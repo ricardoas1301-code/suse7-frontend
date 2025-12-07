@@ -1,0 +1,337 @@
+/* =====================================================================
+   FUNDO DA PÁGINA — LAYOUT GERAL
+   Estrutura principal do fundo que centraliza todo o conteúdo
+   ===================================================================== */
+.login-bg {
+  background: #f5f7ff;          /* Cor suave para o fundo */
+  min-height: 100vh;            /* Ocupa toda a altura da tela */
+  display: flex;                /* Habilita flexbox */
+  flex-direction: column;       /* Elementos organizados na vertical */
+  justify-content: space-evenly;/* Espaço distribuído entre box e rodapé */
+  align-items: center;          /* Centraliza horizontalmente */
+  padding: 20px 0;              /* Espaçamento superior e inferior */
+}
+
+/* Remove barra de rolagem horizontal (caso algo estoure o layout) */
+body, html {
+  overflow-x: hidden;
+}
+
+
+/* =====================================================================
+   CAIXA PRINCIPAL — CARD DE LOGIN
+   Caixa branca com sombra e bordas arredondadas
+   ===================================================================== */
+.login-box {
+  background: #ffffff;           /* Fundo branco */
+  width: 100%;                   /* Ocupa toda a largura possível */
+  max-width: 380px;              /* Largura máxima para evitar ficar grande */
+  padding: 50px;                 /* Espaçamento interno */
+  border-radius: 18px;           /* Bordas arredondadas premium */
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06); /* Sombra suave */
+  text-align: center;            /* Centraliza conteúdo interno */
+  margin-top: -20px; 
+}
+
+
+/* =====================================================================
+   LOGO — Imagem superior do Suse7
+   ===================================================================== */
+.login-logo {
+  width: 133px;                  /* Tamanho da logo */
+  margin: 0 auto -33px auto;      /* Centraliza + margem inferior */
+  display: block;                /* Força comportamento de bloco */
+}
+
+
+/* =====================================================================
+   TÍTULO DO FORMULÁRIO
+   ===================================================================== */
+.login-subtitle {
+  font-size: 20px;               /* Tamanho do texto */
+  font-weight: 600;              /* Peso da fonte */
+  color: #333;                   /* Cor escura */
+  margin-bottom: 25px;           /* Espaço inferior */
+}
+
+
+/* =====================================================================
+   LABELS DOS INPUTS — Titulos acima das caixas de texto
+   ===================================================================== */
+.login-label {
+  display: block;                /* Cada label ocupa a linha inteira */
+  text-align: left;              /* Alinhamento à esquerda */
+  font-size: 14px;               /* Tamanho da fonte */
+  font-weight: 500;              /* Peso médio */
+  color: #4a4a4a;                /* Cor neutra escura */
+  margin-bottom: 5px;            /* Espaço abaixo do label */
+}
+
+
+/* =====================================================================
+   INPUTS PADRÃO SUSE7 — Campos de email e senha
+   ===================================================================== */
+.login-input {
+  width: 100%;                   /* Ocupa 100% da largura do card */
+  padding: 12px 16px;            /* Altura e espaçamento interno */
+  border-radius: 10px;           /* Cantos arredondados */
+  border: 1px solid #cfd7e3;     /* Borda cinza suave */
+  background: #f1f5ff;           /* Fundo azul muito claro */
+  font-size: 14px;               /* Tamanho do texto */
+  margin-bottom: 18px;           /* Espaço inferior */
+  box-sizing: border-box;        /* Inclui padding dentro da largura */
+}
+
+/* Estilo do input quando recebe foco */
+.login-input:focus {
+  border-color: #4e8cff;         /* Borda azul */
+  background: #eef3ff;           /* Fundo ainda mais claro */
+}
+
+
+/* =====================================================================
+   LINK: "Esqueci minha senha"
+   ===================================================================== */
+.login-forgot {
+  text-align: left;              /* Texto alinhado à esquerda */
+  margin-top: -10px;             /* Aproxima do input */
+  margin-bottom: 20px;           /* Espaço inferior */
+}
+
+.login-forgot a {
+  font-size: 13px;               /* Tamanho menor */
+  color: #3c7bff;                /* Azul leve */
+  text-decoration: none;         /* Sem sublinhado */
+}
+
+.login-forgot a:hover {
+  text-decoration: underline;    /* Sublinha ao passar o mouse */
+}
+
+
+/* =====================================================================
+   BOTÃO ENTRAR — Botão principal
+   ===================================================================== */
+.login-submit {
+  width: 100%;                   /* Largura total */
+  padding: 14px;                 /* Altura confortável */
+  background: #2563eb;           /* Azul principal */
+  color: white;                  /* Texto branco */
+  border: none;                  /* Sem borda */
+  border-radius: 12px;           /* Bordas arredondadas */
+  font-weight: 600;              /* Negrito leve */
+  font-size: 15px;               /* Tamanho do texto */
+  cursor: pointer;               /* Mãozinha ao passar o mouse */
+  transition: 0.2s;              /* Suavidade no hover */
+  margin-bottom: -10px;
+}
+
+/* Efeito ao passar o mouse no botão */
+.login-submit:hover {
+  background: #1e4ec9;           /* Azul mais escuro */
+}
+
+
+/* =====================================================================
+   DIVISOR ENTRE LOGIN E GOOGLE
+   ===================================================================== */
+.login-divider {
+  margin: 25px 0 20px 0;         /* Espaços verticais */
+  color: #727272;                /* Cinza médio */
+  font-size: 14px;               /* Tamanho da fonte */
+}
+
+
+/* =====================================================================
+   BOTÃO GOOGLE — Login com Google
+   ===================================================================== */
+.login-google-btn {
+  width: 100%;                   /* Botão largo */
+  padding: 12px;                 /* Altura */
+  border: 1px solid #d7d7d7;     /* Borda cinza */
+  border-radius: 12px;           /* Bordas arredondadas */
+  background: #ffffff;           /* Fundo branco */
+  cursor: pointer;               /* Ação de clique */
+  display: flex;                 /* Layout horizontal */
+  justify-content: center;       /* Centraliza conteúdo */
+  align-items: center;           /* Alinha verticalmente */
+  gap: 8px;                      /* Espaço entre logo e texto */
+  transition: 0.2s;              /* Efeito no hover */
+  font-size: 15px;               /* Tamanho do texto */
+  font-weight: 500;              /* Peso médio */
+  color: #555;                   /* Cinza escuro */
+}
+
+.login-google-btn:hover {
+  background: #f5f5f5;           /* Fundo cinza claro */
+}
+
+/* Logo do Google dentro do botão */
+.google-logo {
+  width: 20px;
+  height: 20px;
+}
+
+
+/* =====================================================================
+   LINK: "Ainda não tem cadastro?"
+   ===================================================================== */
+.login-footer-small {
+  margin-top: 20px;
+}
+
+.login-footer-small a {
+  color: #1c8adb !important;     /* Azul institucional */
+  font-weight: 500;              /* Peso médio */
+  text-decoration: none;         /* Sem sublinhado */
+}
+
+.login-footer-small a:hover {
+  text-decoration: underline;    /* Sublinha no hover */
+}
+
+
+/* =====================================================================
+   RODAPÉ — LINKS INSTITUCIONAIS
+   (Fale conosco | Termos | Privacidade)
+   ===================================================================== */
+.login-footer {
+  margin-top: 10px;              /* Espaço acima */
+  font-size: 14px;               /* Tamanho da fonte */
+  text-align: centrer;            /* Centralizado */
+  font-family: "Inter", sans-serif;
+}
+
+.login-footer a {
+  color: #1c8adb;                /* Azul Suse7 */
+  text-decoration: none;         /* Sem sublinhado */
+  font-weight: 500;              /* Peso médio */
+  margin: 0 6px;                 /* Espaçamento lateral */
+  transition: 0.2s;              /* Animação no hover */
+}
+
+.login-footer a:hover {
+  text-decoration: underline;    /* Sublinha no hover */
+  cursor: pointer;               /* Mãozinha */
+}
+
+
+/* =====================================================================
+   COPYRIGHT — Texto final
+   ===================================================================== */
+.login-copy {
+  display: block;                /* Texto ocupa linha inteira */
+  margin-top: 5px;               /* Espaço superior */
+  text-align: center;            /* Centralização */
+  font-size: 13px;               /* Tamanho da fonte */
+  font-family: "Inter", sans-serif;
+  color: #4a4a4a;                /* Cinza */
+}
+
+.footer-contact {
+  color: #1c8adb;
+  cursor: pointer;
+  margin: 0 6px;
+  font-weight: 500;
+}
+
+.footer-contact:hover {
+  text-decoration: underline;
+}
+
+/* -------------------------------------------------------------
+   CONTAINER DA PÁGINA DE LOGIN — fundo isolado
+------------------------------------------------------------- */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f7ff; /* fundo leve */
+}
+
+/* =====================================================================
+    SENHA — CORREÇÃO PARA MOSTRAR/ESCONDER SENHA
+   ===================================================================== */
+
+/* Container que envolve o input e o botão */
+.password-wrapper {
+    position: relative;
+    /* Copia a margem que estava no .login-input */
+    margin-bottom: 18px; 
+    line-height: 0; /* Ajuda a controlar a altura */
+}
+
+/* O novo input de senha (copia estilos do .login-input) */
+.login-input-password {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #cfd7e3;
+    background: #f1f5ff;
+    font-size: 14px;
+    box-sizing: border-box; 
+    
+    /* 🔥 Garante que o texto da senha não entre por baixo do ícone */
+    padding-right: 48px; 
+    
+    /* Remove a margem inferior, que agora está no wrapper */
+    margin-bottom: 0; 
+}
+
+/* Estilo do novo input quando recebe foco */
+.login-input-password:focus {
+    border-color: #4e8cff;
+    background: #eef3ff;
+}
+
+/* Botão de mostrar/esconder senha (o ícone) */
+.password-toggle-btn {
+    position: absolute;
+    right: 50px; /* Posição à direita */
+    top: 50%; /* Ponto de referência no centro vertical */
+    
+    /* 🔥 CENTRALIZAÇÃO PERFEITA: Sobe 50% da própria altura */
+    transform: translateY(-50%); 
+    
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #4a4a4a; /* Cor para o ícone */
+    font-size: 18px; /* Tamanho do ícone */
+    padding: 0;
+    line-height: 1; 
+    outline: none;
+    z-index: 10;
+}
+
+.login-error-msg {
+  background: #ffe6e6;
+  color: #b10000;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 5px solid #ffbcbc;
+
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+
+  /* 🔥 AQUI ESTÁ O SEGREDO */
+  width: calc(100% - 40px);  /* reduz um pouco a largura */
+  margin: 0 auto 20px auto;  /* centraliza perfeitamente */
+
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.forgot-password {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #4a63ff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+

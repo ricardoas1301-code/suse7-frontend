@@ -1,0 +1,4 @@
+/* Aplica o tema salvo antes do React montar */
+html.dark {
+  color-scheme: dark;
+}

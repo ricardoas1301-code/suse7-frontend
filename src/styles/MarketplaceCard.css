@@ -1,0 +1,62 @@
+/* ============================================================
+   CARD PREMIUM DO DASHBOARD — SUSE7
+   ============================================================ */
+
+.market-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px;
+  width: 100%;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.2s;
+}
+
+.market-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* HEADER: Ícone + Título */
+.market-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.market-card-icon {
+  font-size: 28px;
+}
+
+.market-card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Texto do contador */
+.market-card-count {
+  font-size: 16px;
+  color: #475569;
+  margin: 0;
+}
+
+/* Botão */
+.market-card-button {
+  background: #2563eb;          /* Azul premium Suse7 */
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.market-card-button:hover {
+  background: #1e40af;
+}

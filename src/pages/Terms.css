@@ -1,0 +1,96 @@
+.terms-wrapper {
+  background: #f4f6fa;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.terms-box {
+  background: #ffffff;
+  max-width: 950px;
+  margin: auto;
+  padding: 45px;
+  border-radius: 18px;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.06);
+  font-family: "Inter", sans-serif;
+}
+
+.terms-title {
+  font-size: 38px;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 5px;
+  color: #222;
+}
+
+.terms-update {
+  text-align: center;
+  color: #777;
+  margin-bottom: 40px;
+  font-size: 14px;
+}
+
+.terms-subtitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin-top: 35px;
+  margin-bottom: 10px;
+  color: #005eff;
+}
+
+.terms-text {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.terms-list {
+  padding-left: 22px;
+  line-height: 1.8;
+  font-size: 17px;
+  color: #333;
+}
+
+.terms-footer {
+  margin-top: 50px;
+  text-align: center;
+  font-style: italic;
+  color: #555;
+  font-size: 16px;
+}
+
+.terms-wrapper {
+  background: #f4f6fa;
+  min-height: 100vh;
+  padding: 40px 20px;
+  overflow-y: auto;      /* 🔥 permite rolagem */
+}
+
+/* -------------------------------------------------------------
+   NAVBAR DO TERMS — elegante e fina
+------------------------------------------------------------- */
+/* 🔥 AJUSTE DEFINITIVO DO NAVBAR — Força prioridade sobre App.css */
+.terms-navbar {
+  padding-left: 25px !important;
+  padding-right: 25px !important;
+}
+
+/* 🔥 Garante que os links fiquem próximos */
+.terms-navbar-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-right: 30px !important;
+}
+
+/* 🔥 Reduz o botão para não empurrar tudo para direita */
+.terms-navbar-btn {
+  background: #2563eb;
+  color: white;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 600;
+  font-size: 14px !important;
+  text-decoration: none;
+  transition: 0.2s;
+}

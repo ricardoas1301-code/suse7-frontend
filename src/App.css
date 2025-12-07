@@ -1,0 +1,954 @@
+/* -----------------------------------------------------------
+   SUSE7 — GLOBAL DESIGN SYSTEM PREMIUM
+   Styles globais usados em todas as páginas
+------------------------------------------------------------ */
+
+/* ------------------------------------------------------------- */
+/* Modo Escuro (Theme Dark) — Variáveis                          */
+/* ------------------------------------------------------------- */
+
+:root.dark {
+  --s7-dark: #f3f4f6;
+  --s7-gray-1: #1f2937;
+  --s7-gray-2: #111827;
+  --s7-gray-3: #6b7280;
+
+  --s7-primary: #3b82f6;
+  --s7-secondary: #22d3ee;
+
+  background-color: #0f172a;
+  color: #f3f4f6;
+}
+
+:root {
+  --s7-primary: #2563eb;
+  --s7-secondary: #22c55e;
+  --s7-dark: #111827;
+  --s7-gray-1: #f3f4f6;
+  --s7-gray-2: #e5e7eb;
+  --s7-gray-3: #9ca3af;
+  --s7-radius: 14px;
+  --s7-shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
+  --s7-shadow-md: 0 6px 16px rgba(0,0,0,0.07);
+  --s7-shadow-lg: 0 12px 26px rgba(0,0,0,0.10);
+}
+
+/* Reset básico */
+/* ------------------------------------------------------------- */
+/*  TEMA GLOBAL PREMIUM — TIPOGRAFIA + ESPAÇAMENTO               */
+/* ------------------------------------------------------------- */
+
+body {
+  background: #f5f7fa;
+  color: var(--s7-dark);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Roboto, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  color: var(--s7-dark);
+  letter-spacing: -0.5px;
+}
+
+p {
+  color: #4b5563;
+}
+
+
+/* Body global */
+body {
+  background: #f5f6fa;
+  font-family: "Inter", sans-serif;
+  color: #333;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* LINKS */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Layout principal */
+.main-content {
+  padding: 30px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Títulos */
+h1, h2, h3 {
+  font-weight: 700;
+}
+
+/* NAVBAR PREMIUM */
+.navbar {
+  width: 100%;
+  height: 70px;
+  background: white;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 35px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-logo img {
+  margin-right: 10px;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  font-weight: 600;
+  gap: 8px;
+  color: #007bff;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 25px;
+}
+
+.navbar-links a {
+  font-size: 15px;
+  font-weight: 500;
+  padding-bottom: 4px;
+  transition: 0.2s;
+}
+
+.navbar-links a.active {
+  border-bottom: 2px solid #007bff;
+  color: #007bff;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.btn-logout {
+  background: #ef4444;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-logout:hover {
+  background: #dc2626;
+}
+
+/* CARDS PREMIUM */
+.stat-card {
+  background: white;
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stat-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.stat-description {
+  font-size: 14px;
+  color: #999;
+}
+
+/* CARD MERCADO LIVRE */
+.ml-card {
+  background: #fffbe6;
+  border: 1px solid #ffe58f;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+}
+
+.ml-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #d97706;
+}
+
+.ml-status {
+  background: #e5e7eb;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+/* BOTÃO ML */
+.btn-ml {
+  background: #fbbf24;
+  color: white;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: 0.2s;
+}
+
+.btn-ml:hover {
+  background: #f59e0b;
+}
+
+/* ------------------------------------------------------------- */
+/*  STATCARD PREMIUM                                             */
+/* ------------------------------------------------------------- */
+
+.stat-premium-card {
+  background: white;
+  border-radius: 16px;
+  padding: 26px;
+  border: 1px solid #e7e9ee;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  transition: 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stat-premium-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.07);
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-title {
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.stat-value {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 2px;
+}
+
+.stat-description {
+  margin-top: -4px;
+  font-size: 0.85rem;
+  color: #9CA3AF;
+}
+
+/* ------------------------------------------------------------- */
+/*  LAYOUT PREMIUM                                               */
+/* ------------------------------------------------------------- */
+
+.page-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 80px; /* evita que o conteúdo encoste no navbar */
+  box-sizing: border-box;
+}
+
+.page-content {
+  width: 100%;
+  max-width: 1500px;
+  padding: 0 40px 60px 40px; 
+  box-sizing: border-box;
+}
+
+/* Corrige páginas internas */
+.internal-page {
+  padding: 20px 0;
+}
+
+/* ------------------------------------------------------------- */
+/* NAVBAR PREMIUM                                                */
+/* ------------------------------------------------------------- */
+
+.navbar-premium {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(200, 200, 200, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 34px;
+  z-index: 999;
+}
+
+/* Logo */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-circle {
+  background: #2563eb;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.logo-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+/* Menu central */
+.nav-center {
+  display: flex;
+  gap: 22px;
+}
+
+.nav-item {
+  font-size: 0.95rem;
+  color: #4b5563;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.nav-item.active {
+  background: #2563eb;
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Usuário */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+/* Botão de logout */
+.logout-btn {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #374151;
+}
+
+.logout-btn:hover {
+  background: #e5e7eb;
+}
+
+/* ---------------------------------------------------------- */
+/* DASHBOARD PREMIUM                                           */
+/* ---------------------------------------------------------- */
+
+.dash-header {
+  background: white;
+  border-radius: 14px;
+  padding: 24px 32px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.dash-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.dash-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Botão ML */
+.dash-btn-ml {
+  background: #f59e0b;
+  color: white;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.dash-btn-ml:hover {
+  background: #d97706;
+}
+
+/* Grades */
+.dash-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.dash-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+/* Seções */
+.dash-section-title {
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* ---------------------------------------------------------- */
+/* RESPONSIVIDADE PREMIUM – DASHBOARD                         */
+/* ---------------------------------------------------------- */
+
+@media (max-width: 1200px) {
+  .dash-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .internal-page {
+    padding: 24px;
+  }
+
+  .dash-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .dash-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-title {
+    font-size: 1.6rem;
+  }
+
+  .dash-btn-ml {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-title {
+    font-size: 1.4rem;
+  }
+}
+
+/* ---------------------------------------------------------- */
+/* NAVBAR PREMIUM FIXA / GLASS EFFECT                         */
+/* ---------------------------------------------------------- */
+
+.navbar-premium {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 32px;
+
+  /* Vidro */
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* ---------------------------------------------------------- */
+/* LOGO                                                       */
+/* ---------------------------------------------------------- */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.logo-circle {
+  width: 36px;
+  height: 36px;
+  background: #2563eb;
+  color: white;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+.logo-title {
+  font-size: 1.2rem;
+}
+
+/* ---------------------------------------------------------- */
+/* MENU                                                       */
+/* ---------------------------------------------------------- */
+
+.nav-center {
+  display: flex;
+  gap: 14px;
+}
+
+.nav-item {
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: #374151;
+  font-weight: 500;
+  text-decoration: none;
+  transition: 0.25s;
+}
+
+.nav-item:hover {
+  background: rgba(37, 99, 235, 0.07);
+}
+
+.nav-item.active {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+}
+
+/* ---------------------------------------------------------- */
+/* USER AREA                                                  */
+/* ---------------------------------------------------------- */
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #374151;
+}
+
+.logout-btn {
+  padding: 8px 14px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.logout-btn:hover {
+  background: #e5e7eb;
+}
+
+/* ---------------------------------------------------------- */
+/* PAGE WRAPPER – Para todo o conteúdo interno                */
+/* ---------------------------------------------------------- */
+
+.page-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.page-content {
+  width: 100%;
+  max-width: 1500px;
+  padding: 40px 40px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .page-content {
+    padding: 24px 18px;
+  }
+}
+
+/* ---------------------------------------------------------- */
+/* STATCARD PREMIUM                                            */
+/* ---------------------------------------------------------- */
+
+.stat-card-premium {
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 18px;
+  transition: 0.25s ease;
+}
+
+.stat-card-premium:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.07);
+}
+
+/* --------------------------------------------------------------
+   ML CARD PREMIUM
+-------------------------------------------------------------- */
+
+.ml-card-premium {
+  background: #fffbe8;
+  border: 1px solid #f4d87b;
+  border-left: 6px solid #f2c200;
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ml-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ml-icon-container {
+  width: 52px;
+  height: 52px;
+  background: #f2c200;
+  color: #fff;
+  font-size: 26px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ml-info h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  color: #8a6c00;
+}
+
+.ml-subtitle {
+  font-size: 0.9rem;
+  color: #706934;
+  margin-top: 2px;
+}
+
+.ml-status-badge {
+  margin-left: auto;
+  background: #d1d1d1;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.ml-description {
+  color: #6b6b6b;
+  line-height: 1.4;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.ml-button {
+  background: #f2c200;
+  color: #fff;
+  font-weight: bold;
+  padding: 12px 18px;
+  border-radius: 10px;
+  width: 180px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 0.95rem;
+}
+
+.ml-button:hover {
+  background: #cf9f00;
+}
+
+/* --------------------------------------------------------------
+   MARKETPLACE CARD — PREMIUM
+-------------------------------------------------------------- */
+
+.marketplace-card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.02),
+    0 10px 18px rgba(0,0,0,0.03);
+  transition: 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.marketplace-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 6px 14px rgba(0,0,0,0.04),
+    0 12px 24px rgba(0,0,0,0.06);
+}
+
+.marketplace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.marketplace-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.marketplace-status {
+  font-size: 0.78rem;
+  background: #e5e7eb;
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: #374151;
+}
+
+.marketplace-icon {
+  font-size: 2rem;
+}
+
+.marketplace-btn {
+  width: 160px;
+  padding: 10px 0;
+  border-radius: 10px;
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.2s ease;
+}
+
+.marketplace-btn:hover {
+  opacity: 0.85;
+}
+
+
+/* ----------- SEPARADORES PREMIUM ----------- */
+.dash-section-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 40px 0 20px;
+  position: relative;
+}
+
+.dash-section-title::after {
+  content: "";
+  display: block;
+  width: 70px;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb, #22c55e);
+  border-radius: 6px;
+  margin-top: 6px;
+}
+
+/* ------ GRID PREMIUM ------- */
+.dash-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 22px;
+  margin-top: 10px;
+}
+
+.theme-toggle {
+  font-size: 1.3rem;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: #f3f4f6;
+}
+
+.marketplace-card-premium {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  transition: 0.2s;
+}
+
+.marketplace-card-premium:hover {
+  transform: translateY(-4px);
+}
+
+.mp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mp-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 26px;
+}
+
+.mp-status {
+  background: #e5e5e5;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.mp-title {
+  margin-top: 18px;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #222;
+}
+
+.mp-count {
+  margin-top: 6px;
+  color: #666;
+}
+
+.mp-btn {
+  margin-top: 20px;
+  padding: 10px 18px;
+  background: #ffc400;
+  color: #222;
+  border: none;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.mp-btn:hover {
+  background: #e3af00;
+}
+
+.login-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.login-subtitle {
+  font-size: 15px;
+  color: #777;
+  margin-bottom: 25px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: var(--s7-radius);
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 15px;
+  padding: 14px;
+  background: var(--s7-primary);
+  color: white;
+  border: none;
+  border-radius: var(--s7-radius);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.login-google {
+  width: 100%;
+  padding: 12px;
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  border-radius: var(--s7-radius);
+  cursor: pointer;
+}
+
+.login-divider {
+  margin: 20px 0;
+  font-size: 14px;
+  color: #888;
+}
+
+.login-footer {
+  margin-top: 20px;
+  font-size: 14px;
+}

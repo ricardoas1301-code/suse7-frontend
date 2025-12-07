@@ -1,0 +1,85 @@
+/* =====================================================================
+   NAVBAR PÚBLICA — PADRÃO SUSE7 (VERSÃO FINA E RESPONSIVA)
+   ===================================================================== */
+.public-navbar {
+  width: 100%;
+  max-width: 100%;                 /* Garante que nunca ultrapasse a tela */
+  padding: 10px 25px;              /* Altura ideal */
+  box-sizing: border-box;
+  margin: 0 auto;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: transparent;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+
+/* =====================================================================
+   LOGO — PADRÃO SUSE7
+   ===================================================================== */
+.public-navbar-logo {
+  width: 95px;
+  cursor: pointer;
+}
+
+
+
+/* =====================================================================
+   MENU SUPERIOR — LINKS PADRÃO SUSE7
+   ===================================================================== */
+.public-navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 22px;                        /* Espaçamento entre itens */
+}
+
+
+/* -------------------------------------------------------------
+   LINKS DO MENU — PADRÃO SUSE7
+   ------------------------------------------------------------- */
+.public-navbar-link,
+.public-navbar-menu a {
+  font-size: 15px;
+  color: #1c1c1c;                   /* Cinza escuro elegante */
+  text-decoration: none;            /* Sem sublinhado inicial */
+  cursor: pointer;                  /* Mãozinha ao passar */
+  transition: 0.25s ease;           /* Efeito suave */
+}
+
+
+/* -------------------------------------------------------------
+   LINKS DO MENU — HOVER (AO PASSAR O MOUSE)
+   ------------------------------------------------------------- */
+.public-navbar-link:hover,
+.public-navbar-menu a:hover {
+  color: #2d73f5;                   /* Azul da identidade visual */
+  text-decoration: underline;       /* Sublinhado padrão Suse7 */
+}
+
+
+
+/* =====================================================================
+   BOTÃO TESTE GRÁTIS — PADRÃO SUSE7
+   ===================================================================== */
+.public-navbar-btn {
+  background: #2563eb;              /* Azul botão */
+  padding: 8px 16px;
+  border-radius: 8px;
+
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.public-navbar-btn:hover {
+  background: #1e4ec9;              /* Azul mais escuro no hover */
+}

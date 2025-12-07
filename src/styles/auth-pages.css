@@ -1,0 +1,113 @@
+/* ================================
+   FUNDO PADRÃO SUSE7
+================================ */
+.auth-bg {
+  background: #EEF1FF;
+  min-height: 100vh;
+  width: 100%;                 /* garante que a área ocupa toda a tela */
+  display: flex;
+  justify-content: center;     /* centraliza horizontal */
+  align-items: center;         /* centraliza vertical */
+  padding: 0;                  /* remove espaçamento que desalinha */
+}
+
+/* ================================
+   CARD PREMIUM SUSE7
+================================ */
+.auth-box {
+  background: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  padding: 60px 50px;
+  border-radius: 22px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+/* LOGO */
+.auth-logo {
+  width: 155px;
+  margin: 0 auto -10px auto;
+}
+
+/* TÍTULOS */
+.auth-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 33px;
+}
+
+.auth-subtext {
+  font-size: 15px;
+  color: #6B7280;
+  margin-bottom: 33px;
+}
+
+/* LABEL */
+.auth-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+  text-align: center;     /* ← AQUI É O PULO DO GATO */
+  margin-bottom: 10px;
+  width: 100%;            /* ← Garantir alinhamento perfeito */
+  display: block;
+}
+
+
+/* INPUT */
+.auth-input {
+  text-align: left;         /* ← centraliza o label */
+  width: 92%;                /* ← força centralização */
+  display: block;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #c9d2f6;
+  margin-bottom: 40px;
+  font-size: 15px;
+  outline: none;
+  transition: 0.2s;
+  background: #F6F7FF;
+  
+
+ }
+
+.auth-input:focus {
+  border-color: #447BFF;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(68, 123, 255, 0.2);
+}
+
+/* BOTÃO */
+.auth-btn {
+  width: 100%;
+  background: #1A5BFF;
+  color: #ffffff;
+  padding: 14px 0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.auth-btn:hover {
+  background: #174EE6;
+}
+
+/* LINKS */
+.auth-link {
+  margin-top: 20px;
+  display: inline-block;
+  font-size: 14px;
+  color: #1A5BFF;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+

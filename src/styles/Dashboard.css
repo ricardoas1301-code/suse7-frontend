@@ -1,0 +1,61 @@
+/* WRAPPER GERAL */
+.dashboard-wrapper {
+  padding: 30px 40px;
+  min-height: 100vh;
+  background: #f5f6fa;
+}
+
+/* HEADER */
+.dash-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.dash-header-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.dash-logo {
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
+}
+
+.dash-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.dash-subtitle {
+  font-size: 15px;
+  color: #666;
+}
+
+/* GRID DE ESTATÍSTICAS */
+.dash-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  margin-bottom: 45px;
+}
+
+/* SESSÕES */
+.dash-section {
+  margin-top: 30px;
+}
+
+.dash-section-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2a2a2a;
+  margin-bottom: 16px;
+}
+
+.dash-grid-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+}

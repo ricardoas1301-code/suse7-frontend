@@ -1,0 +1,417 @@
+/* CONTAINER PRINCIPAL */
+.signup-container {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f6fb;
+  font-family: "Inter", sans-serif;
+  align-items: center;     /* centraliza verticalmente TUDO */
+  justify-content: center; /* garante proporção perfeita */
+  gap: 40px;               /* respiro entre colunas */
+}
+
+/* COLUNA ESQUERDA (MARKETING) */
+.signup-left {
+  width: 55%;
+  padding: 5px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centraliza verticalmente */
+  align-items: flex-start; /* alinha textos à esquerda */
+  background: transparent; /* remove fundo branco */
+  overflow: hidden; /* evita scroll */
+  max-width: 620px;  /* impede ficar gigante demais */
+}
+
+
+
+.signup-logo {
+  width: 130px;
+  margin-bottom: 30px;
+}
+
+.signup-left h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color:#0077ff;
+}
+
+.signup-left p {
+  margin-top: 17px;
+  font-size: 16px;
+  color: #0077ff;
+  max-width: 600px;
+}
+
+.signup-benefits {
+  margin-top: 25px;
+  list-style: none;
+  padding: 0;
+}
+
+.signup-benefits li {
+  margin-bottom: 10px;
+  font-size: 15px;
+  color: #0077ff;
+}
+
+/* Voltar */
+.signup-back {
+  margin-top: 40px;
+  color: #0077ff;
+  font-weight: 600;
+  text-decoration: none;
+}
+.signup-back:hover {
+  text-decoration: underline;
+}
+
+/* COLUNA DIREITA (FORM) */
+.signup-right {
+   width: 50%;
+  max-width: 520px;
+  padding: 60px 50px;
+  margin-top: 20px;
+
+  /* ESTILO DO QUADRO BRANCO */
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Google login */
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 10px;
+  height: 33px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  
+}
+.google-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+/* Divider */
+.divider {
+  text-align: center;
+  margin: 25px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* FORM FIELDS */
+.row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.field.small {
+  max-width: 80px;
+}
+
+.field label {
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #0077ff;
+  font-weight: 500;
+}
+
+.field input {
+  padding: 8px 10px;
+  height: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.field input:focus {
+  border-color: #0077ff;
+  background: white;
+}
+
+/* ERRO (opção 3 PREMIUM) */
+.error {
+  border-color: #ff3b3b !important;
+  background: #ffecec !important;
+}
+
+.err {
+  font-size: 12px;
+  color: #ff3b3b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Termos */
+.termos-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.termos-box label {
+  color: #333;
+  font-size: 14px;
+}
+
+/* Botão Criar Conta */
+.signup-btn {
+  text-align: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 33px;
+
+  width: 100%;
+  padding: 14px;
+  background: #007bff;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: 0.2s;
+}
+
+.signup-btn:hover {
+  background: #0062d1;
+}
+
+.signup-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.field.imposto-small input {
+  width: 50px !important;
+  text-align: center;
+  padding-right: 12px;
+}
+
+/* Efeito SHAKER */
+.shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+/* RESPONSIVO */
+@media (max-width: 950px) {
+  .signup-container {
+    flex-direction: column;
+  }
+
+  .signup-left,
+  .signup-right {
+    padding: 20px 50px 10px 50px;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+  
+}
+
+/* Ajuste da coluna da direita */
+.signup-right {
+  margin-top: -33px;          /* sobe a coluna da direita */
+  align-self: flex-start;     /* alinha no topo do container */
+  transform: translateX(30px); /* move levemente para a direita */
+}
+
+/* Garantir que tudo continue centralizado */
+.signup-container {
+  align-items: flex-start !important;
+  padding-top: 40px;
+}
+
+/* Deixar mais profissional em telas grandes */
+@media (min-width: 1400px) {
+  .signup-right {
+    transform: translateX(40px); /* mais deslocamento para telas largas */
+  }
+}
+
+/* Limita a altura da página e remove scroll vertical */
+html, body {
+  height: 100%;
+  overflow-y: hidden;
+}
+
+/* Evita que o formulário inteiro desça muito */
+.signup-right {
+  margin-top: 10px;         /* antes -40px, agora suave */
+  max-height: 90vh;         /* garante que cabe na tela */
+  overflow-y: auto;         /* se estourar MUITO, só rola a coluna */
+  padding-bottom: 20px;
+}
+
+/* Deixa o scroll interno suave e quase invisível */
+.signup-right::-webkit-scrollbar {
+  width: 6px;
+}
+
+.signup-right::-webkit-scrollbar-thumb {
+  background: #cfcfcf;
+  border-radius: 50px;
+}
+
+/* Ajuste da coluna esquerda também */
+.signup-left {
+  margin-top: 20px;
+}
+
+.signup-container {
+  height: 100vh;
+  overflow: hidden;
+  align-items: center;
+  padding-top: 0;
+}
+
+.password-toggle-btn:hover {
+  opacity: 1;
+}
+
+
+.signup-right .password-wrapper input {
+  width: 80%;
+  padding-right: 32px; /* espaço pro ícone */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.password-toggle-btn:hover {
+  opacity: 1;
+}
+
+/* ----------------------------- */
+/* TÍTULOS PRINCIPAIS            */
+/* ----------------------------- */
+
+.signup-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 18px;
+  line-height: 1.2;
+}
+
+.signup-title span {
+  color: #1a8cff;    /* azul bonito */
+}
+
+/* SUBTÍTULO */
+.signup-subtitle {
+  font-size: 17px;
+  color: #444;
+  max-width: 480px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+
+/* ----------------------------- */
+/* LISTA DE BENEFÍCIOS           */
+/* ----------------------------- */
+
+.signup-benefits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px; /* espaçamento entre itens */
+}
+
+.signup-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+/* Ícones padronizados */
+.signup-benefits li .icon {
+  font-size: 22px;
+  width: 32px;       /* garante alinhamento perfeito */
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+    background: #f2f5ff;
+  border-radius: 10px;
+}
+
+/* Títulos internos */
+.signup-benefits li h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #111;
+  }
+
+/* Descrição */
+.signup-benefits li p {
+  margin: 0;
+  font-size: 15px;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* Pequeno texto final */
+.signup-small-print {
+  margin-top: 35px;
+  font-size: 13px;
+  color: #777;
+}
+
+.signup-back-top {
+  display: flex;
+  align-items: center;   /* 🔥 Alinha seta e texto na mesma linha */
+  gap: 6px;              /* espaçamento entre seta e texto */
+  font-size: 16px;
+  text-decoration: none;
+  color: #333;
+}
+
+.signup-back-top svg {
+  width: 18px;
+  height: 18px;
+}
