@@ -1,25 +1,24 @@
 // src/App.jsx
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import "./App.css";
+
+// Páginas de recuperação de senha
 import PasswordForgot from "./pages/PasswordForgot";
 import PasswordReset from "./pages/PasswordReset";
-import MLConnect from './ML/MLConnect';
-import MLCallback from "./ml/MLCallback";
 
 
 // Supabase + Páginas
-import { supabase } from './supabaseClient';
-import Login from './components/Login';
-import Layout from './components/Layout';
-import Signup from './components/Signup';
-import Profile from './components/Profile';
+import { supabase } from "./supabaseClient";
+import Login from "./components/Login";
+import Layout from "./components/Layout";
+import Signup from "./components/Signup";
+import Profile from "./components/Profile";
 import Terms from "./pages/Terms";
 import Privacidade from "./pages/Privacidade";
 import Precificacoes from "./pages/Precificacoes";
 import "./global.css";
-
 
 // Páginas temporárias
 import Dashboard from "./components/Dashboard";
@@ -32,9 +31,10 @@ const Monitoramento = () => <div className="content-wrapper"><h1>Página de Moni
 const Registros = () => <div className="content-wrapper"><h1>Página de Registros</h1></div>;
 const Configuracoes = () => <div className="content-wrapper"><h1>Página de Configurações</h1></div>;
 
-// =========================================================
+
+// ======================================================================
 // ROTAS PROTEGIDAS
-// =========================================================
+// ======================================================================
 const AuthWrapper = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -100,6 +100,7 @@ const AuthWrapper = ({ children }) => {
   return session ? children : <Navigate to="/login" replace />;
 };
 
+
 // =========================================================
 // ROTAS DO APP — VERSÃO CORRETA
 // =========================================================
@@ -139,9 +140,6 @@ function App() {
           </Route>
 
 
-          // 🔥 ROTAS ESPECIAIS (DEVEM FICAR FORA)
-          <Route path="/ml/connect" element={<MLConnect />} />
-          <Route path="/ml/callback" element={<MLCallback />} />
                
 
         {/* fallback */}
