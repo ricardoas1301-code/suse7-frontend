@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/ml/connect", "destination": "/" },
+    { "source": "/ml/callback", "destination": "/" },
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}
