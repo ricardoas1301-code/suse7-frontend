@@ -8,6 +8,10 @@ import "./App.css";
 import PasswordForgot from "./pages/PasswordForgot";
 import PasswordReset from "./pages/PasswordReset";
 
+// ML
+import MLConnect from "./ml/MLConnect.jsx";
+import MLCallback from "./ml/MLCallback.jsx";
+
 
 // Supabase + Páginas
 import { supabase } from "./supabaseClient";
@@ -140,6 +144,9 @@ function App() {
           </Route>
 
 
+          {/* 🔥 ROTAS ESPECIAIS — MERCADO LIVRE */}
+          <Route path="/ml/connect" element={<MLConnect />} />
+          <Route path="/ml/callback" element={<MLCallback />} />      
                
 
         {/* fallback */}
