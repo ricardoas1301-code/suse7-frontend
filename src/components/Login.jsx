@@ -41,22 +41,21 @@ export default function Login() {
   };
 
 
-  /* -------------------------------------------------------------
-     LOGIN COM GOOGLE
-  ------------------------------------------------------------- */
-  const handleGoogleLogin = async () => {
-    const { error } = await 
-supabase.auth.signInWithOAuth({
-  provider: "google",
-  options: {
-    redirectTo: `${window.location.origin}/dashboard`
-  }
-});
+  // -------------------------------------------------------------
+// LOGIN COM GOOGLE (HashRouter + Produção)
+// -------------------------------------------------------------
+const handleGoogleLogin = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/#/dashboard`,
+    },
+  });
 
-    if (error) {
-      setErrorMsg("Erro ao conectar com o Google. Tente novamente.");
-      return;
-    }
+  if (error) {
+    setErrorMsg("Erro ao conectar com o Google. Tente novamente.");
+  }
+
 
     setTimeout(async () => {
       const { data: { user } } = await supabase.auth.getUser();
