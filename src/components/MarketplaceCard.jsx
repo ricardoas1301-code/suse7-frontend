@@ -22,9 +22,10 @@ export default function MarketplaceCard({
 
       <p className="market-card-count">{count} anúncios</p>
 
-      <button
+        <button
+        type="button"              // 🔥 ISSO RESOLVE TUDO
         className="market-card-button"
-        onClick={onClick}    // <-- O BOTÃO SÓ FUNCIONA SE TIVER ISSO!
+        onClick={onClick}
       >
         {buttonText}
       </button>

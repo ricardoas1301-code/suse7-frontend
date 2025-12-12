@@ -17,8 +17,9 @@ export default function MLConnect() {
     //  - REDIRECT_URI: rota do frontend que receberá o "code"
     //    (precisa ser a mesma cadastrada no painel do ML)
     // ------------------------------------------------------------
-    const CLIENT_ID = "5102529405183816";
-    const REDIRECT_URI = "https://app.suse7.com.br/ml/callback";
+      
+      const CLIENT_ID = import.meta.env.VITE_ML_CLIENT_ID;
+      const REDIRECT_URI = import.meta.env.VITE_ML_REDIRECT_URI;
 
     // ------------------------------------------------------------
     // 2. MONTAR A URL OFICIAL DE AUTORIZAÇÃO DO MERCADO LIVRE
