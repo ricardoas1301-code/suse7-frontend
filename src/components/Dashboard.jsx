@@ -77,7 +77,8 @@ const handleConnectML = () => {
   }
   color="#ffe600"
   icon="🛒"
-  onClick={isConnected ? null : handleConnectMercadoLivre}
+  onClick={isConnected ? null : handleConnectML}
+
 />
       </div>
     </div>
