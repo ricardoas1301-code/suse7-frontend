@@ -34,7 +34,7 @@ export default function Dashboard() {
 // ==========================================================
 try {
     // 💡 SOLUÇÃO: Adicione o user_id como Query Parameter
-    const apiUrl = `${import.meta.env.VITE_API_URL}/ml/status?user_id=${user.id}`;
+    const apiUrl = `${import.meta.env.VITE_API_URL}/api/ml/status?user_id=${user.id}`;
 
     const res = await fetch(
       apiUrl, // <-- Use a URL completa
