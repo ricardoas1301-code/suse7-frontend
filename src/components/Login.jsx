@@ -41,17 +41,23 @@ export default function Login() {
   };
 
 
-  // -------------------------------------------------------------
-// LOGIN COM GOOGLE (HashRouter + Produção)
-// -------------------------------------------------------------
+ // ----------------------------------------
+// Google Login (com criação automática de profile)
+// ----------------------------------------
 const handleGoogleLogin = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/#/dashboard`,
-    },
   });
 
+  if (error) {
+    console.error(error);
+    setAlertData({
+    type: "error",
+     message: "Não foi possível conectar ao Google.\nPor favor, tente novamente."
+  });
+    return;
+  }
+  
   if (error) {
     setErrorMsg("Erro ao conectar com o Google. Tente novamente.");
   }
