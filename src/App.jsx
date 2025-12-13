@@ -3,7 +3,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./App.css";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./components/Dashboard";
 
 // Páginas de recuperação de senha
 import PasswordForgot from "./pages/PasswordForgot";
