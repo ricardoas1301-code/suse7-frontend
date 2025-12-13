@@ -38,7 +38,7 @@ try {
 
     const res = await fetch(
       apiUrl, // <-- Use a URL completa
-      { credentials: "include" }
+      
     );
         const data = await res.json();
         console.log("📡 Status ML:", data);
