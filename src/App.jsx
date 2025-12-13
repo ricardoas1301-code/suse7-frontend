@@ -25,8 +25,7 @@ import Precificacoes from "./pages/Precificacoes";
 import "./global.css";
 
 // Páginas temporárias
-import MLConnect from "./ml/MLConnect";
-
+import MLConnect from "../ml/MLConnect";
 const AnunciosTable = () => <div className="content-wrapper"><h1>Gerenciamento de Anúncios</h1></div>;
 const Produtos = () => <div className="content-wrapper"><h1>Página de Produtos</h1></div>;
 const Clientes = () => <div className="content-wrapper"><h1>Página de Clientes</h1></div>;
