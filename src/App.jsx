@@ -1,6 +1,6 @@
 // src/App.jsx
 
-import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./App.css";
 import Dashboard from "./components/Dashboard";

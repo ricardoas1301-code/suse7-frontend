@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient"; // ✅ caminho existente no seu projeto
 import MarketplaceCard from "./MarketplaceCard";
 import "../styles/Dashboard.css";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
@@ -60,9 +61,11 @@ try {
 // -----------------------------------------------------
 // FUNÇÃO: Conectar Mercado Livre (HashRouter)
 // -----------------------------------------------------
+const navigate = useNavigate();
+
 const handleConnectML = () => {
   console.log("Conectando Mercado Livre...");
-  window.location.hash = "#/ml/connect";
+  navigate("/ml/connect");
 };
 
 
