@@ -1,31 +1,46 @@
-{showCompletarCadastro && (
-  <div className="popup-overlay">
-    <div className="popup-box">
-      <h2>Complete seu cadastro</h2>
+// ======================================================
+// CompleteProfileModal.jsx
+// Modal para completar cadastro do usuário
+// ======================================================
 
-      <input type="text" placeholder="Nome" id="nome" />
-      <input type="text" placeholder="WhatsApp" id="whatsapp" />
-      <input type="text" placeholder="Nome da loja" id="loja" />
+import { supabase } from "../supabaseClient";
 
-      <button onClick={async () => {
+export default function CompleteProfileModal({
+  show,
+  onClose,
+  profileId,
+}) {
+  if (!show) return null;
 
-        const nome = document.getElementById("nome").value;
-        const whatsapp = document.getElementById("whatsapp").value;
-        const loja = document.getElementById("loja").value;
+  async function handleSalvar() {
+    const nome = document.getElementById("nome").value;
+    const whatsapp = document.getElementById("whatsapp").value;
+    const loja = document.getElementById("loja").value;
 
-        await supabase
-          .from("profiles")
-          .update({
-            nome,
-            whatsapp,
-            loja,
-            primeiro_login: false,
-          })
-          .eq("id", profile.id);
+    await supabase
+      .from("profiles")
+      .update({
+        nome,
+        whatsapp,
+        loja,
+        primeiro_login: false,
+      })
+      .eq("id", profileId);
 
-        setShowCompletarCadastro(false);
+    onClose();
+  }
 
-      }}>Salvar</button>
+  return (
+    <div className="popup-overlay">
+      <div className="popup-box">
+        <h2>Complete seu cadastro</h2>
+
+        <input type="text" placeholder="Nome" id="nome" />
+        <input type="text" placeholder="WhatsApp" id="whatsapp" />
+        <input type="text" placeholder="Nome da loja" id="loja" />
+
+        <button onClick={handleSalvar}>Salvar</button>
+      </div>
     </div>
-  </div>
-)}
+  );
+}
