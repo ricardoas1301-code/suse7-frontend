@@ -146,8 +146,8 @@ function App() {
 
 
           {/* 🔥 ROTAS ESPECIAIS — MERCADO LIVRE */}
-          <Route path="/ml/connect" element={<MLConnect />} />
-          <Route path="/ml/callback" element={<MLCallback />} />      
+         // <Route path="/ml/connect" element={<MLConnect />} />
+         // <Route path="/ml/callback" element={<MLCallback />} />      
                
 
         {/* fallback */}
