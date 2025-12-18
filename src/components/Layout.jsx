@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import ProfileOnboardingModal from './ProfileOnboardingModal';
 import ThemeToggle from "./ThemeToggle";
 
 const Layout = () => {
@@ -26,10 +25,6 @@ const Layout = () => {
 
       setProfile(profileData);
 
-      // Se for primeiro login → abre o modal
-      if (profileData?.primeiro_login === true) {
-        setShowCompletarCadastro(true);
-      }
     }
 
     loadProfile();
