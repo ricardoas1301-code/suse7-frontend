@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient"; 
 import MarketplaceCard from "./MarketplaceCard";
+import CompleteProfileModal from "./CompleteProfileModal";
 // CORREÇÃO AQUI: Mudamos de "../components/" para "./" 
 import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
