@@ -6,9 +6,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient"; 
 import MarketplaceCard from "./MarketplaceCard";
 // CORREÇÃO AQUI: Mudamos de "../components/" para "./" 
-import CompleteProfileModal from "./CompleteProfileModal"; 
 import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
+
+<CompleteProfileModal
+  show={showCompletarCadastro}
+  onClose={() => setShowCompletarCadastro(false)}
+  profileId={userId}
+/>
 
 export default function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
