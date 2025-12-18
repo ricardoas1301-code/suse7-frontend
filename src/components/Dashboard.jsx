@@ -10,11 +10,12 @@ import CompleteProfileModal from "./CompleteProfileModal";
 import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
 
-<CompleteProfileModal
-  show={showCompletarCadastro}
-  onClose={() => setShowCompletarCadastro(false)}
-  profileId={userId}
-/>
+{perfilIncompleto && userId && (
+  <CompleteProfileModal
+    userId={userId}
+    onSuccess={() => setPerfilIncompleto(false)}
+  />
+)}
 
 export default function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
