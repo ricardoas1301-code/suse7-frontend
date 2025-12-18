@@ -6,7 +6,6 @@ import ProfileOnboardingModal from './ProfileOnboardingModal';
 import ThemeToggle from "./ThemeToggle";
 
 const Layout = () => {
-  const [showCompletarCadastro, setShowCompletarCadastro] = useState(false);
   const [profile, setProfile] = useState(null);
   const [userEmail, setUserEmail] = useState('...');
   const location = useLocation();
@@ -95,14 +94,7 @@ const Layout = () => {
   return (
     <div className="app-container">
 
-      {/* Modal de completar cadastro */}
-      {showCompletarCadastro && (
-        <ProfileOnboardingModal
-          profile={profile}
-          onClose={() => setShowCompletarCadastro(false)}
-        />
-      )}
-
+      
       {/* -------------------- Navbar -------------------- */}
       <nav className="navbar-premium">
 
