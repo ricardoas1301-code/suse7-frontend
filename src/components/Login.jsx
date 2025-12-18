@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 import GoogleIcon from "../assets/google.png";
 import SuseLogo from "../assets/suse7-logo-redonda.png";
-import ContactModal from "./ContactModal";
+import CompleteProfileModal from "../components/CompleteProfileModal";
 
 export default function Login() {
 
