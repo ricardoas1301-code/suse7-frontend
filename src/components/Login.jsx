@@ -1,93 +1,61 @@
 // ======================================================================
-//  DASHBOARD — SUSE7 (FIX DEFINITIVO)
+// Login.jsx — SUSE7
 // ======================================================================
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "../supabaseClient";
-import MarketplaceCard from "./MarketplaceCard";
-import CompleteProfileModal from "./CompleteProfileModal";
-import "../styles/Dashboard.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
-export default function Dashboard() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [perfilIncompleto, setPerfilIncompleto] = useState(false);
-  const [userId, setUserId] = useState(null);
-
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
+  const handleLogin = async () => {
+    setError("");
 
-        if (!user) {
-          setLoading(false);
-          return;
-        }
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: senha,
+    });
 
-        setUserId(user.id);
+    if (error) {
+      setError("E-mail ou senha inválidos");
+      return;
+    }
 
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("primeiro_login")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profileError) throw profileError;
-
-        if (profile?.primeiro_login) {
-          setPerfilIncompleto(true);
-        }
-
-        const apiUrl = `${import.meta.env.VITE_API_URL}/api/ml/status?user_id=${user.id}`;
-        const res = await fetch(apiUrl);
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.connected) setIsConnected(true);
-        }
-
-      } catch (err) {
-        console.error("Erro no Dashboard:", err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboardData();
-  }, []);
-
-  const handleConnectML = () => navigate("/ml/connect");
+    navigate("/");
+  };
 
   return (
-    <div className="dashboard-wrapper">
+    <div style={{ padding: 40 }}>
+      <h2>Login</h2>
 
-      {/* MODAL — perfil incompleto */}
-      {perfilIncompleto && userId && (
-        <CompleteProfileModal
-          userId={userId}
-          onSuccess={() => setPerfilIncompleto(false)}
-        />
-      )}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <div className="dash-grid-1">
-        <MarketplaceCard
-          name="Mercado Livre"
-          count={0}
-          buttonText={
-            loading
-              ? "Carregando..."
-              : isConnected
-              ? "Conectado ✔"
-              : "Conectar"
-          }
-          color="#ffe600"
-          icon="🛒"
-          onClick={!loading && !isConnected ? handleConnectML : null}
-        />
-      </div>
+      <input
+        placeholder="E-mail"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      <br /><br />
+
+      <input
+        type="password"
+        placeholder="Senha"
+        value={senha}
+        onChange={(e) => setSenha(e.target.value)}
+      />
+
+      <br /><br />
+
+      <button onClick={handleLogin}>Entrar</button>
+
+      <p>
+        <Link to="/signup">Criar conta</Link>
+      </p>
     </div>
   );
 }
