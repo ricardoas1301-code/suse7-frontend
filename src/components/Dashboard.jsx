@@ -93,28 +93,13 @@ setProfileLoaded(true);
   return (
     <div className="dashboard-wrapper">
       {/* O modal só abre se o perfil estiver incompleto */}
-{perfilIncompleto && userId && (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "rgba(255,0,0,0.3)",
-      zIndex: 9999,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "32px",
-      color: "#000",
-      fontWeight: "bold"
-    }}
-  >
-    MODAL DE PRIMEIRO LOGIN
-  </div>
+{userId && (
+  <CompleteProfileModal
+    show={perfilIncompleto}
+    profileId={userId}
+    onClose={() => setPerfilIncompleto(false)}
+  />
 )}
-
 
       <div className="dash-grid-1">
         <MarketplaceCard

@@ -4,6 +4,8 @@
 // ======================================================
 
 import { supabase } from "../supabaseClient";
+import { createPortal } from "react-dom";
+
 
 export default function CompleteProfileModal({
   show,
@@ -30,17 +32,19 @@ export default function CompleteProfileModal({
     onClose();
   }
 
-  return (
-    <div className="popup-overlay">
-      <div className="popup-box">
-        <h2>Complete seu cadastro</h2>
+return createPortal(
+  <div className="popup-overlay">
+    <div className="popup-box">
+      <h2>Complete seu cadastro</h2>
 
-        <input type="text" placeholder="Nome" id="nome" />
-        <input type="text" placeholder="WhatsApp" id="whatsapp" />
-        <input type="text" placeholder="Nome da loja" id="loja" />
+      <input type="text" placeholder="Nome" id="nome" />
+      <input type="text" placeholder="WhatsApp" id="whatsapp" />
+      <input type="text" placeholder="Nome da loja" id="loja" />
 
-        <button onClick={handleSalvar}>Salvar</button>
-      </div>
+      <button onClick={handleSalvar}>Salvar</button>
     </div>
-  );
+  </div>,
+  document.body
+);
+
 }
