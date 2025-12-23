@@ -84,26 +84,33 @@ if (profile.primeiro_login === true) {
 
   const handleConnectML = () => navigate("/ml/connect");
 
+// ==========================================================
+// Renderização condicional — perfil incompleto
+// ==========================================================
+if (perfilIncompleto && userId) {
   return (
-    <div className="dashboard-wrapper">
-      {/* O modal só abre se o perfil estiver incompleto */}
-      {perfilIncompleto && userId && (
-        <CompleteProfileModal 
-          userId={userId} 
-          onSuccess={() => setPerfilIncompleto(false)} 
-        />
-      )}
-
-      <div className="dash-grid-1">
-        <MarketplaceCard
-          name="Mercado Livre"
-          count={0}
-          buttonText={loading ? "Carregando..." : isConnected ? "Conectado ✔" : "Conectar"}
-          color="#ffe600"
-          icon="🛒"
-          onClick={(!loading && !isConnected) ? handleConnectML : null}
-        />
-      </div>
-    </div>
+    <CompleteProfileModal
+      userId={userId}
+      onSuccess={() => setPerfilIncompleto(false)}
+    />
   );
+}
+
+// ==========================================================
+// Dashboard normal
+// ==========================================================
+return (
+  <div className="dashboard-wrapper">
+    <div className="dash-grid-1">
+      <MarketplaceCard
+        name="Mercado Livre"
+        count={0}
+        buttonText={loading ? "Carregando..." : isConnected ? "Conectado ✔" : "Conectar"}
+        color="#ffe600"
+        icon="🛒"
+        onClick={(!loading && !isConnected) ? handleConnectML : null}
+      />
+    </div>
+  </div>
+);
 }
