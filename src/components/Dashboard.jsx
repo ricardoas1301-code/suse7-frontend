@@ -11,17 +11,15 @@ import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
 
 
+// ... seus imports ...
+
 export default function Dashboard() {
-  const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [perfilIncompleto, setPerfilIncompleto] = useState(false);
-  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false); // Usaremos este como principal
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
-  
 
-useEffect(() => {
+  useEffect(() => {
     const loadDashboardData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
