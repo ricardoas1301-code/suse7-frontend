@@ -66,9 +66,7 @@ if (!profile) {
 
 // Se for primeiro login → abre modal (garantido)
 if (profile?.primeiro_login === true) {
-  setTimeout(() => {
-    setShowCompleteProfile(true);
-  }, 100);
+  setPerfilIncompleto(true);
 }
 
 setProfileLoaded(true);
@@ -97,11 +95,11 @@ setProfileLoaded(true);
   return (
     <div className="dashboard-wrapper">
       {/* O modal só abre se o perfil estiver incompleto */}
-{userId && (
+{profileLoaded && perfilIncompleto && (
   <CompleteProfileModal
-    show={showCompleteProfile}
+    show={true}
     profileId={userId}
-    onClose={() => setShowCompleteProfile(false)}
+    onClose={() => setPerfilIncompleto(false)}
   />
 )}
 
