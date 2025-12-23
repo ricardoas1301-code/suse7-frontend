@@ -31,17 +31,39 @@ export default function Dashboard() {
 
         setUserId(user.id);
 
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("primeiro_login")
-          .eq("id", user.id)
-          .maybeSingle();
+// --------------------------------------------------------
+// Garantir que o profile existe (especialmente login social)
+// --------------------------------------------------------
+let { data: profile } = await supabase
+  .from("profiles")
+  .select("id, primeiro_login")
+  .eq("id", user.id)
+  .maybeSingle();
 
-        if (profileError) throw profileError;
+// Se não existir profile, criar (caso login social)
+if (!profile) {
+  const { data: newProfile, error } = await supabase
+    .from("profiles")
+    .insert({
+      id: user.id,
+      email: user.email,
+      primeiro_login: true,
+      created_at: new Date(),
+      last_login: new Date(),
+    })
+    .select()
+    .single();
 
-        if (profile?.primeiro_login) {
-          setPerfilIncompleto(true);
-        }
+  if (error) throw error;
+
+  profile = newProfile;
+}
+
+// Se for primeiro login → abre modal
+if (profile.primeiro_login === true) {
+  setPerfilIncompleto(true);
+}
+
 
         const apiUrl = `${import.meta.env.VITE_API_URL}/api/ml/status?user_id=${user.id}`;
         const res = await fetch(apiUrl);
