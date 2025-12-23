@@ -4,19 +4,24 @@
 // ======================================================================
 
 import { useState } from "react";
+import ContactModal from "./ContactModal";
 import { supabase } from "../supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 
+
 // Assets (src/assets)
 import suse7Logo from "../assets/suse7-logo-redonda.png";
 import googleLogo from "../assets/google.png";
+
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [showContactModal, setShowContactModal] = useState(false);
+
 
   // --------------------------------------------------------
   // Login com e-mail e senha
@@ -133,7 +138,18 @@ export default function Login() {
 
       {/* -------------------- Footer -------------------- */}
       <div className="login-footer">
-        <span className="footer-contact">Fale conosco</span> |{" "}
+        <span
+  className="footer-contact"
+  style={{ cursor: "pointer" }}
+  onClick={() => setShowContactModal(true)}
+>
+  Fale conosco
+</span>
+
+{showContactModal && (
+  <ContactModal onClose={() => setShowContactModal(false)} />
+)}
+
         <Link to="/termos">Termos de uso</Link> |{" "}
         <Link to="/privacidade">Segurança e privacidade</Link>
         <span className="login-copy">
