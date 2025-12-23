@@ -954,24 +954,3 @@ h1, h2, h3 {
 }
 
 
-/* No seu Dashboard.css ou App.css */
-.popup-overlay {
-  position: fixed !important; /* Garante que ignore pais com position relative */
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.75); /* Escurece o fundo */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999; /* Valor extremo para ficar à frente de tudo */
-}
-
-.popup-box {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  z-index: 100000;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
