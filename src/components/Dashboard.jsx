@@ -97,7 +97,7 @@ setProfileLoaded(true);
   return (
     <div className="dashboard-wrapper">
       {/* O modal só abre se o perfil estiver incompleto */}
-{profileLoaded && perfilIncompleto && (
+{perfilIncompleto && (
   <CompleteProfileModal
     show={true}
     profileId={userId}
