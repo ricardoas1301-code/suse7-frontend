@@ -15,9 +15,11 @@ export default function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [perfilIncompleto, setPerfilIncompleto] = useState(false);
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     
@@ -62,9 +64,11 @@ if (!profile) {
   profile = newProfile;
 }
 
-// Se for primeiro login → abre modal
+// Se for primeiro login → abre modal (garantido)
 if (profile?.primeiro_login === true) {
-  setPerfilIncompleto(true);
+  setTimeout(() => {
+    setShowCompleteProfile(true);
+  }, 100);
 }
 
 setProfileLoaded(true);
@@ -95,9 +99,9 @@ setProfileLoaded(true);
       {/* O modal só abre se o perfil estiver incompleto */}
 {userId && (
   <CompleteProfileModal
-    show={perfilIncompleto}
+    show={showCompleteProfile}
     profileId={userId}
-    onClose={() => setPerfilIncompleto(false)}
+    onClose={() => setShowCompleteProfile(false)}
   />
 )}
 
