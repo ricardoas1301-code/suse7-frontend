@@ -1,11 +1,16 @@
 // ======================================================================
-// Login.jsx — SUSE7 (VERSÃO ORIGINAL / PREMIUM)
+// Login.jsx — SUSE7 (FINAL / PRODUÇÃO)
+// Estrutura fiel à build original + assets locais
 // ======================================================================
 
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
+
+// Assets (src/assets)
+import suse7Logo from "../assets/suse7-logo-redonda.png";
+import googleLogo from "../assets/google.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -49,20 +54,24 @@ export default function Login() {
   };
 
   return (
-    <div className="login-wrapper">
+    <div className="login-bg">
 
-      <div className="login-card">
+      {/* -------------------- Card -------------------- */}
+      <div className="login-box">
 
         {/* Logo */}
-        <div className="login-logo">
-          <img src="/logo-suse7.svg" alt="Suse7" />
-        </div>
+        <img
+          src={suse7Logo}
+          alt="Suse7"
+          className="login-logo"
+        />
 
-        <h2 className="login-title">Acesse sua conta</h2>
+        <p className="login-subtitle">Acesse sua conta</p>
 
         {error && <p className="login-error">{error}</p>}
 
-        <label>E-mail ou usuário</label>
+        {/* E-mail */}
+        <label className="login-label">E-mail ou usuário</label>
         <input
           className="login-input"
           type="email"
@@ -71,43 +80,66 @@ export default function Login() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <label>Senha</label>
-        <input
-          className="login-input"
-          type="password"
-          placeholder="Digite sua senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-        />
-
-        <div className="login-forgot">
-          <Link to="/forgot-password">Esqueci minha senha</Link>
+        {/* Senha */}
+        <label className="login-label">Senha</label>
+        <div className="password-wrapper">
+          <input
+            className="login-input-password"
+            type="password"
+            placeholder="Digite sua senha"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+          />
+          <button
+            type="button"
+            className="password-toggle-btn"
+            disabled
+            title="Indicador visual"
+          >
+            ✔
+          </button>
         </div>
 
-        <button className="login-btn" onClick={handleLogin}>
+        {/* Esqueci senha */}
+        <Link className="forgot-password" to="/forgot-password">
+          Esqueci minha senha
+        </Link>
+
+        {/* Entrar */}
+        <button className="login-submit" onClick={handleLogin}>
           Entrar
         </button>
 
+        {/* Divider */}
         <div className="login-divider">Ou acesse via</div>
 
+        {/* Google */}
         <button className="login-google-btn" onClick={handleGoogleLogin}>
-          <img src="/google-icon.svg" alt="Google" />
-          Google
+          <img
+            src={googleLogo}
+            alt="Google"
+            className="google-logo"
+          />
+          <span>Google</span>
         </button>
 
-        <div className="login-signup">
+        {/* Signup */}
+        <p className="login-footer-small">
           Ainda não tem cadastro?{" "}
           <Link to="/signup">Inscreva-se agora</Link>
-        </div>
+        </p>
 
       </div>
 
-      <footer className="login-footer">
-        <Link to="/contato">Fale conosco</Link> |{" "}
+      {/* -------------------- Footer -------------------- */}
+      <div className="login-footer">
+        <span className="footer-contact">Fale conosco</span> |{" "}
         <Link to="/termos">Termos de uso</Link> |{" "}
         <Link to="/privacidade">Segurança e privacidade</Link>
-        <p>Suse7 2025 © Todos os direitos reservados</p>
-      </footer>
+        <span className="login-copy">
+          Suse7 2025 © Todos os direitos reservados
+        </span>
+      </div>
 
     </div>
   );
