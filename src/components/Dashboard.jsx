@@ -14,14 +14,14 @@ import { useNavigate } from "react-router-dom";
 export default function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [perfilIncompleto, setPerfilIncompleto] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
   
 
-  useEffect(() => {
-    
+useEffect(() => {
     const loadDashboardData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -33,51 +33,36 @@ export default function Dashboard() {
 
         setUserId(user.id);
 
-        
-// --------------------------------------------------------
-// Garantir que o profile existe (especialmente login social)
-// --------------------------------------------------------
-let { data: profile } = await supabase
-  .from("profiles")
-  .select("id, primeiro_login")
-  .eq("id", user.id)
-  .maybeSingle();
-   
+        // Busca o perfil
+        let { data: profile } = await supabase
+          .from("profiles")
+          .select("id, primeiro_login")
+          .eq("id", user.id)
+          .maybeSingle();
 
-// Se não existir profile, criar (caso login social)
-if (!profile) {
-  const { data: newProfile, error } = await supabase
-    .from("profiles")
-    .insert({
-      id: user.id,
-      email: user.email,
-      primeiro_login: true,
-      created_at: new Date(),
-      last_login: new Date(),
-    })
-    .select()
-    .single();
+        // Se não existir profile (Login Social), cria um novo
+        if (!profile) {
+          const { data: newProfile, error } = await supabase
+            .from("profiles")
+            .insert({
+              id: user.id,
+              email: user.email,
+              primeiro_login: true,
+              created_at: new Date(),
+              last_login: new Date(),
+            })
+            .select()
+            .single();
 
-  if (error) throw error;
+          if (error) throw error;
+          profile = newProfile;
+        }
 
-  profile = newProfile;
-}
-
-// Se for primeiro login → abre modal (garantido)
-if (profile?.primeiro_login === true) {
-  setPerfilIncompleto(true);
-}
-
-setProfileLoaded(true);
-
-
-
-       // const apiUrl = `${import.meta.env.VITE_API_URL}/api/ml/status?user_id=${user.id}`;
-       // const res = await fetch(apiUrl);
-       // if (res.ok) {
-       //   const data = await res.json();
-       //   if (data.connected) setIsConnected(true);
-       // }
+        // LOGICA DE ABERTURA: Se for primeiro login, abre o modal
+        if (profile && profile.primeiro_login === true) {
+          console.log("Usuário novo detectado, abrindo modal...");
+          setShowCompleteProfile(true);
+        }
 
       } catch (err) {
         console.error("Erro no Dashboard:", err.message);
@@ -90,28 +75,33 @@ setProfileLoaded(true);
   }, []);
 
   const handleConnectML = () => navigate("/ml/connect");
-  console.log("perfilIncompleto:", perfilIncompleto);
 
+  // Função para fechar o modal e atualizar o estado local
+  const handleCloseModal = () => {
+    setShowCompleteProfile(false);
+  };
 
   return (
     <div className="dashboard-wrapper">
-      {/* O modal só abre se o perfil estiver incompleto */}
-{profileLoaded && perfilIncompleto && (
-  <CompleteProfileModal
-    show={true}
-    profileId={userId}
-    onClose={() => setPerfilIncompleto(false)}
-  />
-)}
+      {/* Removi o 'profileLoaded' e usei 'showCompleteProfile'. 
+          O Modal só será renderizado se showCompleteProfile for true.
+      */}
+      {showCompleteProfile && (
+        <CompleteProfileModal
+          show={true}
+          profileId={userId}
+          onClose={handleCloseModal}
+        />
+      )}
 
       <div className="dash-grid-1">
         <MarketplaceCard
           name="Mercado Livre"
           count={0}
-          buttonText={loading ? "Carregando..." : isConnected ? "Conectado ✔" : "Conectar"}
+          buttonText={loading ? "Carregando..." : "Conectar"} // Simplificado para o exemplo
           color="#ffe600"
           icon="🛒"
-          onClick={(!loading && !isConnected) ? handleConnectML : null}
+          onClick={handleConnectML}
         />
       </div>
     </div>
