@@ -215,3 +215,7 @@ body.modal-open {
   border: 1px solid #cfd7e3;
   font-size: 14px;
 }
+
+body {
+  position: relative;
+}
