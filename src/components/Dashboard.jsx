@@ -14,7 +14,6 @@ import { useNavigate } from "react-router-dom";
 export default function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [perfilIncompleto, setPerfilIncompleto] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [userId, setUserId] = useState(null);
@@ -73,12 +72,12 @@ setProfileLoaded(true);
 
 
 
-        const apiUrl = `${import.meta.env.VITE_API_URL}/api/ml/status?user_id=${user.id}`;
-        const res = await fetch(apiUrl);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.connected) setIsConnected(true);
-        }
+       // const apiUrl = `${import.meta.env.VITE_API_URL}/api/ml/status?user_id=${user.id}`;
+       // const res = await fetch(apiUrl);
+       // if (res.ok) {
+       //   const data = await res.json();
+       //   if (data.connected) setIsConnected(true);
+       // }
 
       } catch (err) {
         console.error("Erro no Dashboard:", err.message);
@@ -91,6 +90,8 @@ setProfileLoaded(true);
   }, []);
 
   const handleConnectML = () => navigate("/ml/connect");
+  console.log("perfilIncompleto:", perfilIncompleto);
+
 
   return (
     <div className="dashboard-wrapper">
