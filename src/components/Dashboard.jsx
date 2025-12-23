@@ -15,11 +15,12 @@ export default function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [perfilIncompleto, setPerfilIncompleto] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [userId, setUserId] = useState(null);
-
   const navigate = useNavigate();
 
   useEffect(() => {
+    
     const loadDashboardData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -30,6 +31,9 @@ export default function Dashboard() {
         }
 
         setUserId(user.id);
+
+        
+
 
 // --------------------------------------------------------
 // Garantir que o profile existe (especialmente login social)
@@ -60,9 +64,12 @@ if (!profile) {
 }
 
 // Se for primeiro login → abre modal
-if (profile.primeiro_login === true) {
+if (profile?.primeiro_login === true) {
   setPerfilIncompleto(true);
 }
+
+setProfileLoaded(true);
+
 
 
         const apiUrl = `${import.meta.env.VITE_API_URL}/api/ml/status?user_id=${user.id}`;
