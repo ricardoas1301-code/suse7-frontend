@@ -33,8 +33,6 @@ export default function Dashboard() {
         setUserId(user.id);
 
         
-
-
 // --------------------------------------------------------
 // Garantir que o profile existe (especialmente login social)
 // --------------------------------------------------------
@@ -43,6 +41,7 @@ let { data: profile } = await supabase
   .select("id, primeiro_login")
   .eq("id", user.id)
   .maybeSingle();
+   
 
 // Se não existir profile, criar (caso login social)
 if (!profile) {
