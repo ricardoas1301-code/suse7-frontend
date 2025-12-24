@@ -8,11 +8,11 @@ import { supabase } from "../supabaseClient";
 import MarketplaceCard from "./MarketplaceCard";
 import CompleteProfileModal from "./CompleteProfileModal";
 // CORREÇÃO AQUI: Mudamos de "../components/" para "./" 
-import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
 
 
 export default function Dashboard() {
+  const [user, setUser] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [perfilIncompleto, setPerfilIncompleto] = useState(false);
@@ -22,74 +22,100 @@ export default function Dashboard() {
   const navigate = useNavigate();
   
 
-  useEffect(() => {
-    
-    const loadDashboardData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
+// ======================================================================
+//  EFFECT PRINCIPAL DO DASHBOARD
+//  - Busca usuário autenticado
+//  - Garante existência do profile (login social)
+//  - Decide se deve abrir o modal de completar cadastro
+// ======================================================================
+useEffect(() => {
 
-        if (!user) {
-          setLoading(false);
-          return;
-        }
+  // ------------------------------------------------------
+  // Função principal de carregamento do Dashboard
+  // ------------------------------------------------------
+  const loadDashboardData = async () => {
+    try {
 
-        setUserId(user.id);
+      // --------------------------------------------------
+      // 1) Obter usuário autenticado via Supabase Auth
+      // --------------------------------------------------
+      const { data: { user } } = await supabase.auth.getUser();
 
-        
-// --------------------------------------------------------
-// Garantir que o profile existe (especialmente login social)
-// --------------------------------------------------------
-let { data: profile } = await supabase
-  .from("profiles")
-  .select("id, primeiro_login")
-  .eq("id", user.id)
-  .maybeSingle();
-   
-
-// Se não existir profile, criar (caso login social)
-if (!profile) {
-  const { data: newProfile, error } = await supabase
-    .from("profiles")
-    .insert({
-      id: user.id,
-      email: user.email,
-      primeiro_login: true,
-      created_at: new Date(),
-      last_login: new Date(),
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  profile = newProfile;
-}
-
-// Se for primeiro login → abre modal (garantido)
-if (profile?.primeiro_login === true) {
-  setPerfilIncompleto(true);
-}
-
-setProfileLoaded(true);
-
-
-
-       // const apiUrl = `${import.meta.env.VITE_API_URL}/api/ml/status?user_id=${user.id}`;
-       // const res = await fetch(apiUrl);
-       // if (res.ok) {
-       //   const data = await res.json();
-       //   if (data.connected) setIsConnected(true);
-       // }
-
-      } catch (err) {
-        console.error("Erro no Dashboard:", err.message);
-      } finally {
+      // Se não houver usuário autenticado, encerra o fluxo
+      if (!user) {
         setLoading(false);
+        return;
       }
-    };
 
-    loadDashboardData();
-  }, []);
+      // Salva dados básicos do usuário em estado
+      setUserId(user.id);
+
+      // --------------------------------------------------
+      // 2) Buscar profile do usuário na tabela profiles
+      //    (importante para login social)
+      // --------------------------------------------------
+      let { data: profile } = await supabase
+        .from("profiles")
+        .select("id, primeiro_login")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      // --------------------------------------------------
+      // 3) Se profile NÃO existir (caso login social),
+      //    cria automaticamente um profile inicial
+      // --------------------------------------------------
+      if (!profile) {
+
+        const { data: newProfile, error } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            email: user.email,
+            primeiro_login: true,      // Força abertura do modal
+            created_at: new Date(),
+            last_login: new Date(),
+          })
+          .select()
+          .single();
+
+        // Se houver erro ao criar profile, dispara exceção
+        if (error) throw error;
+
+        // Atualiza variável local com o novo profile criado
+        profile = newProfile;
+      }
+
+      // --------------------------------------------------
+      // 4) Regra de negócio:
+      //    Se for primeiro login, abrir modal de cadastro
+      // --------------------------------------------------
+      if (profile.primeiro_login === true) {
+        setPerfilIncompleto(true);
+      }
+
+    } catch (err) {
+
+      // --------------------------------------------------
+      // Tratamento de erro geral do Dashboard
+      // --------------------------------------------------
+      console.error("Erro ao carregar Dashboard:", err.message);
+
+    } finally {
+
+      // --------------------------------------------------
+      // Finaliza estado de loading independentemente do fluxo
+      // --------------------------------------------------
+      setLoading(false);
+    }
+  };
+
+  // ------------------------------------------------------
+  // Executa o carregamento inicial do Dashboard
+  // ------------------------------------------------------
+  loadDashboardData();
+
+}, []);
+
 
   const handleConnectML = () => navigate("/ml/connect");
   console.log("perfilIncompleto:", perfilIncompleto);
