@@ -1,22 +1,145 @@
-.popup-overlay {
+/* ======================================================================
+   COMPLETE PROFILE MODAL — SUSE7
+   Centralizado, premium e responsivo
+   ====================================================================== */
+
+/* BACKDROP */
+.profile-modal-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.45);
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
+
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+
   z-index: 9999;
 }
 
-.popup-box {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  width: 380px;
+/* CONTAINER PRINCIPAL DO MODAL */
+.profile-modal {
+  background: #ffffff;
+  width: 100%;
+  max-width: 760px;
+  padding: 32px 36px;
+  border-radius: 22px;
+
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  border-top: 4px solid #0077ff;
+
+  max-height: 92vh;
+  overflow-y: auto;
+
+  animation: popupFade 0.25s ease-out;
+}
+
+/* CABEÇALHO */
+.profile-modal-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.profile-modal-header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0077ff;
+  margin-bottom: 6px;
+}
+
+.profile-modal-header p {
+  font-size: 14px;
+  color: #555;
+}
+
+/* FORM */
+.profile-modal-form label {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.profile-modal-form input {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cfd7e3;
+  background: #f5f8ff;
+  font-size: 14px;
+}
+
+.profile-modal-form input:focus {
+  border-color: #0077ff;
+  outline: none;
+  background: #eef5ff;
+}
+
+/* GRIDS */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.profile-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 90px;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+/* BOTÃO */
+.btn-primary {
+  width: 100%;
+  margin-top: 26px;
+  padding: 12px;
+  border-radius: 12px;
+
+  background: #0077ff;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #0060d0;
+}
+
+.btn-primary:disabled {
+  background: #aacfff;
+  cursor: not-allowed;
+}
+
+/* ANIMAÇÃO */
+@keyframes popupFade {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+  .profile-modal {
+    max-width: 95%;
+    padding: 24px;
+  }
+
+  .profile-grid,
+  .profile-grid-3 {
+    grid-template-columns: 1fr;
+  }
 }
