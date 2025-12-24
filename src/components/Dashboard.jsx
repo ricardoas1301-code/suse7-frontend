@@ -2,6 +2,7 @@
 //  DASHBOARD — SUSE7 (FIX DEPLOY PATH)
 // ======================================================================
 
+import "./Dashboard.css";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient"; 
 import MarketplaceCard from "./MarketplaceCard";

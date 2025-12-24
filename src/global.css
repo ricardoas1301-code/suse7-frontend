@@ -1,98 +1,3 @@
-/* BACKDROP (FUNDO ESCURECIDO DO MODAL) */
-.profile-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(5px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-
-  /* IMPORTANTE PARA PERMITIR SCROLL DO MODAL */
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-
-/* CONTAINER DO MODAL – VERSÃO COMPACTA IGUAL À IMAGEM 1 */
-.profile-modal {
-  background: #ffffff;
-  width: 100%;
-  max-width: 620px;              /* <<< Reduzi para ficar igual à imagem 1 */
-  padding: 25px 35px 30px 35px;  /* <<< Padding menor para deixar mais compacto */
-  border-radius: 22px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
-  animation: popupFade 0.25s ease-out;
-
-  max-height: 98vh;               /* Altura máxima */
-  overflow-y: auto;               /* Scroll só dentro do modal */
-  overflow-x: hidden;
-
-  border-top: 4px solid #0077ff;  /* Linha superior fina estilo premium */
-  box-sizing: border-box;
-
-  scrollbar-gutter: stable;
-}
-
-
-
-/* CABEÇALHO DO MODAL (LOGO + TÍTULO + TEXTO) */
-.profile-modal-header {
-  text-align: center;
-  margin-bottom: 22px;
-}
-
-.profile-modal-logo {
-  width: 133px;       /* <<< Igual ao modal da imagem 1 */
-  height: 133px;
-  display: block;
-  margin: 0 auto 10px auto;
-  object-fit: contain;
-}
-
-.profile-modal h2 {
-  font-size: 26px;
-  font-weight: 700;
-  color: #0077ff;
-  margin: 4px 0 4px 0;
-}
-
-.profile-modal p {
-  text-align: center;
-  color: #555;
-  margin: 0 0 18px 0;
-  font-size: 15px;
-  }
-
-/* FORMULÁRIO */
-.profile-modal-form label {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1px;
-  font-weight: 600;
-  color: #333;
-  line-height: 1;
-}
-
-.profile-modal-form input {
-  margin-top: 4px;
-  padding: 8px 10px;         /* <<< Menor para ficar igual à imagem 1 */
-  border-radius: 10px;
-  border: 1px solid #cfd7e3;
-  background: #f5f8ff;
-  font-size: 14px;
-}
-
-
-.profile-modal-form input:focus {
-  border-color: #0077ff;
-  outline: none;
-  background: #eef5ff;
-}
-
 /* LINHAS (ex: nº + bairro, cidade + UF) */
 .profile-row {
   display: flex;
@@ -100,29 +5,6 @@
   margin-bottom: 8px;
 }
 
-/* BOTÃO PRINCIPAL */
-.btn-primary {
-  width: 100%;
-  background: #0077ff;
-  padding: 10px;
-  border-radius: 10px;
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-top: 33px;
-}
-
-.btn-primary:hover {
-  background: #0060d0;
-}
-
-.btn-primary:disabled {
-  background: #aacfff;
-  cursor: not-allowed;
-}
 
 /* ANIMAÇÃO */
 @keyframes popupFade {
@@ -134,57 +16,6 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-}
-
-body.modal-open {
-  overflow: hidden !important;
-}
-
-/* Scrollbar fina e totalmente dentro do modal */
-.profile-modal {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #c3c3c3 transparent;
-}
-
-/* Chrome, Edge, Opera */
-.profile-modal::-webkit-scrollbar {
-  width: 10px;            /* largura do scroll */
-}
-
-.profile-modal::-webkit-scrollbar-track {
-  background: transparent; /* fundo invisível */
-}
-
-.profile-modal::-webkit-scrollbar-thumb {
-  background-color: #c3c3c3; /* cor da barrinha */
-  border-radius: 10px;       
-  border: 1px solid #ffffff; /* deixa mais elegante */
-}
-
-/* Hover mais bonito */
-.profile-modal::-webkit-scrollbar-thumb:hover {
-  background-color: #9e9e9e;
-}
-
-.profile-modal-header {
-  text-align: center;
-  margin-top: -5px;
-  margin-bottom: 12px;  /* <<< Mais compacto */
-}
-
-
-.profile-modal-header h2 {
-  font-size: 22px;      /* <<< Menor, igual imagem 1 */
-  font-weight: 700;
-  color: #0077ff;
-  margin-bottom: 4px;
-}
-
-
-.profile-modal-header p {
-  font-size: 14px;     /* <<< Menor */
-  color: #555;
-  margin: 0 0 10px 0;
 }
 
 .profile-grid {
@@ -201,18 +32,4 @@ body.modal-open {
   margin-bottom: 12px;
 }
 
-.profile-modal-form label {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.profile-modal-form input {
-  margin-top: 4px;
-  height: 10px;                 /* Inputs mais baixos */
-  padding: 8px 10px;
-  background: #f5f8ff;
-  border-radius: 10px;
-  border: 1px solid #cfd7e3;
-  font-size: 14px;
-}
 
