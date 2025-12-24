@@ -5,7 +5,7 @@
 
 import { supabase } from "../supabaseClient";
 import { createPortal } from "react-dom";
-
+import "./CompleteProfileModal.css";
 
 export default function CompleteProfileModal({
   show,
