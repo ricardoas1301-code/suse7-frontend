@@ -159,11 +159,11 @@ const validateForm = () => {
   // --------------------------------------------------------------------
   if (!show) return null;
 
-  // --------------------------------------------------------------------
-// Formatação de telefone / WhatsApp
+// --------------------------------------------------------------------
+// Formatação de telefone / WhatsApp (limite 11 números)
 // --------------------------------------------------------------------
 const formatPhone = (value) => {
-  const v = value.replace(/\D/g, "");
+  const v = value.replace(/\D/g, "").slice(0, 11); // 👈 LIMITE AQUI
 
   if (v.length <= 10) {
     return v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
