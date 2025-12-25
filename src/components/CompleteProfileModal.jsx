@@ -85,29 +85,32 @@ if (name === "cep") {
     return value.length === 11 || value.length === 14;
   };
 
-  // --------------------------------------------------------------------
-  // Busca endereço pelo CEP (ViaCEP)
-  // --------------------------------------------------------------------
-  const handleCepBlur = async () => {
-    if (form.cep.length !== 8) return;
+// --------------------------------------------------------------------
+// Busca endereço pelo CEP (ViaCEP)
+// --------------------------------------------------------------------
+const handleCepBlur = async () => {
+  const cepLimpo = form.cep.replace(/\D/g, ""); // 👈 remove o hífen
 
-    try {
-      const res = await fetch(`https://viacep.com.br/ws/${form.cep}/json/`);
-      const data = await res.json();
+  if (cepLimpo.length !== 8) return;
 
-      if (data.erro) return;
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    const data = await res.json();
 
-      setForm((prev) => ({
-        ...prev,
-        endereco: data.logradouro || "",
-        bairro: data.bairro || "",
-        cidade: data.localidade || "",
-        estado: data.uf || "",
-      }));
-    } catch (err) {
-      console.error("Erro ao buscar CEP:", err);
-    }
-  };
+    if (data.erro) return;
+
+    setForm((prev) => ({
+      ...prev,
+      endereco: data.logradouro || "",
+      bairro: data.bairro || "",
+      cidade: data.localidade || "",
+      estado: data.uf || "",
+    }));
+  } catch (err) {
+    console.error("Erro ao buscar CEP:", err);
+  }
+};
+
 
   // --------------------------------------------------------------------
 // Validação dos campos obrigatórios
