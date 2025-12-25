@@ -330,7 +330,7 @@ const formatCpfCnpj = (value) => {
                 onChange={handleChange}
                 onBlur={handleCepBlur}
               />
-
+              {errors.cep && <small className="error-text">{errors.cep}</small>}
             </label>
           </div>
 
@@ -376,7 +376,9 @@ const formatCpfCnpj = (value) => {
               value={form.imposto_percentual}
               onChange={handleChange}
               placeholder="Ex: 5 ou 5,5"
-            />
+            />.
+             {errors.imposto_percentual && (
+             <small className="error-text">{errors.imposto_percentual}</small>
 
             </label>
           </div>
