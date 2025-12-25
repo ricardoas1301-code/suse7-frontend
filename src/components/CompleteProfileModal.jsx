@@ -173,10 +173,10 @@ const formatPhone = (value) => {
 };
 
 // --------------------------------------------------------------------
-// Formatação de CPF / CNPJ
+// Formatação de CPF / CNPJ (limite 14 números)
 // --------------------------------------------------------------------
 const formatCpfCnpj = (value) => {
-  const v = value.replace(/\D/g, "");
+  const v = value.replace(/\D/g, "").slice(0, 14); // 👈 LIMITE AQUI
 
   if (v.length <= 11) {
     return v
