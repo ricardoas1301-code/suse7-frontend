@@ -56,13 +56,16 @@ const handleChange = (e) => {
     return;
   }
 
-  if (name === "cep") {
-    setForm((prev) => ({
-      ...prev,
-      cep: value.replace(/\D/g, ""),
-    }));
-    return;
-  }
+if (name === "cep") {
+  const onlyNumbers = value.replace(/\D/g, "").slice(0, 8); // 👈 LIMITE AQUI
+
+  setForm((prev) => ({
+    ...prev,
+    cep: onlyNumbers.replace(/(\d{5})(\d)/, "$1-$2"), // 👈 MÁSCARA
+  }));
+  return;
+}
+
 
   if (name === "imposto_percentual") {
     setForm((prev) => ({
