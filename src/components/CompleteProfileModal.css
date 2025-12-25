@@ -143,3 +143,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ===================================================== */
+/* Mensagens de erro de validação                        */
+/* ===================================================== */
+.error-text {
+  color: #d32f2f;      /* vermelho elegante */
+  font-weight: 700;    /* negrito */
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}

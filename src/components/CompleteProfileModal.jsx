@@ -193,7 +193,7 @@ const validateForm = () => {
   } else if (!isValidCpfCnpj(form.cpf_cnpj)) {
   newErrors.cpf_cnpj = "CPF ou CNPJ inválido";
   }
-  
+
   if (!form.cep) newErrors.cep = "CEP é obrigatório";
   if (!form.numero) newErrors.numero = "Número é obrigatório";
   if (!form.imposto_percentual) newErrors.imposto_percentual = "Imposto é obrigatório";
@@ -323,7 +323,7 @@ const formatCpfCnpj = (value) => {
             </label>
 
             <label>
-              CEP
+              CEP *
                 <input
                 name="cep"
                 value={form.cep}
@@ -370,7 +370,7 @@ const formatCpfCnpj = (value) => {
             </label>
 
             <label>
-              Imposto (%)
+              Imposto (%) *
               <input
               name="imposto_percentual"
               value={form.imposto_percentual}
