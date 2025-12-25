@@ -280,7 +280,7 @@ const formatCpfCnpj = (value) => {
         {/* ============================================================= */}
         <div className="profile-modal-header">
           <h2>Complete seu cadastro</h2>
-          <p>Informações necessárias</p>
+          <p>* Informações necessárias</p>
         </div>
 
         {/* ============================================================= */}
