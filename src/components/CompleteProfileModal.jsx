@@ -81,9 +81,75 @@ if (name === "cep") {
   // --------------------------------------------------------------------
   // Validação simples de CPF / CNPJ (frontend)
   // --------------------------------------------------------------------
-  const isValidCpfCnpj = (value) => {
-    return value.length === 11 || value.length === 14;
+// --------------------------------------------------------------------
+// Validação real de CPF
+// --------------------------------------------------------------------
+const isValidCPF = (cpf) => {
+  cpf = cpf.replace(/\D/g, "");
+
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1+$/.test(cpf)) return false; // todos iguais
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cpf.charAt(i)) * (10 - i);
+  }
+
+  let check1 = (sum * 10) % 11;
+  if (check1 === 10) check1 = 0;
+  if (check1 !== parseInt(cpf.charAt(9))) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cpf.charAt(i)) * (11 - i);
+  }
+
+  let check2 = (sum * 10) % 11;
+  if (check2 === 10) check2 = 0;
+
+  return check2 === parseInt(cpf.charAt(10));
+};
+
+// --------------------------------------------------------------------
+// Validação real de CNPJ
+// --------------------------------------------------------------------
+const isValidCNPJ = (cnpj) => {
+  cnpj = cnpj.replace(/\D/g, "");
+
+  if (cnpj.length !== 14) return false;
+  if (/^(\d)\1+$/.test(cnpj)) return false;
+
+  const calcCheckDigit = (base, factors) => {
+    let sum = 0;
+    for (let i = 0; i < factors.length; i++) {
+      sum += base[i] * factors[i];
+    }
+    const rest = sum % 11;
+    return rest < 2 ? 0 : 11 - rest;
   };
+
+  const numbers = cnpj.split("").map(Number);
+
+  const digit1 = calcCheckDigit(numbers.slice(0, 12), [5,4,3,2,9,8,7,6,5,4,3,2]);
+  if (digit1 !== numbers[12]) return false;
+
+  const digit2 = calcCheckDigit(numbers.slice(0, 13), [6,5,4,3,2,9,8,7,6,5,4,3,2]);
+  return digit2 === numbers[13];
+};
+
+
+// --------------------------------------------------------------------
+// Validação unificada CPF / CNPJ
+// --------------------------------------------------------------------
+const isValidCpfCnpj = (value) => {
+  const clean = value.replace(/\D/g, "");
+
+  if (clean.length === 11) return isValidCPF(clean);
+  if (clean.length === 14) return isValidCNPJ(clean);
+
+  return false;
+};
+
 
 // --------------------------------------------------------------------
 // Busca endereço pelo CEP (ViaCEP)
@@ -121,7 +187,13 @@ const validateForm = () => {
   if (!form.nome) newErrors.nome = "Nome é obrigatório";
   if (!form.nome_loja) newErrors.nome_loja = "Nome da loja é obrigatório";
   if (!form.whatsapp) newErrors.whatsapp = "WhatsApp é obrigatório";
-  if (!form.cpf_cnpj) newErrors.cpf_cnpj = "CPF ou CNPJ é obrigatório";
+  
+  if (!form.cpf_cnpj) {
+  newErrors.cpf_cnpj = "CPF ou CNPJ é obrigatório";
+  } else if (!isValidCpfCnpj(form.cpf_cnpj)) {
+  newErrors.cpf_cnpj = "CPF ou CNPJ inválido";
+  }
+  
   if (!form.cep) newErrors.cep = "CEP é obrigatório";
   if (!form.numero) newErrors.numero = "Número é obrigatório";
   if (!form.imposto_percentual) newErrors.imposto_percentual = "Imposto é obrigatório";
