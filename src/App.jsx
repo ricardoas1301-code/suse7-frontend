@@ -114,6 +114,10 @@ function App() {
     <Router>
       <Routes>
 
+        {/* 🔥 ROTAS ESPECIAIS — MERCADO LIVRE */}
+        <Route path="/ml/connect" element={<MLConnect />} />
+        <Route path="/ml/callback" element={<MLCallback />} />   
+
         {/* 🔓 ROTAS PÚBLICAS */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -143,15 +147,10 @@ function App() {
           <Route path="perfil" element={<Profile />} />
           <Route path="precificacoes" element={<Precificacoes />} />
           </Route>
-
-
-          {/* 🔥 ROTAS ESPECIAIS — MERCADO LIVRE */}
-          <Route path="/ml/connect" element={<MLConnect />} />
-          <Route path="/ml/callback" element={<MLCallback />} />      
-               
+           
 
         {/* fallback */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
