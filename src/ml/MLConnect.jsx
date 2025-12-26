@@ -1,23 +1,35 @@
 // ======================================================================
 // COMPONENTE: MLConnect
-// Objetivo: Redirecionar o usuário para a autorização oficial do
-// Mercado Livre (OAuth 2.0), usando o client_id e o redirect_uri.
-// ======================================================================
-
-// ======================================================================
-// COMPONENTE: MLConnect
 // Objetivo: Iniciar o OAuth do Mercado Livre via BACKEND
 // ======================================================================
 
 import { useEffect } from "react";
+import { supabase } from "../supabaseClient";
 
 export default function MLConnect() {
   // ------------------------------------------------------------
   // Efeito: executa uma vez ao entrar na rota /ml/connect
-  // Redireciona o usuário para o backend iniciar o OAuth
   // ------------------------------------------------------------
   useEffect(() => {
-    window.location.href = "https://app.suse7.com.br/api/ml/connect";
+    const iniciarOAuthML = async () => {
+      // --------------------------------------------------------
+      // 1. Obter usuário autenticado no Supabase
+      // --------------------------------------------------------
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("❌ Usuário não autenticado. Faça login novamente.");
+        return;
+      }
+
+      // --------------------------------------------------------
+      // 2. Redirecionar para o backend com o user_id
+      // --------------------------------------------------------
+      window.location.href =
+        `https://app.suse7.com.br/api/ml/connect?user_id=${user.id}`;
+    };
+
+    iniciarOAuthML();
   }, []);
 
   // --------------------------------------------------------------
@@ -29,4 +41,3 @@ export default function MLConnect() {
     </h2>
   );
 }
-
