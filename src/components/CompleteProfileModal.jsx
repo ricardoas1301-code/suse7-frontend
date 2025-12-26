@@ -67,13 +67,39 @@ if (name === "cep") {
 }
 
 
-  if (name === "imposto_percentual") {
-    setForm((prev) => ({
-      ...prev,
-      imposto_percentual: value.replace(/[^0-9.,]/g, ""),
-    }));
-    return;
+// --------------------------------------------------------------------
+// Formatação do campo Imposto (%)
+// Aceita de 0 até 99,99
+// Formato BR: xx,xx
+// Exemplos válidos: 5 | 18 | 18,5 | 18,50
+// --------------------------------------------------------------------
+if (name === "imposto_percentual") {
+  let v = value.replace(/[^0-9,]/g, "");
+
+  // Permite apenas uma vírgula
+  if ((v.match(/,/g) || []).length > 1) return;
+
+  // Se tiver vírgula, valida partes
+  if (v.includes(",")) {
+    const [inteiro, decimal] = v.split(",");
+
+    // Máx. 2 dígitos antes da vírgula
+    if (inteiro.length > 2) return;
+
+    // Máx. 2 casas decimais
+    if (decimal.length > 2) return;
+  } else {
+    // Sem vírgula → limita a 2 dígitos
+    if (v.length > 2) return;
   }
+
+  setForm((prev) => ({
+    ...prev,
+    imposto_percentual: v,
+  }));
+  return;
+}
+
 
   setForm((prev) => ({ ...prev, [name]: value }));
 };
@@ -211,13 +237,22 @@ const validateForm = () => {
     try {
       setSaving(true);
 
+        // --------------------------------------------------------
+        // Converte imposto para número (ex: "18,50" → 18.5)
+        // --------------------------------------------------------
+        const impostoNumerico = form.imposto_percentual
+        ? parseFloat(form.imposto_percentual.replace(",", "."))
+        : 0;
+
       const { error } = await supabase
         .from("profiles")
         .update({
           ...form,
+          imposto_percentual: impostoNumerico, // 👈 AQUI
           primeiro_login: false,
           last_login: new Date(),
         })
+
         .eq("id", profileId);
 
       if (error) throw error;
@@ -375,7 +410,7 @@ const formatCpfCnpj = (value) => {
               name="imposto_percentual"
               value={form.imposto_percentual}
               onChange={handleChange}
-              placeholder="Ex: 5 ou 5,5"
+              placeholder="Ex: 6 ou 13,28"
             />
             {errors.imposto_percentual && (
             <small className="error-text">{errors.imposto_percentual}</small>
