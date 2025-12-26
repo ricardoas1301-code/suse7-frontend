@@ -97,7 +97,7 @@ export default function Login() {
         <div className="password-wrapper">
           <input
             className={`login-input-password ${error ? "login-input-error" : ""}`}
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Digite sua senha"
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
