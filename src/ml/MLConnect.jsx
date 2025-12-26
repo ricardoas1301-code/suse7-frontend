@@ -7,46 +7,44 @@ import { useEffect } from "react";
 import { supabase } from "../supabaseClient";
 
 export default function MLConnect() {
-  // ------------------------------------------------------------
-  // Efeito: executa uma vez ao entrar na rota /ml/connect
-  // ------------------------------------------------------------
-useEffect(() => {
-  let mounted = true;
+  useEffect(() => {
+    let mounted = true;
 
-  const iniciarOAuthML = async () => {
-    // --------------------------------------------------------
-    // 1. Buscar usuário autenticado no Supabase
-    // --------------------------------------------------------
-    const { data, error } = await supabase.auth.getUser();
+    const iniciarOAuthML = async () => {
+      // --------------------------------------------------------
+      // 1. Buscar usuário autenticado no Supabase
+      // --------------------------------------------------------
+      const { data, error } = await supabase.auth.getUser();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    // --------------------------------------------------------
-    // 2. Se não houver sessão válida, volta para login
-    // --------------------------------------------------------
-    if (error || !data?.user) {
-      console.warn("Usuário não autenticado para integração ML");
-      window.location.href = "/login";
-      return;
-    }
+      // --------------------------------------------------------
+      // 2. Validação de sessão
+      // --------------------------------------------------------
+      if (error || !data?.user) {
+        console.warn("Usuário não autenticado para integração ML");
+        window.location.href = "/login";
+        return;
+      }
 
-    // --------------------------------------------------------
-    // 3. Redireciona para o backend com o UUID do Supabase
-    // --------------------------------------------------------
-    window.location.href =
-      `https://suse7.com.br/api/ml/connect?user_id=${user.id}`;
-  };
+      const userId = data.user.id;
 
-  iniciarOAuthML();
+      // --------------------------------------------------------
+      // 3. Redirecionar para o backend (OAuth ML)
+      // --------------------------------------------------------
+      window.location.href =
+        `${import.meta.env.VITE_API_URL}/ml/connect?user_id=${userId}`;
+    };
 
-  return () => {
-    mounted = false;
-  };
-}, []);
+    iniciarOAuthML();
 
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // --------------------------------------------------------------
-  // Mensagem simples enquanto redireciona
+  // Tela de transição
   // --------------------------------------------------------------
   return (
     <h2 style={{ padding: 20, textAlign: "center" }}>
