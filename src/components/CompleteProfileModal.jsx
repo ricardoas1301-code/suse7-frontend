@@ -326,14 +326,20 @@ const formatCpfCnpj = (value) => {
           <div className="profile-grid">
             <label>
               Nome *
-              <input name="nome" onChange={handleChange} />
-              {errors.nome && <small>{errors.nome}</small>}
+             <input name="nome" onChange={handleChange} />
+              { errors.nome && (
+             <small className="error-text">{errors.nome}</small>
+            )}
+
             </label>
 
             <label>
               Nome da loja *
               <input name="nome_loja" onChange={handleChange} />
-              {errors.nome_loja && <small>{errors.nome_loja}</small>}
+               {errors.nome_loja && (
+              <small className="error-text">{errors.nome_loja}</small>
+            )}
+
             </label>
           </div>
 
@@ -341,7 +347,10 @@ const formatCpfCnpj = (value) => {
             <label>
               WhatsApp *
               <input name="whatsapp" value={form.whatsapp} onChange={handleChange} />
-              {errors.whatsapp && <small>{errors.whatsapp}</small>}
+                {errors.whatsapp && (
+              <small className="error-text">{errors.whatsapp}</small>
+            )}
+
             </label>
 
             <label>
