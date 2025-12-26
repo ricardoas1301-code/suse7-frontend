@@ -356,7 +356,10 @@ const formatCpfCnpj = (value) => {
             <label>
               CPF / CNPJ *
               <input name="cpf_cnpj" value={form.cpf_cnpj} onChange={handleChange} />
-              {errors.cpf_cnpj && <small>{errors.cpf_cnpj}</small>}
+                 {errors.cpf_cnpj && (
+              <small className="error-text">{errors.cpf_cnpj}</small>
+            )}
+
             </label>
           </div>
 
