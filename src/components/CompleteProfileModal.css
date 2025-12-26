@@ -1,6 +1,6 @@
 /* ======================================================================
    COMPLETE PROFILE MODAL — SUSE7
-   Centralizado, premium e responsivo
+   Centralizado, premium e responsivo (compacto para caber sem scroll)
    ====================================================================== */
 
 /* BACKDROP */
@@ -24,13 +24,22 @@
   background: #ffffff;
   width: 100%;
   max-width: 760px;
-  padding: 32px 36px;
-  border-radius: 22px;
 
+  /* ------------------------------------------------------ */
+  /* Ajuste fino: reduz padding para caber sem rolagem       */
+  /* ------------------------------------------------------ */
+  padding: 18px 22px;
+
+  border-radius: 22px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   border-top: 4px solid #0077ff;
 
-  max-height: 92vh;
+  /* ------------------------------------------------------ */
+  /* Ajuste fino: permite mais altura útil (evita scroll)    */
+  /* ------------------------------------------------------ */
+  max-height: 96vh;
+
+  /* Mantém seguro (se em telas muito baixas precisar) */
   overflow-y: auto;
 
   animation: popupFade 0.25s ease-out;
@@ -39,26 +48,48 @@
 /* CABEÇALHO */
 .profile-modal-header {
   text-align: center;
-  margin-bottom: 15px;
+
+  /* Ajuste fino: menos espaço */
+  margin-bottom: 10px;
 }
 
 .profile-modal-header h2 {
-  font-size: 24px;
+  /* Ajuste fino: título um pouco menor */
+  font-size: 20px;
   font-weight: 700;
   color: #0077ff;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .profile-modal-header p {
   font-size: 12px;
   color: #555;
+  margin: 0;
+}
+
+/* ===================================================== */
+/* Logo do modal de cadastro                             */
+/* ===================================================== */
+.profile-modal-logo {
+  display: block;
+
+  /* Ajuste fino: menos espaço abaixo da logo */
+  margin: 0 auto 8px auto;
+
+  /* Ajuste fino: logo menor para caber sem scroll */
+  max-width: 88px;
+
+  height: auto;
 }
 
 /* FORM */
 .profile-modal-form label {
   display: flex;
   flex-direction: column;
-  margin-bottom: 8px;
+
+  /* Ajuste fino: menos espaço por campo */
+  margin-bottom: 6px;
+
   font-weight: 600;
   font-size: 13px;
   color: #333;
@@ -66,11 +97,17 @@
 
 .profile-modal-form input {
   margin-top: 4px;
-  padding: 8px 10px;
+
+  /* Ajuste fino: input mais compacto */
+  padding: 7px 10px;
+
   border-radius: 10px;
   border: 1px solid #cfd7e3;
   background: #f5f8ff;
   font-size: 14px;
+
+  /* Ajuste fino: altura menor e consistente */
+  height: 36px;
 }
 
 .profile-modal-form input:focus {
@@ -83,29 +120,43 @@
 .profile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 13px;
-  margin-bottom: 14px;
+
+  /* Ajuste fino: gap menor */
+  gap: 10px;
+
+  /* Ajuste fino: menos margem entre blocos */
+  margin-bottom: 10px;
 }
 
 .profile-grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 90px;
-  gap: 13px;
-  margin-bottom: 14px;
+
+  /* Ajuste fino: gap menor */
+  gap: 10px;
+
+  /* Ajuste fino: menos margem entre blocos */
+  margin-bottom: 10px;
 }
 
 /* BOTÃO */
 .btn-primary {
   width: 100%;
-  margin-top: 24px;
-  padding: 10px;
-  border-radius: 12px;
 
+  /* Ajuste fino: menos espaço acima do botão */
+  margin-top: 12px;
+
+  /* Ajuste fino: botão mais compacto */
+  padding: 10px;
+
+  border-radius: 12px;
   background: #0077ff;
   color: #fff;
-  font-size: 16px;
-  font-weight: 600;
 
+  /* Ajuste fino: um pouco menor */
+  font-size: 15px;
+
+  font-weight: 600;
   border: none;
   cursor: pointer;
   transition: background 0.2s;
@@ -136,12 +187,19 @@
 @media (max-width: 768px) {
   .profile-modal {
     max-width: 95%;
-    padding: 24px;
+
+    /* Mantém compacto no mobile */
+    padding: 16px 16px;
+    max-height: 96vh;
   }
 
   .profile-grid,
   .profile-grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .profile-modal-logo {
+    max-width: 80px;
   }
 }
 
@@ -149,20 +207,9 @@
 /* Mensagens de erro de validação                        */
 /* ===================================================== */
 .error-text {
-  color: #d32f2f;      /* vermelho elegante */
-  font-weight: 700;    /* negrito */
+  color: #d32f2f;
+  font-weight: 700;
   font-size: 12px;
   margin-top: 4px;
   display: block;
 }
-
-/* ===================================================== */
-/* Logo do modal de cadastro                             */
-/* ===================================================== */
-.profile-modal-logo {
-  display: block;
-  margin: 0 auto 14px auto; /* centralizada */
-  max-width: 120px;        /* ideal para logo redonda */
-  height: auto;
-}
-
