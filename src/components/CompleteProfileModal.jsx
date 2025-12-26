@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import "./CompleteProfileModal.css";
+import suse7Logo from "../assets/suse7-logo-redonda.png";
 
 export default function CompleteProfileModal({ show, profileId, onClose }) {
 
@@ -311,9 +312,19 @@ const formatCpfCnpj = (value) => {
       <div className="profile-modal">
 
         {/* ============================================================= */}
-        {/* CABEÇALHO                                                     */}
+        {/* CABEÇALHO COM LOGO                                            */}
         {/* ============================================================= */}
         <div className="profile-modal-header">
+
+        {/* ============================================================= */}
+        {/* LOGO SUSE7                                                    */}
+        {/* ============================================================= */}
+          <img
+            src={suse7Logo}
+            alt="Suse7"
+            className="profile-modal-logo"
+          />
+
           <h2>Complete seu cadastro</h2>
           <p>* Informações necessárias</p>
         </div>

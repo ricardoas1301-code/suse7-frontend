@@ -154,3 +154,14 @@
   margin-top: 4px;
   display: block;
 }
+
+/* ===================================================== */
+/* Logo do modal de cadastro                             */
+/* ===================================================== */
+.profile-modal-logo {
+  display: block;
+  margin: 0 auto 14px auto; /* centralizada */
+  max-width: 120px;        /* ideal para logo redonda */
+  height: auto;
+}
+
