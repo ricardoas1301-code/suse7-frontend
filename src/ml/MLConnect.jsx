@@ -12,22 +12,16 @@
 import { useEffect } from "react";
 
 export default function MLConnect() {
+  // ------------------------------------------------------------
+  // Efeito: executa uma vez ao entrar na rota /ml/connect
+  // Redireciona o usuário para o backend iniciar o OAuth
+  // ------------------------------------------------------------
   useEffect(() => {
-  // ------------------------------------------------------------
-  // Redireciona para o backend iniciar o OAuth do Mercado Livre
-  // ------------------------------------------------------------
-        window.location.href = "https://app.suse7.com.br/api/ml/connect";
-      }, []);
-
-      return (
-        <h2 style={{ padding: 20, textAlign: "center" }}>
-        Redirecionando para o Mercado Livre...
-        </h2>
-      );
-    }
+    window.location.href = "https://app.suse7.com.br/api/ml/connect";
+  }, []);
 
   // --------------------------------------------------------------
-  // MENSAGEM SIMPLES NA TELA (caso o usuário veja rapidamente)
+  // Mensagem simples enquanto redireciona
   // --------------------------------------------------------------
   return (
     <h2 style={{ padding: 20, textAlign: "center" }}>
@@ -35,3 +29,4 @@ export default function MLConnect() {
     </h2>
   );
 }
+
