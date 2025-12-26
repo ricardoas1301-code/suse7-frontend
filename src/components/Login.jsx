@@ -21,6 +21,8 @@ export default function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
 
 
   // --------------------------------------------------------
@@ -73,12 +75,17 @@ export default function Login() {
 
         <p className="login-subtitle">Acesse sua conta</p>
 
-        {error && <p className="login-error">{error}</p>}
+        {error && (
+            <div className="login-error-msg">
+            {error}
+          </div>
+        )}
+
 
         {/* E-mail */}
         <label className="login-label">E-mail ou usuário</label>
         <input
-          className="login-input"
+          className={`login-input ${error ? "login-input-error" : ""}`}
           type="email"
           placeholder="Digite seu e-mail"
           value={email}
@@ -89,7 +96,7 @@ export default function Login() {
         <label className="login-label">Senha</label>
         <div className="password-wrapper">
           <input
-            className="login-input-password"
+            className={`login-input-password ${error ? "login-input-error" : ""}`}
             type="password"
             placeholder="Digite sua senha"
             value={senha}
@@ -98,10 +105,9 @@ export default function Login() {
           <button
             type="button"
             className="password-toggle-btn"
-            disabled
-            title="Indicador visual"
-          >
-            ✔
+            onClick={() => setShowPassword(!showPassword)}
+            >
+            {showPassword ? "X" : "✔"}
           </button>
         </div>
 
