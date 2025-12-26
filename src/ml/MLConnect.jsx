@@ -34,7 +34,7 @@ useEffect(() => {
     // 3. Redireciona para o backend com o UUID do Supabase
     // --------------------------------------------------------
     window.location.href =
-      `https://app.suse7.com.br/api/ml/connect?user_id=${data.user.id}`;
+      `https://suse7.com.br/api/ml/connect?user_id=${user.id}`;
   };
 
   iniciarOAuthML();
