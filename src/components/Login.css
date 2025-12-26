@@ -287,41 +287,45 @@ body, html {
 
 /* Botão de mostrar/esconder senha (o ícone) */
 .password-toggle-btn {
-    position: absolute;
-    right: 50px; /* Posição à direita */
-    top: 50%; /* Ponto de referência no centro vertical */
-    
-    /* 🔥 CENTRALIZAÇÃO PERFEITA: Sobe 50% da própria altura */
-    transform: translateY(-50%); 
-    
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #4a4a4a; /* Cor para o ícone */
-    font-size: 18px; /* Tamanho do ícone */
-    padding: 0;
-    line-height: 1; 
-    outline: none;
-    z-index: 10;
+  position: absolute;
+
+  /* 🔥 posição correta dentro do input */
+  right: 14px;
+
+  top: 50%;
+  transform: translateY(-50%);
+
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4a4a4a;
+  font-size: 18px;
+  padding: 0;
+  line-height: 1;
+  outline: none;
+  z-index: 10;
 }
 
+
 .login-error-msg {
-  background: #ffe6e6;
+  background: #fff5f5;
   color: #b10000;
   padding: 12px 18px;
   border-radius: 12px;
-  border: 5px solid #ffbcbc;
+
+  /* 🔥 Borda vermelha padrão SaaS */
+  border: 1.5px solid #d32f2f;
 
   font-size: 13px;
   font-weight: 500;
   text-align: center;
 
-  /* 🔥 AQUI ESTÁ O SEGREDO */
-  width: calc(100% - 40px);  /* reduz um pouco a largura */
-  margin: 0 auto 20px auto;  /* centraliza perfeitamente */
+  width: calc(100% - 40px);
+  margin: 0 auto 20px auto;
 
   animation: fadeIn 0.25s ease-in-out;
 }
+
 
 .forgot-password {
   margin-top: 12px;
