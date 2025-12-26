@@ -4,37 +4,27 @@
 // Mercado Livre (OAuth 2.0), usando o client_id e o redirect_uri.
 // ======================================================================
 
+// ======================================================================
+// COMPONENTE: MLConnect
+// Objetivo: Iniciar o OAuth do Mercado Livre via BACKEND
+// ======================================================================
+
 import { useEffect } from "react";
 
 export default function MLConnect() {
-  // ------------------------------------------------------------
-  // EFEITO: roda uma vez ao abrir a rota /ml/connect
-  // ------------------------------------------------------------
   useEffect(() => {
-    // ------------------------------------------------------------
-    // 1. CONFIGURAÇÕES DO APLICATIVO ML
-    //  - CLIENT_ID: ID do app no Mercado Livre
-    //  - REDIRECT_URI: rota do frontend que receberá o "code"
-    //    (precisa ser a mesma cadastrada no painel do ML)
-    // ------------------------------------------------------------
-      
-      const CLIENT_ID = import.meta.env.VITE_ML_CLIENT_ID;
-      const REDIRECT_URI = import.meta.env.VITE_ML_REDIRECT_URI;
+  // ------------------------------------------------------------
+  // Redireciona para o backend iniciar o OAuth do Mercado Livre
+  // ------------------------------------------------------------
+        window.location.href = "https://app.suse7.com.br/api/ml/connect";
+      }, []);
 
-    // ------------------------------------------------------------
-    // 2. MONTAR A URL OFICIAL DE AUTORIZAÇÃO DO MERCADO LIVRE
-    // ------------------------------------------------------------
-    const authURL =
-      "https://auth.mercadolivre.com.br/authorization" +
-      `?response_type=code` +
-      `&client_id=${CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
-
-    // ------------------------------------------------------------
-    // 3. REDIRECIONAR AUTOMATICAMENTE PARA O ML
-    // ------------------------------------------------------------
-    window.location.href = authURL;
-  }, []);
+      return (
+        <h2 style={{ padding: 20, textAlign: "center" }}>
+        Redirecionando para o Mercado Livre...
+        </h2>
+      );
+    }
 
   // --------------------------------------------------------------
   // MENSAGEM SIMPLES NA TELA (caso o usuário veja rapidamente)
