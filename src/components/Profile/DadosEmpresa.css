@@ -108,3 +108,23 @@
     padding: 20px;
   }
 }
+
+/* Espaçamento entre seções */
+.profile-section-title {
+  margin-top: 40px;
+}
+
+/* Primeira seção não precisa tanto espaço */
+.profile-section-title:first-of-type {
+  margin-top: 24px;
+}
+
+/* Inputs com mais respiro vertical */
+.form-grid {
+  row-gap: 20px;
+}
+
+/* Último bloco antes do botão */
+.form-grid:last-of-type {
+  margin-bottom: 32px;
+}
