@@ -12,7 +12,7 @@ export default function MLConnect() {
 
     const iniciarOAuthML = async () => {
       // --------------------------------------------------------
-      // 1. Buscar usuário autenticado no Supabase
+      // 1. Buscar usuário autenticado no Supabase ok
       // --------------------------------------------------------
       const { data, error } = await supabase.auth.getUser();
 
