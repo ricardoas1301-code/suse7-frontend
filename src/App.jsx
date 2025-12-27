@@ -152,7 +152,7 @@ function MLConnectedRedirect() {
 
 
 // =========================================================
-// ROTAS DO APP — VERSÃO CORRETA
+// ROTAS DO APP — VERSÃO CORRETA ok ok
 // =========================================================
 function App() {
   return (
