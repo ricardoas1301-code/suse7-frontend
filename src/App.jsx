@@ -126,6 +126,20 @@ function MLRedirectHandler({ children }) {
 }
 
 // =========================================================
+// REDIRECT FINAL DO MERCADO LIVRE (ROTA PÚBLICA)
+// =========================================================
+function MLConnectedRedirect() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate("/", { replace: true });
+  }, [navigate]);
+
+  return <div>Finalizando conexão...</div>;
+}
+
+
+// =========================================================
 // ROTAS DO APP — VERSÃO CORRETA
 // =========================================================
 function App() {
@@ -145,6 +159,8 @@ function App() {
       <Route path="/privacidade" element={<Privacidade />} />
       <Route path="/forgot-password" element={<PasswordForgot />} />
       <Route path="/reset-password" element={<PasswordReset />} />
+      <Route path="/ml/connected" element={<MLConnectedRedirect />} />
+
 
       {/* 🔐 ROTAS PROTEGIDAS */}
       <Route
