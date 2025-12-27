@@ -10,7 +10,15 @@ export default function SidebarProfile() {
     <aside className="sidebar-profile">
       <h3 className="sidebar-title">Minha Conta</h3>
 
-      <NavLink to="/perfil/dados-empresa">Dados da Empresa</NavLink>
+      <NavLink
+          to="/perfil/dados-empresa"
+          className={({ isActive }) =>
+          isActive ? "sidebar-link active" : "sidebar-link"
+        }
+        >
+        Dados da Empresa
+      </NavLink>
+
       <NavLink to="/perfil/alterar-senha">Alterar Senha</NavLink>
 
       <h3 className="sidebar-title">Integrações</h3>
@@ -33,3 +41,5 @@ export default function SidebarProfile() {
     </aside>
   );
 }
+
+<aside className="sidebar-profile" aria-label="Menu do perfil"></aside>
