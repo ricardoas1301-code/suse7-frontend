@@ -1,10 +1,11 @@
 .profile-layout {
   display: flex;
-  min-height: calc(100vh - 64px); /* altura sem navbar */
+  min-height: calc(100vh - 64px);
+  margin-top: 0;          /* 🔥 garante que não empurre pra baixo */
 }
 
 .profile-content {
   flex: 1;
-  padding: 24px;
+  padding: 16px 24px;     /* 🔥 menos espaço no topo */
   background: #f6f8fb;
 }
