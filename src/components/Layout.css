@@ -48,3 +48,21 @@
 .s7-profile-area:hover .s7-profile-tooltip {
   opacity: 1;
 }
+
+
+/* ======================================================================
+   CONTEÚDO PRINCIPAL — PADRÃO GLOBAL
+====================================================================== */
+
+.page-container {
+  display: flex;
+  flex: 1;
+}
+
+.page-content {
+  width: 100%;
+  padding-top: 8px;     /* 🔥 reduz ~70% do espaço */
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 24px;
+}

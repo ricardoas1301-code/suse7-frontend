@@ -1,11 +1,11 @@
 .profile-layout {
   display: flex;
   min-height: calc(100vh - 64px);
-  margin-top: 0;          /* 🔥 garante que não empurre pra baixo */
+  margin-top: 0;
 }
 
 .profile-content {
   flex: 1;
-  padding: 8px 16px;     /* 🔥 menos espaço no topo */
+  padding: 8px 24px;     /* 🔥 era 24px → agora reduzimos ~70% */
   background: #f6f8fb;
 }
