@@ -1,44 +1,42 @@
 /* ======================================================================
    SIDEBAR PERFIL — SUSE7
-====================================================================== */
+   ====================================================================== */
 
 .sidebar-profile {
   width: 260px;
   background: #ffffff;
-  border-right: 1px solid #e5e7eb;
-  padding: 24px 16px;
-}
-
-.sidebar-group {
-  margin-bottom: 28px;
+  border-radius: 12px;
+  padding: 20px;
 }
 
 .sidebar-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #6b7280;
+  margin: 18px 0 8px;
   text-transform: uppercase;
-  margin-bottom: 10px;
-  padding-left: 8px;
 }
 
-.sidebar-link {
+/* Links padrão */
+.sidebar-profile a {
   display: block;
-  padding: 10px 12px;
+  padding: 10px 14px;
   margin-bottom: 6px;
   border-radius: 8px;
+  text-decoration: none;
   font-size: 14px;
   color: #111827;
-  text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.sidebar-link:hover {
-  background: #f3f4f6;
+/* Hover */
+.sidebar-profile a:hover {
+  background: #eef2ff;
 }
 
-.sidebar-link.active {
+/* 🔥 LINK ATIVO (PADRÃO DADOS DA EMPRESA) */
+.sidebar-profile a.active {
   background: #2563eb;
   color: #ffffff;
-  font-weight: 500;
+  font-weight: 600;
 }
