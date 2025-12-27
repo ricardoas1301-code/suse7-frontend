@@ -953,8 +953,3 @@ h1, h2, h3 {
   font-size: 14px;
 }
 
-:root {
-  --navbar-height: 56px;
-  --page-top-gap: 14px; /* ✅ aqui é o "respiro" abaixo da navbar */
-}
-
