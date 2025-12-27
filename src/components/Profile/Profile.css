@@ -1,0 +1,10 @@
+.profile-layout {
+  display: flex;
+  min-height: calc(100vh - 64px); /* altura sem navbar */
+}
+
+.profile-content {
+  flex: 1;
+  padding: 24px;
+  background: #f6f8fb;
+}

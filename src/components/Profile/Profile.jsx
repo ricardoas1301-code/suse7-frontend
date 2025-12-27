@@ -1,14 +1,21 @@
 // ======================================================================
-// PERFIL — CONTAINER PRINCIPAL
+// PERFIL — LAYOUT PRINCIPAL (SIDEBAR + CONTEÚDO)
 // ======================================================================
 
 import { Outlet } from "react-router-dom";
+import SidebarProfile from "./SidebarProfile";
 import "./Profile.css";
 
 export default function Profile() {
   return (
-    <div className="profile-container">
-      <Outlet />
+    <div className="profile-layout">
+      {/* Sidebar fixa */}
+      <SidebarProfile />
+
+      {/* Conteúdo dinâmico */}
+      <div className="profile-content">
+        <Outlet />
+      </div>
     </div>
   );
 }
