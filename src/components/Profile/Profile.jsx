@@ -1,5 +1,5 @@
 // ======================================================================
-// PERFIL — LAYOUT PRINCIPAL (SIDEBAR + CONTEÚDO)
+// PERFIL — LAYOUT PRINCIPAL (SIDEBAR + CONTEÚDO) ok
 // ======================================================================
 
 import { Outlet } from "react-router-dom";
