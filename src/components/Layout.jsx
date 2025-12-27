@@ -151,7 +151,7 @@ const Layout = () => {
       </nav>
 
       {/* -------------------- Conteúdo -------------------- */}
-      <div className="page-container" style={{ flex: 1, width: "100%", overflowY: "auto" }}>
+      <div className="page-content" style={{ padding: "6px 20px 20px 20px" }}>
   <div className="page-content">
     <Outlet />
   </div>
