@@ -1,126 +1,245 @@
 // ======================================================================
 // PERFIL — DADOS DA EMPRESA
-// Objetivo: Exibir e editar os dados cadastrais da empresa do usuário
-// Obs: Somente layout (sem lógica / sem Supabase)
+// Objetivo: Exibir e editar dados cadastrais da empresa do usuário
+// Regras:
+// - CPF/CNPJ: VISÍVEL + READ-ONLY
+// - Email: VISÍVEL + READ-ONLY
+// - Nome do usuário: NÃO EXIBIR
 // ======================================================================
 
-import "./DadosEmpresa.css";
+import { useEffect, useState } from "react";
+import { supabase } from "../../supabaseClient";
+import "./Profile.css";
 
 export default function DadosEmpresa() {
+  // ------------------------------------------------------------------
+  // STATES
+  // ------------------------------------------------------------------
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [form, setForm] = useState({
+    email: "",
+    cpf_cnpj: "",
+    nome: "",
+    nome_loja: "",
+    whatsapp: "",
+    telefone: "",
+    cep: "",
+    endereco: "",
+    numero: "",
+    complemento: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
+    imposto_percentual: "",
+  });
+
+  // ------------------------------------------------------------------
+  // CARREGAR DADOS DO PERFIL
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    const loadProfile = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        setForm({
+          email: data.email || user.email || "",
+          cpf_cnpj: data.cpf_cnpj || "",
+          nome: data.nome || "",
+          nome_loja: data.nome_loja || "",
+          whatsapp: data.whatsapp || "",
+          telefone: data.telefone || "",
+          cep: data.cep || "",
+          endereco: data.endereco || "",
+          numero: data.numero || "",
+          complemento: data.complemento || "",
+          bairro: data.bairro || "",
+          cidade: data.cidade || "",
+          estado: data.estado || "",
+          imposto_percentual: data.imposto_percentual || "",
+        });
+      }
+
+      setLoading(false);
+    };
+
+    loadProfile();
+  }, []);
+
+  // ------------------------------------------------------------------
+  // HANDLER INPUTS
+  // ------------------------------------------------------------------
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // ------------------------------------------------------------------
+  // SALVAR DADOS
+  // ------------------------------------------------------------------
+  const handleSave = async () => {
+    setSaving(true);
+
+    const {
+      email,
+      cpf_cnpj,
+      ...dadosEditaveis
+    } = form; // remove campos read-only
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    await supabase
+      .from("profiles")
+      .update(dadosEditaveis)
+      .eq("id", user.id);
+
+    setSaving(false);
+    alert("Dados atualizados com sucesso!");
+  };
+
+  // ------------------------------------------------------------------
+  // LOADING
+  // ------------------------------------------------------------------
+  if (loading) {
+    return <p>Carregando dados...</p>;
+  }
+
+  // ------------------------------------------------------------------
+  // RENDER
+  // ------------------------------------------------------------------
   return (
-    <div className="dados-empresa-container">
+    <div className="profile-card">
+      <h2>Dados da Empresa</h2>
 
-      {/* --------------------------------------------------
-          Cabeçalho
-      -------------------------------------------------- */}
-      <div className="dados-empresa-header">
-        <h1>Dados da Empresa</h1>
-        <p>
-          Essas informações serão utilizadas nos cálculos de precificação
-          e integrações do Suse7.
-        </p>
-      </div>
+      {/* ================= IDENTIFICAÇÃO ================= */}
+      <h4 className="profile-section-title">Identificação</h4>
 
-      {/* --------------------------------------------------
-          Card — Informações da Empresa
-      -------------------------------------------------- */}
-      <div className="dados-empresa-card">
+      <div className="form-grid">
+        <div>
+          <label>Email</label>
+          <input value={form.email} disabled />
+        </div>
 
-        <h2>Informações da Empresa</h2>
+        <div>
+          <label>CPF / CNPJ</label>
+          <input value={form.cpf_cnpj} disabled />
+        </div>
 
-        <div className="dados-empresa-grid">
+        <div>
+          <label>Responsável</label>
+          <input
+            name="nome"
+            value={form.nome}
+            onChange={handleChange}
+            placeholder="Nome do responsável"
+          />
+        </div>
 
-          <div className="form-group">
-            <label>Nome da Empresa</label>
-            <input type="text" placeholder="Ex: Suse7 Tecnologia LTDA" />
-          </div>
-
-          <div className="form-group">
-            <label>CPF / CNPJ</label>
-            <input type="text" placeholder="Somente números" />
-          </div>
-
-          <div className="form-group">
-            <label>E-mail</label>
-            <input type="email" placeholder="contato@suse7.com.br" />
-          </div>
-
-          <div className="form-group">
-            <label>Telefone / WhatsApp</label>
-            <input type="text" placeholder="(00) 00000-0000" />
-          </div>
-
+        <div>
+          <label>Nome da Loja</label>
+          <input
+            name="nome_loja"
+            value={form.nome_loja}
+            onChange={handleChange}
+            placeholder="Nome da loja"
+          />
         </div>
       </div>
 
-      {/* --------------------------------------------------
-          Card — Endereço
-      -------------------------------------------------- */}
-      <div className="dados-empresa-card">
+      {/* ================= CONTATO ================= */}
+      <h4 className="profile-section-title">Contato</h4>
 
-        <h2>Endereço</h2>
-
-        <div className="dados-empresa-grid">
-
-          <div className="form-group">
-            <label>CEP</label>
-            <input type="text" placeholder="00000-000" />
-          </div>
-
-          <div className="form-group">
-            <label>Endereço</label>
-            <input type="text" placeholder="Rua, Avenida, etc." />
-          </div>
-
-          <div className="form-group">
-            <label>Número</label>
-            <input type="text" placeholder="Número" />
-          </div>
-
-          <div className="form-group">
-            <label>Complemento</label>
-            <input type="text" placeholder="Opcional" />
-          </div>
-
-          <div className="form-group">
-            <label>Bairro</label>
-            <input type="text" placeholder="Bairro" />
-          </div>
-
-          <div className="form-group">
-            <label>Cidade / UF</label>
-            <input type="text" placeholder="Cidade - UF" />
-          </div>
-
-        </div>
+      <div className="form-grid">
+        <input
+          name="whatsapp"
+          value={form.whatsapp}
+          onChange={handleChange}
+          placeholder="WhatsApp"
+        />
+        <input
+          name="telefone"
+          value={form.telefone}
+          onChange={handleChange}
+          placeholder="Telefone"
+        />
       </div>
 
-      {/* --------------------------------------------------
-          Card — Configurações Fiscais
-      -------------------------------------------------- */}
-      <div className="dados-empresa-card">
+      {/* ================= ENDEREÇO ================= */}
+      <h4 className="profile-section-title">Endereço</h4>
 
-        <h2>Configurações Fiscais</h2>
-
-        <div className="dados-empresa-grid">
-
-          <div className="form-group">
-            <label>Imposto (%)</label>
-            <input type="number" placeholder="Ex: 1.00" />
-          </div>
-
-        </div>
+      <div className="form-grid">
+        <input name="cep" value={form.cep} onChange={handleChange} placeholder="CEP" />
+        <input
+          name="endereco"
+          value={form.endereco}
+          onChange={handleChange}
+          placeholder="Endereço"
+        />
+        <input
+          name="numero"
+          value={form.numero}
+          onChange={handleChange}
+          placeholder="Número"
+        />
+        <input
+          name="complemento"
+          value={form.complemento}
+          onChange={handleChange}
+          placeholder="Complemento"
+        />
+        <input
+          name="bairro"
+          value={form.bairro}
+          onChange={handleChange}
+          placeholder="Bairro"
+        />
+        <input
+          name="cidade"
+          value={form.cidade}
+          onChange={handleChange}
+          placeholder="Cidade"
+        />
+        <input
+          name="estado"
+          value={form.estado}
+          onChange={handleChange}
+          placeholder="Estado"
+        />
       </div>
 
-      {/* --------------------------------------------------
-          Ações
-      -------------------------------------------------- */}
-      <div className="dados-empresa-actions">
-        <button className="btn-primary">
-          Salvar Alterações
-        </button>
+      {/* ================= FISCAL ================= */}
+      <h4 className="profile-section-title">Configuração Fiscal</h4>
+
+      <div className="form-grid">
+        <input
+          name="imposto_percentual"
+          value={form.imposto_percentual}
+          onChange={handleChange}
+          placeholder="Imposto (%)"
+        />
       </div>
 
+      {/* ================= AÇÕES ================= */}
+      <button
+        className="btn-primary"
+        onClick={handleSave}
+        disabled={saving}
+      >
+        {saving ? "Salvando..." : "Salvar Alterações"}
+      </button>
     </div>
   );
 }
