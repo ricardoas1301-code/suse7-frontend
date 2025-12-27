@@ -1,0 +1,50 @@
+/* ======================================================================
+   SUSE7 — PERFIL (AVATAR + TOOLTIP)
+====================================================================== */
+
+.s7-profile-area {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+  cursor: pointer;
+}
+
+.s7-profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s7-profile-initials {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Tooltip */
+.s7-profile-tooltip {
+  position: absolute;
+  top: 44px;
+  right: 50%;
+  transform: translateX(50%);
+  background-color: #111827;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  z-index: 9999;
+}
+
+/* Hover */
+.s7-profile-area:hover .s7-profile-tooltip {
+  opacity: 1;
+}

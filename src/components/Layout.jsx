@@ -1,6 +1,7 @@
 // src/components/Layout.jsx
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import "./Layout.css";
 import { supabase } from '../supabaseClient';
 import ThemeToggle from "./ThemeToggle";
 
@@ -8,6 +9,7 @@ const Layout = () => {
   const [profile, setProfile] = useState(null);
   const [userEmail, setUserEmail] = useState('...');
   const location = useLocation();
+  const navigate = useNavigate();
 
   // -----------------------------------------------------
   // Carregar perfil do usuário
@@ -115,10 +117,36 @@ const Layout = () => {
         </div>
 
         {/* Usuário */}
-        <div className="nav-right">
-  <span className="user-name">Olá, {userEmail}!</span>
-  <button className="logout-btn" onClick={handleLogout}>Sair</button>
+<div className="nav-right">
+
+  {/* Nome do usuário */}
+  <span className="user-name">{userEmail}!</span>
+
+  {/* ======================================
+      PERFIL — AVATAR + TOOLTIP
+  ====================================== */}
+  <div
+    className="s7-profile-area"
+    onClick={() => navigate("/perfil")}
+  >
+    <div className="s7-profile-avatar">
+      <span className="s7-profile-initials">
+        {userEmail?.charAt(0)?.toUpperCase() || "U"}
+      </span>
+    </div>
+
+    <div className="s7-profile-tooltip">
+      Perfil
+    </div>
+  </div>
+
+  {/* Logout */}
+  <button className="logout-btn" onClick={handleLogout}>
+    Sair
+  </button>
+
 </div>
+
 
       </nav>
 
