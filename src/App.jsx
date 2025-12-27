@@ -44,7 +44,7 @@ import ExtratoConta from "./components/Profile/ExtratoConta";
 import Preferencias from "./components/Profile/Preferencias";
 import Notificacoes from "./components/Profile/Notificacoes";
 
-// Páginas temporárias
+// Temporários
 const AnunciosTable = () => <h1>Anúncios</h1>;
 const Produtos = () => <h1>Produtos</h1>;
 const Clientes = () => <h1>Clientes</h1>;
@@ -63,12 +63,12 @@ const AuthWrapper = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const carregar = async () => {
+    const load = async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
       setLoading(false);
     };
-    carregar();
+    load();
   }, []);
 
   if (loading) return <div>Carregando...</div>;
