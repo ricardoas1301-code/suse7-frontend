@@ -126,13 +126,25 @@ function MLRedirectHandler({ children }) {
 }
 
 // =========================================================
-// REDIRECT FINAL DO MERCADO LIVRE (ROTA PÚBLICA)
+// REDIRECT FINAL DO MERCADO LIVRE (AGUARDA SESSÃO)
 // =========================================================
 function MLConnectedRedirect() {
   const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    navigate("/", { replace: true });
+    const checkSessionAndRedirect = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        navigate("/", { replace: true });
+      } else {
+        // aguarda um pouco e tenta novamente
+        setTimeout(checkSessionAndRedirect, 300);
+      }
+    };
+
+    checkSessionAndRedirect();
   }, [navigate]);
 
   return <div>Finalizando conexão...</div>;
