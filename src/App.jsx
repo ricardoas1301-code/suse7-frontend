@@ -1,6 +1,6 @@
 // src/App.jsx
 
-import {BrowserRouter as Router, Routes, Route, Navigate} from "react-router-dom";
+import {BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate} from "react-router-dom";
 
 import { useState, useEffect } from "react";
 import "./App.css";
@@ -105,6 +105,25 @@ const AuthWrapper = ({ children }) => {
   return session ? children : <Navigate to="/login" replace />;
 };
 
+// =========================================================
+// TRATAMENTO DE REDIRECT DO MERCADO LIVRE (?ml=connected)
+// =========================================================
+function MLRedirectHandler({ children }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const mlConnected = params.get("ml");
+
+    if (mlConnected === "connected") {
+      // Limpa a URL e redireciona para o Dashboard
+      navigate("/", { replace: true });
+    }
+  }, [location, navigate]);
+
+  return children;
+}
 
 // =========================================================
 // ROTAS DO APP — VERSÃO CORRETA
@@ -112,47 +131,50 @@ const AuthWrapper = ({ children }) => {
 function App() {
   return (
     <Router>
-      <Routes>
+  <MLRedirectHandler>
+    <Routes>
 
-        {/* 🔥 ROTAS ESPECIAIS — MERCADO LIVRE */}
-        <Route path="/ml/connect" element={<MLConnect />} />
-        <Route path="/ml/callback" element={<MLCallback />} />   
+      {/* 🔥 ROTAS ESPECIAIS — MERCADO LIVRE */}
+      <Route path="/ml/connect" element={<MLConnect />} />
+      <Route path="/ml/callback" element={<MLCallback />} />   
 
-        {/* 🔓 ROTAS PÚBLICAS */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/termos" element={<Terms />} />
-        <Route path="/privacidade" element={<Privacidade />} />
-        <Route path="/forgot-password" element={<PasswordForgot />} />
-        <Route path="/reset-password" element={<PasswordReset />} />
+      {/* 🔓 ROTAS PÚBLICAS */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/termos" element={<Terms />} />
+      <Route path="/privacidade" element={<Privacidade />} />
+      <Route path="/forgot-password" element={<PasswordForgot />} />
+      <Route path="/reset-password" element={<PasswordReset />} />
 
-        {/* 🔐 ROTAS PROTEGIDAS */}
-        <Route
-          path="/"
-          element={
-            <AuthWrapper>
-              <Layout />
-            </AuthWrapper>
-          }
-        >
-          <Route index element={<Dashboard />} />
-          <Route path="anuncios" element={<AnunciosTable />} />
-          <Route path="produtos" element={<Produtos />} />
-          <Route path="clientes" element={<Clientes />} />
-          <Route path="faturas" element={<Faturas />} />
-          <Route path="relatorios" element={<Relatorios />} />
-          <Route path="monitoramento" element={<Monitoramento />} />
-          <Route path="registros" element={<Registros />} />
-          <Route path="configuracoes" element={<Configuracoes />} />
-          <Route path="perfil" element={<Profile />} />
-          <Route path="precificacoes" element={<Precificacoes />} />
-          </Route>
-           
+      {/* 🔐 ROTAS PROTEGIDAS */}
+      <Route
+        path="/"
+        element={
+          <AuthWrapper>
+            <Layout />
+          </AuthWrapper>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="anuncios" element={<AnunciosTable />} />
+        <Route path="produtos" element={<Produtos />} />
+        <Route path="clientes" element={<Clientes />} />
+        <Route path="faturas" element={<Faturas />} />
+        <Route path="relatorios" element={<Relatorios />} />
+        <Route path="monitoramento" element={<Monitoramento />} />
+        <Route path="registros" element={<Registros />} />
+        <Route path="configuracoes" element={<Configuracoes />} />
+        <Route path="perfil" element={<Profile />} />
+        <Route path="precificacoes" element={<Precificacoes />} />
+      </Route>
 
-        {/* fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+      {/* fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+
+    </Routes>
+  </MLRedirectHandler>
+</Router>
+
   );
 }
 
