@@ -10,6 +10,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import "./Profile.css";
+import "./DadosEmpresa.css";
 
 export default function DadosEmpresa() {
   // ------------------------------------------------------------------

@@ -1,92 +1,110 @@
 /* ======================================================================
-   PERFIL — DADOS DA EMPRESA (LAYOUT)
+   SUSE7 — PERFIL | DADOS DA EMPRESA
 ====================================================================== */
 
-.dados-empresa-container {
-  max-width: 1100px;
-}
-
-/* Header */
-.dados-empresa-header {
-  margin-bottom: 24px;
-}
-
-.dados-empresa-header h1 {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.dados-empresa-header p {
-  color: #6b7280;
-  font-size: 14px;
-}
-
-/* Card */
-.dados-empresa-card {
+.profile-card {
   background: #ffffff;
   border-radius: 12px;
-  padding: 24px;
+  padding: 28px;
+  max-width: 900px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* Título principal */
+.profile-card h2 {
+  font-size: 22px;
+  font-weight: 700;
   margin-bottom: 24px;
+  color: #111827;
 }
 
-.dados-empresa-card h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-/* Grid */
-.dados-empresa-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-/* Form */
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 6px;
-  color: #374151;
-}
-
-.form-group input {
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+/* Títulos de seção */
+.profile-section-title {
   font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin: 32px 0 16px;
 }
 
-.form-group input:focus {
+/* Grid padrão */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 20px;
+}
+
+/* Inputs */
+.form-grid input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  background: #f9fafb;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Labels */
+.form-grid label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+/* Inputs desabilitados */
+.form-grid input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Focus */
+.form-grid input:focus {
   outline: none;
   border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background: #ffffff;
 }
 
-/* Actions */
-.dados-empresa-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-
+/* Botão salvar */
 .btn-primary {
+  width: 100%;
+  margin-top: 36px;
+  padding: 14px;
   background: #2563eb;
   color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
   border: none;
   border-radius: 10px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: #1e40af;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card {
+    padding: 20px;
+  }
 }
