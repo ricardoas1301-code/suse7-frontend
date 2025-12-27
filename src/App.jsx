@@ -15,36 +15,26 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import "./global.css";
 
-// ----------------------------------------------------------------------
 // Supabase
-// ----------------------------------------------------------------------
 import { supabase } from "./supabaseClient";
 
-// ----------------------------------------------------------------------
 // Layout e páginas principais
-// ----------------------------------------------------------------------
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 
-// ----------------------------------------------------------------------
 // Páginas públicas
-// ----------------------------------------------------------------------
 import Terms from "./pages/Terms";
 import Privacidade from "./pages/Privacidade";
 import PasswordForgot from "./pages/PasswordForgot";
 import PasswordReset from "./pages/PasswordReset";
 
-// ----------------------------------------------------------------------
 // Mercado Livre
-// ----------------------------------------------------------------------
 import MLConnect from "./ml/MLConnect.jsx";
 import MLCallback from "./ml/MLCallback.jsx";
 
-// ----------------------------------------------------------------------
-// Perfil (sidebar + subrotas)
-// ----------------------------------------------------------------------
+// Perfil
 import Profile from "./components/Profile/Profile";
 import DadosEmpresa from "./components/Profile/DadosEmpresa";
 import AlterarSenha from "./components/Profile/AlterarSenha";
@@ -54,9 +44,7 @@ import ExtratoConta from "./components/Profile/ExtratoConta";
 import Preferencias from "./components/Profile/Preferencias";
 import Notificacoes from "./components/Profile/Notificacoes";
 
-// ----------------------------------------------------------------------
 // Páginas temporárias
-// ----------------------------------------------------------------------
 const AnunciosTable = () => <h1>Anúncios</h1>;
 const Produtos = () => <h1>Produtos</h1>;
 const Clientes = () => <h1>Clientes</h1>;
@@ -68,52 +56,22 @@ const Configuracoes = () => <h1>Configurações</h1>;
 const Precificacoes = () => <h1>Precificações</h1>;
 
 // ======================================================================
-// AUTH WRAPPER — PROTEGE ROTAS
+// AUTH WRAPPER
 // ======================================================================
 const AuthWrapper = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const criarProfileSeNaoExistir = async (user) => {
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (!profile) {
-      await supabase.from("profiles").insert({
-        id: user.id,
-        email: user.email,
-        primeiro_login: true,
-        created_at: new Date(),
-        last_login: new Date(),
-      });
-    }
-  };
-
   useEffect(() => {
     const carregar = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      setSession(session);
-
-      if (session?.user) {
-        await criarProfileSeNaoExistir(session.user);
-      }
-
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
       setLoading(false);
     };
-
     carregar();
   }, []);
 
   if (loading) return <div>Carregando...</div>;
-
   return session ? children : <Navigate to="/login" replace />;
 };
 
@@ -142,9 +100,7 @@ export default function App() {
     <Router>
       <MLRedirectHandler>
         <Routes>
-          {/* -------------------------------------------------- */}
-          {/* ROTAS PÚBLICAS */}
-          {/* -------------------------------------------------- */}
+          {/* Públicas */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/termos" element={<Terms />} />
@@ -152,15 +108,11 @@ export default function App() {
           <Route path="/forgot-password" element={<PasswordForgot />} />
           <Route path="/reset-password" element={<PasswordReset />} />
 
-          {/* -------------------------------------------------- */}
-          {/* MERCADO LIVRE */}
-          {/* -------------------------------------------------- */}
+          {/* Mercado Livre */}
           <Route path="/ml/connect" element={<MLConnect />} />
           <Route path="/ml/callback" element={<MLCallback />} />
 
-          {/* -------------------------------------------------- */}
-          {/* ROTAS PROTEGIDAS */}
-          {/* -------------------------------------------------- */}
+          {/* Protegidas */}
           <Route
             path="/"
             element={
@@ -171,7 +123,7 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
 
-            {/* PERFIL */}
+            {/* Perfil */}
             <Route path="perfil" element={<Profile />}>
               <Route index element={<DadosEmpresa />} />
               <Route path="dados-empresa" element={<DadosEmpresa />} />
@@ -179,15 +131,13 @@ export default function App() {
               <Route path="integracoes/mercado-livre" element={<MercadoLivre />} />
               <Route path="pagamentos/formas" element={<FormasPagamento />} />
               <Route path="pagamentos/extrato" element={<ExtratoConta />} />
-
-              {/* PREFERÊNCIAS */}
               <Route path="preferencias" element={<Preferencias />}>
                 <Route index element={<Notificacoes />} />
                 <Route path="notificacoes" element={<Notificacoes />} />
               </Route>
             </Route>
 
-            {/* OUTRAS */}
+            {/* Outras */}
             <Route path="anuncios" element={<AnunciosTable />} />
             <Route path="produtos" element={<Produtos />} />
             <Route path="clientes" element={<Clientes />} />
@@ -199,7 +149,7 @@ export default function App() {
             <Route path="precificacoes" element={<Precificacoes />} />
           </Route>
 
-          {/* FALLBACK */}
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </MLRedirectHandler>
