@@ -6,6 +6,6 @@
 
 .profile-content {
   flex: 1;
-  padding: 16px 24px;     /* 🔥 menos espaço no topo */
+  padding: 8px 16px;     /* 🔥 menos espaço no topo */
   background: #f6f8fb;
 }
