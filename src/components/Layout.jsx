@@ -120,7 +120,7 @@ const Layout = () => {
 <div className="nav-right">
 
   {/* Nome do usuário */}
-  <span className="user-name">{userEmail}!</span>
+  <span className="user-name">{userEmail}</span>
 
   {/* ======================================
       PERFIL — AVATAR + TOOLTIP
