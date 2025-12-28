@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import "./Layout.css";
-import { useEffect, useState, useRef } from "react";
 
 
 // IMPORTAR ICONES DO MENU SUPERIOR
