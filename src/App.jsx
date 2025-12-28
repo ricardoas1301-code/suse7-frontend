@@ -2,7 +2,15 @@
 // src/App.jsx — ROTAS PRINCIPAIS DO SUSE7
 // ======================================================================
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
 import { useState, useEffect } from "react";
 import "./App.css";
 import "./global.css";
