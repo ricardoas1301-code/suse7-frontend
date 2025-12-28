@@ -9,6 +9,19 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import "./Layout.css";
 
+// IMPORTAR ICONES DO MENU SUPERIOR
+import {
+  LayoutDashboard,
+  Box,
+  Tag,
+  Calculator,
+  Activity,
+  BarChart3,
+  FileText,
+  Settings,
+} from "lucide-react";
+
+
 // Asset da logo
 import suse7Logo from "../assets/suse7-logo-redonda.png";
 
@@ -16,6 +29,8 @@ export default function Layout() {
   const [userName, setUserName] = useState("...");
   const location = useLocation();
   const navigate = useNavigate();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
 
   // -----------------------------------------------------
   // Carregar usuário logado (nome amigável)
@@ -50,14 +65,14 @@ export default function Layout() {
   };
 
   const navItems = [
-    { path: "/", label: "Painel" },
-    { path: "/produtos", label: "Produtos" },
-    { path: "/anuncios", label: "Anúncios" },
-    { path: "/precificacoes", label: "Precificações" },
-    { path: "/monitoramento", label: "Monitoramento" },
-    { path: "/relatorios", label: "Relatórios" },
-    { path: "/registros", label: "Registros" },
-    { path: "/configuracoes", label: "Configurações" },
+{ path: "/", label: "Painel", icon: LayoutDashboard },
+  { path: "/produtos", label: "Produtos", icon: Box },
+  { path: "/anuncios", label: "Anúncios", icon: Tag },
+  { path: "/precificacoes", label: "Precificações", icon: Calculator },
+  { path: "/monitoramento", label: "Monitoramento", icon: Activity },
+  { path: "/relatorios", label: "Relatórios", icon: BarChart3 },
+  { path: "/registros", label: "Registros", icon: FileText },
+  { path: "/configuracoes", label: "Configurações", icon: Settings },
   ];
 
   return (
@@ -74,45 +89,52 @@ export default function Layout() {
         </div>
 
         {/* Menu */}
-        <div className="nav-center">
-          {navItems.map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`nav-item ${
-                location.pathname === item.path ? "active" : ""
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+          <div className="nav-center">
+          {navItems.map(item => {
+          const Icon = item.icon;
+
+            return (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`nav-item ${
+          location.pathname === item.path ? "active" : ""
+          }`}
+          >
+          <Icon className="nav-icon" />
+          <span>{item.label}</span>
+         </Link>
+          );
+          })}
         </div>
 
         {/* Usuário */}
         <div className="nav-right">
-
-          <span className="user-name">{userName}</span>
-
+           <span className="user-name">{userName}</span>
           <div
-            className="s7-profile-area"
-            onClick={() => navigate("/perfil")}
-          >
-            <div className="s7-profile-avatar">
-              <span className="s7-profile-initials">
-                {userName.charAt(0)}
-              </span>
-            </div>
-
-            <div className="s7-profile-tooltip">
-              Perfil
-            </div>
+          className="s7-profile-area"
+          onClick={() => setUserMenuOpen(!userMenuOpen)}
+           >
+          <div className="s7-profile-avatar">
+            <span className="s7-profile-initials">
+              {userName.charAt(0)}
+          </span>
           </div>
 
-          <button className="logout-btn" onClick={handleLogout}>
-            Sair
+          {userMenuOpen && (
+          <div className="s7-user-menu">
+          <button onClick={() => navigate("/configuracoes")}>
+          Configurações
           </button>
-
+          <button className="danger" onClick={handleLogout}>
+          Sair da conta
+          </button>
         </div>
+    )}
+  </div>
+
+</div>
+
       </nav>
 
       {/* ===================== CONTEÚDO ===================== */}
