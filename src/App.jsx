@@ -145,7 +145,7 @@ export default function App() {
             <Route path="relatorios" element={<Relatorios />} />
             <Route path="monitoramento" element={<Monitoramento />} />
             <Route path="registros" element={<Registros />} />
-            <Route path="configuracoes" element={<Configuracoes />} />
+            <Route path="/configuracoes" element={<Navigate to="/perfil" />} />
             <Route path="precificacoes" element={<Precificacoes />} />
           </Route>
 

@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import "./Layout.css";
+import { useEffect, useState, useRef } from "react";
+
 
 // IMPORTAR ICONES DO MENU SUPERIOR
 import {
@@ -30,11 +32,36 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
+  const userMenuRef = useRef(null);
 
   // -----------------------------------------------------
   // Carregar usuário logado (nome amigável)
   // -----------------------------------------------------
+
+   // -----------------------------------------------------
+// Fechar menu do usuário ao clicar fora
+// -----------------------------------------------------
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (
+      userMenuRef.current &&
+      !userMenuRef.current.contains(event.target)
+    ) {
+      setUserMenuOpen(false);
+    }
+  };
+
+  if (userMenuOpen) {
+    document.addEventListener("mousedown", handleClickOutside);
+  }
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, [userMenuOpen]);
+
+
+
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -111,9 +138,10 @@ export default function Layout() {
         <div className="nav-right">
            <span className="user-name">{userName}</span>
           <div
-          className="s7-profile-area"
-          onClick={() => setUserMenuOpen(!userMenuOpen)}
-           >
+            className="s7-profile-area"
+            ref={userMenuRef}
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+          >
           <div className="s7-profile-avatar">
             <span className="s7-profile-initials">
               {userName.charAt(0)}
@@ -122,8 +150,8 @@ export default function Layout() {
 
           {userMenuOpen && (
           <div className="s7-user-menu">
-          <button onClick={() => navigate("/configuracoes")}>
-          Configurações
+          <button onClick={() => navigate("/perfil")}>
+            Configurações
           </button>
           <button className="danger" onClick={handleLogout}>
           Sair da conta

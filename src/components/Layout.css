@@ -95,19 +95,19 @@
 }
 
 .nav-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: #6b7280;
 }
 
 .nav-item.active .nav-icon {
-  color: #2563eb;
+  color: #2563eb; /* 🔥 azul oficial do Suse7 */
 }
 
 /* Item ativo */
 .nav-item.active {
   background: #eef3ff;     /* fundo azul suave */
-  color: #2563eb;          /* azul Suse7 */
+  color: #2563eb; /* 🔥 azul oficial do Suse7 */
   font-weight: 600;
 }
 
