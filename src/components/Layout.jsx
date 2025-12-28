@@ -4,7 +4,7 @@
 // Responsável apenas pela estrutura visual (Navbar + Conteúdo)
 // ======================================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import "./Layout.css";
