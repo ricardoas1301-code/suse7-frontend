@@ -101,14 +101,13 @@
 }
 
 .nav-item.active .nav-icon {
-   background: #2563eb;
-  color: #ffffff;
+  color: #2563eb; /* 🔥 azul oficial do Suse7 */
 }
 
 /* Item ativo */
 .nav-item.active {
-  background: #eef3ff;     /* fundo azul suave */
-  color: #2563eb; /* 🔥 azul oficial do Suse7 */
+   background: #2563eb;
+   color: #ffffff;
   font-weight: 600;
 }
 
