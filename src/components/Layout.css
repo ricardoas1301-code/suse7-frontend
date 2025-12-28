@@ -68,8 +68,8 @@
 }
 
 .nav-logo-img {
-  width: 48px;
-  height: 48px;
+  width: 69px;
+  height: 69px;
 }
 
 .navbar-premium {
@@ -125,4 +125,18 @@
 
 .s7-user-menu .danger {
   color: #b91c1c;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: nowrap;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0; /* 🔥 impede o avatar de sumir */
 }

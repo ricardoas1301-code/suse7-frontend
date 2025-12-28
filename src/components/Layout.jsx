@@ -72,8 +72,7 @@ export default function Layout() {
   { path: "/monitoramento", label: "Monitoramento", icon: Activity },
   { path: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { path: "/registros", label: "Registros", icon: FileText },
-  { path: "/configuracoes", label: "Configurações", icon: Settings },
-  ];
+   ];
 
   return (
     <div className="app-container">
