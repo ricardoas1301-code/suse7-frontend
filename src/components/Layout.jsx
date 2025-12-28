@@ -1,105 +1,75 @@
 // src/components/Layout.jsx
-import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import "./Layout.css";
-import { supabase } from '../supabaseClient';
-import ThemeToggle from "./ThemeToggle";
+// ======================================================================
+// LAYOUT — SUSE7 (PADRÃO GLOBAL DO APP)
+// Responsável apenas pela estrutura visual (Navbar + Conteúdo)
+// ======================================================================
 
-const Layout = () => {
-  const [profile, setProfile] = useState(null);
-  const [userEmail, setUserEmail] = useState('...');
+import { useEffect, useState } from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import "./Layout.css";
+
+// Asset da logo
+import suse7Logo from "../assets/suse7-logo-redonda.png";
+
+export default function Layout() {
+  const [userName, setUserName] = useState("...");
   const location = useLocation();
   const navigate = useNavigate();
 
   // -----------------------------------------------------
-  // Carregar perfil do usuário
-  // -----------------------------------------------------
-  useEffect(() => {
-    async function loadProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      setProfile(profileData);
-
-    }
-
-    loadProfile();
-  }, []);
-
-  // -----------------------------------------------------
-  // Capturar nome/e-mail do usuário
+  // Carregar usuário logado (nome amigável)
   // -----------------------------------------------------
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (user) {
-        const namePart = user.email ? user.email.split('@')[0] : 'Usuário';
-        const formattedName = namePart.split('.')
-          .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-          .join(' ');
-
-        setUserEmail(formattedName);
-      } else {
-        setUserEmail('Convidado');
+      if (!user?.email) {
+        setUserName("Usuário");
+        return;
       }
+
+      const namePart = user.email.split("@")[0];
+      const formatted = namePart
+        .split(".")
+        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+        .join(" ");
+
+      setUserName(formatted);
     };
 
     fetchUser();
   }, []);
 
   // -----------------------------------------------------
-  // Tema salvo (Dark / Light)
-  // -----------------------------------------------------
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("s7-theme");
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
-
-  // -----------------------------------------------------
   // Logout
   // -----------------------------------------------------
   const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error.message);
-      alert('Não foi possível sair: ' + error.message);
-    }
+    await supabase.auth.signOut();
+    navigate("/login");
   };
 
   const navItems = [
-  { path: '/', label: 'Painel' },
-  { path: '/produtos', label: 'Produtos' },
-  { path: '/anuncios', label: 'Anúncios' },
-  { path: '/precificacoes', label: 'Precificações' }, // ✅ novo link
-  { path: '/monitoramento', label: 'Monitoramento' },
-  { path: '/relatorios', label: 'Relatórios' },
-  { path: '/registros', label: 'Registros' },
-  { path: '/configuracoes', label: 'Configurações' },
-];
+    { path: "/", label: "Painel" },
+    { path: "/produtos", label: "Produtos" },
+    { path: "/anuncios", label: "Anúncios" },
+    { path: "/precificacoes", label: "Precificações" },
+    { path: "/monitoramento", label: "Monitoramento" },
+    { path: "/relatorios", label: "Relatórios" },
+    { path: "/registros", label: "Registros" },
+    { path: "/configuracoes", label: "Configurações" },
+  ];
 
   return (
     <div className="app-container">
 
-      
-      {/* -------------------- Navbar -------------------- */}
+      {/* ===================== NAVBAR ===================== */}
       <nav className="navbar-premium">
 
         {/* Logo */}
         <div className="nav-left">
           <Link to="/" className="nav-logo">
-            <div className="logo-circle">S7</div>
-            <span className="logo-title">Suse7</span>
+            <img src={suse7Logo} alt="Suse7" className="nav-logo-img" />
           </Link>
         </div>
 
@@ -109,7 +79,9 @@ const Layout = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+              className={`nav-item ${
+                location.pathname === item.path ? "active" : ""
+              }`}
             >
               {item.label}
             </Link>
@@ -117,49 +89,37 @@ const Layout = () => {
         </div>
 
         {/* Usuário */}
-<div className="nav-right">
+        <div className="nav-right">
 
-  {/* Nome do usuário */}
-  <span className="user-name">{userEmail}</span>
+          <span className="user-name">{userName}</span>
 
-  {/* ======================================
-      PERFIL — AVATAR + TOOLTIP
-  ====================================== */}
-  <div
-    className="s7-profile-area"
-    onClick={() => navigate("/perfil")}
-  >
-    <div className="s7-profile-avatar">
-      <span className="s7-profile-initials">
-        {userEmail?.charAt(0)?.toUpperCase() || "U"}
-      </span>
-    </div>
+          <div
+            className="s7-profile-area"
+            onClick={() => navigate("/perfil")}
+          >
+            <div className="s7-profile-avatar">
+              <span className="s7-profile-initials">
+                {userName.charAt(0)}
+              </span>
+            </div>
 
-    <div className="s7-profile-tooltip">
-      Perfil
-    </div>
-  </div>
+            <div className="s7-profile-tooltip">
+              Perfil
+            </div>
+          </div>
 
-  {/* Logout */}
-  <button className="logout-btn" onClick={handleLogout}>
-    Sair
-  </button>
+          <button className="logout-btn" onClick={handleLogout}>
+            Sair
+          </button>
 
-</div>
-
-
+        </div>
       </nav>
 
-      {/* -------------------- Conteúdo -------------------- */}
-      <div className="page-content" style={{ padding: "6px 20px 20px 20px" }}>
-  <div className="page-content">
-    <Outlet />
-  </div>
-</div>
-
+      {/* ===================== CONTEÚDO ===================== */}
+      <main className="page-content">
+        <Outlet />
+      </main>
 
     </div>
   );
-};
-
-export default Layout;
+}

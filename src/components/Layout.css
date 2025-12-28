@@ -66,3 +66,23 @@
   padding-right: 24px;
   padding-bottom: 24px;
 }
+
+.nav-logo-img {
+  width: 36px;
+  height: 36px;
+}
+
+.navbar-premium {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+
