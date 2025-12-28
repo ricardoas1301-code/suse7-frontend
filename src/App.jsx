@@ -2,15 +2,7 @@
 // src/App.jsx — ROTAS PRINCIPAIS DO SUSE7
 // ======================================================================
 
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
-
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./App.css";
 import "./global.css";
@@ -132,8 +124,8 @@ export default function App() {
               <Route path="pagamentos/formas" element={<FormasPagamento />} />
               <Route path="pagamentos/extrato" element={<ExtratoConta />} />
               <Route path="preferencias" element={<Preferencias />}>
-                <Route index element={<Notificacoes />} />
-                <Route path="notificacoes" element={<Notificacoes />} />
+              <Route index element={<Notificacoes />} />
+              <Route path="notificacoes" element={<Notificacoes />} />
               </Route>
             </Route>
 
