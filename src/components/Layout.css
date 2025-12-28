@@ -77,29 +77,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 24px;        /* 🔥 espaço lateral seguro */
+  box-sizing: border-box;
 }
+
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 500;
+  color: #374151;          /* cinza elegante */
+  text-decoration: none;
+  transition: all 0.15s ease;
 }
 
 .nav-icon {
   width: 18px;
   height: 18px;
-  color: #6b7280; /* cinza elegante */
+  color: #6b7280;
+}
+
+.nav-item.active .nav-icon {
+  color: #2563eb;
 }
 
 /* Item ativo */
-.nav-item.active .nav-icon {
-  color: #2563eb; /* azul Suse7 */
+.nav-item.active {
+  background: #eef3ff;     /* fundo azul suave */
+  color: #2563eb;          /* azul Suse7 */
+  font-weight: 600;
 }
+
 
 .s7-user-menu {
   position: absolute;
-  top: 48px;
-  right: 0;
+  top: 52px;
+  right: 0;               /* 🔥 cola no avatar */
   background: #ffffff;
   border-radius: 10px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
@@ -138,5 +154,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0; /* 🔥 impede o avatar de sumir */
+  flex-shrink: 0;         /* 🔥 impede de ser espremido */
+  position: relative;     /* 🔥 referência pro menu */
+}
+
+.nav-item:hover {
+  background: #eef3ff;
 }
