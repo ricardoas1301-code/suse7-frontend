@@ -101,7 +101,8 @@
 }
 
 .nav-item.active .nav-icon {
-  color: #2563eb; /* 🔥 azul oficial do Suse7 */
+   background: #2563eb;
+  color: #ffffff;
 }
 
 /* Item ativo */
