@@ -165,6 +165,27 @@ export default function DadosEmpresa() {
     <div className="profile-card">
       <h2>Dados da Empresa</h2>
 
+           {/* ================= LOGO ================= */}
+<div className="form-grid">
+  <div className="field-full logo-field">
+    <label>Logo da Empresa</label>
+
+    {form.photo_url && (
+      <div className="logo-preview">
+        <img src={form.photo_url} alt="Logo da empresa" />
+      </div>
+    )}
+
+    <input
+      type="file"
+      accept="image/png, image/jpeg"
+      onChange={handleLogoUpload}
+    />
+
+    <small>PNG ou JPG • Recomendado fundo transparente</small>
+  </div>
+</div>
+
       {/* ================= DADOS DA EMPRESA ================= */}
 <div className="form-grid">
   <div className="field-lg">
@@ -203,29 +224,7 @@ export default function DadosEmpresa() {
 
 </div>
 
-
-      {/* ================= LOGO ================= */}
-<div className="form-grid">
-  <div className="field-full logo-field">
-    <label>Logo da Empresa</label>
-
-    {form.photo_url && (
-      <div className="logo-preview">
-        <img src={form.photo_url} alt="Logo da empresa" />
-      </div>
-    )}
-
-    <input
-      type="file"
-      accept="image/png, image/jpeg"
-      onChange={handleLogoUpload}
-    />
-
-    <small>PNG ou JPG • Recomendado fundo transparente</small>
-  </div>
-</div>
-
-      {/* ================= CONTATO ================= */}
+       {/* ================= CONTATO ================= */}
       <h4 className="profile-section-title">Contato</h4>
 
       <div className="form-grid">
