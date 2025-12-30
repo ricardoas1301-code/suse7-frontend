@@ -33,7 +33,7 @@
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: 30px;
-  row-gap: 39px; /* 🔥 ESSENCIAL */
+  row-gap: 26px; /* 🔥 ESSENCIAL */
 }
 
 /* Campo que ocupa linha inteira */

@@ -199,9 +199,7 @@ export default function DadosEmpresa() {
 
 
       {/* ================= LOGO ================= */}
-      <h4 className="profile-section-title">Identidade Visual</h4>
-
-      <div className="form-grid">
+       <div className="form-grid">
         <div className="field-full">
           <label>Logo da Empresa</label>
 
