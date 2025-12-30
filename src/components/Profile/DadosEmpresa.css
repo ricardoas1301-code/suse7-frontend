@@ -33,7 +33,7 @@
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: 30px;
-  row-gap: 26px; /* 🔥 ESSENCIAL */
+  row-gap: 30px; /* 🔥 ESSENCIAL */
 }
 
 /* Campo que ocupa linha inteira */
@@ -60,6 +60,7 @@
   background: #f9fafb;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   margin-top: 2px; /* 🔥 evita sensação de grudar */
+  row-gap: 30px; /* 🔥 ESSENCIAL */
   }
 
 /* Espaçamento visual entre label e input */
