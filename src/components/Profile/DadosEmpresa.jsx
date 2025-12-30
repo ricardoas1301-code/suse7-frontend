@@ -182,8 +182,7 @@ export default function DadosEmpresa() {
       onChange={handleLogoUpload}
     />
 
-    <small>PNG ou JPG • Recomendado fundo transparente</small>
-  </div>
+    </div>
 </div>
 
       {/* ================= DADOS DA EMPRESA ================= */}
