@@ -191,33 +191,39 @@ export default function DadosEmpresa() {
     />
   </div>
 
-  <div className="field-lg site-field">
-    <label>Site *</label>
-    <input name="site" value={form.site} onChange={handleChange} />
-  </div>
+<div className="field-full site-field">
+  <label>Site *</label>
+  <input
+    name="site"
+    value={form.site}
+    onChange={handleChange}
+    placeholder="www.sualoja.com.br"
+  />
+</div>
+
 </div>
 
 
       {/* ================= LOGO ================= */}
-       <div className="form-grid">
-        <div className="field-full logo-field">
-          <label>Logo da Empresa</label>
+<div className="form-grid">
+  <div className="field-full logo-field">
+    <label>Logo da Empresa</label>
 
-          {form.photo_url && (
-            <div className="logo-preview">
-              <img src={form.photo_url} alt="Logo da empresa" />
-            </div>
-          )}
-
-          <input
-            type="file"
-            accept="image/png, image/jpeg"
-            onChange={handleLogoUpload}
-          />
-
-          <small>PNG ou JPG • Recomendado fundo transparente</small>
-        </div>
+    {form.photo_url && (
+      <div className="logo-preview">
+        <img src={form.photo_url} alt="Logo da empresa" />
       </div>
+    )}
+
+    <input
+      type="file"
+      accept="image/png, image/jpeg"
+      onChange={handleLogoUpload}
+    />
+
+    <small>PNG ou JPG • Recomendado fundo transparente</small>
+  </div>
+</div>
 
       {/* ================= CONTATO ================= */}
       <h4 className="profile-section-title">Contato</h4>

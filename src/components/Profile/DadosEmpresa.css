@@ -147,3 +147,8 @@
 .logo-field input[type="file"] {
   max-width: 100%;
 }
+
+/* Espaçamento extra antes do bloco da Logo */
+.logo-field {
+  margin-top: 16px; /* ajuste fino */
+}
