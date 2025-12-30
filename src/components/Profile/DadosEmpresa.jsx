@@ -107,7 +107,6 @@ export default function DadosEmpresa() {
     const fileExt = file.name.split(".").pop();
     const filePath = `logos/${user.id}.${fileExt}`;
 
-    // Upload no Supabase Storage
     const { error } = await supabase.storage
       .from("profiles")
       .upload(filePath, file, { upsert: true });
@@ -117,20 +116,17 @@ export default function DadosEmpresa() {
       return;
     }
 
-    // Gerar URL pública
     const { data } = supabase.storage
       .from("profiles")
       .getPublicUrl(filePath);
 
     const logoUrl = data.publicUrl;
 
-    // Salvar URL no perfil
     await supabase
       .from("profiles")
       .update({ photo_url: logoUrl })
       .eq("id", user.id);
 
-    // Atualizar estado local
     setForm((prev) => ({ ...prev, photo_url: logoUrl }));
   };
 
@@ -171,7 +167,7 @@ export default function DadosEmpresa() {
 
       {/* ================= DADOS DA EMPRESA ================= */}
       <div className="form-grid">
-        <div>
+        <div className="field-lg">
           <label>Nome da Empresa *</label>
           <input
             name="nome_loja"
@@ -181,17 +177,17 @@ export default function DadosEmpresa() {
           />
         </div>
 
-        <div>
+        <div className="field-md">
           <label>CPF / CNPJ</label>
           <input value={form.cpf_cnpj} disabled />
         </div>
 
-        <div>
+        <div className="field-lg">
           <label>Email</label>
           <input value={form.email} disabled />
         </div>
 
-        <div>
+        <div className="field-sm">
           <label>Imposto (%) *</label>
           <input
             name="imposto_percentual"
@@ -201,7 +197,7 @@ export default function DadosEmpresa() {
           />
         </div>
 
-        <div className="full">
+        <div className="field-full">
           <label>Site *</label>
           <input
             name="site"
@@ -216,7 +212,7 @@ export default function DadosEmpresa() {
       <h4 className="profile-section-title">Identidade Visual</h4>
 
       <div className="form-grid">
-        <div className="full">
+        <div className="field-full">
           <label>Logo da Empresa</label>
 
           {form.photo_url && (
@@ -239,7 +235,7 @@ export default function DadosEmpresa() {
       <h4 className="profile-section-title">Contato</h4>
 
       <div className="form-grid">
-        <div>
+        <div className="field-lg">
           <label>Responsável *</label>
           <input
             name="nome"
@@ -249,7 +245,7 @@ export default function DadosEmpresa() {
           />
         </div>
 
-        <div>
+        <div className="field-md">
           <label>WhatsApp *</label>
           <input
             name="whatsapp"
@@ -259,7 +255,7 @@ export default function DadosEmpresa() {
           />
         </div>
 
-        <div>
+        <div className="field-md">
           <label>Telefone *</label>
           <input
             name="telefone"
@@ -274,13 +270,75 @@ export default function DadosEmpresa() {
       <h4 className="profile-section-title">Endereço</h4>
 
       <div className="form-grid">
-        <input name="cep" value={form.cep} onChange={handleChange} placeholder="CEP" />
-        <input name="endereco" value={form.endereco} onChange={handleChange} placeholder="Endereço" />
-        <input name="numero" value={form.numero} onChange={handleChange} placeholder="Número" />
-        <input name="complemento" value={form.complemento} onChange={handleChange} placeholder="Complemento" />
-        <input name="bairro" value={form.bairro} onChange={handleChange} placeholder="Bairro" />
-        <input name="cidade" value={form.cidade} onChange={handleChange} placeholder="Cidade" />
-        <input name="estado" value={form.estado} onChange={handleChange} placeholder="UF" />
+        <div className="field-sm">
+          <label>CEP *</label>
+          <input
+            name="cep"
+            value={form.cep}
+            onChange={handleChange}
+            placeholder="CEP"
+          />
+        </div>
+
+        <div className="field-sm">
+          <label>UF *</label>
+          <input
+            name="estado"
+            value={form.estado}
+            onChange={handleChange}
+            placeholder="UF"
+          />
+        </div>
+
+        <div className="field-md">
+          <label>Cidade *</label>
+          <input
+            name="cidade"
+            value={form.cidade}
+            onChange={handleChange}
+            placeholder="Cidade"
+          />
+        </div>
+
+        <div className="field-lg">
+          <label>Endereço *</label>
+          <input
+            name="endereco"
+            value={form.endereco}
+            onChange={handleChange}
+            placeholder="Endereço"
+          />
+        </div>
+
+        <div className="field-sm">
+          <label>Número *</label>
+          <input
+            name="numero"
+            value={form.numero}
+            onChange={handleChange}
+            placeholder="Número"
+          />
+        </div>
+
+        <div className="field-md">
+          <label>Complemento</label>
+          <input
+            name="complemento"
+            value={form.complemento}
+            onChange={handleChange}
+            placeholder="Complemento"
+          />
+        </div>
+
+        <div className="field-md">
+          <label>Bairro</label>
+          <input
+            name="bairro"
+            value={form.bairro}
+            onChange={handleChange}
+            placeholder="Bairro"
+          />
+        </div>
       </div>
 
       {/* ================= AÇÕES ================= */}

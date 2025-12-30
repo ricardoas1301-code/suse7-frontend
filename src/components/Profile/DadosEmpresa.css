@@ -141,3 +141,30 @@
   flex-direction: column;
   gap: 4px;              /* 🔥 controla o espaço real */
 }
+
+/* ======================================================
+   CONTROLE DE LARGURA DOS CAMPOS (PADRÃO BLING)
+====================================================== */
+
+/* Grid base mais flexível */
+.form-grid {
+  grid-template-columns: repeat(12, 1fr);
+}
+
+/* Tamanhos semânticos */
+.field-sm {
+  grid-column: span 3;
+}
+
+.field-md {
+  grid-column: span 4;
+}
+
+.field-lg {
+  grid-column: span 6;
+}
+
+.field-full {
+  grid-column: span 12;
+}
+
