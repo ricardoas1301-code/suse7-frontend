@@ -181,3 +181,47 @@
   grid-column: span 12;
 }
 
+/* ================================
+   PADRÃO DE FORMULÁRIO (IGUAL SIGNUP)
+================================ */
+
+.row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px; /* 🔥 espaço ENTRE linhas */
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* 🔥 espaço ENTRE label e input */
+  flex: 1;
+}
+
+/* Campos menores */
+.field.small {
+  max-width: 120px;
+}
+
+.field.xs {
+  max-width: 90px;
+}
+
+.field.md {
+  max-width: 220px;
+}
+
+.field.lg {
+  max-width: 360px;
+}
+
+/* Campo ocupa linha toda */
+.field.full {
+  flex: 1;
+}
+
+/* Inputs nunca grudam */
+.field input,
+.field select {
+  width: 100%;
+}
