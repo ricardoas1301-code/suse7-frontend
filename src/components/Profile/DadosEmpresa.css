@@ -140,7 +140,7 @@
 .form-grid > div {
   display: flex;
   flex-direction: column;
-  gap: 1px;              /* 🔥 espaço REAL entre label e input */
+  gap: -2px;              /* 🔥 espaço REAL entre label e input */
   margin-bottom: 6px;   /* 🔥 espaço entre campos */
 }
 
