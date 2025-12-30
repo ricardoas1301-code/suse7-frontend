@@ -178,6 +178,6 @@
 
 /* Linha inteira: Site, Logo */
 .field-full {
-  grid-column: span 12;
+  grid-column: span 8;
 }
 
