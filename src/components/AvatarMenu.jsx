@@ -1,6 +1,7 @@
 // ======================================================================
 // COMPONENTE: AvatarMenu
 // Objetivo: Menu do usuário com LOGO DA EMPRESA
+// Padrão visual: ícones monocromáticos (lucide-react)
 // ======================================================================
 
 import { useState, useRef, useEffect } from "react";
@@ -9,6 +10,9 @@ import { supabase } from "../supabaseClient";
 import ContactModal from "./ContactModal";
 import "./AvatarMenu.css";
 
+// Ícones monocromáticos (mesmo padrão do menu superior)
+import { Settings, MessageCircle, LogOut } from "lucide-react";
+
 export default function AvatarMenu({ empresaNome, logoUrl }) {
   // ------------------------------------------------------------
   // States
@@ -16,13 +20,13 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
   const [open, setOpen] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
-  // Referência do container do menu (logo + dropdown)
+  // Referência do container (logo + dropdown)
   const menuRef = useRef(null);
 
   const navigate = useNavigate();
 
   // ------------------------------------------------------------
-  // Fechar menu ao clicar fora
+  // Fechar menu ao clicar fora do componente
   // ------------------------------------------------------------
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -67,7 +71,7 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
         {/* Menu dropdown */}
         {open && (
           <div className="avatar-menu">
-            {/* Header */}
+            {/* Cabeçalho do menu */}
             <div className="avatar-menu-header">
               <img
                 src={logoUrl || "/logo-default.png"}
@@ -89,7 +93,8 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
                 navigate("/profile");
               }}
             >
-              ⚙️ <span>Configurações</span>
+              <Settings className="avatar-menu-icon" />
+              <span>Configurações</span>
             </button>
 
             {/* Suporte */}
@@ -100,7 +105,8 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
                 setShowSupport(true);
               }}
             >
-              💬 <span>Suporte</span>
+              <MessageCircle className="avatar-menu-icon" />
+              <span>Suporte</span>
             </button>
 
             <div className="avatar-menu-divider" />
@@ -110,7 +116,8 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
               className="avatar-menu-item logout"
               onClick={handleLogout}
             >
-              🚪 <span>Sair da conta</span>
+              <LogOut className="avatar-menu-icon" />
+              <span>Sair da conta</span>
             </button>
           </div>
         )}

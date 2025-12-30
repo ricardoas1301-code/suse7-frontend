@@ -79,3 +79,15 @@
   background: #e5e7eb;
   margin: 6px 0;
 }
+
+/* Ícones do menu */
+.avatar-menu-icon {
+  width: 16px;
+  height: 16px;
+  color: #6b7280; /* mesmo tom do menu superior */
+}
+
+/* Ícone do logout */
+.avatar-menu-item.logout .avatar-menu-icon {
+  color: #dc2626;
+}
