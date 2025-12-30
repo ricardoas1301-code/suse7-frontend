@@ -36,7 +36,7 @@
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: 24px;
-  row-gap: 24px; /* 🔥 CONTROLA ESPAÇO ENTRE INPUTS */
+  row-gap: 46px; /* 🔥 CONTROLA ESPAÇO ENTRE INPUTS */
 }
 
 /* Cada campo */
@@ -132,4 +132,18 @@
   .form-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Campo Site menor (55%) */
+.site-field {
+  grid-column: span 6; /* antes 12 */
+}
+
+/* Campo Logo compacto (73% menor visualmente) */
+.logo-field {
+  grid-column: span 4; /* Bling-style */
+}
+
+.logo-field input[type="file"] {
+  max-width: 100%;
 }

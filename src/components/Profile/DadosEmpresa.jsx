@@ -191,7 +191,7 @@ export default function DadosEmpresa() {
     />
   </div>
 
-  <div className="field-full">
+  <div className="field-lg site-field">
     <label>Site *</label>
     <input name="site" value={form.site} onChange={handleChange} />
   </div>
@@ -200,7 +200,7 @@ export default function DadosEmpresa() {
 
       {/* ================= LOGO ================= */}
        <div className="form-grid">
-        <div className="field-full">
+        <div className="field-full logo-field">
           <label>Logo da Empresa</label>
 
           {form.photo_url && (
