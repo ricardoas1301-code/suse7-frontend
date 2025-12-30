@@ -143,27 +143,40 @@
 }
 
 /* ======================================================
-   CONTROLE DE LARGURA DOS CAMPOS (PADRÃO BLING)
+   GRID PROPORCIONAL — AJUSTE FINO POR TIPO DE CAMPO
+   Base: 12 colunas (padrão SaaS / Bling)
 ====================================================== */
 
-/* Grid base mais flexível */
 .form-grid {
   grid-template-columns: repeat(12, 1fr);
 }
 
-/* Tamanhos semânticos */
+/* Muito curto: UF, Número, Imposto */
+.field-xs {
+  grid-column: span 2;
+}
+
+/* Curto: CEP */
 .field-sm {
   grid-column: span 3;
 }
 
+/* Médio: CPF, Telefone, WhatsApp */
 .field-md {
   grid-column: span 4;
 }
 
+/* Longo: Nome, Email, Cidade */
 .field-lg {
   grid-column: span 6;
 }
 
+/* Muito longo: Endereço */
+.field-xl {
+  grid-column: span 8;
+}
+
+/* Linha inteira: Site, Logo */
 .field-full {
   grid-column: span 12;
 }
