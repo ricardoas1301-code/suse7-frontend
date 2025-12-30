@@ -25,14 +25,28 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #6b7280;
-  margin: 32px 0 16px;
+  margin: 40px 0 16px;
 }
 
 /* Grid padrão */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px 20px;
+  gap: 20px 24px;
+}
+
+/* Campo que ocupa linha inteira */
+.form-grid .full {
+  grid-column: span 2;
+}
+
+/* Labels */
+.form-grid label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
 }
 
 /* Inputs */
@@ -44,15 +58,6 @@
   font-size: 14px;
   background: #f9fafb;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Labels */
-.form-grid label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 6px;
 }
 
 /* Inputs desabilitados */
@@ -68,6 +73,21 @@
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   background: #ffffff;
+}
+
+/* Preview da logo */
+.logo-preview {
+  margin-bottom: 12px;
+}
+
+.logo-preview img {
+  max-height: 80px;
+  max-width: 220px;
+  object-fit: contain;
+  border: 1px dashed #e5e7eb;
+  padding: 8px;
+  border-radius: 8px;
+  background: #f9fafb;
 }
 
 /* Botão salvar */
@@ -107,24 +127,4 @@
   .profile-card {
     padding: 20px;
   }
-}
-
-/* Espaçamento entre seções */
-.profile-section-title {
-  margin-top: 40px;
-}
-
-/* Primeira seção não precisa tanto espaço */
-.profile-section-title:first-of-type {
-  margin-top: 24px;
-}
-
-/* Inputs com mais respiro vertical */
-.form-grid {
-  row-gap: 20px;
-}
-
-/* Último bloco antes do botão */
-.form-grid:last-of-type {
-  margin-bottom: 32px;
 }

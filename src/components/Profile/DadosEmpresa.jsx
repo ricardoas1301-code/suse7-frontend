@@ -1,10 +1,11 @@
 // ======================================================================
 // PERFIL — DADOS DA EMPRESA
-// Objetivo: Exibir e editar dados cadastrais da empresa do usuário
+// Objetivo: Exibir e editar os dados cadastrais da empresa
 // Regras:
 // - CPF/CNPJ: VISÍVEL + READ-ONLY
 // - Email: VISÍVEL + READ-ONLY
-// - Nome do usuário: NÃO EXIBIR
+// - Nome do usuário pessoal: NÃO EXIBIR
+// - Logo: upload no Supabase Storage + salvar URL em photo_url
 // ======================================================================
 
 import { useEffect, useState } from "react";
@@ -24,6 +25,7 @@ export default function DadosEmpresa() {
     cpf_cnpj: "",
     nome: "",
     nome_loja: "",
+    site: "",
     whatsapp: "",
     telefone: "",
     cep: "",
@@ -34,6 +36,7 @@ export default function DadosEmpresa() {
     cidade: "",
     estado: "",
     imposto_percentual: "",
+    photo_url: "",
   });
 
   // ------------------------------------------------------------------
@@ -59,6 +62,7 @@ export default function DadosEmpresa() {
           cpf_cnpj: data.cpf_cnpj || "",
           nome: data.nome || "",
           nome_loja: data.nome_loja || "",
+          site: data.site || "",
           whatsapp: data.whatsapp || "",
           telefone: data.telefone || "",
           cep: data.cep || "",
@@ -69,6 +73,7 @@ export default function DadosEmpresa() {
           cidade: data.cidade || "",
           estado: data.estado || "",
           imposto_percentual: data.imposto_percentual || "",
+          photo_url: data.photo_url || "",
         });
       }
 
@@ -79,7 +84,7 @@ export default function DadosEmpresa() {
   }, []);
 
   // ------------------------------------------------------------------
-  // HANDLER INPUTS
+  // HANDLER GENÉRICO DE INPUT
   // ------------------------------------------------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,16 +92,55 @@ export default function DadosEmpresa() {
   };
 
   // ------------------------------------------------------------------
-  // SALVAR DADOS
+  // UPLOAD DA LOGO DA EMPRESA
+  // ------------------------------------------------------------------
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const fileExt = file.name.split(".").pop();
+    const filePath = `logos/${user.id}.${fileExt}`;
+
+    // Upload no Supabase Storage
+    const { error } = await supabase.storage
+      .from("profiles")
+      .upload(filePath, file, { upsert: true });
+
+    if (error) {
+      alert("Erro ao enviar logo.");
+      return;
+    }
+
+    // Gerar URL pública
+    const { data } = supabase.storage
+      .from("profiles")
+      .getPublicUrl(filePath);
+
+    const logoUrl = data.publicUrl;
+
+    // Salvar URL no perfil
+    await supabase
+      .from("profiles")
+      .update({ photo_url: logoUrl })
+      .eq("id", user.id);
+
+    // Atualizar estado local
+    setForm((prev) => ({ ...prev, photo_url: logoUrl }));
+  };
+
+  // ------------------------------------------------------------------
+  // SALVAR DADOS EDITÁVEIS
   // ------------------------------------------------------------------
   const handleSave = async () => {
     setSaving(true);
 
-    const {
-      email,
-      cpf_cnpj,
-      ...dadosEditaveis
-    } = form; // remove campos read-only
+    const { email, cpf_cnpj, ...dadosEditaveis } = form;
 
     const {
       data: { user },
@@ -125,13 +169,16 @@ export default function DadosEmpresa() {
     <div className="profile-card">
       <h2>Dados da Empresa</h2>
 
-      {/* ================= IDENTIFICAÇÃO ================= */}
-      <h4 className="profile-section-title">Identificação</h4>
-
+      {/* ================= DADOS DA EMPRESA ================= */}
       <div className="form-grid">
         <div>
-          <label>Email</label>
-          <input value={form.email} disabled />
+          <label>Nome da Empresa *</label>
+          <input
+            name="nome_loja"
+            value={form.nome_loja}
+            onChange={handleChange}
+            placeholder="Nome da empresa"
+          />
         </div>
 
         <div>
@@ -140,7 +187,60 @@ export default function DadosEmpresa() {
         </div>
 
         <div>
-          <label>Responsável</label>
+          <label>Email</label>
+          <input value={form.email} disabled />
+        </div>
+
+        <div>
+          <label>Imposto (%) *</label>
+          <input
+            name="imposto_percentual"
+            value={form.imposto_percentual}
+            onChange={handleChange}
+            placeholder="Ex: 1"
+          />
+        </div>
+
+        <div className="full">
+          <label>Site *</label>
+          <input
+            name="site"
+            value={form.site}
+            onChange={handleChange}
+            placeholder="https://www.sualoja.com.br"
+          />
+        </div>
+      </div>
+
+      {/* ================= LOGO ================= */}
+      <h4 className="profile-section-title">Identidade Visual</h4>
+
+      <div className="form-grid">
+        <div className="full">
+          <label>Logo da Empresa</label>
+
+          {form.photo_url && (
+            <div className="logo-preview">
+              <img src={form.photo_url} alt="Logo da empresa" />
+            </div>
+          )}
+
+          <input
+            type="file"
+            accept="image/png, image/jpeg"
+            onChange={handleLogoUpload}
+          />
+
+          <small>PNG ou JPG • Recomendado fundo transparente</small>
+        </div>
+      </div>
+
+      {/* ================= CONTATO ================= */}
+      <h4 className="profile-section-title">Contato</h4>
+
+      <div className="form-grid">
+        <div>
+          <label>Responsável *</label>
           <input
             name="nome"
             value={form.nome}
@@ -150,32 +250,24 @@ export default function DadosEmpresa() {
         </div>
 
         <div>
-          <label>Nome da Loja</label>
+          <label>WhatsApp *</label>
           <input
-            name="nome_loja"
-            value={form.nome_loja}
+            name="whatsapp"
+            value={form.whatsapp}
             onChange={handleChange}
-            placeholder="Nome da loja"
+            placeholder="WhatsApp"
           />
         </div>
-      </div>
 
-      {/* ================= CONTATO ================= */}
-      <h4 className="profile-section-title">Contato</h4>
-
-      <div className="form-grid">
-        <input
-          name="whatsapp"
-          value={form.whatsapp}
-          onChange={handleChange}
-          placeholder="WhatsApp"
-        />
-        <input
-          name="telefone"
-          value={form.telefone}
-          onChange={handleChange}
-          placeholder="Telefone"
-        />
+        <div>
+          <label>Telefone *</label>
+          <input
+            name="telefone"
+            value={form.telefone}
+            onChange={handleChange}
+            placeholder="Telefone"
+          />
+        </div>
       </div>
 
       {/* ================= ENDEREÇO ================= */}
@@ -183,54 +275,12 @@ export default function DadosEmpresa() {
 
       <div className="form-grid">
         <input name="cep" value={form.cep} onChange={handleChange} placeholder="CEP" />
-        <input
-          name="endereco"
-          value={form.endereco}
-          onChange={handleChange}
-          placeholder="Endereço"
-        />
-        <input
-          name="numero"
-          value={form.numero}
-          onChange={handleChange}
-          placeholder="Número"
-        />
-        <input
-          name="complemento"
-          value={form.complemento}
-          onChange={handleChange}
-          placeholder="Complemento"
-        />
-        <input
-          name="bairro"
-          value={form.bairro}
-          onChange={handleChange}
-          placeholder="Bairro"
-        />
-        <input
-          name="cidade"
-          value={form.cidade}
-          onChange={handleChange}
-          placeholder="Cidade"
-        />
-        <input
-          name="estado"
-          value={form.estado}
-          onChange={handleChange}
-          placeholder="Estado"
-        />
-      </div>
-
-      {/* ================= FISCAL ================= */}
-      <h4 className="profile-section-title">Configuração Fiscal</h4>
-
-      <div className="form-grid">
-        <input
-          name="imposto_percentual"
-          value={form.imposto_percentual}
-          onChange={handleChange}
-          placeholder="Imposto (%)"
-        />
+        <input name="endereco" value={form.endereco} onChange={handleChange} placeholder="Endereço" />
+        <input name="numero" value={form.numero} onChange={handleChange} placeholder="Número" />
+        <input name="complemento" value={form.complemento} onChange={handleChange} placeholder="Complemento" />
+        <input name="bairro" value={form.bairro} onChange={handleChange} placeholder="Bairro" />
+        <input name="cidade" value={form.cidade} onChange={handleChange} placeholder="Cidade" />
+        <input name="estado" value={form.estado} onChange={handleChange} placeholder="UF" />
       </div>
 
       {/* ================= AÇÕES ================= */}

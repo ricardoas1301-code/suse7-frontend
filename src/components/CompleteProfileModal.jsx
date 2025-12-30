@@ -345,7 +345,7 @@ const formatCpfCnpj = (value) => {
             </label>
 
             <label>
-              Nome da loja *
+              Nome da Empresa *
               <input name="nome_loja" onChange={handleChange} />
                {errors.nome_loja && (
               <small className="error-text">{errors.nome_loja}</small>
