@@ -3,7 +3,7 @@
 // Objetivo: Menu do usuário com LOGO DA EMPRESA
 // ======================================================================
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import ContactModal from "./ContactModal";
@@ -16,7 +16,29 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
   const [open, setOpen] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
+  // Referência do container do menu (logo + dropdown)
+  const menuRef = useRef(null);
+
   const navigate = useNavigate();
+
+  // ------------------------------------------------------------
+  // Fechar menu ao clicar fora
+  // ------------------------------------------------------------
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   // ------------------------------------------------------------
   // Logout
@@ -28,60 +50,73 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
 
   return (
     <>
-      {/* Logo da empresa (clicável) */}
-      <div className="logo-wrapper" onClick={() => setOpen(!open)}>
-        <img
-          src={logoUrl || "/logo-default.png"}
-          alt="Logo da empresa"
-          className="company-logo"
-        />
+      {/* Container geral (logo + menu) */}
+      <div ref={menuRef}>
+        {/* Logo da empresa (clicável) */}
+        <div
+          className="logo-wrapper"
+          onClick={() => setOpen((prev) => !prev)}
+        >
+          <img
+            src={logoUrl || "/logo-default.png"}
+            alt="Logo da empresa"
+            className="company-logo"
+          />
+        </div>
+
+        {/* Menu dropdown */}
+        {open && (
+          <div className="avatar-menu">
+            {/* Header */}
+            <div className="avatar-menu-header">
+              <img
+                src={logoUrl || "/logo-default.png"}
+                alt="Logo da empresa"
+                className="avatar-menu-img"
+              />
+              <div className="avatar-menu-company">
+                {empresaNome || "Minha Empresa"}
+              </div>
+            </div>
+
+            <div className="avatar-menu-divider" />
+
+            {/* Configurações */}
+            <button
+              className="avatar-menu-item"
+              onClick={() => {
+                setOpen(false);
+                navigate("/profile");
+              }}
+            >
+              ⚙️ <span>Configurações</span>
+            </button>
+
+            {/* Suporte */}
+            <button
+              className="avatar-menu-item"
+              onClick={() => {
+                setOpen(false);
+                setShowSupport(true);
+              }}
+            >
+              💬 <span>Suporte</span>
+            </button>
+
+            <div className="avatar-menu-divider" />
+
+            {/* Logout */}
+            <button
+              className="avatar-menu-item logout"
+              onClick={handleLogout}
+            >
+              🚪 <span>Sair da conta</span>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Menu */}
-      {open && (
-        <div className="avatar-menu">
-          {/* Header */}
-          <div className="avatar-menu-header">
-            <img
-              src={logoUrl || "/logo-default.png"}
-              alt="Logo da empresa"
-              className="avatar-menu-img"
-            />
-            <div className="avatar-menu-company">
-              {empresaNome || "Minha Empresa"}
-            </div>
-          </div>
-
-          <div className="avatar-menu-divider" />
-
-          {/* Configurações */}
-          <button
-            className="avatar-menu-item"
-            onClick={() => navigate("/profile")}
-          >
-            ⚙️ <span>Configurações</span>
-          </button>
-
-          {/* Suporte */}
-          <button
-            className="avatar-menu-item"
-            onClick={() => setShowSupport(true)}
-          >
-            💬 <span>Suporte</span>
-          </button>
-
-          <div className="avatar-menu-divider" />
-
-          {/* Logout */}
-          <button
-            className="avatar-menu-item logout"
-            onClick={handleLogout}
-          >
-            🚪 <span>Sair da conta</span>
-          </button>
-        </div>
-      )}
-
+      {/* Modal de suporte */}
       {showSupport && (
         <ContactModal onClose={() => setShowSupport(false)} />
       )}

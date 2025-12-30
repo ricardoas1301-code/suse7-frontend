@@ -36,30 +36,36 @@ export default function Layout() {
   const location = useLocation();
 
   // -----------------------------------------------------
-  // Buscar dados da empresa logada
-  // -----------------------------------------------------
-  useEffect(() => {
-    const loadProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+// Buscar dados da empresa logada (profiles)
+// -----------------------------------------------------
+useEffect(() => {
+  const loadProfile = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!user) return;
+    if (!user) return;
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("empresa_nome, logo_url")
-        .eq("id", user.id)
-        .single();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("nome_loja, photo_url")
+      .eq("id", user.id)
+      .single();
 
-      if (data) {
-        setEmpresaNome(data.empresa_nome);
-        setLogoUrl(data.logo_url);
-      }
-    };
+    if (error) {
+      console.error("Erro ao carregar profile:", error);
+      return;
+    }
 
-    loadProfile();
-  }, []);
+    if (data) {
+      setEmpresaNome(data.nome_loja);   // ✅ nome da empresa
+      setLogoUrl(data.photo_url);       // ✅ logo da empresa
+    }
+  };
+
+  loadProfile();
+}, []);
+;
 
   // -----------------------------------------------------
   // Itens do menu central
