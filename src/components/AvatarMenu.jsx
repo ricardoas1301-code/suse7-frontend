@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import ContactModal from "./ContactModal";
 import "./AvatarMenu.css";
+import { createPortal } from "react-dom";
+
 
 // Ícones monocromáticos (mesmo padrão do menu superior)
 import { Settings, MessageCircle, LogOut } from "lucide-react";
@@ -124,10 +126,13 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
         )}
       </div>
 
-      {/* Modal de suporte */}
-      {showSupport && (
-        <ContactModal onClose={() => setShowSupport(false)} />
-      )}
+            {/* Modal de suporte */}
+            {showSupport &&
+                createPortal(
+                <ContactModal onClose={() => setShowSupport(false)} />,
+            document.body
+        )
+        }
     </>
   );
 }
