@@ -25,14 +25,14 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #6b7280;
-  margin: 40px 0 16px;
+  margin: 20px 0 12px;
 }
 
 /* Grid padrão com mais respiro */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 28px 32px; /* 🔥 mais espaço vertical e horizontal */
+  gap: 12px 20px; /* 🔥 inputs mais próximos */
 }
 
 /* Campo que ocupa linha inteira */
