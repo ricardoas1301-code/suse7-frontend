@@ -32,8 +32,8 @@
 .form-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  column-gap: 20px;
-  row-gap: 18px; /* 🔥 ESSENCIAL */
+  column-gap: 26px;
+  row-gap: 30px; /* 🔥 ESSENCIAL */
 }
 
 /* Campo que ocupa linha inteira */
@@ -140,7 +140,7 @@
 .form-grid > div {
   display: flex;
   flex-direction: column;
-  gap: 8px;              /* 🔥 espaço REAL entre label e input */
+  gap: 10px;              /* 🔥 espaço REAL entre label e input */
   margin-bottom: 6px;   /* 🔥 espaço entre campos */
 }
 
