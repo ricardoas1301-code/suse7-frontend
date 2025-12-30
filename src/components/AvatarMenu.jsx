@@ -87,15 +87,16 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
 
             {/* Configurações */}
             <button
-              className="avatar-menu-item"
-              onClick={() => {
+                className="avatar-menu-item"
+                onClick={() => {
                 setOpen(false);
-                navigate("/profile");
-              }}
+                navigate("/perfil");
+            }}
             >
-              <Settings className="avatar-menu-icon" />
-              <span>Configurações</span>
+                <Settings className="avatar-menu-icon" />
+                <span>Configurações</span>
             </button>
+
 
             {/* Suporte */}
             <button
