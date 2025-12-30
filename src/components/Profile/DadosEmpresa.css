@@ -25,14 +25,14 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #6b7280;
-  margin: 20px 0 12px;
+  margin: 14px 0 8px;
 }
 
 /* Grid padrão com mais respiro */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px 20px; /* 🔥 inputs mais próximos */
+  gap: 8px 16px; /* 🔥 inputs mais próximos */
 }
 
 /* Campo que ocupa linha inteira */
@@ -52,7 +52,7 @@
 /* Inputs */
 .form-grid input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   font-size: 14px;
@@ -133,4 +133,11 @@
   .profile-card {
     padding: 20px;
   }
+}
+
+/* Bloco de campo (label + input) */
+.form-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;              /* 🔥 controla o espaço real */
 }
