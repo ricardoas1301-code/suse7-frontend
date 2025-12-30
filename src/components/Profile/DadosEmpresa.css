@@ -1,5 +1,5 @@
 /* ======================================================================
-   SUSE7 — PERFIL | DADOS DA EMPRESA
+   SUSE7 — PERFIL | DADOS DA EMPRESA (PADRÃO BLING)
 ====================================================================== */
 
 .profile-card {
@@ -14,66 +14,60 @@
 .profile-card h2 {
   font-size: 22px;
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   color: #111827;
 }
 
-/* Títulos de seção */
+/* Subtítulos */
 .profile-section-title {
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #6b7280;
-  margin: 14px 0 8px;
+  margin: 32px 0 16px;
 }
 
-/* Grid padrão com mais respiro */
+/* =========================
+   GRID PADRÃO (12 COLUNAS)
+========================= */
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  column-gap: 30px;
-  row-gap: 36px; /* 🔥 ESSENCIAL */
+  column-gap: 24px;
+  row-gap: 24px; /* 🔥 CONTROLA ESPAÇO ENTRE INPUTS */
 }
 
-/* Campo que ocupa linha inteira */
-.form-grid .full {
-  grid-column: span 2;
+/* Cada campo */
+.form-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* 🔥 CONTROLA LABEL ↔ INPUT */
 }
 
 /* Labels */
 .form-grid label {
-  display: block;
   font-size: 13px;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 6px;
 }
 
 /* Inputs */
 .form-grid input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   font-size: 14px;
   background: #f9fafb;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  margin-top: 2px; /* 🔥 evita sensação de grudar */
-  row-gap: 30px; /* 🔥 ESSENCIAL */
-  }
-
-/* Espaçamento visual entre label e input */
-.form-grid label {
-  margin-bottom: 3px; /* 🔥 mais respiro */
 }
 
-/* Inputs desabilitados */
+/* Disabled */
 .form-grid input:disabled {
   background: #f3f4f6;
   color: #6b7280;
-  cursor: not-allowed;
-  
 }
 
 /* Focus */
@@ -84,9 +78,20 @@
   background: #ffffff;
 }
 
-/* Preview da logo */
+/* =========================
+   TAMANHOS (Bling Style)
+========================= */
+
+.field-xs { grid-column: span 2; }   /* UF, Imposto */
+.field-sm { grid-column: span 3; }   /* CEP, Número */
+.field-md { grid-column: span 4; }   /* WhatsApp, Telefone */
+.field-lg { grid-column: span 6; }   /* Nome, Email */
+.field-xl { grid-column: span 8; }   /* Endereço */
+.field-full { grid-column: span 12; }/* Site, Logo */
+
+/* Logo */
 .logo-preview {
-  margin-bottom: 12px;
+  margin-top: 6px;
 }
 
 .logo-preview img {
@@ -99,7 +104,7 @@
   background: #f9fafb;
 }
 
-/* Botão salvar */
+/* Botão */
 .btn-primary {
   width: 100%;
   margin-top: 36px;
@@ -108,18 +113,13 @@
   color: #ffffff;
   font-size: 15px;
   font-weight: 700;
-  border: none;
   border-radius: 10px;
+  border: none;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 .btn-primary:hover {
   background: #1e40af;
-}
-
-.btn-primary:active {
-  transform: scale(0.98);
 }
 
 .btn-primary:disabled {
@@ -127,55 +127,9 @@
   cursor: not-allowed;
 }
 
-/* Responsivo */
+/* Mobile */
 @media (max-width: 768px) {
   .form-grid {
     grid-template-columns: 1fr;
   }
-
-  .profile-card {
-    padding: 20px;
-  }
 }
-
-/* Bloco de campo (label + input) */
-.form-grid > div {
-  display: flex;
-  flex-direction: column;
-  gap: -2px;              /* 🔥 espaço REAL entre label e input */
-  margin-bottom: 6px;   /* 🔥 espaço entre campos */
-  row-gap: 15px; /* 🔥 ESSENCIAL */
-}
-
-/* ======================================================
-   GRID PROPORCIONAL — AJUSTE FINO POR TIPO DE CAMPO
-   Base: 12 colunas (padrão SaaS / Bling)
-====================================================== */
-
-/* Muito curto: UF, Número, Imposto */
-.field-xs {
-  grid-column: span 2;
-}
-
-/* Curto: CEP */
-.field-sm {
-  grid-column: span 3;
-}
-
-/* Médio: CPF, Telefone, WhatsApp */
-.field-md {
-  grid-column: span 4;
-}
-
-/* Longo: Nome, Email, Cidade */
-.field-lg {
-  grid-column: span 6;
-}
-
-.field-xs { grid-column: span 2; }
-.field-sm { grid-column: span 3; }
-.field-md { grid-column: span 4; }
-.field-lg { grid-column: span 6; }
-.field-xl { grid-column: span 8; }
-.field-full { grid-column: span 12; }
-
