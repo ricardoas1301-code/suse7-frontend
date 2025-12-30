@@ -166,47 +166,37 @@ export default function DadosEmpresa() {
       <h2>Dados da Empresa</h2>
 
       {/* ================= DADOS DA EMPRESA ================= */}
-      <div className="form-grid">
-        <div className="field-lg">
-          <label>Nome da Empresa *</label>
-          <input
-            name="nome_loja"
-            value={form.nome_loja}
-            onChange={handleChange}
-            placeholder="Nome da empresa"
-          />
-        </div>
+<div className="form-grid">
+  <div className="field-lg">
+    <label>Nome da Empresa *</label>
+    <input name="nome_loja" value={form.nome_loja} onChange={handleChange} />
+  </div>
 
-        <div className="field-md">
-          <label>CPF / CNPJ</label>
-          <input value={form.cpf_cnpj} disabled />
-        </div>
+  <div className="field-md">
+    <label>CPF / CNPJ</label>
+    <input value={form.cpf_cnpj} disabled />
+  </div>
 
-        <div className="field-lg">
-          <label>Email</label>
-          <input value={form.email} disabled />
-        </div>
+  <div className="field-lg">
+    <label>Email</label>
+    <input value={form.email} disabled />
+  </div>
 
-        <div className="field-sm">
-          <label>Imposto (%) *</label>
-          <input
-            name="imposto_percentual"
-            value={form.imposto_percentual}
-            onChange={handleChange}
-            placeholder="Ex: 1"
-          />
-        </div>
+  <div className="field-xs">
+    <label>Imposto (%) *</label>
+    <input
+      name="imposto_percentual"
+      value={form.imposto_percentual}
+      onChange={handleChange}
+    />
+  </div>
 
-        <div className="field-full">
-          <label>Site *</label>
-          <input
-            name="site"
-            value={form.site}
-            onChange={handleChange}
-            placeholder="https://www.sualoja.com.br"
-          />
-        </div>
-      </div>
+  <div className="field-full">
+    <label>Site *</label>
+    <input name="site" value={form.site} onChange={handleChange} />
+  </div>
+</div>
+
 
       {/* ================= LOGO ================= */}
       <h4 className="profile-section-title">Identidade Visual</h4>

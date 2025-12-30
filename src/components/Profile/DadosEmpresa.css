@@ -32,7 +32,7 @@
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px 16px; /* 🔥 inputs mais próximos */
+  gap: 14px 20px; /* 🔥 inputs mais próximos */
 }
 
 /* Campo que ocupa linha inteira */
