@@ -6,7 +6,8 @@
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;     /* 🔥 alinha pelo topo */
+  padding-top: 80px;           /* 🔥 distância do menu superior */
   z-index: 999;
 }
 
