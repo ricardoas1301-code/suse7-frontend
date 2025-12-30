@@ -31,8 +31,9 @@
 /* Grid padrão com mais respiro */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px 20px; /* 🔥 inputs mais próximos */
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 20px;
+  row-gap: 18px; /* 🔥 ESSENCIAL */
 }
 
 /* Campo que ocupa linha inteira */
@@ -139,17 +140,14 @@
 .form-grid > div {
   display: flex;
   flex-direction: column;
-  gap: 4px;              /* 🔥 controla o espaço real */
+  gap: 8px;              /* 🔥 espaço REAL entre label e input */
+  margin-bottom: 6px;   /* 🔥 espaço entre campos */
 }
 
 /* ======================================================
    GRID PROPORCIONAL — AJUSTE FINO POR TIPO DE CAMPO
    Base: 12 colunas (padrão SaaS / Bling)
 ====================================================== */
-
-.form-grid {
-  grid-template-columns: repeat(12, 1fr);
-}
 
 /* Muito curto: UF, Número, Imposto */
 .field-xs {
@@ -171,57 +169,10 @@
   grid-column: span 6;
 }
 
-/* Muito longo: Endereço */
-.field-xl {
-  grid-column: span 8;
-}
+.field-xs { grid-column: span 2; }
+.field-sm { grid-column: span 3; }
+.field-md { grid-column: span 4; }
+.field-lg { grid-column: span 6; }
+.field-xl { grid-column: span 8; }
+.field-full { grid-column: span 12; }
 
-/* Linha inteira: Site, Logo */
-.field-xl {
-  grid-column: span 12;
-}
-
-/* ================================
-   PADRÃO DE FORMULÁRIO (IGUAL SIGNUP)
-================================ */
-
-.row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px; /* 🔥 espaço ENTRE linhas */
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px; /* 🔥 espaço ENTRE label e input */
-  flex: 1;
-}
-
-/* Campos menores */
-.field.small {
-  max-width: 120px;
-}
-
-.field.xs {
-  max-width: 90px;
-}
-
-.field.md {
-  max-width: 220px;
-}
-
-.field.lg {
-  max-width: 360px;
-}
-
-/* Campo ocupa linha toda */
-.field.full {
-  flex: 1;
-}
-
-/* Inputs nunca grudam */
-.field input,
-.field select {
-  width: 100%;
-}
