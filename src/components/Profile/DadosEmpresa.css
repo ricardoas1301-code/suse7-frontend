@@ -28,11 +28,11 @@
   margin: 40px 0 16px;
 }
 
-/* Grid padrão */
+/* Grid padrão com mais respiro */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px 24px;
+  gap: 28px 32px; /* 🔥 mais espaço vertical e horizontal */
 }
 
 /* Campo que ocupa linha inteira */
@@ -58,6 +58,12 @@
   font-size: 14px;
   background: #f9fafb;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 2px; /* 🔥 evita sensação de grudar */
+  }
+
+/* Espaçamento visual entre label e input */
+.form-grid label {
+  margin-bottom: 8px; /* 🔥 mais respiro */
 }
 
 /* Inputs desabilitados */
