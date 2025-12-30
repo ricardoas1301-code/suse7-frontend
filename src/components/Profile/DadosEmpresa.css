@@ -141,7 +141,7 @@
 
 /* Campo Logo compacto (73% menor visualmente) */
 .logo-field {
-  grid-column: span 4; /* Bling-style */
+  grid-column: span 2; /* Bling-style */
 }
 
 .logo-field input[type="file"] {
