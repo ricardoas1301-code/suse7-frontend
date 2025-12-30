@@ -136,7 +136,7 @@
 
 /* Campo Site menor (55%) */
 .site-field {
-  grid-column: span 6; /* antes 12 */
+  grid-column: span 5; /* antes 12 */
 }
 
 /* Campo Logo compacto (73% menor visualmente) */
