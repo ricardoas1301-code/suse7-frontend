@@ -32,8 +32,8 @@
 .form-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  column-gap: 36px;
-  row-gap: 39px; /* 🔥 ESSENCIAL */
+  column-gap: 30px;
+  row-gap: 33px; /* 🔥 ESSENCIAL */
 }
 
 /* Campo que ocupa linha inteira */
