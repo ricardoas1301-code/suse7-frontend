@@ -1,54 +1,7 @@
 /* ======================================================================
-   SUSE7 — PERFIL (AVATAR + TOOLTIP)
+   SUSE7 — LAYOUT GLOBAL
+   Responsável apenas por navbar e conteúdo principal
 ====================================================================== */
-
-.s7-profile-area {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-left: 12px;
-  cursor: pointer;
-}
-
-.s7-profile-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #2563eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.s7-profile-initials {
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-/* Tooltip */
-.s7-profile-tooltip {
-  position: absolute;
-  top: 44px;
-  right: 50%;
-  transform: translateX(50%);
-  background-color: #111827;
-  color: #ffffff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  white-space: nowrap;
-  z-index: 9999;
-}
-
-/* Hover */
-.s7-profile-area:hover .s7-profile-tooltip {
-  opacity: 1;
-}
-
 
 /* ======================================================================
    CONTEÚDO PRINCIPAL — PADRÃO GLOBAL
@@ -61,16 +14,15 @@
 
 .page-content {
   width: 100%;
-  padding-top: 8px;     /* 🔥 reduz ~70% do espaço */
+  padding-top: 8px;        /* 🔥 reduz espaço superior */
   padding-left: 24px;
   padding-right: 24px;
   padding-bottom: 24px;
 }
 
-.nav-logo-img {
-  width: 63px;
-  height: 63px;
-}
+/* ======================================================================
+   NAVBAR PREMIUM
+====================================================================== */
 
 .navbar-premium {
   height: 64px;
@@ -79,69 +31,19 @@
   justify-content: space-between;
   padding: 0 24px;        /* 🔥 espaço lateral seguro */
   box-sizing: border-box;
-}
-
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-weight: 500;
-  color: #374151;          /* cinza elegante */
-  text-decoration: none;
-  transition: all 0.15s ease;
-}
-
-.nav-icon {
-  width: 16px;
-  height: 16px;
-  color: #6b7280;
-}
-
-.nav-item.active .nav-icon {
-  color: #e9ebf1; /* 🔥 azul oficial do Suse7 */
-}
-
-/* Item ativo */
-.nav-item.active {
-   background: #2563eb;
-   color: #ffffff;
-  font-weight: 600;
-}
-
-
-.s7-user-menu {
-  position: absolute;
-  top: 52px;
-  right: 0;               /* 🔥 cola no avatar */
   background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  padding: 6px;
-  min-width: 180px;
-  z-index: 9999;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.s7-user-menu button {
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 10px 12px;
-  text-align: left;
-  font-size: 14px;
-  cursor: pointer;
-  border-radius: 8px;
+/* Logo Suse7 */
+.nav-logo-img {
+  width: 63px;
+  height: 63px;
 }
 
-.s7-user-menu button:hover {
-  background: #f1f5ff;
-}
-
-.s7-user-menu .danger {
-  color: #b91c1c;
-}
+/* ======================================================================
+   MENU CENTRAL
+====================================================================== */
 
 .nav-center {
   display: flex;
@@ -150,14 +52,48 @@
   flex-wrap: nowrap;
 }
 
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 500;
+  color: #374151;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.nav-item:hover {
+  background: #eef3ff;
+}
+
+.nav-icon {
+  width: 16px;
+  height: 16px;
+  color: #6b7280;
+}
+
+/* Item ativo */
+.nav-item.active {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.nav-item.active .nav-icon {
+  color: #e9ebf1;
+}
+
+/* ======================================================================
+   ÁREA DIREITA — MENU DA EMPRESA
+   (AvatarMenu.jsx controla dropdown e interações)
+====================================================================== */
+
 .nav-right {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;         /* 🔥 impede de ser espremido */
-  position: relative;     /* 🔥 referência pro menu */
-}
-
-.nav-item:hover {
-  background: #eef3ff;
+  position: relative;     /* 🔥 referência para o dropdown */
 }
