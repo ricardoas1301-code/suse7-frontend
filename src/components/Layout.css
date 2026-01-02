@@ -123,16 +123,15 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  .nav-right {
-  z-index: 20;          /* 🔥 acima do menu central */
-}
 
-  /* 🔥 Espaço padrão do avatar pro fim */
   padding-left: 33px;
-
   gap: 12px;
+
   flex-shrink: 0;
   position: relative;
+
+  z-index: 20; /* 🔥 AGORA FUNCIONA */
+
 }
 
 /* ======================================================================
