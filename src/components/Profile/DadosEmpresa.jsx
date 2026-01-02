@@ -172,38 +172,32 @@ if (error) {
   return (
   <div className="dados-empresa-container">
     <div className="profile-card">
-      <h2>Dados da Empresa</h2>
+      <div className="form-header">
+  <h2>Dados da Empresa</h2>
+  <span className="required-hint">(*) Campos obrigatórios</span>
+</div>
 
-      {/* ================= LOGO DA EMPRESA ================= */}
+
+{/* ================= LOGO DA EMPRESA ================= */}
 <div className="form-grid">
   <div className="field-full logo-field">
     <label>Logo da Empresa</label>
 
-  <div className="form-header">
-  <h2>Dados da Empresa</h2>
-
-  <span className="required-hint">
-    (*) Campos obrigatórios
-  </span>
-</div>
-
     <div className="logo-preview">
       {form.photo_url ? (
         <img
-  src={form.photo_url}
-  alt="Logo da empresa"
-  key={form.photo_url}   // 🔥 força re-render
-  className="logo-fade"
-/>
+          src={form.photo_url}
+          alt="Logo da empresa"
+          key={form.photo_url}
+          className="logo-fade"
+        />
       ) : (
         <span className="logo-placeholder">Sem logo</span>
       )}
     </div>
 
     <label className="logo-upload-btn">
-     <div className="logo-actions">
-  <span className="alterar-imagem">Alterar imagem</span>
-</div>
+      <span className="alterar-imagem">Alterar imagem</span>
       <input
         type="file"
         accept="image/png, image/jpeg"
@@ -214,99 +208,56 @@ if (error) {
   </div>
 </div>
 
+      
+{/* ================= DADOS DA EMPRESA ================= */}
+<div className="form-grid">
 
-      {/* ================= DADOS DA EMPRESA ================= */}
-      <div className="field-lg">
-  <label>Email</label>
-
-  <div className="readonly-field">
-    <input value={form.email} disabled />
-    <span
-      className="readonly-icon"
-      title="Este campo não pode ser alterado"
-    >
-      🔒
-    </span>
+  <div className="field-lg">
+    <label>Nome da Empresa *</label>
+    <input
+      name="nome_loja"
+      value={form.nome_loja}
+      onChange={handleChange}
+    />
   </div>
+
+  <div className="field-lg">
+    <label>Email</label>
+    <div className="readonly-field">
+      <input value={form.email} disabled />
+      <span className="readonly-icon" title="Este campo não pode ser alterado">🔒</span>
+    </div>
+  </div>
+
+  <div className="field-md">
+    <label>CPF / CNPJ</label>
+    <div className="readonly-field">
+      <input value={form.cpf_cnpj} disabled />
+      <span className="readonly-icon" title="Este campo não pode ser alterado">🔒</span>
+    </div>
+  </div>
+
+  <div className="field-xs">
+    <label>Imposto (%) *</label>
+    <input
+      name="imposto_percentual"
+      value={form.imposto_percentual}
+      onChange={handleChange}
+    />
+  </div>
+
+  <div className="field-full site-field">
+    <label>Site *</label>
+    <input
+      name="site"
+      value={form.site}
+      onChange={handleChange}
+      placeholder="www.sualoja.com.br"
+    />
+  </div>
+
 </div>
 
-      <div className="form-grid">
-        <div className="field-lg">
-          <label>Nome da Empresa *</label>
-          <input
-            name="nome_loja"
-            value={form.nome_loja}
-            onChange={handleChange}
-          />
-        </div>
-
-<div className="field-md">
-  <label>CPF / CNPJ</label>
-
-  <div className="readonly-field">
-    <input value={form.cpf_cnpj} disabled />
-    <span
-      className="readonly-icon"
-      title="Este campo não pode ser alterado"
-    >
-      🔒
-    </span>
-  </div>
-</div>
-
-
-        <div className="field-full site-field">
-          <label>Site *</label>
-          <input
-            name="site"
-            value={form.site}
-            onChange={handleChange}
-            placeholder="www.sualoja.com.br"
-          />
-        </div>
-      </div>
-
-              <div className="field-xs">
-          <label>Imposto (%) *</label>
-          <input
-            name="imposto_percentual"
-            value={form.imposto_percentual}
-            onChange={handleChange}
-          />
-        </div>
-
-
-      {/* ================= CONTATO ================= */}
-      <h4 className="profile-section-title">Contato</h4>
-
-      <div className="form-grid">
-        <div className="field-lg">
-          <label>Responsável *</label>
-          <input
-            name="nome"
-            value={form.nome}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="field-md">
-          <label>WhatsApp *</label>
-          <input
-            name="whatsapp"
-            value={form.whatsapp}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="field-md">
-          <label>Telefone *</label>
-          <input
-            name="telefone"
-            value={form.telefone}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
 
       {/* ================= ENDEREÇO ================= */}
       <h4 className="profile-section-title">Endereço</h4>
