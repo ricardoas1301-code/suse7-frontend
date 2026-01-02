@@ -8,11 +8,12 @@
   padding: 28px;
   max-width: 900px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  margin-bottom: 33px;
 }
 
 /* Título principal */
 .profile-card h2 {
-  font-size: 22px;
+  font-size: 33px;
   font-weight: 700;
   margin-bottom: 28px;
   color: #111827;
@@ -62,7 +63,6 @@
   font-size: 14px;
   background: #f9fafb;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  margin-bottom: 15px;
 }
 
 /* Disabled */
