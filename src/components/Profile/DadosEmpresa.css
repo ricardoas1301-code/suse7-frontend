@@ -124,7 +124,7 @@
   color: #2563eb;
   cursor: pointer;
   display: inline-block;
-  margin-bottom: 33px; /* 🔥 espaço entre "Alterar imagem" e próximo campo */
+  margin-bottom: 39px; /* 🔥 espaço entre "Alterar imagem" e próximo campo */
 
 }
 
@@ -260,4 +260,12 @@
   font-size: 14px;
   color: #9ca3af;
   pointer-events: none;
+}
+
+.alterar-imagem {
+  transition: color 0.2s ease;
+}
+
+.alterar-imagem:hover {
+  color: #1e40af;
 }
