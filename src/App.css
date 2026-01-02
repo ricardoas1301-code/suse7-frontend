@@ -72,12 +72,20 @@ a {
   color: inherit;
 }
 
-/* Layout principal */
+/* =====================================================
+   CONTAINER PRINCIPAL DO CONTEÚDO
+   Responsável pela rolagem vertical das páginas
+===================================================== */
+
 .main-content {
   padding: 30px 40px;
   max-width: 1400px;
   margin: 0 auto;
+
+  min-height: 100vh;   /* ocupa no mínimo a tela */
+  overflow-y: auto;    /* 🔥 ATIVA A ROLAGEM */
 }
+
 
 /* Títulos */
 h1, h2, h3 {
