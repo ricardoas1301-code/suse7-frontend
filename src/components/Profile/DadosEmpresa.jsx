@@ -121,7 +121,7 @@ if (error) {
       .from("profiles")
       .getPublicUrl(filePath);
 
-    const logoUrl = data.publicUrl;
+    const logoUrl = `${publicData.publicUrl}?t=${Date.now()}`;
 
     await supabase
       .from("profiles")
