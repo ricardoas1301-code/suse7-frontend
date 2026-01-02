@@ -3,10 +3,16 @@
    ====================================================================== */
 
 /* Logo no header */
-.logo-wrapper {
-  position: relative;   /* 🔥 CRÍTICO */
-  z-index: 20;          /* 🔥 SOBE ACIMA DA NAVBAR */
+  .logo-wrapper {
+  position: relative;
+  z-index: 20;
+  cursor: pointer;        /* 🔥 DEDINHO */
 }
+
+.logo-wrapper:hover {
+  opacity: 0.9;
+}
+
 
 .company-logo {
   width: 49px;   /* ou 40px */
@@ -20,8 +26,9 @@
   top: calc(100% + 8px);
   right: 0;
 
+  width: 260px;              /* 🔥 TAMANHO FIXO */
   max-width: 260px;
-  width: max-content;
+  min-width: 260px;
 
   background: #ffffff;
   border-radius: 12px;
@@ -131,4 +138,35 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* ================= TOOLTIP PERFIL ================= */
+
+.logo-wrapper {
+  position: relative;
+}
+
+.logo-wrapper::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: #111827;
+  color: #ffffff;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+
+  white-space: nowrap;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.logo-wrapper:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(2px);
 }
