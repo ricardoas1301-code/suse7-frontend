@@ -90,27 +90,45 @@
 .field-full { grid-column: span 12; }/* Site, Logo */
 
 /* =========================
-   LOGO DA EMPRESA (SEGURA)
+   LOGO DA EMPRESA (PADRÃO BLING)
 ========================= */
 
 .logo-preview {
   margin-top: 8px;
-  width: 100%;
-  max-width: 260px;          /* 🔥 limite visual */
-  height: 120px;             /* 🔥 altura controlada */
+  width: 260px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px dashed #e5e7eb;
   border-radius: 10px;
   background: #f9fafb;
-  overflow: hidden;          /* 🔥 impede estouro */
+  overflow: hidden;
 }
 
 .logo-preview img {
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain;       /* 🔥 mantém proporção */
+  object-fit: contain;
+}
+
+.logo-placeholder {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* Botão estilo link */
+.logo-upload-btn {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.logo-upload-btn:hover {
+  text-decoration: underline;
 }
 
 

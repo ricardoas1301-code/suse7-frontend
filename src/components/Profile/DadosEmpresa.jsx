@@ -111,10 +111,11 @@ export default function DadosEmpresa() {
       .from("profiles")
       .upload(filePath, file, { upsert: true });
 
-    if (error) {
-      alert("Erro ao enviar logo.");
-      return;
-    }
+if (error) {
+  console.error(error);
+  alert("Não foi possível enviar a logo. Verifique o formato (PNG ou JPG).");
+  return;
+}
 
     const { data } = supabase.storage
       .from("profiles")
@@ -166,24 +167,31 @@ export default function DadosEmpresa() {
     <div className="profile-card">
       <h2>Dados da Empresa</h2>
 
-      {/* ================= LOGO ================= */}
-      <div className="form-grid">
-        <div className="field-full logo-field">
-          <label>Logo da Empresa</label>
+      {/* ================= LOGO DA EMPRESA ================= */}
+<div className="form-grid">
+  <div className="field-full logo-field">
+    <label>Logo da Empresa</label>
 
-          {form.photo_url && (
-            <div className="logo-preview">
-              <img src={form.photo_url} alt="Logo da empresa" />
-            </div>
-          )}
+    <div className="logo-preview">
+      {form.photo_url ? (
+        <img src={form.photo_url} alt="Logo da empresa" />
+      ) : (
+        <span className="logo-placeholder">Sem logo</span>
+      )}
+    </div>
 
-          <input
-            type="file"
-            accept="image/png, image/jpeg"
-            onChange={handleLogoUpload}
-          />
-        </div>
-      </div>
+    <label className="logo-upload-btn">
+      Alterar imagem
+      <input
+        type="file"
+        accept="image/png, image/jpeg"
+        onChange={handleLogoUpload}
+        hidden
+      />
+    </label>
+  </div>
+</div>
+
 
       {/* ================= DADOS DA EMPRESA ================= */}
       <div className="form-grid">
