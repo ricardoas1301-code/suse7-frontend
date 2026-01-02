@@ -81,6 +81,11 @@
   pointer-events: auto;
 }
 
+.nav-center {
+  position: relative;
+  z-index: 1;
+}
+
 /* Itens do menu */
 .nav-item {
   display: flex;
@@ -132,8 +137,8 @@
   flex-shrink: 0;
   position: relative;
 
-  z-index: 20; /* 🔥 AGORA FUNCIONA */
-
+  z-index: 50; /* 🔥 AGORA FUNCIONA */
+  pointer-events: auto;
 }
 
 /* ======================================================================
