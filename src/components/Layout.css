@@ -67,19 +67,18 @@
 .nav-center {
   display: flex;
   align-items: center;
-
-  /* 🔥 Centraliza o menu no meio da tela */
   justify-content: center;
 
-  /* 🔥 Espaço padrão entre itens */
   gap: 18px;
-
-  /* 🔥 Não deixa “puxar” o layout */
-  min-width: 0;
   white-space: nowrap;
 
-  pointer-events: auto;
+  pointer-events: none; /* 🔥 ISSO É O PULO DO GATO */
 }
+
+.nav-center .nav-item {
+  pointer-events: auto; /* 🔥 só os botões clicam */
+}
+
 
 .nav-center {
   position: relative;
@@ -162,10 +161,4 @@
   flex: 1;
   overflow: auto;          /* 🔥 A ROLAGEM NASCE AQUI */
   padding: 8px 24px 24px;
-}
-
-
-
-.nav-center {
-  background: rgba(255, 0, 0, 0.05);
 }
