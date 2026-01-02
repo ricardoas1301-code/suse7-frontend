@@ -104,7 +104,7 @@ const handleWhatsappChange = (e) => {
 const handleTelefoneChange = (e) => {
   let value = e.target.value.replace(/\D/g, "").slice(0, 11);
 
-  if (value.length >= 10) {
+  if (value.length >= 11) {
     value = value.replace(
       /^(\d{2})(\d{4})(\d{4})$/,
       "($1) $2-$3"
