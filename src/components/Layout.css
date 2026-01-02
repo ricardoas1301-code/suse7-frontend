@@ -77,6 +77,8 @@
   /* 🔥 Não deixa “puxar” o layout */
   min-width: 0;
   white-space: nowrap;
+
+  pointer-events: auto;
 }
 
 /* Itens do menu */
