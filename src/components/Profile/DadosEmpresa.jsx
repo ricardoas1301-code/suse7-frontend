@@ -75,6 +75,47 @@ export default function DadosEmpresa() {
     loadProfile();
   }, []);
 
+// ------------------------------------------------------------------
+// WHATSAPP — (99) 99999-9999
+// ------------------------------------------------------------------
+const handleWhatsappChange = (e) => {
+  let value = e.target.value.replace(/\D/g, "").slice(0, 11);
+
+  if (value.length >= 11) {
+    value = value.replace(
+      /^(\d{2})(\d{5})(\d{4})$/,
+      "($1) $2-$3"
+    );
+  } else if (value.length >= 7) {
+    value = value.replace(
+      /^(\d{2})(\d{4,5})(\d{0,4})$/,
+      "($1) $2-$3"
+    );
+  } else if (value.length >= 3) {
+    value = value.replace(/^(\d{2})(\d+)/, "($1) $2");
+  }
+
+  setForm((prev) => ({ ...prev, whatsapp: value }));
+};
+
+// ------------------------------------------------------------------
+// TELEFONE — (99) 9999-99999
+// ------------------------------------------------------------------
+const handleTelefoneChange = (e) => {
+  let value = e.target.value.replace(/\D/g, "").slice(0, 11);
+
+  if (value.length >= 10) {
+    value = value.replace(
+      /^(\d{2})(\d{4})(\d{4})$/,
+      "($1) $2-$3"
+    );
+  } else if (value.length >= 3) {
+    value = value.replace(/^(\d{2})(\d+)/, "($1) $2");
+  }
+
+  setForm((prev) => ({ ...prev, telefone: value }));
+};
+
   // ------------------------------------------------------------------
   // GENERIC HANDLER
   // ------------------------------------------------------------------
@@ -83,18 +124,31 @@ export default function DadosEmpresa() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ------------------------------------------------------------------
-  // IMPOSTO MASK (99,99)
-  // ------------------------------------------------------------------
-  const handleImpostoChange = (e) => {
-    let value = e.target.value.replace(/\D/g, "").slice(0, 4);
+// ------------------------------------------------------------------
+// IMPOSTO (%) — aceita: 6 | 6,33 | 19,28
+// ------------------------------------------------------------------
+const handleImpostoChange = (e) => {
+  let value = e.target.value;
 
-    if (value.length >= 3) {
-      value = value.replace(/^(\d{2})(\d{1,2})$/, "$1,$2");
-    }
+  // Remove tudo que não for número ou vírgula
+  value = value.replace(/[^0-9,]/g, "");
 
-    setForm((prev) => ({ ...prev, imposto_percentual: value }));
-  };
+  // Impede mais de uma vírgula
+  if ((value.match(/,/g) || []).length > 1) {
+    return;
+  }
+
+  // Limita casas decimais em 2
+  if (value.includes(",")) {
+    const [int, dec] = value.split(",");
+    value = `${int.slice(0, 2)},${dec.slice(0, 2)}`;
+  } else {
+    value = value.slice(0, 2);
+  }
+
+  setForm((prev) => ({ ...prev, imposto_percentual: value }));
+};
+
 
   // ------------------------------------------------------------------
   // CEP MASK + VIA CEP
@@ -240,7 +294,7 @@ export default function DadosEmpresa() {
               name="imposto_percentual"
               value={form.imposto_percentual}
               onChange={handleImpostoChange}
-              placeholder="15,99"
+              placeholder="6,33"
             />
           </div>
         </div>
@@ -255,12 +309,23 @@ export default function DadosEmpresa() {
 
           <div className="field-md">
             <label>WhatsApp *</label>
-            <input name="whatsapp" value={form.whatsapp} onChange={handleChange} />
+            <input
+  name="whatsapp"
+  value={form.whatsapp}
+  onChange={handleWhatsappChange}
+  placeholder="(17) 99933-2833"
+/>
           </div>
 
           <div className="field-md">
             <label>Telefone *</label>
-            <input name="telefone" value={form.telefone} onChange={handleChange} />
+            <input
+  name="telefone"
+  value={form.telefone}
+  onChange={handleTelefoneChange}
+  placeholder="(17) 93399-3328"
+/>
+
           </div>
         </div>
 
