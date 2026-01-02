@@ -54,3 +54,9 @@
   align-items: center;
   gap: 12px;
 }
+
+.nav-logo-img {
+  width: 63px;
+  height: 63px;
+  object-fit: contain;
+}

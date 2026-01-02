@@ -32,4 +32,14 @@
   margin-bottom: 12px;
 }
 
+/* =====================================================
+   PROTEÇÃO GLOBAL DE IMAGENS
+   Evita imagens estourarem o layout
+===================================================== */
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
 

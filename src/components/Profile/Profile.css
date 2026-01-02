@@ -7,5 +7,6 @@
 .profile-content {
   flex: 1;
   padding: 8px 24px;     /* 🔥 era 24px → agora reduzimos ~70% */
+  padding: 8px 24px;     /* 🔥 era 24px → agora reduzimos ~70% */
   background: #f6f8fb;
 }
