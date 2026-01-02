@@ -72,7 +72,7 @@
   gap: 18px;
   white-space: nowrap;
 
-  pointer-events: none; /* 🔥 ISSO É O PULO DO GATO */
+  pointer-events: auto; /* 🔥 ISSO É O PULO DO GATO */
 }
 
 .nav-center .nav-item {
