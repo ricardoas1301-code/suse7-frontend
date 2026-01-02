@@ -44,7 +44,7 @@ export default function DadosEmpresa() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("*")
+        .select("(*)")
         .eq("id", user.id)
         .single();
 
@@ -183,7 +183,7 @@ export default function DadosEmpresa() {
 
         <div className="form-header">
           <h2>Dados da Empresa</h2>
-          <span className="required-hint">(*) Campos obrigatórios</span>
+          <span className="required-hint"> Campos obrigatórios</span>
         </div>
 
         {/* LOGO */}
@@ -217,7 +217,7 @@ export default function DadosEmpresa() {
             <label>Email</label>
             <div className="readonly-field">
               <input value={form.email} disabled />
-              <span className="readonly-icon">🔒</span>
+              <span className="readonly-icon"></span>
             </div>
           </div>
 
@@ -225,12 +225,12 @@ export default function DadosEmpresa() {
             <label>CPF / CNPJ</label>
             <div className="readonly-field">
               <input value={form.cpf_cnpj} disabled />
-              <span className="readonly-icon">🔒</span>
+              <span className="readonly-icon"></span>
             </div>
           </div>
 
           <div className="field-full site-field">
-            <label>Site *</label>
+            <label>Site</label>
             <input name="site" value={form.site} onChange={handleChange} />
           </div>
 
@@ -273,22 +273,22 @@ export default function DadosEmpresa() {
           </div>
 
           <div className="field-sm">
-            <label>UF *</label>
+            <label>UF</label>
             <input value={form.estado} disabled />
           </div>
 
           <div className="field-md">
-            <label>Cidade *</label>
+            <label>Cidade</label>
             <input value={form.cidade} disabled />
           </div>
 
           <div className="field-lg">
-            <label>Endereço *</label>
+            <label>Endereço</label>
             <input name="endereco" value={form.endereco} onChange={handleChange} />
           </div>
 
           <div className="field-sm">
-            <label>Número *</label>
+            <label>Número</label>
             <input name="numero" value={form.numero} onChange={handleChange} />
           </div>
 
