@@ -54,8 +54,8 @@
 
 /* 🔥 Logo SEMPRE controlada (não estoura / não some) */
 .nav-logo-img {
-  width: 66px;
-  height: 66px;
+  width: 63px;
+  height: 63px;
   object-fit: contain;
   display: block;
 }
