@@ -162,68 +162,71 @@ export default function DadosEmpresa() {
   // RENDER
   // ------------------------------------------------------------------
   return (
+  <div className="dados-empresa-container">
     <div className="profile-card">
       <h2>Dados da Empresa</h2>
 
-           {/* ================= LOGO ================= */}
-<div className="form-grid">
-  <div className="field-full logo-field">
-    <label>Logo da Empresa</label>
+      {/* ================= LOGO ================= */}
+      <div className="form-grid">
+        <div className="field-full logo-field">
+          <label>Logo da Empresa</label>
 
-    {form.photo_url && (
-      <div className="logo-preview">
-        <img src={form.photo_url} alt="Logo da empresa" />
+          {form.photo_url && (
+            <div className="logo-preview">
+              <img src={form.photo_url} alt="Logo da empresa" />
+            </div>
+          )}
+
+          <input
+            type="file"
+            accept="image/png, image/jpeg"
+            onChange={handleLogoUpload}
+          />
+        </div>
       </div>
-    )}
-
-    <input
-      type="file"
-      accept="image/png, image/jpeg"
-      onChange={handleLogoUpload}
-    />
-
-    </div>
-</div>
 
       {/* ================= DADOS DA EMPRESA ================= */}
-<div className="form-grid">
-  <div className="field-lg">
-    <label>Nome da Empresa *</label>
-    <input name="nome_loja" value={form.nome_loja} onChange={handleChange} />
-  </div>
+      <div className="form-grid">
+        <div className="field-lg">
+          <label>Nome da Empresa *</label>
+          <input
+            name="nome_loja"
+            value={form.nome_loja}
+            onChange={handleChange}
+          />
+        </div>
 
-  <div className="field-md">
-    <label>CPF / CNPJ</label>
-    <input value={form.cpf_cnpj} disabled />
-  </div>
+        <div className="field-md">
+          <label>CPF / CNPJ</label>
+          <input value={form.cpf_cnpj} disabled />
+        </div>
 
-  <div className="field-lg">
-    <label>Email</label>
-    <input value={form.email} disabled />
-  </div>
+        <div className="field-lg">
+          <label>Email</label>
+          <input value={form.email} disabled />
+        </div>
 
-  <div className="field-xs">
-    <label>Imposto (%) *</label>
-    <input
-      name="imposto_percentual"
-      value={form.imposto_percentual}
-      onChange={handleChange}
-    />
-  </div>
+        <div className="field-xs">
+          <label>Imposto (%) *</label>
+          <input
+            name="imposto_percentual"
+            value={form.imposto_percentual}
+            onChange={handleChange}
+          />
+        </div>
 
-<div className="field-full site-field">
-  <label>Site *</label>
-  <input
-    name="site"
-    value={form.site}
-    onChange={handleChange}
-    placeholder="www.sualoja.com.br"
-  />
-</div>
+        <div className="field-full site-field">
+          <label>Site *</label>
+          <input
+            name="site"
+            value={form.site}
+            onChange={handleChange}
+            placeholder="www.sualoja.com.br"
+          />
+        </div>
+      </div>
 
-</div>
-
-       {/* ================= CONTATO ================= */}
+      {/* ================= CONTATO ================= */}
       <h4 className="profile-section-title">Contato</h4>
 
       <div className="form-grid">
@@ -233,7 +236,6 @@ export default function DadosEmpresa() {
             name="nome"
             value={form.nome}
             onChange={handleChange}
-            placeholder="Nome do responsável"
           />
         </div>
 
@@ -243,7 +245,6 @@ export default function DadosEmpresa() {
             name="whatsapp"
             value={form.whatsapp}
             onChange={handleChange}
-            placeholder="WhatsApp"
           />
         </div>
 
@@ -253,7 +254,6 @@ export default function DadosEmpresa() {
             name="telefone"
             value={form.telefone}
             onChange={handleChange}
-            placeholder="Telefone"
           />
         </div>
       </div>
@@ -268,7 +268,6 @@ export default function DadosEmpresa() {
             name="cep"
             value={form.cep}
             onChange={handleChange}
-            placeholder="CEP"
           />
         </div>
 
@@ -278,7 +277,6 @@ export default function DadosEmpresa() {
             name="estado"
             value={form.estado}
             onChange={handleChange}
-            placeholder="UF"
           />
         </div>
 
@@ -288,7 +286,6 @@ export default function DadosEmpresa() {
             name="cidade"
             value={form.cidade}
             onChange={handleChange}
-            placeholder="Cidade"
           />
         </div>
 
@@ -298,7 +295,6 @@ export default function DadosEmpresa() {
             name="endereco"
             value={form.endereco}
             onChange={handleChange}
-            placeholder="Endereço"
           />
         </div>
 
@@ -308,7 +304,6 @@ export default function DadosEmpresa() {
             name="numero"
             value={form.numero}
             onChange={handleChange}
-            placeholder="Número"
           />
         </div>
 
@@ -318,7 +313,6 @@ export default function DadosEmpresa() {
             name="complemento"
             value={form.complemento}
             onChange={handleChange}
-            placeholder="Complemento"
           />
         </div>
 
@@ -328,7 +322,6 @@ export default function DadosEmpresa() {
             name="bairro"
             value={form.bairro}
             onChange={handleChange}
-            placeholder="Bairro"
           />
         </div>
       </div>
@@ -342,5 +335,6 @@ export default function DadosEmpresa() {
         {saving ? "Salvando..." : "Salvar Alterações"}
       </button>
     </div>
-  );
+  </div>
+);
 }
