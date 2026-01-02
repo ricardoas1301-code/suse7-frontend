@@ -89,20 +89,30 @@
 .field-xl { grid-column: span 8; }   /* Endereço */
 .field-full { grid-column: span 12; }/* Site, Logo */
 
-/* Logo */
+/* =========================
+   LOGO DA EMPRESA (SEGURA)
+========================= */
+
 .logo-preview {
-  margin-top: 6px;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 260px;          /* 🔥 limite visual */
+  height: 120px;             /* 🔥 altura controlada */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+  overflow: hidden;          /* 🔥 impede estouro */
 }
 
 .logo-preview img {
-  max-height: 80px;
-  max-width: 220px;
-  object-fit: contain;
-  border: 1px dashed #e5e7eb;
-  padding: 8px;
-  border-radius: 8px;
-  background: #f9fafb;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;       /* 🔥 mantém proporção */
 }
+
 
 /* Botão */
 .btn-primary {
