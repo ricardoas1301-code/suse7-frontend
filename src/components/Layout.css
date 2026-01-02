@@ -34,7 +34,7 @@
 
   /* 🔥 Evita overflow lateral e “quebras” */
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible; /* 🔥 PERMITE O DROPDOWN APARECER */
 }
 
 /* ======================================================================
