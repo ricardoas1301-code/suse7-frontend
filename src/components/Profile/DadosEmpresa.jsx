@@ -1,11 +1,6 @@
 // ======================================================================
 // PERFIL — DADOS DA EMPRESA
 // Objetivo: Exibir e editar os dados cadastrais da empresa
-// Regras:
-// - CPF/CNPJ: VISÍVEL + READ-ONLY
-// - Email: VISÍVEL + READ-ONLY
-// - Nome do usuário pessoal: NÃO EXIBIR
-// - Logo: upload no Supabase Storage + salvar URL em photo_url
 // ======================================================================
 
 import { useEffect, useState } from "react";
@@ -40,14 +35,11 @@ export default function DadosEmpresa() {
   });
 
   // ------------------------------------------------------------------
-  // CARREGAR DADOS DO PERFIL
+  // LOAD PROFILE
   // ------------------------------------------------------------------
   useEffect(() => {
     const loadProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data } = await supabase
@@ -84,7 +76,7 @@ export default function DadosEmpresa() {
   }, []);
 
   // ------------------------------------------------------------------
-  // HANDLER GENÉRICO DE INPUT
+  // GENERIC HANDLER
   // ------------------------------------------------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,250 +84,229 @@ export default function DadosEmpresa() {
   };
 
   // ------------------------------------------------------------------
-  // UPLOAD DA LOGO DA EMPRESA
+  // IMPOSTO MASK (99,99)
+  // ------------------------------------------------------------------
+  const handleImpostoChange = (e) => {
+    let value = e.target.value.replace(/\D/g, "").slice(0, 4);
+
+    if (value.length >= 3) {
+      value = value.replace(/^(\d{2})(\d{1,2})$/, "$1,$2");
+    }
+
+    setForm((prev) => ({ ...prev, imposto_percentual: value }));
+  };
+
+  // ------------------------------------------------------------------
+  // CEP MASK + VIA CEP
+  // ------------------------------------------------------------------
+  const handleCepChange = async (e) => {
+    let value = e.target.value.replace(/\D/g, "").slice(0, 8);
+
+    if (value.length > 5) {
+      value = value.replace(/^(\d{5})(\d{1,3})$/, "$1-$2");
+    }
+
+    setForm((prev) => ({ ...prev, cep: value }));
+
+    if (value.length === 9) {
+      const cepClean = value.replace("-", "");
+
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`);
+        const data = await res.json();
+
+        if (!data.erro) {
+          setForm((prev) => ({
+            ...prev,
+            endereco: data.logradouro || "",
+            bairro: data.bairro || "",
+            cidade: data.localidade || "",
+            estado: data.uf || "",
+          }));
+        }
+      } catch (err) {
+        console.error("Erro ao buscar CEP", err);
+      }
+    }
+  };
+
+  // ------------------------------------------------------------------
+  // LOGO UPLOAD
   // ------------------------------------------------------------------
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-     // 👉 Preview imediato (Bling style)
-  const previewUrl = URL.createObjectURL(file);
-  setForm((prev) => ({ ...prev, photo_url: previewUrl }));
+    const previewUrl = URL.createObjectURL(file);
+    setForm((prev) => ({ ...prev, photo_url: previewUrl }));
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const fileExt = file.name.split(".").pop();
-    const filePath = `logos/${user.id}.${fileExt}`;
+    const ext = file.name.split(".").pop();
+    const path = `logos/${user.id}.${ext}`;
 
-    const { error } = await supabase.storage
-      .from("profiles")
-      .upload(filePath, file, { upsert: true });
+    await supabase.storage.from("profiles").upload(path, file, { upsert: true });
 
-if (error) {
-  console.error(error);
-  alert("Não foi possível enviar a logo. Verifique o formato (PNG ou JPG).");
-  return;
-}
-
-    const { data } = supabase.storage
-      .from("profiles")
-      .getPublicUrl(filePath);
-
+    const { data } = supabase.storage.from("profiles").getPublicUrl(path);
     const logoUrl = `${data.publicUrl}?t=${Date.now()}`;
 
-    await supabase
-      .from("profiles")
-      .update({ photo_url: logoUrl })
-      .eq("id", user.id);
+    await supabase.from("profiles").update({ photo_url: logoUrl }).eq("id", user.id);
 
     setForm((prev) => ({ ...prev, photo_url: logoUrl }));
-
     window.dispatchEvent(new Event("logoUpdated"));
-
   };
 
   // ------------------------------------------------------------------
-  // SALVAR DADOS EDITÁVEIS
+  // SAVE
   // ------------------------------------------------------------------
   const handleSave = async () => {
     setSaving(true);
 
     const { email, cpf_cnpj, ...dadosEditaveis } = form;
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    await supabase
-      .from("profiles")
-      .update(dadosEditaveis)
-      .eq("id", user.id);
+    await supabase.from("profiles").update(dadosEditaveis).eq("id", user.id);
 
     setSaving(false);
     alert("Dados atualizados com sucesso!");
   };
 
-  // ------------------------------------------------------------------
-  // LOADING
-  // ------------------------------------------------------------------
-  if (loading) {
-    return <p>Carregando dados...</p>;
-  }
+  if (loading) return <p>Carregando dados...</p>;
 
   // ------------------------------------------------------------------
   // RENDER
   // ------------------------------------------------------------------
   return (
-  <div className="dados-empresa-container">
-    <div className="profile-card">
-      <div className="form-header">
-  <h2>Dados da Empresa</h2>
-  <span className="required-hint">(*) Campos obrigatórios</span>
-</div>
+    <div className="dados-empresa-container">
+      <div className="profile-card">
 
-
-{/* ================= LOGO DA EMPRESA ================= */}
-<div className="form-grid">
-  <div className="field-full logo-field">
-    <label>Logo da Empresa</label>
-
-    <div className="logo-preview">
-      {form.photo_url ? (
-        <img
-          src={form.photo_url}
-          alt="Logo da empresa"
-          key={form.photo_url}
-          className="logo-fade"
-        />
-      ) : (
-        <span className="logo-placeholder">Sem logo</span>
-      )}
-    </div>
-
-    <label className="logo-upload-btn">
-      <span className="alterar-imagem">Alterar imagem</span>
-      <input
-        type="file"
-        accept="image/png, image/jpeg"
-        onChange={handleLogoUpload}
-        hidden
-      />
-    </label>
-  </div>
-</div>
-
-      
-{/* ================= DADOS DA EMPRESA ================= */}
-<div className="form-grid">
-
-  <div className="field-lg">
-    <label>Nome da Empresa *</label>
-    <input
-      name="nome_loja"
-      value={form.nome_loja}
-      onChange={handleChange}
-    />
-  </div>
-
-  <div className="field-lg">
-    <label>Email</label>
-    <div className="readonly-field">
-      <input value={form.email} disabled />
-      <span className="readonly-icon" title="Este campo não pode ser alterado"></span>
-    </div>
-  </div>
-
-  <div className="field-md">
-    <label>CPF / CNPJ</label>
-    <div className="readonly-field">
-      <input value={form.cpf_cnpj} disabled />
-      <span className="readonly-icon" title="Este campo não pode ser alterado"></span>
-    </div>
-  </div>
-
-   <div className="field-full site-field">
-    <label>Site *</label>
-    <input
-      name="site"
-      value={form.site}
-      onChange={handleChange}
-      placeholder="www.sualoja.com.br"
-    />
-  </div>
-
-   <div className="field-xs">
-    <label>Imposto (%) *</label>
-    <input
-      name="imposto_percentual"
-      value={form.imposto_percentual}
-      onChange={handleChange}
-    />
-  </div>
-
-</div>
-
-
-      {/* ================= ENDEREÇO ================= */}
-      <h4 className="profile-section-title">Endereço</h4>
-
-      <div className="form-grid">
-        <div className="field-sm">
-          <label>CEP *</label>
-          <input
-            name="cep"
-            value={form.cep}
-            onChange={handleChange}
-          />
+        <div className="form-header">
+          <h2>Dados da Empresa</h2>
+          <span className="required-hint">(*) Campos obrigatórios</span>
         </div>
 
-        <div className="field-sm">
-          <label>UF *</label>
-          <input
-            name="estado"
-            value={form.estado}
-            onChange={handleChange}
-          />
+        {/* LOGO */}
+        <div className="form-grid">
+          <div className="field-full logo-field">
+            <label>Logo da Empresa</label>
+
+            <div className="logo-preview">
+              {form.photo_url ? (
+                <img src={form.photo_url} alt="Logo" className="logo-fade" />
+              ) : (
+                <span className="logo-placeholder">Sem logo</span>
+              )}
+            </div>
+
+            <label className="logo-upload-btn">
+              <span className="alterar-imagem">Alterar imagem</span>
+              <input type="file" accept="image/png, image/jpeg" onChange={handleLogoUpload} hidden />
+            </label>
+          </div>
         </div>
 
-        <div className="field-md">
-          <label>Cidade *</label>
-          <input
-            name="cidade"
-            value={form.cidade}
-            onChange={handleChange}
-          />
+        {/* DADOS */}
+        <div className="form-grid">
+          <div className="field-lg">
+            <label>Nome da Empresa *</label>
+            <input name="nome_loja" value={form.nome_loja} onChange={handleChange} />
+          </div>
+
+          <div className="field-lg">
+            <label>Email</label>
+            <div className="readonly-field">
+              <input value={form.email} disabled />
+              <span className="readonly-icon">🔒</span>
+            </div>
+          </div>
+
+          <div className="field-md">
+            <label>CPF / CNPJ</label>
+            <div className="readonly-field">
+              <input value={form.cpf_cnpj} disabled />
+              <span className="readonly-icon">🔒</span>
+            </div>
+          </div>
+
+          <div className="field-full site-field">
+            <label>Site *</label>
+            <input name="site" value={form.site} onChange={handleChange} />
+          </div>
+
+          <div className="field-xs">
+            <label>Imposto (%) *</label>
+            <input
+              name="imposto_percentual"
+              value={form.imposto_percentual}
+              onChange={handleImpostoChange}
+              placeholder="15,99"
+            />
+          </div>
         </div>
 
-        <div className="field-lg">
-          <label>Endereço *</label>
-          <input
-            name="endereco"
-            value={form.endereco}
-            onChange={handleChange}
-          />
+        {/* CONTATO */}
+        <h4 className="profile-section-title">Contato</h4>
+        <div className="form-grid">
+          <div className="field-lg">
+            <label>Responsável *</label>
+            <input name="nome" value={form.nome} onChange={handleChange} />
+          </div>
+
+          <div className="field-md">
+            <label>WhatsApp *</label>
+            <input name="whatsapp" value={form.whatsapp} onChange={handleChange} />
+          </div>
+
+          <div className="field-md">
+            <label>Telefone *</label>
+            <input name="telefone" value={form.telefone} onChange={handleChange} />
+          </div>
         </div>
 
-        <div className="field-sm">
-          <label>Número *</label>
-          <input
-            name="numero"
-            value={form.numero}
-            onChange={handleChange}
-          />
+        {/* ENDEREÇO */}
+        <h4 className="profile-section-title">Endereço</h4>
+        <div className="form-grid">
+          <div className="field-sm">
+            <label>CEP *</label>
+            <input value={form.cep} onChange={handleCepChange} />
+          </div>
+
+          <div className="field-sm">
+            <label>UF *</label>
+            <input value={form.estado} disabled />
+          </div>
+
+          <div className="field-md">
+            <label>Cidade *</label>
+            <input value={form.cidade} disabled />
+          </div>
+
+          <div className="field-lg">
+            <label>Endereço *</label>
+            <input name="endereco" value={form.endereco} onChange={handleChange} />
+          </div>
+
+          <div className="field-sm">
+            <label>Número *</label>
+            <input name="numero" value={form.numero} onChange={handleChange} />
+          </div>
+
+          <div className="field-md">
+            <label>Complemento</label>
+            <input name="complemento" value={form.complemento} onChange={handleChange} />
+          </div>
+
+          <div className="field-md">
+            <label>Bairro</label>
+            <input value={form.bairro} disabled />
+          </div>
         </div>
 
-        <div className="field-md">
-          <label>Complemento</label>
-          <input
-            name="complemento"
-            value={form.complemento}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="field-md">
-          <label>Bairro</label>
-          <input
-            name="bairro"
-            value={form.bairro}
-            onChange={handleChange}
-          />
-        </div>
+        <button className="btn-primary" onClick={handleSave} disabled={saving}>
+          {saving ? "Salvando..." : "Salvar Alterações"}
+        </button>
       </div>
-
-      {/* ================= AÇÕES ================= */}
-      <button
-        className="btn-primary"
-        onClick={handleSave}
-        disabled={saving}
-      >
-        {saving ? "Salvando..." : "Salvar Alterações"}
-      </button>
     </div>
-  </div>
-);
+  );
 }
