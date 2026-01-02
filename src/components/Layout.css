@@ -17,6 +17,8 @@
 
 .navbar-premium {
   height: 64px;
+  position: relative;   /* 🔥 cria contexto */
+  z-index: 10;
 
   /* 🔥 Troca de flex para grid para centralização perfeita */
   display: grid;
@@ -121,6 +123,9 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  .nav-right {
+  z-index: 20;          /* 🔥 acima do menu central */
+}
 
   /* 🔥 Espaço padrão do avatar pro fim */
   padding-left: 33px;
@@ -153,43 +158,5 @@
   padding: 8px 24px 24px;
 }
 
-/* Menu */
-.nav-center {
-  display: flex;
-  gap: 16px;
-}
 
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  color: #374151;
-  text-decoration: none;
-}
-
-.nav-item.active {
-  background: #2563eb;
-  color: #fff;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Logo Suse7 no Navbar */
-.nav-logo-img {
-  height: 63px;        /* 🔥 limite real */
-  width: auto;
-  max-width: 120px;
-  object-fit: contain;
-}
-
-.nav-logo {
-  display: flex;
-  align-items: center;
-}
 
