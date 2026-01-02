@@ -4,13 +4,13 @@
 
 /* Logo no header */
 .logo-wrapper {
-  cursor: pointer;
+  position: relative;   /* 🔥 CRÍTICO */
+  z-index: 20;          /* 🔥 SOBE ACIMA DA NAVBAR */
 }
 
 .company-logo {
+  width: 36px;   /* ou 40px */
   height: 36px;
-  max-width: 160px;
-  object-fit: contain;
 }
 
 /* ---------------- MENU ---------------- */
