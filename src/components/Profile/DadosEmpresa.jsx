@@ -181,7 +181,12 @@ if (error) {
 
     <div className="logo-preview">
       {form.photo_url ? (
-        <img src={form.photo_url} alt="Logo da empresa" />
+        <img
+  src={form.photo_url}
+  alt="Logo da empresa"
+  key={form.photo_url}   // 🔥 força re-render
+  className="logo-fade"
+/>
       ) : (
         <span className="logo-placeholder">Sem logo</span>
       )}

@@ -56,15 +56,15 @@
 }
 
 /* Logo Suse7 no Navbar */
-.nav-logo-img {
-  height: 36px;        /* 🔥 limite real */
-  width: auto;
-  max-width: 120px;
-  object-fit: contain;
-}
-
 .nav-logo {
   display: flex;
   align-items: center;
 }
+
+.nav-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
 

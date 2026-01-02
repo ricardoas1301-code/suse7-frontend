@@ -94,7 +94,7 @@
 
 .avatar-dropdown {
   position: absolute;
-  top: 56px;
+  top: 52px;
   right: 0;
 
   width: 240px;              /* 🔥 trava largura */
@@ -102,7 +102,7 @@
 
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
   overflow: hidden;
   z-index: 9999;
 }
