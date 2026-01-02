@@ -98,6 +98,10 @@ export default function DadosEmpresa() {
     const file = e.target.files[0];
     if (!file) return;
 
+     // 👉 Preview imediato (Bling style)
+  const previewUrl = URL.createObjectURL(file);
+  setForm((prev) => ({ ...prev, photo_url: previewUrl }));
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -121,7 +125,7 @@ if (error) {
       .from("profiles")
       .getPublicUrl(filePath);
 
-    const logoUrl = `${publicData.publicUrl}?t=${Date.now()}`;
+    const logoUrl = `${data.publicUrl}?t=${Date.now()}`;
 
     await supabase
       .from("profiles")
@@ -129,6 +133,9 @@ if (error) {
       .eq("id", user.id);
 
     setForm((prev) => ({ ...prev, photo_url: logoUrl }));
+
+    window.dispatchEvent(new Event("logoUpdated"));
+
   };
 
   // ------------------------------------------------------------------

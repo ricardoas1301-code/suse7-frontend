@@ -40,30 +40,29 @@ export default function Layout() {
 // -----------------------------------------------------
 useEffect(() => {
   const loadProfile = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("profiles")
       .select("nome_loja, photo_url")
       .eq("id", user.id)
       .single();
 
-    if (error) {
-      console.error("Erro ao carregar profile:", error);
-      return;
-    }
-
     if (data) {
-      setEmpresaNome(data.nome_loja);   // ✅ nome da empresa
-      setLogoUrl(data.photo_url);       // ✅ logo da empresa
+      setEmpresaNome(data.nome_loja || "");
+      setLogoUrl(data.photo_url || "");
     }
   };
 
   loadProfile();
+
+  const handleLogoUpdate = () => loadProfile();
+  window.addEventListener("logoUpdated", handleLogoUpdate);
+
+  return () => {
+    window.removeEventListener("logoUpdated", handleLogoUpdate);
+  };
 }, []);
 ;
 
