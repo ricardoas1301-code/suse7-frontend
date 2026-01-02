@@ -225,7 +225,7 @@ if (error) {
     <label>Email</label>
     <div className="readonly-field">
       <input value={form.email} disabled />
-      <span className="readonly-icon" title="Este campo não pode ser alterado">🔒</span>
+      <span className="readonly-icon" title="Este campo não pode ser alterado"></span>
     </div>
   </div>
 
@@ -233,26 +233,26 @@ if (error) {
     <label>CPF / CNPJ</label>
     <div className="readonly-field">
       <input value={form.cpf_cnpj} disabled />
-      <span className="readonly-icon" title="Este campo não pode ser alterado">🔒</span>
+      <span className="readonly-icon" title="Este campo não pode ser alterado"></span>
     </div>
   </div>
 
-  <div className="field-xs">
-    <label>Imposto (%) *</label>
-    <input
-      name="imposto_percentual"
-      value={form.imposto_percentual}
-      onChange={handleChange}
-    />
-  </div>
-
-  <div className="field-full site-field">
+   <div className="field-full site-field">
     <label>Site *</label>
     <input
       name="site"
       value={form.site}
       onChange={handleChange}
       placeholder="www.sualoja.com.br"
+    />
+  </div>
+
+   <div className="field-xs">
+    <label>Imposto (%) *</label>
+    <input
+      name="imposto_percentual"
+      value={form.imposto_percentual}
+      onChange={handleChange}
     />
   </div>
 
