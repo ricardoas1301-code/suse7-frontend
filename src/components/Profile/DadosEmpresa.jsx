@@ -99,12 +99,20 @@ const handleWhatsappChange = (e) => {
 };
 
 // ------------------------------------------------------------------
-// TELEFONE — (99) 9999-99999
+// TELEFONE — aceita 10 ou 11 dígitos
+// (99) 9999-9999 | (99) 99999-9999
 // ------------------------------------------------------------------
 const handleTelefoneChange = (e) => {
   let value = e.target.value.replace(/\D/g, "").slice(0, 11);
 
-  if (value.length >= 11) {
+  if (value.length === 11) {
+    // Celular
+    value = value.replace(
+      /^(\d{2})(\d{5})(\d{4})$/,
+      "($1) $2-$3"
+    );
+  } else if (value.length === 10) {
+    // Fixo
     value = value.replace(
       /^(\d{2})(\d{4})(\d{4})$/,
       "($1) $2-$3"
@@ -115,6 +123,7 @@ const handleTelefoneChange = (e) => {
 
   setForm((prev) => ({ ...prev, telefone: value }));
 };
+
 
   // ------------------------------------------------------------------
   // GENERIC HANDLER
