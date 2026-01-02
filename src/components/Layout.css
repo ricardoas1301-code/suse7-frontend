@@ -10,14 +10,17 @@
 .page-container {
   display: flex;
   flex: 1;
+  height: calc(100vh - 64px); /* 🔥 desconta a navbar */
 }
 
 .page-content {
   width: 100%;
-  padding-top: 8px;        /* 🔥 reduz espaço superior */
+  padding-top: 8px;
   padding-left: 24px;
   padding-right: 24px;
   padding-bottom: 24px;
+
+  overflow-y: auto;   /* 🔥 ESSENCIAL */
 }
 
 /* ======================================================================
