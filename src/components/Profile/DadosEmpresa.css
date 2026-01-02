@@ -205,3 +205,56 @@
   }
 }
 
+/* Espaço entre ações da logo e próximo label */
+.logo-actions {
+  margin-bottom: 16px; /* ajuste fino se quiser */
+}
+
+.alterar-imagem {
+  color: #2563eb;          /* azul padrão Suse7 */
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.alterar-imagem:hover {
+  text-decoration: underline;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.required-hint {
+  font-size: 12px;
+  color: #6b7280; /* cinza elegante */
+}
+
+.required-hint::before {
+  content: "* ";
+  color: #dc2626; /* vermelho discreto */
+  font-weight: 600;
+}
+
+/* ================= READONLY FIELDS ================= */
+
+.readonly-field {
+  position: relative;
+}
+
+.readonly-field input {
+  background-color: #f9fafb;
+  cursor: not-allowed;
+}
+
+.readonly-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #9ca3af;
+  pointer-events: none;
+}

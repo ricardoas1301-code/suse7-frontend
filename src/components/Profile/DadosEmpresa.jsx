@@ -179,6 +179,14 @@ if (error) {
   <div className="field-full logo-field">
     <label>Logo da Empresa</label>
 
+  <div className="form-header">
+  <h2>Dados da Empresa</h2>
+
+  <span className="required-hint">
+    (*) Campos obrigatórios
+  </span>
+</div>
+
     <div className="logo-preview">
       {form.photo_url ? (
         <img
@@ -193,7 +201,9 @@ if (error) {
     </div>
 
     <label className="logo-upload-btn">
-      Alterar imagem
+     <div className="logo-actions">
+  <span className="alterar-imagem">Alterar imagem</span>
+</div>
       <input
         type="file"
         accept="image/png, image/jpeg"
@@ -206,6 +216,20 @@ if (error) {
 
 
       {/* ================= DADOS DA EMPRESA ================= */}
+      <div className="field-lg">
+  <label>Email</label>
+
+  <div className="readonly-field">
+    <input value={form.email} disabled />
+    <span
+      className="readonly-icon"
+      title="Este campo não pode ser alterado"
+    >
+      🔒
+    </span>
+  </div>
+</div>
+
       <div className="form-grid">
         <div className="field-lg">
           <label>Nome da Empresa *</label>
@@ -216,24 +240,20 @@ if (error) {
           />
         </div>
 
-        <div className="field-md">
-          <label>CPF / CNPJ</label>
-          <input value={form.cpf_cnpj} disabled />
-        </div>
+<div className="field-md">
+  <label>CPF / CNPJ</label>
 
-        <div className="field-lg">
-          <label>Email</label>
-          <input value={form.email} disabled />
-        </div>
+  <div className="readonly-field">
+    <input value={form.cpf_cnpj} disabled />
+    <span
+      className="readonly-icon"
+      title="Este campo não pode ser alterado"
+    >
+      🔒
+    </span>
+  </div>
+</div>
 
-        <div className="field-xs">
-          <label>Imposto (%) *</label>
-          <input
-            name="imposto_percentual"
-            value={form.imposto_percentual}
-            onChange={handleChange}
-          />
-        </div>
 
         <div className="field-full site-field">
           <label>Site *</label>
@@ -245,6 +265,16 @@ if (error) {
           />
         </div>
       </div>
+
+              <div className="field-xs">
+          <label>Imposto (%) *</label>
+          <input
+            name="imposto_percentual"
+            value={form.imposto_percentual}
+            onChange={handleChange}
+          />
+        </div>
+
 
       {/* ================= CONTATO ================= */}
       <h4 className="profile-section-title">Contato</h4>
