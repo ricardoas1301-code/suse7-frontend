@@ -25,7 +25,7 @@
   align-items: center;
 
   /* 🔥 Espaço padrão nas bordas do navbar */
-  padding: 0 16px;
+  padding: 0 33px;
 
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
@@ -123,7 +123,7 @@
   justify-content: flex-end;
 
   /* 🔥 Espaço padrão do avatar pro fim */
-  padding-left: 12px;
+  padding-left: 33px;
 
   gap: 12px;
   flex-shrink: 0;
