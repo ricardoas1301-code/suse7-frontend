@@ -158,9 +158,11 @@
    Objetivo: permitir rolagem vertical da página
 ===================================================== */
 
+
 .dados-empresa-container {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
+  overflow-y: auto;      /* 🔥 SCROLL SÓ AQUI */
   padding-bottom: 40px;
 }
 
