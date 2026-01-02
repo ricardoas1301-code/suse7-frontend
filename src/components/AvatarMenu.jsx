@@ -60,9 +60,11 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
       <div ref={menuRef}>
         {/* Logo da empresa (clicável) */}
         <div
-          className="logo-wrapper"
-          onClick={() => setOpen((prev) => !prev)}
-        >
+  className="logo-wrapper"
+  role="button"
+  aria-label="Abrir menu do perfil"
+  onClick={() => setOpen((prev) => !prev)}
+>
           <img
             src={logoUrl || "/logo-default.png"}
             alt="Logo da empresa"
