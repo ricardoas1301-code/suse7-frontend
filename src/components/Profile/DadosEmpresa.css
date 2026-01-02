@@ -124,6 +124,8 @@
   color: #2563eb;
   cursor: pointer;
   display: inline-block;
+  margin-bottom: 33px; /* 🔥 espaço entre "Alterar imagem" e próximo campo */
+
 }
 
 .logo-upload-btn:hover {
@@ -164,6 +166,7 @@
 /* Campo Site menor (55%) */
 .site-field {
   grid-column: span 4; /* antes 12 */
+  margin-bottom: 33px; /* 🔥 espaço entre "Alterar imagem" e próximo campo */
 }
 
 /* Campo Logo compacto (73% menor visualmente) */
