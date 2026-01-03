@@ -10,6 +10,7 @@ import { supabase } from "../supabaseClient";
 import ContactModal from "./ContactModal";
 import "./AvatarMenu.css";
 import { createPortal } from "react-dom";
+import "./Avatar/Avatar.css";
 
 
 // Ícones monocromáticos (mesmo padrão do menu superior)
@@ -59,29 +60,31 @@ export default function AvatarMenu({ empresaNome, logoUrl }) {
       {/* Container geral (logo + menu) */}
       <div ref={menuRef}>
         {/* Logo da empresa (clicável) */}
-        <div
+       <div
   className="logo-wrapper"
   data-tooltip="Perfil"
   onClick={() => setOpen((prev) => !prev)}
 >
-  <img
-    src={logoUrl || "/logo-default.png"}
-    alt="Logo da empresa"
-    className="company-logo"
-  />
+  <div className="suse7-avatar logo-sm">
+    <img
+      src={logoUrl || "/logo-default.png"}
+      alt="Logo da empresa"
+    />
+  </div>
 </div>
-
 
         {/* Menu dropdown */}
         {open && (
           <div className="avatar-menu">
             {/* Cabeçalho do menu */}
             <div className="avatar-menu-header">
-              <img
-                src={logoUrl || "/logo-default.png"}
-                alt="Logo da empresa"
-                className="avatar-menu-img"
-              />
+<div className="suse7-avatar logo-sm">
+  <img
+    src={logoUrl || "/logo-default.png"}
+    alt="Logo da empresa"
+  />
+</div>
+
               <div className="avatar-menu-company">
                 {empresaNome || "Minha Empresa"}
               </div>
