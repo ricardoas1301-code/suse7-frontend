@@ -267,3 +267,8 @@
 .alterar-imagem:hover {
   color: #1e40af;
 }
+
+/* Imposto em linha própria */
+.imposto-field {
+  grid-column: span 3;
+}

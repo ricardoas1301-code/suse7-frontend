@@ -275,43 +275,55 @@ const handleImpostoChange = (e) => {
         </div>
 
         {/* DADOS */}
-        <div className="form-grid">
-          <div className="field-lg">
-            <label>Nome da Empresa *</label>
-            <input name="nome_loja" value={form.nome_loja} onChange={handleChange} />
-          </div>
+<div className="form-grid">
+  <div className="field-lg">
+    <label>Nome da Empresa *</label>
+    <input
+      name="nome_loja"
+      value={form.nome_loja}
+      onChange={handleChange}
+    />
+  </div>
 
-          <div className="field-md">
-            <label>CPF / CNPJ</label>
-            <div className="readonly-field">
-              <input value={form.cpf_cnpj} disabled />
-              <span className="readonly-icon"></span>
-            </div>
-          </div>
+  <div className="field-md">
+    <label>CPF / CNPJ</label>
+    <div className="readonly-field">
+      <input value={form.cpf_cnpj} disabled />
+      <span className="readonly-icon"></span>
+    </div>
+  </div>
 
-          <div className="field-lg">
-            <label>Email</label>
-            <div className="readonly-field">
-              <input value={form.email} disabled />
-              <span className="readonly-icon"></span>
-            </div>
-          </div>
+  <div className="field-lg">
+    <label>Email</label>
+    <div className="readonly-field">
+      <input value={form.email} disabled />
+      <span className="readonly-icon"></span>
+    </div>
+  </div>
 
-          <div className="field-full site-field">
-            <label>Site</label>
-            <input name="site" value={form.site} onChange={handleChange} />
-          </div>
+  <div className="field-full site-field">
+    <label>Site</label>
+    <input
+      name="site"
+      value={form.site}
+      onChange={handleChange}
+    />
+  </div>
+</div>
 
-          <div className="field-xs">
-            <label>Imposto (%) *</label>
-            <input
-              name="imposto_percentual"
-              value={form.imposto_percentual}
-              onChange={handleImpostoChange}
-              placeholder="6,33"
-            />
-          </div>
-        </div>
+{/* IMPOSTO — LINHA SEPARADA */}
+<div className="form-grid">
+  <div className="field-sm">
+    <label>Imposto (%) *</label>
+    <input
+      name="imposto_percentual"
+      value={form.imposto_percentual}
+      onChange={handleImpostoChange}
+      placeholder="6,33"
+    />
+  </div>
+</div>
+
 
         {/* CONTATO */}
         <h4 className="profile-section-title">Contato</h4>
