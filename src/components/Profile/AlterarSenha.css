@@ -1,9 +1,10 @@
 /* =====================================================
-   ALTERAR SENHA — coluna única (força 1 coluna)
+   ALTERAR SENHA — layout em coluna única real
 ===================================================== */
 .form-grid.form-single-column {
-  grid-template-columns: 1fr !important;
-  row-gap: 20px;
+  display: flex;
+  flex-direction: column; /* 🔥 força 1 por linha */
+  gap: 20px;
 }
 
 /* =====================================================
@@ -73,6 +74,6 @@
    ALTERAR SENHA — largura padrão de campos de senha
 ===================================================== */
 .form-grid.form-single-column .password-field {
-  max-width: 520px;     /* ajuste fino: 460 / 520 / 560 */
+  max-width: 480px;     /* ajuste fino: 460 / 520 / 560 */
   width: 100%;
 }
