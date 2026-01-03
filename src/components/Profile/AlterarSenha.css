@@ -21,9 +21,10 @@
 
 .password-wrapper input {
   width: 100%;
-  height: 44px;
+  height: 46px;
   padding-right: 44px; /* espaço real pro ícone */
   box-sizing: border-box;
+  font-size: 15px;
 }
 
 .toggle-password {
@@ -66,5 +67,14 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-left: 0;          /* alinhado à esquerda */
 }
 
+/* =====================================================
+   ALTERAR SENHA — largura padrão dos inputs
+===================================================== */
+
+.password-field {
+  max-width: 460px;   /* padrão SaaS para senha */
+  width: 100%;
+}
