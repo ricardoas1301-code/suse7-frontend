@@ -44,21 +44,3 @@
   color: #e53935;
 }
 
-.password-strength {
-  margin-top: 6px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.password-strength.fraca {
-  color: #e53935;
-}
-
-.password-strength.media {
-  color: #f9a825;
-}
-
-.password-strength.forte {
-  color: #2e7d32;
-}
-

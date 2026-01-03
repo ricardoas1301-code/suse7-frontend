@@ -23,32 +23,6 @@ export default function AlterarSenha() {
   const [showNovaSenha, setShowNovaSenha] = useState(false);
   const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
 
- // ------------------------------------------------------------------
-// PASSWORD STRENGTH
-// ------------------------------------------------------------------
-const getPasswordStrength = (password) => {
-  if (!password) return "";
-
-  // Fraca: menos de 6 caracteres
-  if (password.length < 6) return "fraca";
-
-  // Forte: maiúscula + minúscula + número + símbolo + 8+
-  const strongRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
-
-  if (strongRegex.test(password)) return "forte";
-
-  // Média: letras + números, 6+
-  const mediumRegex =
-    /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
-
-  if (mediumRegex.test(password)) return "media";
-
-  return "fraca";
-};
-
-
-
   // ------------------------------------------------------------------
   // HANDLE SAVE
   // ------------------------------------------------------------------
