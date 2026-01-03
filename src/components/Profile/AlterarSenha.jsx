@@ -93,7 +93,7 @@ export default function AlterarSenha() {
   return (
     <div className="dados-empresa-container">
       <div className="profile-card">
-        <h2>Alterar Senha</h2>
+        
 
         <div className="form-header">
   <h2>Alterar Senha</h2>
