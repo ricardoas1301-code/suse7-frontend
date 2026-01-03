@@ -43,3 +43,20 @@
   font-size: 13px;
   color: #e53935;
 }
+
+.password-strength {
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.password-strength.fraca {
+  color: #e53935;
+}
+
+.password-strength.media {
+  color: #fb8c00;
+}
+
+.password-strength.forte {
+  color: #2e7d32;
+}

@@ -23,6 +23,20 @@ export default function AlterarSenha() {
   const [showNovaSenha, setShowNovaSenha] = useState(false);
   const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
 
+    // ------------------------------------------------------------------
+  // PASSWORD STRENGTH
+  // ------------------------------------------------------------------
+  const getPasswordStrength = (password) => {
+    if (!password) return "";
+
+    if (password.length < 6) return "fraca";
+    if (password.match(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/)) return "media";
+    if (password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)) return "forte";
+
+    return "media";
+  };
+
+
   // ------------------------------------------------------------------
   // HANDLE SAVE
   // ------------------------------------------------------------------
@@ -97,7 +111,7 @@ export default function AlterarSenha() {
 
         <div className="form-header">
   <h2>Alterar Senha</h2>
-  <span className="required-hint">* Campos obrigatórios</span>
+  <span className="required-hint"> Campos obrigatórios</span>
 </div>
 
         {/* FORMULÁRIO */}
@@ -136,12 +150,21 @@ export default function AlterarSenha() {
 
               <span
                 className="toggle-password"
-                onClick={() => setShowNovaSenha(!showSenhaAtual)}
+                onClick={() => setShowNovaSenha(!showNovaSenha)}
               >
                 {showNovaSenha ? "✖" : "✔"}
               </span>
             </div>
-          </div>
+
+                        {/* INDICADOR DE FORÇA */}
+            {novaSenha && (
+              <div className={`password-strength ${getPasswordStrength(novaSenha)}`}>
+                {getPasswordStrength(novaSenha) === "fraca" && "Senha fraca"}
+                {getPasswordStrength(novaSenha) === "media" && "Senha média"}
+                {getPasswordStrength(novaSenha) === "forte" && "Senha forte"}
+              </div>
+            )}
+           </div>
 
           {/* CONFIRMAR SENHA */}
           <div className="field-lg password-field">
@@ -156,7 +179,7 @@ export default function AlterarSenha() {
 
               <span
                 className="toggle-password"
-                onClick={() => setShowConfirmarSenha(!showSenhaAtual)}
+                onClick={() => setShowConfirmarSenha(!showConfirmarSenha)}
               >
                 {showConfirmarSenha ? "✖" : "✔"}
               </span>
