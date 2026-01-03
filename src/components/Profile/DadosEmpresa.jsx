@@ -240,15 +240,11 @@ const handleSave = async () => {
   delete payload.cpf_cnpj;
 
   // ✅ NORMALIZA imposto (vírgula → ponto)
-  if (payload.imposto_percentual) {
-    payload.imposto_percentual = Number(
-      if (payload.imposto_percentual !== "" && payload.imposto_percentual !== null) {
+if (payload.imposto_percentual !== "" && payload.imposto_percentual !== null) {
   payload.imposto_percentual = Number(
     String(payload.imposto_percentual).replace(",", ".")
   );
 }
-    );
-  }
 
   const { data: { user } } = await supabase.auth.getUser();
 
