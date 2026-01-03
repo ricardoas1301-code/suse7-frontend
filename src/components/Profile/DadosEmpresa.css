@@ -94,17 +94,14 @@
    LOGO DA EMPRESA (PADRÃO BLING)
 ========================= */
 
+/* Container da logo (apenas posicionamento, sem visual) */
 .logo-preview {
-  width: 140px;
-  height: 140px;              /* 🔥 quadrado */
-  border: 1px dashed #e5e7eb;
-  border-radius: 12px;
-  background: #f9fafb;
-
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-top: 6px;
 }
+
 
 .logo-preview img {
   max-width: 100%;
