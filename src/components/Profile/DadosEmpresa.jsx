@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import "./Profile.css";
 import "./DadosEmpresa.css";
+import "../Avatar/Avatar.css";
 
 export default function DadosEmpresa() {
   // ------------------------------------------------------------------
@@ -254,13 +255,17 @@ const handleImpostoChange = (e) => {
           <div className="field-full logo-field">
             <label>Logo da Empresa</label>
 
-            <div className="logo-preview">
-              {form.photo_url ? (
-                <img src={form.photo_url} alt="Logo" className="logo-fade" />
-              ) : (
-                <span className="logo-placeholder">Sem logo</span>
-              )}
-            </div>
+<div className="logo-preview">
+  <div className="suse7-avatar logo-lg">
+    {form.photo_url ? (
+      <img src={form.photo_url} alt="Logo da empresa" />
+    ) : (
+      <span className="avatar-placeholder">
+        {form.nome_loja?.charAt(0)?.toUpperCase() || "?"}
+      </span>
+    )}
+  </div>
+</div>
 
             <label className="logo-upload-btn">
               <span className="alterar-imagem">Alterar imagem</span>
