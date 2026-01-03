@@ -141,15 +141,6 @@ export default function AlterarSenha() {
                 {showNovaSenha ? "✖" : "✔"}
               </span>
             </div>
-
-                        {/* INDICADOR DE FORÇA */}
-            {novaSenha && (
-              <div className={`password-strength ${getPasswordStrength(novaSenha)}`}>
-                {getPasswordStrength(novaSenha) === "fraca" && "Senha fraca"}
-                {getPasswordStrength(novaSenha) === "media" && "Senha média"}
-                {getPasswordStrength(novaSenha) === "forte" && "Senha forte"}
-              </div>
-            )}
            </div>
 
           {/* CONFIRMAR SENHA */}
