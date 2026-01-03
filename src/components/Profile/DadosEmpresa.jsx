@@ -68,7 +68,9 @@ export default function DadosEmpresa() {
           bairro: data.bairro || "",
           cidade: data.cidade || "",
           estado: data.estado || "",
-          imposto_percentual: data.imposto_percentual || "",
+          imposto_percentual: data.imposto_percentual !== null && data.imposto_percentual !== undefined
+          ? String(data.imposto_percentual).replace(".", ",")
+          : "",
           photo_url: data.photo_url || "",
         });
       }
@@ -240,7 +242,11 @@ const handleSave = async () => {
   // ✅ NORMALIZA imposto (vírgula → ponto)
   if (payload.imposto_percentual) {
     payload.imposto_percentual = Number(
-      payload.imposto_percentual.replace(",", ".")
+      if (payload.imposto_percentual !== "" && payload.imposto_percentual !== null) {
+  payload.imposto_percentual = Number(
+    String(payload.imposto_percentual).replace(",", ".")
+  );
+}
     );
   }
 
