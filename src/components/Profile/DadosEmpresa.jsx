@@ -281,18 +281,18 @@ const handleImpostoChange = (e) => {
             <input name="nome_loja" value={form.nome_loja} onChange={handleChange} />
           </div>
 
-          <div className="field-lg">
-            <label>Email</label>
-            <div className="readonly-field">
-              <input value={form.email} disabled />
-              <span className="readonly-icon"></span>
-            </div>
-          </div>
-
           <div className="field-md">
             <label>CPF / CNPJ</label>
             <div className="readonly-field">
               <input value={form.cpf_cnpj} disabled />
+              <span className="readonly-icon"></span>
+            </div>
+          </div>
+
+          <div className="field-lg">
+            <label>Email</label>
+            <div className="readonly-field">
+              <input value={form.email} disabled />
               <span className="readonly-icon"></span>
             </div>
           </div>
