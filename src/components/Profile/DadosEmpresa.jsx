@@ -8,6 +8,8 @@ import { supabase } from "../../supabaseClient";
 import "./Profile.css";
 import "./DadosEmpresa.css";
 import "../Avatar/Avatar.css";
+import FeedbackModal from "../FeedbackModal/FeedbackModal";
+
 
 export default function DadosEmpresa() {
   // ------------------------------------------------------------------
@@ -15,6 +17,7 @@ export default function DadosEmpresa() {
   // ------------------------------------------------------------------
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -233,7 +236,7 @@ const handleImpostoChange = (e) => {
     await supabase.from("profiles").update(dadosEditaveis).eq("id", user.id);
 
     setSaving(false);
-    alert("Dados atualizados com sucesso!");
+    setShowSuccess(true);
   };
 
   if (loading) return <p>Carregando dados...</p>;
@@ -397,7 +400,15 @@ const handleImpostoChange = (e) => {
         <button className="btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? "Salvando..." : "Salvar Alterações"}
         </button>
-      </div>
-    </div>
-  );
+      {/* POPUP SUCESSO — PADRÃO SUSE7 */}
+{showSuccess && (
+  <FeedbackModal
+    title="Dados atualizados!"
+    message="As informações da empresa foram salvas com sucesso."
+    onClose={() => setShowSuccess(false)}
+  />
+)}
+</div>
+</div>
+);
 }
