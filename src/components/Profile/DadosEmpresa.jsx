@@ -227,17 +227,32 @@ const handleImpostoChange = (e) => {
   // ------------------------------------------------------------------
   // SAVE
   // ------------------------------------------------------------------
-  const handleSave = async () => {
-    setSaving(true);
+const handleSave = async () => {
+  setSaving(true);
 
-    const { email, cpf_cnpj, ...dadosEditaveis } = form;
-    const { data: { user } } = await supabase.auth.getUser();
+  // 🔒 Snapshot seguro do state (evita race condition)
+  const payload = { ...form };
+  delete payload.email;
+  delete payload.cpf_cnpj;
 
-    await supabase.from("profiles").update(dadosEditaveis).eq("id", user.id);
+  const { data: { user } } = await supabase.auth.getUser();
 
-    setSaving(false);
-    setShowSuccess(true);
-  };
+  const { error } = await supabase
+    .from("profiles")
+    .update(payload)
+    .eq("id", user.id);
+
+  setSaving(false);
+
+  if (error) {
+    console.error("Erro ao salvar dados:", error);
+    alert("Erro ao salvar os dados.");
+    return;
+  }
+
+  setShowSuccess(true);
+};
+
 
   if (loading) return <p>Carregando dados...</p>;
 
@@ -397,9 +412,16 @@ const handleImpostoChange = (e) => {
           </div>
         </div>
 
-        <button className="btn-primary" onClick={handleSave} disabled={saving}>
-          {saving ? "Salvando..." : "Salvar Alterações"}
-        </button>
+<button
+  className="btn-primary"
+  onMouseDown={() => document.activeElement.blur()}
+  onClick={handleSave}
+  disabled={saving}
+>
+  {saving ? "Salvando..." : "Salvar Alterações"}
+</button>
+
+
       {/* POPUP SUCESSO — PADRÃO SUSE7 */}
 {showSuccess && (
   <FeedbackModal
