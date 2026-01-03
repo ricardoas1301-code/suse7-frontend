@@ -230,10 +230,19 @@ const handleImpostoChange = (e) => {
 const handleSave = async () => {
   setSaving(true);
 
-  // 🔒 Snapshot seguro do state (evita race condition)
+  // 🔒 Snapshot seguro do state
   const payload = { ...form };
+
+  // ❌ campos não editáveis
   delete payload.email;
   delete payload.cpf_cnpj;
+
+  // ✅ NORMALIZA imposto (vírgula → ponto)
+  if (payload.imposto_percentual) {
+    payload.imposto_percentual = Number(
+      payload.imposto_percentual.replace(",", ".")
+    );
+  }
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -252,7 +261,6 @@ const handleSave = async () => {
 
   setShowSuccess(true);
 };
-
 
   if (loading) return <p>Carregando dados...</p>;
 
