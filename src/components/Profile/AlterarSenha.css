@@ -45,8 +45,9 @@
 }
 
 .password-strength {
-  font-size: 13px;
   margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .password-strength.fraca {
@@ -54,9 +55,10 @@
 }
 
 .password-strength.media {
-  color: #fb8c00;
+  color: #f9a825;
 }
 
 .password-strength.forte {
   color: #2e7d32;
 }
+
