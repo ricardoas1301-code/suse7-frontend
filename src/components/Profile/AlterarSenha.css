@@ -14,7 +14,10 @@
 .password-wrapper {
   position: relative;
   width: 100%;
+  display: flex;
+  align-items: center;
 }
+
 
 .password-wrapper input {
   width: 100%;
@@ -52,5 +55,16 @@
 .required-hint {
   font-size: 13px;
   color: #e53935;
+}
+
+
+/* =====================================================
+   ALTERAR SENHA — campo em coluna + alinhamento
+===================================================== */
+
+.password-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 

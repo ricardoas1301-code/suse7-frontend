@@ -104,7 +104,7 @@ export default function AlterarSenha() {
         <div className="form-grid form-single-column">
 
           {/* SENHA ATUAL */}
-          <div className="field-lg password-field">
+          <div className="field-full password-field">
             <label>Senha atual *</label>
 
             <div className="password-wrapper">
