@@ -70,10 +70,9 @@
 }
 
 /* =====================================================
-   ALTERAR SENHA — largura padrão dos inputs
+   ALTERAR SENHA — largura padrão de campos de senha
 ===================================================== */
-
-.password-field {
-  max-width: 460px;   /* padrão SaaS para senha */
+.form-grid.form-single-column .password-field {
+  max-width: 520px;     /* ajuste fino: 460 / 520 / 560 */
   width: 100%;
 }
