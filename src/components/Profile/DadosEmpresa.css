@@ -37,7 +37,7 @@
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: 24px;
-  row-gap: 19px; /* 🔥 CONTROLA ESPAÇO ENTRE INPUTS */
+  row-gap: 22px; /* 🔥 CONTROLA ESPAÇO ENTRE INPUTS */
 }
 
 /* Cada campo */
