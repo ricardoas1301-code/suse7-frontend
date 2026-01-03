@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { supabase } from "../../supabaseClient";
 import "./Profile.css";
+import "./AlterarSenha.css";
 import FeedbackModal from "../FeedbackModal/FeedbackModal";
 
 export default function AlterarSenha() {

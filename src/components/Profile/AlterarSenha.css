@@ -1,9 +1,8 @@
 /* =====================================================
-   ALTERAR SENHA — coluna única
+   ALTERAR SENHA — coluna única (força 1 coluna)
 ===================================================== */
-.form-single-column {
-  display: grid;  
-  grid-template-columns: 1fr;
+.form-grid.form-single-column {
+  grid-template-columns: 1fr !important;
   row-gap: 20px;
 }
 
