@@ -18,6 +18,11 @@ export default function AlterarSenha() {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Estados para mostrar / ocultar senha
+  const [showSenhaAtual, setShowSenhaAtual] = useState(false);
+  const [showNovaSenha, setShowNovaSenha] = useState(false);
+  const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
+
   // ------------------------------------------------------------------
   // HANDLE SAVE
   // ------------------------------------------------------------------
@@ -39,7 +44,7 @@ export default function AlterarSenha() {
 
     setLoading(true);
 
-    // 🔐 Reautentica o usuário
+    // 🔐 Identifica usuário
     const {
       data: { user },
       error: userError,
@@ -51,6 +56,7 @@ export default function AlterarSenha() {
       return;
     }
 
+    // 🔁 Reautenticação obrigatória
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password: senhaAtual,
@@ -62,7 +68,7 @@ export default function AlterarSenha() {
       return;
     }
 
-    // 🔁 Atualiza senha
+    // 🔒 Atualiza senha
     const { error: updateError } = await supabase.auth.updateUser({
       password: novaSenha,
     });
@@ -74,6 +80,7 @@ export default function AlterarSenha() {
       return;
     }
 
+    // Limpa formulário + sucesso
     setSenhaAtual("");
     setNovaSenha("");
     setConfirmarSenha("");
@@ -86,38 +93,74 @@ export default function AlterarSenha() {
   return (
     <div className="dados-empresa-container">
       <div className="profile-card">
-
         <h2>Alterar Senha</h2>
 
-        <div className="form-grid">
-          <div className="field-lg">
+        {/* FORMULÁRIO */}
+        <div className="form-grid form-single-column">
+
+          {/* SENHA ATUAL */}
+          <div className="field-lg password-field">
             <label>Senha atual *</label>
-            <input
-              type="password"
-              value={senhaAtual}
-              onChange={(e) => setSenhaAtual(e.target.value)}
-            />
+
+            <div className="password-wrapper">
+              <input
+                type={showSenhaAtual ? "text" : "password"}
+                value={senhaAtual}
+                onChange={(e) => setSenhaAtual(e.target.value)}
+              />
+
+              <span
+                className="toggle-password"
+                onClick={() => setShowSenhaAtual((prev) => !prev)}
+              >
+                {showSenhaAtual ? "✖" : "✔"}
+              </span>
+            </div>
           </div>
 
-          <div className="field-lg">
+          {/* NOVA SENHA */}
+          <div className="field-lg password-field">
             <label>Nova senha *</label>
-            <input
-              type="password"
-              value={novaSenha}
-              onChange={(e) => setNovaSenha(e.target.value)}
-            />
+
+            <div className="password-wrapper">
+              <input
+                type={showNovaSenha ? "text" : "password"}
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+              />
+
+              <span
+                className="toggle-password"
+                onClick={() => setShowNovaSenha((prev) => !prev)}
+              >
+                {showNovaSenha ? "✖" : "✔"}
+              </span>
+            </div>
           </div>
 
-          <div className="field-lg">
+          {/* CONFIRMAR SENHA */}
+          <div className="field-lg password-field">
             <label>Confirmar nova senha *</label>
-            <input
-              type="password"
-              value={confirmarSenha}
-              onChange={(e) => setConfirmarSenha(e.target.value)}
-            />
+
+            <div className="password-wrapper">
+              <input
+                type={showConfirmarSenha ? "text" : "password"}
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
+              />
+
+              <span
+                className="toggle-password"
+                onClick={() => setShowConfirmarSenha((prev) => !prev)}
+              >
+                {showConfirmarSenha ? "✖" : "✔"}
+              </span>
+            </div>
           </div>
+
         </div>
 
+        {/* BOTÃO */}
         <button
           className="btn-primary"
           onClick={handleChangePassword}
@@ -126,7 +169,7 @@ export default function AlterarSenha() {
           {loading ? "Atualizando..." : "Salvar nova senha"}
         </button>
 
-        {/* POPUP SUCESSO */}
+        {/* POPUP SUCESSO — PADRÃO SUSE7 */}
         {showSuccess && (
           <FeedbackModal
             title="Senha atualizada!"

@@ -1,0 +1,33 @@
+/* =====================================================
+   ALTERAR SENHA — coluna única
+===================================================== */
+.form-single-column {
+  grid-template-columns: 1fr;
+  row-gap: 20px;
+}
+
+/* =====================================================
+   ALTERAR SENHA — mostrar / ocultar senha
+===================================================== */
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 42px; /* espaço pro ícone */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  user-select: none;
+  opacity: 0.7;
+}
+
+.toggle-password:hover {
+  opacity: 1;
+}

@@ -10,3 +10,11 @@
   padding: 8px 24px;     /* 🔥 era 24px → agora reduzimos ~70% */
   background: #f6f8fb;
 }
+
+/* =====================================================
+   ALTERAR SENHA — inputs em coluna única
+===================================================== */
+.form-single-column {
+  grid-template-columns: 1fr;
+  row-gap: 20px;
+}
