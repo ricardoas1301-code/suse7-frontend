@@ -2,6 +2,7 @@
    ALTERAR SENHA — coluna única
 ===================================================== */
 .form-single-column {
+  display: grid;  
   grid-template-columns: 1fr;
   row-gap: 20px;
 }
@@ -30,4 +31,15 @@
 
 .toggle-password:hover {
   opacity: 1;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.required-hint {
+  font-size: 13px;
+  color: #e53935;
 }

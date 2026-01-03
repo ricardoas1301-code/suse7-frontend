@@ -95,6 +95,11 @@ export default function AlterarSenha() {
       <div className="profile-card">
         <h2>Alterar Senha</h2>
 
+        <div className="form-header">
+  <h2>Alterar Senha</h2>
+  <span className="required-hint">* Campos obrigatórios</span>
+</div>
+
         {/* FORMULÁRIO */}
         <div className="form-grid form-single-column">
 
@@ -111,7 +116,7 @@ export default function AlterarSenha() {
 
               <span
                 className="toggle-password"
-                onClick={() => setShowSenhaAtual((prev) => !prev)}
+                onClick={() => setShowSenhaAtual(!showSenhaAtual)}
               >
                 {showSenhaAtual ? "✖" : "✔"}
               </span>
@@ -131,7 +136,7 @@ export default function AlterarSenha() {
 
               <span
                 className="toggle-password"
-                onClick={() => setShowNovaSenha((prev) => !prev)}
+                onClick={() => setShowNovaSenha(!showSenhaAtual)}
               >
                 {showNovaSenha ? "✖" : "✔"}
               </span>
@@ -151,7 +156,7 @@ export default function AlterarSenha() {
 
               <span
                 className="toggle-password"
-                onClick={() => setShowConfirmarSenha((prev) => !prev)}
+                onClick={() => setShowConfirmarSenha(!showSenhaAtual)}
               >
                 {showConfirmarSenha ? "✖" : "✔"}
               </span>
