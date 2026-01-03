@@ -245,7 +245,7 @@ const handleImpostoChange = (e) => {
       <div className="profile-card">
 
         <div className="form-header">
-          <h2>Dados da Empresa</h2>
+          <h2>Perfil da Empresa</h2>
           <span className="required-hint"> Campos obrigatórios</span>
         </div>
 

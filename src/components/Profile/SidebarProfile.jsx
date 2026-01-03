@@ -11,7 +11,7 @@ export default function SidebarProfile() {
       <h3 className="sidebar-title">Minha Conta</h3>
 
       <NavLink to="/perfil/dados-empresa">
-        Dados da Empresa
+        Perfil da Empresa
       </NavLink>
 
       <NavLink to="/perfil/alterar-senha">
