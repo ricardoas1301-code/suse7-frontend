@@ -21,10 +21,11 @@
 
 .password-wrapper input {
   width: 100%;
-  height: 46px;
-  padding-right: 44px; /* espaço real pro ícone */
+  padding: 6px 8px;       /* ✅ mesmo padding do DadosEmpresa */
+  padding-right: 44px;    /* espaço pro ícone */
+  border-radius: 8px;
+  font-size: 14px;
   box-sizing: border-box;
-  font-size: 15px;
 }
 
 .toggle-password {
