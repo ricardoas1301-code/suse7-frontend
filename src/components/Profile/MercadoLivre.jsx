@@ -90,23 +90,7 @@ export default function MercadoLivre() {
     <div className="ml-container">
       <div className="ml-card">
 
-{/* HEADER */}
-<div className="ml-header">
-  <div className="ml-header-logos">
-    <img
-      src="/assets/suse7-logo.svg"
-      alt="Suse7"
-      className="ml-header-logo"
-    />
 
-    <span className="ml-header-arrow">↔</span>
-
-    <img
-      src="/assets/mercado-livre-logo.svg"
-      alt="Mercado Livre"
-      className="ml-header-logo ml-logo-ml"
-    />
-  </div>
 
  {/* HEADER COM LOGOS */}
 <div className="ml-header">
@@ -122,9 +106,6 @@ export default function MercadoLivre() {
 
   <h2 className="ml-title">Mercado Livre</h2>
 </div>
-
-</div>
-
 
         {/* INFO TOKEN */}
         {isConnected && expiresAt && (
