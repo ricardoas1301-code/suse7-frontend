@@ -11,127 +11,163 @@ import FeedbackModal from "../FeedbackModal/FeedbackModal";
 
 export default function AlterarSenha() {
   // ------------------------------------------------------------------
-  // STATES
+  // STATES — FORM
   // ------------------------------------------------------------------
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  // Estados para mostrar / ocultar senha
+
+  // ------------------------------------------------------------------
+  // STATES — VISIBILIDADE DAS SENHAS
+  // ------------------------------------------------------------------
   const [showSenhaAtual, setShowSenhaAtual] = useState(false);
   const [showNovaSenha, setShowNovaSenha] = useState(false);
   const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
-  
+
   // ------------------------------------------------------------------
-// FEEDBACK MODAL (PADRÃO SUSE7)
-// ------------------------------------------------------------------
+  // STATES — FEEDBACK MODAL (PADRÃO SUSE7)
+  // ------------------------------------------------------------------
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({
-    type: "",
+    type: "",     // "success" | "error" | "warning" (depende do seu modal)
     title: "",
     message: "",
-   });
+  });
+
+  // ------------------------------------------------------------------
+  // HELPERS — ABRIR / FECHAR MODAL
+  // ------------------------------------------------------------------
+  const openFeedback = ({ type, title, message }) => {
+    setFeedback({ type, title, message });
+    setShowFeedback(true);
+  };
+
+  const closeFeedback = () => {
+    setShowFeedback(false);
+
+    // Limpa o conteúdo para evitar comportamento estranho do modal ao montar
+    setFeedback({
+      type: "",
+      title: "",
+      message: "",
+    });
+  };
 
   // ------------------------------------------------------------------
   // HANDLE SAVE
   // ------------------------------------------------------------------
-const handleChangePassword = async () => {
-  // ------------------------------
-  // Validação de campos obrigatórios
-  // ------------------------------
-  if (!senhaAtual || !novaSenha || !confirmarSenha) {
-    setFeedback({
-      type: "error",
-      title: "Campos obrigatórios",
-      message: "Preencha todos os campos para alterar sua senha.",
-    });
-    setShowFeedback(true);
-    return;
-  }
+  const handleChangePassword = async () => {
+    try {
+      // ------------------------------------------------------------
+      // Validações (Front-end UX)
+      // ------------------------------------------------------------
+      if (!senhaAtual || !novaSenha || !confirmarSenha) {
+        openFeedback({
+          type: "error",
+          title: "Campos obrigatórios",
+          message: "Preencha todos os campos para alterar sua senha.",
+        });
+        return;
+      }
 
-  if (novaSenha.length < 6) {
-    setFeedback({
-      type: "error",
-      title: "Senha inválida",
-      message: "A nova senha deve ter no mínimo 6 caracteres.",
-    });
-    setShowFeedback(true);
-    return;
-  }
+      if (novaSenha.length < 6) {
+        openFeedback({
+          type: "error",
+          title: "Senha inválida",
+          message: "A nova senha deve ter no mínimo 6 caracteres.",
+        });
+        return;
+      }
 
-  if (novaSenha !== confirmarSenha) {
-    setFeedback({
-      type: "error",
-      title: "Senhas não conferem",
-      message: "A confirmação da senha está diferente da nova senha.",
-    });
-    setShowFeedback(true);
-    return;
-  }
+      if (novaSenha !== confirmarSenha) {
+        openFeedback({
+          type: "error",
+          title: "Senhas não conferem",
+          message: "A confirmação da senha está diferente da nova senha.",
+        });
+        return;
+      }
 
-  setLoading(true);
+      setLoading(true);
 
+      // ------------------------------------------------------------
+      // Identifica usuário logado
+      // ------------------------------------------------------------
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    // 🔐 Identifica usuário
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+      if (userError || !user?.email) {
+        openFeedback({
+          type: "error",
+          title: "Erro de sessão",
+          message: "Não foi possível identificar seu usuário. Faça login novamente.",
+        });
+        return;
+      }
 
-    if (userError || !user?.email) {
+      // ------------------------------------------------------------
+      // Reautenticação obrigatória (senha atual)
+      // ------------------------------------------------------------
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: senhaAtual,
+      });
+
+      if (signInError) {
+        openFeedback({
+          type: "error",
+          title: "Senha incorreta",
+          message: "A senha atual informada está incorreta.",
+        });
+        return;
+      }
+
+      // ------------------------------------------------------------
+      // Atualiza senha
+      // ------------------------------------------------------------
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: novaSenha,
+      });
+
+      if (updateError) {
+        openFeedback({
+          type: "error",
+          title: "Erro ao atualizar",
+          message: "Não foi possível atualizar sua senha. Tente novamente.",
+        });
+        return;
+      }
+
+      // ------------------------------------------------------------
+      // Sucesso: limpa formulário + feedback
+      // ------------------------------------------------------------
+      setSenhaAtual("");
+      setNovaSenha("");
+      setConfirmarSenha("");
+
+      openFeedback({
+        type: "success",
+        title: "Senha atualizada",
+        message: "Sua senha foi alterada com sucesso.",
+      });
+    } catch (err) {
+      // ------------------------------------------------------------
+      // Fallback de erro inesperado
+      // ------------------------------------------------------------
+      openFeedback({
+        type: "error",
+        title: "Erro inesperado",
+        message: "Ocorreu um erro ao alterar sua senha. Tente novamente.",
+      });
+    } finally {
+      // ------------------------------------------------------------
+      // Garante que o loading sempre finalize
+      // ------------------------------------------------------------
       setLoading(false);
-      alert("Erro ao identificar usuário.");
-      return;
     }
-
-    // 🔁 Reautenticação obrigatória
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: senhaAtual,
-    });
-
-    if (signInError) {
-      setLoading(false);
-      setFeedback({
-  type: "error",
-  title: "Senha incorreta",
-  message: "A senha atual informada está incorreta.",
-});
-setShowFeedback(true);
-
-      return;
-    }
-
-    // 🔒 Atualiza senha
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: novaSenha,
-    });
-
-    setLoading(false);
-
-    if (updateError) {
-      setFeedback({
-  type: "error",
-  title: "Erro ao atualizar",
-  message: "Não foi possível atualizar sua senha. Tente novamente.",
-});
-setShowFeedback(true);
-
-      return;
-    }
-
-    // Limpa formulário + sucesso
-    setSenhaAtual("");
-    setNovaSenha("");
-    setConfirmarSenha("");
-    setFeedback({
-  type: "success",
-  title: "Senha atualizada",
-  message: "Sua senha foi alterada com sucesso.",
-});
-setShowFeedback(true);
-
   };
 
   // ------------------------------------------------------------------
@@ -140,16 +176,13 @@ setShowFeedback(true);
   return (
     <div className="dados-empresa-container">
       <div className="profile-card">
-        
-
         <div className="form-header">
-  <h2>Alterar Senha</h2>
-  <span className="required-hint"> Campos obrigatórios</span>
-</div>
+          <h2>Alterar Senha</h2>
+          <span className="required-hint">* Campos obrigatórios</span>
+        </div>
 
         {/* FORMULÁRIO */}
         <div className="form-grid form-single-column">
-
           {/* SENHA ATUAL */}
           <div className="field-full password-field">
             <label>Senha atual *</label>
@@ -164,6 +197,7 @@ setShowFeedback(true);
               <span
                 className="toggle-password"
                 onClick={() => setShowSenhaAtual(!showSenhaAtual)}
+                title={showSenhaAtual ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showSenhaAtual ? "✖" : "✔"}
               </span>
@@ -184,11 +218,12 @@ setShowFeedback(true);
               <span
                 className="toggle-password"
                 onClick={() => setShowNovaSenha(!showNovaSenha)}
+                title={showNovaSenha ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showNovaSenha ? "✖" : "✔"}
               </span>
             </div>
-           </div>
+          </div>
 
           {/* CONFIRMAR SENHA */}
           <div className="field-lg password-field">
@@ -204,31 +239,29 @@ setShowFeedback(true);
               <span
                 className="toggle-password"
                 onClick={() => setShowConfirmarSenha(!showConfirmarSenha)}
+                title={showConfirmarSenha ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showConfirmarSenha ? "✖" : "✔"}
               </span>
             </div>
           </div>
-
         </div>
 
         {/* BOTÃO */}
-        <button
-          className="btn-primary"
-          onClick={handleChangePassword}
-          disabled={loading}
-        >
+        <button className="btn-primary" onClick={handleChangePassword} disabled={loading}>
           {loading ? "Atualizando..." : "Salvar nova senha"}
         </button>
 
-        {/* FEEDBACK MODAL — PADRÃO SUSE7 */}
-<FeedbackModal
-  show={showFeedback}
-  onClose={() => setShowFeedback(false)}
-  type={feedback.type}
-  title={feedback.title}
-  message={feedback.message}
-/>
+        {/* FEEDBACK MODAL — renderiza SOMENTE quando necessário */}
+        {showFeedback && (
+          <FeedbackModal
+            show={showFeedback}
+            onClose={closeFeedback}
+            type={feedback.type}
+            title={feedback.title}
+            message={feedback.message}
+          />
+        )}
       </div>
     </div>
   );
