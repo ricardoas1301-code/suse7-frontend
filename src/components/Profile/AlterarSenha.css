@@ -94,3 +94,13 @@
   width: 100%;
 }
 
+/* ======================================================================
+   SUSE7 — ALTERAR SENHA | BOTÃO ALINHADO AO TAMANHO DOS INPUTS
+   Objetivo: botão com mesma largura visual dos campos
+====================================================================== */
+
+.profile-card .btn-primary {
+  max-width: 320px;   /* mesmo valor dos inputs */
+  width: 100%;
+}
+
