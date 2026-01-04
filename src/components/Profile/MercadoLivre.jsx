@@ -97,7 +97,7 @@ export default function MercadoLivre() {
             <img src={mercadoLivreLogo} alt="Mercado Livre" className="ml-logo ml" />
           </div>
 
-          <h2 className="ml-title">Mercado Livre</h2>
+          <h2 className="ml-title">xxx</h2>
         </div>
 
         {/* ==========================================================
@@ -118,7 +118,7 @@ export default function MercadoLivre() {
 
     {/* TEXTO CENTRALIZADO */}
     <p className="ml-connect-description">
-      Faça a autenticação da sua conta de vendedor no Mercado Livre
+      Faça a autenticação da sua conta de vendedor no <strong>Mercado Livre</strong>
       para autorizar a integração com o <strong>Suse7 Precifica</strong>.
     </p>
 
