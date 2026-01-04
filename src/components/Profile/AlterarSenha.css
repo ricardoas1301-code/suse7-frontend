@@ -84,7 +84,13 @@
    Objetivo: Reduzir largura dos inputs em 70%
 ====================================================================== */
 
-.input-group input {
-  width: 30%;          /* ← 100% → 30% (redução de 70%) */
-  min-width: 280px;    /* garante boa leitura em telas menores */
+/* ======================================================================
+   SUSE7 — ALTERAR SENHA | PADRÃO DE INPUT
+   Objetivo: reduzir largura visual dos inputs
+====================================================================== */
+
+.form-grid.form-single-column .password-wrapper input {
+  max-width: 320px;   /* ~70% menor visualmente */
+  width: 100%;
 }
+

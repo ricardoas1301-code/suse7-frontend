@@ -23,30 +23,56 @@ export default function AlterarSenha() {
   const [showSenhaAtual, setShowSenhaAtual] = useState(false);
   const [showNovaSenha, setShowNovaSenha] = useState(false);
   const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
+  
+  // ------------------------------------------------------------------
+// FEEDBACK MODAL (PADRÃO SUSE7)
+// ------------------------------------------------------------------
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState({
+    type: "",
+    title: "",
+    message: "",
+   });
 
   // ------------------------------------------------------------------
   // HANDLE SAVE
   // ------------------------------------------------------------------
-  const handleChangePassword = async () => {
-setFeedback({
-  type: "error",
-  title: "Campos obrigatórios",
-  message: "Preencha todos os campos para alterar sua senha."
-});
-setShowFeedback(true);
-return;
+const handleChangePassword = async () => {
+  // ------------------------------
+  // Validação de campos obrigatórios
+  // ------------------------------
+  if (!senhaAtual || !novaSenha || !confirmarSenha) {
+    setFeedback({
+      type: "error",
+      title: "Campos obrigatórios",
+      message: "Preencha todos os campos para alterar sua senha.",
+    });
+    setShowFeedback(true);
+    return;
+  }
 
-    if (novaSenha.length < 6) {
-      alert("A nova senha deve ter no mínimo 6 caracteres.");
-      return;
-    }
+  if (novaSenha.length < 6) {
+    setFeedback({
+      type: "error",
+      title: "Senha inválida",
+      message: "A nova senha deve ter no mínimo 6 caracteres.",
+    });
+    setShowFeedback(true);
+    return;
+  }
 
-    if (novaSenha !== confirmarSenha) {
-      alert("As senhas não conferem.");
-      return;
-    }
+  if (novaSenha !== confirmarSenha) {
+    setFeedback({
+      type: "error",
+      title: "Senhas não conferem",
+      message: "A confirmação da senha está diferente da nova senha.",
+    });
+    setShowFeedback(true);
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
+
 
     // 🔐 Identifica usuário
     const {
@@ -68,7 +94,13 @@ return;
 
     if (signInError) {
       setLoading(false);
-      alert("Senha atual incorreta.");
+      setFeedback({
+  type: "error",
+  title: "Senha incorreta",
+  message: "A senha atual informada está incorreta.",
+});
+setShowFeedback(true);
+
       return;
     }
 
@@ -80,7 +112,13 @@ return;
     setLoading(false);
 
     if (updateError) {
-      alert("Erro ao atualizar a senha.");
+      setFeedback({
+  type: "error",
+  title: "Erro ao atualizar",
+  message: "Não foi possível atualizar sua senha. Tente novamente.",
+});
+setShowFeedback(true);
+
       return;
     }
 
@@ -88,7 +126,13 @@ return;
     setSenhaAtual("");
     setNovaSenha("");
     setConfirmarSenha("");
-    setShowSuccess(true);
+    setFeedback({
+  type: "success",
+  title: "Senha atualizada",
+  message: "Sua senha foi alterada com sucesso.",
+});
+setShowFeedback(true);
+
   };
 
   // ------------------------------------------------------------------
@@ -178,16 +222,6 @@ return;
           {loading ? "Atualizando..." : "Salvar nova senha"}
         </button>
 
-        {/* POPUP SUCESSO — PADRÃO SUSE7 */}
-        {showSuccess && (
-<FeedbackModal
-  show={showFeedback}
-  onClose={() => setShowFeedback(false)}
-  type={feedback.type}
-  title={feedback.title}
-  message={feedback.message}
-/>
-        )}
       </div>
     </div>
   );
