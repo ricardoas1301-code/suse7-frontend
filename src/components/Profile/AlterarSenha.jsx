@@ -17,8 +17,7 @@ export default function AlterarSenha() {
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
+  
   // Estados para mostrar / ocultar senha
   const [showSenhaAtual, setShowSenhaAtual] = useState(false);
   const [showNovaSenha, setShowNovaSenha] = useState(false);
@@ -222,6 +221,14 @@ setShowFeedback(true);
           {loading ? "Atualizando..." : "Salvar nova senha"}
         </button>
 
+        {/* FEEDBACK MODAL — PADRÃO SUSE7 */}
+<FeedbackModal
+  show={showFeedback}
+  onClose={() => setShowFeedback(false)}
+  type={feedback.type}
+  title={feedback.title}
+  message={feedback.message}
+/>
       </div>
     </div>
   );
