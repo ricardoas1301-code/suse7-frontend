@@ -272,3 +272,12 @@
 .imposto-field {
   grid-column: span 3;
 }
+
+/* ======================================================================
+   SUSE7 — PERFIL DA EMPRESA | ESPAÇAMENTO PADRÃO BOTÃO
+   Objetivo: alinhar espaçamento com página Alterar Senha
+====================================================================== */
+
+.profile-card .btn-primary {
+  margin-top: 30px; /* padrão oficial Suse7 */
+}
