@@ -44,18 +44,19 @@ export default function MercadoLivre() {
         // ------------------------------------------------------------
         // 2. Consultar status da conexão ML no backend
         // ------------------------------------------------------------
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/ml/status?user_id=${user.id}`
-        );
+const response = await fetch(
+  `${import.meta.env.VITE_API_URL}/ml/status?user_id=${user.id}`
+);
 
-        const data = await response.json();
+const data = await response.json();
 
-        if (data.connected === true) {
-          setIsConnected(true);
-          setExpiresAt(data.expires_at || null);
-        } else {
-          setIsConnected(false);
-        }
+if (data.connected === true) {
+  setIsConnected(true);
+  setExpiresAt(data.expires_at || null);
+} else {
+  setIsConnected(false);
+}
+
 
       } catch (err) {
         console.error("Erro ao carregar status do ML:", err);
