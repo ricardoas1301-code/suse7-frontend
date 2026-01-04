@@ -279,5 +279,14 @@
 ====================================================================== */
 
 .profile-card .btn-primary {
-  margin-top: 60px; /* padrão oficial Suse7 */
+  margin-top: 30px; /* padrão oficial Suse7 */
+}
+
+/* ======================================================================
+   SUSE7 — PERFIL DA EMPRESA | ESPAÇAMENTO ENTRE GRID E BOTÃO
+   Objetivo: replicar o respiro visual da página Alterar Senha
+====================================================================== */
+
+.profile-card .form-grid {
+  margin-bottom: 30px; /* 🔥 padrão oficial Suse7 */
 }
