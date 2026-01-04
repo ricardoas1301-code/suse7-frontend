@@ -105,30 +105,40 @@ export default function MercadoLivre() {
            ESTADO: NÃO CONECTADO (UX img2)
         ========================================================== */}
         {!isConnected && (
-          <>
-            <div className="ml-status disconnected">
-              <span className="ml-status-dot" />
-              Conta ainda não conectada
-            </div>
+  <>
+    {/* STATUS */}
+    <div className="ml-status disconnected">
+      <span className="ml-status-dot" />
+      Conta ainda não conectada
+    </div>
 
-            <p className="ml-connect-text">
-              Faça a autenticação da sua conta de vendedor no Mercado Livre
-              para autorizar a integração com o <strong>Suse7</strong>.
-            </p>
+    {/* TÍTULO PRINCIPAL */}
+    <h3 className="ml-connect-title">
+      Conectar com Mercado Livre
+    </h3>
 
-            <button
-              className="ml-button"
-              onClick={handleConnectML}
-            >
-              Iniciar autenticação
-            </button>
+    {/* TEXTO CENTRALIZADO */}
+    <p className="ml-connect-description">
+      Faça a autenticação da sua conta de vendedor no Mercado Livre
+      para autorizar a integração com o <strong>Suse7</strong>.
+    </p>
 
-            <p className="ml-security-hint">
-              🔒 Conexão segura via OAuth oficial do Mercado Livre.
-              O Suse7 não armazena sua senha.
-            </p>
-          </>
-        )}
+    {/* CTA */}
+    <button
+      className="ml-button"
+      onClick={handleConnectML}
+    >
+      Iniciar autenticação
+    </button>
+
+    {/* MICROCOPY */}
+    <p className="ml-security-hint">
+      🔒 Conexão segura via OAuth oficial do Mercado Livre.
+      O Suse7 não armazena sua senha.
+    </p>
+  </>
+)}
+
 
         {/* ==========================================================
            ESTADO: CONECTADO (img369)

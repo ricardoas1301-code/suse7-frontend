@@ -199,3 +199,24 @@
   color: #6b7280;
   font-weight: 600;
 }
+
+/* ======================================================
+   ESTADO NÃO CONECTADO — UX REFINADO
+====================================================== */
+
+.ml-connect-title {
+  margin-top: 22px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+}
+
+.ml-connect-description {
+  margin-top: 10px;
+  margin-bottom: 24px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #6b7280;
+  text-align: center;
+}
