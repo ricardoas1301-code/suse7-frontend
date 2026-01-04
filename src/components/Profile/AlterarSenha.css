@@ -1,57 +1,20 @@
 /* =====================================================
-   ALTERAR SENHA — layout em coluna única real
+   ALTERAR SENHA — layout em coluna única
 ===================================================== */
 .form-grid.form-single-column {
   display: flex;
-  flex-direction: column; /* 🔥 força 1 por linha */
+  flex-direction: column;
   gap: 20px;
+  align-items: center; /* centraliza o bloco inteiro */
 }
-
-/* =====================================================
-   ALTERAR SENHA — input com ícone interno
-===================================================== */
-
-/* =====================================================
-   ALTERAR SENHA — input com ícone interno
-===================================================== */
-
-.password-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.password-wrapper input {
-  width: 100%;
-  padding: 6px 36px 6px 8px; /* espaço real pro ícone */
-  border-radius: 8px;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.toggle-password {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 16px;
-  color: #6b7280; /* cinza elegante */
-  user-select: none;
-}
-
-.toggle-password:hover {
-  color: #2563eb; /* azul Suse7 */
-}
-
 
 /* =====================================================
    ALTERAR SENHA — header centralizado
 ===================================================== */
-
 .form-header {
   display: flex;
   flex-direction: column;
-  align-items: center;   /* centraliza horizontal */
+  align-items: center;
   gap: 6px;
   margin-bottom: 20px;
 }
@@ -65,63 +28,62 @@
   color: #e53935;
 }
 
-
 /* =====================================================
-   ALTERAR SENHA — campo em coluna + alinhamento
+   ALTERAR SENHA — campo de senha (label + input)
 ===================================================== */
-
 .password-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-left: 0;          /* alinhado à esquerda */
+  width: 100%;
+  align-items: center; /* 🔥 centralização real */
 }
 
 /* =====================================================
-   ALTERAR SENHA — largura padrão de campos de senha
+   ALTERAR SENHA — wrapper controla a largura REAL
 ===================================================== */
-.form-grid.form-single-column .password-field {
-  max-width: 480px;     /* ajuste fino: 460 / 520 / 560 */
+.password-wrapper {
+  position: relative;
   width: 100%;
+  max-width: 320px; /* 🔥 largura FINAL do campo */
 }
 
-/* ======================================================================
-   SUSE7 — ALTERAR SENHA | PADRÃO DE INPUT
-   Objetivo: Reduzir largura dos inputs em 70%
-====================================================================== */
-
-/* ======================================================================
-   SUSE7 — ALTERAR SENHA | PADRÃO DE INPUT
-   Objetivo: reduzir largura visual dos inputs
-====================================================================== */
-
-.form-grid.form-single-column .password-wrapper input {
-  max-width: 320px;   /* ~70% menor visualmente */
+/* =====================================================
+   ALTERAR SENHA — input
+===================================================== */
+.password-wrapper input {
   width: 100%;
+  padding: 6px 40px 6px 8px; /* espaço correto pro ícone */
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
 }
 
-/* ======================================================================
-   SUSE7 — ALTERAR SENHA | BOTÃO ALINHADO AO TAMANHO DOS INPUTS
-   Objetivo: botão com mesma largura visual dos campos
-====================================================================== */
+/* =====================================================
+   ALTERAR SENHA — ícone dentro do input
+===================================================== */
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 16px;
+  color: #6b7280;
+  line-height: 1;
+  user-select: none;
+}
 
+.toggle-password:hover {
+  color: #2563eb;
+}
+
+/* =====================================================
+   ALTERAR SENHA — botão alinhado aos inputs
+===================================================== */
 .profile-card .btn-primary {
   max-width: 320px;
   width: 100%;
-  margin: 0 auto;        /* 🔥 centraliza */
+  margin: 10px auto 0;
   display: block;
 }
-
-/* ======================================================================
-   SUSE7 — ALTERAR SENHA | CENTRALIZAÇÃO DO FORMULÁRIO
-   Objetivo: centralizar inputs e botão como bloco único
-====================================================================== */
-
-.form-grid.form-single-column {
-  align-items: center;
-}
-
-.profile-card .btn-primary {
-  align-self: center;
-}
-
