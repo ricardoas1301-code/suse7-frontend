@@ -1,7 +1,9 @@
 // ======================================================================
 // PÁGINA: Mercado Livre — Integração
 // Objetivo: Gerenciar conexão com o Mercado Livre (OAuth)
-// Layout: Inspirado na img369 + UX de conexão (img2)
+// UX:
+// - NÃO conectado → tela de autenticação (estilo img2)
+// - CONECTADO → status + dados (img369)
 // ======================================================================
 
 import { useEffect, useState } from "react";
@@ -9,7 +11,6 @@ import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import "./MercadoLivre.css";
 
-// Assets
 import suse7Logo from "../../assets/suse7-logo-redonda.png";
 import mercadoLivreLogo from "../../assets/mercado-livre.png";
 
@@ -29,29 +30,26 @@ export default function MercadoLivre() {
   useEffect(() => {
     const loadMLStatus = async () => {
       try {
-        // 1. Usuário autenticado
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
           setLoading(false);
           return;
         }
 
-        // 2. Consultar status no backend
         const response = await fetch(
           `${import.meta.env.VITE_API_URL}/ml/status?user_id=${user.id}`
         );
 
         const data = await response.json();
 
-        if (data.connected === true) {
+        if (data.connected) {
           setIsConnected(true);
           setExpiresAt(data.expires_at || null);
         } else {
           setIsConnected(false);
         }
+
       } catch (err) {
         console.error("Erro ao carregar status ML:", err);
       } finally {
@@ -63,7 +61,7 @@ export default function MercadoLivre() {
   }, []);
 
   // ------------------------------------------------------------------
-  // HANDLERS
+  // HANDLER
   // ------------------------------------------------------------------
   const handleConnectML = () => {
     navigate("/ml/connect");
@@ -76,45 +74,35 @@ export default function MercadoLivre() {
     return (
       <div className="ml-container">
         <div className="ml-card">
-          <h2 className="ml-title">Mercado Livre</h2>
-          <p>Carregando status da integração...</p>
+          <h2>Mercado Livre</h2>
+          <p>Carregando integração...</p>
         </div>
       </div>
     );
   }
 
-  // ------------------------------------------------------------------
-  // RENDER PRINCIPAL
-  // ------------------------------------------------------------------
+  // ==================================================================
+  // RENDER
+  // ==================================================================
   return (
     <div className="ml-container">
       <div className="ml-card">
 
         {/* ==========================================================
-            HEADER COM LOGOS + TÍTULO
+           HEADER COM LOGOS
         ========================================================== */}
         <div className="ml-header">
           <div className="ml-header-logos">
-            <img
-              src={suse7Logo}
-              alt="Suse7"
-              className="ml-logo suse7"
-            />
-
+            <img src={suse7Logo} alt="Suse7" className="ml-logo suse7" />
             <span className="ml-header-arrow">↔</span>
-
-            <img
-              src={mercadoLivreLogo}
-              alt="Mercado Livre"
-              className="ml-logo ml"
-            />
+            <img src={mercadoLivreLogo} alt="Mercado Livre" className="ml-logo ml" />
           </div>
 
           <h2 className="ml-title">Mercado Livre</h2>
         </div>
 
         {/* ==========================================================
-            ESTADO: NÃO CONECTADO (UX img2)
+           ESTADO: NÃO CONECTADO (UX img2)
         ========================================================== */}
         {!isConnected && (
           <>
@@ -123,17 +111,10 @@ export default function MercadoLivre() {
               Conta ainda não conectada
             </div>
 
-            <div className="ml-info-grid">
-              <div className="ml-field">
-                <label>Nome do canal de venda</label>
-                <input value="MERCADO LIVRE" disabled />
-              </div>
-
-              <div className="ml-field">
-                <label>Login Mercado Livre</label>
-                <input value="—" disabled />
-              </div>
-            </div>
+            <p className="ml-connect-text">
+              Faça a autenticação da sua conta de vendedor no Mercado Livre
+              para autorizar a integração com o <strong>Suse7</strong>.
+            </p>
 
             <button
               className="ml-button"
@@ -141,11 +122,16 @@ export default function MercadoLivre() {
             >
               Iniciar autenticação
             </button>
+
+            <p className="ml-security-hint">
+              🔒 Conexão segura via OAuth oficial do Mercado Livre.
+              O Suse7 não armazena sua senha.
+            </p>
           </>
         )}
 
         {/* ==========================================================
-            ESTADO: CONECTADO (UX img369)
+           ESTADO: CONECTADO (img369)
         ========================================================== */}
         {isConnected && (
           <>
@@ -175,16 +161,13 @@ export default function MercadoLivre() {
             <button className="ml-button connected" disabled>
               Conta conectada ✔
             </button>
+
+            <p className="ml-security-hint">
+              🔒 Conexão segura via OAuth oficial do Mercado Livre.
+              O Suse7 não armazena sua senha.
+            </p>
           </>
         )}
-
-        {/* ==========================================================
-            MICROCOPY DE SEGURANÇA
-        ========================================================== */}
-        <p className="ml-security-hint">
-          🔒 Conexão segura via OAuth oficial do Mercado Livre.
-          O Suse7 não armazena sua senha.
-        </p>
 
       </div>
     </div>
