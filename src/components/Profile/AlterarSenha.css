@@ -11,18 +11,18 @@
    ALTERAR SENHA — input com ícone interno
 ===================================================== */
 
+/* =====================================================
+   ALTERAR SENHA — input com ícone interno
+===================================================== */
+
 .password-wrapper {
   position: relative;
   width: 100%;
-  display: flex;
-  align-items: center;
 }
-
 
 .password-wrapper input {
   width: 100%;
-  padding: 6px 8px;       /* ✅ mesmo padding do DadosEmpresa */
-  padding-right: 44px;    /* espaço pro ícone */
+  padding: 6px 36px 6px 8px; /* espaço real pro ícone */
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
@@ -30,28 +30,34 @@
 
 .toggle-password {
   position: absolute;
-  right: 14px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
+  font-size: 16px;
+  color: #6b7280; /* cinza elegante */
   user-select: none;
-  color: #555;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .toggle-password:hover {
-  color: #2563eb; /* azul padrão Suse7 */
+  color: #2563eb; /* azul Suse7 */
 }
 
 
+/* =====================================================
+   ALTERAR SENHA — header centralizado
+===================================================== */
+
 .form-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: center;   /* centraliza horizontal */
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.form-header h2 {
+  text-align: center;
 }
 
 .required-hint {
@@ -100,8 +106,10 @@
 ====================================================================== */
 
 .profile-card .btn-primary {
-  max-width: 320px;   /* mesmo valor dos inputs */
+  max-width: 320px;
   width: 100%;
+  margin: 0 auto;        /* 🔥 centraliza */
+  display: block;
 }
 
 /* ======================================================================
