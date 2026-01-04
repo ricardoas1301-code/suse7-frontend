@@ -290,3 +290,13 @@
 .profile-card .form-grid {
   margin-bottom: 30px; /* 🔥 padrão oficial Suse7 */
 }
+
+/* ======================================================================
+   SUSE7 — PERFIL DA EMPRESA | ESPAÇO PADRÃO ANTES DO BOTÃO (FORÇA)
+   Objetivo: garantir o respiro de 30px entre último campo e botão
+====================================================================== */
+
+.profile-card .btn-primary{
+  margin-top: 30px !important; /* força contra overrides */
+  display: block;
+}
