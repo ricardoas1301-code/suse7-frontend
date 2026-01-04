@@ -1,12 +1,13 @@
 // ======================================================================
 // PÁGINA: Mercado Livre — Integração
-// Objetivo: Centralizar a lógica de conexão com o Mercado Livre
-// Versão: BASE (lógica pura, sem layout final)
+// Objetivo: Gerenciar conexão com o Mercado Livre (OAuth)
+// Layout: Inspirado na img369 (visual + clean)
 // ======================================================================
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import "./MercadoLivre.css";
 
 export default function MercadoLivre() {
   // ------------------------------------------------------------------
@@ -25,41 +26,34 @@ export default function MercadoLivre() {
   useEffect(() => {
     const loadMLStatus = async () => {
       try {
-        // ------------------------------------------------------------
-        // 1. Obter usuário autenticado
-        // ------------------------------------------------------------
+        // 1. Usuário autenticado
         const {
           data: { user },
-          error: userError,
         } = await supabase.auth.getUser();
 
-        if (userError || !user) {
-          console.warn("Usuário não autenticado");
+        if (!user) {
           setLoading(false);
           return;
         }
 
         setUserId(user.id);
 
-        // ------------------------------------------------------------
-        // 2. Consultar status da conexão ML no backend
-        // ------------------------------------------------------------
-const response = await fetch(
-  `${import.meta.env.VITE_API_URL}/ml/status?user_id=${user.id}`
-);
+        // 2. Status via backend
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/ml/status?user_id=${user.id}`
+        );
 
-const data = await response.json();
+        const data = await response.json();
 
-if (data.connected === true) {
-  setIsConnected(true);
-  setExpiresAt(data.expires_at || null);
-} else {
-  setIsConnected(false);
-}
-
+        if (data.connected === true) {
+          setIsConnected(true);
+          setExpiresAt(data.expires_at || null);
+        } else {
+          setIsConnected(false);
+        }
 
       } catch (err) {
-        console.error("Erro ao carregar status do ML:", err);
+        console.error("Erro ao carregar status ML:", err);
       } finally {
         setLoading(false);
       }
@@ -71,60 +65,77 @@ if (data.connected === true) {
   // ------------------------------------------------------------------
   // HANDLERS
   // ------------------------------------------------------------------
-
-  // Iniciar conexão com Mercado Livre (OAuth)
   const handleConnectML = () => {
     navigate("/ml/connect");
   };
 
   // ------------------------------------------------------------------
-  // RENDER (TEMPORÁRIO — TEXTO PURO)
+  // RENDER
   // ------------------------------------------------------------------
   if (loading) {
     return (
-      <div style={{ padding: 30 }}>
-        <h2>Mercado Livre</h2>
-        <p>Carregando status da integração...</p>
+      <div className="ml-container">
+        <div className="ml-card">
+          <h2>Mercado Livre</h2>
+          <p>Carregando status da integração...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 30 }}>
-      <h2>Mercado Livre</h2>
+    <div className="ml-container">
+      <div className="ml-card">
 
-      {/* STATUS */}
-      {isConnected ? (
-        <p style={{ color: "green", fontWeight: 600 }}>
-          🟢 Conta conectada com sucesso
-        </p>
-      ) : (
-        <p style={{ color: "#6b7280" }}>
-          🔴 Conta ainda não conectada
-        </p>
-      )}
+        {/* HEADER */}
+        <h2 className="ml-title">Mercado Livre</h2>
 
-      {/* INFO EXTRA (opcional, útil para debug/admin) */}
-      {isConnected && expiresAt && (
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Token válido até: {new Date(expiresAt).toLocaleString()}
-        </p>
-      )}
+        {/* STATUS */}
+        <div className={`ml-status ${isConnected ? "connected" : "disconnected"}`}>
+          <span className="ml-status-dot" />
+          {isConnected
+            ? "Conta conectada com sucesso"
+            : "Conta ainda não conectada"}
+        </div>
 
-      {/* BOTÃO PRINCIPAL */}
-      <button
-        onClick={handleConnectML}
-        disabled={isConnected}
-        style={{
-          marginTop: 20,
-          padding: "12px 20px",
-          fontSize: 15,
-          fontWeight: 600,
-          cursor: isConnected ? "default" : "pointer",
-        }}
-      >
-        {isConnected ? "Conta conectada ✔" : "Conectar Mercado Livre"}
-      </button>
+        {/* INFO TOKEN */}
+        {isConnected && expiresAt && (
+          <p className="ml-token-info">
+            Token válido até: {new Date(expiresAt).toLocaleString()}
+          </p>
+        )}
+
+        {/* BLOCO DE INFORMAÇÕES */}
+        <div className="ml-info-grid">
+
+          <div className="ml-field">
+            <label>Nome do canal de venda</label>
+            <input value="MERCADO LIVRE" disabled />
+          </div>
+
+          <div className="ml-field">
+            <label>Login Mercado Livre</label>
+            <input value="—" disabled />
+          </div>
+
+        </div>
+
+        {/* BOTÃO PRINCIPAL */}
+        <button
+          className={`ml-button ${isConnected ? "connected" : ""}`}
+          onClick={handleConnectML}
+          disabled={isConnected}
+        >
+          {isConnected ? "Conta conectada ✔" : "Conectar Mercado Livre"}
+        </button>
+
+        {/* MICROCOPY */}
+        <p className="ml-security-hint">
+          🔒 Conexão segura via OAuth oficial do Mercado Livre.
+          O Suse7 não armazena sua senha.
+        </p>
+
+      </div>
     </div>
   );
 }

@@ -1,0 +1,131 @@
+/* ======================================================================
+   SUSE7 — MERCADO LIVRE | INTEGRAÇÃO
+   Layout inspirado na img369
+====================================================================== */
+
+.ml-container {
+  width: 100%;
+  min-height: 100%;
+  padding: 32px;
+  background: #f9fafb;
+}
+
+.ml-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 36px;
+  max-width: 720px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.05);
+}
+
+/* Título */
+.ml-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #111827;
+}
+
+/* Status */
+.ml-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.ml-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.ml-status.connected {
+  color: #15803d;
+}
+
+.ml-status.connected .ml-status-dot {
+  background: #22c55e;
+}
+
+.ml-status.disconnected {
+  color: #b91c1c;
+}
+
+.ml-status.disconnected .ml-status-dot {
+  background: #ef4444;
+}
+
+/* Token info */
+.ml-token-info {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 22px;
+}
+
+/* Grid info */
+.ml-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.ml-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ml-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.ml-field input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  font-size: 14px;
+}
+
+/* Botão */
+.ml-button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: #2563eb;
+  color: #ffffff;
+  transition: background 0.2s ease;
+}
+
+.ml-button:hover {
+  background: #1e40af;
+}
+
+.ml-button.connected {
+  background: #e5e7eb;
+  color: #6b7280;
+  cursor: default;
+}
+
+/* Microcopy */
+.ml-security-hint {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin-top: 18px;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .ml-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
