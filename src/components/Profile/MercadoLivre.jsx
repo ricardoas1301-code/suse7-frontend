@@ -74,7 +74,6 @@ export default function MercadoLivre() {
     return (
       <div className="ml-container">
         <div className="ml-card">
-          <h2>Mercado Livre</h2>
           <p>Carregando integração...</p>
         </div>
       </div>
@@ -120,7 +119,7 @@ export default function MercadoLivre() {
     {/* TEXTO CENTRALIZADO */}
     <p className="ml-connect-description">
       Faça a autenticação da sua conta de vendedor no Mercado Livre
-      para autorizar a integração com o <strong>Suse7</strong>.
+      para autorizar a integração com o <strong>Suse7 Precifica</strong>.
     </p>
 
     {/* CTA */}
@@ -134,7 +133,7 @@ export default function MercadoLivre() {
     {/* MICROCOPY */}
     <p className="ml-security-hint">
       🔒 Conexão segura via OAuth oficial do Mercado Livre.
-      O Suse7 não armazena sua senha.
+      O Suse7 Precifica não armazena sua senha.
     </p>
   </>
 )}
