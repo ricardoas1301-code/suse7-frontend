@@ -78,3 +78,13 @@
   max-width: 480px;     /* ajuste fino: 460 / 520 / 560 */
   width: 100%;
 }
+
+/* ======================================================================
+   SUSE7 — ALTERAR SENHA | PADRÃO DE INPUT
+   Objetivo: Reduzir largura dos inputs em 70%
+====================================================================== */
+
+.input-group input {
+  width: 30%;          /* ← 100% → 30% (redução de 70%) */
+  min-width: 280px;    /* garante boa leitura em telas menores */
+}

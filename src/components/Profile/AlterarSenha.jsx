@@ -28,10 +28,13 @@ export default function AlterarSenha() {
   // HANDLE SAVE
   // ------------------------------------------------------------------
   const handleChangePassword = async () => {
-    if (!senhaAtual || !novaSenha || !confirmarSenha) {
-      alert("Preencha todos os campos.");
-      return;
-    }
+setFeedback({
+  type: "error",
+  title: "Campos obrigatórios",
+  message: "Preencha todos os campos para alterar sua senha."
+});
+setShowFeedback(true);
+return;
 
     if (novaSenha.length < 6) {
       alert("A nova senha deve ter no mínimo 6 caracteres.");
