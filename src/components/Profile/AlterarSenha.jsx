@@ -180,11 +180,13 @@ return;
 
         {/* POPUP SUCESSO — PADRÃO SUSE7 */}
         {showSuccess && (
-          <FeedbackModal
-            title="Senha atualizada!"
-            message="Sua senha foi alterada com sucesso."
-            onClose={() => setShowSuccess(false)}
-          />
+<FeedbackModal
+  show={showFeedback}
+  onClose={() => setShowFeedback(false)}
+  type={feedback.type}
+  title={feedback.title}
+  message={feedback.message}
+/>
         )}
       </div>
     </div>
