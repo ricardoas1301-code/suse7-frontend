@@ -166,3 +166,36 @@
   font-weight: 700;
   color: #9ca3af;
 }
+
+/* =====================================================
+   HEADER COM LOGOS — SUSE7 ↔ MERCADO LIVRE
+===================================================== */
+
+.ml-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.ml-header-logos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ml-logo {
+  height: 34px;            /* padrão visual SaaS */
+  width: auto;
+  object-fit: contain;
+}
+
+.ml-logo.suse7 {
+  border-radius: 50%;
+}
+
+.ml-header-arrow {
+  font-size: 18px;
+  color: #6b7280;
+  font-weight: 600;
+}

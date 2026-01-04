@@ -8,6 +8,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import "./MercadoLivre.css";
+import suse7Logo from "../../assets/suse7-logo-redonda.png";
+import mercadoLivreLogo from "../../assets/mercado-livre.png";
+
 
 export default function MercadoLivre() {
   // ------------------------------------------------------------------
@@ -105,7 +108,21 @@ export default function MercadoLivre() {
     />
   </div>
 
+ {/* HEADER COM LOGOS */}
+<div className="ml-header">
+  <div className="ml-header-logos">
+    <img src={suse7Logo} alt="Suse7" className="ml-logo suse7" />
+    <span className="ml-header-arrow">↔</span>
+    <img
+      src={mercadoLivreLogo}
+      alt="Mercado Livre"
+      className="ml-logo ml"
+    />
+  </div>
+
   <h2 className="ml-title">Mercado Livre</h2>
+</div>
+
 </div>
 
 
