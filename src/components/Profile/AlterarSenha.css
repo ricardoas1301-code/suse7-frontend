@@ -104,3 +104,16 @@
   width: 100%;
 }
 
+/* ======================================================================
+   SUSE7 — ALTERAR SENHA | CENTRALIZAÇÃO DO FORMULÁRIO
+   Objetivo: centralizar inputs e botão como bloco único
+====================================================================== */
+
+.form-grid.form-single-column {
+  align-items: center;
+}
+
+.profile-card .btn-primary {
+  align-self: center;
+}
+
