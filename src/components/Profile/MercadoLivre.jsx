@@ -87,16 +87,27 @@ export default function MercadoLivre() {
     <div className="ml-container">
       <div className="ml-card">
 
-        {/* HEADER */}
-        <h2 className="ml-title">Mercado Livre</h2>
+{/* HEADER */}
+<div className="ml-header">
+  <div className="ml-header-logos">
+    <img
+      src="/assets/suse7-logo.svg"
+      alt="Suse7"
+      className="ml-header-logo"
+    />
 
-        {/* STATUS */}
-        <div className={`ml-status ${isConnected ? "connected" : "disconnected"}`}>
-          <span className="ml-status-dot" />
-          {isConnected
-            ? "Conta conectada com sucesso"
-            : "Conta ainda não conectada"}
-        </div>
+    <span className="ml-header-arrow">↔</span>
+
+    <img
+      src="/assets/mercado-livre-logo.svg"
+      alt="Mercado Livre"
+      className="ml-header-logo ml-logo-ml"
+    />
+  </div>
+
+  <h2 className="ml-title">Mercado Livre</h2>
+</div>
+
 
         {/* INFO TOKEN */}
         {isConnected && expiresAt && (

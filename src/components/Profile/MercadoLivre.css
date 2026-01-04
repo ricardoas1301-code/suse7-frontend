@@ -129,3 +129,40 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =====================================================
+   MERCADO LIVRE — HEADER COM LOGOS (PADRÃO IMG369)
+===================================================== */
+
+.ml-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.ml-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ml-header-logos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ml-header-logo {
+  height: 34px;
+  width: auto;
+}
+
+.ml-logo-ml {
+  height: 36px; /* ML levemente maior */
+}
+
+.ml-header-arrow {
+  font-size: 20px;
+  font-weight: 700;
+  color: #9ca3af;
+}
