@@ -2,8 +2,8 @@
 // PÁGINA: Mercado Livre — Integração
 // Objetivo: Gerenciar conexão com o Mercado Livre (OAuth)
 // UX:
-// - NÃO conectado → tela de autenticação (estilo img2)
-// - CONECTADO → status + dados (img369)
+// - NÃO conectado → tela de autenticação (padrão SaaS Suse7)
+// - CONECTADO → status + dados
 // ======================================================================
 
 import { useEffect, useState } from "react";
@@ -30,7 +30,9 @@ export default function MercadoLivre() {
   useEffect(() => {
     const loadMLStatus = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
         if (!user) {
           setLoading(false);
@@ -49,7 +51,6 @@ export default function MercadoLivre() {
         } else {
           setIsConnected(false);
         }
-
       } catch (err) {
         console.error("Erro ao carregar status ML:", err);
       } finally {
@@ -86,60 +87,55 @@ export default function MercadoLivre() {
   return (
     <div className="ml-container">
       <div className="ml-card">
-
         {/* ==========================================================
-           HEADER COM LOGOS
+           HEADER COM LOGOS (ÍCONES +100%)
         ========================================================== */}
         <div className="ml-header">
           <div className="ml-header-logos">
-            <img src={suse7Logo} alt="Suse7" className="ml-logo suse7" />
+            <img
+              src={suse7Logo}
+              alt="Suse7"
+              className="ml-logo suse7"
+            />
             <span className="ml-header-arrow">↔</span>
-            <img src={mercadoLivreLogo} alt="Mercado Livre" className="ml-logo ml" />
+            <img
+              src={mercadoLivreLogo}
+              alt="Mercado Livre"
+              className="ml-logo ml"
+            />
           </div>
-          
         </div>
 
         {/* ==========================================================
-           ESTADO: NÃO CONECTADO (UX img2)
+           ESTADO: NÃO CONECTADO
         ========================================================== */}
         {!isConnected && (
-  <>
-    {/* STATUS */}
-    <div className="ml-status disconnected">
-      <span className="ml-status-dot" />
-      Conta ainda não conectada
-    </div>
+          <>
+            <h3 className="ml-connect-title">
+              Conectar com Mercado Livre
+            </h3>
 
-    {/* TÍTULO PRINCIPAL */}
-    <h3 className="ml-connect-title">
-      Conectar com Mercado Livre
-    </h3>
+            <p className="ml-connect-description">
+              Faça a autenticação da sua conta de vendedor no Mercado Livre
+              para autorizar a integração com o <strong>Suse7 Precifica</strong>.
+            </p>
 
-    {/* TEXTO CENTRALIZADO */}
-    <p className="ml-connect-description">
-      <strong>Faça a autenticação da sua conta de vendedor no Mercado Livre
-      para autorizar a integração com o Suse7 Precifica</strong>.
-    </p>
+            <button
+              className="ml-button"
+              onClick={handleConnectML}
+            >
+              Iniciar autenticação
+            </button>
 
-    {/* CTA */}
-    <button
-      className="ml-button"
-      onClick={handleConnectML}
-    >
-      Iniciar autenticação
-    </button>
-
-    {/* MICROCOPY */}
-    <p className="ml-security-hint">
-      🔒 Conexão segura via OAuth oficial do Mercado Livre.
-      O Suse7 Precifica não armazena sua senha.
-    </p>
-  </>
-)}
-
+            <p className="ml-security-hint">
+              🔒 Conexão segura via OAuth oficial do Mercado Livre.
+              O Suse7 Precifica não armazena sua senha.
+            </p>
+          </>
+        )}
 
         {/* ==========================================================
-           ESTADO: CONECTADO (img369)
+           ESTADO: CONECTADO
         ========================================================== */}
         {isConnected && (
           <>
@@ -150,14 +146,15 @@ export default function MercadoLivre() {
 
             {expiresAt && (
               <p className="ml-token-info">
-                Token válido até: {new Date(expiresAt).toLocaleString()}
+                Token válido até:{" "}
+                {new Date(expiresAt).toLocaleString()}
               </p>
             )}
 
             <div className="ml-info-grid">
               <div className="ml-field">
-                <label>Nome do canal de venda</label>
-                <input value="MERCADO LIVRE" disabled />
+                <label>Canal de venda</label>
+                <input value="Mercado Livre" disabled />
               </div>
 
               <div className="ml-field">
@@ -176,7 +173,6 @@ export default function MercadoLivre() {
             </p>
           </>
         )}
-
       </div>
     </div>
   );
