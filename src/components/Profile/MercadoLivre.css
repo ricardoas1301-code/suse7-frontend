@@ -186,14 +186,15 @@
 
 @media (max-width: 640px) {
   .ml-container {
-    padding: 20px 0;
-  }
+  width: 100%;
+  min-height: calc(100vh - 60px); /* desconta topbar */
+  padding: 42px;
+  background: #f5f7fb;
 
-  .ml-card {
-    padding: 28px 20px;
-  }
+  display: flex;
+  justify-content: center;   /* CENTRALIZA HORIZONTAL */
+  align-items: flex-start;   /* NÃO centraliza vertical */
 }
-
 
   .ml-info-grid {
     grid-template-columns: 1fr;
