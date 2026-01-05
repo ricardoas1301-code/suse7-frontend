@@ -176,8 +176,15 @@
 
 @media (max-width: 640px) {
   .ml-container {
-    padding: 24px;
-  }
+  width: 100%;
+  min-height: calc(100vh - 60px); /* desconta topbar */
+  padding: 42px;
+  background: #f5f7fb;
+
+  display: flex;
+  justify-content: center;   /* CENTRALIZA HORIZONTAL */
+  align-items: flex-start;   /* NÃO centraliza vertical */
+}
 
   .ml-info-grid {
     grid-template-columns: 1fr;
@@ -186,4 +193,34 @@
   .ml-logo {
     height: 52px;
   }
+}
+
+/* ======================================================
+   BLOCO — O QUE ACONTECE APÓS CONECTAR
+====================================================== */
+
+.ml-after-connect {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.ml-after-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.ml-after-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ml-after-list li {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.8;
 }

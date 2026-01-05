@@ -127,6 +127,19 @@ export default function MercadoLivre() {
               Iniciar autenticação
             </button>
 
+            {/* BLOCO DE CONTEXTO — O QUE ACONTECE APÓS CONECTAR */}
+<div className="ml-after-connect">
+  <p className="ml-after-title">
+    O que acontece após conectar?
+  </p>
+
+  <ul className="ml-after-list">
+    <li>✔ Importar seus anúncios automaticamente</li>
+    <li>✔ Calcular taxas, comissões e lucro real</li>
+    <li>✔ Monitorar preços e resultados em tempo real</li>
+  </ul>
+</div>
+
             <p className="ml-security-hint">
               🔒 Conexão segura via OAuth oficial do Mercado Livre.
               O Suse7 Precifica não armazena sua senha.
