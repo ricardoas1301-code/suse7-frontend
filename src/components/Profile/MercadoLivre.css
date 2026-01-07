@@ -123,10 +123,15 @@
   margin: 0 auto 30px auto;  /* CENTRALIZA O GRID */
 }
 
+/* ======================================================
+   CAMPO (LABEL + INPUT) — ESPAÇAMENTO PADRÃO SUSE7
+====================================================== */
+
 .ml-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 6px;          /* distância entre label e input */
+  margin-bottom: 20px; /* 🔑 distância ENTRE os campos */
 }
 
 .ml-field label {
