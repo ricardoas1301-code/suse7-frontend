@@ -397,3 +397,35 @@
   transform: translate(-50%, -50%);
   transition: opacity 0.1s ease;
 }
+
+/* ======================================================
+   READ-ONLY FIELD — PADRÃO SUSE7
+====================================================== */
+
+.readonly-field {
+  position: relative;
+}
+
+.readonly-field input {
+  width: 100%;
+  cursor: not-allowed;
+}
+
+/* ÍCONE (FORTE E PADRÃO) */
+.readonly-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: url("/icons/readonly.svg") no-repeat center;
+  background-size: contain;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* MOSTRA ÍCONE SOMENTE NO HOVER DO INPUT */
+.readonly-field:hover .readonly-icon {
+  opacity: 1;
+}

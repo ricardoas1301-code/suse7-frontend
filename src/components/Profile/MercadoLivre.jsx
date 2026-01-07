@@ -181,23 +181,12 @@ export default function MercadoLivre() {
 </div>
 
 {/* ======================================================
-   NOME DE USUÁRIO (READ-ONLY COM ÍCONE NO CURSOR)
+   NOME DE USUÁRIO (READ-ONLY)
 ====================================================== */}
-<div className="ml-field">
+<div className="ml-field field-lg">
   <label>Nome de usuário</label>
 
-  <div
-    className="ml-input-hover"
-    onMouseEnter={() => setActiveReadonlyField("username")}
-    onMouseLeave={() => setActiveReadonlyField(null)}
-    onMouseMove={(e) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      setIconPosition({
-        x: e.clientX - rect.left + 12,
-        y: e.clientY - rect.top + 12,
-      });
-    }}
-  >
+  <div className="readonly-field">
     <input
       value={
         mlUsername && mlUsername !== "—"
@@ -206,54 +195,22 @@ export default function MercadoLivre() {
       }
       disabled
     />
-
-    {activeReadonlyField === "username" && (
-      <span
-        className="ml-readonly-floating"
-        style={{
-          left: iconPosition.x,
-          top: iconPosition.y,
-        }}
-      >
-        🚫
-      </span>
-    )}
+    <span className="readonly-icon"></span>
   </div>
 </div>
 
 {/* ======================================================
-   STATUS DA INTEGRAÇÃO (READ-ONLY COM ÍCONE NO CURSOR)
+   STATUS DA INTEGRAÇÃO (READ-ONLY)
 ====================================================== */}
-<div className="ml-field">
+<div className="ml-field field-lg">
   <label>Status da integração</label>
 
-  <div
-    className="ml-input-hover"
-    onMouseEnter={() => setActiveReadonlyField("status")}
-    onMouseLeave={() => setActiveReadonlyField(null)}
-    onMouseMove={(e) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      setIconPosition({
-        x: e.clientX - rect.left + 12,
-        y: e.clientY - rect.top + 12,
-      });
-    }}
-  >
+  <div className="readonly-field">
     <input value="Ativa" disabled />
-
-    {activeReadonlyField === "status" && (
-      <span
-        className="ml-readonly-floating"
-        style={{
-          left: iconPosition.x,
-          top: iconPosition.y,
-        }}
-      >
-        🚫
-      </span>
-    )}
+    <span className="readonly-icon"></span>
   </div>
 </div>
+
 
      {/* ======================================================
        PRÓXIMOS PASSOS (EM BREVE)
