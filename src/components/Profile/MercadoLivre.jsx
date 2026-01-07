@@ -117,8 +117,8 @@ export default function MercadoLivre() {
 
             <p className="ml-connect-description">
               Faça a autenticação da sua conta de vendedor no Mercado Livre
-              para autorizar a integração com o <strong>Suse7 Precifica</strong> 
-              e começar a usar as ferramentas inteligentes de precificação avançada.
+              para autorizar a integração com o <strong>Suse7 Precifica </strong> 
+              e começe a usar as ferramentas inteligentes de precificação avançada.
             </p>
 
             <button
@@ -135,12 +135,12 @@ export default function MercadoLivre() {
   </p>
 
   <ul className="ml-after-list">
-    <li>✔ Sincronização Automática: Seus anúncios são importados e atualizados instantaneamente</li>
-    <li>✔ Precisão Financeira: Cálculo exato de taxas, comissões de marketplace e seu lucro real</li>
-    <li>✔ Inteligência de Mercado: Monitoramento de preços e performance em tempo real</li>
-    <li>✔ Gestão Centralizada: Altere preços e estoque sem sair do Suse7</li>
-    <li>✔ Visão 360º: Tenha painéis de controle atualizados com cada venda realizada</li>
-    <li>✔ Sync de Anúncios: Importação total de títulos, fotos e descrições</li>
+    <li>✔ Sincronização Automática: Seus anúncios são importados e atualizados instantaneamente.</li>
+    <li>✔ Precisão Financeira: Cálculo exato de taxas, comissões de marketplace e seu lucro real.</li>
+    <li>✔ Inteligência de Mercado: Monitoramento de preços e performance em tempo real.</li>
+    <li>✔ Gestão Centralizada: Altere preços e estoque e muito mais sem sair do Suse7.</li>
+    <li>✔ Visão 360º: Tenha painéis de controle atualizados com cada venda realizada.</li>
+    <li>✔ Sync de Anúncios: Importação total de todos os dados como títulos, fotos e descrições...</li>
   </ul>
 </div>
 
