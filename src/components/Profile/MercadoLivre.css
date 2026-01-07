@@ -136,12 +136,17 @@
 }
 
 .ml-field input {
-  height: 38px;               /* PADRÃO SUSE7 */
-  padding: 6px 8px;           /* PADRÃO SUSE7 */
-  border-radius: 8px;         /* PADRÃO SUSE7 */
+  height: 38px;                 /* PADRÃO SUSE7 */
+  padding: 6px 8px;             /* PADRÃO SUSE7 */
+  border-radius: 8px;           /* PADRÃO SUSE7 */
   border: 1px solid #e5e7eb;
   background: #f3f4f6;
-  font-size: 14px;            /* PADRÃO SUSE7 */
+
+  font-size: 14px;              /* PADRÃO SUSE7 */
+  line-height: 1.2;             /* 🔑 AJUSTE CRÍTICO */
+  box-sizing: border-box;       /* 🔑 GARANTE ALTURA REAL */
+
+  color: #111827;
 }
 
 /* ======================================================
