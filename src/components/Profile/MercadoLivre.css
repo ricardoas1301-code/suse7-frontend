@@ -321,7 +321,7 @@
 }
 
 .ml-button.primary {
-  width: 240px;
+  width: 100%;
   height: 38px;              /* PADRÃO SUSE7 */
   padding: 6px 8px;          /* PADRÃO SUSE7 */
   border-radius: 8px;        /* PADRÃO SUSE7 */

@@ -198,20 +198,13 @@ export default function MercadoLivre() {
       </div>
     </div>
 
-    {expiresAt && (
-      <p className="ml-token-info">
-        🔐 Token válido até:{" "}
-        <strong>{new Date(expiresAt).toLocaleString()}</strong>
-      </p>
-    )}
-
-
-    {/* ======================================================
+       {/* ======================================================
         PRÓXIMOS PASSOS (EM BREVE)
     ====================================================== */}
     <div className="ml-next-steps">
       <p className="ml-next-title">Agora você tem todos os recursos da integração:</p>
 
+    <br />
       <ul></ul>
       <ul>
     <li>✔ Sincronização Automática: Seus anúncios são importados e atualizados instantaneamente.</li>
@@ -220,6 +213,7 @@ export default function MercadoLivre() {
     <li>✔ Gestão Centralizada: Altere preços e estoque e muito mais sem sair do Suse7.</li>
     <li>✔ Visão 360º: Tenha painéis de controle atualizados com cada venda realizada.</li>
     <li>✔ Sync de Anúncios: Importação total de todos os dados como títulos, fotos e descrições...</li>
+    <br />
       </ul>
     </div>
 
