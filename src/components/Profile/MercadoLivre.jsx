@@ -22,6 +22,9 @@ export default function MercadoLivre() {
   const [isConnected, setIsConnected] = useState(false);
   const [expiresAt, setExpiresAt] = useState(null);
   const [mlUsername, setMlUsername] = useState("—");
+  const [showReadonlyIcon, setShowReadonlyIcon] = useState(false);
+  const [iconPosition, setIconPosition] = useState({ x: 0, y: 0 });
+
 
   const navigate = useNavigate();
 
@@ -176,12 +179,23 @@ export default function MercadoLivre() {
 </div>
 
  {/* ======================================================
-   NOME DE USUÁRIO (READ-ONLY)
+   NOME DE USUÁRIO (READ-ONLY COM ÍCONE NO CURSOR)
 ====================================================== */}
-<div className="ml-field ml-readonly-field">
+<div className="ml-field">
   <label>Nome de usuário</label>
 
-  <div className="ml-input-wrapper">
+  <div
+    className="ml-input-hover"
+    onMouseEnter={() => setShowReadonlyIcon(true)}
+    onMouseLeave={() => setShowReadonlyIcon(false)}
+    onMouseMove={(e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setIconPosition({
+        x: e.clientX - rect.left + 10,
+        y: e.clientY - rect.top + 10,
+      });
+    }}
+  >
     <input
       value={
         mlUsername && mlUsername !== "—"
@@ -190,19 +204,52 @@ export default function MercadoLivre() {
       }
       disabled
     />
-    <span className="ml-readonly-icon">🚫</span>
+
+    {showReadonlyIcon && (
+      <span
+        className="ml-readonly-floating"
+        style={{
+          left: iconPosition.x,
+          top: iconPosition.y,
+        }}
+      >
+        🚫
+      </span>
+    )}
   </div>
 </div>
 
 {/* ======================================================
-   STATUS DA INTEGRAÇÃO (READ-ONLY)
+   STATUS DA INTEGRAÇÃO (READ-ONLY COM ÍCONE NO CURSOR)
 ====================================================== */}
-<div className="ml-field ml-readonly-field">
+<div className="ml-field">
   <label>Status da integração</label>
 
-  <div className="ml-input-wrapper">
+  <div
+    className="ml-input-hover"
+    onMouseEnter={() => setShowReadonlyIcon(true)}
+    onMouseLeave={() => setShowReadonlyIcon(false)}
+    onMouseMove={(e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setIconPosition({
+        x: e.clientX - rect.left + 10,
+        y: e.clientY - rect.top + 10,
+      });
+    }}
+  >
     <input value="Ativa" disabled />
-    <span className="ml-readonly-icon">🚫</span>
+
+    {showReadonlyIcon && (
+      <span
+        className="ml-readonly-floating"
+        style={{
+          left: iconPosition.x,
+          top: iconPosition.y,
+        }}
+      >
+        🚫
+      </span>
+    )}
   </div>
 </div>
 

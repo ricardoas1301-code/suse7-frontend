@@ -380,3 +380,20 @@
 .ml-input-wrapper input {
   width: 100%;
 }
+
+/* ======================================================
+   ÍCONE READ-ONLY FLUTUANTE (SEGUIR O CURSOR)
+====================================================== */
+
+.ml-input-hover {
+  position: relative;
+}
+
+.ml-readonly-floating {
+  position: absolute;
+  font-size: 14px;
+  pointer-events: none; /* não interfere no mouse */
+  opacity: 0.7;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.1s ease;
+}
