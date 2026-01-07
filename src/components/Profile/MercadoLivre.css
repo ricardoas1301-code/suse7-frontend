@@ -118,7 +118,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  margin-bottom: 30px;
+
+  max-width: 520px;          /* 🔑 CONTROLE DE LARGURA */
+  margin: 0 auto 30px auto;  /* CENTRALIZA O GRID */
 }
 
 .ml-field {
