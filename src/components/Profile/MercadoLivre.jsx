@@ -24,6 +24,8 @@ export default function MercadoLivre() {
   const [mlUsername, setMlUsername] = useState("—");
   const [showReadonlyIcon, setShowReadonlyIcon] = useState(false);
   const [iconPosition, setIconPosition] = useState({ x: 0, y: 0 });
+  const [activeReadonlyField, setActiveReadonlyField] = useState(null); // "username" | "status" | null
+
 
 
   const navigate = useNavigate();
@@ -178,7 +180,7 @@ export default function MercadoLivre() {
   </button>
 </div>
 
- {/* ======================================================
+{/* ======================================================
    NOME DE USUÁRIO (READ-ONLY COM ÍCONE NO CURSOR)
 ====================================================== */}
 <div className="ml-field">
@@ -186,13 +188,13 @@ export default function MercadoLivre() {
 
   <div
     className="ml-input-hover"
-    onMouseEnter={() => setShowReadonlyIcon(true)}
-    onMouseLeave={() => setShowReadonlyIcon(false)}
+    onMouseEnter={() => setActiveReadonlyField("username")}
+    onMouseLeave={() => setActiveReadonlyField(null)}
     onMouseMove={(e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       setIconPosition({
-        x: e.clientX - rect.left + 10,
-        y: e.clientY - rect.top + 10,
+        x: e.clientX - rect.left + 12,
+        y: e.clientY - rect.top + 12,
       });
     }}
   >
@@ -205,7 +207,7 @@ export default function MercadoLivre() {
       disabled
     />
 
-    {showReadonlyIcon && (
+    {activeReadonlyField === "username" && (
       <span
         className="ml-readonly-floating"
         style={{
@@ -227,19 +229,19 @@ export default function MercadoLivre() {
 
   <div
     className="ml-input-hover"
-    onMouseEnter={() => setShowReadonlyIcon(true)}
-    onMouseLeave={() => setShowReadonlyIcon(false)}
+    onMouseEnter={() => setActiveReadonlyField("status")}
+    onMouseLeave={() => setActiveReadonlyField(null)}
     onMouseMove={(e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       setIconPosition({
-        x: e.clientX - rect.left + 10,
-        y: e.clientY - rect.top + 10,
+        x: e.clientX - rect.left + 12,
+        y: e.clientY - rect.top + 12,
       });
     }}
   >
     <input value="Ativa" disabled />
 
-    {showReadonlyIcon && (
+    {activeReadonlyField === "status" && (
       <span
         className="ml-readonly-floating"
         style={{
