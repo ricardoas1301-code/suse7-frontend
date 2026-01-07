@@ -336,3 +336,23 @@
 .ml-button.primary:hover {
   background: #2563eb; /* não muda, é status */
 }
+
+/* ======================================================
+   LABEL READ-ONLY (CAMPOS NÃO EDITÁVEIS)
+====================================================== */
+
+.ml-label-readonly {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ml-readonly-icon {
+  font-size: 13px;
+  cursor: help;
+  opacity: 0.6;
+}
+
+.ml-readonly-icon:hover {
+  opacity: 1;
+}

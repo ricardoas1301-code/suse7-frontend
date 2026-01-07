@@ -21,6 +21,7 @@ export default function MercadoLivre() {
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [expiresAt, setExpiresAt] = useState(null);
+  const [mlUsername, setMlUsername] = useState("—");
 
   const navigate = useNavigate();
 
@@ -47,6 +48,7 @@ export default function MercadoLivre() {
 
         if (data.connected) {
           setIsConnected(true);
+          setMlUsername(data.username || "—");
           setExpiresAt(data.expires_at || null);
         } else {
           setIsConnected(false);
@@ -176,30 +178,43 @@ export default function MercadoLivre() {
     {/* ======================================================
         INFORMAÇÕES DA CONTA
     ====================================================== */}
-    <div className="ml-info-grid">
-      <div className="ml-field">
-        <label>Canal de venda</label>
-        <input value="Mercado Livre (MLB)" disabled />
-      </div>
+<div className="ml-info-grid">
 
-      <div className="ml-field">
-        <label>Status da integração</label>
-        <input value="Ativa" disabled />
-      </div>
+  {/* NOME DE USUÁRIO */}
+  <div className="ml-field">
+    <label className="ml-label-readonly">
+      Nome de usuário
+      <span
+        className="ml-readonly-icon"
+        title="Este campo não pode ser alterado"
+      >
+        🚫
+      </span>
+    </label>
 
-      <div className="ml-field">
-        <label>Login do vendedor</label>
-        <input value="—" disabled />
-      </div>
+    <input value={mlUsername} disabled />
+  </div>
 
-      <div className="ml-field">
-        <label>Token OAuth</label>
-        <input value={expiresAt ? "Válido" : "—"} disabled />
-      </div>
-    </div>
+  {/* STATUS DA INTEGRAÇÃO */}
+  <div className="ml-field">
+    <label className="ml-label-readonly">
+      Status da integração
+      <span
+        className="ml-readonly-icon"
+        title="Este campo não pode ser alterado"
+      >
+        🚫
+      </span>
+    </label>
 
-       {/* ======================================================
-        PRÓXIMOS PASSOS (EM BREVE)
+    <input value="Ativa" disabled />
+  </div>
+
+</div>
+
+
+     {/* ======================================================
+       PRÓXIMOS PASSOS (EM BREVE)
     ====================================================== */}
     <div className="ml-next-steps">
       <p className="ml-next-title">Agora você tem todos os recursos da integração:</p>
