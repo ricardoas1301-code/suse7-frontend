@@ -164,6 +164,15 @@ export default function MercadoLivre() {
       </p>
     </div>
 
+        {/* ======================================================
+        AÇÕES
+    ====================================================== */}
+<div className="ml-actions single">
+  <button className="ml-button primary">
+    Conta conectada ✔
+  </button>
+</div>
+
     {/* ======================================================
         INFORMAÇÕES DA CONTA
     ====================================================== */}
@@ -196,14 +205,6 @@ export default function MercadoLivre() {
       </p>
     )}
 
-    {/* ======================================================
-        AÇÕES
-    ====================================================== */}
-<div className="ml-actions single">
-  <button className="ml-button primary">
-    Conta conectada ✔
-  </button>
-</div>
 
     {/* ======================================================
         PRÓXIMOS PASSOS (EM BREVE)
