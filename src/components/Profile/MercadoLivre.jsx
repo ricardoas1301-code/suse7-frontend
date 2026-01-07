@@ -175,43 +175,36 @@ export default function MercadoLivre() {
   </button>
 </div>
 
-    {/* ======================================================
-        INFORMAÇÕES DA CONTA
-    ====================================================== */}
-<div className="ml-info-grid">
+ {/* ======================================================
+   NOME DE USUÁRIO (READ-ONLY)
+====================================================== */}
+<div className="ml-field ml-readonly-field">
+  <label>Nome de usuário</label>
 
-  {/* NOME DE USUÁRIO */}
-  <div className="ml-field">
-    <label className="ml-label-readonly">
-      Nome de usuário
-      <span
-        className="ml-readonly-icon"
-        title="Este campo não pode ser alterado"
-      >
-        🚫
-      </span>
-    </label>
-
-    <input value={mlUsername} disabled />
+  <div className="ml-input-wrapper">
+    <input
+      value={
+        mlUsername && mlUsername !== "—"
+          ? mlUsername
+          : "Conta Mercado Livre conectada"
+      }
+      disabled
+    />
+    <span className="ml-readonly-icon">🚫</span>
   </div>
-
-  {/* STATUS DA INTEGRAÇÃO */}
-  <div className="ml-field">
-    <label className="ml-label-readonly">
-      Status da integração
-      <span
-        className="ml-readonly-icon"
-        title="Este campo não pode ser alterado"
-      >
-        🚫
-      </span>
-    </label>
-
-    <input value="Ativa" disabled />
-  </div>
-
 </div>
 
+{/* ======================================================
+   STATUS DA INTEGRAÇÃO (READ-ONLY)
+====================================================== */}
+<div className="ml-field ml-readonly-field">
+  <label>Status da integração</label>
+
+  <div className="ml-input-wrapper">
+    <input value="Ativa" disabled />
+    <span className="ml-readonly-icon">🚫</span>
+  </div>
+</div>
 
      {/* ======================================================
        PRÓXIMOS PASSOS (EM BREVE)

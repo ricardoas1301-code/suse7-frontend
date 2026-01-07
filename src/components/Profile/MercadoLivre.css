@@ -347,12 +347,36 @@
   gap: 6px;
 }
 
+/* ÍCONE 🚫 */
 .ml-readonly-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 13px;
-  cursor: help;
-  opacity: 0.6;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
 .ml-readonly-icon:hover {
   opacity: 1;
+}
+
+/* APARECE SOMENTE NO HOVER DO CAMPO */
+.ml-readonly-field:hover .ml-readonly-icon {
+  opacity: 0.7;
+}
+
+/* ======================================================
+   INPUT READ-ONLY — ÍCONE NO HOVER (PADRÃO CPF/CNPJ)
+====================================================== */
+
+.ml-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.ml-input-wrapper input {
+  width: 100%;
 }
