@@ -117,7 +117,8 @@ export default function MercadoLivre() {
 
             <p className="ml-connect-description">
               Faça a autenticação da sua conta de vendedor no Mercado Livre
-              para autorizar a integração com o <strong>Suse7 Precifica</strong>.
+              para autorizar a integração com o <strong>Suse7 Precifica</strong> 
+              e começar a usar as ferramentas inteligentes de precificação avançada.
             </p>
 
             <button
@@ -134,15 +135,18 @@ export default function MercadoLivre() {
   </p>
 
   <ul className="ml-after-list">
-    <li>✔ Importar seus anúncios automaticamente</li>
-    <li>✔ Calcular taxas, comissões e lucro real</li>
-    <li>✔ Monitorar preços e resultados em tempo real</li>
+    <li>✔ Sincronização Automática: Seus anúncios são importados e atualizados instantaneamente</li>
+    <li>✔ Precisão Financeira: Cálculo exato de taxas, comissões de marketplace e seu lucro real</li>
+    <li>✔ Inteligência de Mercado: Monitoramento de preços e performance em tempo real</li>
+    <li>✔ Gestão Centralizada: Altere preços e estoque sem sair do Suse7</li>
+    <li>✔ Visão 360º: Tenha painéis de controle atualizados com cada venda realizada</li>
+    <li>✔ Sync de Anúncios: Importação total de títulos, fotos e descrições</li>
   </ul>
 </div>
 
             <p className="ml-security-hint">
-              🔒 Conexão segura via OAuth oficial do Mercado Livre.
-              O Suse7 Precifica não armazena sua senha.
+              🔒 Conexão segura utilizamos o protocolo oficial OAuth do Mercado Livre.
+              Seus dados são protegidos por criptografia de ponta a ponta via API oficial.
             </p>
           </>
         )}
