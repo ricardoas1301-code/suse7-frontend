@@ -145,7 +145,7 @@ export default function MercadoLivre() {
 </div>
 
             <p className="ml-security-hint">
-              🔒 Conexão segura utilizamos o protocolo oficial OAuth do Mercado Livre.
+              🔒 Conexão segura: utilizamos o protocolo oficial OAuth do Mercado Livre.
               Seus dados são protegidos por criptografia de ponta a ponta via API oficial.
             </p>
           </>
@@ -156,40 +156,85 @@ export default function MercadoLivre() {
         ========================================================== */}
         {isConnected && (
           <>
-            <div className="ml-status connected">
-              <span className="ml-status-dot" />
-              Conta conectada com sucesso
-            </div>
+             <div className="ml-connected-header">
+      <div className="ml-status connected">
+        <span className="ml-status-dot" />
+        Mercado Livre conectado com sucesso
+      </div>
 
-            {expiresAt && (
-              <p className="ml-token-info">
-                Token válido até:{" "}
-                {new Date(expiresAt).toLocaleString()}
-              </p>
-            )}
+      <p className="ml-connected-subtitle">
+        Sua conta já está integrada ao <strong>Suse7 Precifica</strong> e pronta
+        para utilizar as ferramentas inteligentes.
+      </p>
+    </div>
 
-            <div className="ml-info-grid">
-              <div className="ml-field">
-                <label>Canal de venda</label>
-                <input value="Mercado Livre" disabled />
-              </div>
+    {/* ======================================================
+        INFORMAÇÕES DA CONTA
+    ====================================================== */}
+    <div className="ml-info-grid">
+      <div className="ml-field">
+        <label>Canal de venda</label>
+        <input value="Mercado Livre (MLB)" disabled />
+      </div>
 
-              <div className="ml-field">
-                <label>Login Mercado Livre</label>
-                <input value="—" disabled />
-              </div>
-            </div>
+      <div className="ml-field">
+        <label>Status da integração</label>
+        <input value="Ativa" disabled />
+      </div>
 
-            <button className="ml-button connected" disabled>
-              Conta conectada ✔
-            </button>
+      <div className="ml-field">
+        <label>Login do vendedor</label>
+        <input value="—" disabled />
+      </div>
 
-            <p className="ml-security-hint">
-              🔒 Conexão segura via OAuth oficial do Mercado Livre.
-              O Suse7 não armazena sua senha.
-            </p>
-          </>
-        )}
+      <div className="ml-field">
+        <label>Token OAuth</label>
+        <input value={expiresAt ? "Válido" : "—"} disabled />
+      </div>
+    </div>
+
+    {expiresAt && (
+      <p className="ml-token-info">
+        🔐 Token válido até:{" "}
+        <strong>{new Date(expiresAt).toLocaleString()}</strong>
+      </p>
+    )}
+
+    {/* ======================================================
+        AÇÕES
+    ====================================================== */}
+    <div className="ml-actions">
+      <button className="ml-button secondary">
+        Reconfigurar integração
+      </button>
+
+      <button className="ml-button connected" disabled>
+        Conta conectada ✔
+      </button>
+    </div>
+
+    {/* ======================================================
+        PRÓXIMOS PASSOS (EM BREVE)
+    ====================================================== */}
+    <div className="ml-next-steps">
+      <p className="ml-next-title">Agora todos você todos os recursos da integração:</p>
+
+      <ul>
+    <li>✔ Sincronização Automática: Seus anúncios são importados e atualizados instantaneamente.</li>
+    <li>✔ Precisão Financeira: Cálculo exato de taxas, comissões de marketplace e seu lucro real.</li>
+    <li>✔ Inteligência de Mercado: Monitoramento de preços e performance em tempo real.</li>
+    <li>✔ Gestão Centralizada: Altere preços e estoque e muito mais sem sair do Suse7.</li>
+    <li>✔ Visão 360º: Tenha painéis de controle atualizados com cada venda realizada.</li>
+    <li>✔ Sync de Anúncios: Importação total de todos os dados como títulos, fotos e descrições...</li>
+      </ul>
+    </div>
+
+    <p className="ml-security-hint">
+🔒 Conexão segura: utilizamos o protocolo oficial OAuth do Mercado Livre.
+   Seus dados são protegidos por criptografia de ponta a ponta via API oficial.
+    </p>
+  </>
+)}
       </div>
     </div>
   );
