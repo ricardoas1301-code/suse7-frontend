@@ -134,12 +134,12 @@
 }
 
 .ml-field input {
-  height: 38px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  height: 38px;               /* PADRÃO SUSE7 */
+  padding: 6px 8px;           /* PADRÃO SUSE7 */
+  border-radius: 8px;         /* PADRÃO SUSE7 */
   border: 1px solid #e5e7eb;
   background: #f3f4f6;
-  font-size: 14px;
+  font-size: 14px;            /* PADRÃO SUSE7 */
 }
 
 /* ======================================================
@@ -304,4 +304,31 @@
   font-size: 13px;
   color: #6b7280;
   line-height: 1.8;
+}
+
+/* ======================================================
+   BOTÃO — CONTA CONECTADA (PADRÃO SUSE7)
+====================================================== */
+
+.ml-actions.single {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px; /* PADRÃO SUSE7 */
+}
+
+.ml-button.primary {
+  width: 240px;
+  height: 38px;              /* PADRÃO SUSE7 */
+  padding: 6px 8px;          /* PADRÃO SUSE7 */
+  border-radius: 8px;        /* PADRÃO SUSE7 */
+  font-size: 14px;           /* PADRÃO SUSE7 */
+  font-weight: 500;
+  background: #2563eb;       /* AZUL SUSE7 */
+  color: #ffffff;
+  border: none;
+  cursor: default;
+}
+
+.ml-button.primary:hover {
+  background: #2563eb; /* não muda, é status */
 }

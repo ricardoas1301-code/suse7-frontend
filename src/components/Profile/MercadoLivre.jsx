@@ -157,14 +157,10 @@ export default function MercadoLivre() {
         {isConnected && (
           <>
              <div className="ml-connected-header">
-      <div className="ml-status connected">
-        <span className="ml-status-dot" />
-        Mercado Livre conectado com sucesso
-      </div>
 
       <p className="ml-connected-subtitle">
         Sua conta já está integrada ao <strong>Suse7 Precifica</strong> e pronta
-        para utilizar as ferramentas inteligentes.
+        para utilizar as ferramentas inteligentes de precificação avançada.
       </p>
     </div>
 
@@ -203,22 +199,19 @@ export default function MercadoLivre() {
     {/* ======================================================
         AÇÕES
     ====================================================== */}
-    <div className="ml-actions">
-      <button className="ml-button secondary">
-        Reconfigurar integração
-      </button>
-
-      <button className="ml-button connected" disabled>
-        Conta conectada ✔
-      </button>
-    </div>
+<div className="ml-actions single">
+  <button className="ml-button primary">
+    Conta conectada ✔
+  </button>
+</div>
 
     {/* ======================================================
         PRÓXIMOS PASSOS (EM BREVE)
     ====================================================== */}
     <div className="ml-next-steps">
-      <p className="ml-next-title">Agora todos você todos os recursos da integração:</p>
+      <p className="ml-next-title">Agora você tem todos os recursos da integração:</p>
 
+      <ul></ul>
       <ul>
     <li>✔ Sincronização Automática: Seus anúncios são importados e atualizados instantaneamente.</li>
     <li>✔ Precisão Financeira: Cálculo exato de taxas, comissões de marketplace e seu lucro real.</li>
