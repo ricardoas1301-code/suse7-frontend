@@ -44,9 +44,13 @@ import ExtratoConta from "./components/Profile/ExtratoConta";
 import Preferencias from "./components/Profile/Preferencias";
 import Notificacoes from "./components/Profile/Notificacoes";
 
+// Produtos (REAL)
+import Products from "./components/Products";
+
+
 // Temporários
 const AnunciosTable = () => <h1>Anúncios</h1>;
-const Produtos = () => <h1>Produtos</h1>;
+<Route path="produtos" element={<Produtos />} />
 const Clientes = () => <h1>Clientes</h1>;
 const Faturas = () => <h1>Faturas</h1>;
 const Relatorios = () => <h1>Relatórios</h1>;
