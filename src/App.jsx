@@ -16,7 +16,7 @@ import "./App.css";
 import "./global.css";
 
 // Supabase
-import { supabase } from "../supabaseClient";
+import { supabase } from "./supabaseClient";
 
 // Layout e páginas principais
 import Layout from "./components/Layout";
