@@ -1,0 +1,93 @@
+/* ======================================================================
+   SUSE7 — PRODUTOS
+====================================================================== */
+
+.products-container {
+  padding: 32px;
+}
+
+.products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.products-header h1 {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.products-header p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.btn-primary {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.products-empty {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 48px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.products-table {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.products-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  padding: 14px 18px;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.products-row.header {
+  background: #f9fafb;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.product-meta {
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.status-active {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.status-inactive {
+  color: #9ca3af;
+}
+
+.actions {
+  cursor: pointer;
+}
