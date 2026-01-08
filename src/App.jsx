@@ -142,7 +142,7 @@ export default function App() {
 
             {/* Outras */}
             <Route path="anuncios" element={<AnunciosTable />} />
-            <<Route path="produtos" element={<Products />} />
+            <Route path="produtos" element={<Products />} />
             <Route path="clientes" element={<Clientes />} />
             <Route path="faturas" element={<Faturas />} />
             <Route path="relatorios" element={<Relatorios />} />
