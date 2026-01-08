@@ -50,7 +50,6 @@ import Products from "./components/Products";
 
 // Temporários
 const AnunciosTable = () => <h1>Anúncios</h1>;
-<Route path="produtos" element={<Produtos />} />
 const Clientes = () => <h1>Clientes</h1>;
 const Faturas = () => <h1>Faturas</h1>;
 const Relatorios = () => <h1>Relatórios</h1>;
@@ -143,7 +142,7 @@ export default function App() {
 
             {/* Outras */}
             <Route path="anuncios" element={<AnunciosTable />} />
-            <Route path="produtos" element={<Produtos />} />
+            <<Route path="produtos" element={<Products />} />
             <Route path="clientes" element={<Clientes />} />
             <Route path="faturas" element={<Faturas />} />
             <Route path="relatorios" element={<Relatorios />} />
