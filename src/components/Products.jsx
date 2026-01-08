@@ -4,7 +4,7 @@
 // ======================================================================
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../supabaseClient";
+import { supabase } from "../supabaseClient";
 import "./Products.css";
 
 export default function Products() {
