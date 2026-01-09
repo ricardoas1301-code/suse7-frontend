@@ -186,17 +186,13 @@ export default function MercadoLivre() {
 <div className="ml-field field-lg">
   <label>Nome de usuário</label>
 
-  <div className="readonly-field">
-    <input
-      value={
-        mlUsername && mlUsername !== "—"
-          ? mlUsername
-          : "Conta Mercado Livre conectada"
-      }
-      disabled
-    />
-    <span className="readonly-icon"></span>
-  </div>
+<div className="readonly-field">
+  <input
+    value={mlUsername || ""}
+    disabled
+  />
+  <span className="readonly-icon"></span>
+</div>
 </div>
 
 {/* ======================================================
