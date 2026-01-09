@@ -230,3 +230,20 @@
 .btn-primary:hover {
   background: #1e40af;
 }
+
+/* ======================================================
+   BODY DO MODAL — ALTURA PADRÃO ENTRE ABAS
+   Referência: Aba "Dados básicos"
+====================================================== */
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  /* 🔒 TRAVA DE ALTURA PARA NÃO "PULAR" ENTRE ABAS */
+  min-height: 360px;
+
+  /* Scroll interno se alguma aba tiver mais conteúdo */
+  overflow-y: auto;
+}
