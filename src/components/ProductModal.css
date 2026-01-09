@@ -279,8 +279,25 @@
   opacity: 1;
 }
 
+/* ======================================================
+   ABA DESCRIÇÃO DO PRODUTO
+====================================================== */
+
 .description-tab {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  gap: 12px;
 }
+
+.description-wrapper {
+  position: relative;
+}
+
+/* 🔒 TEXTAREA COM ALTURA FIXA E SCROLL INTERNO */
+.description-wrapper textarea {
+  width: 100%;
+  height: 220px;            /* 👈 ALTURA FIXA (ajuste se quiser) */
+  resize: none;             /* ❌ usuário não redimensiona */
+  overflow-y: auto;         /* ✅ scroll interno */
+}
+
