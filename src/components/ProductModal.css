@@ -26,8 +26,9 @@
 ====================================================== */
 .modal-card {
   background: #ffffff;
-  width: 880px;                 /* Modal mais largo (UX melhor) */
-  max-width: 96%;
+  width: 900px;
+  max-width: 95%;
+  height: 80vh; /* 👈 controla o espaço total */
   border-radius: 14px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.15);
   display: flex;
@@ -276,4 +277,10 @@
 
 .copy-description:hover {
   opacity: 1;
+}
+
+.description-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
