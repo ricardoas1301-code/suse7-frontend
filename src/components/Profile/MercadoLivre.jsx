@@ -25,6 +25,7 @@ export default function MercadoLivre() {
   const [showReadonlyIcon, setShowReadonlyIcon] = useState(false);
   const [iconPosition, setIconPosition] = useState({ x: 0, y: 0 });
   const [activeReadonlyField, setActiveReadonlyField] = useState(null); // "username" | "status" | null
+  const [user, setUser] = useState(null);
 
 
 
@@ -36,9 +37,11 @@ export default function MercadoLivre() {
   useEffect(() => {
     const loadMLStatus = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+
+setUser(user);
 
         if (!user) {
           setLoading(false);
@@ -71,9 +74,12 @@ export default function MercadoLivre() {
   // ------------------------------------------------------------------
   // HANDLER
   // ------------------------------------------------------------------
-  const handleConnectML = () => {
-    navigate("/ml/connect");
-  };
+const handleConnectML = () => {
+  if (!user) return;
+
+  window.location.href = `${import.meta.env.VITE_API_URL}/ml/connect?user_id=${user.id}`;
+};
+
 
   // ------------------------------------------------------------------
   // LOADING
