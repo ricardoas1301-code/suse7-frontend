@@ -1,13 +1,67 @@
 /* ======================================================================
-   MODAL — PRODUTO (SUSE7 PADRÃO)
+   SUSE7 — PRODUCT MODAL
+   Objetivo:
+   - Modal de cadastro / edição de produtos
+   - UX limpa, padrão SaaS premium
+   - Estrutura preparada para abas
 ====================================================================== */
 
-.modal-card-lg {
-  width: 860px;
-  max-width: 96%;
+
+/* ======================================================
+   OVERLAY
+====================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
 
-/* Nome do produto fixo */
+
+/* ======================================================
+   CARD PRINCIPAL DO MODAL
+====================================================== */
+.modal-card {
+  background: #ffffff;
+  width: 880px;                 /* Modal mais largo (UX melhor) */
+  max-width: 96%;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ======================================================
+   HEADER
+====================================================== */
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eef0f3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+
+/* ======================================================
+   NOME DO PRODUTO — FIXO (FORA DAS ABAS)
+====================================================== */
 .product-name-fixed {
   padding: 16px 24px;
   border-bottom: 1px solid #eef0f3;
@@ -16,35 +70,163 @@
   gap: 6px;
 }
 
-/* Tabs */
-.modal-tabs {
+
+/* ======================================================
+   ABAS
+====================================================== */
+.tabs {
   display: flex;
   gap: 8px;
   padding: 12px 24px;
   border-bottom: 1px solid #eef0f3;
 }
 
-.modal-tabs button {
+.tabs button {
   background: #f3f4f6;
   border: none;
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.modal-tabs button.active {
+.tabs button:hover {
+  background: #e5e7eb;
+}
+
+.tabs button.active {
   background: #2563eb;
-  color: #fff;
+  color: #ffffff;
 }
 
-/* Placeholder de abas futuras */
-.tab-placeholder {
+
+/* ======================================================
+   BODY DO MODAL
+====================================================== */
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+
+/* ======================================================
+   FORMULÁRIOS
+====================================================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+
+/* ======================================================
+   INPUTS / TEXTAREA / SELECT
+====================================================== */
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 6px 8px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #dcdfe4;
+  background: #f9fafb;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+
+/* ======================================================
+   BOTÃO IA — GERAR DESCRIÇÃO
+====================================================== */
+.btn-ai {
+  margin-top: 6px;
+  align-self: flex-start;
+  background: #eef4ff;
+  border: 1px solid #cfe0ff;
+  color: #2563eb;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-ai:hover {
+  background: #e0ebff;
+}
+
+
+/* ======================================================
+   ABA FOTOS
+====================================================== */
+.hint {
   font-size: 14px;
   color: #6b7280;
-  background: #f9fafb;
-  border: 1px dashed #dcdfe4;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
+}
+
+.photo-uploader {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+
+/* ======================================================
+   FOOTER
+====================================================== */
+.modal-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #eef0f3;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+
+/* ======================================================
+   BOTÕES
+====================================================== */
+.btn-secondary {
+  background: #f3f4f6;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  background: #1e40af;
 }

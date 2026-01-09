@@ -1,137 +1,235 @@
 // ======================================================================
 // COMPONENTE: ProductModal
-// Objetivo: Modal de cadastro / edição de produto
-// Padrão visual: Suse7
-// Regra: Nome do produto FIXO fora das abas
+// Objetivo:
+// - Cadastro / edição de produto
+// - Modal (popup) com abas
+// - Nome do produto fixo (fora das abas)
+// - UI preparada para integração com Supabase e marketplaces
 // ======================================================================
 
 import { useState } from "react";
 import "./ProductModal.css";
 
 export default function ProductModal({ open, onClose }) {
-  const [activeTab, setActiveTab] = useState("dados");
+  // ------------------------------------------------------
+  // CONTROLE DE ABAS
+  // ------------------------------------------------------
+  const [activeTab, setActiveTab] = useState("basic");
 
+  // ------------------------------------------------------
+  // STATE DO PRODUTO (UI only por enquanto)
+  // ------------------------------------------------------
+  const [product, setProduct] = useState({
+    product_name: "",
+    sku: "",
+    gtin: "",
+    ncm: "",
+    brand: "",
+    model: "",
+    description: "",
+    stock_quantity: 0,
+    stock_source: "manual",
+    cost_price: "",
+    fixed_costs: "",
+    photos: [],
+  });
+
+  // ------------------------------------------------------
+  // HANDLER GENÉRICO PARA INPUTS
+  // ------------------------------------------------------
+  const handleChange = (field, value) => {
+    setProduct((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // ------------------------------------------------------
+  // SUBMIT (placeholder — backend depois)
+  // ------------------------------------------------------
+  const handleSubmit = () => {
+    console.log("Produto a salvar:", product);
+    // aqui entra Supabase depois
+  };
+
+  // ------------------------------------------------------
+  // NÃO RENDERIZA SE MODAL FECHADO
+  // ------------------------------------------------------
   if (!open) return null;
 
   return (
     <div className="modal-overlay">
-      <div className="modal-card modal-card-lg">
+      <div className="modal-card">
 
-        {/* ======================================================
+        {/* ==================================================
            HEADER
-        ====================================================== */}
+        ================================================== */}
         <div className="modal-header">
           <h2>Novo produto</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
-        {/* ======================================================
+        {/* ==================================================
            NOME DO PRODUTO — FIXO
-        ====================================================== */}
+        ================================================== */}
         <div className="product-name-fixed">
           <label>Nome do produto</label>
           <input
             type="text"
             placeholder="Ex: Armário de cozinha 3 portas"
+            value={product.product_name}
+            onChange={(e) =>
+              handleChange("product_name", e.target.value)
+            }
           />
         </div>
 
-        {/* ======================================================
+        {/* ==================================================
            ABAS
-        ====================================================== */}
-        <div className="modal-tabs">
+        ================================================== */}
+        <div className="tabs">
           <button
-            className={activeTab === "dados" ? "active" : ""}
-            onClick={() => setActiveTab("dados")}
+            className={activeTab === "basic" ? "active" : ""}
+            onClick={() => setActiveTab("basic")}
           >
             Dados básicos
           </button>
 
           <button
-            className={activeTab === "estoque" ? "active" : ""}
-            onClick={() => setActiveTab("estoque")}
+            className={activeTab === "stock" ? "active" : ""}
+            onClick={() => setActiveTab("stock")}
           >
             Estoque & logística
           </button>
 
           <button
-            className={activeTab === "custos" ? "active" : ""}
-            onClick={() => setActiveTab("custos")}
+            className={activeTab === "pricing" ? "active" : ""}
+            onClick={() => setActiveTab("pricing")}
           >
             Custos & precificação
           </button>
 
           <button
-            className={activeTab === "fotos" ? "active" : ""}
-            onClick={() => setActiveTab("fotos")}
+            className={activeTab === "photos" ? "active" : ""}
+            onClick={() => setActiveTab("photos")}
           >
             Fotos
           </button>
         </div>
 
-        {/* ======================================================
-           BODY
-        ====================================================== */}
+        {/* ==================================================
+           CONTEÚDO DAS ABAS
+        ================================================== */}
         <div className="modal-body">
 
           {/* =======================
-             ABA: DADOS BÁSICOS
+              DADOS BÁSICOS
           ======================= */}
-          {activeTab === "dados" && (
+          {activeTab === "basic" && (
             <>
               <div className="form-row">
                 <div className="form-group">
                   <label>SKU</label>
-                  <input type="text" placeholder="SKU interno" />
+                  <input
+                    placeholder="SKU interno"
+                    value={product.sku}
+                    onChange={(e) =>
+                      handleChange("sku", e.target.value)
+                    }
+                  />
                 </div>
 
                 <div className="form-group">
                   <label>EAN / GTIN</label>
-                  <input type="text" placeholder="Código de barras" />
+                  <input
+                    placeholder="Código de barras"
+                    value={product.gtin}
+                    onChange={(e) =>
+                      handleChange("gtin", e.target.value)
+                    }
+                  />
                 </div>
 
                 <div className="form-group">
                   <label>NCM</label>
-                  <input type="text" placeholder="Ex: 94036000" />
+                  <input
+                    placeholder="Ex: 94036000"
+                    value={product.ncm}
+                    onChange={(e) =>
+                      handleChange("ncm", e.target.value)
+                    }
+                  />
                 </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
                   <label>Marca</label>
-                  <input type="text" />
+                  <input
+                    value={product.brand}
+                    onChange={(e) =>
+                      handleChange("brand", e.target.value)
+                    }
+                  />
                 </div>
 
                 <div className="form-group">
                   <label>Modelo</label>
-                  <input type="text" />
+                  <input
+                    value={product.model}
+                    onChange={(e) =>
+                      handleChange("model", e.target.value)
+                    }
+                  />
                 </div>
               </div>
 
               <div className="form-group">
                 <label>Descrição do produto</label>
-                <textarea rows="4" />
-                <button className="btn-ai">🤖 Gerar descrição com IA</button>
+                <textarea
+                  rows="4"
+                  value={product.description}
+                  onChange={(e) =>
+                    handleChange("description", e.target.value)
+                  }
+                />
+                <button className="btn-ai">
+                  🤖 Gerar descrição com IA
+                </button>
               </div>
             </>
           )}
 
           {/* =======================
-             ABA: ESTOQUE
+              ESTOQUE & LOGÍSTICA
           ======================= */}
-          {activeTab === "estoque" && (
+          {activeTab === "stock" && (
             <>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Quantidade em estoque</label>
-                  <input type="number" min="0" />
+                  <label>Estoque</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={product.stock_quantity}
+                    onChange={(e) =>
+                      handleChange("stock_quantity", e.target.value)
+                    }
+                  />
                 </div>
 
                 <div className="form-group">
-                  <label>Status</label>
-                  <select>
-                    <option value="true">Ativo</option>
-                    <option value="false">Inativo</option>
+                  <label>Origem do estoque</label>
+                  <select
+                    value={product.stock_source}
+                    onChange={(e) =>
+                      handleChange("stock_source", e.target.value)
+                    }
+                  >
+                    <option value="manual">Manual</option>
+                    <option value="virtual">
+                      Virtual (avançado)
+                    </option>
                   </select>
                 </div>
               </div>
@@ -139,37 +237,64 @@ export default function ProductModal({ open, onClose }) {
           )}
 
           {/* =======================
-             ABA: CUSTOS
+              CUSTOS & PRECIFICAÇÃO
           ======================= */}
-          {activeTab === "custos" && (
+          {activeTab === "pricing" && (
             <>
-              <p className="tab-placeholder">
-                Configurações de custo e lucro (próximo passo 🚀)
-              </p>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Custo do produto</label>
+                  <input
+                    type="number"
+                    value={product.cost_price}
+                    onChange={(e) =>
+                      handleChange("cost_price", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Custos fixos</label>
+                  <input
+                    type="number"
+                    value={product.fixed_costs}
+                    onChange={(e) =>
+                      handleChange("fixed_costs", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
             </>
           )}
 
           {/* =======================
-             ABA: FOTOS
+              FOTOS
           ======================= */}
-          {activeTab === "fotos" && (
+          {activeTab === "photos" && (
             <>
-              <p className="tab-placeholder">
-                Upload de até 7 fotos do produto
+              <p className="hint">
+                Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas
+                para atualizar anúncios em todos os canais.
               </p>
+
+              <div className="photo-uploader">
+                <button className="btn-secondary">
+                  Adicionar fotos
+                </button>
+              </div>
             </>
           )}
 
         </div>
 
-        {/* ======================================================
+        {/* ==================================================
            FOOTER
-        ====================================================== */}
+        ================================================== */}
         <div className="modal-footer">
           <button className="btn-secondary" onClick={onClose}>
             Cancelar
           </button>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={handleSubmit}>
             Salvar produto
           </button>
         </div>
