@@ -45,6 +45,19 @@ export default function ProductModal({ open, onClose }) {
   };
 
   // ------------------------------------------------------
+  // COPIAR DESCRIÇÃO (UX)
+  // ------------------------------------------------------
+  const handleCopyDescription = async () => {
+    try {
+      await navigator.clipboard.writeText(product.description || "");
+      // futuramente podemos colocar toast "Copiado!"
+      console.log("✅ Descrição copiada");
+    } catch (err) {
+      console.error("❌ Falha ao copiar descrição:", err);
+    }
+  };
+
+  // ------------------------------------------------------
   // SUBMIT (placeholder — backend depois)
   // ------------------------------------------------------
   const handleSubmit = () => {
@@ -60,13 +73,14 @@ export default function ProductModal({ open, onClose }) {
   return (
     <div className="modal-overlay">
       <div className="modal-card">
-
         {/* ==================================================
            HEADER
         ================================================== */}
         <div className="modal-header">
           <h2>Novo produto</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         {/* ==================================================
@@ -78,9 +92,7 @@ export default function ProductModal({ open, onClose }) {
             type="text"
             placeholder="Ex: Armário de cozinha 3 portas"
             value={product.product_name}
-            onChange={(e) =>
-              handleChange("product_name", e.target.value)
-            }
+            onChange={(e) => handleChange("product_name", e.target.value)}
           />
         </div>
 
@@ -93,6 +105,13 @@ export default function ProductModal({ open, onClose }) {
             onClick={() => setActiveTab("basic")}
           >
             Dados básicos
+          </button>
+
+          <button
+            className={activeTab === "description" ? "active" : ""}
+            onClick={() => setActiveTab("description")}
+          >
+            Descrição
           </button>
 
           <button
@@ -121,9 +140,9 @@ export default function ProductModal({ open, onClose }) {
            CONTEÚDO DAS ABAS
         ================================================== */}
         <div className="modal-body">
-
           {/* =======================
               DADOS BÁSICOS
+              (sem descrição agora)
           ======================= */}
           {activeTab === "basic" && (
             <>
@@ -133,9 +152,7 @@ export default function ProductModal({ open, onClose }) {
                   <input
                     placeholder="SKU interno"
                     value={product.sku}
-                    onChange={(e) =>
-                      handleChange("sku", e.target.value)
-                    }
+                    onChange={(e) => handleChange("sku", e.target.value)}
                   />
                 </div>
 
@@ -144,9 +161,7 @@ export default function ProductModal({ open, onClose }) {
                   <input
                     placeholder="Código de barras"
                     value={product.gtin}
-                    onChange={(e) =>
-                      handleChange("gtin", e.target.value)
-                    }
+                    onChange={(e) => handleChange("gtin", e.target.value)}
                   />
                 </div>
 
@@ -155,9 +170,7 @@ export default function ProductModal({ open, onClose }) {
                   <input
                     placeholder="Ex: 94036000"
                     value={product.ncm}
-                    onChange={(e) =>
-                      handleChange("ncm", e.target.value)
-                    }
+                    onChange={(e) => handleChange("ncm", e.target.value)}
                   />
                 </div>
               </div>
@@ -167,9 +180,7 @@ export default function ProductModal({ open, onClose }) {
                   <label>Marca</label>
                   <input
                     value={product.brand}
-                    onChange={(e) =>
-                      handleChange("brand", e.target.value)
-                    }
+                    onChange={(e) => handleChange("brand", e.target.value)}
                   />
                 </div>
 
@@ -177,23 +188,41 @@ export default function ProductModal({ open, onClose }) {
                   <label>Modelo</label>
                   <input
                     value={product.model}
-                    onChange={(e) =>
-                      handleChange("model", e.target.value)
-                    }
+                    onChange={(e) => handleChange("model", e.target.value)}
                   />
                 </div>
               </div>
+            </>
+          )}
 
+          {/* =======================
+              DESCRIÇÃO (ABA EXCLUSIVA)
+          ======================= */}
+          {activeTab === "description" && (
+            <>
               <div className="form-group">
                 <label>Descrição do produto</label>
-                <textarea
-                  rows="4"
-                  value={product.description}
-                  onChange={(e) =>
-                    handleChange("description", e.target.value)
-                  }
-                />
-                <button className="btn-ai">
+
+                <div className="description-wrapper">
+                  <textarea
+                    rows="8"
+                    placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
+                    value={product.description}
+                    onChange={(e) => handleChange("description", e.target.value)}
+                  />
+
+                  {/* ÍCONE COPIAR */}
+                  <button
+                    type="button"
+                    className="copy-description"
+                    title="Copiar descrição"
+                    onClick={handleCopyDescription}
+                  >
+                    📋
+                  </button>
+                </div>
+
+                <button className="btn-ai" type="button">
                   🤖 Gerar descrição com IA
                 </button>
               </div>
@@ -222,14 +251,10 @@ export default function ProductModal({ open, onClose }) {
                   <label>Origem do estoque</label>
                   <select
                     value={product.stock_source}
-                    onChange={(e) =>
-                      handleChange("stock_source", e.target.value)
-                    }
+                    onChange={(e) => handleChange("stock_source", e.target.value)}
                   >
                     <option value="manual">Manual</option>
-                    <option value="virtual">
-                      Virtual (avançado)
-                    </option>
+                    <option value="virtual">Virtual (avançado)</option>
                   </select>
                 </div>
               </div>
@@ -247,9 +272,7 @@ export default function ProductModal({ open, onClose }) {
                   <input
                     type="number"
                     value={product.cost_price}
-                    onChange={(e) =>
-                      handleChange("cost_price", e.target.value)
-                    }
+                    onChange={(e) => handleChange("cost_price", e.target.value)}
                   />
                 </div>
 
@@ -258,9 +281,7 @@ export default function ProductModal({ open, onClose }) {
                   <input
                     type="number"
                     value={product.fixed_costs}
-                    onChange={(e) =>
-                      handleChange("fixed_costs", e.target.value)
-                    }
+                    onChange={(e) => handleChange("fixed_costs", e.target.value)}
                   />
                 </div>
               </div>
@@ -278,27 +299,25 @@ export default function ProductModal({ open, onClose }) {
               </p>
 
               <div className="photo-uploader">
-                <button className="btn-secondary">
+                <button className="btn-secondary" type="button">
                   Adicionar fotos
                 </button>
               </div>
             </>
           )}
-
         </div>
 
         {/* ==================================================
            FOOTER
         ================================================== */}
         <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose}>
+          <button className="btn-secondary" onClick={onClose} type="button">
             Cancelar
           </button>
-          <button className="btn-primary" onClick={handleSubmit}>
+          <button className="btn-primary" onClick={handleSubmit} type="button">
             Salvar produto
           </button>
         </div>
-
       </div>
     </div>
   );
