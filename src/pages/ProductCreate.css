@@ -1,0 +1,13 @@
+/* ======================================================================
+   SUSE7 — PRODUCT CREATE (PÁGINA)
+   Objetivo:
+   - Fundo azul claro + card branco centralizado (padrão Suse7)
+====================================================================== */
+
+.product-page{
+  min-height: calc(100vh - 60px);
+  padding: 22px;
+  background: #eaf1ff;
+  display: flex;
+  justify-content: center;
+}

@@ -46,6 +46,8 @@ import Notificacoes from "./components/Profile/Notificacoes";
 
 // Produtos (REAL)
 import Products from "./components/Products";
+import ProductCreate from "./pages/ProductCreate";
+import ProductEdit from "./pages/ProductEdit";
 
 
 // Temporários
@@ -150,6 +152,8 @@ export default function App() {
             <Route path="registros" element={<Registros />} />
             <Route path="/configuracoes" element={<Navigate to="/perfil" />} />
             <Route path="precificacoes" element={<Precificacoes />} />
+            <Route path="/produtos/novo" element={<ProductCreate />} />
+            <Route path="/produtos/:id/editar" element={<ProductEdit />} />
           </Route>
 
           {/* Fallback */}
