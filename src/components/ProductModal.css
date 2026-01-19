@@ -121,17 +121,16 @@
 }
 
 .tabs button.active {
-  background: #ffffff;
-  color: #2563eb;
-  border-color: #dbe3f3;
+  background: #2563eb;        /* 🔵 azul Suse7 */
+  color: #ffffff;             /* ⚪ texto branco */
+  border-color: #2563eb;
 
-  /* ✅ “encaixa” no card, estilo fichário */
   position: relative;
   top: 1px;
 
-  /* ✅ destaque sutil */
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 -2px 10px rgba(37, 99, 235, 0.35);
 }
+
 
 
 /* ======================================================

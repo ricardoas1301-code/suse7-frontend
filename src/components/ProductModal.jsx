@@ -332,9 +332,8 @@ export default function ProductModal({ open, onClose }) {
               </div>
             </>
           )}
-        </div>
 
-        {/* =======================
+          {/* =======================
     PESOS & MEDIDAS
 ======================= */}
 {activeTab === "measures" && (
@@ -458,6 +457,8 @@ export default function ProductModal({ open, onClose }) {
     </div>
   </>
 )}
+
+        </div>
 
 
         {/* ==================================================
