@@ -152,14 +152,15 @@ export default function ProductModal({ open, onClose }) {
           >
             Fotos
           </button>
-        </div>
 
-          <button
+                    <button
             className={activeTab === "measures" ? "active" : ""}
             onClick={() => setActiveTab("measures")}
           >
             Pesos & medidas
           </button>
+
+        </div>
 
 
         {/* ==================================================

@@ -76,32 +76,61 @@
 
 
 /* ======================================================
-   ABAS
+   ABAS — FICHÁRIO PREMIUM
 ====================================================== */
 .tabs {
   display: flex;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 12px 24px 0;
   border-bottom: 1px solid #eef0f3;
+
+  /* ✅ mantém na mesma linha */
+  flex-wrap: nowrap;
+
+  /* ✅ se faltar espaço, scroll horizontal (premium) */
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.tabs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tabs::-webkit-scrollbar-thumb {
+  background: #d7dbe3;
+  border-radius: 999px;
 }
 
 .tabs button {
+  flex: 0 0 auto;
+
   background: #f3f4f6;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+
+  padding: 10px 14px;
+  border-radius: 10px 10px 0 0;
+
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
 }
 
 .tabs button:hover {
-  background: #e5e7eb;
+  background: #e9edf3;
 }
 
 .tabs button.active {
-  background: #2563eb;
-  color: #ffffff;
+  background: #ffffff;
+  color: #2563eb;
+  border-color: #dbe3f3;
+
+  /* ✅ “encaixa” no card, estilo fichário */
+  position: relative;
+  top: 1px;
+
+  /* ✅ destaque sutil */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
 }
 
 
