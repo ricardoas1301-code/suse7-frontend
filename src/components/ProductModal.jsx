@@ -32,8 +32,26 @@ export default function ProductModal({ open, onClose }) {
     cost_price: "",
     fixed_costs: "",
     photos: [],
+
+    // ======================================================
+  // PESOS & MEDIDAS — ENVIO
+  // ======================================================
+  shipping_width: "",
+  shipping_height: "",
+  shipping_depth: "",
+  shipping_weight: "",
+
+  // ======================================================
+  // PESOS & MEDIDAS — PRODUTO MONTADO
+  // ======================================================
+  mounted_width: "",
+  mounted_height: "",
+  mounted_depth: "",
+  mounted_weight: "",
+
   });
 
+  
   // ------------------------------------------------------
   // HANDLER GENÉRICO PARA INPUTS
   // ------------------------------------------------------
@@ -135,6 +153,14 @@ export default function ProductModal({ open, onClose }) {
             Fotos
           </button>
         </div>
+
+          <button
+            className={activeTab === "measures" ? "active" : ""}
+            onClick={() => setActiveTab("measures")}
+          >
+            Pesos & medidas
+          </button>
+
 
         {/* ==================================================
            CONTEÚDO DAS ABAS
@@ -306,6 +332,132 @@ export default function ProductModal({ open, onClose }) {
             </>
           )}
         </div>
+
+        {/* =======================
+    PESOS & MEDIDAS
+======================= */}
+{activeTab === "measures" && (
+  <>
+    {/* ==================================================
+       GRUPO 1 — MEDIDAS DE ENVIO
+    ================================================== */}
+    <div className="section">
+      <div className="section-header">
+        <h3>Medidas de envio</h3>
+        <p className="section-subtitle">
+          Medidas usadas para cálculo de frete e logística.
+        </p>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Largura (cm)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Ex: 30"
+            value={product.shipping_width}
+            onChange={(e) => handleChange("shipping_width", e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Altura (cm)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Ex: 15"
+            value={product.shipping_height}
+            onChange={(e) => handleChange("shipping_height", e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Profundidade (cm)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Ex: 45"
+            value={product.shipping_depth}
+            onChange={(e) => handleChange("shipping_depth", e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Peso (kg)</label>
+          <input
+            type="number"
+            min="0"
+            step="0.001"
+            placeholder="Ex: 2.350"
+            value={product.shipping_weight}
+            onChange={(e) => handleChange("shipping_weight", e.target.value)}
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* ==================================================
+       GRUPO 2 — MEDIDAS DO PRODUTO (MONTADO)
+    ================================================== */}
+    <div className="section">
+      <div className="section-header">
+        <h3>Medidas do produto (montado)</h3>
+        <p className="section-subtitle">
+          Medidas reais do produto pronto/montado (referência interna).
+        </p>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Largura (cm)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Ex: 32"
+            value={product.mounted_width}
+            onChange={(e) => handleChange("mounted_width", e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Altura (cm)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Ex: 80"
+            value={product.mounted_height}
+            onChange={(e) => handleChange("mounted_height", e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Profundidade (cm)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Ex: 42"
+            value={product.mounted_depth}
+            onChange={(e) => handleChange("mounted_depth", e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Peso (kg)</label>
+          <input
+            type="number"
+            min="0"
+            step="0.001"
+            placeholder="Ex: 8.500"
+            value={product.mounted_weight}
+            onChange={(e) => handleChange("mounted_weight", e.target.value)}
+          />
+        </div>
+      </div>
+    </div>
+  </>
+)}
+
 
         {/* ==================================================
            FOOTER

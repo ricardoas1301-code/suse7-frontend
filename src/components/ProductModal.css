@@ -312,3 +312,56 @@
   overflow-y: auto;         /* ✅ scroll interno */
 }
 
+
+/* ======================================================
+   SECTIONS (GRUPOS) — PESOS & MEDIDAS
+====================================================== */
+.section {
+  background: #ffffff;
+  border: 1px solid #eef0f3;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.section-subtitle {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ======================================================
+   RESPONSIVO — PRODUCT MODAL (ABAS COM MUITOS CAMPOS)
+   Objetivo:
+   - Quebrar linhas no tablet/mobile
+   - Evitar inputs esmagados
+====================================================== */
+
+@media (max-width: 900px) {
+  /* 4 campos na mesma linha (Pesos & Medidas) vira 2 por linha */
+  .form-row {
+    flex-wrap: wrap;
+  }
+
+  .form-row .form-group {
+    flex: 1 1 calc(50% - 8px); /* ✅ 2 colunas */
+    min-width: 220px;          /* ✅ evita ficar muito estreito */
+  }
+}
+
+@media (max-width: 520px) {
+  /* No celular, vira 1 por linha */
+  .form-row .form-group {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  /* Tabs: quebra bem e não aperta */
+  .tabs {
+    flex-wrap: wrap;
+  }
+}
