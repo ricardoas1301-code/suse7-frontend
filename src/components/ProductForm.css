@@ -13,7 +13,7 @@
 .pf-card{
   background: #ffffff;
   width: 100%;
-  max-width: 1200%;
+  max-width: 100%;
   height: 100%;            /* ✅ ocupa toda altura do workspace */
   min-height: 0;           /* ✅ importante pra scroll interno funcionar */
   border-radius: 16px;        /* ✅ estilo workspace (se quiser manter 14px eu te dou a variação) */
@@ -22,7 +22,6 @@
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-  
   }
 
 
@@ -72,65 +71,67 @@
 }
 
 /* ======================================================
-   ABAS — TAMANHO FIXO + SCROLL HORIZONTAL (Padrão ERP/SaaS)
-   Objetivo:
-   - Todas as abas com mesma largura
-   - Texto não aumenta a aba (ellipsis)
-   - Scroll entra quando ultrapassar a largura total
+   ABAS — FICHÁRIO PREMIUM
+====================================================== */
+/* ======================================================
+   ABAS — SEM GAP + SEM SCROLL (wrap)
 ====================================================== */
 .pf-tabs{
   display: flex;
-  flex-wrap: nowrap;          /* ✅ não quebra linha */
-  gap: 0;                     /* ✅ sem espaçamento (ganha espaço) */
+  gap: 0;                      /* ✅ sem espaços */
   padding: 12px 24px 0;
   border-bottom: 1px solid #eef0f3;
 
-  overflow-x: auto;           /* ✅ scroll quando precisar */
-  overflow-y: hidden;
-  white-space: nowrap;        /* ✅ mantém tudo em linha */
+  flex-wrap: wrap;             /* ✅ quebra linha (sem barra) */
+  overflow: hidden;            /* ✅ sem rolagem */
+  white-space: normal;         /* ✅ permite quebra */
 }
 
-/* Scroll mais discreto (opcional, mas premium) */
+/* Remove scrollbar das abas (não será mais necessário) */
 .pf-tabs::-webkit-scrollbar{
-  height: 6px;
+  display: none;
 }
 
-.pf-tabs::-webkit-scrollbar-thumb{
-  background: #d7dbe3;
-  border-radius: 999px;
-}
-
+/* Botões das abas: mais compactos e colados */
 .pf-tabs button{
-  flex: 0 0 auto;             /* ✅ não estica */
-  width: 150px;               /* ✅ tamanho fixo (ajuste fino aqui) */
-  height: 38px;               /* ✅ alinhado com padrão de botões */
-  padding: 0 12px;
+  flex: 0 0 auto;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  min-width: auto;             /* ✅ remove travamento */
+  padding: 9px 12px;           /* ✅ mais compacto */
+  font-size: 13px;
 
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
   border-bottom: none;
 
   border-radius: 10px 10px 0 0;
-
   cursor: pointer;
-  font-size: 13px;
   transition: all 0.2s ease;
+  text-align: center;
 
-  /* ✅ NÃO deixa texto crescer a aba */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0;                   /* ✅ colado */
 }
 
-/* cola as abas removendo borda duplicada */
+/* Para “colar” bem: remove borda duplicada entre botões */
 .pf-tabs button + button{
-  border-left: none;
+  border-left: none;           /* ✅ sem dupla borda */
 }
 
+
+/* ======================================================
+   BODY
+====================================================== */
+.pf-body{
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  flex: 1;
+  min-height: 0;        /* ✅ ESSENCIAL pra scroll interno */
+  overflow-y: auto;     /* ✅ scroll fica aqui */
+  overflow-x: hidden;
+}
 
 /* ======================================================
    FORMULÁRIOS
@@ -209,7 +210,7 @@
    FOOTER — sempre visível
 ====================================================== */
 .pf-footer{
-  padding: 14px 24px;
+  padding: 18px 24px;
   border-top: 1px solid #eef0f3;
   display: flex;
   justify-content: space-between; /* ✅ Cancelar esquerda, Salvar direita */
@@ -384,20 +385,3 @@
   justify-content: flex-end;
 }
 
-/* ======================================================
-   ABAS — PADRÃO SUSE7 (ATIVA AZUL / TEXTO BRANCO)
-====================================================== */
-.pf-tabs button.active{
-  background: #2563eb;
-  color: #ffffff;
-  border-color: #2563eb;
-
-  position: relative;
-  top: 1px;
-  box-shadow: 0 -2px 10px rgba(37, 99, 235, 0.35);
-}
-
-.pf-tabs button.active:hover{
-  background: #1e40af;
-  border-color: #1e40af;
-}
