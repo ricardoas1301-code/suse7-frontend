@@ -200,15 +200,15 @@ export default function ProductForm({
     // ======================================================================*/}
 
 <div className="pf-header">
+  <h2>{title}</h2>
+
   <button
     type="button"
     className="pf-back"
     onClick={onCancel}
   >
-    ← Voltar para Produtos
+    Voltar para Produtos →
   </button>
-
-  <h2>{title}</h2>
 </div>
 
 

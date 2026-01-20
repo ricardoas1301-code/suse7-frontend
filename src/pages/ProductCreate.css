@@ -7,22 +7,21 @@
 
 .product-page{
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex: 1;
+  min-height: 100%;
+  padding: 20px;              /* ✅ respiro ao redor do card */
+  background: #eaf1ff;        /* ✅ moldura azul premium */
 
-  background: transparent; /* ✅ sem moldura azul */
-  padding: 0;              /* ✅ ocupa tudo */
-  overflow: hidden;        /* ✅ sem scroll externo */
+  display: flex;
+  justify-content: center;    /* ✅ centraliza horizontal */
+  align-items: flex-start;    /* ✅ começa do topo (não “flutua” no meio) */
+
+  overflow: hidden;           /* ✅ sem scroll externo */
 }
 
 .product-page > *{
   width: 100%;
-  height: 100%;
-  flex: 1;
-  min-width: 0;
+  max-width: 1200px;          /* ✅ igual ao card */
 }
-
 
 
 .product-page > *{

@@ -16,7 +16,7 @@
   max-width: 100%;
   height: 100%;            /* ✅ ocupa toda altura do workspace */
   min-height: 0;           /* ✅ importante pra scroll interno funcionar */
-  border-radius: 0;        /* ✅ estilo workspace (se quiser manter 14px eu te dou a variação) */
+  border-radius: 16px;        /* ✅ estilo workspace (se quiser manter 14px eu te dou a variação) */
   box-shadow: none;        /* ✅ remove “cara de modal” */
   display: flex;
   flex-direction: column;
@@ -28,34 +28,26 @@
 
 
 /* ======================================================
-   HEADER
+   HEADER — PREMIUM
 ====================================================== */
 .pf-header{
   padding: 20px 24px;
   border-bottom: 1px solid #eef0f3;
-
-  display: grid;
-  grid-template-columns: auto 1fr;
+  display: flex;
+  justify-content: space-between; /* ✅ já resolve direita/esquerda */
   align-items: center;
-  gap: 16px;
 }
 
-/* ======================================================
-   BOTÃO VOLTAR — PADRÃO ERP
-====================================================== */
+/* Botão voltar no canto direito */
 .pf-back{
   background: none;
   border: none;
   padding: 0;
 
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: #2563eb;
   cursor: pointer;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .pf-back:hover{
@@ -82,64 +74,50 @@
 /* ======================================================
    ABAS — FICHÁRIO PREMIUM
 ====================================================== */
+/* ======================================================
+   ABAS — SEM GAP + SEM SCROLL (wrap)
+====================================================== */
 .pf-tabs{
   display: flex;
-  gap: 8px;
+  gap: 0;                      /* ✅ sem espaços */
   padding: 12px 24px 0;
   border-bottom: 1px solid #eef0f3;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  white-space: nowrap;
+
+  flex-wrap: wrap;             /* ✅ quebra linha (sem barra) */
+  overflow: hidden;            /* ✅ sem rolagem */
+  white-space: normal;         /* ✅ permite quebra */
 }
 
+/* Remove scrollbar das abas (não será mais necessário) */
 .pf-tabs::-webkit-scrollbar{
-  height: 6px;
+  display: none;
 }
 
-.pf-tabs::-webkit-scrollbar-thumb{
-  background: #d7dbe3;
-  border-radius: 999px;
-}
-
+/* Botões das abas: mais compactos e colados */
 .pf-tabs button{
   flex: 0 0 auto;
-  min-width: 140px;
+
+  min-width: auto;             /* ✅ remove travamento */
+  padding: 9px 12px;           /* ✅ mais compacto */
+  font-size: 13px;
 
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
   border-bottom: none;
 
-  padding: 10px 14px;
   border-radius: 10px 10px 0 0;
-
   cursor: pointer;
-  font-size: 14px;
   transition: all 0.2s ease;
   text-align: center;
+
+  margin: 0;                   /* ✅ colado */
 }
 
-.pf-tabs button:hover{
-  background: #e9edf3;
+/* Para “colar” bem: remove borda duplicada entre botões */
+.pf-tabs button + button{
+  border-left: none;           /* ✅ sem dupla borda */
 }
 
-.pf-tabs button.active{
-  background: #2563eb;
-  color: #ffffff;
-  border-color: #2563eb;
-
-  position: relative;
-  top: 1px;
-  box-shadow: 0 -2px 10px rgba(37, 99, 235, 0.35);
-}
-
-.pf-tabs button:focus{
-  outline: none;
-}
-
-.pf-tabs button:focus-visible{
-  outline: 3px solid rgba(37, 99, 235, 0.18);
-  outline-offset: 2px;
-}
 
 /* ======================================================
    BODY
@@ -230,20 +208,20 @@
 }
 
 /* ======================================================
-   FOOTER (STICKY)
+   FOOTER — sempre visível
 ====================================================== */
 .pf-footer{
-  padding: 20px 24px;
+  padding: 18px 24px;
   border-top: 1px solid #eef0f3;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between; /* ✅ Cancelar esquerda, Salvar direita */
   gap: 12px;
   flex-shrink: 0;
   background: #ffffff;
 
-  position: sticky;   /* ✅ mantém visível */
-  bottom: 0;          /* ✅ gruda no fundo */
-  z-index: 5;         /* ✅ fica acima do body */
+  position: sticky;   /* ✅ fica visível */
+  bottom: 0;
+  z-index: 5;
 }
 
 
