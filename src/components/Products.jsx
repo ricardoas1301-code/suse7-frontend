@@ -7,11 +7,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import ProductModal from "./ProductModal";
 import "./Products.css";
+import { useNavigate } from "react-router-dom";
 
 export default function Products() {
 const [products, setProducts] = useState([]);
 const [loading, setLoading] = useState(true);
 const [openModal, setOpenModal] = useState(false);
+const navigate = useNavigate(); // ✅ ADD
 
   // ------------------------------------------------------------
   // LOAD PRODUCTS
@@ -54,18 +56,12 @@ const [openModal, setOpenModal] = useState(false);
         <div>
           <h1>Produtos</h1>
           <p>Gerencie seus produtos e prepare-os para anúncios e precificação.</p>
-
-          <ProductModal
-  open={openModal}
-  onClose={() => setOpenModal(false)}
-/>
-
         </div>
 
         
 <button
   className="btn-primary"
-  onClick={() => setOpenModal(true)}
+  onClick={() => navigate("/produtos/novo")}
 >
   + Novo produto
 </button>
@@ -75,16 +71,9 @@ const [openModal, setOpenModal] = useState(false);
       {loading ? (
         <p>Carregando produtos...</p>
       ) : products.length === 0 ? (
-        <div className="products-empty">
-          <p>Você ainda não cadastrou nenhum produto.</p>
-<button
-  className="btn-primary"
-  onClick={() => setOpenModal(true)}
->
-  Cadastrar primeiro produto
-</button>
-
-        </div>
+       <div className="products-empty">
+  <p>Você ainda não cadastrou nenhum produto.</p>
+</div>
       ) : (
         <div className="products-table">
           <div className="products-row header">
