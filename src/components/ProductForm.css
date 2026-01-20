@@ -17,13 +17,12 @@
   height: 100%;            /* ✅ ocupa toda altura do workspace */
   min-height: 0;           /* ✅ importante pra scroll interno funcionar */
   border-radius: 16px;        /* ✅ estilo workspace (se quiser manter 14px eu te dou a variação) */
-  box-shadow: none;        /* ✅ remove “cara de modal” */
+  box-shadow: 0 18px 46px rgba(0,0,0,0.10);      /* ✅ remove “cara de modal” */
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-  margin: 0 auto;
-}
+  }
 
 
 

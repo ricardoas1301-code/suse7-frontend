@@ -1,31 +1,25 @@
 /* ======================================================================
-   SUSE7 — PRODUCT CREATE (FULL WORKSPACE)
+   SUSE7 — PRODUCT CREATE (WORKSPACE PREMIUM)
    Objetivo:
-   - Sem moldura azul
-   - Ocupa 100% do espaço disponível
+   - Centralizado (padrão Alterar Senha)
+   - Sem scroll externo na página (scroll fica no .pf-body)
 ====================================================================== */
 
 .product-page{
   width: 100%;
-  min-height: 100%;
-  padding: 20px;              /* ✅ respiro ao redor do card */
-  background: #eaf1ff;        /* ✅ moldura azul premium */
+  background: #eaf1ff;
+  padding: 12px 24px 24px;
 
   display: flex;
-  justify-content: center;    /* ✅ centraliza horizontal */
-  align-items: flex-start;    /* ✅ começa do topo (não “flutua” no meio) */
-
-  overflow: hidden;           /* ✅ sem scroll externo */
+  justify-content: center;
+  align-items: flex-start;
 }
 
+/* Wrapper do form ocupa altura fixa da área visível */
 .product-page > *{
   width: 100%;
-  max-width: 1200px;          /* ✅ igual ao card */
+  max-width: 1200px;
+  height: calc(100vh - 64px - 8px - 24px - 24px);
+  /* 64 navbar + 8 top padding do page-content + 24 bottom padding + 24 da própria página */
 }
 
-
-.product-page > *{
-  width: 100%;
-  flex: 1;
-  min-width: 0;
-}
