@@ -1,9 +1,8 @@
 /* ======================================================================
    SUSE7 — PRODUCT CREATE (WORKSPACE PREMIUM)
    Objetivo:
-   - Fundo igual ao padrão do app (remove o azul “vazando”)
-   - Centralizado
-   - Scroll só dentro do .pf-body
+   - Centralizado (padrão Alterar Senha)
+   - Sem scroll externo na página (scroll fica no .pf-body)
 ====================================================================== */
 
 .product-page{
@@ -12,20 +11,16 @@
   justify-content: center;
   align-items: flex-start;
 
-  padding: 0;
-
-  /* ✅ FORÇA o fundo padrão do app (mata o azul de vez) */
-  background: #f5f6fa;
+  padding: 0;              /* ✅ não empurra o card */
+  background: transparent;
 }
 
-/* Wrapper do form ocupa a área visível */
+
+/* Wrapper do form ocupa altura fixa da área visível */
 .product-page > *{
   width: 100%;
   max-width: 1200px;
-
-  /* ✅ altura controlada para manter footer visível */
-  height: calc(100vh - 64px);
-
-  display: flex;
-  flex-direction: column;
+  height: calc(100vh - 64px - 8px - 24px - 24px);
+  /* 64 navbar + 8 top padding do page-content + 24 bottom padding + 24 da própria página */
 }
+
