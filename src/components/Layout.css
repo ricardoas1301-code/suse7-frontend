@@ -162,11 +162,13 @@
    - Remove scroll do navegador
    - Scroll ficará somente dentro do ProductForm (.pf-body)
 ====================================================================== */
+/* Conteúdo abaixo da navbar */
 .page-content {
   flex: 1;
+  overflow: auto;          /* ✅ mantém scroll para Perfil/ML/etc */
+  overflow-x: hidden;      /* ✅ evita barra horizontal */
+  padding: 8px 24px 24px;
   height: 100%;
-  overflow: hidden;     /* ✅ tira rolagem vertical da página */
-  padding: 0;           /* ✅ para tela ocupar tudo */
 }
 
 
