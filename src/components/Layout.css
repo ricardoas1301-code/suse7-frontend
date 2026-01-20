@@ -163,13 +163,13 @@
    - Scroll ficará somente dentro do ProductForm (.pf-body)
 ====================================================================== */
 /* Conteúdo abaixo da navbar */
-.page-content {
+.page-content{
   flex: 1;
   overflow: auto;
   overflow-x: hidden;
   padding: 8px 24px 24px;
 
-  background: #ffffff; /* ✅ remove o azul (padrão Perfil) */
+  background: #ffffff; /* ✅ remove o fundo azul */
 }
 
 
