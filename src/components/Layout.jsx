@@ -99,9 +99,16 @@ useEffect(() => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`nav-item ${
-                  location.pathname === item.path ? "active" : ""
-                }`}
+className={`nav-item ${
+  item.path === "/produtos"
+    ? location.pathname.startsWith("/produtos")
+      ? "active"
+      : ""
+    : location.pathname === item.path
+      ? "active"
+      : ""
+}`}
+
               >
                 <Icon className="nav-icon" />
                 <span>{item.label}</span>
