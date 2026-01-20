@@ -161,4 +161,12 @@
   flex: 1;
   overflow: auto;          /* 🔥 A ROLAGEM NASCE AQUI */
   padding: 8px 24px 24px;
+  height: 100%;
+}
+
+/* ======================================================================
+   AJUSTE: permitir páginas ocuparem altura total dentro do page-content
+====================================================================== */
+.page-content {
+  height: 100%;
 }
