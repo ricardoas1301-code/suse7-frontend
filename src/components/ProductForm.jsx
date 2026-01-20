@@ -207,7 +207,7 @@ export default function ProductForm({
     className="pf-back"
     onClick={onCancel}
   >
-    Voltar para Produtos →
+    Voltar ➔
   </button>
 </div>
 
@@ -777,14 +777,11 @@ export default function ProductForm({
       {/* ==================================================
          FOOTER
       ================================================== */}
-      <div className="pf-footer">
-        <button className="btn-secondary" onClick={onCancel} type="button">
-          Cancelar
-        </button>
-        <button className="btn-primary" onClick={handleSubmit} type="button">
-          {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
-        </button>
-      </div>
+<div className="pf-footer pf-footer-right">
+  <button className="btn-primary" onClick={handleSubmit} type="button">
+    {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+  </button>
+</div>
     </div>
   );
 }
