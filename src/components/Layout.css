@@ -156,15 +156,19 @@
 }
 
 
-/* Conteúdo abaixo da navbar */
-/* Conteúdo abaixo da navbar */
+/* ======================================================================
+   CONTEÚDO ABAIXO DA NAVBAR
+   Ajuste:
+   - Remove scroll do navegador
+   - Scroll ficará somente dentro do ProductForm (.pf-body)
+====================================================================== */
 .page-content {
   flex: 1;
-  overflow: auto;          /* rolagem vertical */
-  overflow-x: hidden;      /* ✅ remove barra inferior */
-  padding: 8px 24px 24px;
   height: 100%;
+  overflow: hidden;     /* ✅ tira rolagem vertical da página */
+  padding: 0;           /* ✅ para tela ocupar tudo */
 }
+
 
 /* ======================================================================
    AJUSTE: permitir páginas ocuparem altura total dentro do page-content

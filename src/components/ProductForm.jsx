@@ -193,21 +193,24 @@ export default function ProductForm({
 
   return (
     <div className="pf-card">
-      {/* ==================================================
-         HEADER
-      ================================================== */}
-      <div className="pf-header">
-        <h2>{title}</h2>
+    // ======================================================================
+    // HEADER — PADRÃO PÁGINA (ERP)
+    // - Remove botão X (modal)
+    // - Adiciona "Voltar para Produtos"
+    // ======================================================================
 
-        {/* --------------------------------------------------
-           Ação do header (ex: voltar/cancelar)
-        -------------------------------------------------- */}
-        {onCancel && (
-          <button className="pf-close" onClick={onCancel} type="button" title="Voltar">
-            ✕
-          </button>
-        )}
-      </div>
+<div className="pf-header">
+  <button
+    type="button"
+    className="pf-back"
+    onClick={onCancel}
+  >
+    ← Voltar para Produtos
+  </button>
+
+  <h2>{title}</h2>
+</div>
+
 
       {/* ==================================================
          NOME DO PRODUTO — FIXO

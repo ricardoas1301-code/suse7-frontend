@@ -12,16 +12,19 @@
 ====================================================== */
 .pf-card{
   background: #ffffff;
-  width: 100%;              /* ✅ ocupa toda a largura disponível */
-  max-width: 100%;          /* ✅ garante 100% */
-  min-height: 100%;         /* ✅ acompanha a altura do wrapper */
-  border-radius: 14px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.10);
+  width: 100%;
+  max-width: 100%;
+  height: 100%;            /* ✅ ocupa toda altura do workspace */
+  min-height: 0;           /* ✅ importante pra scroll interno funcionar */
+  border-radius: 0;        /* ✅ estilo workspace (se quiser manter 14px eu te dou a variação) */
+  box-shadow: none;        /* ✅ remove “cara de modal” */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-sizing: border-box; /* ✅ impede “vazar” por padding/borda */
+  box-sizing: border-box;
+  margin: 0 auto;
 }
+
 
 
 /* ======================================================
@@ -30,21 +33,39 @@
 .pf-header{
   padding: 20px 24px;
   border-bottom: 1px solid #eef0f3;
-  display: flex;
-  justify-content: space-between;
+
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
+  gap: 16px;
 }
+
+/* ======================================================
+   BOTÃO VOLTAR — PADRÃO ERP
+====================================================== */
+.pf-back{
+  background: none;
+  border: none;
+  padding: 0;
+
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-back:hover{
+  text-decoration: underline;
+}
+
 
 .pf-header h2{
   font-size: 18px;
   margin: 0;
-}
-
-.pf-close{
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
 }
 
 /* ======================================================
@@ -128,9 +149,11 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden; /* ✅ remove qualquer vazamento horizontal */
+  min-height: 0;        /* ✅ ESSENCIAL pra scroll interno */
+  overflow-y: auto;     /* ✅ scroll fica aqui */
+  overflow-x: hidden;
 }
 
 /* ======================================================

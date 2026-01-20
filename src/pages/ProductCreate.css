@@ -1,7 +1,8 @@
 /* ======================================================================
-   SUSE7 — PRODUCT CREATE (PÁGINA)
+   SUSE7 — PRODUCT CREATE (FULL WORKSPACE)
    Objetivo:
-   - Fundo azul claro + card branco ocupando toda a moldura azul
+   - Sem moldura azul
+   - Ocupa 100% do espaço disponível
 ====================================================================== */
 
 .product-page{
@@ -10,11 +11,18 @@
   display: flex;
   flex: 1;
 
-  padding: 22px;
-  background: #eaf1ff;
-
-  overflow-x: hidden; /* ✅ evita scroll lateral da página */
+  background: transparent; /* ✅ sem moldura azul */
+  padding: 0;              /* ✅ ocupa tudo */
+  overflow: hidden;        /* ✅ sem scroll externo */
 }
+
+.product-page > *{
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+}
+
 
 
 .product-page > *{
