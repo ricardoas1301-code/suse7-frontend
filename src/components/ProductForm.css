@@ -13,7 +13,7 @@
 .pf-card{
   background: #ffffff;
   width: 100%;
-  max-width: 1200%;
+  max-width: 1200px;
   height: 100%;            /* ✅ ocupa toda altura do workspace */
   min-height: 0;           /* ✅ importante pra scroll interno funcionar */
   border-radius: 16px;        /* ✅ estilo workspace (se quiser manter 14px eu te dou a variação) */
@@ -22,7 +22,7 @@
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-  
+  margin: auto;  
   }
 
 
@@ -101,9 +101,14 @@
 }
 
 .pf-tabs button{
-  flex: 0 0 auto;             /* ✅ não estica */
-  width: 190px;               /* ✅ tamanho fixo (ajuste fino aqui) */
-  height: 38px;               /* ✅ alinhado com padrão de botões */
+  box-sizing: border-box;
+
+  flex: 0 0 190px;     /* ✅ agora é fixo de verdade */
+  width: 190px;
+  min-width: 190px;
+  max-width: 190px;
+
+  height: 38px;
   padding: 0 12px;
 
   display: inline-flex;
@@ -120,16 +125,11 @@
   font-size: 13px;
   transition: all 0.2s ease;
 
-  /* ✅ NÃO deixa texto crescer a aba */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* cola as abas removendo borda duplicada */
-.pf-tabs button + button{
-  border-left: none;
-}
 
 /* ======================================================
    FORMULÁRIOS
@@ -348,8 +348,11 @@
    RESPONSIVO
 ====================================================== */
 @media (max-width: 900px){
-  .form-row{
-    flex-wrap: wrap;
+  .pf-tabs button{
+    flex: 0 0 150px;
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
   }
 
   .form-row .form-group{
@@ -357,9 +360,6 @@
     min-width: 220px;
   }
 
-  .pf-tabs button{
-    min-width: 130px;
-  }
 }
 
 @media (max-width: 520px){
