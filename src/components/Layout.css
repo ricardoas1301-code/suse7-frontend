@@ -165,11 +165,13 @@
 /* Conteúdo abaixo da navbar */
 .page-content {
   flex: 1;
-  overflow: auto;          /* ✅ mantém scroll para Perfil/ML/etc */
-  overflow-x: hidden;      /* ✅ evita barra horizontal */
+  overflow: auto;
+  overflow-x: hidden;
   padding: 8px 24px 24px;
-  height: 100%;
+
+  background: #ffffff; /* ✅ remove o azul (padrão Perfil) */
 }
+
 
 
 /* ======================================================================

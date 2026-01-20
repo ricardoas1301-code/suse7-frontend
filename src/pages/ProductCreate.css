@@ -7,14 +7,12 @@
 
 .product-page{
   width: 100%;
-  padding: 0;                 /* ✅ sem moldura */
-  background: transparent;    /* ✅ igual padrão Perfil */
-
   display: flex;
-  justify-content: center;    /* ✅ centraliza o card */
+  justify-content: center;
   align-items: flex-start;
 
-  overflow: hidden;
+  padding: 0;              /* ✅ não empurra o card */
+  background: transparent;
 }
 
 

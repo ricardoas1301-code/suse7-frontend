@@ -13,7 +13,7 @@
 .pf-card{
   background: #ffffff;
   width: 100%;
-  max-width: 100%;
+  max-width: 1200%;
   height: 100%;            /* ✅ ocupa toda altura do workspace */
   min-height: 0;           /* ✅ importante pra scroll interno funcionar */
   border-radius: 16px;        /* ✅ estilo workspace (se quiser manter 14px eu te dou a variação) */
@@ -22,6 +22,7 @@
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
+  margin: 0 auto;          /* ✅ centralização garantida *
   }
 
 
