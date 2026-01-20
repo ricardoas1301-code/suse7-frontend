@@ -22,7 +22,7 @@
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-  margin: 0 auto;          /* ✅ centralização garantida *
+  
   }
 
 
@@ -72,66 +72,63 @@
 }
 
 /* ======================================================
-   ABAS — FICHÁRIO PREMIUM
-====================================================== */
-/* ======================================================
-   ABAS — SEM GAP + SEM SCROLL (wrap)
+   ABAS — TAMANHO FIXO + SCROLL HORIZONTAL (Padrão ERP/SaaS)
+   Objetivo:
+   - Todas as abas com mesma largura
+   - Texto não aumenta a aba (ellipsis)
+   - Scroll entra quando ultrapassar a largura total
 ====================================================== */
 .pf-tabs{
   display: flex;
-  gap: 0;                      /* ✅ sem espaços */
+  flex-wrap: nowrap;          /* ✅ não quebra linha */
+  gap: 0;                     /* ✅ sem espaçamento (ganha espaço) */
   padding: 12px 24px 0;
   border-bottom: 1px solid #eef0f3;
 
-  flex-wrap: wrap;             /* ✅ quebra linha (sem barra) */
-  overflow: hidden;            /* ✅ sem rolagem */
-  white-space: normal;         /* ✅ permite quebra */
+  overflow-x: auto;           /* ✅ scroll quando precisar */
+  overflow-y: hidden;
+  white-space: nowrap;        /* ✅ mantém tudo em linha */
 }
 
-/* Remove scrollbar das abas (não será mais necessário) */
+/* Scroll mais discreto (opcional, mas premium) */
 .pf-tabs::-webkit-scrollbar{
-  display: none;
+  height: 6px;
 }
 
-/* Botões das abas: mais compactos e colados */
-.pf-tabs button{
-  flex: 0 0 auto;
+.pf-tabs::-webkit-scrollbar-thumb{
+  background: #d7dbe3;
+  border-radius: 999px;
+}
 
-  min-width: auto;             /* ✅ remove travamento */
-  padding: 9px 12px;           /* ✅ mais compacto */
-  font-size: 13px;
+.pf-tabs button{
+  flex: 0 0 auto;             /* ✅ não estica */
+  width: 190px;               /* ✅ tamanho fixo (ajuste fino aqui) */
+  height: 38px;               /* ✅ alinhado com padrão de botões */
+  padding: 0 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
   border-bottom: none;
 
   border-radius: 10px 10px 0 0;
+
   cursor: pointer;
+  font-size: 13px;
   transition: all 0.2s ease;
-  text-align: center;
 
-  margin: 0;                   /* ✅ colado */
+  /* ✅ NÃO deixa texto crescer a aba */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Para “colar” bem: remove borda duplicada entre botões */
+/* cola as abas removendo borda duplicada */
 .pf-tabs button + button{
-  border-left: none;           /* ✅ sem dupla borda */
-}
-
-
-/* ======================================================
-   BODY
-====================================================== */
-.pf-body{
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-
-  flex: 1;
-  min-height: 0;        /* ✅ ESSENCIAL pra scroll interno */
-  overflow-y: auto;     /* ✅ scroll fica aqui */
-  overflow-x: hidden;
+  border-left: none;
 }
 
 /* ======================================================
