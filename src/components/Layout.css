@@ -169,7 +169,7 @@
   overflow-x: hidden;
   padding: 8px 24px 24px;
 
-  background: transparent; /* ✅ não pinta nada aqui */
+  background: #ffffff; /* ✅ remove o fundo azul */
 }
 
 

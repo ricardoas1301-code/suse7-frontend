@@ -20,12 +20,7 @@
 .product-page > *{
   width: 100%;
   max-width: 1200px;
-
-  /* Usa viewport disponível sem travar scroll interno */
-  min-height: calc(100vh - 64px);
-  height: auto;
-
-  display: flex;
-  flex-direction: column;
+  height: calc(100vh - 64px - 8px - 24px - 24px);
+  /* 64 navbar + 8 top padding do page-content + 24 bottom padding + 24 da própria página */
 }
 
