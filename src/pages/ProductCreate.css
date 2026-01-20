@@ -12,7 +12,10 @@
 
   padding: 22px;
   background: #eaf1ff;
+
+  overflow-x: hidden; /* ✅ evita scroll lateral da página */
 }
+
 
 .product-page > *{
   width: 100%;

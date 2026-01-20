@@ -20,6 +20,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-sizing: border-box; /* ✅ impede “vazar” por padding/borda */
 }
 
 
@@ -129,6 +130,7 @@
   gap: 20px;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden; /* ✅ remove qualquer vazamento horizontal */
 }
 
 /* ======================================================
@@ -368,7 +370,10 @@
     min-width: 100%;
   }
 
-  .pf-tabs{
-    flex-wrap: wrap;
-  }
+.pf-tabs{
+  max-width: 100%;    /* ✅ garante que a rolagem fica só dentro dela */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 }
