@@ -207,7 +207,7 @@ export default function ProductForm({
     className="pf-back"
     onClick={onCancel}
   >
-    Voltar  ➔
+    Voltar
   </button>
 </div>
 
