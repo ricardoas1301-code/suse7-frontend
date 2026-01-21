@@ -7,7 +7,7 @@
 // - UI only por enquanto (salvar/back-end depois)
 // ======================================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./ProductForm.css";
 
 export default function ProductForm({
@@ -35,8 +35,14 @@ export default function ProductForm({
 
   // ------------------------------------------------------
   // STATE: PRODUTO (UI only)
+  // IMPORTANTE:
+  // - Campos abaixo estão alinhados com a tabela `products` do Supabase
+  // - Evita duplicidade de colunas no banco e bugs no save futuro
   // ------------------------------------------------------
   const [product, setProduct] = useState({
+    // ======================================================
+    // BÁSICO
+    // ======================================================
     product_name: "",
     sku: "",
     gtin: "",
@@ -44,28 +50,65 @@ export default function ProductForm({
     brand: "",
     model: "",
     description: "",
+
+    // ======================================================
+    // CATEGORIA (ML)
+    // ======================================================
+    category_ml_id: "",
+
+    // ======================================================
+    // ESTOQUE & LOGÍSTICA
+    // ======================================================
     stock_quantity: 0,
     stock_source: "manual",
+    lead_time_days: "", // dias (pode ser vazio)
+    origin: "", // texto livre (como você decidiu)
+    supplier_name: "",
+    notes: "",
+
+    // ======================================================
+    // CUSTOS & PRECIFICAÇÃO
+    // ======================================================
     cost_price: "",
     fixed_costs: "",
-    photos: [],
+    min_profit_percentage: "",
+    min_profit_value: "",
 
     // ======================================================
-    // PESOS & MEDIDAS — ENVIO
+    // PESOS & MEDIDAS — ENVIO (Supabase: width/height/length/weight)
     // ======================================================
-    shipping_width: "",
-    shipping_height: "",
-    shipping_depth: "",
-    shipping_weight: "",
+    width: "",
+    height: "",
+    length: "",
+    weight: "",
 
     // ======================================================
-    // PESOS & MEDIDAS — PRODUTO MONTADO
+    // PESOS & MEDIDAS — PRODUTO MONTADO (Supabase: assembled_*)
     // ======================================================
-    mounted_width: "",
-    mounted_height: "",
-    mounted_depth: "",
-    mounted_weight: "",
+    assembled_width: "",
+    assembled_height: "",
+    assembled_length: "",
+    assembled_weight: "",
+
+    // ======================================================
+    // IMAGENS (Supabase: product_images)
+    // Observação: por enquanto UI only; depois podemos salvar como array JSON/string
+    // ======================================================
+    product_images: null,
+
+    // ======================================================
+    // CAMPOS DE SISTEMA (não mostrar por enquanto)
+    // ======================================================
+    active: true,
+    imported_from_channel: "manual",
+    parent_sku: null,
   });
+
+  // ------------------------------------------------------
+  // STATE: VALORES ORIGINAIS (para alertas no modo EDIT)
+  // ------------------------------------------------------
+  const [originalSku, setOriginalSku] = useState("");
+  const [originalGtin, setOriginalGtin] = useState("");
 
   // ------------------------------------------------------
   // STATE: VARIAÇÕES (UI only)
@@ -97,6 +140,18 @@ export default function ProductForm({
         ...prev,
         ...initialProduct,
       }));
+
+      // ------------------------------------------------------
+      // Guarda valores originais para alerta de mudança SKU/GTIN
+      // ------------------------------------------------------
+      setOriginalSku(initialProduct.sku || "");
+      setOriginalGtin(initialProduct.gtin || "");
+    } else {
+      // ------------------------------------------------------
+      // Modo create: mantém originais vazios
+      // ------------------------------------------------------
+      setOriginalSku("");
+      setOriginalGtin("");
     }
 
     // ------------------------------------------------------
@@ -119,6 +174,17 @@ export default function ProductForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProduct, initialVariations]);
+
+  // ------------------------------------------------------
+  // ALERTA SKU/GTIN (modo edit)
+  // - Se alterar sku/gtin, exibe aviso (UI only)
+  // ------------------------------------------------------
+  const showSkuGtinAlert = useMemo(() => {
+    if (mode !== "edit") return false;
+    const skuChanged = (product.sku || "") !== (originalSku || "");
+    const gtinChanged = (product.gtin || "") !== (originalGtin || "");
+    return skuChanged || gtinChanged;
+  }, [mode, product.sku, product.gtin, originalSku, originalGtin]);
 
   // ------------------------------------------------------
   // HANDLER GENÉRICO PARA INPUTS
@@ -193,24 +259,19 @@ export default function ProductForm({
 
   return (
     <div className="pf-card">
-    {/*// ======================================================================
-    // HEADER — PADRÃO PÁGINA (ERP)
-    // - Remove botão X (modal)
-    // - Adiciona "Voltar para Produtos"
-    // ======================================================================*/}
+      {/*// ======================================================================
+        // HEADER — PADRÃO PÁGINA (ERP)
+        // - Remove botão X (modal)
+        // - Adiciona "Voltar"
+        // ======================================================================*/}
 
-<div className="pf-header">
-  <h2>{title}</h2>
+      <div className="pf-header">
+        <h2>{title}</h2>
 
-  <button
-    type="button"
-    className="pf-back"
-    onClick={onCancel}
-  >
-    Voltar
-  </button>
-</div>
-
+        <button type="button" className="pf-back" onClick={onCancel}>
+          Voltar
+        </button>
+      </div>
 
       {/* ==================================================
          NOME DO PRODUTO — FIXO
@@ -224,6 +285,16 @@ export default function ProductForm({
           onChange={(e) => handleChange("product_name", e.target.value)}
         />
       </div>
+
+      {/* ==================================================
+         ALERTA: SKU/GTIN alterado (modo edit)
+      ================================================== */}
+      {showSkuGtinAlert && (
+        <div className="pf-alert">
+          <strong>Atenção:</strong> alterar <strong>SKU</strong> ou{" "}
+          <strong>GTIN</strong> pode impactar vínculos com anúncios e integrações.
+        </div>
+      )}
 
       {/* ==================================================
          ABAS
@@ -356,6 +427,15 @@ export default function ProductForm({
                   onChange={(e) => handleChange("model", e.target.value)}
                 />
               </div>
+
+              <div className="form-group">
+                <label>Categoria Mercado Livre (ID)</label>
+                <input
+                  placeholder="Ex: MLB1234"
+                  value={product.category_ml_id}
+                  onChange={(e) => handleChange("category_ml_id", e.target.value)}
+                />
+              </div>
             </div>
           </>
         )}
@@ -395,6 +475,10 @@ export default function ProductForm({
 
         {/* =======================
             ESTOQUE & LOGÍSTICA
+            - Origem (texto livre)
+            - Fornecedor
+            - Observações
+            - Lead time (dias)
         ======================= */}
         {activeTab === "stock" && (
           <>
@@ -419,12 +503,56 @@ export default function ProductForm({
                   <option value="virtual">Virtual (avançado)</option>
                 </select>
               </div>
+
+              <div className="form-group">
+                <label>Lead time (dias)</label>
+                <input
+                  inputMode="numeric"
+                  placeholder="Ex: 2"
+                  value={product.lead_time_days}
+                  onChange={(e) =>
+                    handleChange("lead_time_days", e.target.value.replace(/\D/g, ""))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Origem (texto livre)</label>
+                <input
+                  placeholder="Ex: Nacional / Importado / SP / Fábrica própria..."
+                  value={product.origin}
+                  onChange={(e) => handleChange("origin", e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Fornecedor</label>
+                <input
+                  placeholder="Nome do fornecedor"
+                  value={product.supplier_name}
+                  onChange={(e) => handleChange("supplier_name", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Observações</label>
+                <input
+                  placeholder="Notas internas sobre estoque/logística"
+                  value={product.notes}
+                  onChange={(e) => handleChange("notes", e.target.value)}
+                />
+              </div>
             </div>
           </>
         )}
 
         {/* =======================
             CUSTOS & PRECIFICAÇÃO
+            - Inclui lucro mínimo (por % e por R$)
         ======================= */}
         {activeTab === "pricing" && (
           <>
@@ -447,11 +575,34 @@ export default function ProductForm({
                 />
               </div>
             </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Lucro mínimo (%)</label>
+                <input
+                  inputMode="decimal"
+                  placeholder="Ex: 10"
+                  value={product.min_profit_percentage}
+                  onChange={(e) => handleChange("min_profit_percentage", e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Lucro mínimo (R$)</label>
+                <input
+                  inputMode="decimal"
+                  placeholder="Ex: 15,00"
+                  value={product.min_profit_value}
+                  onChange={(e) => handleChange("min_profit_value", e.target.value)}
+                />
+              </div>
+            </div>
           </>
         )}
 
         {/* =======================
             FOTOS
+            - Campo do Supabase: product_images
         ======================= */}
         {activeTab === "photos" && (
           <>
@@ -465,11 +616,22 @@ export default function ProductForm({
                 Adicionar fotos
               </button>
             </div>
+
+            {/* ------------------------------------------------------
+               Placeholder técnico: por enquanto não há upload real
+               Quando integrar, salvamos URLs/paths em product_images
+            ------------------------------------------------------ */}
+            <div className="hint" style={{ marginTop: 12 }}>
+              Campo alvo no Supabase: <strong>product_images</strong>
+            </div>
           </>
         )}
 
         {/* =======================
             PESOS & MEDIDAS
+            - Alinhado com Supabase
+            - ENVIO: width / height / length / weight
+            - MONTADO: assembled_*
         ======================= */}
         {activeTab === "measures" && (
           <>
@@ -488,8 +650,8 @@ export default function ProductForm({
                     type="number"
                     min="0"
                     placeholder="Ex: 30"
-                    value={product.shipping_width}
-                    onChange={(e) => handleChange("shipping_width", e.target.value)}
+                    value={product.width}
+                    onChange={(e) => handleChange("width", e.target.value)}
                   />
                 </div>
 
@@ -499,19 +661,19 @@ export default function ProductForm({
                     type="number"
                     min="0"
                     placeholder="Ex: 15"
-                    value={product.shipping_height}
-                    onChange={(e) => handleChange("shipping_height", e.target.value)}
+                    value={product.height}
+                    onChange={(e) => handleChange("height", e.target.value)}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Profundidade (cm)</label>
+                  <label>Comprimento (cm)</label>
                   <input
                     type="number"
                     min="0"
                     placeholder="Ex: 45"
-                    value={product.shipping_depth}
-                    onChange={(e) => handleChange("shipping_depth", e.target.value)}
+                    value={product.length}
+                    onChange={(e) => handleChange("length", e.target.value)}
                   />
                 </div>
 
@@ -522,8 +684,8 @@ export default function ProductForm({
                     min="0"
                     step="0.001"
                     placeholder="Ex: 2.350"
-                    value={product.shipping_weight}
-                    onChange={(e) => handleChange("shipping_weight", e.target.value)}
+                    value={product.weight}
+                    onChange={(e) => handleChange("weight", e.target.value)}
                   />
                 </div>
               </div>
@@ -544,8 +706,8 @@ export default function ProductForm({
                     type="number"
                     min="0"
                     placeholder="Ex: 32"
-                    value={product.mounted_width}
-                    onChange={(e) => handleChange("mounted_width", e.target.value)}
+                    value={product.assembled_width}
+                    onChange={(e) => handleChange("assembled_width", e.target.value)}
                   />
                 </div>
 
@@ -555,19 +717,19 @@ export default function ProductForm({
                     type="number"
                     min="0"
                     placeholder="Ex: 80"
-                    value={product.mounted_height}
-                    onChange={(e) => handleChange("mounted_height", e.target.value)}
+                    value={product.assembled_height}
+                    onChange={(e) => handleChange("assembled_height", e.target.value)}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Profundidade (cm)</label>
+                  <label>Comprimento (cm)</label>
                   <input
                     type="number"
                     min="0"
                     placeholder="Ex: 42"
-                    value={product.mounted_depth}
-                    onChange={(e) => handleChange("mounted_depth", e.target.value)}
+                    value={product.assembled_length}
+                    onChange={(e) => handleChange("assembled_length", e.target.value)}
                   />
                 </div>
 
@@ -578,8 +740,8 @@ export default function ProductForm({
                     min="0"
                     step="0.001"
                     placeholder="Ex: 8.500"
-                    value={product.mounted_weight}
-                    onChange={(e) => handleChange("mounted_weight", e.target.value)}
+                    value={product.assembled_weight}
+                    onChange={(e) => handleChange("assembled_weight", e.target.value)}
                   />
                 </div>
               </div>
@@ -601,7 +763,11 @@ export default function ProductForm({
               </div>
 
               <div className="pf-actions-row">
-                <button className="btn-secondary" type="button" onClick={handleAddVariation}>
+                <button
+                  className="btn-secondary"
+                  type="button"
+                  onClick={handleAddVariation}
+                >
                   + Adicionar variação
                 </button>
               </div>
@@ -636,7 +802,11 @@ export default function ProductForm({
                       type="button"
                       onClick={() => handleRemoveVariation(v.id)}
                       disabled={variations.length === 1}
-                      title={variations.length === 1 ? "Mantenha ao menos 1 variação" : "Remover variação"}
+                      title={
+                        variations.length === 1
+                          ? "Mantenha ao menos 1 variação"
+                          : "Remover variação"
+                      }
                     >
                       Remover
                     </button>
@@ -684,7 +854,9 @@ export default function ProductForm({
                     <input
                       placeholder="Ex: ARM-COZ-PT-01"
                       value={v.sku}
-                      onChange={(e) => handleVariationChange(v.id, "sku", e.target.value)}
+                      onChange={(e) =>
+                        handleVariationChange(v.id, "sku", e.target.value)
+                      }
                     />
                   </div>
 
@@ -695,7 +867,11 @@ export default function ProductForm({
                       placeholder="Ex: 7891234567890"
                       value={v.ean}
                       onChange={(e) =>
-                        handleVariationChange(v.id, "ean", e.target.value.replace(/\D/g, ""))
+                        handleVariationChange(
+                          v.id,
+                          "ean",
+                          e.target.value.replace(/\D/g, "")
+                        )
                       }
                     />
                   </div>
@@ -709,7 +885,11 @@ export default function ProductForm({
                       placeholder="Ex: 10"
                       value={v.stock}
                       onChange={(e) =>
-                        handleVariationChange(v.id, "stock", e.target.value.replace(/\D/g, ""))
+                        handleVariationChange(
+                          v.id,
+                          "stock",
+                          e.target.value.replace(/\D/g, "")
+                        )
                       }
                     />
                   </div>
@@ -720,7 +900,9 @@ export default function ProductForm({
                       inputMode="decimal"
                       placeholder="Ex: 199,90"
                       value={v.price}
-                      onChange={(e) => handleVariationChange(v.id, "price", e.target.value)}
+                      onChange={(e) =>
+                        handleVariationChange(v.id, "price", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -777,11 +959,11 @@ export default function ProductForm({
       {/* ==================================================
          FOOTER
       ================================================== */}
-<div className="pf-footer pf-footer-right">
-  <button className="btn-primary" onClick={handleSubmit} type="button">
-    {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
-  </button>
-</div>
+      <div className="pf-footer pf-footer-right">
+        <button className="btn-primary" onClick={handleSubmit} type="button">
+          {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+        </button>
+      </div>
     </div>
   );
 }

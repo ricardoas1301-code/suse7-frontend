@@ -420,3 +420,16 @@
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
+
+/* ======================================================================
+   ALERTA SKU/GTIN — ProductForm
+====================================================================== */
+.pf-alert{
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 13px;
+}
