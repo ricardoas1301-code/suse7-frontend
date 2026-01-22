@@ -275,7 +275,10 @@
 ====================================================== */
 .description-wrapper{
   position: relative;
+  max-width: 100%;
+  box-sizing: border-box;
 }
+
 
 
 /* ======================================================
@@ -283,12 +286,12 @@
 ====================================================== */
 .description-wrapper textarea{
   width: 100%;
-  height: 220px;       /* tamanho fixo */
-  max-height: 220px;  /* trava crescimento */
-  resize: none;       /* impede redimensionar */
-  overflow-y: auto;   /* scroll interno */
+  height: 220px;
+  max-height: 220px;
+  resize: none;
+  overflow-y: auto;
+  box-sizing: border-box; /* 🔥 ESSENCIAL */
 }
-
 
 
 .copy-description{
