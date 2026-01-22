@@ -512,7 +512,7 @@ const formatNcm = (value) => {
         {activeTab === "basic" && (
           <>
             <div className="form-row">
-              <div className="form-group">
+              <div className="form-group pf-desc-group">
                 <FieldLabel
   text="SKU"
   required
@@ -625,7 +625,7 @@ onChange={(e) => {
 />
 
 
-              <div className="description-wrapper">
+              <div className="description-wrapper pf-desc-wrapper">
                 <textarea
                   rows="8"
                   placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."

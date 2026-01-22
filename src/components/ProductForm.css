@@ -506,7 +506,7 @@
 .pf-copy-btn::after{
   content: "Copiar";
   position: absolute;
-  top: -32px;
+  top: 22px;        /* ✅ agora fica embaixo */
   right: 0;
 
   background: #111827;
@@ -520,7 +520,10 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
+  white-space: nowrap;
+  z-index: 50;      /* ✅ garante que fica acima */
 }
+
 
 .pf-copy-btn:hover::after{
   opacity: 1;
@@ -585,6 +588,26 @@
   font-size: 12px;
   font-weight: 600;      /* ✅ sem “negrito pesado” */
   color: #6b7280;        /* ✅ mesma cor do Fechar */
+}
+
+/* ======================================================
+   DESCRIÇÃO — ocupar a altura e empurrar textarea pra baixo
+====================================================== */
+.pf-desc-group{
+  display: flex;
+  flex-direction: column;
+  flex: 1;          /* ✅ pega altura disponível da aba */
+  min-height: 0;    /* ✅ necessário pra scroll interno */
+}
+
+.pf-desc-wrapper{
+  flex: 1;          /* ✅ faz o wrapper crescer */
+  min-height: 0;
+  display: flex;
+}
+
+.pf-desc-wrapper textarea{
+  flex: 1;          /* ✅ textarea ocupa todo wrapper */
 }
 
 
