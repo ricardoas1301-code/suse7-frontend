@@ -530,18 +530,3 @@
   }
 }
 
-/* ======================================================
-   HEADER — título + texto campos obrigatórios
-====================================================== */
-.pf-title-block{
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.pf-required-hint{
-  font-size: 12px;
-  font-weight: 800;
-  color: #ef4444;
-}
-
