@@ -241,21 +241,119 @@ export default function ProductForm({
   // ------------------------------------------------------
   // SUBMIT (UI only por enquanto)
   // ------------------------------------------------------
-  const handleSubmit = () => {
-    // ------------------------------------------------------
-    // Se o pai passou onSubmit, delega
-    // ------------------------------------------------------
-    if (typeof onSubmit === "function") {
-      onSubmit({ product, variations, mode });
-      return;
-    }
+const handleSubmit = () => {
+  // ------------------------------------------------------
+  // VALIDAÇÃO UX — ABA DADOS BÁSICOS
+  // ------------------------------------------------------
+  const okBasic = validateBasicTab();
 
-    // ------------------------------------------------------
-    // Placeholder padrão
-    // ------------------------------------------------------
-    console.log("Produto a salvar:", product);
-    console.log("Variações a salvar:", variations);
-  };
+  // Se houver erro, volta automaticamente para a aba Básico
+  if (!okBasic) {
+    setActiveTab("basic");
+    return;
+  }
+
+  // ------------------------------------------------------
+  // Se o pai passou onSubmit, delega
+  // ------------------------------------------------------
+  if (typeof onSubmit === "function") {
+    onSubmit({ product, variations, mode });
+    return;
+  }
+
+  // ------------------------------------------------------
+  // Placeholder padrão
+  // ------------------------------------------------------
+  console.log("Produto a salvar:", product);
+  console.log("Variações a salvar:", variations);
+};
+
+
+// ======================================================================
+// HELPER UI: Copiar conteúdo do campo (padrão ML)
+// Objetivo:
+// - Permitir copiar valor de Nome/SKU/EAN/NCM com 1 clique
+// - Exibir feedback simples via console (por enquanto)
+// ======================================================================
+const handleCopyField = async (value) => {
+  try {
+    await navigator.clipboard.writeText(value || "");
+    console.log("✅ Campo copiado");
+  } catch (err) {
+    console.error("❌ Falha ao copiar campo:", err);
+  }
+};
+
+// ======================================================================
+// HELPER UI: Render de Label com ícone de copiar (padrão Mercado Livre)
+// Objetivo:
+// - Reutilizar em vários campos sem repetir HTML
+// - Mesmo ícone e mesma UX
+// ======================================================================
+const FieldLabel = ({ text, required = false, onCopy }) => {
+  return (
+    <div className="pf-label-row">
+      <span className="pf-label-text">
+        {text} {required && <span className="pf-required">*</span>}
+      </span>
+
+      <button
+        type="button"
+        className="pf-copy-btn"
+        onClick={onCopy}
+        title="Copiar"
+        aria-label="Copiar"
+      >
+        ⧉
+      </button>
+    </div>
+  );
+};
+
+// ======================================================================
+// STATE: ERROS (UX somente)
+// Regras agora:
+// - Nome do produto: obrigatório
+// - SKU: obrigatório
+// - EAN/GTIN: somente números, até 13
+// - NCM: somente números, até 8
+// ======================================================================
+const [errors, setErrors] = useState({});
+
+// ======================================================================
+// VALIDAR: Aba Dados Básicos (UX)
+// ======================================================================
+const validateBasicTab = () => {
+  const nextErrors = {};
+
+  // Nome do produto (obrigatório)
+  if (!String(product.product_name || "").trim()) {
+    nextErrors.product_name = "Nome do produto é obrigatório.";
+  }
+
+  // SKU (obrigatório)
+  if (!String(product.sku || "").trim()) {
+    nextErrors.sku = "SKU é obrigatório.";
+  }
+
+  // EAN/GTIN (opcional, mas se preencher valida)
+  const gtin = String(product.gtin || "").trim();
+  if (gtin) {
+    if (!/^\d+$/.test(gtin)) nextErrors.gtin = "EAN/GTIN deve conter apenas números.";
+    if (gtin.length > 13) nextErrors.gtin = "EAN/GTIN deve ter no máximo 13 dígitos.";
+  }
+
+  // NCM (opcional, mas se preencher valida)
+  const ncm = String(product.ncm || "").trim();
+  if (ncm) {
+    if (!/^\d+$/.test(ncm)) nextErrors.ncm = "NCM deve conter apenas números.";
+    if (ncm.length !== 8) nextErrors.ncm = "NCM deve ter 8 dígitos.";
+  }
+
+  setErrors(nextErrors);
+  return Object.keys(nextErrors).length === 0;
+};
+
 
   return (
     <div className="pf-card pf-card--primary">
@@ -283,13 +381,19 @@ export default function ProductForm({
          NOME DO PRODUTO — FIXO
       ================================================== */}
       <div className="pf-product-name-fixed">
-        <label>Nome do produto</label>
-        <input
-          type="text"
-          placeholder="Ex: Armário de cozinha 3 portas"
-          value={product.product_name}
-          onChange={(e) => handleChange("product_name", e.target.value)}
-        />
+        <FieldLabel
+  text="Nome do produto"
+  required
+  onCopy={() => handleCopyField(product.product_name)}
+/>
+
+<input
+  className={errors.product_name ? "pf-input-error" : ""}
+  type="text"
+  placeholder="Ex: Armário de cozinha 3 portas"
+  value={product.product_name}
+  onChange={(e) => handleChange("product_name", e.target.value)}
+/>
       </div>
 
       {/* ==================================================
@@ -390,30 +494,66 @@ export default function ProductForm({
           <>
             <div className="form-row">
               <div className="form-group">
-                <label>SKU</label>
-                <input
-                  placeholder="SKU interno"
-                  value={product.sku}
-                  onChange={(e) => handleChange("sku", e.target.value)}
-                />
+                <FieldLabel
+  text="SKU"
+  required
+  onCopy={() => handleCopyField(product.sku)}
+/>
+
+<input
+  className={errors.sku ? "pf-input-error" : ""}
+  placeholder="SKU interno"
+  value={product.sku}
+  onChange={(e) =>
+    handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())
+  }
+/>
+
+{errors.sku && <div className="pf-error">{errors.sku}</div>}
               </div>
 
               <div className="form-group">
-                <label>EAN / GTIN</label>
-                <input
-                  placeholder="Código de barras"
-                  value={product.gtin}
-                  onChange={(e) => handleChange("gtin", e.target.value)}
-                />
+                <FieldLabel
+  text="EAN / GTIN"
+  onCopy={() => handleCopyField(product.gtin)}
+/>
+
+
+<input
+  className={errors.gtin ? "pf-input-error" : ""}
+  inputMode="numeric"
+  placeholder="Código de barras"
+  value={product.gtin}
+  onChange={(e) =>
+    handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))
+  }
+/>
+
+{errors.gtin && <div className="pf-error">{errors.gtin}</div>}
+
+
               </div>
 
               <div className="form-group">
-                <label>NCM</label>
-                <input
-                  placeholder="Ex: 94036000"
-                  value={product.ncm}
-                  onChange={(e) => handleChange("ncm", e.target.value)}
-                />
+                <FieldLabel
+  text="NCM"
+  onCopy={() => handleCopyField(product.ncm)}
+/>
+
+
+<input
+  className={errors.ncm ? "pf-input-error" : ""}
+  inputMode="numeric"
+  placeholder="Ex: 94036000"
+  value={product.ncm}
+  onChange={(e) =>
+    handleChange("ncm", e.target.value.replace(/\D/g, "").slice(0, 8))
+  }
+/>
+
+{errors.ncm && <div className="pf-error">{errors.ncm}</div>}
+
+
               </div>
             </div>
 
