@@ -509,10 +509,8 @@
 .pf-copy-btn::after{
   content: "Copiar";
   position: absolute;
-
-  top: 50%;                 /* centraliza vertical */
-  left: calc(100% + 8px);   /* joga pra direita do ícone */
-  transform: translateY(-50%);
+  top: 22px;        /* ✅ agora fica embaixo */
+  right: 0;
 
   background: #111827;
   color: #ffffff;
@@ -525,11 +523,9 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
-
   white-space: nowrap;
-  z-index: 999;
+  z-index: 999;      /* ✅ garante que fica acima */
 }
-
 
 
 .pf-copy-btn:hover::after{
