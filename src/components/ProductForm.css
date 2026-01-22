@@ -39,15 +39,18 @@
 
 
 /* ======================================================
-   HEADER — PREMIUM
+   HEADER — PREMIUM (título + fechar alinhados)
 ====================================================== */
 .pf-header{
   padding: 20px 24px;
   border-bottom: 1px solid #eef0f3;
+
   display: flex;
-  justify-content: space-between; /* ✅ já resolve direita/esquerda */
-  align-items: center;
+  align-items: flex-start;      /* ✅ topo alinhado */
+  justify-content: space-between;
+  gap: 12px;
 }
+
 
 /* ======================================================
    BOTÃO FECHAR — IGUAL POPUP (SÓ HOVER)
@@ -392,16 +395,16 @@
     min-width: 100%;
   }
 
-@media (max-width: 900px){
-  .pf-product-name-fixed input{
-    max-width: 100%;
-  }
-}
-
 .pf-tabs{
   max-width: 100%;    /* ✅ garante que a rolagem fica só dentro dela */
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+@media (max-width: 900px){
+  .pf-product-name-fixed input{
+    max-width: 100%;
+  }
 }
 
 }
@@ -533,15 +536,17 @@
 /* ======================================================
    HEADER — título + texto campos obrigatórios
 ====================================================== */
-.pf-title-block{
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.pf-title-block h2{
+  font-size: 20px;
+  margin: 0;
+  line-height: 1.1;
 }
 
 .pf-required-hint{
+  margin-top: 2px;             /* ✅ um respiro bonito */
   font-size: 12px;
   font-weight: 800;
   color: #ef4444;
 }
+
 
