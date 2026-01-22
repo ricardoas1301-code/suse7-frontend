@@ -381,20 +381,17 @@ const formatNcm = (value) => {
         // - Adiciona "Voltar"
         // ======================================================================*/}
 
-<div className="pf-title-block">
-  <h2>{title}</h2>
-  <div className="pf-required-hint">* Campos obrigatórios</div>
+<div className="pf-header">
+  <div className="pf-title-block">
+    <h2>{title}</h2>
+    <div className="pf-required-hint">* Campos obrigatórios</div>
+  </div>
 
-<button
-  type="button"
-  className="pf-close"
-  onClick={onCancel}
-  aria-label="Fechar"
-  title="Fechar"
->
-  Fechar
-</button>
-      </div>
+  <button type="button" className="pf-close" onClick={onCancel}>
+    Fechar
+  </button>
+</div>
+
 
       {/* ==================================================
          NOME DO PRODUTO — FIXO
