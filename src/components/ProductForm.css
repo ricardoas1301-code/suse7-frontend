@@ -283,11 +283,12 @@
 ====================================================== */
 .description-wrapper textarea{
   width: 100%;
-  min-height: 180px;
-  max-height: 320px;   /* ✅ limite máximo */
-  resize: vertical;   /* ✅ usuário pode puxar até o limite */
-  overflow-y: auto;
+  height: 220px;       /* tamanho fixo */
+  max-height: 220px;  /* trava crescimento */
+  resize: none;       /* impede redimensionar */
+  overflow-y: auto;   /* scroll interno */
 }
+
 
 
 .copy-description{
