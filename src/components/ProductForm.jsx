@@ -619,7 +619,11 @@ onChange={(e) => {
         {activeTab === "description" && (
           <>
             <div className="form-group">
-              <label>Descrição do produto</label>
+              <FieldLabel
+  text="Descrição do produto"
+  onCopy={() => handleCopyField(product.description)}
+/>
+
 
               <div className="description-wrapper">
                 <textarea
@@ -629,19 +633,8 @@ onChange={(e) => {
                   onChange={(e) => handleChange("description", e.target.value)}
                 />
 
-                <button
-                  type="button"
-                  className="copy-description"
-                  title="Copiar descrição"
-                  onClick={handleCopyDescription}
-                >
-                  📋
-                </button>
               </div>
 
-              <button className="btn-ai" type="button">
-                🤖 Gerar descrição com IA
-              </button>
             </div>
           </>
         )}

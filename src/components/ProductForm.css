@@ -201,24 +201,6 @@
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 
-/* ======================================================
-   BOTÃO IA — GERAR DESCRIÇÃO
-====================================================== */
-.btn-ai{
-  margin-top: 6px;
-  align-self: flex-start;
-  background: #eef4ff;
-  border: 1px solid #cfe0ff;
-  color: #2563eb;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.btn-ai:hover{
-  background: #e0ebff;
-}
 
 /* ======================================================
    ABA FOTOS
@@ -295,12 +277,18 @@
   position: relative;
 }
 
+
+/* ======================================================
+   DESCRIÇÃO — ALTURA LIMITADA
+====================================================== */
 .description-wrapper textarea{
   width: 100%;
-  height: 220px;
-  resize: none;
+  min-height: 180px;
+  max-height: 320px;   /* ✅ limite máximo */
+  resize: vertical;   /* ✅ usuário pode puxar até o limite */
   overflow-y: auto;
 }
+
 
 .copy-description{
   position: absolute;
@@ -490,8 +478,11 @@
   margin-left: 4px;
 }
 
-/* Botão copiar (sem moldura, só hover) */
+/* ======================================================
+   BOTÃO COPIAR — COM TOOLTIP
+====================================================== */
 .pf-copy-btn{
+  position: relative;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -499,9 +490,37 @@
 
   font-size: 14px;
   color: #6b7280;
-
   transition: transform 160ms ease;
 }
+
+.pf-copy-btn:hover{
+  transform: scale(1.08);
+}
+
+/* Tooltip */
+.pf-copy-btn::after{
+  content: "Copiar";
+  position: absolute;
+  top: -32px;
+  right: 0;
+
+  background: #111827;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+
+  padding: 4px 8px;
+  border-radius: 8px;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.pf-copy-btn:hover::after{
+  opacity: 1;
+}
+
 
 .pf-copy-btn:hover{
   transform: scale(1.08);
