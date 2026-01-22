@@ -283,7 +283,7 @@
 ====================================================== */
 .description-wrapper textarea{
   width: 100%;
-  height: 220px;       /* tamanho fixo */
+  height: 360px;       /* tamanho fixo */
   max-height: 220px;  /* trava crescimento */
   resize: none;       /* impede redimensionar */
   overflow-y: auto;   /* scroll interno */
