@@ -552,11 +552,17 @@
   line-height: 1.1;
 }
 
+/* ======================================================
+   PADRÃO: "* Campos obrigatórios"
+   - sem negrito
+   - mesma cor do botão Fechar
+====================================================== */
 .pf-required-hint{
   font-size: 12px;
-  font-weight: 800;
-  color: #ef4444;
+  font-weight: 600;      /* ✅ sem “negrito pesado” */
+  color: #6b7280;        /* ✅ mesma cor do Fechar */
 }
+
 
 
 

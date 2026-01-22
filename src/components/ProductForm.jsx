@@ -343,12 +343,15 @@ const validateBasicTab = () => {
     if (gtin.length > 13) nextErrors.gtin = "EAN/GTIN deve ter no máximo 13 dígitos.";
   }
 
-  // NCM (opcional, mas se preencher valida)
-  const ncm = String(product.ncm || "").trim();
-  if (ncm) {
-    if (!/^\d+$/.test(ncm)) nextErrors.ncm = "NCM deve conter apenas números.";
-    if (ncm.length !== 8) nextErrors.ncm = "NCM deve ter 8 dígitos.";
+// NCM (opcional, mas se preencher valida)
+const ncmDigits = String(product.ncm || "").replace(/\D/g, "");
+
+if (ncmDigits) {
+  if (ncmDigits.length !== 8) {
+    nextErrors.ncm = "NCM deve ter 8 dígitos.";
   }
+}
+
 
   setErrors(nextErrors);
   return Object.keys(nextErrors).length === 0;
@@ -562,7 +565,16 @@ const formatNcm = (value) => {
   inputMode="numeric"
   placeholder="Ex: 94036000"
   value={product.ncm}
-onChange={(e) => handleChange("ncm", formatNcm(e.target.value))}
+onChange={(e) => {
+  const masked = formatNcm(e.target.value);
+  handleChange("ncm", masked);
+
+  const digits = masked.replace(/\D/g, "");
+  if (digits.length === 8) {
+    setErrors((prev) => ({ ...prev, ncm: undefined }));
+  }
+}}
+
 
 />
 
