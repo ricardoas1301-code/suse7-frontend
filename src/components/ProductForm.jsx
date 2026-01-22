@@ -258,7 +258,7 @@ export default function ProductForm({
   };
 
   return (
-    <div className="pf-card">
+    <div className="pf-card pf-card--primary">
       {/*// ======================================================================
         // HEADER — PADRÃO PÁGINA (ERP)
         // - Remove botão X (modal)
@@ -268,9 +268,15 @@ export default function ProductForm({
       <div className="pf-header">
         <h2>{title}</h2>
 
-        <button type="button" className="pf-back" onClick={onCancel}>
-          Voltar
-        </button>
+<button
+  type="button"
+  className="pf-close"
+  onClick={onCancel}
+  aria-label="Fechar"
+  title="Fechar"
+>
+  Fechar
+</button>
       </div>
 
       {/* ==================================================
