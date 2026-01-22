@@ -89,7 +89,7 @@ export default function ContactModal({ onClose }) {
         {success && <p className="msg-success">Mensagem enviada com sucesso! 🎉</p>}
         {error && <p className="msg-error">{error}</p>}
 
-        <span className="close-btn" onClick={onClose}>Voltar</span>
+        <span className="close-btn" onClick={onClose}>Fechar</span>
       </div>
     </div>
   );
