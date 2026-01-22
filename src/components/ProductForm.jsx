@@ -355,6 +355,24 @@ const validateBasicTab = () => {
 };
 
 
+// ======================================================================
+// MÁSCARA: NCM (8 dígitos) -> 1234.56.78
+// Regras:
+// - Aceita apenas números
+// - Limita em 8 dígitos
+// - Exibe com pontos
+// ======================================================================
+const formatNcm = (value) => {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+
+  // 1234.56.78
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 4)}.${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
+};
+
+
+
   return (
     <div className="pf-card pf-card--primary">
       {/*// ======================================================================
@@ -363,8 +381,9 @@ const validateBasicTab = () => {
         // - Adiciona "Voltar"
         // ======================================================================*/}
 
-      <div className="pf-header">
-        <h2>{title}</h2>
+<div className="pf-title-block">
+  <h2>{title}</h2>
+  <div className="pf-required-hint">* Campos obrigatórios</div>
 
 <button
   type="button"
@@ -546,9 +565,8 @@ const validateBasicTab = () => {
   inputMode="numeric"
   placeholder="Ex: 94036000"
   value={product.ncm}
-  onChange={(e) =>
-    handleChange("ncm", e.target.value.replace(/\D/g, "").slice(0, 8))
-  }
+onChange={(e) => handleChange("ncm", formatNcm(e.target.value))}
+
 />
 
 {errors.ncm && <div className="pf-error">{errors.ncm}</div>}

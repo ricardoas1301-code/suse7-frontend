@@ -515,3 +515,33 @@
   border-color: #ef4444 !important;
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12) !important;
 }
+
+
+/* ======================================================
+   NOME DO PRODUTO — alinhar label e botão copiar com o input
+====================================================== */
+.pf-product-name-fixed .pf-label-row{
+  max-width: 50%;
+}
+
+@media (max-width: 900px){
+  .pf-product-name-fixed .pf-label-row{
+    max-width: 100%;
+  }
+}
+
+/* ======================================================
+   HEADER — título + texto campos obrigatórios
+====================================================== */
+.pf-title-block{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-required-hint{
+  font-size: 12px;
+  font-weight: 800;
+  color: #ef4444;
+}
+
