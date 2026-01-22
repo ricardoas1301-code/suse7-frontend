@@ -50,27 +50,25 @@
 }
 
 /* ======================================================
-   BOTÃO FECHAR (PADRÃO POPUP)
+   BOTÃO FECHAR — IGUAL POPUP (SÓ HOVER)
 ====================================================== */
 .pf-close{
   background: transparent;
   border: none;
-  padding: 6px 8px;
+  padding: 0;
 
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: #6b7280;
   cursor: pointer;
 
-  border-radius: 8px;
-  transition: transform 160ms ease, color 160ms ease, background 160ms ease;
+  transition: transform 160ms ease;
 }
 
 .pf-close:hover{
-  color: #111827;
-  background: rgba(15, 23, 42, 0.04);
-  transform: scale(1.06); /* ✅ “cresce um pouquinho” */
+  transform: scale(1.08); /* ✅ aumenta levemente */
 }
+
 
 
 .pf-back:hover{
