@@ -470,6 +470,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  position: relative;
+  z-index: 40;
 }
 
 .pf-label-text{
@@ -492,6 +494,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  z-index: 50;
 
   font-size: 14px;
   color: #6b7280;
@@ -521,7 +524,7 @@
   pointer-events: none;
   transition: opacity 160ms ease;
   white-space: nowrap;
-  z-index: 50;      /* ✅ garante que fica acima */
+  z-index: 999;      /* ✅ garante que fica acima */
 }
 
 

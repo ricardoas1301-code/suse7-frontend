@@ -297,15 +297,14 @@ const FieldLabel = ({ text, required = false, onCopy }) => {
         {text} {required && <span className="pf-required">*</span>}
       </span>
 
-      <button
-        type="button"
-        className="pf-copy-btn"
-        onClick={onCopy}
-        title="Copiar"
-        aria-label="Copiar"
-      >
-        ⧉
-      </button>
+<button
+  type="button"
+  className="pf-copy-btn"
+  onClick={onCopy ? onCopy : undefined}
+  aria-label="Copiar"
+>
+  ⧉
+</button>
     </div>
   );
 };
@@ -626,6 +625,7 @@ onChange={(e) => {
 
 
               <div className="description-wrapper pf-desc-wrapper">
+
                 <textarea
                   rows="8"
                   placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
