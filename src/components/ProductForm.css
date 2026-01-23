@@ -152,20 +152,27 @@
 }
 
 /* ======================================================
-   GRID DO FORM
+   FORM LAYOUT
 ====================================================== */
 .form-group{
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;          /* ✅ um pouco mais de respiro entre label e input */
+  min-width: 0;      /* ✅ evita overflow estranho em flex */
 }
 
 .form-row{
   display: flex;
-  gap: 16px;
+  gap: 18px;         /* ✅ MAIS ESPAÇO entre inputs (antes 16px) */
+  flex-wrap: wrap;   /* ✅ garante quebra quando precisar */
+  align-items: flex-start;
 }
 
-.form-row .form-group{ flex: 1; }
+.form-row .form-group{
+  flex: 1 1 0;       /* ✅ colunas equilibradas */
+  min-width: 240px;  /* ✅ evita colar quando falta espaço */
+}
+
 
 /* ======================================================
    DESCRIÇÃO
