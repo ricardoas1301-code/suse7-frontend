@@ -1,45 +1,8 @@
-/* LINHAS (ex: nº + bairro, cidade + UF) */
-.profile-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-
-/* ANIMAÇÃO */
-@keyframes popupFade {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.profile-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
-.profile-grid-3 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 80px; /* UF menor */
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
 /* =====================================================
    PROTEÇÃO GLOBAL DE IMAGENS
-   Evita imagens estourarem o layout
 ===================================================== */
-
-img {
+img{
   max-width: 100%;
   height: auto;
   display: block;
 }
-

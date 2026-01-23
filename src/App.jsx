@@ -14,6 +14,7 @@ import {
 import { useState, useEffect } from "react";
 import "./App.css";
 import "./global.css";
+import "./styles/Suse7-Design-System.css";
 
 // Supabase
 import { supabase } from "./supabaseClient";

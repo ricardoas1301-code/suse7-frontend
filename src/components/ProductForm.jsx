@@ -1,10 +1,12 @@
 // ======================================================================
-// COMPONENTE: ProductForm
+// COMPONENTE: ProductForm (Página)
 // Objetivo:
-// - Reutilizar a mesma UI do ProductModal em modo PÁGINA
-// - Abas: Básico, Descrição, Estoque, Precificação, Fotos, Medidas,
-//         Variações (SKU + EAN), Anúncios (placeholder), Vendas (placeholder)
-// - UI only por enquanto (salvar/back-end depois)
+// - Form único para criar/editar produto
+// - UI premium com abas
+// - Layout (pf-*) + Design System (s7-*)
+// Regras do projeto:
+// - Sem lógica sensível no frontend (por enquanto é UI/UX + validação)
+// - CSS do "skin" (inputs/botões/cards) vem do Suse7-Design-System.css
 // ======================================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -18,31 +20,26 @@ export default function ProductForm({
   onCancel = null,
   onSubmit = null,
 }) {
-  // ------------------------------------------------------
+  // ======================================================================
   // CONTROLE DE ABAS
-  // ------------------------------------------------------
+  // ======================================================================
   const [activeTab, setActiveTab] = useState("basic");
 
-  // ------------------------------------------------------
-  // HELPER: ID seguro para variações (evita quebrar em browsers)
-  // ------------------------------------------------------
+  // ======================================================================
+  // HELPER: ID seguro para variações
+  // ======================================================================
   const createId = () => {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
     return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   };
 
-  // ------------------------------------------------------
-  // STATE: PRODUTO (UI only)
-  // IMPORTANTE:
-  // - Campos abaixo estão alinhados com a tabela `products` do Supabase
-  // - Evita duplicidade de colunas no banco e bugs no save futuro
-  // ------------------------------------------------------
+  // ======================================================================
+  // STATE: PRODUTO (UI only) — alinhado com tabela `products`
+  // ======================================================================
   const [product, setProduct] = useState({
-    // ======================================================
+    // ------------------------------------------------------
     // BÁSICO
-    // ======================================================
+    // ------------------------------------------------------
     product_name: "",
     sku: "",
     gtin: "",
@@ -51,69 +48,67 @@ export default function ProductForm({
     model: "",
     description: "",
 
-    // ======================================================
+    // ------------------------------------------------------
     // CATEGORIA (ML)
-    // ======================================================
+    // ------------------------------------------------------
     category_ml_id: "",
 
-    // ======================================================
+    // ------------------------------------------------------
     // ESTOQUE & LOGÍSTICA
-    // ======================================================
+    // ------------------------------------------------------
     stock_quantity: 0,
     stock_source: "manual",
-    lead_time_days: "", // dias (pode ser vazio)
-    origin: "", // texto livre (como você decidiu)
+    lead_time_days: "",
+    origin: "",
     supplier_name: "",
     notes: "",
 
-    // ======================================================
+    // ------------------------------------------------------
     // CUSTOS & PRECIFICAÇÃO
-    // ======================================================
+    // ------------------------------------------------------
     cost_price: "",
     fixed_costs: "",
     min_profit_percentage: "",
     min_profit_value: "",
 
-    // ======================================================
-    // PESOS & MEDIDAS — ENVIO (Supabase: width/height/length/weight)
-    // ======================================================
+    // ------------------------------------------------------
+    // PESOS & MEDIDAS — ENVIO
+    // ------------------------------------------------------
     width: "",
     height: "",
     length: "",
     weight: "",
 
-    // ======================================================
-    // PESOS & MEDIDAS — PRODUTO MONTADO (Supabase: assembled_*)
-    // ======================================================
+    // ------------------------------------------------------
+    // PESOS & MEDIDAS — PRODUTO MONTADO
+    // ------------------------------------------------------
     assembled_width: "",
     assembled_height: "",
     assembled_length: "",
     assembled_weight: "",
 
-    // ======================================================
-    // IMAGENS (Supabase: product_images)
-    // Observação: por enquanto UI only; depois podemos salvar como array JSON/string
-    // ======================================================
+    // ------------------------------------------------------
+    // IMAGENS
+    // ------------------------------------------------------
     product_images: null,
 
-    // ======================================================
-    // CAMPOS DE SISTEMA (não mostrar por enquanto)
-    // ======================================================
+    // ------------------------------------------------------
+    // CAMPOS DE SISTEMA
+    // ------------------------------------------------------
     active: true,
     imported_from_channel: "manual",
     parent_sku: null,
   });
 
-  // ------------------------------------------------------
-  // STATE: VALORES ORIGINAIS (para alertas no modo EDIT)
-  // ------------------------------------------------------
+  // ======================================================================
+  // STATE: VALORES ORIGINAIS (alerta no modo edit)
+  // ======================================================================
   const [originalSku, setOriginalSku] = useState("");
   const [originalGtin, setOriginalGtin] = useState("");
 
-  // ------------------------------------------------------
+  // ======================================================================
   // STATE: VARIAÇÕES (UI only)
-  // - Cada variação tem SKU e EAN próprios
-  // ------------------------------------------------------
+  // ======================================================================
   const [variations, setVariations] = useState([
     {
       id: createId(),
@@ -128,34 +123,29 @@ export default function ProductForm({
     },
   ]);
 
-  // ------------------------------------------------------
-  // HIDRATAR FORM (modo edição)
-  // ------------------------------------------------------
+  // ======================================================================
+  // STATE: ERROS (UX)
+  // ======================================================================
+  const [errors, setErrors] = useState({});
+
+  // ======================================================================
+  // HIDRATAR FORM (modo edit)
+  // ======================================================================
   useEffect(() => {
     // ------------------------------------------------------
-    // Carrega dados iniciais do produto (quando edit)
+    // Produto (edit)
     // ------------------------------------------------------
     if (initialProduct) {
-      setProduct((prev) => ({
-        ...prev,
-        ...initialProduct,
-      }));
-
-      // ------------------------------------------------------
-      // Guarda valores originais para alerta de mudança SKU/GTIN
-      // ------------------------------------------------------
+      setProduct((prev) => ({ ...prev, ...initialProduct }));
       setOriginalSku(initialProduct.sku || "");
       setOriginalGtin(initialProduct.gtin || "");
     } else {
-      // ------------------------------------------------------
-      // Modo create: mantém originais vazios
-      // ------------------------------------------------------
       setOriginalSku("");
       setOriginalGtin("");
     }
 
     // ------------------------------------------------------
-    // Carrega variações iniciais (quando edit)
+    // Variações (edit)
     // ------------------------------------------------------
     if (Array.isArray(initialVariations) && initialVariations.length > 0) {
       setVariations(
@@ -175,10 +165,9 @@ export default function ProductForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProduct, initialVariations]);
 
-  // ------------------------------------------------------
+  // ======================================================================
   // ALERTA SKU/GTIN (modo edit)
-  // - Se alterar sku/gtin, exibe aviso (UI only)
-  // ------------------------------------------------------
+  // ======================================================================
   const showSkuGtinAlert = useMemo(() => {
     if (mode !== "edit") return false;
     const skuChanged = (product.sku || "") !== (originalSku || "");
@@ -186,19 +175,16 @@ export default function ProductForm({
     return skuChanged || gtinChanged;
   }, [mode, product.sku, product.gtin, originalSku, originalGtin]);
 
-  // ------------------------------------------------------
-  // HANDLER GENÉRICO PARA INPUTS
-  // ------------------------------------------------------
+  // ======================================================================
+  // HANDLER GENÉRICO — PRODUTO
+  // ======================================================================
   const handleChange = (field, value) => {
-    setProduct((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setProduct((prev) => ({ ...prev, [field]: value }));
   };
 
-  // ------------------------------------------------------
-  // VARIAÇÕES: CRUD UI
-  // ------------------------------------------------------
+  // ======================================================================
+  // VARIAÇÕES — CRUD
+  // ======================================================================
   const handleAddVariation = () => {
     setVariations((prev) => [
       ...prev,
@@ -221,206 +207,149 @@ export default function ProductForm({
   };
 
   const handleVariationChange = (id, field, value) => {
-    setVariations((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, [field]: value } : v))
-    );
+    setVariations((prev) => prev.map((v) => (v.id === id ? { ...v, [field]: value } : v)));
   };
 
-  // ------------------------------------------------------
-  // COPIAR DESCRIÇÃO (UX)
-  // ------------------------------------------------------
-  const handleCopyDescription = async () => {
+  // ======================================================================
+  // HELPER: COPY FIELD
+  // ======================================================================
+  const handleCopyField = async (value) => {
     try {
-      await navigator.clipboard.writeText(product.description || "");
-      console.log("✅ Descrição copiada");
+      await navigator.clipboard.writeText(value || "");
+      console.log("✅ Campo copiado");
     } catch (err) {
-      console.error("❌ Falha ao copiar descrição:", err);
+      console.error("❌ Falha ao copiar campo:", err);
     }
   };
 
-  // ------------------------------------------------------
-  // SUBMIT (UI only por enquanto)
-  // ------------------------------------------------------
-const handleSubmit = () => {
-  // ------------------------------------------------------
-  // VALIDAÇÃO UX — ABA DADOS BÁSICOS
-  // ------------------------------------------------------
-  const okBasic = validateBasicTab();
+  // ======================================================================
+  // MÁSCARA: NCM (8 dígitos) -> 1234.56.78
+  // ======================================================================
+  const formatNcm = (value) => {
+    const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+    if (digits.length <= 4) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 4)}.${digits.slice(4)}`;
+    return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
+  };
 
-  // Se houver erro, volta automaticamente para a aba Básico
-  if (!okBasic) {
-    setActiveTab("basic");
-    return;
-  }
+  // ======================================================================
+  // VALIDAR: Aba Dados Básicos
+  // ======================================================================
+  const validateBasicTab = () => {
+    const nextErrors = {};
 
-  // ------------------------------------------------------
-  // Se o pai passou onSubmit, delega
-  // ------------------------------------------------------
-  if (typeof onSubmit === "function") {
-    onSubmit({ product, variations, mode });
-    return;
-  }
+    // Nome do produto (obrigatório)
+    if (!String(product.product_name || "").trim()) {
+      nextErrors.product_name = "Nome do produto é obrigatório.";
+    }
 
-  // ------------------------------------------------------
-  // Placeholder padrão
-  // ------------------------------------------------------
-  console.log("Produto a salvar:", product);
-  console.log("Variações a salvar:", variations);
-};
+    // SKU (obrigatório)
+    if (!String(product.sku || "").trim()) {
+      nextErrors.sku = "SKU é obrigatório.";
+    }
 
+    // GTIN (opcional, mas se preencher valida)
+    const gtin = String(product.gtin || "").trim();
+    if (gtin) {
+      if (!/^\d+$/.test(gtin)) nextErrors.gtin = "EAN/GTIN deve conter apenas números.";
+      else if (gtin.length > 13) nextErrors.gtin = "EAN/GTIN deve ter no máximo 13 dígitos.";
+    }
 
-// ======================================================================
-// HELPER UI: Copiar conteúdo do campo (padrão ML)
-// Objetivo:
-// - Permitir copiar valor de Nome/SKU/EAN/NCM com 1 clique
-// - Exibir feedback simples via console (por enquanto)
-// ======================================================================
-const handleCopyField = async (value) => {
-  try {
-    await navigator.clipboard.writeText(value || "");
-    console.log("✅ Campo copiado");
-  } catch (err) {
-    console.error("❌ Falha ao copiar campo:", err);
-  }
-};
+    // NCM (opcional, mas se preencher valida 8 dígitos)
+    const ncmDigits = String(product.ncm || "").replace(/\D/g, "");
+    if (ncmDigits && ncmDigits.length !== 8) {
+      nextErrors.ncm = "NCM deve ter 8 dígitos.";
+    }
 
-// ======================================================================
-// HELPER UI: Render de Label com ícone de copiar (padrão Mercado Livre)
-// Objetivo:
-// - Reutilizar em vários campos sem repetir HTML
-// - Mesmo ícone e mesma UX
-// ======================================================================
-const FieldLabel = ({ text, required = false, onCopy }) => {
-  return (
-    <div className="pf-label-row">
-      <span className="pf-label-text">
-        {text} {required && <span className="pf-required">*</span>}
-      </span>
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
 
-<button
-  type="button"
-  className="pf-copy-btn"
-  onClick={onCopy ? onCopy : undefined}
-  aria-label="Copiar"
->
-  ⧉
-</button>
-    </div>
-  );
-};
+  // ======================================================================
+  // SUBMIT (UI only)
+  // ======================================================================
+  const handleSubmit = () => {
+    const okBasic = validateBasicTab();
 
-// ======================================================================
-// STATE: ERROS (UX somente)
-// Regras agora:
-// - Nome do produto: obrigatório
-// - SKU: obrigatório
-// - EAN/GTIN: somente números, até 13
-// - NCM: somente números, até 8
-// ======================================================================
-const [errors, setErrors] = useState({});
+    // Se erro, volta para aba Básico
+    if (!okBasic) {
+      setActiveTab("basic");
+      return;
+    }
 
-// ======================================================================
-// VALIDAR: Aba Dados Básicos (UX)
-// ======================================================================
-const validateBasicTab = () => {
-  const nextErrors = {};
+    // Delegar submit se existir
+    if (typeof onSubmit === "function") {
+      onSubmit({ product, variations, mode });
+      return;
+    }
 
-  // Nome do produto (obrigatório)
-  if (!String(product.product_name || "").trim()) {
-    nextErrors.product_name = "Nome do produto é obrigatório.";
-  }
+    console.log("Produto a salvar:", product);
+    console.log("Variações a salvar:", variations);
+  };
 
-  // SKU (obrigatório)
-  if (!String(product.sku || "").trim()) {
-    nextErrors.sku = "SKU é obrigatório.";
-  }
+  // ======================================================================
+  // COMPONENTE: FieldLabel (Label + Copy)
+  // ======================================================================
+  const FieldLabel = ({ text, required = false, onCopy }) => {
+    return (
+      <div className="pf-label-row">
+        <span className="s7-label">
+          {text} {required && <span className="s7-required">*</span>}
+        </span>
 
-  // EAN/GTIN (opcional, mas se preencher valida)
-  const gtin = String(product.gtin || "").trim();
-  if (gtin) {
-    if (!/^\d+$/.test(gtin)) nextErrors.gtin = "EAN/GTIN deve conter apenas números.";
-    if (gtin.length > 13) nextErrors.gtin = "EAN/GTIN deve ter no máximo 13 dígitos.";
-  }
-
-// NCM (opcional, mas se preencher valida)
-const ncmDigits = String(product.ncm || "").replace(/\D/g, "");
-
-if (ncmDigits) {
-  if (ncmDigits.length !== 8) {
-    nextErrors.ncm = "NCM deve ter 8 dígitos.";
-  }
-}
-
-
-  setErrors(nextErrors);
-  return Object.keys(nextErrors).length === 0;
-};
-
-
-// ======================================================================
-// MÁSCARA: NCM (8 dígitos) -> 1234.56.78
-// Regras:
-// - Aceita apenas números
-// - Limita em 8 dígitos
-// - Exibe com pontos
-// ======================================================================
-const formatNcm = (value) => {
-  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
-
-  // 1234.56.78
-  if (digits.length <= 4) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 4)}.${digits.slice(4)}`;
-  return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
-};
-
-
+        <button
+          type="button"
+          className="pf-copy-btn"
+          onClick={onCopy ? onCopy : undefined}
+          aria-label="Copiar"
+          title="Copiar"
+        >
+          ⧉
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div className="pf-card pf-card--primary">
-      {/*// ======================================================================
-        // HEADER — PADRÃO PÁGINA (ERP)
-        // - Remove botão X (modal)
-        // - Adiciona "Voltar"
-        // ======================================================================*/}
+      {/* ==================================================
+         HEADER
+      ================================================== */}
+      <div className="pf-header">
+        <div className="pf-title-block">
+          <h2 className="s7-title">{title}</h2>
+          <div className="s7-hint">* Campos obrigatórios</div>
+        </div>
 
-<div className="pf-header">
-  <div className="pf-title-block">
-    <h2>{title}</h2>
-    <div className="pf-required-hint">* Campos obrigatórios</div>
-  </div>
-
-  <button type="button" className="pf-close" onClick={onCancel}>
-    Fechar
-  </button>
-</div>
-
+        <button type="button" className="pf-close" onClick={onCancel}>
+          Fechar
+        </button>
+      </div>
 
       {/* ==================================================
          NOME DO PRODUTO — FIXO
       ================================================== */}
       <div className="pf-product-name-fixed">
-        <FieldLabel
-  text="Nome do produto"
-  required
-  onCopy={() => handleCopyField(product.product_name)}
-/>
+        <FieldLabel text="Nome do produto" required onCopy={() => handleCopyField(product.product_name)} />
 
-<input
-  className={errors.product_name ? "pf-input-error" : ""}
-  type="text"
-  placeholder="Ex: Armário de cozinha 3 portas"
-  value={product.product_name}
-  onChange={(e) => handleChange("product_name", e.target.value)}
-/>
+        <input
+          className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
+          type="text"
+          placeholder="Ex: Armário de cozinha 3 portas"
+          value={product.product_name}
+          onChange={(e) => handleChange("product_name", e.target.value)}
+        />
+
+        {errors.product_name && <div className="s7-error">{errors.product_name}</div>}
       </div>
 
       {/* ==================================================
          ALERTA: SKU/GTIN alterado (modo edit)
       ================================================== */}
       {showSkuGtinAlert && (
-        <div className="pf-alert">
-          <strong>Atenção:</strong> alterar <strong>SKU</strong> ou{" "}
-          <strong>GTIN</strong> pode impactar vínculos com anúncios e integrações.
+        <div className="s7-alert s7-alert--warning">
+          <strong>Atenção:</strong> alterar <strong>SKU</strong> ou <strong>GTIN</strong> pode impactar
+          vínculos com anúncios e integrações.
         </div>
       )}
 
@@ -428,11 +357,7 @@ const formatNcm = (value) => {
          ABAS
       ================================================== */}
       <div className="pf-tabs">
-        <button
-          className={activeTab === "basic" ? "active" : ""}
-          onClick={() => setActiveTab("basic")}
-          type="button"
-        >
+        <button className={activeTab === "basic" ? "active" : ""} onClick={() => setActiveTab("basic")} type="button">
           Dados básicos
         </button>
 
@@ -444,11 +369,7 @@ const formatNcm = (value) => {
           Descrição
         </button>
 
-        <button
-          className={activeTab === "stock" ? "active" : ""}
-          onClick={() => setActiveTab("stock")}
-          type="button"
-        >
+        <button className={activeTab === "stock" ? "active" : ""} onClick={() => setActiveTab("stock")} type="button">
           Estoque & logística
         </button>
 
@@ -460,11 +381,7 @@ const formatNcm = (value) => {
           Custos & precificação
         </button>
 
-        <button
-          className={activeTab === "photos" ? "active" : ""}
-          onClick={() => setActiveTab("photos")}
-          type="button"
-        >
+        <button className={activeTab === "photos" ? "active" : ""} onClick={() => setActiveTab("photos")} type="button">
           Fotos
         </button>
 
@@ -484,11 +401,7 @@ const formatNcm = (value) => {
           Variações
         </button>
 
-        <button
-          className={activeTab === "ads" ? "active" : ""}
-          onClick={() => setActiveTab("ads")}
-          type="button"
-        >
+        <button className={activeTab === "ads" ? "active" : ""} onClick={() => setActiveTab("ads")} type="button">
           Anúncios
         </button>
 
@@ -512,97 +425,70 @@ const formatNcm = (value) => {
           <>
             <div className="form-row">
               <div className="form-group pf-desc-group">
-                <FieldLabel
-  text="SKU"
-  required
-  onCopy={() => handleCopyField(product.sku)}
-/>
+                <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
 
-<input
-  className={errors.sku ? "pf-input-error" : ""}
-  placeholder="SKU interno"
-  value={product.sku}
-  onChange={(e) =>
-    handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())
-  }
-/>
+                <input
+                  className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
+                  placeholder="SKU interno"
+                  value={product.sku}
+                  onChange={(e) => handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())}
+                />
 
-{errors.sku && <div className="pf-error">{errors.sku}</div>}
+                {errors.sku && <div className="s7-error">{errors.sku}</div>}
               </div>
 
               <div className="form-group">
-                <FieldLabel
-  text="EAN / GTIN"
-  onCopy={() => handleCopyField(product.gtin)}
-/>
+                <FieldLabel text="EAN / GTIN" onCopy={() => handleCopyField(product.gtin)} />
 
+                <input
+                  className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
+                  inputMode="numeric"
+                  placeholder="Código de barras"
+                  value={product.gtin}
+                  onChange={(e) => handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))}
+                />
 
-<input
-  className={errors.gtin ? "pf-input-error" : ""}
-  inputMode="numeric"
-  placeholder="Código de barras"
-  value={product.gtin}
-  onChange={(e) =>
-    handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))
-  }
-/>
-
-{errors.gtin && <div className="pf-error">{errors.gtin}</div>}
-
-
+                {errors.gtin && <div className="s7-error">{errors.gtin}</div>}
               </div>
 
               <div className="form-group">
-                <FieldLabel
-  text="NCM"
-  onCopy={() => handleCopyField(product.ncm)}
-/>
+                <FieldLabel text="NCM" onCopy={() => handleCopyField(product.ncm)} />
 
+                <input
+                  className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
+                  inputMode="numeric"
+                  placeholder="Ex: 94036000"
+                  value={product.ncm}
+                  onChange={(e) => {
+                    const masked = formatNcm(e.target.value);
+                    handleChange("ncm", masked);
 
-<input
-  className={errors.ncm ? "pf-input-error" : ""}
-  inputMode="numeric"
-  placeholder="Ex: 94036000"
-  value={product.ncm}
-onChange={(e) => {
-  const masked = formatNcm(e.target.value);
-  handleChange("ncm", masked);
+                    const digits = masked.replace(/\D/g, "");
+                    if (digits.length === 8) {
+                      setErrors((prev) => ({ ...prev, ncm: undefined }));
+                    }
+                  }}
+                />
 
-  const digits = masked.replace(/\D/g, "");
-  if (digits.length === 8) {
-    setErrors((prev) => ({ ...prev, ncm: undefined }));
-  }
-}}
-
-
-/>
-
-{errors.ncm && <div className="pf-error">{errors.ncm}</div>}
-
-
+                {errors.ncm && <div className="s7-error">{errors.ncm}</div>}
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label>Marca</label>
-                <input
-                  value={product.brand}
-                  onChange={(e) => handleChange("brand", e.target.value)}
-                />
+                <label className="s7-label">Marca</label>
+                <input className="s7-input" value={product.brand} onChange={(e) => handleChange("brand", e.target.value)} />
               </div>
 
               <div className="form-group">
-                <label>Modelo</label>
-                <input
-                  value={product.model}
-                  onChange={(e) => handleChange("model", e.target.value)}
-                />
+                <label className="s7-label">Modelo</label>
+                <input className="s7-input" value={product.model} onChange={(e) => handleChange("model", e.target.value)} />
               </div>
 
               <div className="form-group">
-                <label>Categoria Mercado Livre (ID)</label>
+                <label className="s7-label">Categoria Mercado Livre (ID)</label>
                 <input
+                  className="s7-input"
                   placeholder="Ex: MLB1234"
                   value={product.category_ml_id}
                   onChange={(e) => handleChange("category_ml_id", e.target.value)}
@@ -616,42 +502,31 @@ onChange={(e) => {
             DESCRIÇÃO
         ======================= */}
         {activeTab === "description" && (
-          <>
-            <div className="form-group">
-              <FieldLabel
-  text="Descrição do produto"
-  onCopy={() => handleCopyField(product.description)}
-/>
+          <div className="form-group">
+            <FieldLabel text="Descrição do produto" onCopy={() => handleCopyField(product.description)} />
 
-
-              <div className="description-wrapper pf-desc-wrapper">
-
-                <textarea
-                  rows="8"
-                  placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
-                  value={product.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                />
-
-              </div>
-
+            <div className="description-wrapper pf-desc-wrapper">
+              <textarea
+                className="s7-textarea"
+                rows="8"
+                placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
+                value={product.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+              />
             </div>
-          </>
+          </div>
         )}
 
         {/* =======================
             ESTOQUE & LOGÍSTICA
-            - Origem (texto livre)
-            - Fornecedor
-            - Observações
-            - Lead time (dias)
         ======================= */}
         {activeTab === "stock" && (
           <>
             <div className="form-row">
               <div className="form-group">
-                <label>Estoque</label>
+                <label className="s7-label">Estoque</label>
                 <input
+                  className="s7-input"
                   type="number"
                   min="0"
                   value={product.stock_quantity}
@@ -660,8 +535,9 @@ onChange={(e) => {
               </div>
 
               <div className="form-group">
-                <label>Origem do estoque</label>
+                <label className="s7-label">Origem do estoque</label>
                 <select
+                  className="s7-select"
                   value={product.stock_source}
                   onChange={(e) => handleChange("stock_source", e.target.value)}
                 >
@@ -671,22 +547,22 @@ onChange={(e) => {
               </div>
 
               <div className="form-group">
-                <label>Lead time (dias)</label>
+                <label className="s7-label">Lead time (dias)</label>
                 <input
+                  className="s7-input"
                   inputMode="numeric"
                   placeholder="Ex: 2"
                   value={product.lead_time_days}
-                  onChange={(e) =>
-                    handleChange("lead_time_days", e.target.value.replace(/\D/g, ""))
-                  }
+                  onChange={(e) => handleChange("lead_time_days", e.target.value.replace(/\D/g, ""))}
                 />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label>Origem (texto livre)</label>
+                <label className="s7-label">Origem (texto livre)</label>
                 <input
+                  className="s7-input"
                   placeholder="Ex: Nacional / Importado / SP / Fábrica própria..."
                   value={product.origin}
                   onChange={(e) => handleChange("origin", e.target.value)}
@@ -694,8 +570,9 @@ onChange={(e) => {
               </div>
 
               <div className="form-group">
-                <label>Fornecedor</label>
+                <label className="s7-label">Fornecedor</label>
                 <input
+                  className="s7-input"
                   placeholder="Nome do fornecedor"
                   value={product.supplier_name}
                   onChange={(e) => handleChange("supplier_name", e.target.value)}
@@ -705,8 +582,9 @@ onChange={(e) => {
 
             <div className="form-row">
               <div className="form-group" style={{ flex: 1 }}>
-                <label>Observações</label>
+                <label className="s7-label">Observações</label>
                 <input
+                  className="s7-input"
                   placeholder="Notas internas sobre estoque/logística"
                   value={product.notes}
                   onChange={(e) => handleChange("notes", e.target.value)}
@@ -718,34 +596,26 @@ onChange={(e) => {
 
         {/* =======================
             CUSTOS & PRECIFICAÇÃO
-            - Inclui lucro mínimo (por % e por R$)
         ======================= */}
         {activeTab === "pricing" && (
           <>
             <div className="form-row">
               <div className="form-group">
-                <label>Custo do produto</label>
-                <input
-                  type="number"
-                  value={product.cost_price}
-                  onChange={(e) => handleChange("cost_price", e.target.value)}
-                />
+                <label className="s7-label">Custo do produto</label>
+                <input className="s7-input" type="number" value={product.cost_price} onChange={(e) => handleChange("cost_price", e.target.value)} />
               </div>
 
               <div className="form-group">
-                <label>Custos fixos</label>
-                <input
-                  type="number"
-                  value={product.fixed_costs}
-                  onChange={(e) => handleChange("fixed_costs", e.target.value)}
-                />
+                <label className="s7-label">Custos fixos</label>
+                <input className="s7-input" type="number" value={product.fixed_costs} onChange={(e) => handleChange("fixed_costs", e.target.value)} />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label>Lucro mínimo (%)</label>
+                <label className="s7-label">Lucro mínimo (%)</label>
                 <input
+                  className="s7-input"
                   inputMode="decimal"
                   placeholder="Ex: 10"
                   value={product.min_profit_percentage}
@@ -754,8 +624,9 @@ onChange={(e) => {
               </div>
 
               <div className="form-group">
-                <label>Lucro mínimo (R$)</label>
+                <label className="s7-label">Lucro mínimo (R$)</label>
                 <input
+                  className="s7-input"
                   inputMode="decimal"
                   placeholder="Ex: 15,00"
                   value={product.min_profit_value}
@@ -768,25 +639,19 @@ onChange={(e) => {
 
         {/* =======================
             FOTOS
-            - Campo do Supabase: product_images
         ======================= */}
         {activeTab === "photos" && (
           <>
             <p className="hint">
-              Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas para
-              atualizar anúncios em todos os canais.
+              Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas para atualizar anúncios em todos os canais.
             </p>
 
             <div className="photo-uploader">
-              <button className="btn-secondary" type="button">
+              <button className="s7-btn s7-btn--secondary" type="button">
                 Adicionar fotos
               </button>
             </div>
 
-            {/* ------------------------------------------------------
-               Placeholder técnico: por enquanto não há upload real
-               Quando integrar, salvamos URLs/paths em product_images
-            ------------------------------------------------------ */}
             <div className="hint" style={{ marginTop: 12 }}>
               Campo alvo no Supabase: <strong>product_images</strong>
             </div>
@@ -795,120 +660,63 @@ onChange={(e) => {
 
         {/* =======================
             PESOS & MEDIDAS
-            - Alinhado com Supabase
-            - ENVIO: width / height / length / weight
-            - MONTADO: assembled_*
         ======================= */}
         {activeTab === "measures" && (
           <>
-            <div className="section">
-              <div className="section-header">
-                <h3>Medidas de envio</h3>
-                <p className="section-subtitle">
-                  Medidas usadas para cálculo de frete e logística.
-                </p>
+            <div className="s7-card">
+              <div className="s7-card__header">
+                <h3 className="s7-card__title">Medidas de envio</h3>
+                <p className="s7-card__subtitle">Medidas usadas para cálculo de frete e logística.</p>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Largura (cm)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Ex: 30"
-                    value={product.width}
-                    onChange={(e) => handleChange("width", e.target.value)}
-                  />
+                  <label className="s7-label">Largura (cm)</label>
+                  <input className="s7-input" type="number" min="0" placeholder="Ex: 30" value={product.width} onChange={(e) => handleChange("width", e.target.value)} />
                 </div>
 
                 <div className="form-group">
-                  <label>Altura (cm)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Ex: 15"
-                    value={product.height}
-                    onChange={(e) => handleChange("height", e.target.value)}
-                  />
+                  <label className="s7-label">Altura (cm)</label>
+                  <input className="s7-input" type="number" min="0" placeholder="Ex: 15" value={product.height} onChange={(e) => handleChange("height", e.target.value)} />
                 </div>
 
                 <div className="form-group">
-                  <label>Comprimento (cm)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Ex: 45"
-                    value={product.length}
-                    onChange={(e) => handleChange("length", e.target.value)}
-                  />
+                  <label className="s7-label">Comprimento (cm)</label>
+                  <input className="s7-input" type="number" min="0" placeholder="Ex: 45" value={product.length} onChange={(e) => handleChange("length", e.target.value)} />
                 </div>
 
                 <div className="form-group">
-                  <label>Peso (kg)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    placeholder="Ex: 2.350"
-                    value={product.weight}
-                    onChange={(e) => handleChange("weight", e.target.value)}
-                  />
+                  <label className="s7-label">Peso (kg)</label>
+                  <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 2.350" value={product.weight} onChange={(e) => handleChange("weight", e.target.value)} />
                 </div>
               </div>
             </div>
 
-            <div className="section">
-              <div className="section-header">
-                <h3>Medidas do produto (montado)</h3>
-                <p className="section-subtitle">
-                  Medidas reais do produto pronto/montado (referência interna).
-                </p>
+            <div className="s7-card">
+              <div className="s7-card__header">
+                <h3 className="s7-card__title">Medidas do produto (montado)</h3>
+                <p className="s7-card__subtitle">Medidas reais do produto pronto/montado (referência interna).</p>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Largura (cm)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Ex: 32"
-                    value={product.assembled_width}
-                    onChange={(e) => handleChange("assembled_width", e.target.value)}
-                  />
+                  <label className="s7-label">Largura (cm)</label>
+                  <input className="s7-input" type="number" min="0" placeholder="Ex: 32" value={product.assembled_width} onChange={(e) => handleChange("assembled_width", e.target.value)} />
                 </div>
 
                 <div className="form-group">
-                  <label>Altura (cm)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Ex: 80"
-                    value={product.assembled_height}
-                    onChange={(e) => handleChange("assembled_height", e.target.value)}
-                  />
+                  <label className="s7-label">Altura (cm)</label>
+                  <input className="s7-input" type="number" min="0" placeholder="Ex: 80" value={product.assembled_height} onChange={(e) => handleChange("assembled_height", e.target.value)} />
                 </div>
 
                 <div className="form-group">
-                  <label>Comprimento (cm)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Ex: 42"
-                    value={product.assembled_length}
-                    onChange={(e) => handleChange("assembled_length", e.target.value)}
-                  />
+                  <label className="s7-label">Comprimento (cm)</label>
+                  <input className="s7-input" type="number" min="0" placeholder="Ex: 42" value={product.assembled_length} onChange={(e) => handleChange("assembled_length", e.target.value)} />
                 </div>
 
                 <div className="form-group">
-                  <label>Peso (kg)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    placeholder="Ex: 8.500"
-                    value={product.assembled_weight}
-                    onChange={(e) => handleChange("assembled_weight", e.target.value)}
-                  />
+                  <label className="s7-label">Peso (kg)</label>
+                  <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 8.500" value={product.assembled_weight} onChange={(e) => handleChange("assembled_weight", e.target.value)} />
                 </div>
               </div>
             </div>
@@ -920,33 +728,27 @@ onChange={(e) => {
         ======================= */}
         {activeTab === "variations" && (
           <>
-            <div className="section">
-              <div className="section-header">
-                <h3>Variações</h3>
-                <p className="section-subtitle">
+            <div className="s7-card">
+              <div className="s7-card__header">
+                <h3 className="s7-card__title">Variações</h3>
+                <p className="s7-card__subtitle">
                   Crie variações como cor/tamanho. Cada variação pode ter SKU e EAN próprios.
                 </p>
               </div>
 
               <div className="pf-actions-row">
-                <button
-                  className="btn-secondary"
-                  type="button"
-                  onClick={handleAddVariation}
-                >
+                <button className="s7-btn s7-btn--secondary" type="button" onClick={handleAddVariation}>
                   + Adicionar variação
                 </button>
               </div>
             </div>
 
             {variations.map((v, index) => (
-              <div className="section" key={v.id}>
+              <div className="s7-card" key={v.id}>
                 <div className="pf-variation-head">
                   <div>
-                    <h3 style={{ margin: 0 }}>
-                      {v.variation_name || `Variação ${index + 1}`}
-                    </h3>
-                    <p className="section-subtitle" style={{ marginTop: 6 }}>
+                    <h3 className="s7-card__title">{v.variation_name || `Variação ${index + 1}`}</h3>
+                    <p className="s7-card__subtitle" style={{ marginTop: 6 }}>
                       Configure atributo, valor, SKU, EAN e estoque da variação.
                     </p>
                   </div>
@@ -956,23 +758,17 @@ onChange={(e) => {
                       <input
                         type="checkbox"
                         checked={v.active}
-                        onChange={(e) =>
-                          handleVariationChange(v.id, "active", e.target.checked)
-                        }
+                        onChange={(e) => handleVariationChange(v.id, "active", e.target.checked)}
                       />
                       Ativa
                     </label>
 
                     <button
-                      className="btn-secondary"
+                      className="s7-btn s7-btn--secondary"
                       type="button"
                       onClick={() => handleRemoveVariation(v.id)}
                       disabled={variations.length === 1}
-                      title={
-                        variations.length === 1
-                          ? "Mantenha ao menos 1 variação"
-                          : "Remover variação"
-                      }
+                      title={variations.length === 1 ? "Mantenha ao menos 1 variação" : "Remover variação"}
                     >
                       Remover
                     </button>
@@ -981,95 +777,53 @@ onChange={(e) => {
 
                 <div className="form-row">
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label>Nome da variação (opcional)</label>
+                    <label className="s7-label">Nome da variação (opcional)</label>
                     <input
+                      className="s7-input"
                       placeholder="Ex: Cor Preto"
                       value={v.variation_name}
-                      onChange={(e) =>
-                        handleVariationChange(v.id, "variation_name", e.target.value)
-                      }
+                      onChange={(e) => handleVariationChange(v.id, "variation_name", e.target.value)}
                     />
                   </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Atributo</label>
-                    <input
-                      placeholder="Ex: Cor"
-                      value={v.attribute}
-                      onChange={(e) =>
-                        handleVariationChange(v.id, "attribute", e.target.value)
-                      }
-                    />
+                    <label className="s7-label">Atributo</label>
+                    <input className="s7-input" placeholder="Ex: Cor" value={v.attribute} onChange={(e) => handleVariationChange(v.id, "attribute", e.target.value)} />
                   </div>
 
                   <div className="form-group">
-                    <label>Valor</label>
-                    <input
-                      placeholder="Ex: Preto"
-                      value={v.value}
-                      onChange={(e) =>
-                        handleVariationChange(v.id, "value", e.target.value)
-                      }
-                    />
+                    <label className="s7-label">Valor</label>
+                    <input className="s7-input" placeholder="Ex: Preto" value={v.value} onChange={(e) => handleVariationChange(v.id, "value", e.target.value)} />
                   </div>
 
                   <div className="form-group">
-                    <label>SKU da variação</label>
-                    <input
-                      placeholder="Ex: ARM-COZ-PT-01"
-                      value={v.sku}
-                      onChange={(e) =>
-                        handleVariationChange(v.id, "sku", e.target.value)
-                      }
-                    />
+                    <label className="s7-label">SKU da variação</label>
+                    <input className="s7-input" placeholder="Ex: ARM-COZ-PT-01" value={v.sku} onChange={(e) => handleVariationChange(v.id, "sku", e.target.value)} />
                   </div>
 
                   <div className="form-group">
-                    <label>EAN</label>
+                    <label className="s7-label">EAN</label>
                     <input
+                      className="s7-input"
                       inputMode="numeric"
                       placeholder="Ex: 7891234567890"
                       value={v.ean}
-                      onChange={(e) =>
-                        handleVariationChange(
-                          v.id,
-                          "ean",
-                          e.target.value.replace(/\D/g, "")
-                        )
-                      }
+                      onChange={(e) => handleVariationChange(v.id, "ean", e.target.value.replace(/\D/g, ""))}
                     />
                   </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Estoque da variação</label>
-                    <input
-                      inputMode="numeric"
-                      placeholder="Ex: 10"
-                      value={v.stock}
-                      onChange={(e) =>
-                        handleVariationChange(
-                          v.id,
-                          "stock",
-                          e.target.value.replace(/\D/g, "")
-                        )
-                      }
-                    />
+                    <label className="s7-label">Estoque da variação</label>
+                    <input className="s7-input" inputMode="numeric" placeholder="Ex: 10" value={v.stock} onChange={(e) => handleVariationChange(v.id, "stock", e.target.value.replace(/\D/g, ""))} />
                   </div>
 
                   <div className="form-group">
-                    <label>Preço (opcional)</label>
-                    <input
-                      inputMode="decimal"
-                      placeholder="Ex: 199,90"
-                      value={v.price}
-                      onChange={(e) =>
-                        handleVariationChange(v.id, "price", e.target.value)
-                      }
-                    />
+                    <label className="s7-label">Preço (opcional)</label>
+                    <input className="s7-input" inputMode="decimal" placeholder="Ex: 199,90" value={v.price} onChange={(e) => handleVariationChange(v.id, "price", e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -1081,10 +835,10 @@ onChange={(e) => {
             ANÚNCIOS (placeholder)
         ======================= */}
         {activeTab === "ads" && (
-          <div className="section">
-            <div className="section-header">
-              <h3>Anúncios do produto</h3>
-              <p className="section-subtitle">
+          <div className="s7-card">
+            <div className="s7-card__header">
+              <h3 className="s7-card__title">Anúncios do produto</h3>
+              <p className="s7-card__subtitle">
                 Aqui vamos listar os anúncios vinculados a este produto em cada marketplace (ML primeiro).
               </p>
             </div>
@@ -1093,7 +847,7 @@ onChange={(e) => {
               Em breve: tabela com Marketplace, ID do anúncio, Status, Preço, Estoque e Ações.
             </p>
 
-            <button className="btn-secondary" type="button">
+            <button className="s7-btn s7-btn--secondary" type="button">
               Importar anúncios (em breve)
             </button>
           </div>
@@ -1103,10 +857,10 @@ onChange={(e) => {
             VENDAS & DESEMPENHO (placeholder)
         ======================= */}
         {activeTab === "performance" && (
-          <div className="section">
-            <div className="section-header">
-              <h3>Vendas & desempenho</h3>
-              <p className="section-subtitle">
+          <div className="s7-card">
+            <div className="s7-card__header">
+              <h3 className="s7-card__title">Vendas & desempenho</h3>
+              <p className="s7-card__subtitle">
                 Painel do produto: histórico de vendas, desempenho por canal e indicadores.
               </p>
             </div>
@@ -1115,7 +869,7 @@ onChange={(e) => {
               Em breve: cards com Vendas, Receita, Lucro, Ticket médio, Conversão e Curva ABC.
             </p>
 
-            <button className="btn-secondary" type="button">
+            <button className="s7-btn s7-btn--secondary" type="button">
               Ver relatório (em breve)
             </button>
           </div>
@@ -1123,10 +877,10 @@ onChange={(e) => {
       </div>
 
       {/* ==================================================
-         FOOTER
+         FOOTER (sticky)
       ================================================== */}
       <div className="pf-footer pf-footer-right">
-        <button className="btn-primary" onClick={handleSubmit} type="button">
+        <button className="s7-btn s7-btn--primary" onClick={handleSubmit} type="button">
           {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
         </button>
       </div>

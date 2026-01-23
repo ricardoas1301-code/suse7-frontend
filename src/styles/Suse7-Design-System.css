@@ -1,0 +1,494 @@
+/* ======================================================================
+   SUSE7 — DESIGN SYSTEM v1.0
+   Objetivo:
+   - Centralizar padrões reutilizáveis do Suse7
+   - Garantir consistência visual em todas as telas (SaaS premium)
+   - Evitar duplicidade de CSS por componente
+   Regras do projeto:
+   - NÃO usar classes genéricas globais (ex: .btn-primary)
+   - Tudo aqui é prefixado com s7-
+   - Layout específico continua nos CSS de cada tela/componente
+====================================================================== */
+
+/* ======================================================
+   TOKENS (CSS VARIABLES)
+   - Base única de cores, tipografia, radius, sombras, rings
+====================================================== */
+:root{
+  /* --------------------------------------------------
+     TIPOGRAFIA
+  -------------------------------------------------- */
+  --s7-font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  --s7-fs-title: 20px;
+  --s7-fs-subtitle: 15px;
+  --s7-fs-label: 13px;
+  --s7-fs-input: 14px;
+  --s7-fs-hint: 12px;
+  --s7-fs-tooltip: 11px;
+
+  /* --------------------------------------------------
+     CORES (padrão Suse7)
+  -------------------------------------------------- */
+  --s7-primary: #2563eb;
+  --s7-primary-hover: #1e40af;
+
+  --s7-text: #0f172a;
+  --s7-muted: #6b7280;
+
+  --s7-bg: #ffffff;
+  --s7-bg-soft: #f9fafb;
+
+  --s7-border: #dcdfe4;
+  --s7-divider: #eef0f3;
+
+  --s7-danger: #ef4444;
+
+  --s7-warning-bg: #fff7ed;
+  --s7-warning-border: #fed7aa;
+  --s7-warning-text: #9a3412;
+
+  --s7-tooltip-bg: #111827;
+
+  /* --------------------------------------------------
+     RADIUS
+  -------------------------------------------------- */
+  --s7-radius-sm: 8px;
+  --s7-radius-md: 12px;
+  --s7-radius-lg: 16px;
+
+  /* --------------------------------------------------
+     BOTÕES
+  -------------------------------------------------- */
+  --s7-btn-h: 38px;
+
+  /* --------------------------------------------------
+     SOMBRAS (premium)
+  -------------------------------------------------- */
+  --s7-shadow-card: 0 18px 46px rgba(0,0,0,0.10);
+  --s7-shadow-section: 0 10px 26px rgba(0,0,0,0.04);
+  --s7-shadow-float: 0 10px 24px rgba(0,0,0,0.18);
+
+  /* --------------------------------------------------
+     RINGS (focus/erro)
+  -------------------------------------------------- */
+  --s7-ring-focus: 0 0 0 2px rgba(37, 99, 235, 0.12);
+  --s7-ring-danger: 0 0 0 2px rgba(239, 68, 68, 0.12);
+
+  /* --------------------------------------------------
+     ESPAÇAMENTOS-CHAVE
+  -------------------------------------------------- */
+  --s7-gap-6: 6px;
+  --s7-gap-10: 10px;
+  --s7-gap-12: 12px;
+  --s7-gap-16: 16px;
+  --s7-gap-24: 24px;
+
+  /* Regra oficial Suse7: último input -> botão principal */
+  --s7-action-gap: 30px;
+}
+
+/* ======================================================
+   TIPOGRAFIA (UTILITÁRIOS)
+====================================================== */
+.s7-title{
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-title);
+  font-weight: 700;
+  color: var(--s7-text);
+  margin: 0;
+}
+
+.s7-subtitle{
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-subtitle);
+  font-weight: 600;
+  color: var(--s7-muted);
+  margin: 0;
+}
+
+.s7-label{
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-label);
+  font-weight: 700;
+  color: var(--s7-text);
+}
+
+.s7-hint{
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-hint);
+  font-weight: 600;
+  color: var(--s7-muted);
+}
+
+.s7-required{
+  color: var(--s7-danger);
+  margin-left: 4px;
+}
+
+/* ======================================================
+   INPUTS (PADRÃO SUSE7)
+   Regra oficial:
+   - sem height fixa
+   - padding 6px 8px
+   - background soft
+====================================================== */
+.s7-input,
+.s7-select,
+.s7-textarea{
+  width: 100%;
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-input);
+  color: var(--s7-text);
+
+  padding: 6px 8px;
+  border-radius: var(--s7-radius-sm);
+  border: 1px solid var(--s7-border);
+  background: var(--s7-bg-soft);
+
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.s7-input:focus,
+.s7-select:focus,
+.s7-textarea:focus{
+  outline: none;
+  border-color: var(--s7-primary);
+  box-shadow: var(--s7-ring-focus);
+  background: var(--s7-bg);
+}
+
+/* Select: deixa o cursor/UX melhor */
+.s7-select{
+  cursor: pointer;
+}
+
+/* Textarea: pode controlar por tela, mas padroniza base */
+.s7-textarea{
+  resize: none;
+  overflow-y: auto;
+}
+
+/* ======================================================
+   INPUTS — ESTADOS (ERRO)
+====================================================== */
+.s7-input--error,
+.s7-select--error,
+.s7-textarea--error{
+  border-color: var(--s7-danger) !important;
+  box-shadow: var(--s7-ring-danger) !important;
+  background: var(--s7-bg);
+}
+
+.s7-error{
+  margin-top: 6px;
+  font-family: var(--s7-font);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--s7-danger);
+}
+
+/* ======================================================
+   BOTÕES (PADRÃO SUSE7) — PREFIXADO
+====================================================== */
+.s7-btn{
+  height: var(--s7-btn-h);
+  padding: 0 16px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: var(--s7-font);
+  font-size: 14px;
+  font-weight: 700;
+
+  border-radius: var(--s7-radius-sm);
+  cursor: pointer;
+
+  transition: background 0.2s ease, transform 0.12s ease, filter 0.2s ease;
+}
+
+.s7-btn:active{
+  transform: scale(0.98);
+}
+
+/* Botão primário */
+.s7-btn--primary{
+  background: var(--s7-primary);
+  color: #ffffff;
+  border: none;
+}
+
+.s7-btn--primary:hover{
+  background: var(--s7-primary-hover);
+}
+
+/* Botão secundário */
+.s7-btn--secondary{
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: var(--s7-text);
+}
+
+.s7-btn--secondary:hover{
+  background: #e5e7eb;
+}
+
+/* Botão danger (quando precisar) */
+.s7-btn--danger{
+  background: var(--s7-danger);
+  color: #ffffff;
+  border: none;
+}
+
+.s7-btn--danger:hover{
+  filter: brightness(0.92);
+}
+
+/* Disabled universal */
+.s7-btn:disabled{
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ======================================================
+   CARDS / SECTIONS (CONTAINERS)
+   Padrão do Suse7:
+   - s7-panel: container principal (grande / premium)
+   - s7-card: blocos internos (sections do formulário)
+====================================================== */
+
+/* ------------------------------------------------------
+   PANEL (container principal premium)
+------------------------------------------------------ */
+.s7-panel{
+  background: var(--s7-bg);
+  border-radius: var(--s7-radius-lg);
+  box-shadow: var(--s7-shadow-card);
+  border: 1px solid rgba(37, 99, 235, 0.55);
+  box-sizing: border-box;
+}
+
+.s7-panel--primary{
+  border: 1px solid rgba(37, 99, 235, 0.55);
+}
+
+.s7-panel--danger{
+  border: 1px solid rgba(239, 68, 68, 0.55);
+}
+
+
+/* ------------------------------------------------------
+   CARD (bloco interno / section)
+------------------------------------------------------ */
+.s7-card{
+  background: var(--s7-bg);
+  border: 1px solid var(--s7-divider);
+  border-radius: var(--s7-radius-md);
+  padding: 16px;
+  box-shadow: var(--s7-shadow-section);
+  box-sizing: border-box;
+}
+
+.s7-card__header{
+  margin-bottom: 10px;
+}
+
+.s7-card__title{
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--s7-text);
+}
+
+.s7-card__subtitle{
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: var(--s7-muted);
+}
+
+
+/* ======================================================
+   ALERTAS (padrão)
+====================================================== */
+.s7-alert{
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: var(--s7-font);
+}
+
+.s7-alert--warning{
+  background: var(--s7-warning-bg);
+  border: 1px solid var(--s7-warning-border);
+  color: var(--s7-warning-text);
+}
+
+.s7-alert--danger{
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+/* ======================================================
+   TABS (base reutilizável)
+   Observação:
+   - Layout específico pode continuar na tela (ex: pf-tabs),
+     mas quando criarmos novas telas, já usamos s7-tabs.
+====================================================== */
+.s7-tabs{
+  display: flex;
+  gap: 0;
+  flex-wrap: wrap;
+
+  padding: 12px 24px 0;
+  border-bottom: 1px solid var(--s7-divider);
+
+  overflow: hidden;
+  white-space: normal;
+}
+
+.s7-tabs::-webkit-scrollbar{
+  display: none;
+}
+
+.s7-tabs button{
+  flex: 0 0 auto;
+
+  min-width: auto;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: var(--s7-font);
+
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+
+  margin: 0;
+}
+
+.s7-tabs button + button{
+  border-left: none;
+}
+
+.s7-tabs button.s7-tabs-active{
+  background: var(--s7-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--s7-primary) !important;
+
+  position: relative;
+  top: 1px;
+  box-shadow: 0 -2px 10px rgba(37, 99, 235, 0.35);
+}
+
+.s7-tabs button.s7-tabs-active:hover{
+  background: var(--s7-primary-hover) !important;
+  border-color: var(--s7-primary-hover) !important;
+}
+
+/* ======================================================
+   TOOLTIP (reutilizável)
+   - Para tooltips que seguem mouse ou são posicionadas via JS
+====================================================== */
+.s7-tooltip{
+  position: fixed;
+  z-index: 99999;
+
+  padding: 6px 10px;
+  border-radius: 8px;
+
+  background: var(--s7-tooltip-bg);
+  color: #ffffff;
+
+  font-size: var(--s7-fs-tooltip);
+  font-weight: 600;
+
+  box-shadow: var(--s7-shadow-float);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ======================================================
+   BADGES (status pequenos)
+====================================================== */
+.s7-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-family: var(--s7-font);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.s7-badge--primary{
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--s7-primary);
+}
+
+.s7-badge--danger{
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--s7-danger);
+}
+
+.s7-badge--muted{
+  background: rgba(107, 114, 128, 0.12);
+  color: var(--s7-muted);
+}
+
+/* ======================================================
+   HELPERS (micro utilitários)
+====================================================== */
+.s7-divider{
+  border-top: 1px solid var(--s7-divider);
+}
+
+.s7-gap-6{ gap: var(--s7-gap-6); }
+.s7-gap-10{ gap: var(--s7-gap-10); }
+.s7-gap-12{ gap: var(--s7-gap-12); }
+.s7-gap-16{ gap: var(--s7-gap-16); }
+.s7-gap-24{ gap: var(--s7-gap-24); }
+
+/* Regra oficial: respiro final antes do botão principal */
+.s7-mt-action{
+  margin-top: var(--s7-action-gap);
+}
+
+/* Alinhamentos rápidos */
+.s7-row{
+  display: flex;
+  align-items: center;
+}
+
+.s7-row-between{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.s7-col{
+  display: flex;
+  flex-direction: column;
+}
+
+/* ======================================================
+   RESPONSIVO (utilitário)
+====================================================== */
+@media (max-width: 520px){
+  .s7-tabs{
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+  }
+}

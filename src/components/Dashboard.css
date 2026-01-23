@@ -1,57 +1,146 @@
+/* ======================================================================
+   SUSE7 — DASHBOARD (CSS ÚNICO)
+   Objetivo:
+   - Unificar os 2 Dashboard.css (components + styles)
+   - Garantir que dashboard-wrapper e modal funcionem juntos
+   - Evitar conflito com .btn-primary do ProductForm (escopo no modal)
+====================================================================== */
 
+/* ======================================================
+   WRAPPER GERAL (era do styles/Dashboard.css)
+====================================================== */
+.dashboard-wrapper{
+  padding: 30px 40px;
+  min-height: 100vh;
+  background: #f5f6fa;
+}
 
-/* CONTAINER DO MODAL – VERSÃO COMPACTA IGUAL À IMAGEM 1 */
-.profile-modal {
+/* HEADER (se você usar futuramente) */
+.dash-header{
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.dash-header-left{
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.dash-logo{
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
+}
+
+.dash-title{
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.dash-subtitle{
+  font-size: 15px;
+  color: #666;
+}
+
+/* GRID DE ESTATÍSTICAS (se você usar futuramente) */
+.dash-grid-4{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  margin-bottom: 45px;
+}
+
+/* SESSÕES (se você usar futuramente) */
+.dash-section{
+  margin-top: 30px;
+}
+
+.dash-section-title{
+  font-size: 22px;
+  font-weight: 600;
+  color: #2a2a2a;
+  margin-bottom: 16px;
+}
+
+.dash-grid-1{
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+/* ======================================================
+   ANIMAÇÃO (era do components/Dashboard.css)
+====================================================== */
+@keyframes popupFade{
+  from{
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+  to{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Trava scroll do body quando modal abre */
+body.modal-open{
+  overflow: hidden !important;
+}
+
+/* ======================================================
+   MODAL — PERFIL (era do components/Dashboard.css)
+====================================================== */
+.profile-modal{
   background: #ffffff;
   width: 100%;
-  max-width: 620px;              /* <<< Reduzi para ficar igual à imagem 1 */
-  padding: 25px 35px 30px 35px;  /* <<< Padding menor para deixar mais compacto */
+  max-width: 620px;
+  padding: 25px 35px 30px 35px;
   border-radius: 22px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
   animation: popupFade 0.25s ease-out;
 
-  max-height: 98vh;               /* Altura máxima */
-  overflow-y: auto;               /* Scroll só dentro do modal */
+  max-height: 98vh;
+  overflow-y: auto;
   overflow-x: hidden;
 
-  border-top: 4px solid #0077ff;  /* Linha superior fina estilo premium */
+  border-top: 4px solid #0077ff;
   box-sizing: border-box;
 
   scrollbar-gutter: stable;
 }
 
-
-
-/* CABEÇALHO DO MODAL (LOGO + TÍTULO + TEXTO) */
-.profile-modal-header {
+/* Cabeçalho do modal */
+.profile-modal-header{
   text-align: center;
   margin-bottom: 22px;
 }
 
-.profile-modal-logo {
-  width: 133px;       /* <<< Igual ao modal da imagem 1 */
+.profile-modal-logo{
+  width: 133px;
   height: 133px;
   display: block;
   margin: 0 auto 10px auto;
   object-fit: contain;
 }
 
-.profile-modal h2 {
+.profile-modal h2{
   font-size: 26px;
   font-weight: 700;
   color: #0077ff;
   margin: 4px 0 4px 0;
 }
 
-.profile-modal p {
+.profile-modal p{
   text-align: center;
   color: #555;
   margin: 0 0 18px 0;
   font-size: 15px;
-  }
+}
 
-/* FORMULÁRIO */
-.profile-modal-form label {
+/* Form do modal */
+.profile-modal-form label{
   display: flex;
   flex-direction: column;
   margin-bottom: 1px;
@@ -60,31 +149,48 @@
   line-height: 1;
 }
 
-.profile-modal-form input {
+.profile-modal-form input{
   margin-top: 4px;
-  padding: 8px 10px;         /* <<< Menor para ficar igual à imagem 1 */
+  padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid #cfd7e3;
   background: #f5f8ff;
   font-size: 14px;
 }
 
-
-.profile-modal-form input:focus {
+.profile-modal-form input:focus{
   border-color: #0077ff;
   outline: none;
   background: #eef5ff;
 }
 
-/* LINHAS (ex: nº + bairro, cidade + UF) */
-.profile-row {
+/* Linhas do formulário */
+.profile-row{
   display: flex;
   gap: 12px;
   margin-bottom: 8px;
 }
 
-/* BOTÃO PRINCIPAL */
-.btn-primary {
+.profile-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.profile-grid-3{
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+/* ======================================================
+   BOTÃO PRINCIPAL DO MODAL
+   IMPORTANTÍSSIMO:
+   - Escopado para NÃO conflitar com .btn-primary do ProductForm
+====================================================== */
+.profile-modal .btn-primary{
   width: 100%;
   background: #0077ff;
   padding: 10px;
@@ -98,42 +204,11 @@
   margin-top: 33px;
 }
 
-.btn-primary:hover {
+.profile-modal .btn-primary:hover{
   background: #0060d0;
 }
 
-.btn-primary:disabled {
+.profile-modal .btn-primary:disabled{
   background: #aacfff;
   cursor: not-allowed;
 }
-
-/* ANIMAÇÃO */
-@keyframes popupFade {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-body.modal-open {
-  overflow: hidden !important;
-}
-
-.profile-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
-.profile-grid-3 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 80px; /* UF menor */
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
