@@ -1,12 +1,14 @@
 // ======================================================================
-// COMPONENTE: ProductForm (Página)
+// COMPONENTE: ProductForm
 // Objetivo:
-// - Form único para criar/editar produto
-// - UI premium com abas
-// - Layout (pf-*) + Design System (s7-*)
-// Regras do projeto:
-// - Sem lógica sensível no frontend (por enquanto é UI/UX + validação)
-// - CSS do "skin" (inputs/botões/cards) vem do Suse7-Design-System.css
+// - Reutilizar a mesma UI do ProductModal em modo PÁGINA
+// - Abas: Básico, Descrição, Estoque, Precificação, Fotos, Medidas,
+//         Variações (SKU + EAN), Anúncios (placeholder), Vendas (placeholder)
+// - UI only por enquanto (salvar/back-end depois)
+// Correção aplicada:
+// - Removemos classes genéricas (form-row/form-group) para evitar conflito
+// - Agora usamos pf-row / pf-group (escopo do ProductForm)
+// - Mantemos .s7-card nas seções de medidas
 // ======================================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -20,26 +22,28 @@ export default function ProductForm({
   onCancel = null,
   onSubmit = null,
 }) {
-  // ======================================================================
+  // ------------------------------------------------------
   // CONTROLE DE ABAS
-  // ======================================================================
+  // ------------------------------------------------------
   const [activeTab, setActiveTab] = useState("basic");
 
-  // ======================================================================
-  // HELPER: ID seguro para variações
-  // ======================================================================
+  // ------------------------------------------------------
+  // HELPER: ID seguro para variações (evita quebrar em browsers)
+  // ------------------------------------------------------
   const createId = () => {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
     return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   };
 
-  // ======================================================================
-  // STATE: PRODUTO (UI only) — alinhado com tabela `products`
-  // ======================================================================
+  // ------------------------------------------------------
+  // STATE: PRODUTO (UI only)
+  // ------------------------------------------------------
   const [product, setProduct] = useState({
-    // ------------------------------------------------------
+    // ======================================================
     // BÁSICO
-    // ------------------------------------------------------
+    // ======================================================
     product_name: "",
     sku: "",
     gtin: "",
@@ -48,14 +52,14 @@ export default function ProductForm({
     model: "",
     description: "",
 
-    // ------------------------------------------------------
+    // ======================================================
     // CATEGORIA (ML)
-    // ------------------------------------------------------
+    // ======================================================
     category_ml_id: "",
 
-    // ------------------------------------------------------
+    // ======================================================
     // ESTOQUE & LOGÍSTICA
-    // ------------------------------------------------------
+    // ======================================================
     stock_quantity: 0,
     stock_source: "manual",
     lead_time_days: "",
@@ -63,52 +67,52 @@ export default function ProductForm({
     supplier_name: "",
     notes: "",
 
-    // ------------------------------------------------------
+    // ======================================================
     // CUSTOS & PRECIFICAÇÃO
-    // ------------------------------------------------------
+    // ======================================================
     cost_price: "",
     fixed_costs: "",
     min_profit_percentage: "",
     min_profit_value: "",
 
-    // ------------------------------------------------------
+    // ======================================================
     // PESOS & MEDIDAS — ENVIO
-    // ------------------------------------------------------
+    // ======================================================
     width: "",
     height: "",
     length: "",
     weight: "",
 
-    // ------------------------------------------------------
+    // ======================================================
     // PESOS & MEDIDAS — PRODUTO MONTADO
-    // ------------------------------------------------------
+    // ======================================================
     assembled_width: "",
     assembled_height: "",
     assembled_length: "",
     assembled_weight: "",
 
-    // ------------------------------------------------------
+    // ======================================================
     // IMAGENS
-    // ------------------------------------------------------
+    // ======================================================
     product_images: null,
 
-    // ------------------------------------------------------
+    // ======================================================
     // CAMPOS DE SISTEMA
-    // ------------------------------------------------------
+    // ======================================================
     active: true,
     imported_from_channel: "manual",
     parent_sku: null,
   });
 
-  // ======================================================================
-  // STATE: VALORES ORIGINAIS (alerta no modo edit)
-  // ======================================================================
+  // ------------------------------------------------------
+  // STATE: VALORES ORIGINAIS (alertas no modo EDIT)
+  // ------------------------------------------------------
   const [originalSku, setOriginalSku] = useState("");
   const [originalGtin, setOriginalGtin] = useState("");
 
-  // ======================================================================
+  // ------------------------------------------------------
   // STATE: VARIAÇÕES (UI only)
-  // ======================================================================
+  // ------------------------------------------------------
   const [variations, setVariations] = useState([
     {
       id: createId(),
@@ -123,17 +127,17 @@ export default function ProductForm({
     },
   ]);
 
-  // ======================================================================
-  // STATE: ERROS (UX)
-  // ======================================================================
+  // ------------------------------------------------------
+  // STATE: ERROS (UX somente)
+  // ------------------------------------------------------
   const [errors, setErrors] = useState({});
 
-  // ======================================================================
-  // HIDRATAR FORM (modo edit)
-  // ======================================================================
+  // ------------------------------------------------------
+  // HIDRATAR FORM (modo edição)
+  // ------------------------------------------------------
   useEffect(() => {
     // ------------------------------------------------------
-    // Produto (edit)
+    // Produto inicial
     // ------------------------------------------------------
     if (initialProduct) {
       setProduct((prev) => ({ ...prev, ...initialProduct }));
@@ -145,7 +149,7 @@ export default function ProductForm({
     }
 
     // ------------------------------------------------------
-    // Variações (edit)
+    // Variações iniciais
     // ------------------------------------------------------
     if (Array.isArray(initialVariations) && initialVariations.length > 0) {
       setVariations(
@@ -165,9 +169,9 @@ export default function ProductForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProduct, initialVariations]);
 
-  // ======================================================================
+  // ------------------------------------------------------
   // ALERTA SKU/GTIN (modo edit)
-  // ======================================================================
+  // ------------------------------------------------------
   const showSkuGtinAlert = useMemo(() => {
     if (mode !== "edit") return false;
     const skuChanged = (product.sku || "") !== (originalSku || "");
@@ -175,16 +179,16 @@ export default function ProductForm({
     return skuChanged || gtinChanged;
   }, [mode, product.sku, product.gtin, originalSku, originalGtin]);
 
-  // ======================================================================
-  // HANDLER GENÉRICO — PRODUTO
-  // ======================================================================
+  // ------------------------------------------------------
+  // HANDLER GENÉRICO PARA INPUTS
+  // ------------------------------------------------------
   const handleChange = (field, value) => {
     setProduct((prev) => ({ ...prev, [field]: value }));
   };
 
-  // ======================================================================
-  // VARIAÇÕES — CRUD
-  // ======================================================================
+  // ------------------------------------------------------
+  // VARIAÇÕES: CRUD UI
+  // ------------------------------------------------------
   const handleAddVariation = () => {
     setVariations((prev) => [
       ...prev,
@@ -207,12 +211,14 @@ export default function ProductForm({
   };
 
   const handleVariationChange = (id, field, value) => {
-    setVariations((prev) => prev.map((v) => (v.id === id ? { ...v, [field]: value } : v)));
+    setVariations((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, [field]: value } : v))
+    );
   };
 
-  // ======================================================================
-  // HELPER: COPY FIELD
-  // ======================================================================
+  // ------------------------------------------------------
+  // HELPER UI: Copiar conteúdo do campo (padrão ML)
+  // ------------------------------------------------------
   const handleCopyField = async (value) => {
     try {
       await navigator.clipboard.writeText(value || "");
@@ -222,9 +228,38 @@ export default function ProductForm({
     }
   };
 
-  // ======================================================================
+  // ------------------------------------------------------
+  // VALIDAR: Aba Dados Básicos (UX)
+  // ------------------------------------------------------
+  const validateBasicTab = () => {
+    const nextErrors = {};
+
+    if (!String(product.product_name || "").trim()) {
+      nextErrors.product_name = "Nome do produto é obrigatório.";
+    }
+
+    if (!String(product.sku || "").trim()) {
+      nextErrors.sku = "SKU é obrigatório.";
+    }
+
+    const gtin = String(product.gtin || "").trim();
+    if (gtin) {
+      if (!/^\d+$/.test(gtin)) nextErrors.gtin = "EAN/GTIN deve conter apenas números.";
+      else if (gtin.length > 13) nextErrors.gtin = "EAN/GTIN deve ter no máximo 13 dígitos.";
+    }
+
+    const ncmDigits = String(product.ncm || "").replace(/\D/g, "");
+    if (ncmDigits) {
+      if (ncmDigits.length !== 8) nextErrors.ncm = "NCM deve ter 8 dígitos.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  // ------------------------------------------------------
   // MÁSCARA: NCM (8 dígitos) -> 1234.56.78
-  // ======================================================================
+  // ------------------------------------------------------
   const formatNcm = (value) => {
     const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
     if (digits.length <= 4) return digits;
@@ -232,52 +267,16 @@ export default function ProductForm({
     return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
   };
 
-  // ======================================================================
-  // VALIDAR: Aba Dados Básicos
-  // ======================================================================
-  const validateBasicTab = () => {
-    const nextErrors = {};
-
-    // Nome do produto (obrigatório)
-    if (!String(product.product_name || "").trim()) {
-      nextErrors.product_name = "Nome do produto é obrigatório.";
-    }
-
-    // SKU (obrigatório)
-    if (!String(product.sku || "").trim()) {
-      nextErrors.sku = "SKU é obrigatório.";
-    }
-
-    // GTIN (opcional, mas se preencher valida)
-    const gtin = String(product.gtin || "").trim();
-    if (gtin) {
-      if (!/^\d+$/.test(gtin)) nextErrors.gtin = "EAN/GTIN deve conter apenas números.";
-      else if (gtin.length > 13) nextErrors.gtin = "EAN/GTIN deve ter no máximo 13 dígitos.";
-    }
-
-    // NCM (opcional, mas se preencher valida 8 dígitos)
-    const ncmDigits = String(product.ncm || "").replace(/\D/g, "");
-    if (ncmDigits && ncmDigits.length !== 8) {
-      nextErrors.ncm = "NCM deve ter 8 dígitos.";
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  // ======================================================================
-  // SUBMIT (UI only)
-  // ======================================================================
+  // ------------------------------------------------------
+  // SUBMIT (UI only por enquanto)
+  // ------------------------------------------------------
   const handleSubmit = () => {
     const okBasic = validateBasicTab();
-
-    // Se erro, volta para aba Básico
     if (!okBasic) {
       setActiveTab("basic");
       return;
     }
 
-    // Delegar submit se existir
     if (typeof onSubmit === "function") {
       onSubmit({ product, variations, mode });
       return;
@@ -288,7 +287,7 @@ export default function ProductForm({
   };
 
   // ======================================================================
-  // COMPONENTE: FieldLabel (Label + Copy)
+  // COMPONENTE: FieldLabel
   // ======================================================================
   const FieldLabel = ({ text, required = false, onCopy }) => {
     return (
@@ -302,7 +301,6 @@ export default function ProductForm({
           className="pf-copy-btn"
           onClick={onCopy ? onCopy : undefined}
           aria-label="Copiar"
-          title="Copiar"
         >
           ⧉
         </button>
@@ -330,7 +328,11 @@ export default function ProductForm({
          NOME DO PRODUTO — FIXO
       ================================================== */}
       <div className="pf-product-name-fixed">
-        <FieldLabel text="Nome do produto" required onCopy={() => handleCopyField(product.product_name)} />
+        <FieldLabel
+          text="Nome do produto"
+          required
+          onCopy={() => handleCopyField(product.product_name)}
+        />
 
         <input
           className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
@@ -348,8 +350,8 @@ export default function ProductForm({
       ================================================== */}
       {showSkuGtinAlert && (
         <div className="s7-alert s7-alert--warning">
-          <strong>Atenção:</strong> alterar <strong>SKU</strong> ou <strong>GTIN</strong> pode impactar
-          vínculos com anúncios e integrações.
+          <strong>Atenção:</strong> alterar <strong>SKU</strong> ou <strong>GTIN</strong> pode
+          impactar vínculos com anúncios e integrações.
         </div>
       )}
 
@@ -360,56 +362,28 @@ export default function ProductForm({
         <button className={activeTab === "basic" ? "active" : ""} onClick={() => setActiveTab("basic")} type="button">
           Dados básicos
         </button>
-
-        <button
-          className={activeTab === "description" ? "active" : ""}
-          onClick={() => setActiveTab("description")}
-          type="button"
-        >
+        <button className={activeTab === "description" ? "active" : ""} onClick={() => setActiveTab("description")} type="button">
           Descrição
         </button>
-
         <button className={activeTab === "stock" ? "active" : ""} onClick={() => setActiveTab("stock")} type="button">
           Estoque & logística
         </button>
-
-        <button
-          className={activeTab === "pricing" ? "active" : ""}
-          onClick={() => setActiveTab("pricing")}
-          type="button"
-        >
+        <button className={activeTab === "pricing" ? "active" : ""} onClick={() => setActiveTab("pricing")} type="button">
           Custos & precificação
         </button>
-
         <button className={activeTab === "photos" ? "active" : ""} onClick={() => setActiveTab("photos")} type="button">
           Fotos
         </button>
-
-        <button
-          className={activeTab === "measures" ? "active" : ""}
-          onClick={() => setActiveTab("measures")}
-          type="button"
-        >
+        <button className={activeTab === "measures" ? "active" : ""} onClick={() => setActiveTab("measures")} type="button">
           Pesos & medidas
         </button>
-
-        <button
-          className={activeTab === "variations" ? "active" : ""}
-          onClick={() => setActiveTab("variations")}
-          type="button"
-        >
+        <button className={activeTab === "variations" ? "active" : ""} onClick={() => setActiveTab("variations")} type="button">
           Variações
         </button>
-
         <button className={activeTab === "ads" ? "active" : ""} onClick={() => setActiveTab("ads")} type="button">
           Anúncios
         </button>
-
-        <button
-          className={activeTab === "performance" ? "active" : ""}
-          onClick={() => setActiveTab("performance")}
-          type="button"
-        >
+        <button className={activeTab === "performance" ? "active" : ""} onClick={() => setActiveTab("performance")} type="button">
           Vendas & desempenho
         </button>
       </div>
@@ -423,23 +397,20 @@ export default function ProductForm({
         ======================= */}
         {activeTab === "basic" && (
           <>
-            <div className="form-row">
-              <div className="form-group pf-desc-group">
+            <div className="pf-row">
+              <div className="pf-group pf-desc-group">
                 <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
-
                 <input
                   className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
                   placeholder="SKU interno"
                   value={product.sku}
                   onChange={(e) => handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())}
                 />
-
                 {errors.sku && <div className="s7-error">{errors.sku}</div>}
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <FieldLabel text="EAN / GTIN" onCopy={() => handleCopyField(product.gtin)} />
-
                 <input
                   className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
                   inputMode="numeric"
@@ -447,13 +418,11 @@ export default function ProductForm({
                   value={product.gtin}
                   onChange={(e) => handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))}
                 />
-
                 {errors.gtin && <div className="s7-error">{errors.gtin}</div>}
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <FieldLabel text="NCM" onCopy={() => handleCopyField(product.ncm)} />
-
                 <input
                   className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
                   inputMode="numeric"
@@ -464,28 +433,25 @@ export default function ProductForm({
                     handleChange("ncm", masked);
 
                     const digits = masked.replace(/\D/g, "");
-                    if (digits.length === 8) {
-                      setErrors((prev) => ({ ...prev, ncm: undefined }));
-                    }
+                    if (digits.length === 8) setErrors((prev) => ({ ...prev, ncm: undefined }));
                   }}
                 />
-
                 {errors.ncm && <div className="s7-error">{errors.ncm}</div>}
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="pf-row">
+              <div className="pf-group">
                 <label className="s7-label">Marca</label>
                 <input className="s7-input" value={product.brand} onChange={(e) => handleChange("brand", e.target.value)} />
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <label className="s7-label">Modelo</label>
                 <input className="s7-input" value={product.model} onChange={(e) => handleChange("model", e.target.value)} />
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <label className="s7-label">Categoria Mercado Livre (ID)</label>
                 <input
                   className="s7-input"
@@ -502,9 +468,8 @@ export default function ProductForm({
             DESCRIÇÃO
         ======================= */}
         {activeTab === "description" && (
-          <div className="form-group">
+          <div className="pf-group">
             <FieldLabel text="Descrição do produto" onCopy={() => handleCopyField(product.description)} />
-
             <div className="description-wrapper pf-desc-wrapper">
               <textarea
                 className="s7-textarea"
@@ -522,31 +487,21 @@ export default function ProductForm({
         ======================= */}
         {activeTab === "stock" && (
           <>
-            <div className="form-row">
-              <div className="form-group">
+            <div className="pf-row">
+              <div className="pf-group">
                 <label className="s7-label">Estoque</label>
-                <input
-                  className="s7-input"
-                  type="number"
-                  min="0"
-                  value={product.stock_quantity}
-                  onChange={(e) => handleChange("stock_quantity", e.target.value)}
-                />
+                <input className="s7-input" type="number" min="0" value={product.stock_quantity} onChange={(e) => handleChange("stock_quantity", e.target.value)} />
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <label className="s7-label">Origem do estoque</label>
-                <select
-                  className="s7-select"
-                  value={product.stock_source}
-                  onChange={(e) => handleChange("stock_source", e.target.value)}
-                >
+                <select className="s7-select" value={product.stock_source} onChange={(e) => handleChange("stock_source", e.target.value)}>
                   <option value="manual">Manual</option>
                   <option value="virtual">Virtual (avançado)</option>
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <label className="s7-label">Lead time (dias)</label>
                 <input
                   className="s7-input"
@@ -558,8 +513,8 @@ export default function ProductForm({
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="pf-row">
+              <div className="pf-group">
                 <label className="s7-label">Origem (texto livre)</label>
                 <input
                   className="s7-input"
@@ -569,7 +524,7 @@ export default function ProductForm({
                 />
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <label className="s7-label">Fornecedor</label>
                 <input
                   className="s7-input"
@@ -580,8 +535,8 @@ export default function ProductForm({
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group" style={{ flex: 1 }}>
+            <div className="pf-row">
+              <div className="pf-group" style={{ flex: 1 }}>
                 <label className="s7-label">Observações</label>
                 <input
                   className="s7-input"
@@ -599,20 +554,20 @@ export default function ProductForm({
         ======================= */}
         {activeTab === "pricing" && (
           <>
-            <div className="form-row">
-              <div className="form-group">
+            <div className="pf-row">
+              <div className="pf-group">
                 <label className="s7-label">Custo do produto</label>
                 <input className="s7-input" type="number" value={product.cost_price} onChange={(e) => handleChange("cost_price", e.target.value)} />
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <label className="s7-label">Custos fixos</label>
                 <input className="s7-input" type="number" value={product.fixed_costs} onChange={(e) => handleChange("fixed_costs", e.target.value)} />
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="pf-row">
+              <div className="pf-group">
                 <label className="s7-label">Lucro mínimo (%)</label>
                 <input
                   className="s7-input"
@@ -623,7 +578,7 @@ export default function ProductForm({
                 />
               </div>
 
-              <div className="form-group">
+              <div className="pf-group">
                 <label className="s7-label">Lucro mínimo (R$)</label>
                 <input
                   className="s7-input"
@@ -643,7 +598,8 @@ export default function ProductForm({
         {activeTab === "photos" && (
           <>
             <p className="hint">
-              Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas para atualizar anúncios em todos os canais.
+              Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas para atualizar anúncios
+              em todos os canais.
             </p>
 
             <div className="photo-uploader">
@@ -669,23 +625,23 @@ export default function ProductForm({
                 <p className="s7-card__subtitle">Medidas usadas para cálculo de frete e logística.</p>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
+              <div className="pf-row">
+                <div className="pf-group">
                   <label className="s7-label">Largura (cm)</label>
                   <input className="s7-input" type="number" min="0" placeholder="Ex: 30" value={product.width} onChange={(e) => handleChange("width", e.target.value)} />
                 </div>
 
-                <div className="form-group">
+                <div className="pf-group">
                   <label className="s7-label">Altura (cm)</label>
                   <input className="s7-input" type="number" min="0" placeholder="Ex: 15" value={product.height} onChange={(e) => handleChange("height", e.target.value)} />
                 </div>
 
-                <div className="form-group">
+                <div className="pf-group">
                   <label className="s7-label">Comprimento (cm)</label>
                   <input className="s7-input" type="number" min="0" placeholder="Ex: 45" value={product.length} onChange={(e) => handleChange("length", e.target.value)} />
                 </div>
 
-                <div className="form-group">
+                <div className="pf-group">
                   <label className="s7-label">Peso (kg)</label>
                   <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 2.350" value={product.weight} onChange={(e) => handleChange("weight", e.target.value)} />
                 </div>
@@ -698,23 +654,23 @@ export default function ProductForm({
                 <p className="s7-card__subtitle">Medidas reais do produto pronto/montado (referência interna).</p>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
+              <div className="pf-row">
+                <div className="pf-group">
                   <label className="s7-label">Largura (cm)</label>
                   <input className="s7-input" type="number" min="0" placeholder="Ex: 32" value={product.assembled_width} onChange={(e) => handleChange("assembled_width", e.target.value)} />
                 </div>
 
-                <div className="form-group">
+                <div className="pf-group">
                   <label className="s7-label">Altura (cm)</label>
                   <input className="s7-input" type="number" min="0" placeholder="Ex: 80" value={product.assembled_height} onChange={(e) => handleChange("assembled_height", e.target.value)} />
                 </div>
 
-                <div className="form-group">
+                <div className="pf-group">
                   <label className="s7-label">Comprimento (cm)</label>
                   <input className="s7-input" type="number" min="0" placeholder="Ex: 42" value={product.assembled_length} onChange={(e) => handleChange("assembled_length", e.target.value)} />
                 </div>
 
-                <div className="form-group">
+                <div className="pf-group">
                   <label className="s7-label">Peso (kg)</label>
                   <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 8.500" value={product.assembled_weight} onChange={(e) => handleChange("assembled_weight", e.target.value)} />
                 </div>
@@ -728,10 +684,10 @@ export default function ProductForm({
         ======================= */}
         {activeTab === "variations" && (
           <>
-            <div className="s7-card">
-              <div className="s7-card__header">
-                <h3 className="s7-card__title">Variações</h3>
-                <p className="s7-card__subtitle">
+            <div className="section">
+              <div className="section-header">
+                <h3>Variações</h3>
+                <p className="section-subtitle">
                   Crie variações como cor/tamanho. Cada variação pode ter SKU e EAN próprios.
                 </p>
               </div>
@@ -744,11 +700,11 @@ export default function ProductForm({
             </div>
 
             {variations.map((v, index) => (
-              <div className="s7-card" key={v.id}>
+              <div className="section" key={v.id}>
                 <div className="pf-variation-head">
                   <div>
-                    <h3 className="s7-card__title">{v.variation_name || `Variação ${index + 1}`}</h3>
-                    <p className="s7-card__subtitle" style={{ marginTop: 6 }}>
+                    <h3 style={{ margin: 0 }}>{v.variation_name || `Variação ${index + 1}`}</h3>
+                    <p className="section-subtitle" style={{ marginTop: 6 }}>
                       Configure atributo, valor, SKU, EAN e estoque da variação.
                     </p>
                   </div>
@@ -775,8 +731,8 @@ export default function ProductForm({
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group" style={{ flex: 1 }}>
+                <div className="pf-row">
+                  <div className="pf-group" style={{ flex: 1 }}>
                     <label className="s7-label">Nome da variação (opcional)</label>
                     <input
                       className="s7-input"
@@ -787,23 +743,38 @@ export default function ProductForm({
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
+                <div className="pf-row">
+                  <div className="pf-group">
                     <label className="s7-label">Atributo</label>
-                    <input className="s7-input" placeholder="Ex: Cor" value={v.attribute} onChange={(e) => handleVariationChange(v.id, "attribute", e.target.value)} />
+                    <input
+                      className="s7-input"
+                      placeholder="Ex: Cor"
+                      value={v.attribute}
+                      onChange={(e) => handleVariationChange(v.id, "attribute", e.target.value)}
+                    />
                   </div>
 
-                  <div className="form-group">
+                  <div className="pf-group">
                     <label className="s7-label">Valor</label>
-                    <input className="s7-input" placeholder="Ex: Preto" value={v.value} onChange={(e) => handleVariationChange(v.id, "value", e.target.value)} />
+                    <input
+                      className="s7-input"
+                      placeholder="Ex: Preto"
+                      value={v.value}
+                      onChange={(e) => handleVariationChange(v.id, "value", e.target.value)}
+                    />
                   </div>
 
-                  <div className="form-group">
+                  <div className="pf-group">
                     <label className="s7-label">SKU da variação</label>
-                    <input className="s7-input" placeholder="Ex: ARM-COZ-PT-01" value={v.sku} onChange={(e) => handleVariationChange(v.id, "sku", e.target.value)} />
+                    <input
+                      className="s7-input"
+                      placeholder="Ex: ARM-COZ-PT-01"
+                      value={v.sku}
+                      onChange={(e) => handleVariationChange(v.id, "sku", e.target.value)}
+                    />
                   </div>
 
-                  <div className="form-group">
+                  <div className="pf-group">
                     <label className="s7-label">EAN</label>
                     <input
                       className="s7-input"
@@ -815,15 +786,27 @@ export default function ProductForm({
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
+                <div className="pf-row">
+                  <div className="pf-group">
                     <label className="s7-label">Estoque da variação</label>
-                    <input className="s7-input" inputMode="numeric" placeholder="Ex: 10" value={v.stock} onChange={(e) => handleVariationChange(v.id, "stock", e.target.value.replace(/\D/g, ""))} />
+                    <input
+                      className="s7-input"
+                      inputMode="numeric"
+                      placeholder="Ex: 10"
+                      value={v.stock}
+                      onChange={(e) => handleVariationChange(v.id, "stock", e.target.value.replace(/\D/g, ""))}
+                    />
                   </div>
 
-                  <div className="form-group">
+                  <div className="pf-group">
                     <label className="s7-label">Preço (opcional)</label>
-                    <input className="s7-input" inputMode="decimal" placeholder="Ex: 199,90" value={v.price} onChange={(e) => handleVariationChange(v.id, "price", e.target.value)} />
+                    <input
+                      className="s7-input"
+                      inputMode="decimal"
+                      placeholder="Ex: 199,90"
+                      value={v.price}
+                      onChange={(e) => handleVariationChange(v.id, "price", e.target.value)}
+                    />
                   </div>
                 </div>
               </div>
@@ -835,10 +818,10 @@ export default function ProductForm({
             ANÚNCIOS (placeholder)
         ======================= */}
         {activeTab === "ads" && (
-          <div className="s7-card">
-            <div className="s7-card__header">
-              <h3 className="s7-card__title">Anúncios do produto</h3>
-              <p className="s7-card__subtitle">
+          <div className="section">
+            <div className="section-header">
+              <h3>Anúncios do produto</h3>
+              <p className="section-subtitle">
                 Aqui vamos listar os anúncios vinculados a este produto em cada marketplace (ML primeiro).
               </p>
             </div>
@@ -857,10 +840,10 @@ export default function ProductForm({
             VENDAS & DESEMPENHO (placeholder)
         ======================= */}
         {activeTab === "performance" && (
-          <div className="s7-card">
-            <div className="s7-card__header">
-              <h3 className="s7-card__title">Vendas & desempenho</h3>
-              <p className="s7-card__subtitle">
+          <div className="section">
+            <div className="section-header">
+              <h3>Vendas & desempenho</h3>
+              <p className="section-subtitle">
                 Painel do produto: histórico de vendas, desempenho por canal e indicadores.
               </p>
             </div>
@@ -877,7 +860,7 @@ export default function ProductForm({
       </div>
 
       {/* ==================================================
-         FOOTER (sticky)
+         FOOTER — sticky
       ================================================== */}
       <div className="pf-footer pf-footer-right">
         <button className="s7-btn s7-btn--primary" onClick={handleSubmit} type="button">
