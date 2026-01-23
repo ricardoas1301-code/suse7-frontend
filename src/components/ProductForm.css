@@ -151,26 +151,44 @@
   overflow-x: hidden;
 }
 
-/* ======================================================
-   FORM LAYOUT
-====================================================== */
+/* ======================================================================
+   FORM ROW — GRID (ANTI "INPUT COLADO")
+   Objetivo:
+   - Garantir espaçamento REAL entre inputs (gap sempre respeitado)
+   - Responsivo automático sem quebrar o layout
+====================================================================== */
+.form-row{
+  display: grid;
+  gap: 18px; /* ✅ espaçamento horizontal e vertical */
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* padrão: 3 colunas */
+  align-items: start;
+}
+
+/* ======================================================================
+   FORM GROUP — BASE
+   Objetivo:
+   - Evitar overflow e manter respiro entre label e input
+====================================================================== */
 .form-group{
   display: flex;
   flex-direction: column;
-  gap: 8px;          /* ✅ um pouco mais de respiro entre label e input */
-  min-width: 0;      /* ✅ evita overflow estranho em flex */
+  gap: 8px;
+  min-width: 0;
 }
 
-.form-row{
-  display: flex;
-  gap: 18px;         /* ✅ MAIS ESPAÇO entre inputs (antes 16px) */
-  flex-wrap: wrap;   /* ✅ garante quebra quando precisar */
-  align-items: flex-start;
+/* ======================================================================
+   RESPONSIVO DO GRID
+====================================================================== */
+@media (max-width: 900px){
+  .form-row{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.form-row .form-group{
-  flex: 1 1 0;       /* ✅ colunas equilibradas */
-  min-width: 240px;  /* ✅ evita colar quando falta espaço */
+@media (max-width: 520px){
+  .form-row{
+    grid-template-columns: 1fr;
+  }
 }
 
 
