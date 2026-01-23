@@ -164,17 +164,30 @@
   align-items: start;
 }
 
-/* ======================================================================
-   FORM GROUP — BASE
-   Objetivo:
-   - Evitar overflow e manter respiro entre label e input
-====================================================================== */
+
+/* ======================================================
+   FORM LAYOUT (GRID — evita inputs colarem)
+====================================================== */
 .form-group{
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 0;
+  gap: 6px;
+  min-width: 0; /* evita overflow e “empurrões” */
 }
+
+/* Grid inteligente: se tiver 3 campos vira 3 colunas, se tiver 2 vira 2, etc */
+.form-row{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px; /* espaçamento real entre inputs */
+  align-items: start;
+}
+
+/* remove o flex antigo se existir em outro lugar */
+.form-row .form-group{
+  width: 100%;
+}
+
 
 /* ======================================================================
    RESPONSIVO DO GRID
