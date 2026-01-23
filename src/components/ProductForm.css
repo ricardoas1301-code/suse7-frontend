@@ -2,13 +2,14 @@
    SUSE7 — PRODUCT FORM (PÁGINA)
    Objetivo:
    - Mesma UI do ProductModal, mas para uso em página
+   - Card full page com scroll interno no body
+   - Abas premium (wrap, sem scrollbar) + estado ativo azul
 ====================================================================== */
 
 /* ======================================================
    CARD PRINCIPAL (FULL PAGE)
    Ajuste:
-   - Antes: width fixo 1100px (limitava a página)
-   - Agora: ocupa 100% da moldura azul
+   - Ocupa 100% da moldura azul (sem width fixo)
 ====================================================== */
 .pf-card{
   background: #ffffff;
@@ -16,14 +17,17 @@
   max-width: 100%;
   height: 100%;
   min-height: 0;
+
   border-radius: 16px;
   box-shadow: 0 18px 46px rgba(0,0,0,0.10);
+
   display: flex;
   flex-direction: column;
+
   overflow: hidden;
   box-sizing: border-box;
 
-  border: 1px solid rgba(37, 99, 235, 0.55); /* ✅ NOVO */
+  border: 1px solid rgba(37, 99, 235, 0.55);
 }
 
 /* ======================================================
@@ -37,7 +41,6 @@
   border: 1px solid rgba(239, 68, 68, 0.55);
 }
 
-
 /* ======================================================
    HEADER — GRID (título à esquerda | fechar à direita)
 ====================================================== */
@@ -46,14 +49,40 @@
   border-bottom: 1px solid #eef0f3;
 
   display: grid;
-  grid-template-columns: 1fr auto; /* ✅ esquerda cresce | direita só o botão */
+  grid-template-columns: 1fr auto; /* esquerda cresce | direita só o botão */
   align-items: start;
   column-gap: 12px;
 }
 
+/* ======================================================
+   HEADER — título + texto campos obrigatórios
+====================================================== */
+.pf-title-block{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-title-block h2{
+  font-size: 20px;
+  margin: 0;
+  line-height: 1.1;
+}
 
 /* ======================================================
-   BOTÃO FECHAR — IGUAL POPUP (SÓ HOVER)
+   PADRÃO: "* Campos obrigatórios"
+   Obs:
+   - Você pode manter 600 se quiser mais “presença”
+   - Aqui mantive igual ao seu arquivo atual (600)
+====================================================== */
+.pf-required-hint{
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* ======================================================
+   BOTÃO FECHAR — PADRÃO ContactModal (.close-btn)
 ====================================================== */
 .pf-close{
   background: transparent;
@@ -61,30 +90,20 @@
   padding: 0;
 
   font-size: 14px;
-  font-weight: 600;
-  color: #6b7280;
+  font-weight: 400; /* ✅ sem negrito (igual ContactModal) */
+  color: #666;
+
   cursor: pointer;
 
-  justify-self: end;    /* ✅ gruda na direita */
-  align-self: start;    /* ✅ gruda no topo */
+  justify-self: end;
+  align-self: start;
 
-  transition: transform 160ms ease;
+  transition: 0.2s ease;
 }
 
 .pf-close:hover{
-  transform: scale(1.08); /* ✅ aumenta levemente */
-}
-
-
-
-.pf-back:hover{
-  text-decoration: underline;
-}
-
-
-.pf-header h2{
-  font-size: 18px;
-  margin: 0;
+  color: #000;
+  transform: scale(1.05);
 }
 
 /* ======================================================
@@ -93,39 +112,58 @@
 .pf-product-name-fixed{
   padding: 16px 24px;
   border-bottom: 1px solid #eef0f3;
+
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* ======================================================
-   ABAS — FICHÁRIO PREMIUM
-====================================================== */
+/* Input do nome do produto: mesmo padrão dos inputs (com max-width) */
+.pf-product-name-fixed input{
+  padding: 6px 8px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #dcdfe4;
+  background: #f9fafb;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  max-width: 50%;
+}
+
+.pf-product-name-fixed input:focus{
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+/* Label-row do Nome do produto alinhada com o input (mesmo max-width) */
+.pf-product-name-fixed .pf-label-row{
+  max-width: 50%;
+}
+
 /* ======================================================
    ABAS — SEM GAP + SEM SCROLL (wrap)
 ====================================================== */
 .pf-tabs{
   display: flex;
-  gap: 0;                      /* ✅ sem espaços */
+  gap: 0;
   padding: 12px 24px 0;
   border-bottom: 1px solid #eef0f3;
 
-  flex-wrap: wrap;             /* ✅ quebra linha (sem barra) */
-  overflow: hidden;            /* ✅ sem rolagem */
-  white-space: normal;         /* ✅ permite quebra */
+  flex-wrap: wrap;      /* quebra linha (sem barra) */
+  overflow: hidden;     /* sem rolagem */
+  white-space: normal;  /* permite quebra */
 }
 
-/* Remove scrollbar das abas (não será mais necessário) */
 .pf-tabs::-webkit-scrollbar{
   display: none;
 }
 
-/* Botões das abas: mais compactos e colados */
 .pf-tabs button{
   flex: 0 0 auto;
 
-  min-width: auto;             /* ✅ remove travamento */
-  padding: 9px 12px;           /* ✅ mais compacto */
+  min-width: auto;
+  padding: 9px 12px;
   font-size: 13px;
 
   background: #f3f4f6;
@@ -137,27 +175,43 @@
   transition: all 0.2s ease;
   text-align: center;
 
-  margin: 0;                   /* ✅ colado */
+  margin: 0;
 }
 
-/* Para “colar” bem: remove borda duplicada entre botões */
+/* Remove borda duplicada entre botões */
 .pf-tabs button + button{
-  border-left: none;           /* ✅ sem dupla borda */
+  border-left: none;
 }
 
+/* Aba ativa (força padrão Suse7) */
+.pf-tabs button.active{
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+
+  position: relative;
+  top: 1px;
+  box-shadow: 0 -2px 10px rgba(37, 99, 235, 0.35);
+}
+
+.pf-tabs button.active:hover{
+  background: #1e40af !important;
+  border-color: #1e40af !important;
+}
 
 /* ======================================================
-   BODY
+   BODY — scroll interno
 ====================================================== */
 .pf-body{
   padding: 24px;
+
   display: flex;
   flex-direction: column;
   gap: 33px;
 
   flex: 1;
-  min-height: 0;        /* ✅ ESSENCIAL pra scroll interno */
-  overflow-y: auto;     /* ✅ scroll fica aqui */
+  min-height: 0;       /* essencial para scroll interno */
+  overflow-y: auto;    /* scroll fica aqui */
   overflow-x: hidden;
 }
 
@@ -180,7 +234,7 @@
 }
 
 /* ======================================================
-   INPUTS / TEXTAREA / SELECT
+   INPUTS / TEXTAREA / SELECT (padrão Suse7)
 ====================================================== */
 .form-group input,
 .form-group textarea,
@@ -199,8 +253,8 @@
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+  background: #ffffff;
 }
-
 
 /* ======================================================
    ABA FOTOS
@@ -217,22 +271,28 @@
 }
 
 /* ======================================================
-   FOOTER — sempre visível
+   FOOTER — sempre visível (sticky)
 ====================================================== */
 .pf-footer{
   padding: 18px 24px;
   border-top: 1px solid #eef0f3;
+
   display: flex;
-  justify-content: space-between; /* ✅ Cancelar esquerda, Salvar direita */
+  justify-content: space-between; /* cancelar esquerda, salvar direita */
   gap: 12px;
+
   flex-shrink: 0;
   background: #ffffff;
 
-  position: sticky;   /* ✅ fica visível */
+  position: sticky;
   bottom: 0;
   z-index: 5;
 }
 
+/* Footer apenas botão principal à direita */
+.pf-footer-right{
+  justify-content: flex-end;
+}
 
 /* ======================================================
    BOTÕES (padrão Suse7)
@@ -241,9 +301,11 @@
 .btn-primary{
   height: 38px;
   padding: 0 16px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   font-weight: 700;
   border-radius: 8px;
   cursor: pointer;
@@ -261,7 +323,7 @@
 
 .btn-primary{
   background: #2563eb;
-  color: white;
+  color: #ffffff;
   border: none;
   padding: 0 18px;
 }
@@ -271,49 +333,50 @@
 }
 
 /* ======================================================
-   DESCRIÇÃO (TEXTAREA FIXA + SCROLL)
+   DESCRIÇÃO — TEXTAREA FIXA + SCROLL
 ====================================================== */
 .description-wrapper{
   position: relative;
   max-width: 100%;
   box-sizing: border-box;
-  margin-bottom: 32px; /* 🔥 empurra o textarea pra baixo */
+
+  /* empurra a área para não “grudar” no footer visualmente */
+  margin-bottom: 32px;
 }
 
-
-
-/* ======================================================
-   DESCRIÇÃO — ALTURA LIMITADA
-====================================================== */
 .description-wrapper textarea{
   width: 100%;
   height: 220px;
   max-height: 220px;
+
   resize: none;
   overflow-y: auto;
-  box-sizing: border-box; /* 🔥 ESSENCIAL */
-}
 
-
-.copy-description{
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #f3f4f6;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 8px;
-  cursor: pointer;
-  font-size: 14px;
-  opacity: 0.7;
-}
-
-.copy-description:hover{
-  opacity: 1;
+  box-sizing: border-box;
 }
 
 /* ======================================================
-   SECTIONS
+   DESCRIÇÃO — ocupar a altura e empurrar textarea pra baixo
+====================================================== */
+.pf-desc-group{
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.pf-desc-wrapper{
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.pf-desc-wrapper textarea{
+  flex: 1;
+}
+
+/* ======================================================
+   SECTIONS (blocos internos)
 ====================================================== */
 .section{
   background: #ffffff;
@@ -368,90 +431,8 @@
 }
 
 /* ======================================================
-   RESPONSIVO
-====================================================== */
-@media (max-width: 900px){
-  .form-row{
-    flex-wrap: wrap;
-  }
-
-  .form-row .form-group{
-    flex: 1 1 calc(50% - 8px);
-    min-width: 220px;
-  }
-
-  .pf-tabs button{
-    min-width: 130px;
-  }
-}
-
-@media (max-width: 520px){
-  .form-row .form-group{
-    flex: 1 1 100%;
-    min-width: 100%;
-  }
-
-.pf-tabs{
-  max-width: 100%;    /* ✅ garante que a rolagem fica só dentro dela */
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-@media (max-width: 900px){
-  .pf-product-name-fixed input{
-    max-width: 100%;
-  }
-}
-
-}
-
-/* ======================================================
-   FOOTER — apenas botão principal à direita
-====================================================== */
-.pf-footer-right{
-  justify-content: flex-end;
-}
-
-/* ======================================================
-   ABAS — ATIVA (FORÇA PADRÃO SUSE7)
-====================================================== */
-.pf-tabs button.active{
-  background: #2563eb !important;
-  color: #ffffff !important;
-  border-color: #2563eb !important;
-
-  position: relative;
-  top: 1px;
-  box-shadow: 0 -2px 10px rgba(37, 99, 235, 0.35);
-}
-
-.pf-tabs button.active:hover{
-  background: #1e40af !important;
-  border-color: #1e40af !important;
-}
-
-/* ======================================================
-   INPUT NOME DO PRODUTO — MESMO PADRÃO DOS INPUTS
-====================================================== */
-.pf-product-name-fixed input{
-  padding: 6px 8px;
-  font-size: 14px;
-  border-radius: 8px;
-  border: 1px solid #dcdfe4;
-  background: #f9fafb;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  max-width: 50%;
-}
-
-.pf-product-name-fixed input:focus{
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
-}
-
-/* ======================================================================
    ALERTA SKU/GTIN — ProductForm
-====================================================================== */
+====================================================== */
 .pf-alert{
   margin-top: 12px;
   padding: 10px 12px;
@@ -470,6 +451,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+
   position: relative;
   z-index: 40;
 }
@@ -486,7 +468,7 @@
 }
 
 /* ======================================================
-   BOTÃO COPIAR — COM TOOLTIP
+   BOTÃO COPIAR — COM TOOLTIP (abaixo do ícone)
 ====================================================== */
 .pf-copy-btn{
   position: relative;
@@ -494,6 +476,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
+
   z-index: 50;
 
   font-size: 14px;
@@ -509,7 +492,7 @@
 .pf-copy-btn::after{
   content: "Copiar";
   position: absolute;
-  top: 22px;        /* ✅ agora fica embaixo */
+  top: 22px; /* tooltip embaixo */
   right: 0;
 
   background: #111827;
@@ -523,18 +506,13 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
-  white-space: nowrap;
-  z-index: 999;      /* ✅ garante que fica acima */
-}
 
+  white-space: nowrap;
+  z-index: 999;
+}
 
 .pf-copy-btn:hover::after{
   opacity: 1;
-}
-
-
-.pf-copy-btn:hover{
-  transform: scale(1.08);
 }
 
 /* ======================================================
@@ -552,67 +530,42 @@
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12) !important;
 }
 
-
 /* ======================================================
-   NOME DO PRODUTO — alinhar label e botão copiar com o input
+   RESPONSIVO
 ====================================================== */
-.pf-product-name-fixed .pf-label-row{
-  max-width: 50%;
-}
-
 @media (max-width: 900px){
+  .form-row{
+    flex-wrap: wrap;
+  }
+
+  .form-row .form-group{
+    flex: 1 1 calc(50% - 8px);
+    min-width: 220px;
+  }
+
+  .pf-tabs button{
+    min-width: 130px;
+  }
+
+  .pf-product-name-fixed input{
+    max-width: 100%;
+  }
+
   .pf-product-name-fixed .pf-label-row{
     max-width: 100%;
   }
 }
 
+@media (max-width: 520px){
+  .form-row .form-group{
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
 
-/* ======================================================
-   HEADER — título + texto campos obrigatórios
-====================================================== */
-.pf-title-block{
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  /* Em telas muito pequenas, permite rolagem horizontal só nas abas */
+  .pf-tabs{
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
 }
-
-.pf-title-block h2{
-  font-size: 20px;
-  margin: 0;
-  line-height: 1.1;
-}
-
-/* ======================================================
-   PADRÃO: "* Campos obrigatórios"
-   - sem negrito
-   - mesma cor do botão Fechar
-====================================================== */
-.pf-required-hint{
-  font-size: 12px;
-  font-weight: 600;      /* ✅ sem “negrito pesado” */
-  color: #6b7280;        /* ✅ mesma cor do Fechar */
-}
-
-/* ======================================================
-   DESCRIÇÃO — ocupar a altura e empurrar textarea pra baixo
-====================================================== */
-.pf-desc-group{
-  display: flex;
-  flex-direction: column;
-  flex: 1;          /* ✅ pega altura disponível da aba */
-  min-height: 0;    /* ✅ necessário pra scroll interno */
-}
-
-.pf-desc-wrapper{
-  flex: 1;          /* ✅ faz o wrapper crescer */
-  min-height: 0;
-  display: flex;
-}
-
-.pf-desc-wrapper textarea{
-  flex: 1;          /* ✅ textarea ocupa todo wrapper */
-}
-
-
-
-
