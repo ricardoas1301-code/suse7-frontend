@@ -51,6 +51,7 @@ export default function ProductForm({
     brand: "",
     model: "",
     description: "",
+    seo_keywords: "", // ✅ Palavras-chave SEO (separadas por vírgula)
 
     // ======================================================
     // CATEGORIA (ML)
@@ -396,7 +397,7 @@ export default function ProductForm({
             DADOS BÁSICOS
         ======================= */}
         {activeTab === "basic" && (
-          <>
+          <div className="pf-tab pf-tab--basic">
             <div className="pf-row">
               <div className="pf-group pf-desc-group">
                 <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
@@ -461,7 +462,26 @@ export default function ProductForm({
                 />
               </div>
             </div>
-          </>
+
+          <div className="pf-row">
+  <div className="pf-group" style={{ flex: 1 }}>
+    <label className="s7-label">Palavras-chave SEO</label>
+
+    <input
+      className="s7-input"
+      placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
+      value={product.seo_keywords}
+      onChange={(e) => handleChange("seo_keywords", e.target.value)}
+    />
+
+    <div className="s7-hint">
+      Separe por vírgulas. Isso ajuda na busca interna e SEO futuro.
+    </div>
+  </div>
+</div>
+
+
+          </div>
         )}
 
         {/* =======================

@@ -394,3 +394,14 @@ min-width: 0;
     overflow-y: hidden;
   }
 }
+
+.pf-tab--basic{
+  width: 50%;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px){
+  .pf-tab--basic{
+    width: 100%;
+  }
+}
