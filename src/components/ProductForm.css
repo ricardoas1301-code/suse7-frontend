@@ -170,7 +170,7 @@ min-width: 0;
 ====================================================== */
 .pf-row{
   display: flex;
-  gap: 22px;           /* ✅ separa lateralmente (anti “grudado”) */
+  gap: 33px;           /* ✅ separa lateralmente (anti “grudado”) */
   row-gap: 12px;       /* ✅ quando quebrar linha */
   align-items: flex-start;
   margin-bottom: 12px; /* ✅ respiro vertical */
