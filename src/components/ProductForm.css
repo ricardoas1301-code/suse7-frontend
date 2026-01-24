@@ -144,7 +144,7 @@
 
   display: flex;
   flex-direction: column;
-  gap: 24px; /* ✅ 33px estava um pouco grande; 28px fica mais “premium” */
+  gap: 9px; /* ✅ 33px estava um pouco grande; 28px fica mais “premium” */
   
   flex: 1;
   min-height: 0;
