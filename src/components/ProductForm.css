@@ -165,19 +165,29 @@ min-width: 0;
 }
 
 
+/* ======================================================
+   LAYOUT DO FORM (SEM CONFLITO GLOBAL)
+====================================================== */
 .pf-row{
   display: flex;
-  gap: 18px;              /* ✅ lateral entre inputs (um pouco mais premium) */
-  row-gap: 10px;          /* ✅ quando quebrar linha no responsivo */
+  gap: 22px;           /* ✅ separa lateralmente (anti “grudado”) */
+  row-gap: 12px;       /* ✅ quando quebrar linha */
   align-items: flex-start;
-
-  margin-bottom: 12px;    /* ✅ RESPIRO vertical entre blocos de inputs */
+  margin-bottom: 12px; /* ✅ respiro vertical */
 }
 
-/* ✅ evita espaço sobrando no final do bloco */
 .pf-row:last-child{
   margin-bottom: 0;
 }
+
+.pf-group{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 220px;    /* ✅ impede ficar estreito e “colar” */
+}
+
 
 
 /* ======================================================
