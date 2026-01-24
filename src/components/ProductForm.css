@@ -438,3 +438,12 @@ min-width: 0;
   flex: 0 0 100%;
   width: 100%;
 }
+
+/* ======================================================
+   PF — TRILHO CENTRAL (aplica o padrão do SEO em tudo)
+====================================================== */
+.pf-tab-inner{
+  width: 100%;
+  max-width: 1040px;   /* ajuste fino: 980–1100 (escolha o que ficar mais premium) */
+  margin: 0 auto;      /* centraliza */
+}

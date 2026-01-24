@@ -397,7 +397,7 @@ export default function ProductForm({
             DADOS BÁSICOS
         ======================= */}
         {activeTab === "basic" && (
-          <div className="pf-tab pf-tab--basic">
+          <div className="pf-tab-inner">
             <div className="pf-row">
               <div className="pf-group">
                 <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
