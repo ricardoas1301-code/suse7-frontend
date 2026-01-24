@@ -189,6 +189,15 @@ min-width: 0;
   margin-bottom: 0;
 }
 
+.pf-group{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 220px;    /* ✅ impede ficar estreito e “colar” */
+}
+
+
 
 /* ======================================================
    DESCRIÇÃO
@@ -437,13 +446,4 @@ min-width: 0;
 .pf-group--full{
   flex: 0 0 100%;
   width: 100%;
-}
-
-/* ======================================================
-   PF — TRILHO CENTRAL (aplica o padrão do SEO em tudo)
-====================================================== */
-.pf-tab-inner{
-  width: 100%;
-  max-width: 1040px;   /* ajuste fino: 980–1100 (escolha o que ficar mais premium) */
-  margin: 0 auto;      /* centraliza */
 }
