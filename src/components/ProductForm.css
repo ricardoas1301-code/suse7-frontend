@@ -451,3 +451,38 @@
   box-sizing: border-box;
 }
 
+/* ======================================================================
+   SUSE7 — PRODUCT FORM — PADDING LATERAL PADRÃO (TODAS AS ABAS)
+   Objetivo:
+   - Mesmo espaço à esquerda/direita em todos os inputs
+   - Sem mexer input por input
+   - Sem criar wrapper novo que quebra grid/flex
+====================================================================== */
+
+/* ======================================================
+   1) PADRÃO DE RESPIRO LATERAL DO CONTEÚDO (ALVO PRINCIPAL)
+   -> Aplique no container que envolve o conteúdo das abas
+====================================================== */
+.pf-body{
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+}
+
+/* ======================================================
+   2) PROTEÇÃO: se algum "panel" de aba estiver zerando padding
+   -> Evita que uma aba fique com padding diferente da outra
+====================================================== */
+.pf-body > *{
+  box-sizing: border-box;
+}
+
+/* ======================================================
+   3) PROTEÇÃO: evita "estouro" por margens negativas de grids/rows
+====================================================== */
+.pf-body .row,
+.pf-body .grid,
+.pf-body .form-row{
+  margin-left: 0;
+  margin-right: 0;
+}
