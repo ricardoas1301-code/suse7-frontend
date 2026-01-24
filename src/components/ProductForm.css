@@ -140,11 +140,11 @@
 ====================================================== */
 .pf-body{
   padding: 24px;
-  padding-bottom: calc(24px + 30px); /* ✅ padrão Suse7: 30px de respiro antes do botão/rodapé */
+  padding-bottom: calc(24px + 53px); /* ✅ padrão Suse7: 30px de respiro antes do botão/rodapé */
 
   display: flex;
   flex-direction: column;
-  gap: 28px; /* ✅ 33px estava um pouco grande; 28px fica mais “premium” */
+  gap: 50px; /* ✅ 33px estava um pouco grande; 28px fica mais “premium” */
   
   flex: 1;
   min-height: 0;
@@ -167,11 +167,11 @@ min-width: 0;
 
 .pf-row{
   display: flex;
-  gap: 20px;              /* ✅ lateral entre inputs (um pouco mais premium) */
-  row-gap: 20px;          /* ✅ quando quebrar linha no responsivo */
+  gap: 36px;              /* ✅ lateral entre inputs (um pouco mais premium) */
+  row-gap: 36px;          /* ✅ quando quebrar linha no responsivo */
   align-items: flex-start;
 
-  margin-bottom: 20px;    /* ✅ RESPIRO vertical entre blocos de inputs */
+  margin-bottom: 36px;    /* ✅ RESPIRO vertical entre blocos de inputs */
 }
 
 /* ✅ evita espaço sobrando no final do bloco */
