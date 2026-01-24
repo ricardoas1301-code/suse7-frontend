@@ -424,3 +424,8 @@ min-width: 0;
     width: 100%;
   }
 }
+
+/* Aba basic mais compacta (só ela) */
+.pf-tab--basic .pf-row{
+  margin-bottom: 8px;  /* reduz espaço entre linhas nessa aba */
+}
