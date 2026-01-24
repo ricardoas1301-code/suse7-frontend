@@ -200,8 +200,8 @@ min-width: 0;
 
 .pf-seo-wrapper textarea{
   width: 100%;
-  height: 110px;      /* ✅ menor que a descrição, mas mesmo “formato” */
-  max-height: 110px;
+  height: 99px;      /* ✅ menor que a descrição, mas mesmo “formato” */
+  max-height: 99px;
 
   resize: none;       /* ✅ igual descrição */
   overflow-y: auto;
@@ -416,7 +416,7 @@ min-width: 0;
 
 .pf-tab--basic{
   width: 50%;
-  margin: 0 auto;
+  margin: 0;        /* ✅ remove centralização */
 }
 
 @media (max-width: 900px){
