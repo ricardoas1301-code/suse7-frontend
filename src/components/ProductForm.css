@@ -441,4 +441,13 @@
   margin: 0 auto;
 }
 
+/* ======================================================
+   CONTAINER DO FORMULÁRIO
+   Padroniza espaçamento esquerdo e direito
+====================================================== */
+.product-form {
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+}
 
