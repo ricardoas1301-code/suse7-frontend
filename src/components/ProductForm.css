@@ -162,9 +162,6 @@ flex-direction: column;
 gap: 8px;  /* ✅ mais confortável sem “inflar” a tela */
 flex: 1;
 min-width: 0;
-/* quando pf-group vem direto no body (ex: descrição) */
-.pf-body > .pf-group{
-  margin-bottom: 0;
 }
 
 
