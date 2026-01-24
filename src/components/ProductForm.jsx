@@ -1,14 +1,9 @@
 // ======================================================================
 // COMPONENTE: ProductForm
 // Objetivo:
-// - Reutilizar a mesma UI do ProductModal em modo PÁGINA
-// - Abas: Básico, Descrição, Estoque, Precificação, Fotos, Medidas,
-//         Variações (SKU + EAN), Anúncios (placeholder), Vendas (placeholder)
-// - UI only por enquanto (salvar/back-end depois)
-// Correção aplicada:
-// - Removemos classes genéricas (form-row/form-group) para evitar conflito
-// - Agora usamos pf-row / pf-group (escopo do ProductForm)
-// - Mantemos .s7-card nas seções de medidas
+// - Página de cadastro/edição de produto com abas
+// - Layout premium com trilho central (pf-container)
+// - Padrão visual alinhado ao "Pesos & medidas" (s7-card nas abas)
 // ======================================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -31,9 +26,7 @@ export default function ProductForm({
   // HELPER: ID seguro para variações (evita quebrar em browsers)
   // ------------------------------------------------------
   const createId = () => {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
     return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   };
 
@@ -41,9 +34,7 @@ export default function ProductForm({
   // STATE: PRODUTO (UI only)
   // ------------------------------------------------------
   const [product, setProduct] = useState({
-    // ======================================================
     // BÁSICO
-    // ======================================================
     product_name: "",
     sku: "",
     gtin: "",
@@ -51,16 +42,12 @@ export default function ProductForm({
     brand: "",
     model: "",
     description: "",
-    seo_keywords: "", // ✅ Palavras-chave SEO (separadas por vírgula)
+    seo_keywords: "",
 
-    // ======================================================
     // CATEGORIA (ML)
-    // ======================================================
     category_ml_id: "",
 
-    // ======================================================
     // ESTOQUE & LOGÍSTICA
-    // ======================================================
     stock_quantity: 0,
     stock_source: "manual",
     lead_time_days: "",
@@ -68,38 +55,28 @@ export default function ProductForm({
     supplier_name: "",
     notes: "",
 
-    // ======================================================
     // CUSTOS & PRECIFICAÇÃO
-    // ======================================================
     cost_price: "",
     fixed_costs: "",
     min_profit_percentage: "",
     min_profit_value: "",
 
-    // ======================================================
     // PESOS & MEDIDAS — ENVIO
-    // ======================================================
     width: "",
     height: "",
     length: "",
     weight: "",
 
-    // ======================================================
     // PESOS & MEDIDAS — PRODUTO MONTADO
-    // ======================================================
     assembled_width: "",
     assembled_height: "",
     assembled_length: "",
     assembled_weight: "",
 
-    // ======================================================
     // IMAGENS
-    // ======================================================
     product_images: null,
 
-    // ======================================================
     // CAMPOS DE SISTEMA
-    // ======================================================
     active: true,
     imported_from_channel: "manual",
     parent_sku: null,
@@ -137,9 +114,6 @@ export default function ProductForm({
   // HIDRATAR FORM (modo edição)
   // ------------------------------------------------------
   useEffect(() => {
-    // ------------------------------------------------------
-    // Produto inicial
-    // ------------------------------------------------------
     if (initialProduct) {
       setProduct((prev) => ({ ...prev, ...initialProduct }));
       setOriginalSku(initialProduct.sku || "");
@@ -149,9 +123,6 @@ export default function ProductForm({
       setOriginalGtin("");
     }
 
-    // ------------------------------------------------------
-    // Variações iniciais
-    // ------------------------------------------------------
     if (Array.isArray(initialVariations) && initialVariations.length > 0) {
       setVariations(
         initialVariations.map((v, idx) => ({
@@ -212,9 +183,7 @@ export default function ProductForm({
   };
 
   const handleVariationChange = (id, field, value) => {
-    setVariations((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, [field]: value } : v))
-    );
+    setVariations((prev) => prev.map((v) => (v.id === id ? { ...v, [field]: value } : v)));
   };
 
   // ------------------------------------------------------
@@ -302,6 +271,7 @@ export default function ProductForm({
           className="pf-copy-btn"
           onClick={onCopy ? onCopy : undefined}
           aria-label="Copiar"
+          title="Copiar"
         >
           ⧉
         </button>
@@ -329,11 +299,7 @@ export default function ProductForm({
          NOME DO PRODUTO — FIXO
       ================================================== */}
       <div className="pf-product-name-fixed">
-        <FieldLabel
-          text="Nome do produto"
-          required
-          onCopy={() => handleCopyField(product.product_name)}
-        />
+        <FieldLabel text="Nome do produto" required onCopy={() => handleCopyField(product.product_name)} />
 
         <input
           className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
@@ -351,8 +317,7 @@ export default function ProductForm({
       ================================================== */}
       {showSkuGtinAlert && (
         <div className="s7-alert s7-alert--warning">
-          <strong>Atenção:</strong> alterar <strong>SKU</strong> ou <strong>GTIN</strong> pode
-          impactar vínculos com anúncios e integrações.
+          <strong>Atenção:</strong> alterar <strong>SKU</strong> ou <strong>GTIN</strong> pode impactar vínculos com anúncios e integrações.
         </div>
       )}
 
@@ -393,496 +358,410 @@ export default function ProductForm({
          BODY
       ================================================== */}
       <div className="pf-body">
-        {/* =======================
-            DADOS BÁSICOS
-        ======================= */}
-        {activeTab === "basic" && (
-          <div className="pf-container">
-            <div className="pf-row">
-              <div className="pf-group">
-                <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
-                <input
-                  className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
-                  placeholder="SKU interno"
-                  value={product.sku}
-                  onChange={(e) => handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())}
-                />
-                {errors.sku && <div className="s7-error">{errors.sku}</div>}
-              </div>
+        {/* 🔥 Trilho central para TODAS as abas */}
+        <div className="pf-container">
+          {/* =======================
+              DADOS BÁSICOS (agora no padrão Measures: s7-card)
+          ======================= */}
+          {activeTab === "basic" && (
+            <div className="s7-card pf-section">
+              <div className="pf-row">
+                <div className="pf-group">
+                  <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
+                  <input
+                    className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
+                    placeholder="SKU interno"
+                    value={product.sku}
+                    onChange={(e) => handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())}
+                  />
+                  {errors.sku && <div className="s7-error">{errors.sku}</div>}
+                </div>
 
-              <div className="pf-group">
-                <FieldLabel text="EAN / GTIN" onCopy={() => handleCopyField(product.gtin)} />
-                <input
-                  className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
-                  inputMode="numeric"
-                  placeholder="Código de barras"
-                  value={product.gtin}
-                  onChange={(e) => handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))}
-                />
-                {errors.gtin && <div className="s7-error">{errors.gtin}</div>}
-              </div>
+                <div className="pf-group">
+                  <FieldLabel text="EAN / GTIN" onCopy={() => handleCopyField(product.gtin)} />
+                  <input
+                    className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
+                    inputMode="numeric"
+                    placeholder="Código de barras"
+                    value={product.gtin}
+                    onChange={(e) => handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))}
+                  />
+                  {errors.gtin && <div className="s7-error">{errors.gtin}</div>}
+                </div>
 
-              <div className="pf-group">
-                <FieldLabel text="NCM" onCopy={() => handleCopyField(product.ncm)} />
-                <input
-                  className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
-                  inputMode="numeric"
-                  placeholder="Ex: 94036000"
-                  value={product.ncm}
-                  onChange={(e) => {
-                    const masked = formatNcm(e.target.value);
-                    handleChange("ncm", masked);
+                <div className="pf-group">
+                  <FieldLabel text="NCM" onCopy={() => handleCopyField(product.ncm)} />
+                  <input
+                    className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
+                    inputMode="numeric"
+                    placeholder="Ex: 94036000"
+                    value={product.ncm}
+                    onChange={(e) => {
+                      const masked = formatNcm(e.target.value);
+                      handleChange("ncm", masked);
 
-                    const digits = masked.replace(/\D/g, "");
-                    if (digits.length === 8) setErrors((prev) => ({ ...prev, ncm: undefined }));
-                  }}
-                />
-                {errors.ncm && <div className="s7-error">{errors.ncm}</div>}
-              </div>
-            </div>
-
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Marca</label>
-                <input className="s7-input" value={product.brand} onChange={(e) => handleChange("brand", e.target.value)} />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Modelo</label>
-                <input className="s7-input" value={product.model} onChange={(e) => handleChange("model", e.target.value)} />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Categoria Mercado Livre (ID)</label>
-                <input
-                  className="s7-input"
-                  placeholder="Ex: MLB1234"
-                  value={product.category_ml_id}
-                  onChange={(e) => handleChange("category_ml_id", e.target.value)}
-                />
-              </div>
-            </div>
-
-<div className="pf-row">
-  <div className="pf-group pf-group--full">
-    <FieldLabel
-      text="Palavras-chave SEO"
-      onCopy={() => handleCopyField(product.seo_keywords)}
-    />
-
-    <div className="pf-seo-wrapper">
-      <textarea
-        className="s7-textarea"
-        rows="3"
-        placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
-        value={product.seo_keywords}
-        onChange={(e) => handleChange("seo_keywords", e.target.value)}
-      />
-    </div>
-
-    <div className="s7-hint">
-      Separe por vírgulas. Isso ajuda na busca interna e SEO futuro.
-    </div>
-  </div>
-</div>
-
-
-          </div>
-        )}
-
-        {/* =======================
-            DESCRIÇÃO
-        ======================= */}
-        {activeTab === "description" && (
-          <div className="pf-group">
-            <FieldLabel text="Descrição do produto" onCopy={() => handleCopyField(product.description)} />
-            <div className="description-wrapper pf-desc-wrapper">
-              <textarea
-                className="s7-textarea"
-                rows="8"
-                placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
-                value={product.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* =======================
-            ESTOQUE & LOGÍSTICA
-        ======================= */}
-        {activeTab === "stock" && (
-          <>
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Estoque</label>
-                <input className="s7-input" type="number" min="0" value={product.stock_quantity} onChange={(e) => handleChange("stock_quantity", e.target.value)} />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Origem do estoque</label>
-                <select className="s7-select" value={product.stock_source} onChange={(e) => handleChange("stock_source", e.target.value)}>
-                  <option value="manual">Manual</option>
-                  <option value="virtual">Virtual (avançado)</option>
-                </select>
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Lead time (dias)</label>
-                <input
-                  className="s7-input"
-                  inputMode="numeric"
-                  placeholder="Ex: 2"
-                  value={product.lead_time_days}
-                  onChange={(e) => handleChange("lead_time_days", e.target.value.replace(/\D/g, ""))}
-                />
-              </div>
-            </div>
-
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Origem (texto livre)</label>
-                <input
-                  className="s7-input"
-                  placeholder="Ex: Nacional / Importado / SP / Fábrica própria..."
-                  value={product.origin}
-                  onChange={(e) => handleChange("origin", e.target.value)}
-                />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Fornecedor</label>
-                <input
-                  className="s7-input"
-                  placeholder="Nome do fornecedor"
-                  value={product.supplier_name}
-                  onChange={(e) => handleChange("supplier_name", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Observações</label>
-                <input
-                  className="s7-input"
-                  placeholder="Notas internas sobre estoque/logística"
-                  value={product.notes}
-                  onChange={(e) => handleChange("notes", e.target.value)}
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* =======================
-            CUSTOS & PRECIFICAÇÃO
-        ======================= */}
-        {activeTab === "pricing" && (
-          <>
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Custo do produto</label>
-                <input className="s7-input" type="number" value={product.cost_price} onChange={(e) => handleChange("cost_price", e.target.value)} />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Custos fixos</label>
-                <input className="s7-input" type="number" value={product.fixed_costs} onChange={(e) => handleChange("fixed_costs", e.target.value)} />
-              </div>
-            </div>
-
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Lucro mínimo (%)</label>
-                <input
-                  className="s7-input"
-                  inputMode="decimal"
-                  placeholder="Ex: 10"
-                  value={product.min_profit_percentage}
-                  onChange={(e) => handleChange("min_profit_percentage", e.target.value)}
-                />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Lucro mínimo (R$)</label>
-                <input
-                  className="s7-input"
-                  inputMode="decimal"
-                  placeholder="Ex: 15,00"
-                  value={product.min_profit_value}
-                  onChange={(e) => handleChange("min_profit_value", e.target.value)}
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* =======================
-            FOTOS
-        ======================= */}
-        {activeTab === "photos" && (
-          <>
-            <p className="hint">
-              Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas para atualizar anúncios
-              em todos os canais.
-            </p>
-
-            <div className="photo-uploader">
-              <button className="s7-btn s7-btn--secondary" type="button">
-                Adicionar fotos
-              </button>
-            </div>
-
-            <div className="hint" style={{ marginTop: 12 }}>
-              Campo alvo no Supabase: <strong>product_images</strong>
-            </div>
-          </>
-        )}
-
-        {/* =======================
-            PESOS & MEDIDAS
-        ======================= */}
-        {activeTab === "measures" && (
-          <>
-            <div className="s7-card">
-              <div className="s7-card__header">
-                <h3 className="s7-card__title">Medidas de envio</h3>
-                <p className="s7-card__subtitle">Medidas usadas para cálculo de frete e logística.</p>
+                      const digits = masked.replace(/\D/g, "");
+                      if (digits.length === 8) setErrors((prev) => ({ ...prev, ncm: undefined }));
+                    }}
+                  />
+                  {errors.ncm && <div className="s7-error">{errors.ncm}</div>}
+                </div>
               </div>
 
               <div className="pf-row">
                 <div className="pf-group">
-                  <label className="s7-label">Largura (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 30" value={product.width} onChange={(e) => handleChange("width", e.target.value)} />
+                  <label className="s7-label">Marca</label>
+                  <input className="s7-input" value={product.brand} onChange={(e) => handleChange("brand", e.target.value)} />
                 </div>
 
                 <div className="pf-group">
-                  <label className="s7-label">Altura (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 15" value={product.height} onChange={(e) => handleChange("height", e.target.value)} />
+                  <label className="s7-label">Modelo</label>
+                  <input className="s7-input" value={product.model} onChange={(e) => handleChange("model", e.target.value)} />
                 </div>
 
                 <div className="pf-group">
-                  <label className="s7-label">Comprimento (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 45" value={product.length} onChange={(e) => handleChange("length", e.target.value)} />
+                  <label className="s7-label">Categoria Mercado Livre (ID)</label>
+                  <input
+                    className="s7-input"
+                    placeholder="Ex: MLB1234"
+                    value={product.category_ml_id}
+                    onChange={(e) => handleChange("category_ml_id", e.target.value)}
+                  />
                 </div>
+              </div>
 
-                <div className="pf-group">
-                  <label className="s7-label">Peso (kg)</label>
-                  <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 2.350" value={product.weight} onChange={(e) => handleChange("weight", e.target.value)} />
+              <div className="pf-row">
+                <div className="pf-group pf-group--full">
+                  <FieldLabel text="Palavras-chave SEO" onCopy={() => handleCopyField(product.seo_keywords)} />
+
+                  <textarea
+                    className="s7-textarea pf-textarea-sm"
+                    rows={3}
+                    placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
+                    value={product.seo_keywords}
+                    onChange={(e) => handleChange("seo_keywords", e.target.value)}
+                  />
+
+                  <div className="s7-hint">Separe por vírgulas. Isso ajuda na busca interna e SEO futuro.</div>
                 </div>
               </div>
             </div>
+          )}
 
-            <div className="s7-card">
-              <div className="s7-card__header">
-                <h3 className="s7-card__title">Medidas do produto (montado)</h3>
-                <p className="s7-card__subtitle">Medidas reais do produto pronto/montado (referência interna).</p>
+          {/* =======================
+              DESCRIÇÃO (s7-card)
+          ======================= */}
+          {activeTab === "description" && (
+            <div className="s7-card pf-section">
+              <FieldLabel text="Descrição do produto" onCopy={() => handleCopyField(product.description)} />
+              <div className="pf-desc-wrapper">
+                <textarea
+                  className="s7-textarea pf-textarea-lg"
+                  rows={8}
+                  placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
+                  value={product.description}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* =======================
+              ESTOQUE & LOGÍSTICA (s7-card)
+          ======================= */}
+          {activeTab === "stock" && (
+            <div className="s7-card pf-section">
+              <div className="pf-row">
+                <div className="pf-group">
+                  <label className="s7-label">Estoque</label>
+                  <input className="s7-input" type="number" min="0" value={product.stock_quantity} onChange={(e) => handleChange("stock_quantity", e.target.value)} />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Origem do estoque</label>
+                  <select className="s7-select" value={product.stock_source} onChange={(e) => handleChange("stock_source", e.target.value)}>
+                    <option value="manual">Manual</option>
+                    <option value="virtual">Virtual (avançado)</option>
+                  </select>
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Lead time (dias)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="numeric"
+                    placeholder="Ex: 2"
+                    value={product.lead_time_days}
+                    onChange={(e) => handleChange("lead_time_days", e.target.value.replace(/\D/g, ""))}
+                  />
+                </div>
               </div>
 
               <div className="pf-row">
                 <div className="pf-group">
-                  <label className="s7-label">Largura (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 32" value={product.assembled_width} onChange={(e) => handleChange("assembled_width", e.target.value)} />
+                  <label className="s7-label">Origem (texto livre)</label>
+                  <input className="s7-input" placeholder="Ex: Nacional / Importado / SP / Fábrica própria..." value={product.origin} onChange={(e) => handleChange("origin", e.target.value)} />
                 </div>
 
                 <div className="pf-group">
-                  <label className="s7-label">Altura (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 80" value={product.assembled_height} onChange={(e) => handleChange("assembled_height", e.target.value)} />
+                  <label className="s7-label">Fornecedor</label>
+                  <input className="s7-input" placeholder="Nome do fornecedor" value={product.supplier_name} onChange={(e) => handleChange("supplier_name", e.target.value)} />
                 </div>
+              </div>
 
-                <div className="pf-group">
-                  <label className="s7-label">Comprimento (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 42" value={product.assembled_length} onChange={(e) => handleChange("assembled_length", e.target.value)} />
-                </div>
-
-                <div className="pf-group">
-                  <label className="s7-label">Peso (kg)</label>
-                  <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 8.500" value={product.assembled_weight} onChange={(e) => handleChange("assembled_weight", e.target.value)} />
+              <div className="pf-row">
+                <div className="pf-group pf-group--full">
+                  <label className="s7-label">Observações</label>
+                  <input className="s7-input" placeholder="Notas internas sobre estoque/logística" value={product.notes} onChange={(e) => handleChange("notes", e.target.value)} />
                 </div>
               </div>
             </div>
-          </>
-        )}
+          )}
 
-        {/* =======================
-            VARIAÇÕES
-        ======================= */}
-        {activeTab === "variations" && (
-          <>
-            <div className="section">
-              <div className="section-header">
-                <h3>Variações</h3>
-                <p className="section-subtitle">
-                  Crie variações como cor/tamanho. Cada variação pode ter SKU e EAN próprios.
-                </p>
+          {/* =======================
+              CUSTOS & PRECIFICAÇÃO (s7-card)
+          ======================= */}
+          {activeTab === "pricing" && (
+            <div className="s7-card pf-section">
+              <div className="pf-row">
+                <div className="pf-group">
+                  <label className="s7-label">Custo do produto</label>
+                  <input className="s7-input" type="number" value={product.cost_price} onChange={(e) => handleChange("cost_price", e.target.value)} />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Custos fixos</label>
+                  <input className="s7-input" type="number" value={product.fixed_costs} onChange={(e) => handleChange("fixed_costs", e.target.value)} />
+                </div>
               </div>
 
-              <div className="pf-actions-row">
-                <button className="s7-btn s7-btn--secondary" type="button" onClick={handleAddVariation}>
-                  + Adicionar variação
+              <div className="pf-row">
+                <div className="pf-group">
+                  <label className="s7-label">Lucro mínimo (%)</label>
+                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 10" value={product.min_profit_percentage} onChange={(e) => handleChange("min_profit_percentage", e.target.value)} />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Lucro mínimo (R$)</label>
+                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 15,00" value={product.min_profit_value} onChange={(e) => handleChange("min_profit_value", e.target.value)} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =======================
+              FOTOS (s7-card)
+          ======================= */}
+          {activeTab === "photos" && (
+            <div className="s7-card pf-section">
+              <p className="hint">
+                Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas para atualizar anúncios em todos os canais.
+              </p>
+
+              <div className="photo-uploader">
+                <button className="s7-btn s7-btn--secondary" type="button">
+                  Adicionar fotos
                 </button>
               </div>
+
+              <div className="hint" style={{ marginTop: 12 }}>
+                Campo alvo no Supabase: <strong>product_images</strong>
+              </div>
             </div>
+          )}
 
-            {variations.map((v, index) => (
-              <div className="section" key={v.id}>
-                <div className="pf-variation-head">
-                  <div>
-                    <h3 style={{ margin: 0 }}>{v.variation_name || `Variação ${index + 1}`}</h3>
-                    <p className="section-subtitle" style={{ marginTop: 6 }}>
-                      Configure atributo, valor, SKU, EAN e estoque da variação.
-                    </p>
-                  </div>
-
-                  <div className="pf-variation-actions">
-                    <label className="pf-switch">
-                      <input
-                        type="checkbox"
-                        checked={v.active}
-                        onChange={(e) => handleVariationChange(v.id, "active", e.target.checked)}
-                      />
-                      Ativa
-                    </label>
-
-                    <button
-                      className="s7-btn s7-btn--secondary"
-                      type="button"
-                      onClick={() => handleRemoveVariation(v.id)}
-                      disabled={variations.length === 1}
-                      title={variations.length === 1 ? "Mantenha ao menos 1 variação" : "Remover variação"}
-                    >
-                      Remover
-                    </button>
-                  </div>
+          {/* =======================
+              PESOS & MEDIDAS (já está no padrão)
+          ======================= */}
+          {activeTab === "measures" && (
+            <>
+              <div className="s7-card pf-section">
+                <div className="s7-card__header">
+                  <h3 className="s7-card__title">Medidas de envio</h3>
+                  <p className="s7-card__subtitle">Medidas usadas para cálculo de frete e logística.</p>
                 </div>
 
                 <div className="pf-row">
                   <div className="pf-group">
-                    <label className="s7-label">Nome da variação (opcional)</label>
-                    <input
-                      className="s7-input"
-                      placeholder="Ex: Cor Preto"
-                      value={v.variation_name}
-                      onChange={(e) => handleVariationChange(v.id, "variation_name", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="pf-row">
-                  <div className="pf-group">
-                    <label className="s7-label">Atributo</label>
-                    <input
-                      className="s7-input"
-                      placeholder="Ex: Cor"
-                      value={v.attribute}
-                      onChange={(e) => handleVariationChange(v.id, "attribute", e.target.value)}
-                    />
+                    <label className="s7-label">Largura (cm)</label>
+                    <input className="s7-input" type="number" min="0" placeholder="Ex: 30" value={product.width} onChange={(e) => handleChange("width", e.target.value)} />
                   </div>
 
                   <div className="pf-group">
-                    <label className="s7-label">Valor</label>
-                    <input
-                      className="s7-input"
-                      placeholder="Ex: Preto"
-                      value={v.value}
-                      onChange={(e) => handleVariationChange(v.id, "value", e.target.value)}
-                    />
+                    <label className="s7-label">Altura (cm)</label>
+                    <input className="s7-input" type="number" min="0" placeholder="Ex: 15" value={product.height} onChange={(e) => handleChange("height", e.target.value)} />
                   </div>
 
                   <div className="pf-group">
-                    <label className="s7-label">SKU da variação</label>
-                    <input
-                      className="s7-input"
-                      placeholder="Ex: ARM-COZ-PT-01"
-                      value={v.sku}
-                      onChange={(e) => handleVariationChange(v.id, "sku", e.target.value)}
-                    />
+                    <label className="s7-label">Comprimento (cm)</label>
+                    <input className="s7-input" type="number" min="0" placeholder="Ex: 45" value={product.length} onChange={(e) => handleChange("length", e.target.value)} />
                   </div>
 
                   <div className="pf-group">
-                    <label className="s7-label">EAN</label>
-                    <input
-                      className="s7-input"
-                      inputMode="numeric"
-                      placeholder="Ex: 7891234567890"
-                      value={v.ean}
-                      onChange={(e) => handleVariationChange(v.id, "ean", e.target.value.replace(/\D/g, ""))}
-                    />
-                  </div>
-                </div>
-
-                <div className="pf-row">
-                  <div className="pf-group">
-                    <label className="s7-label">Estoque da variação</label>
-                    <input
-                      className="s7-input"
-                      inputMode="numeric"
-                      placeholder="Ex: 10"
-                      value={v.stock}
-                      onChange={(e) => handleVariationChange(v.id, "stock", e.target.value.replace(/\D/g, ""))}
-                    />
-                  </div>
-
-                  <div className="pf-group">
-                    <label className="s7-label">Preço (opcional)</label>
-                    <input
-                      className="s7-input"
-                      inputMode="decimal"
-                      placeholder="Ex: 199,90"
-                      value={v.price}
-                      onChange={(e) => handleVariationChange(v.id, "price", e.target.value)}
-                    />
+                    <label className="s7-label">Peso (kg)</label>
+                    <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 2.350" value={product.weight} onChange={(e) => handleChange("weight", e.target.value)} />
                   </div>
                 </div>
               </div>
-            ))}
-          </>
-        )}
 
-        {/* =======================
-            ANÚNCIOS (placeholder)
-        ======================= */}
-        {activeTab === "ads" && (
-          <div className="section">
-            <div className="section-header">
-              <h3>Anúncios do produto</h3>
-              <p className="section-subtitle">
-                Aqui vamos listar os anúncios vinculados a este produto em cada marketplace (ML primeiro).
-              </p>
+              <div className="s7-card pf-section">
+                <div className="s7-card__header">
+                  <h3 className="s7-card__title">Medidas do produto (montado)</h3>
+                  <p className="s7-card__subtitle">Medidas reais do produto pronto/montado (referência interna).</p>
+                </div>
+
+                <div className="pf-row">
+                  <div className="pf-group">
+                    <label className="s7-label">Largura (cm)</label>
+                    <input className="s7-input" type="number" min="0" placeholder="Ex: 32" value={product.assembled_width} onChange={(e) => handleChange("assembled_width", e.target.value)} />
+                  </div>
+
+                  <div className="pf-group">
+                    <label className="s7-label">Altura (cm)</label>
+                    <input className="s7-input" type="number" min="0" placeholder="Ex: 80" value={product.assembled_height} onChange={(e) => handleChange("assembled_height", e.target.value)} />
+                  </div>
+
+                  <div className="pf-group">
+                    <label className="s7-label">Comprimento (cm)</label>
+                    <input className="s7-input" type="number" min="0" placeholder="Ex: 42" value={product.assembled_length} onChange={(e) => handleChange("assembled_length", e.target.value)} />
+                  </div>
+
+                  <div className="pf-group">
+                    <label className="s7-label">Peso (kg)</label>
+                    <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 8.500" value={product.assembled_weight} onChange={(e) => handleChange("assembled_weight", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* =======================
+              VARIAÇÕES (mantive sua section como está)
+          ======================= */}
+          {activeTab === "variations" && (
+            <>
+              <div className="section">
+                <div className="section-header">
+                  <h3>Variações</h3>
+                  <p className="section-subtitle">Crie variações como cor/tamanho. Cada variação pode ter SKU e EAN próprios.</p>
+                </div>
+
+                <div className="pf-actions-row">
+                  <button className="s7-btn s7-btn--secondary" type="button" onClick={handleAddVariation}>
+                    + Adicionar variação
+                  </button>
+                </div>
+              </div>
+
+              {variations.map((v, index) => (
+                <div className="section" key={v.id}>
+                  <div className="pf-variation-head">
+                    <div>
+                      <h3 style={{ margin: 0 }}>{v.variation_name || `Variação ${index + 1}`}</h3>
+                      <p className="section-subtitle" style={{ marginTop: 6 }}>
+                        Configure atributo, valor, SKU, EAN e estoque da variação.
+                      </p>
+                    </div>
+
+                    <div className="pf-variation-actions">
+                      <label className="pf-switch">
+                        <input type="checkbox" checked={v.active} onChange={(e) => handleVariationChange(v.id, "active", e.target.checked)} />
+                        Ativa
+                      </label>
+
+                      <button
+                        className="s7-btn s7-btn--secondary"
+                        type="button"
+                        onClick={() => handleRemoveVariation(v.id)}
+                        disabled={variations.length === 1}
+                        title={variations.length === 1 ? "Mantenha ao menos 1 variação" : "Remover variação"}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pf-row">
+                    <div className="pf-group">
+                      <label className="s7-label">Nome da variação (opcional)</label>
+                      <input className="s7-input" placeholder="Ex: Cor Preto" value={v.variation_name} onChange={(e) => handleVariationChange(v.id, "variation_name", e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="pf-row">
+                    <div className="pf-group">
+                      <label className="s7-label">Atributo</label>
+                      <input className="s7-input" placeholder="Ex: Cor" value={v.attribute} onChange={(e) => handleVariationChange(v.id, "attribute", e.target.value)} />
+                    </div>
+
+                    <div className="pf-group">
+                      <label className="s7-label">Valor</label>
+                      <input className="s7-input" placeholder="Ex: Preto" value={v.value} onChange={(e) => handleVariationChange(v.id, "value", e.target.value)} />
+                    </div>
+
+                    <div className="pf-group">
+                      <label className="s7-label">SKU da variação</label>
+                      <input className="s7-input" placeholder="Ex: ARM-COZ-PT-01" value={v.sku} onChange={(e) => handleVariationChange(v.id, "sku", e.target.value)} />
+                    </div>
+
+                    <div className="pf-group">
+                      <label className="s7-label">EAN</label>
+                      <input className="s7-input" inputMode="numeric" placeholder="Ex: 7891234567890" value={v.ean} onChange={(e) => handleVariationChange(v.id, "ean", e.target.value.replace(/\D/g, ""))} />
+                    </div>
+                  </div>
+
+                  <div className="pf-row">
+                    <div className="pf-group">
+                      <label className="s7-label">Estoque da variação</label>
+                      <input className="s7-input" inputMode="numeric" placeholder="Ex: 10" value={v.stock} onChange={(e) => handleVariationChange(v.id, "stock", e.target.value.replace(/\D/g, ""))} />
+                    </div>
+
+                    <div className="pf-group">
+                      <label className="s7-label">Preço (opcional)</label>
+                      <input className="s7-input" inputMode="decimal" placeholder="Ex: 199,90" value={v.price} onChange={(e) => handleVariationChange(v.id, "price", e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* =======================
+              ANÚNCIOS (placeholder)
+          ======================= */}
+          {activeTab === "ads" && (
+            <div className="section">
+              <div className="section-header">
+                <h3>Anúncios do produto</h3>
+                <p className="section-subtitle">Aqui vamos listar os anúncios vinculados a este produto em cada marketplace (ML primeiro).</p>
+              </div>
+
+              <p className="hint">Em breve: tabela com Marketplace, ID do anúncio, Status, Preço, Estoque e Ações.</p>
+
+              <button className="s7-btn s7-btn--secondary" type="button">
+                Importar anúncios (em breve)
+              </button>
             </div>
+          )}
 
-            <p className="hint">
-              Em breve: tabela com Marketplace, ID do anúncio, Status, Preço, Estoque e Ações.
-            </p>
+          {/* =======================
+              VENDAS & DESEMPENHO (placeholder)
+          ======================= */}
+          {activeTab === "performance" && (
+            <div className="section">
+              <div className="section-header">
+                <h3>Vendas & desempenho</h3>
+                <p className="section-subtitle">Painel do produto: histórico de vendas, desempenho por canal e indicadores.</p>
+              </div>
 
-            <button className="s7-btn s7-btn--secondary" type="button">
-              Importar anúncios (em breve)
-            </button>
-          </div>
-        )}
+              <p className="hint">Em breve: cards com Vendas, Receita, Lucro, Ticket médio, Conversão e Curva ABC.</p>
 
-        {/* =======================
-            VENDAS & DESEMPENHO (placeholder)
-        ======================= */}
-        {activeTab === "performance" && (
-          <div className="section">
-            <div className="section-header">
-              <h3>Vendas & desempenho</h3>
-              <p className="section-subtitle">
-                Painel do produto: histórico de vendas, desempenho por canal e indicadores.
-              </p>
+              <button className="s7-btn s7-btn--secondary" type="button">
+                Ver relatório (em breve)
+              </button>
             </div>
-
-            <p className="hint">
-              Em breve: cards com Vendas, Receita, Lucro, Ticket médio, Conversão e Curva ABC.
-            </p>
-
-            <button className="s7-btn s7-btn--secondary" type="button">
-              Ver relatório (em breve)
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ==================================================

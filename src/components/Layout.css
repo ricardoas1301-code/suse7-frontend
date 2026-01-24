@@ -163,14 +163,21 @@
    - Scroll ficará somente dentro do ProductForm (.pf-body)
 ====================================================================== */
 /* Conteúdo abaixo da navbar */
+/* padrão do app: páginas podem rolar */
 .page-content{
   flex: 1;
   overflow: auto;
   overflow-x: hidden;
   padding: 8px 24px 24px;
-
-  background: #ffffff; /* ✅ remove o fundo azul */
+  background: #ffffff;
+  box-sizing: border-box;
 }
+
+/* só quando a página quiser scroll interno (ProductForm) */
+.page-content--no-scroll{
+  overflow: hidden;
+}
+
 
 
 

@@ -46,7 +46,6 @@
   gap: 4px;
 }
 
-/* Botão fechar — padrão ContactModal */
 .pf-close{
   background: transparent;
   border: none;
@@ -80,6 +79,7 @@
   gap: 6px;
 }
 
+/* Mantém esse campo mais “curto” como no seu print */
 .pf-product-name-fixed .s7-input,
 .pf-product-name-fixed .pf-label-row{
   max-width: 50%;
@@ -140,159 +140,83 @@
 ====================================================== */
 .pf-body{
   padding: 24px;
-  padding-bottom: calc(24px + 53px); /* ✅ padrão Suse7: 30px de respiro antes do botão/rodapé */
+  padding-bottom: calc(24px + 53px); /* respiro + footer sticky */
 
-  display: flex;
-  flex-direction: column;
-  gap: 9px; /* ✅ 33px estava um pouco grande; 28px fica mais “premium” */
-  
+  display: block;
   flex: 1;
   min-height: 0;
+
   overflow-y: auto;
   overflow-x: hidden;
-  align-items: stretch;
 }
 
-
 /* ======================================================
-   LAYOUT DO FORM (SEM CONFLITO GLOBAL)
+   CONTAINER CENTRAL (trilho igual “Measures”)
 ====================================================== */
-.pf-group{
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  min-width: 220px;
-  min-width: 0; /* se quiser permitir encolher sem quebrar layout */
+.pf-container{
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
 }
 
+/* Espaço entre sections/cards dentro do container */
+.pf-section{
+  margin-bottom: 14px;
+}
+.pf-section:last-child{
+  margin-bottom: 0;
+}
 
 /* ======================================================
-   LAYOUT DO FORM (SEM CONFLITO GLOBAL)
+   GRID DOS CAMPOS
 ====================================================== */
 .pf-row{
   display: flex;
-  gap: 33px;           /* ✅ separa lateralmente (anti “grudado”) */
-  row-gap: 12px;       /* ✅ quando quebrar linha */
+  gap: 18px;         /* ✅ premium e “não grudado” */
+  row-gap: 12px;
   align-items: flex-start;
-  margin-bottom: 12px; /* ✅ respiro vertical */
+  margin-bottom: 12px;
 }
 
 .pf-row:last-child{
   margin-bottom: 0;
 }
 
-
-/* ======================================================
-   DESCRIÇÃO
-====================================================== */
-.description-wrapper{
-  position: relative;
-  max-width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 0; /* ✅ deixa o espaçamento ser controlado pelo pf-body/pf-row */
-}
-
-/* ======================================================
-   SEO KEYWORDS — textarea no padrão da Descrição
-====================================================== */
-.pf-seo-wrapper{
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.pf-seo-wrapper textarea{
-  width: 100%;
-  height: 93px;      /* ✅ menor que a descrição, mas mesmo “formato” */
-  max-height: 93px;
-
-  resize: none;       /* ✅ igual descrição */
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-
-
-.description-wrapper textarea{
-  width: 100%;
-  height: 220px;
-  max-height: 220px;
-
-  resize: none;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-/* Ocupa altura da aba corretamente */
-.pf-desc-group{
+.pf-group{
   display: flex;
   flex-direction: column;
+  gap: 6px;
+
   flex: 1;
-  min-height: 0;
+  min-width: 240px;  /* ✅ evita esmagar e “colar” */
+}
+
+/* Campo de largura total */
+.pf-group--full{
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ======================================================
+   TEXTAREAS (tamanhos padrão do ProductForm)
+====================================================== */
+.pf-textarea-sm{
+  height: 96px;
+  max-height: 96px;
+  resize: none;
+  overflow-y: auto;
+}
+
+.pf-textarea-lg{
+  height: 220px;
+  max-height: 220px;
+  resize: none;
+  overflow-y: auto;
 }
 
 .pf-desc-wrapper{
-  flex: 1;
-  min-height: 0;
   display: flex;
-}
-
-.pf-desc-wrapper textarea{ flex: 1; }
-
-/* ======================================================
-   SECTIONS (temporário — depois migrar tudo para .s7-card)
-====================================================== */
-.section{
-  background: var(--s7-bg, #fff);
-  border: 1px solid var(--s7-divider, #eef0f3);
-  border-radius: var(--s7-radius-md, 12px);
-  padding: 16px;
-  box-shadow: var(--s7-shadow-section, 0 10px 26px rgba(0,0,0,0.04));
-  box-sizing: border-box;
-}
-
-.section-header h3{
-  margin: 0;
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--s7-text, #0f172a);
-}
-
-.section-subtitle{
-  margin: 6px 0 0 0;
-  font-size: 13px;
-  color: var(--s7-muted, #6b7280);
-}
-
-/* ======================================================
-   VARIAÇÕES
-====================================================== */
-.pf-actions-row{
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.pf-variation-head{
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.pf-variation-actions{
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.pf-switch{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #334155;
 }
 
 /* ======================================================
@@ -391,7 +315,7 @@
     flex-wrap: wrap;
   }
 
-  .pf-row .pf-group{
+  .pf-group{
     flex: 1 1 calc(50% - 9px);
     min-width: 220px;
   }
@@ -405,7 +329,7 @@
 }
 
 @media (max-width: 520px){
-  .pf-row .pf-group{
+  .pf-group{
     flex: 1 1 100%;
     min-width: 100%;
   }
@@ -416,29 +340,3 @@
     overflow-y: hidden;
   }
 }
-
-
-@media (max-width: 900px){
-  .pf-tab--basic{
-    width: 100%;
-  }
-}
-
-/* ======================================================
-   PF — FULL WIDTH GROUP (para campos longos)
-====================================================== */
-.pf-group--full{
-  flex: 0 0 100%;
-  width: 100%;
-}
-
-/* ======================================================
-   PF — CONTAINER (trilho central igual UX do Measures)
-====================================================== */
-.pf-container{
-  width: 100%;
-  max-width: 1120px;  /* pode testar 1040/1120/1180 */
-  margin: 0 auto;
-}
-
-
