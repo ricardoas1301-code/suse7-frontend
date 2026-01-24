@@ -167,11 +167,11 @@ min-width: 0;
 
 .pf-row{
   display: flex;
-  gap: 36px;              /* ✅ lateral entre inputs (um pouco mais premium) */
+  gap: 18px;              /* ✅ lateral entre inputs (um pouco mais premium) */
   row-gap: 10px;          /* ✅ quando quebrar linha no responsivo */
   align-items: flex-start;
 
-  margin-bottom: 10px;    /* ✅ RESPIRO vertical entre blocos de inputs */
+  margin-bottom: 12px;    /* ✅ RESPIRO vertical entre blocos de inputs */
 }
 
 /* ✅ evita espaço sobrando no final do bloco */
@@ -414,10 +414,6 @@ min-width: 0;
   }
 }
 
-.pf-tab--basic{
-  width: 50%;
-  margin: 0;        /* ✅ remove centralização */
-}
 
 @media (max-width: 900px){
   .pf-tab--basic{
@@ -425,3 +421,10 @@ min-width: 0;
   }
 }
 
+/* ======================================================
+   PF — FULL WIDTH GROUP (para campos longos)
+====================================================== */
+.pf-group--full{
+  flex: 0 0 100%;
+  width: 100%;
+}

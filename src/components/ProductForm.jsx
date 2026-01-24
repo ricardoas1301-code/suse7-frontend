@@ -463,8 +463,8 @@ export default function ProductForm({
               </div>
             </div>
 
-          <div className="pf-row">
-  <div className="pf-group" style={{ flex: 1 }}>
+<div className="pf-row">
+  <div className="pf-group pf-group--full">
     <FieldLabel
       text="Palavras-chave SEO"
       onCopy={() => handleCopyField(product.seo_keywords)}
@@ -485,7 +485,6 @@ export default function ProductForm({
     </div>
   </div>
 </div>
-
 
 
           </div>
@@ -563,7 +562,7 @@ export default function ProductForm({
             </div>
 
             <div className="pf-row">
-              <div className="pf-group" style={{ flex: 1 }}>
+              <div className="pf-group">
                 <label className="s7-label">Observações</label>
                 <input
                   className="s7-input"
@@ -759,7 +758,7 @@ export default function ProductForm({
                 </div>
 
                 <div className="pf-row">
-                  <div className="pf-group" style={{ flex: 1 }}>
+                  <div className="pf-group">
                     <label className="s7-label">Nome da variação (opcional)</label>
                     <input
                       className="s7-input"
