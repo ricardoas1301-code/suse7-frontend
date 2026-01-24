@@ -150,6 +150,15 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  align-items: stretch;
+}
+
+/* ======================================================
+   CORREÇÃO DE CENTRALIZAÇÃO — DADOS BÁSICOS
+====================================================== */
+.pf-body > .pf-row,
+.pf-body > .pf-group{
+  width: 100%;
 }
 
 
