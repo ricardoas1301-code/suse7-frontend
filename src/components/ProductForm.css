@@ -168,10 +168,10 @@ min-width: 0;
 .pf-row{
   display: flex;
   gap: 36px;              /* ✅ lateral entre inputs (um pouco mais premium) */
-  row-gap: 9px;          /* ✅ quando quebrar linha no responsivo */
+  row-gap: 1px;          /* ✅ quando quebrar linha no responsivo */
   align-items: flex-start;
 
-  margin-bottom: 9px;    /* ✅ RESPIRO vertical entre blocos de inputs */
+  margin-bottom: 1px;    /* ✅ RESPIRO vertical entre blocos de inputs */
 }
 
 /* ✅ evita espaço sobrando no final do bloco */
