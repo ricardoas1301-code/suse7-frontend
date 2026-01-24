@@ -486,3 +486,31 @@
   margin-left: 0;
   margin-right: 0;
 }
+
+
+/* ======================================================================
+   SUSE7 — PRODUCT FORM
+   PADRÃO DE ALINHAMENTO LATERAL (TODAS AS ABAS)
+   Baseado no comportamento correto da aba "Descrição"
+====================================================================== */
+
+/* ======================================================
+   1) PADDING GLOBAL DO CONTEÚDO DAS ABAS
+   (pai de todas as .pf-row / .pf-group)
+====================================================== */
+.pf-container{
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+}
+
+/* ======================================================
+   2) EVITA "PADDING DUPLO" NA ABA DESCRIÇÃO
+   (se a Descrição já tem wrapper com padding, zeramos nele)
+====================================================== */
+.pf-seo,
+.pf-seo-wrapper{
+  padding-left: 0;
+  padding-right: 0;
+  box-sizing: border-box;
+}
