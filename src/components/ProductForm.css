@@ -200,8 +200,8 @@ min-width: 0;
 
 .pf-seo-wrapper textarea{
   width: 100%;
-  height: 99px;      /* ✅ menor que a descrição, mas mesmo “formato” */
-  max-height: 99px;
+  height: 93px;      /* ✅ menor que a descrição, mas mesmo “formato” */
+  max-height: 93px;
 
   resize: none;       /* ✅ igual descrição */
   overflow-y: auto;
@@ -425,7 +425,3 @@ min-width: 0;
   }
 }
 
-/* Aba basic mais compacta (só ela) */
-.pf-tab--basic .pf-row{
-  margin-bottom: 8px;  /* reduz espaço entre linhas nessa aba */
-}
