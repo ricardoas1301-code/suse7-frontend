@@ -171,16 +171,15 @@
    LAYOUT DO FORM (SEM CONFLITO GLOBAL)
 ====================================================== */
 .pf-row{
-  padding-left: 24px;
-  padding-right: 24px;
-  box-sizing: border-box;
+  display: flex;
+  gap: 33px;           /* ✅ separa lateralmente (anti “grudado”) */
+  row-gap: 12px;       /* ✅ quando quebrar linha */
+  align-items: flex-start;
+  margin-bottom: 12px; /* ✅ respiro vertical */
 }
 
-/* ======================================================
-   SEGURANÇA: nenhuma row pode estourar lateralmente
-====================================================== */
-.pf-row > *{
-  box-sizing: border-box;
+.pf-row:last-child{
+  margin-bottom: 0;
 }
 
 
