@@ -399,7 +399,7 @@ export default function ProductForm({
         {activeTab === "basic" && (
           <div className="pf-tab pf-tab--basic">
             <div className="pf-row">
-              <div className="pf-group pf-desc-group">
+              <div className="pf-group">
                 <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
                 <input
                   className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
@@ -465,20 +465,27 @@ export default function ProductForm({
 
           <div className="pf-row">
   <div className="pf-group" style={{ flex: 1 }}>
-    <label className="s7-label">Palavras-chave SEO</label>
-
-    <input
-      className="s7-input"
-      placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
-      value={product.seo_keywords}
-      onChange={(e) => handleChange("seo_keywords", e.target.value)}
+    <FieldLabel
+      text="Palavras-chave SEO"
+      onCopy={() => handleCopyField(product.seo_keywords)}
     />
+
+    <div className="pf-seo-wrapper">
+      <textarea
+        className="s7-textarea"
+        rows="3"
+        placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
+        value={product.seo_keywords}
+        onChange={(e) => handleChange("seo_keywords", e.target.value)}
+      />
+    </div>
 
     <div className="s7-hint">
       Separe por vírgulas. Isso ajuda na busca interna e SEO futuro.
     </div>
   </div>
 </div>
+
 
 
           </div>
