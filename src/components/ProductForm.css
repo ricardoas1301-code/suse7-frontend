@@ -136,32 +136,43 @@
 }
 
 /* ======================================================
-   BODY (scroll interno) — ✅ correção real do "lado direito menor"
+   BODY (scroll interno)
 ====================================================== */
 .pf-body{
   padding: 24px;
-  padding-right: 32px; /* ✅ compensação visual (Windows/Chrome scrollbar) */
-  padding-bottom: calc(24px + 53px); /* ✅ mantém seu respiro do rodapé */
+  padding-bottom: calc(24px + 53px); /* ✅ padrão Suse7: 30px de respiro antes do botão/rodapé */
 
   display: flex;
   flex-direction: column;
-  gap: 9px;
-
+  gap: 9px; /* ✅ 33px estava um pouco grande; 28px fica mais “premium” */
+  
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: stretch;
-
-  scrollbar-gutter: stable; /* ✅ reserva espaço do scroll e mantém margens simétricas */
 }
+
+
+/* ======================================================
+   LAYOUT DO FORM (SEM CONFLITO GLOBAL)
+====================================================== */
+.pf-group{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 220px;
+  min-width: 0; /* se quiser permitir encolher sem quebrar layout */
+}
+
 
 /* ======================================================
    LAYOUT DO FORM (SEM CONFLITO GLOBAL)
 ====================================================== */
 .pf-row{
   display: flex;
-  gap: 33px;           /* ✅ separa lateralmente */
+  gap: 33px;           /* ✅ separa lateralmente (anti “grudado”) */
   row-gap: 12px;       /* ✅ quando quebrar linha */
   align-items: flex-start;
   margin-bottom: 12px; /* ✅ respiro vertical */
@@ -171,13 +182,6 @@
   margin-bottom: 0;
 }
 
-.pf-group{
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  min-width: 220px; /* ✅ evita colar/encolher demais */
-}
 
 /* ======================================================
    DESCRIÇÃO
@@ -186,8 +190,28 @@
   position: relative;
   max-width: 100%;
   box-sizing: border-box;
-  margin-bottom: 0;
+  margin-bottom: 0; /* ✅ deixa o espaçamento ser controlado pelo pf-body/pf-row */
 }
+
+/* ======================================================
+   SEO KEYWORDS — textarea no padrão da Descrição
+====================================================== */
+.pf-seo-wrapper{
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pf-seo-wrapper textarea{
+  width: 100%;
+  height: 93px;      /* ✅ menor que a descrição, mas mesmo “formato” */
+  max-height: 93px;
+
+  resize: none;       /* ✅ igual descrição */
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+
 
 .description-wrapper textarea{
   width: 100%;
@@ -214,24 +238,6 @@
 }
 
 .pf-desc-wrapper textarea{ flex: 1; }
-
-/* ======================================================
-   SEO KEYWORDS — textarea no padrão da Descrição
-====================================================== */
-.pf-seo-wrapper{
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.pf-seo-wrapper textarea{
-  width: 100%;
-  height: 93px;
-  max-height: 93px;
-
-  resize: none;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
 
 /* ======================================================
    SECTIONS (temporário — depois migrar tudo para .s7-card)
@@ -378,23 +384,6 @@
 .pf-footer-right{ justify-content: flex-end; }
 
 /* ======================================================
-   PF — FULL WIDTH GROUP (para campos longos)
-====================================================== */
-.pf-group--full{
-  flex: 0 0 100%;
-  width: 100%;
-}
-
-/* ======================================================
-   PF — CONTAINER (trilho central igual UX do Measures)
-====================================================== */
-.pf-container{
-  width: 100%;
-  max-width: 1120px;
-  margin: 0 auto;
-}
-
-/* ======================================================
    RESPONSIVO
 ====================================================== */
 @media (max-width: 900px){
@@ -427,3 +416,29 @@
     overflow-y: hidden;
   }
 }
+
+
+@media (max-width: 900px){
+  .pf-tab--basic{
+    width: 100%;
+  }
+}
+
+/* ======================================================
+   PF — FULL WIDTH GROUP (para campos longos)
+====================================================== */
+.pf-group--full{
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+/* ======================================================
+   PF — CONTAINER (trilho central igual UX do Measures)
+====================================================== */
+.pf-container{
+  width: 100%;
+  max-width: 1120px;  /* pode testar 1040/1120/1180 */
+  margin: 0 auto;
+}
+
+
