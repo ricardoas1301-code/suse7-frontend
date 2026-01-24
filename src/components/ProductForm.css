@@ -175,27 +175,18 @@ min-width: 0;
 
 
 /* ======================================================
-   LAYOUT DO FORM (SEM CONFLITO GLOBAL)
+   PF ROW — espaçamento padrão (anti grudado)
 ====================================================== */
 .pf-row{
+  width: 100%;
   display: flex;
-  gap: 33px;           /* ✅ separa lateralmente (anti “grudado”) */
-  row-gap: 12px;       /* ✅ quando quebrar linha */
+  gap: 18px;            /* lateral entre inputs (igual sensação do measures) */
+  row-gap: 12px;        /* quando quebrar linha */
   align-items: flex-start;
-  margin-bottom: 12px; /* ✅ respiro vertical */
+  margin-bottom: 14px;  /* vertical entre blocos */
 }
 
-.pf-row:last-child{
-  margin-bottom: 0;
-}
-
-.pf-group{
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  min-width: 220px;    /* ✅ impede ficar estreito e “colar” */
-}
+.pf-row:last-child{ margin-bottom: 0; }
 
 
 
@@ -433,12 +424,6 @@ min-width: 0;
   }
 }
 
-
-@media (max-width: 900px){
-  .pf-tab--basic{
-    width: 100%;
-  }
-}
 
 /* ======================================================
    PF — FULL WIDTH GROUP (para campos longos)
