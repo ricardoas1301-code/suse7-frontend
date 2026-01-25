@@ -685,9 +685,6 @@ export default function ProductForm({
                     )}
                   </div>
 
-                  <div className="s7-hint">
-                    Esta imagem vem da tabela <strong>products</strong> (campo <strong>product_images</strong>).
-                  </div>
                 </div>
               </div>
 
