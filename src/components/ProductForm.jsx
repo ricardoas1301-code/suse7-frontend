@@ -660,8 +660,7 @@ export default function ProductForm({
           <div className="pf-container">
             <div className="pf-row">
               <div className="pf-group">
-                <label className="s7-label">Imagem principal (Img1)</label>
-
+                
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                   <div
                     style={{
