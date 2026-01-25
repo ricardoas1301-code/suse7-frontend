@@ -86,6 +86,13 @@
 }
 
 /* ======================================================
+   ALERTA
+====================================================== */
+.pf-alert{
+  margin: 12px 24px 0;
+}
+
+/* ======================================================
    ABAS
 ====================================================== */
 .pf-tabs{
@@ -136,52 +143,106 @@
 }
 
 /* ======================================================
-   BODY (scroll interno)
+   BODY (scroll interno) + padding padrão
 ====================================================== */
 .pf-body{
   padding: 24px;
-  padding-bottom: calc(24px + 53px); /* ✅ padrão Suse7: 30px de respiro antes do botão/rodapé */
+  padding-bottom: calc(24px + 53px);
 
   display: flex;
   flex-direction: column;
-  gap: 9px; /* ✅ 33px estava um pouco grande; 28px fica mais “premium” */
-  
+  gap: 12px;
+
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: stretch;
+
+  box-sizing: border-box;
 }
 
+/* ======================================================
+   CONTAINER CENTRAL (trilho premium)
+====================================================== */
+.pf-container{
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
 
 /* ======================================================
-   LAYOUT DO FORM (SEM CONFLITO GLOBAL)
+   LAYOUT DO FORM
 ====================================================== */
 .pf-group{
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex: 1;
-  min-width: 220px;
-  min-width: 0; /* se quiser permitir encolher sem quebrar layout */
+  min-width: 0;
 }
 
+.pf-group--full{
+  flex: 0 0 100%;
+  width: 100%;
+}
 
-/* ======================================================
-   LAYOUT DO FORM (SEM CONFLITO GLOBAL)
-====================================================== */
+.pf-group--btn{
+  flex: 0 0 auto;
+  width: 210px;
+}
+
 .pf-row{
   display: flex;
-  gap: 33px;           /* ✅ separa lateralmente (anti “grudado”) */
-  row-gap: 12px;       /* ✅ quando quebrar linha */
+  gap: 33px;
+  row-gap: 12px;
   align-items: flex-start;
-  margin-bottom: 12px; /* ✅ respiro vertical */
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
-.pf-row:last-child{
-  margin-bottom: 0;
+.pf-row:last-child{ margin-bottom: 0; }
+
+/* ======================================================
+   IMG1 (preview)
+====================================================== */
+.pf-img1{
+  width: 100%;
+  height: 92px;
+  border-radius: 10px;
+  border: 1px solid var(--s7-divider, #eef0f3);
+  background: #f8fafc;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.pf-img1 img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pf-img1-placeholder{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ======================================================
+   SEO KEYWORDS — maior verticalmente
+====================================================== */
+.pf-seo-wrapper{ width: 100%; box-sizing: border-box; }
+
+.pf-seo-textarea{
+  height: 120px;
+  max-height: 120px;
+}
 
 /* ======================================================
    DESCRIÇÃO
@@ -190,40 +251,18 @@
   position: relative;
   max-width: 100%;
   box-sizing: border-box;
-  margin-bottom: 0; /* ✅ deixa o espaçamento ser controlado pelo pf-body/pf-row */
+  margin-bottom: 0;
 }
-
-/* ======================================================
-   SEO KEYWORDS — textarea no padrão da Descrição
-====================================================== */
-.pf-seo-wrapper{
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.pf-seo-wrapper textarea{
-  width: 100%;
-  height: 93px;      /* ✅ menor que a descrição, mas mesmo “formato” */
-  max-height: 93px;
-
-  resize: none;       /* ✅ igual descrição */
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-
 
 .description-wrapper textarea{
   width: 100%;
   height: 220px;
   max-height: 220px;
-
   resize: none;
   overflow-y: auto;
   box-sizing: border-box;
 }
 
-/* Ocupa altura da aba corretamente */
 .pf-desc-group{
   display: flex;
   flex-direction: column;
@@ -265,38 +304,7 @@
 }
 
 /* ======================================================
-   VARIAÇÕES
-====================================================== */
-.pf-actions-row{
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.pf-variation-head{
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.pf-variation-actions{
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.pf-switch{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #334155;
-}
-
-/* ======================================================
-   LABEL + COPIAR (tooltip)
+   LABEL + COPIAR
 ====================================================== */
 .pf-label-row{
   display: flex;
@@ -363,6 +371,293 @@
 }
 
 /* ======================================================
+   SWITCH (simples, reaproveita)
+====================================================== */
+.pf-switch{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.pf-switch--block{
+  margin-top: 6px;
+}
+
+/* ======================================================
+   VARIAÇÕES — INFO BOX (estilo Bling)
+====================================================== */
+.pf-variations-info{
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+
+  background: #eaf6ff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid #cfe9ff;
+  margin-bottom: 8px;
+}
+
+.pf-info-icon{
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #0ea5e9;
+  color: #fff;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.pf-info-title{
+  font-size: 14px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.pf-info-subtitle{
+  margin-top: 4px;
+  font-size: 13px;
+  color: #334155;
+}
+
+/* ======================================================
+   CHIPBOX (opções com Enter)
+====================================================== */
+.pf-chipbox{
+  width: 100%;
+  min-height: 38px;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  padding: 6px 8px;
+  border-radius: var(--s7-radius-sm, 8px);
+  border: 1px solid var(--s7-border, #dcdfe4);
+  background: var(--s7-bg-soft, #f9fafb);
+
+  box-sizing: border-box;
+}
+
+.pf-chipbox:focus-within{
+  border-color: var(--s7-primary, #2563eb);
+  box-shadow: var(--s7-ring-focus, 0 0 0 2px rgba(37, 99, 235, 0.12));
+  background: var(--s7-bg, #fff);
+}
+
+.pf-chipbox-input{
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  min-width: 220px;
+  flex: 1;
+}
+
+.pf-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 5px 10px;
+  border-radius: 999px;
+
+  background: rgba(37, 99, 235, 0.10);
+  color: var(--s7-primary, #2563eb);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.pf-chip--soft{
+  background: rgba(107, 114, 128, 0.12);
+  color: #334155;
+  font-weight: 800;
+}
+
+.pf-chip-x{
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.pf-chip-x:hover{ opacity: 1; transform: scale(1.05); }
+
+.pf-chipbox-hint{
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--s7-muted, #6b7280);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pf-info-dot{
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+/* ======================================================
+   VARIAÇÕES CADASTRADAS
+====================================================== */
+.pf-registered{
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--s7-divider, #eef0f3);
+}
+
+.pf-registered-title{
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.pf-registered-row{
+  display: grid;
+  grid-template-columns: 220px 1fr 44px;
+  gap: 12px;
+  align-items: center;
+
+  padding: 10px 12px;
+  border: 1px solid var(--s7-divider, #eef0f3);
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 10px;
+}
+
+.pf-registered-name{
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.pf-registered-options{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pf-registered-remove{
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.pf-registered-remove:hover{ opacity: 1; transform: scale(1.05); }
+
+/* ======================================================
+   GRID DE COMBINAÇÕES
+====================================================== */
+.pf-grid-wrap{
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--s7-divider, #eef0f3);
+}
+
+.pf-grid-title{
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.pf-grid{
+  width: 100%;
+  border: 1px solid var(--s7-divider, #eef0f3);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.pf-grid-head{
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(160px, 1fr);
+  gap: 0;
+
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--s7-divider, #eef0f3);
+
+  font-size: 12px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.pf-grid-row{
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(160px, 1fr);
+  gap: 0;
+
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--s7-divider, #eef0f3);
+}
+
+.pf-grid-row:last-child{
+  border-bottom: none;
+}
+
+.pf-grid-row.even{ background: #fff; }
+.pf-grid-row.odd{  background: #fbfdff; }
+
+.pf-grid-img{
+  display: flex;
+  align-items: center;
+}
+
+.pf-grid-imgbox{
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--s7-divider, #eef0f3);
+  background: #f8fafc;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pf-grid-imgbox img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pf-grid-cell{
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pf-grid-switch{
+  display: flex;
+  align-items: center;
+}
+
+/* ======================================================
    FOOTER (sticky)
 ====================================================== */
 .pf-footer{
@@ -387,109 +682,30 @@
    RESPONSIVO
 ====================================================== */
 @media (max-width: 900px){
-  .pf-row{
-    flex-wrap: wrap;
-  }
-
-  .pf-row .pf-group{
-    flex: 1 1 calc(50% - 9px);
-    min-width: 220px;
-  }
-
   .pf-tabs button{ min-width: 130px; }
 
   .pf-product-name-fixed .s7-input,
   .pf-product-name-fixed .pf-label-row{
     max-width: 100%;
   }
+
+  .pf-group--btn{
+    width: 100%;
+  }
+
+  .pf-registered-row{
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 520px){
-  .pf-row .pf-group{
-    flex: 1 1 100%;
-    min-width: 100%;
-  }
-
   .pf-tabs{
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
   }
-}
 
-
-@media (max-width: 900px){
-  .pf-tab--basic{
-    width: 100%;
+  .pf-chipbox-input{
+    min-width: 140px;
   }
 }
-
-/* ======================================================
-   PF — FULL WIDTH GROUP (para campos longos)
-====================================================== */
-.pf-group--full{
-  flex: 0 0 100%;
-  width: 100%;
-}
-
-/* ======================================================
-   PF — CONTAINER (trilho central igual UX do Measures)
-====================================================== */
-.pf-container{
-  width: 100%;
-  max-width: 1120px;  /* pode testar 1040/1120/1180 */
-  margin: 0 auto;
-  .pf-container{
-  padding-left: 24px;
-  padding-right: 24px;
-  box-sizing: border-box;
-}
-}
-
-/* ======================================================
-   CONTAINER DO FORMULÁRIO
-   Padroniza espaçamento esquerdo e direito
-====================================================== */
-.product-form {
-  padding-left: 24px;
-  padding-right: 24px;
-  box-sizing: border-box;
-}
-
-/* ======================================================================
-   SUSE7 — PRODUCT FORM — PADDING LATERAL PADRÃO (TODAS AS ABAS)
-   Objetivo:
-   - Mesmo espaço à esquerda/direita em todos os inputs
-   - Sem mexer input por input
-   - Sem criar wrapper novo que quebra grid/flex
-====================================================================== */
-
-/* ======================================================
-   1) PADRÃO DE RESPIRO LATERAL DO CONTEÚDO (ALVO PRINCIPAL)
-   -> Aplique no container que envolve o conteúdo das abas
-====================================================== */
-.pf-body{
-  padding-left: 24px;
-  padding-right: 24px;
-  box-sizing: border-box;
-}
-
-/* ======================================================
-   2) PROTEÇÃO: se algum "panel" de aba estiver zerando padding
-   -> Evita que uma aba fique com padding diferente da outra
-====================================================== */
-.pf-body > *{
-  box-sizing: border-box;
-}
-
-/* ======================================================
-   3) PROTEÇÃO: evita "estouro" por margens negativas de grids/rows
-====================================================== */
-.pf-body .row,
-.pf-body .grid,
-.pf-body .form-row{
-  margin-left: 0;
-  margin-right: 0;
-}
-
-

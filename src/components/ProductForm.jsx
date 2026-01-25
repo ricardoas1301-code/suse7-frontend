@@ -1,14 +1,15 @@
 // ======================================================================
 // COMPONENTE: ProductForm
 // Objetivo:
-// - Reutilizar a mesma UI do ProductModal em modo PÁGINA
-// - Abas: Básico, Descrição, Estoque, Precificação, Fotos, Medidas,
-//         Variações (SKU + EAN), Anúncios (placeholder), Vendas (placeholder)
+// - Cadastro / edição de produto em modo PÁGINA (Suse7)
+// - Abas (nova ordem): Dados, Custos & precificação, Imagens, Variações,
+//                      Descrição, Estoque, Pesos & Medidas, Anúncios,
+//                      Vendas & desempenho
+// - Variações no padrão Bling: atributo + opções (chips) -> gerar combinações
 // - UI only por enquanto (salvar/back-end depois)
-// Correção aplicada:
-// - Removemos classes genéricas (form-row/form-group) para evitar conflito
-// - Agora usamos pf-row / pf-group (escopo do ProductForm)
-// - Mantemos .s7-card nas seções de medidas
+// Regras do projeto:
+// - Sem lógica sensível no frontend (validações fortes irão para backend)
+// - Código comentado por bloco/purpose (padrão Suse7)
 // ======================================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -23,58 +24,86 @@ export default function ProductForm({
   onSubmit = null,
 }) {
   // ------------------------------------------------------
-  // CONTROLE DE ABAS
+  // CONTROLE DE ABAS (nova ordem)
   // ------------------------------------------------------
-  const [activeTab, setActiveTab] = useState("basic");
+  const TABS = useMemo(
+    () => [
+      { key: "data", label: "Dados" },
+      { key: "costs", label: "Custos & precificação" },
+      { key: "images", label: "Imagens" },
+      { key: "variations", label: "Variações" },
+      { key: "description", label: "Descrição" },
+      { key: "stock", label: "Estoque" },
+      { key: "measures", label: "Pesos & Medidas" },
+      { key: "ads", label: "Anúncios" },
+      { key: "performance", label: "Vendas & desempenho" },
+    ],
+    []
+  );
+
+  const [activeTab, setActiveTab] = useState("data");
 
   // ------------------------------------------------------
-  // HELPER: ID seguro para variações (evita quebrar em browsers)
+  // HELPER: ID seguro (evita quebrar em browsers)
   // ------------------------------------------------------
   const createId = () => {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
     return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   };
 
   // ------------------------------------------------------
   // STATE: PRODUTO (UI only)
+  // Observação: mantemos campos antigos para compatibilidade,
+  // mas a UI reflete o novo desenho (mais enxuto e seller-friendly).
   // ------------------------------------------------------
   const [product, setProduct] = useState({
     // ======================================================
-    // BÁSICO
+    // DADOS
     // ======================================================
     product_name: "",
+    format: "simple", // "simple" | "variations" | "bundle"
     sku: "",
     gtin: "",
     ncm: "",
     brand: "",
     model: "",
+    seo_keywords: "",
+
+    // Imagem principal (opcional: se vier do banco, exibimos)
+    // Pode ser URL, key de storage, etc. (depende do seu backend/storage)
+    main_image_url: "",
+
+    // ======================================================
+    // DESCRIÇÃO
+    // ======================================================
     description: "",
-    seo_keywords: "", // ✅ Palavras-chave SEO (separadas por vírgula)
 
     // ======================================================
-    // CATEGORIA (ML)
+    // CUSTOS & PRECIFICAÇÃO (novos campos)
     // ======================================================
-    category_ml_id: "",
+    cost_price: "",
+    packaging_cost: "",
+    operational_cost: "",
+    min_profit_percentage: "",
+    min_profit_value: "",
+
+    // Compatibilidade (campo antigo)
+    fixed_costs: "",
 
     // ======================================================
-    // ESTOQUE & LOGÍSTICA
+    // ESTOQUE (novo desenho)
     // ======================================================
-    stock_quantity: 0,
+    stock_quantity: 0, // estoque real
+    stock_min_quantity: "",
+    use_virtual_stock: false,
+    virtual_stock_value: "",
+    notes: "",
+
+    // Compatibilidade (campos antigos)
     stock_source: "manual",
     lead_time_days: "",
     origin: "",
     supplier_name: "",
-    notes: "",
-
-    // ======================================================
-    // CUSTOS & PRECIFICAÇÃO
-    // ======================================================
-    cost_price: "",
-    fixed_costs: "",
-    min_profit_percentage: "",
-    min_profit_value: "",
 
     // ======================================================
     // PESOS & MEDIDAS — ENVIO
@@ -93,12 +122,12 @@ export default function ProductForm({
     assembled_weight: "",
 
     // ======================================================
-    // IMAGENS
+    // IMAGENS (compatibilidade / futuro)
     // ======================================================
     product_images: null,
 
     // ======================================================
-    // CAMPOS DE SISTEMA
+    // SISTEMA
     // ======================================================
     active: true,
     imported_from_channel: "manual",
@@ -112,36 +141,40 @@ export default function ProductForm({
   const [originalGtin, setOriginalGtin] = useState("");
 
   // ------------------------------------------------------
-  // STATE: VARIAÇÕES (UI only)
-  // ------------------------------------------------------
-  const [variations, setVariations] = useState([
-    {
-      id: createId(),
-      variation_name: "Variação 1",
-      attribute: "Cor",
-      value: "Preto",
-      sku: "",
-      ean: "",
-      stock: "",
-      price: "",
-      active: true,
-    },
-  ]);
-
-  // ------------------------------------------------------
-  // STATE: ERROS (UX somente)
+  // STATE: ERROS (UX only)
   // ------------------------------------------------------
   const [errors, setErrors] = useState({});
+
+  // ------------------------------------------------------
+  // VARIAÇÕES (novo padrão Bling)
+  // ------------------------------------------------------
+  const [varAttrName, setVarAttrName] = useState(""); // Nome do atributo (ex: Cor)
+  const [varOptionInput, setVarOptionInput] = useState(""); // Input das opções (chips)
+  const [varOptionChips, setVarOptionChips] = useState([]); // ["Preto","Azul"]
+
+  // Lista de atributos adicionados (definições)
+  const [variationDefinitions, setVariationDefinitions] = useState([]);
+  // Combinações finais (itens gerados)
+  const [variations, setVariations] = useState([]);
 
   // ------------------------------------------------------
   // HIDRATAR FORM (modo edição)
   // ------------------------------------------------------
   useEffect(() => {
-    // ------------------------------------------------------
     // Produto inicial
-    // ------------------------------------------------------
     if (initialProduct) {
-      setProduct((prev) => ({ ...prev, ...initialProduct }));
+      setProduct((prev) => ({
+        ...prev,
+        ...initialProduct,
+
+        // Back-compat: se vier fixed_costs, cair em operational_cost se vazio
+        operational_cost:
+          initialProduct.operational_cost ??
+          prev.operational_cost ??
+          initialProduct.fixed_costs ??
+          "",
+      }));
+
       setOriginalSku(initialProduct.sku || "");
       setOriginalGtin(initialProduct.gtin || "");
     } else {
@@ -149,29 +182,46 @@ export default function ProductForm({
       setOriginalGtin("");
     }
 
-    // ------------------------------------------------------
-    // Variações iniciais
-    // ------------------------------------------------------
+    // Variações iniciais (suporta legado e novo formato)
     if (Array.isArray(initialVariations) && initialVariations.length > 0) {
-      setVariations(
-        initialVariations.map((v, idx) => ({
+      const mapped = initialVariations.map((v) => {
+        // Novo formato: já vem com attributes {}
+        if (v.attributes && typeof v.attributes === "object") {
+          return {
+            id: v.id || createId(),
+            attributes: v.attributes || {},
+            sku: v.sku || "",
+            ean: v.ean || "",
+            stock: v.stock || "",
+            price: v.price || "",
+            image_url: v.image_url || "",
+            active: typeof v.active === "boolean" ? v.active : true,
+          };
+        }
+
+        // Legado: attribute + value
+        const attr = v.attribute || "Atributo";
+        const val = v.value || "";
+        return {
           id: v.id || createId(),
-          variation_name: v.variation_name || `Variação ${idx + 1}`,
-          attribute: v.attribute || "",
-          value: v.value || "",
+          attributes: { [attr]: val },
           sku: v.sku || "",
           ean: v.ean || "",
           stock: v.stock || "",
           price: v.price || "",
+          image_url: v.image_url || "",
           active: typeof v.active === "boolean" ? v.active : true,
-        }))
-      );
+        };
+      });
+
+      setVariations(mapped);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProduct, initialVariations]);
 
   // ------------------------------------------------------
   // ALERTA SKU/GTIN (modo edit)
+  // - Em modo variações, o SKU do produto vira SKU Pai (interno)
   // ------------------------------------------------------
   const showSkuGtinAlert = useMemo(() => {
     if (mode !== "edit") return false;
@@ -188,37 +238,7 @@ export default function ProductForm({
   };
 
   // ------------------------------------------------------
-  // VARIAÇÕES: CRUD UI
-  // ------------------------------------------------------
-  const handleAddVariation = () => {
-    setVariations((prev) => [
-      ...prev,
-      {
-        id: createId(),
-        variation_name: `Variação ${prev.length + 1}`,
-        attribute: "",
-        value: "",
-        sku: "",
-        ean: "",
-        stock: "",
-        price: "",
-        active: true,
-      },
-    ]);
-  };
-
-  const handleRemoveVariation = (id) => {
-    setVariations((prev) => prev.filter((v) => v.id !== id));
-  };
-
-  const handleVariationChange = (id, field, value) => {
-    setVariations((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, [field]: value } : v))
-    );
-  };
-
-  // ------------------------------------------------------
-  // HELPER UI: Copiar conteúdo do campo (padrão ML)
+  // HELPER UI: copiar conteúdo do campo
   // ------------------------------------------------------
   const handleCopyField = async (value) => {
     try {
@@ -230,9 +250,35 @@ export default function ProductForm({
   };
 
   // ------------------------------------------------------
-  // VALIDAR: Aba Dados Básicos (UX)
+  // HELPER: imagem principal (Img1) vindo do próprio product
+  // - Prioridade: main_image_url > primeira de product_images (se array) > null
   // ------------------------------------------------------
-  const validateBasicTab = () => {
+  const mainImage = useMemo(() => {
+    if (String(product.main_image_url || "").trim()) return product.main_image_url;
+
+    // Se no futuro product_images virar array (urls/keys)
+    if (Array.isArray(product.product_images) && product.product_images.length > 0) {
+      return product.product_images[0];
+    }
+
+    // Se vier como string JSON (caso backend salve assim), tentativa safe
+    if (typeof product.product_images === "string") {
+      try {
+        const parsed = JSON.parse(product.product_images);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      } catch {
+        // ignora
+      }
+    }
+
+    return "";
+  }, [product.main_image_url, product.product_images]);
+
+  // ------------------------------------------------------
+  // VALIDAR: Aba Dados (UX)
+  // Obs.: validações fortes vão pro backend depois.
+  // ------------------------------------------------------
+  const validateDataTab = () => {
     const nextErrors = {};
 
     if (!String(product.product_name || "").trim()) {
@@ -240,7 +286,10 @@ export default function ProductForm({
     }
 
     if (!String(product.sku || "").trim()) {
-      nextErrors.sku = "SKU é obrigatório.";
+      nextErrors.sku =
+        product.format === "variations"
+          ? "SKU Pai (interno) é obrigatório."
+          : "SKU é obrigatório.";
     }
 
     const gtin = String(product.gtin || "").trim();
@@ -269,22 +318,140 @@ export default function ProductForm({
   };
 
   // ------------------------------------------------------
+  // VARIAÇÕES: CHIP INPUT (Enter/Tab/Comma)
+  // ------------------------------------------------------
+  const normalizeChip = (raw) =>
+    String(raw || "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const addChip = (raw) => {
+    const val = normalizeChip(raw);
+    if (!val) return;
+
+    // Evita duplicado (case-insensitive)
+    const exists = varOptionChips.some((c) => c.toLowerCase() === val.toLowerCase());
+    if (exists) return;
+
+    setVarOptionChips((prev) => [...prev, val]);
+    setVarOptionInput("");
+  };
+
+  const removeChip = (chip) => {
+    setVarOptionChips((prev) => prev.filter((c) => c !== chip));
+  };
+
+  const handleOptionKeyDown = (e) => {
+    const key = e.key;
+
+    // Separadores: Enter, Tab e vírgula
+    if (key === "Enter" || key === "Tab" || key === ",") {
+      e.preventDefault();
+      addChip(varOptionInput);
+      return;
+    }
+
+    // Backspace com input vazio remove o último chip
+    if (key === "Backspace" && !varOptionInput && varOptionChips.length > 0) {
+      const last = varOptionChips[varOptionChips.length - 1];
+      removeChip(last);
+    }
+  };
+
+  // ------------------------------------------------------
+  // VARIAÇÕES: adicionar definição (atributo + opções)
+  // ------------------------------------------------------
+  const handleAddVariationDefinition = () => {
+    const attr = normalizeChip(varAttrName);
+    if (!attr) return;
+
+    if (varOptionInput) addChip(varOptionInput);
+
+    const options = [...varOptionChips].filter(Boolean);
+    if (options.length === 0) return;
+
+    // Evita duplicar atributo
+    const already = variationDefinitions.some(
+      (d) => String(d.attribute_name || "").toLowerCase() === attr.toLowerCase()
+    );
+    if (already) return;
+
+    const nextDefs = [...variationDefinitions, { attribute_name: attr, options }];
+    setVariationDefinitions(nextDefs);
+
+    // Reset builder
+    setVarAttrName("");
+    setVarOptionInput("");
+    setVarOptionChips([]);
+
+    // Gerar combinações
+    const nextRows = buildCombinations(nextDefs, variations, createId);
+    setVariations(nextRows);
+  };
+
+  // ------------------------------------------------------
+  // VARIAÇÕES: remover uma definição
+  // ------------------------------------------------------
+  const handleRemoveVariationDefinition = (attribute_name) => {
+    const nextDefs = variationDefinitions.filter((d) => d.attribute_name !== attribute_name);
+    setVariationDefinitions(nextDefs);
+
+    const nextRows = buildCombinations(nextDefs, variations, createId);
+    setVariations(nextRows);
+  };
+
+  // ------------------------------------------------------
+  // VARIAÇÕES: atualizar um item gerado (grid)
+  // ------------------------------------------------------
+  const handleVariationRowChange = (id, field, value) => {
+    setVariations((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row))
+    );
+  };
+
+  const handleToggleVariationActive = (id, checked) => {
+    setVariations((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, active: checked } : row))
+    );
+  };
+
+  const handleRemoveVariationRow = (id) => {
+    setVariations((prev) => prev.filter((row) => row.id !== id));
+  };
+
+  // ------------------------------------------------------
   // SUBMIT (UI only por enquanto)
   // ------------------------------------------------------
   const handleSubmit = () => {
-    const okBasic = validateBasicTab();
-    if (!okBasic) {
-      setActiveTab("basic");
+    const okData = validateDataTab();
+    if (!okData) {
+      setActiveTab("data");
+      return;
+    }
+
+    // Se formato for "variations", mas não tem combinações, alerta suave
+    if (product.format === "variations" && variations.length === 0) {
+      setActiveTab("variations");
+      setErrors((prev) => ({
+        ...prev,
+        variations: "Cadastre ao menos 1 variação para produtos com variações.",
+      }));
       return;
     }
 
     if (typeof onSubmit === "function") {
-      onSubmit({ product, variations, mode });
+      onSubmit({
+        product,
+        variation_definitions: variationDefinitions,
+        variations,
+        mode,
+      });
       return;
     }
 
     console.log("Produto a salvar:", product);
-    console.log("Variações a salvar:", variations);
+    console.log("Defs variações:", variationDefinitions);
+    console.log("Variações (combinações) a salvar:", variations);
   };
 
   // ======================================================================
@@ -308,6 +475,13 @@ export default function ProductForm({
       </div>
     );
   };
+
+  // ------------------------------------------------------
+  // Labels dinâmicos conforme Formato
+  // ------------------------------------------------------
+  const skuLabel = product.format === "variations" ? "SKU Pai (interno)" : "SKU";
+  const gtinLabel =
+    product.format === "variations" ? "EAN / GTIN (opcional no Pai)" : "EAN / GTIN";
 
   return (
     <div className="pf-card pf-card--primary">
@@ -360,33 +534,27 @@ export default function ProductForm({
          ABAS
       ================================================== */}
       <div className="pf-tabs">
-        <button className={activeTab === "basic" ? "active" : ""} onClick={() => setActiveTab("basic")} type="button">
-          Dados básicos
-        </button>
-        <button className={activeTab === "description" ? "active" : ""} onClick={() => setActiveTab("description")} type="button">
-          Descrição
-        </button>
-        <button className={activeTab === "stock" ? "active" : ""} onClick={() => setActiveTab("stock")} type="button">
-          Estoque & logística
-        </button>
-        <button className={activeTab === "pricing" ? "active" : ""} onClick={() => setActiveTab("pricing")} type="button">
-          Custos & precificação
-        </button>
-        <button className={activeTab === "photos" ? "active" : ""} onClick={() => setActiveTab("photos")} type="button">
-          Fotos
-        </button>
-        <button className={activeTab === "measures" ? "active" : ""} onClick={() => setActiveTab("measures")} type="button">
-          Pesos & medidas
-        </button>
-        <button className={activeTab === "variations" ? "active" : ""} onClick={() => setActiveTab("variations")} type="button">
-          Variações
-        </button>
-        <button className={activeTab === "ads" ? "active" : ""} onClick={() => setActiveTab("ads")} type="button">
-          Anúncios
-        </button>
-        <button className={activeTab === "performance" ? "active" : ""} onClick={() => setActiveTab("performance")} type="button">
-          Vendas & desempenho
-        </button>
+        {TABS.map((t) => {
+          // Se não for produto com variações, desabilita aba "Variações"
+          const disabled = t.key === "variations" && product.format !== "variations";
+
+          return (
+            <button
+              key={t.key}
+              className={activeTab === t.key ? "active" : ""}
+              onClick={() => setActiveTab(t.key)}
+              type="button"
+              disabled={disabled}
+              title={
+                disabled
+                  ? "Ative o formato 'Com variações' na aba Dados para usar esta aba."
+                  : undefined
+              }
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* ==================================================
@@ -394,24 +562,72 @@ export default function ProductForm({
       ================================================== */}
       <div className="pf-body">
         {/* =======================
-            DADOS BÁSICOS
+            DADOS
         ======================= */}
-        {activeTab === "basic" && (
+        {activeTab === "data" && (
           <div className="pf-container">
+            {/* Img1 produto (preview) */}
+            <div className="pf-row pf-row--tight">
+              <div className="pf-group pf-group--full">
+                <div className="pf-image-row">
+                  <div className="pf-image-preview">
+                    {mainImage ? (
+                      <img src={mainImage} alt="Imagem principal do produto" />
+                    ) : (
+                      <div className="pf-image-placeholder">Img1 produto</div>
+                    )}
+                  </div>
+
+                  <div className="pf-image-info">
+                    <div className="s7-label">Img1 produto</div>
+                    <div className="s7-hint">
+                      Exibimos a imagem principal do produto a partir da tabela <strong>products</strong>.
+                    </div>
+                    <div className="s7-hint">
+                      (Campo sugerido: <strong>main_image_url</strong> ou 1ª imagem de{" "}
+                      <strong>product_images</strong>)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Formato + SKU + GTIN + NCM */}
             <div className="pf-row">
               <div className="pf-group">
-                <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
+                <label className="s7-label">Formato</label>
+                <select
+                  className="s7-select"
+                  value={product.format}
+                  onChange={(e) => handleChange("format", e.target.value)}
+                >
+                  <option value="simple">Simples</option>
+                  <option value="variations">Com variações</option>
+                  <option value="bundle">Com composição</option>
+                </select>
+
+                {product.format === "variations" && (
+                  <div className="s7-hint">
+                    SKU/EAN serão cadastrados por variação. Aqui você define o <strong>SKU Pai</strong>.
+                  </div>
+                )}
+              </div>
+
+              <div className="pf-group">
+                <FieldLabel text={skuLabel} required onCopy={() => handleCopyField(product.sku)} />
                 <input
                   className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
-                  placeholder="SKU interno"
+                  placeholder={product.format === "variations" ? "SKU pai (interno)" : "SKU interno"}
                   value={product.sku}
-                  onChange={(e) => handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())}
+                  onChange={(e) =>
+                    handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())
+                  }
                 />
                 {errors.sku && <div className="s7-error">{errors.sku}</div>}
               </div>
 
               <div className="pf-group">
-                <FieldLabel text="EAN / GTIN" onCopy={() => handleCopyField(product.gtin)} />
+                <FieldLabel text={gtinLabel} onCopy={() => handleCopyField(product.gtin)} />
                 <input
                   className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
                   inputMode="numeric"
@@ -441,154 +657,93 @@ export default function ProductForm({
               </div>
             </div>
 
+            {/* Marca / Modelo */}
             <div className="pf-row">
               <div className="pf-group">
                 <label className="s7-label">Marca</label>
-                <input className="s7-input" value={product.brand} onChange={(e) => handleChange("brand", e.target.value)} />
+                <input
+                  className="s7-input"
+                  value={product.brand}
+                  onChange={(e) => handleChange("brand", e.target.value)}
+                />
               </div>
 
               <div className="pf-group">
                 <label className="s7-label">Modelo</label>
-                <input className="s7-input" value={product.model} onChange={(e) => handleChange("model", e.target.value)} />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Categoria Mercado Livre (ID)</label>
                 <input
                   className="s7-input"
-                  placeholder="Ex: MLB1234"
-                  value={product.category_ml_id}
-                  onChange={(e) => handleChange("category_ml_id", e.target.value)}
+                  value={product.model}
+                  onChange={(e) => handleChange("model", e.target.value)}
                 />
               </div>
             </div>
 
-<div className="pf-row">
-  <div className="pf-group pf-group--full">
-    <FieldLabel
-      text="Palavras-chave SEO"
-      onCopy={() => handleCopyField(product.seo_keywords)}
-    />
+            {/* SEO Keywords (maior e mais “encostado”) */}
+            <div className="pf-row pf-row--tight">
+              <div className="pf-group pf-group--full">
+                <FieldLabel
+                  text="Palavras-chave SEO"
+                  onCopy={() => handleCopyField(product.seo_keywords)}
+                />
 
-    <div className="pf-seo-wrapper">
-      <textarea
-        className="s7-textarea"
-        rows="3"
-        placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
-        value={product.seo_keywords}
-        onChange={(e) => handleChange("seo_keywords", e.target.value)}
-      />
-    </div>
+                <div className="pf-seo-wrapper">
+                  <textarea
+                    className="s7-textarea pf-seo-textarea"
+                    rows="5"
+                    placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
+                    value={product.seo_keywords}
+                    onChange={(e) => handleChange("seo_keywords", e.target.value)}
+                  />
+                </div>
 
-    <div className="s7-hint">
-      Separe por vírgulas. Isso ajuda na busca interna e SEO futuro.
-    </div>
-  </div>
-</div>
-
-
-          </div>
-        )}
-
-        {/* =======================
-            DESCRIÇÃO
-        ======================= */}
-        {activeTab === "description" && (
-          <div className="pf-group">
-            <FieldLabel text="Descrição do produto" onCopy={() => handleCopyField(product.description)} />
-            <div className="description-wrapper pf-desc-wrapper">
-              <textarea
-                className="s7-textarea"
-                rows="8"
-                placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
-                value={product.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-              />
+                <div className="s7-hint">
+                  Separe por vírgulas. Isso ajuda na busca interna e SEO futuro.
+                </div>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* =======================
-            ESTOQUE & LOGÍSTICA
-        ======================= */}
-        {activeTab === "stock" && (
-          <>
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Estoque</label>
-                <input className="s7-input" type="number" min="0" value={product.stock_quantity} onChange={(e) => handleChange("stock_quantity", e.target.value)} />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Origem do estoque</label>
-                <select className="s7-select" value={product.stock_source} onChange={(e) => handleChange("stock_source", e.target.value)}>
-                  <option value="manual">Manual</option>
-                  <option value="virtual">Virtual (avançado)</option>
-                </select>
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Lead time (dias)</label>
-                <input
-                  className="s7-input"
-                  inputMode="numeric"
-                  placeholder="Ex: 2"
-                  value={product.lead_time_days}
-                  onChange={(e) => handleChange("lead_time_days", e.target.value.replace(/\D/g, ""))}
-                />
-              </div>
-            </div>
-
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Origem (texto livre)</label>
-                <input
-                  className="s7-input"
-                  placeholder="Ex: Nacional / Importado / SP / Fábrica própria..."
-                  value={product.origin}
-                  onChange={(e) => handleChange("origin", e.target.value)}
-                />
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Fornecedor</label>
-                <input
-                  className="s7-input"
-                  placeholder="Nome do fornecedor"
-                  value={product.supplier_name}
-                  onChange={(e) => handleChange("supplier_name", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Observações</label>
-                <input
-                  className="s7-input"
-                  placeholder="Notas internas sobre estoque/logística"
-                  value={product.notes}
-                  onChange={(e) => handleChange("notes", e.target.value)}
-                />
-              </div>
-            </div>
-          </>
         )}
 
         {/* =======================
             CUSTOS & PRECIFICAÇÃO
         ======================= */}
-        {activeTab === "pricing" && (
+        {activeTab === "costs" && (
           <>
             <div className="pf-row">
               <div className="pf-group">
                 <label className="s7-label">Custo do produto</label>
-                <input className="s7-input" type="number" value={product.cost_price} onChange={(e) => handleChange("cost_price", e.target.value)} />
+                <input
+                  className="s7-input"
+                  inputMode="decimal"
+                  placeholder="Ex: 49,90"
+                  value={product.cost_price}
+                  onChange={(e) => handleChange("cost_price", e.target.value)}
+                />
               </div>
 
               <div className="pf-group">
-                <label className="s7-label">Custos fixos</label>
-                <input className="s7-input" type="number" value={product.fixed_costs} onChange={(e) => handleChange("fixed_costs", e.target.value)} />
+                <label className="s7-label">Custo Embalagem</label>
+                <input
+                  className="s7-input"
+                  inputMode="decimal"
+                  placeholder="Ex: 3,50"
+                  value={product.packaging_cost}
+                  onChange={(e) => handleChange("packaging_cost", e.target.value)}
+                />
+              </div>
+
+              <div className="pf-group">
+                <label className="s7-label">Custo Operacional</label>
+                <input
+                  className="s7-input"
+                  inputMode="decimal"
+                  placeholder="Ex: 8,00"
+                  value={product.operational_cost}
+                  onChange={(e) => handleChange("operational_cost", e.target.value)}
+                />
+                <div className="s7-hint">
+                  (Frete interno, etiquetas, perdas, custo de operação, etc.)
+                </div>
               </div>
             </div>
 
@@ -619,9 +774,9 @@ export default function ProductForm({
         )}
 
         {/* =======================
-            FOTOS
+            IMAGENS
         ======================= */}
-        {activeTab === "photos" && (
+        {activeTab === "images" && (
           <>
             <p className="hint">
               Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas para atualizar anúncios
@@ -641,72 +796,7 @@ export default function ProductForm({
         )}
 
         {/* =======================
-            PESOS & MEDIDAS
-        ======================= */}
-        {activeTab === "measures" && (
-          <>
-            <div className="s7-card">
-              <div className="s7-card__header">
-                <h3 className="s7-card__title">Medidas de envio</h3>
-                <p className="s7-card__subtitle">Medidas usadas para cálculo de frete e logística.</p>
-              </div>
-
-              <div className="pf-row">
-                <div className="pf-group">
-                  <label className="s7-label">Largura (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 30" value={product.width} onChange={(e) => handleChange("width", e.target.value)} />
-                </div>
-
-                <div className="pf-group">
-                  <label className="s7-label">Altura (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 15" value={product.height} onChange={(e) => handleChange("height", e.target.value)} />
-                </div>
-
-                <div className="pf-group">
-                  <label className="s7-label">Comprimento (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 45" value={product.length} onChange={(e) => handleChange("length", e.target.value)} />
-                </div>
-
-                <div className="pf-group">
-                  <label className="s7-label">Peso (kg)</label>
-                  <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 2.350" value={product.weight} onChange={(e) => handleChange("weight", e.target.value)} />
-                </div>
-              </div>
-            </div>
-
-            <div className="s7-card">
-              <div className="s7-card__header">
-                <h3 className="s7-card__title">Medidas do produto (montado)</h3>
-                <p className="s7-card__subtitle">Medidas reais do produto pronto/montado (referência interna).</p>
-              </div>
-
-              <div className="pf-row">
-                <div className="pf-group">
-                  <label className="s7-label">Largura (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 32" value={product.assembled_width} onChange={(e) => handleChange("assembled_width", e.target.value)} />
-                </div>
-
-                <div className="pf-group">
-                  <label className="s7-label">Altura (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 80" value={product.assembled_height} onChange={(e) => handleChange("assembled_height", e.target.value)} />
-                </div>
-
-                <div className="pf-group">
-                  <label className="s7-label">Comprimento (cm)</label>
-                  <input className="s7-input" type="number" min="0" placeholder="Ex: 42" value={product.assembled_length} onChange={(e) => handleChange("assembled_length", e.target.value)} />
-                </div>
-
-                <div className="pf-group">
-                  <label className="s7-label">Peso (kg)</label>
-                  <input className="s7-input" type="number" min="0" step="0.001" placeholder="Ex: 8.500" value={product.assembled_weight} onChange={(e) => handleChange("assembled_weight", e.target.value)} />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* =======================
-            VARIAÇÕES
+            VARIAÇÕES (padrão Bling)
         ======================= */}
         {activeTab === "variations" && (
           <>
@@ -714,129 +804,436 @@ export default function ProductForm({
               <div className="section-header">
                 <h3>Variações</h3>
                 <p className="section-subtitle">
-                  Crie variações como cor/tamanho. Cada variação pode ter SKU e EAN próprios.
+                  Cadastre atributos (ex: Cor, Tamanho) e opções. Ao adicionar, o Suse7 gera as
+                  combinações abaixo.
                 </p>
               </div>
 
-              <div className="pf-actions-row">
-                <button className="s7-btn s7-btn--secondary" type="button" onClick={handleAddVariation}>
-                  + Adicionar variação
-                </button>
+              {errors.variations && <div className="s7-error">{errors.variations}</div>}
+
+              {/* Builder: Nome do atributo + opções (chips) */}
+              <div className="pf-row pf-row--tight" style={{ marginTop: 12 }}>
+                <div className="pf-group">
+                  <label className="s7-label">Nome do atributo</label>
+                  <input
+                    className="s7-input"
+                    placeholder="Ex: Cor, tamanho, voltagem..."
+                    value={varAttrName}
+                    onChange={(e) => setVarAttrName(e.target.value)}
+                  />
+                </div>
+
+                <div className="pf-group pf-group--wide">
+                  <label className="s7-label">Opções</label>
+
+                  <div className="pf-chipbox">
+                    {varOptionChips.map((chip) => (
+                      <span className="pf-chip" key={chip}>
+                        {chip}
+                        <button
+                          type="button"
+                          className="pf-chip-x"
+                          onClick={() => removeChip(chip)}
+                          aria-label={`Remover ${chip}`}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+
+                    <input
+                      className="pf-chipbox-input"
+                      placeholder={varOptionChips.length === 0 ? "Digite e pressione Enter..." : ""}
+                      value={varOptionInput}
+                      onChange={(e) => setVarOptionInput(e.target.value)}
+                      onKeyDown={handleOptionKeyDown}
+                    />
+                  </div>
+
+                  <div className="s7-hint" style={{ marginTop: 6 }}>
+                    Separe as opções pressionando <strong>Enter</strong> ou <strong>Tab</strong>.
+                  </div>
+                </div>
+
+                <div className="pf-group pf-group--btn">
+                  <label className="s7-label" style={{ opacity: 0 }}>
+                    Ação
+                  </label>
+                  <button
+                    className="s7-btn s7-btn--secondary"
+                    type="button"
+                    onClick={handleAddVariationDefinition}
+                    title="Adicionar variação"
+                  >
+                    Adicionar variação
+                  </button>
+                </div>
+              </div>
+
+              {/* Variações cadastradas (definições) */}
+              {variationDefinitions.length > 0 && (
+                <div className="pf-var-defs">
+                  <div className="s7-label" style={{ marginBottom: 8 }}>
+                    Variações cadastradas
+                  </div>
+
+                  {variationDefinitions.map((d) => (
+                    <div className="pf-var-def" key={d.attribute_name}>
+                      <div className="pf-var-def-left">
+                        <div className="pf-var-def-name">{d.attribute_name}</div>
+                        <div className="pf-var-def-chips">
+                          {d.options.map((opt) => (
+                            <span className="pf-chip pf-chip--muted" key={`${d.attribute_name}-${opt}`}>
+                              {opt}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="s7-btn s7-btn--secondary"
+                        onClick={() => handleRemoveVariationDefinition(d.attribute_name)}
+                        title="Remover esta variação"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Grid das combinações */}
+            {variations.length > 0 && (
+              <div className="section">
+                <div className="section-header">
+                  <h3>Combinações geradas</h3>
+                  <p className="section-subtitle">
+                    Preencha SKU/EAN/Preço/Estoque por variação. (No futuro: validações no backend)
+                  </p>
+                </div>
+
+                <div className="pf-var-table">
+                  <div className="pf-var-table-head">
+                    <div>#</div>
+                    <div>Combinação</div>
+                    <div>SKU</div>
+                    <div>EAN</div>
+                    <div>Preço</div>
+                    <div>Estoque</div>
+                    <div>Situação</div>
+                    <div>Ações</div>
+                  </div>
+
+                  {variations.map((row, idx) => (
+                    <div className="pf-var-table-row" key={row.id}>
+                      <div className="pf-var-idx">{idx + 1}</div>
+
+                      <div className="pf-var-combo">
+                        {Object.entries(row.attributes || {}).map(([k, v]) => (
+                          <span className="pf-chip pf-chip--muted" key={`${row.id}-${k}-${v}`}>
+                            <strong>{k}:</strong>&nbsp;{v}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div>
+                        <input
+                          className="s7-input"
+                          placeholder="SKU variação"
+                          value={row.sku}
+                          onChange={(e) => handleVariationRowChange(row.id, "sku", e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <input
+                          className="s7-input"
+                          inputMode="numeric"
+                          placeholder="EAN"
+                          value={row.ean}
+                          onChange={(e) =>
+                            handleVariationRowChange(row.id, "ean", e.target.value.replace(/\D/g, ""))
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <input
+                          className="s7-input"
+                          inputMode="decimal"
+                          placeholder="Ex: 199,90"
+                          value={row.price}
+                          onChange={(e) => handleVariationRowChange(row.id, "price", e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <input
+                          className="s7-input"
+                          inputMode="numeric"
+                          placeholder="Ex: 10"
+                          value={row.stock}
+                          onChange={(e) =>
+                            handleVariationRowChange(row.id, "stock", e.target.value.replace(/\D/g, ""))
+                          }
+                        />
+                      </div>
+
+                      <div className="pf-var-status">
+                        <label className="pf-switch">
+                          <input
+                            type="checkbox"
+                            checked={!!row.active}
+                            onChange={(e) => handleToggleVariationActive(row.id, e.target.checked)}
+                          />
+                          Ativo
+                        </label>
+                      </div>
+
+                      <div className="pf-var-actions">
+                        <button
+                          className="s7-btn s7-btn--secondary"
+                          type="button"
+                          onClick={() => handleRemoveVariationRow(row.id)}
+                          title="Remover combinação"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* =======================
+            DESCRIÇÃO
+        ======================= */}
+        {activeTab === "description" && (
+          <div className="pf-group">
+            <FieldLabel
+              text="Descrição do produto"
+              onCopy={() => handleCopyField(product.description)}
+            />
+            <div className="description-wrapper pf-desc-wrapper">
+              <textarea
+                className="s7-textarea"
+                rows="8"
+                placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
+                value={product.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* =======================
+            ESTOQUE
+        ======================= */}
+        {activeTab === "stock" && (
+          <>
+            <div className="pf-row">
+              <div className="pf-group">
+                <label className="s7-label">Estoque (real)</label>
+                <input
+                  className="s7-input"
+                  inputMode="numeric"
+                  placeholder="Ex: 25"
+                  value={product.stock_quantity}
+                  onChange={(e) => handleChange("stock_quantity", e.target.value.replace(/\D/g, ""))}
+                />
+              </div>
+
+              <div className="pf-group">
+                <label className="s7-label">Estoque mínimo (real)</label>
+                <input
+                  className="s7-input"
+                  inputMode="numeric"
+                  placeholder="Ex: 5"
+                  value={product.stock_min_quantity}
+                  onChange={(e) =>
+                    handleChange("stock_min_quantity", e.target.value.replace(/\D/g, ""))
+                  }
+                />
+                <div className="s7-hint">
+                  Quando o real atingir o mínimo, enviaremos alerta ao seller.
+                </div>
+              </div>
+
+              <div className="pf-group">
+                <label className="s7-label">Usar estoque virtual?</label>
+
+                <label className="pf-switch">
+                  <input
+                    type="checkbox"
+                    checked={!!product.use_virtual_stock}
+                    onChange={(e) => handleChange("use_virtual_stock", e.target.checked)}
+                  />
+                  Ativar
+                </label>
+
+                <div className="s7-hint">
+                  Quando ativo, é o estoque virtual que será sincronizado nos marketplaces.
+                </div>
               </div>
             </div>
 
-            {variations.map((v, index) => (
-              <div className="section" key={v.id}>
-                <div className="pf-variation-head">
-                  <div>
-                    <h3 style={{ margin: 0 }}>{v.variation_name || `Variação ${index + 1}`}</h3>
-                    <p className="section-subtitle" style={{ marginTop: 6 }}>
-                      Configure atributo, valor, SKU, EAN e estoque da variação.
-                    </p>
-                  </div>
+            {product.use_virtual_stock && (
+              <div className="pf-row">
+                <div className="pf-group">
+                  <label className="s7-label">Estoque virtual (publicado)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="numeric"
+                    placeholder="Ex: 200"
+                    value={product.virtual_stock_value}
+                    onChange={(e) =>
+                      handleChange("virtual_stock_value", e.target.value.replace(/\D/g, ""))
+                    }
+                  />
 
-                  <div className="pf-variation-actions">
-                    <label className="pf-switch">
-                      <input
-                        type="checkbox"
-                        checked={v.active}
-                        onChange={(e) => handleVariationChange(v.id, "active", e.target.checked)}
-                      />
-                      Ativa
-                    </label>
-
-                    <button
-                      className="s7-btn s7-btn--secondary"
-                      type="button"
-                      onClick={() => handleRemoveVariation(v.id)}
-                      disabled={variations.length === 1}
-                      title={variations.length === 1 ? "Mantenha ao menos 1 variação" : "Remover variação"}
-                    >
-                      Remover
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pf-row">
-                  <div className="pf-group">
-                    <label className="s7-label">Nome da variação (opcional)</label>
-                    <input
-                      className="s7-input"
-                      placeholder="Ex: Cor Preto"
-                      value={v.variation_name}
-                      onChange={(e) => handleVariationChange(v.id, "variation_name", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="pf-row">
-                  <div className="pf-group">
-                    <label className="s7-label">Atributo</label>
-                    <input
-                      className="s7-input"
-                      placeholder="Ex: Cor"
-                      value={v.attribute}
-                      onChange={(e) => handleVariationChange(v.id, "attribute", e.target.value)}
-                    />
-                  </div>
-
-                  <div className="pf-group">
-                    <label className="s7-label">Valor</label>
-                    <input
-                      className="s7-input"
-                      placeholder="Ex: Preto"
-                      value={v.value}
-                      onChange={(e) => handleVariationChange(v.id, "value", e.target.value)}
-                    />
-                  </div>
-
-                  <div className="pf-group">
-                    <label className="s7-label">SKU da variação</label>
-                    <input
-                      className="s7-input"
-                      placeholder="Ex: ARM-COZ-PT-01"
-                      value={v.sku}
-                      onChange={(e) => handleVariationChange(v.id, "sku", e.target.value)}
-                    />
-                  </div>
-
-                  <div className="pf-group">
-                    <label className="s7-label">EAN</label>
-                    <input
-                      className="s7-input"
-                      inputMode="numeric"
-                      placeholder="Ex: 7891234567890"
-                      value={v.ean}
-                      onChange={(e) => handleVariationChange(v.id, "ean", e.target.value.replace(/\D/g, ""))}
-                    />
-                  </div>
-                </div>
-
-                <div className="pf-row">
-                  <div className="pf-group">
-                    <label className="s7-label">Estoque da variação</label>
-                    <input
-                      className="s7-input"
-                      inputMode="numeric"
-                      placeholder="Ex: 10"
-                      value={v.stock}
-                      onChange={(e) => handleVariationChange(v.id, "stock", e.target.value.replace(/\D/g, ""))}
-                    />
-                  </div>
-
-                  <div className="pf-group">
-                    <label className="s7-label">Preço (opcional)</label>
-                    <input
-                      className="s7-input"
-                      inputMode="decimal"
-                      placeholder="Ex: 199,90"
-                      value={v.price}
-                      onChange={(e) => handleVariationChange(v.id, "price", e.target.value)}
-                    />
+                  <div className="s7-hint">
+                    Regras futuras:
+                    <br />• Venda decrementa real e virtual
+                    <br />• Se real acabar, anúncio pausa mesmo que virtual &gt; 0
+                    <br />• Aviso quando virtual chegar em 40% do valor configurado
                   </div>
                 </div>
               </div>
-            ))}
+            )}
+
+            <div className="pf-row pf-row--tight">
+              <div className="pf-group pf-group--full">
+                <label className="s7-label">Observações</label>
+                <input
+                  className="s7-input"
+                  placeholder="Notas internas sobre estoque"
+                  value={product.notes}
+                  onChange={(e) => handleChange("notes", e.target.value)}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* =======================
+            PESOS & MEDIDAS
+        ======================= */}
+        {activeTab === "measures" && (
+          <>
+            <div className="s7-card">
+              <div className="s7-card__header">
+                <h3 className="s7-card__title">Medidas de envio</h3>
+                <p className="s7-card__subtitle">
+                  Medidas usadas para cálculo de frete e logística.
+                </p>
+              </div>
+
+              <div className="pf-row">
+                <div className="pf-group">
+                  <label className="s7-label">Largura (cm)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="decimal"
+                    placeholder="Ex: 30"
+                    value={product.width}
+                    onChange={(e) => handleChange("width", e.target.value)}
+                  />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Altura (cm)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="decimal"
+                    placeholder="Ex: 15"
+                    value={product.height}
+                    onChange={(e) => handleChange("height", e.target.value)}
+                  />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Comprimento (cm)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="decimal"
+                    placeholder="Ex: 45"
+                    value={product.length}
+                    onChange={(e) => handleChange("length", e.target.value)}
+                  />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Peso (kg)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="decimal"
+                    placeholder="Ex: 2.350"
+                    value={product.weight}
+                    onChange={(e) => handleChange("weight", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="s7-card">
+              <div className="s7-card__header">
+                <h3 className="s7-card__title">Medidas do produto (montado)</h3>
+                <p className="s7-card__subtitle">
+                  Medidas reais do produto pronto/montado (referência interna).
+                </p>
+              </div>
+
+              <div className="pf-row">
+                <div className="pf-group">
+                  <label className="s7-label">Largura (cm)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="decimal"
+                    placeholder="Ex: 32"
+                    value={product.assembled_width}
+                    onChange={(e) => handleChange("assembled_width", e.target.value)}
+                  />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Altura (cm)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="decimal"
+                    placeholder="Ex: 80"
+                    value={product.assembled_height}
+                    onChange={(e) => handleChange("assembled_height", e.target.value)}
+                  />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Comprimento (cm)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="decimal"
+                    placeholder="Ex: 42"
+                    value={product.assembled_length}
+                    onChange={(e) => handleChange("assembled_length", e.target.value)}
+                  />
+                </div>
+
+                <div className="pf-group">
+                  <label className="s7-label">Peso (kg)</label>
+                  <input
+                    className="s7-input"
+                    inputMode="decimal"
+                    placeholder="Ex: 8.500"
+                    value={product.assembled_weight}
+                    onChange={(e) => handleChange("assembled_weight", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
           </>
         )}
 
@@ -895,4 +1292,57 @@ export default function ProductForm({
       </div>
     </div>
   );
+}
+
+/* ======================================================================
+   FUNÇÃO: buildCombinations
+   Objetivo:
+   - A partir das definições (atributos + opções), gerar as combinações
+   - Preservar dados já preenchidos (SKU/EAN/preço/estoque/ativo) quando possível
+====================================================================== */
+function buildCombinations(defs, previousRows, createId) {
+  // Sem definições -> sem combinações
+  if (!Array.isArray(defs) || defs.length === 0) return [];
+
+  // Produto cartesiano das opções
+  const cartesian = (arrs) =>
+    arrs.reduce((acc, curr) => acc.flatMap((a) => curr.map((b) => [...a, b])), [[]]);
+
+  const attrNames = defs.map((d) => d.attribute_name);
+  const optionsMatrix = defs.map((d) => d.options || []);
+
+  const combos = cartesian(optionsMatrix).map((values) => {
+    const attributes = {};
+    values.forEach((v, idx) => (attributes[attrNames[idx]] = v));
+    return attributes;
+  });
+
+  // Map de preservação (chave determinística)
+  const makeKey = (attributes) =>
+    Object.entries(attributes)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}:${v}`)
+      .join("|");
+
+  const prevMap = new Map();
+  (previousRows || []).forEach((row) => {
+    const key = makeKey(row.attributes || {});
+    prevMap.set(key, row);
+  });
+
+  return combos.map((attributes) => {
+    const key = makeKey(attributes);
+    const prev = prevMap.get(key);
+
+    return {
+      id: prev?.id || createId(),
+      attributes,
+      sku: prev?.sku || "",
+      ean: prev?.ean || "",
+      stock: prev?.stock || "",
+      price: prev?.price || "",
+      image_url: prev?.image_url || "",
+      active: typeof prev?.active === "boolean" ? prev.active : true,
+    };
+  });
 }

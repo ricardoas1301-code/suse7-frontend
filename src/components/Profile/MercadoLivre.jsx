@@ -172,7 +172,7 @@ const handleConnectML = () => {
              <div className="ml-connected-header">
 
       <p className="ml-connected-subtitle">
-        Sua conta já está integrada ao <strong>Suse7 Precifica</strong> e pronta
+        Sua conta do <strong>Mercado Livre</strong> já está integrada ao <strong>Suse7 Precifica</strong> e pronta
         para utilizar as ferramentas inteligentes de precificação avançada.
       </p>
     </div>

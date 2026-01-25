@@ -159,7 +159,7 @@ export default function Login() {
         <Link to="/termos">Termos de uso</Link> |{" "}
         <Link to="/privacidade">Segurança e privacidade</Link>
         <span className="login-copy">
-          Suse7 2025 © Todos os direitos reservados
+          Suse7 2026 © Todos os direitos reservados
         </span>
       </div>
 
