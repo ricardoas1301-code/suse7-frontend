@@ -790,10 +790,3 @@
   }
 }
 
-/* ======================================================
-   ABA DADOS — remove scroll fantasma
-====================================================== */
-.pf-body[data-active-tab="data"]{
-  overflow-y: hidden;     /* tira a barra */
-  padding-bottom: 24px;   /* remove o "colchão" do footer só nessa aba */
-}
