@@ -213,7 +213,7 @@
 ====================================================== */
 .pf-body{
   padding: 24px;
-  padding-bottom: calc(24px + 53px);
+  padding-bottom: calc 24px;
 
   display: flex;
   flex-direction: column;
