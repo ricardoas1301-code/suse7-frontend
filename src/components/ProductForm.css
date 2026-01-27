@@ -98,8 +98,8 @@
    NOME FIXO — THUMB (padrão avatar do Logo da Empresa)
 ====================================================== */
 .pf-product-thumb{
-  width: 75px;
-  height: 75px;
+  width: 86px;
+  height: 86px;
   border-radius: 999px; /* ✅ avatar redondo */
   border: 1px solid var(--s7-divider, #eef0f3);
   background: var(--s7-bg-soft, #f9fafb);
