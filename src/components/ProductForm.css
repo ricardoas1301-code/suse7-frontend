@@ -86,13 +86,14 @@
 }
 
 /* ======================================================
-   NOME FIXO — LINHA COM IMG + CAMPOS
+   NOME FIXO — LINHA COM IMG + NOME
 ====================================================== */
 .pf-product-name-line{
-  display: center
-  align-items: flex-start;
+  display: flex;          /* ← chave do alinhamento */
+  align-items: center;    /* centraliza verticalmente IMG + input */
   gap: 12px;
 }
+
 
 /* ======================================================
    NOME FIXO — THUMB (padrão avatar do Logo da Empresa)
