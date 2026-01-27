@@ -718,8 +718,8 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
     text="Formato"
     infoText={
       product.format === "simple"
-        ? "Produto simples (sem variação de características)."
-        : "Produto com variação de características (ex: Cor, Voltagem etc)."
+        ? "Produto simples (sem variação de características)"
+        : "Produto com variação de características (ex: Cor / Voltagem)"
     }
   />
 
@@ -804,7 +804,7 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
                 <FieldLabel
   text="Palavras-chave SEO"
   onCopy={() => handleCopyField(product.seo_keywords)}
-  infoText="Separe por vírgulas. Isso ajuda na busca interna e SEO futuro."
+  infoText="Separe por vírgulas. Isso ajuda na busca interna e SEO futuro"
 />
 
 
