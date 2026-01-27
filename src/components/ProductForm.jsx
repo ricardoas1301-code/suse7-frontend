@@ -223,24 +223,53 @@ export default function ProductForm({
     }
   };
 
-  // ======================================================================
-  // COMPONENTE: FieldLabel (com copiar)
-  // ======================================================================
-  const FieldLabel = ({ text, required = false, onCopy }) => {
-    return (
-      <div className="pf-label-row">
-        <span className="s7-label">
-          {text} {required && <span className="s7-required">*</span>}
-        </span>
+// ======================================================================
+// COMPONENTE: FieldLabel (com copiar + info tooltip)
+// Objetivo:
+// - Label padrão Suse7
+// - Botão (i) opcional com tooltip (estilo Bling)
+// - Botão copiar opcional
+// ======================================================================
+const FieldLabel = ({ text, required = false, onCopy, infoText = "" }) => {
+  return (
+    <div className="pf-label-row">
+      <span className="s7-label">
+        {text} {required && <span className="s7-required">*</span>}
+      </span>
 
-        {onCopy && (
-          <button type="button" className="pf-copy-btn" onClick={onCopy} aria-label="Copiar">
+      <div className="pf-label-actions">
+        {/* ------------------------------------------------------------
+            INFO (tooltip) — aparece só quando infoText existir
+        ------------------------------------------------------------ */}
+        {infoText ? (
+          <button
+            type="button"
+            className="pf-info-btn"
+            aria-label="Informações"
+            data-tooltip={infoText}
+          >
+            i
+          </button>
+        ) : null}
+
+        {/* ------------------------------------------------------------
+            COPIAR — aparece só quando onCopy existir
+        ------------------------------------------------------------ */}
+        {onCopy ? (
+          <button
+            type="button"
+            className="pf-copy-btn"
+            onClick={onCopy}
+            aria-label="Copiar"
+          >
             ⧉
           </button>
-        )}
+        ) : null}
       </div>
-    );
-  };
+    </div>
+  );
+};
+
 
   // ------------------------------------------------------
   // CHIPS (opções) — adiciona via Enter/Tab/virgula
@@ -689,28 +718,24 @@ export default function ProductForm({
   {/* ------------------------------------------------------
       FORMATO (sempre visível)
   ------------------------------------------------------ */}
- <div className="pf-group pf-group--xs">
-  <label className="s7-label">Formato</label>
-  <select className="s7-select" value={product.format} onChange={(e) => handleFormatChange(e.target.value)}>
+<div className="pf-group pf-group--xs">
+  <FieldLabel
+    text="Formato"
+    infoText={
+      product.format === "simple"
+        ? "Produto simples (sem variação de características)."
+        : "Produto com variação de características (ex: Cor, Voltagem etc)."
+    }
+  />
+
+  <select
+    className="s7-select"
+    value={product.format}
+    onChange={(e) => handleFormatChange(e.target.value)}
+  >
     <option value="simple">Simples</option>
     <option value="variants">Com variações</option>
   </select>
-
-  <div className="s7-hint" style={{ marginTop: 6 }}>
-    {product.format === "simple"
-      ? "Produto com SKU/EAN únicos."
-      : "SKU/EAN serão cadastrados por variação (estilo Bling)."}
-  </div>
-
-{product.format === "variants" && (
-  <div className="pf-format-alert">
-    <div className="s7-alert s7-alert--warning">
-      <strong>Observação:</strong> no formato <strong>Com variações</strong>, o <strong>SKU</strong> e o{" "}
-      <strong>GTIN</strong> ficam na aba <strong>Variações</strong>, por combinação.
-    </div>
-  </div>
-)}
-
 </div>
 
 
@@ -781,7 +806,12 @@ export default function ProductForm({
 
             <div className="pf-row">
               <div className="pf-group pf-group--full">
-                <FieldLabel text="Palavras-chave SEO" onCopy={() => handleCopyField(product.seo_keywords)} />
+                <FieldLabel
+  text="Palavras-chave SEO"
+  onCopy={() => handleCopyField(product.seo_keywords)}
+  infoText="Separe por vírgulas. Isso ajuda na busca interna e SEO futuro."
+/>
+
 
                 <div className="pf-seo-wrapper">
                   <textarea
@@ -793,7 +823,6 @@ export default function ProductForm({
                   />
                 </div>
 
-                <div className="s7-hint">Separe por vírgulas. Isso ajuda na busca interna e SEO futuro.</div>
               </div>
             </div>
 
