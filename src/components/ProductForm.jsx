@@ -686,31 +686,7 @@ export default function ProductForm({
           <div className="pf-container">
             <div className="pf-row">
               <div className="pf-group">
-                
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <div
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 12,
-                      border: "1px solid var(--s7-divider)",
-                      background: "var(--s7-bg-soft)",
-                      overflow: "hidden",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                    title={mainImageUrl ? "Imagem principal do produto" : "Sem imagem"}
-                  >
-                    {mainImageUrl ? (
-                      <img src={mainImageUrl} alt="Imagem do produto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      <span style={{ fontSize: 12, color: "var(--s7-muted)", fontWeight: 700 }}>IMG</span>
-                    )}
-                  </div>
-
-                </div>
+                                
               </div>
 
               <div className="pf-group">
