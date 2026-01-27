@@ -601,20 +601,46 @@ export default function ProductForm({
         </button>
       </div>
 
-      {/* ==================================================
-         NOME FIXO (mantemos premium)
-      ================================================== */}
-      <div className="pf-product-name-fixed">
-        <FieldLabel text="Nome do produto" required onCopy={() => handleCopyField(product.product_name)} />
-        <input
-          className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
-          type="text"
-          placeholder="Ex: Armário de cozinha 3 portas"
-          value={product.product_name}
-          onChange={(e) => handleChange("product_name", e.target.value)}
-        />
-        {errors.product_name && <div className="s7-error">{errors.product_name}</div>}
-      </div>
+    {/* ==================================================
+   NOME FIXO (mantemos premium)
+   - IMG1 à esquerda do nome (preview)
+================================================== */}
+<div className="pf-product-name-fixed">
+  <div className="pf-product-name-line">
+    {/* ------------------------------------------------------------
+        IMG1 (preview) — usa mainImageUrl (já existe)
+    ------------------------------------------------------------ */}
+    <div
+      className="pf-product-thumb"
+      title={mainImageUrl ? "Imagem principal do produto" : "Sem imagem"}
+      aria-label="Imagem principal do produto"
+    >
+      {mainImageUrl ? (
+        <img src={mainImageUrl} alt="Imagem principal do produto" />
+      ) : (
+        <span className="pf-product-thumb__placeholder">IMG</span>
+      )}
+    </div>
+
+    {/* ------------------------------------------------------------
+        Nome do produto (label + input)
+    ------------------------------------------------------------ */}
+    <div className="pf-product-name-fields">
+      <FieldLabel text="Nome do produto" required onCopy={() => handleCopyField(product.product_name)} />
+
+      <input
+        className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
+        type="text"
+        placeholder="Ex: Armário de cozinha 3 portas"
+        value={product.product_name}
+        onChange={(e) => handleChange("product_name", e.target.value)}
+      />
+
+      {errors.product_name && <div className="s7-error">{errors.product_name}</div>}
+    </div>
+  </div>
+</div>
+
 
       {/* ==================================================
          TABS (nova ordem e nomes)
