@@ -90,7 +90,7 @@
 ====================================================== */
 .pf-product-name-line{
   display: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
