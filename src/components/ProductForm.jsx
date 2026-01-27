@@ -804,7 +804,7 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
                 <FieldLabel
   text="Palavras-chave SEO"
   onCopy={() => handleCopyField(product.seo_keywords)}
-  infoText="Separe por vírgulas. Isso ajuda na busca interna e SEO futuro"
+  infoText="Separe por vírgulas. Isso ajuda na busca interna e SEO"
 />
 
 

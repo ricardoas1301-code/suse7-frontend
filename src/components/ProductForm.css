@@ -319,10 +319,23 @@
 ====================================================== */
 .pf-seo-wrapper{ width: 100%; box-sizing: border-box; }
 
-.pf-seo-textarea{
-  height: 120px;
-  max-height: 120px;
+/* ======================================================
+   SEO KEYWORDS — textarea grande, sem scroll
+====================================================== */
+.pf-seo-wrapper{
+  width: 100%;
+  box-sizing: border-box;
 }
+
+.pf-seo-wrapper textarea{
+  width: 100%;
+  min-height: 140px;     /* altura confortável */
+  max-height: 220px;     /* limite elegante */
+  resize: none;          /* sem redimensionar manual */
+  overflow-y: hidden;    /* 🚀 remove scrollbar */
+  box-sizing: border-box;
+}
+
 
 /* ======================================================
    DESCRIÇÃO
