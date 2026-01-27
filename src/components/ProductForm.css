@@ -15,7 +15,7 @@
 
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible; /* ✅ deixa tooltip respirar */
   box-sizing: border-box;
 
   background: var(--s7-bg, #fff);
@@ -395,6 +395,116 @@
   position: relative;
   z-index: 40;
 }
+
+/* ======================================================
+   LABEL LEFT (label + info)
+====================================================== */
+.pf-label-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  position: relative;
+  z-index: 40;
+
+  /* ✅ importante: deixa o tooltip existir */
+  overflow: visible;
+}
+
+.pf-label-left{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* ======================================================
+   INFO BUTTON (i) + TOOLTIP (não corta)
+====================================================== */
+.pf-info-btn{
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: #fff;
+  color: var(--s7-primary, #2563eb);
+
+  font-size: 12px;
+  font-weight: 900;
+
+  cursor: help;
+  position: relative;
+
+  /* ✅ garante que o botão fica acima */
+  z-index: 60;
+}
+
+.pf-info-btn::after{
+  content: attr(data-tooltip);
+
+  position: absolute;
+
+  /* ✅ aparece para baixo (pra não bater no topo/abas) */
+  top: calc(100% + 10px);
+  left: 0;
+
+  max-width: 420px;
+  width: max-content;
+
+  background: var(--s7-tooltip-bg, #111827);
+  color: #fff;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  white-space: normal;
+
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 160ms ease, transform 160ms ease;
+
+  pointer-events: none;
+
+  /* ✅ acima de tudo dentro do card */
+  z-index: 99999;
+
+  box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+}
+
+.pf-info-btn::before{
+  content: "";
+  position: absolute;
+
+  top: calc(100% + 4px);
+  left: 8px;
+
+  border: 6px solid transparent;
+  border-bottom-color: var(--s7-tooltip-bg, #111827);
+
+  opacity: 0;
+  transition: opacity 160ms ease;
+
+  z-index: 99999;
+}
+
+.pf-info-btn:hover::after,
+.pf-info-btn:hover::before,
+.pf-info-btn:focus-visible::after,
+.pf-info-btn:focus-visible::before{
+  opacity: 1;
+  transform: translateY(0);
+}
+
 
 /* ======================================================
    LABEL ACTIONS (ícones à direita)
