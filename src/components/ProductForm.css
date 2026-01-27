@@ -258,6 +258,20 @@
   width: 210px;
 }
 
+/* ======================================================
+   GROUP WIDTH HELPERS — ABA DADOS
+====================================================== */
+.pf-group--xs{
+  flex: 0 0 220px;   /* Formato (com hint) */
+  max-width: 220px;
+}
+
+.pf-group--sm{
+  flex: 0 0 260px;   /* SKU / GTIN / NCM */
+  max-width: 260px;
+}
+
+
 .pf-row{
   display: flex;
   gap: 33px;

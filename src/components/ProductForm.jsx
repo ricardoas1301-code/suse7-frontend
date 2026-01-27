@@ -684,71 +684,81 @@ export default function ProductForm({
         ======================= */}
         {activeTab === "data" && (
           <div className="pf-container">
-            <div className="pf-row">
-              <div className="pf-group">
-                                
-              </div>
-
-              <div className="pf-group">
-                <label className="s7-label">Formato</label>
-                <select className="s7-select" value={product.format} onChange={(e) => handleFormatChange(e.target.value)}>
-                  <option value="simple">Simples</option>
-                  <option value="variants">Com variações</option>
-                </select>
-                <div className="s7-hint" style={{ marginTop: 6 }}>
-                  {product.format === "simple"
-                    ? "Produto com SKU/EAN únicos."
-                    : "SKU/EAN serão cadastrados por variação (estilo Bling)."}
-                </div>
-              </div>
-            </div>
 
             <div className="pf-row">
-              {product.format === "simple" && (
-                <>
-                  <div className="pf-group">
-                    <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
-                    <input
-                      className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
-                      placeholder="SKU interno"
-                      value={product.sku}
-                      onChange={(e) => handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())}
-                    />
-                    {errors.sku && <div className="s7-error">{errors.sku}</div>}
-                  </div>
+  {/* ------------------------------------------------------
+      FORMATO (sempre visível)
+  ------------------------------------------------------ */}
+  <div className="pf-group pf-group--xs">
+    <label className="s7-label">Formato</label>
+    <select
+      className="s7-select"
+      value={product.format}
+      onChange={(e) => handleFormatChange(e.target.value)}
+    >
+      <option value="simple">Simples</option>
+      <option value="variants">Com variações</option>
+    </select>
 
-                  <div className="pf-group">
-                    <FieldLabel text="EAN / GTIN" onCopy={() => handleCopyField(product.gtin)} />
-                    <input
-                      className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
-                      inputMode="numeric"
-                      placeholder="Código de barras"
-                      value={product.gtin}
-                      onChange={(e) => handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))}
-                    />
-                    {errors.gtin && <div className="s7-error">{errors.gtin}</div>}
-                  </div>
-                </>
-              )}
+    <div className="s7-hint" style={{ marginTop: 6 }}>
+      {product.format === "simple"
+        ? "Produto com SKU/EAN únicos."
+        : "SKU/EAN serão cadastrados por variação (estilo Bling)."}
+    </div>
+  </div>
 
-              <div className="pf-group">
-                <FieldLabel text="NCM" onCopy={() => handleCopyField(product.ncm)} />
-                <input
-                  className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
-                  inputMode="numeric"
-                  placeholder="Ex: 94036000"
-                  value={product.ncm}
-                  onChange={(e) => {
-                    const masked = formatNcm(e.target.value);
-                    handleChange("ncm", masked);
+  {/* ------------------------------------------------------
+      SKU / GTIN (apenas no formato simples)
+  ------------------------------------------------------ */}
+  {product.format === "simple" && (
+    <>
+      <div className="pf-group pf-group--sm">
+        <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
+        <input
+          className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
+          placeholder="SKU interno"
+          value={product.sku}
+          onChange={(e) => handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())}
+        />
+        {errors.sku && <div className="s7-error">{errors.sku}</div>}
+      </div>
 
-                    const digits = masked.replace(/\D/g, "");
-                    if (digits.length === 8) setErrors((prev) => ({ ...prev, ncm: undefined }));
-                  }}
-                />
-                {errors.ncm && <div className="s7-error">{errors.ncm}</div>}
-              </div>
-            </div>
+      <div className="pf-group pf-group--sm">
+        <FieldLabel text="EAN / GTIN" onCopy={() => handleCopyField(product.gtin)} />
+        <input
+          className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
+          inputMode="numeric"
+          placeholder="Código de barras"
+          value={product.gtin}
+          onChange={(e) => handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))}
+        />
+        {errors.gtin && <div className="s7-error">{errors.gtin}</div>}
+      </div>
+    </>
+  )}
+
+  {/* ------------------------------------------------------
+      NCM (sempre visível)
+  ------------------------------------------------------ */}
+  <div className="pf-group pf-group--sm">
+    <FieldLabel text="NCM" onCopy={() => handleCopyField(product.ncm)} />
+    <input
+      className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
+      inputMode="numeric"
+      placeholder="Ex: 94036000"
+      value={product.ncm}
+      onChange={(e) => {
+        const masked = formatNcm(e.target.value);
+        handleChange("ncm", masked);
+
+        const digits = masked.replace(/\D/g, "");
+        if (digits.length === 8) setErrors((prev) => ({ ...prev, ncm: undefined }));
+      }}
+    />
+    {errors.ncm && <div className="s7-error">{errors.ncm}</div>}
+  </div>
+</div>
+
 
             <div className="pf-row">
               <div className="pf-group">
