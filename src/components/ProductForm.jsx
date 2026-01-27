@@ -689,23 +689,27 @@ export default function ProductForm({
   {/* ------------------------------------------------------
       FORMATO (sempre visível)
   ------------------------------------------------------ */}
-  <div className="pf-group pf-group--xs">
-    <label className="s7-label">Formato</label>
-    <select
-      className="s7-select"
-      value={product.format}
-      onChange={(e) => handleFormatChange(e.target.value)}
-    >
-      <option value="simple">Simples</option>
-      <option value="variants">Com variações</option>
-    </select>
+ <div className="pf-group pf-group--xs">
+  <label className="s7-label">Formato</label>
+  <select className="s7-select" value={product.format} onChange={(e) => handleFormatChange(e.target.value)}>
+    <option value="simple">Simples</option>
+    <option value="variants">Com variações</option>
+  </select>
 
-    <div className="s7-hint" style={{ marginTop: 6 }}>
-      {product.format === "simple"
-        ? "Produto com SKU/EAN únicos."
-        : "SKU/EAN serão cadastrados na aba variações."}
-    </div>
+  <div className="s7-hint" style={{ marginTop: 6 }}>
+    {product.format === "simple"
+      ? "Produto com SKU/EAN únicos."
+      : "SKU/EAN serão cadastrados por variação (estilo Bling)."}
   </div>
+
+  {product.format === "variants" && (
+    <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
+      <strong>Observação:</strong> no formato <strong>Com variações</strong>, o <strong>SKU</strong> e o{" "}
+      <strong>GTIN</strong> ficam na aba <strong>Variações</strong>, por combinação.
+    </div>
+  )}
+</div>
+
 
   {/* ------------------------------------------------------
       SKU / GTIN (apenas no formato simples)
@@ -934,15 +938,6 @@ export default function ProductForm({
                         Separe opções com Enter/Tab/virgula.
                       </div>
                     </div>
-
-                    {product.format === "variants" && (
-  <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
-    <strong>Observação:</strong> no formato <strong>Com variações</strong>, o <strong>SKU</strong> e o{" "}
-    <strong>GTIN</strong> ficam na aba <strong>Variações</strong>, por combinação.
-  </div>
-)}
-
-
 
                     <div className="pf-group" style={{ flex: "0 0 auto", minWidth: 200, alignSelf: "flex-end" }}>
                       <button className="s7-btn s7-btn--secondary" type="button" onClick={handleAddVariationAttribute}>
