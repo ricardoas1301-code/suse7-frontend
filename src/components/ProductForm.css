@@ -89,8 +89,7 @@
    NOME FIXO — LINHA COM IMG + CAMPOS
 ====================================================== */
 .pf-product-name-line{
-  display: flex;
-  align-items: flex-start;
+  align-items: center; 
   gap: 12px;
 }
 
