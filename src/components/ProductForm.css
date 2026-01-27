@@ -798,5 +798,5 @@
 
   /* faz o alerta "escapar" da coluna estreita */
   width: calc(100vw - 96px);
-  max-width: 1120px; /* mesmo max do pf-container */
+  max-width: 869px; /* mesmo max do pf-container */
 }
