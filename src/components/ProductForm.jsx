@@ -702,12 +702,15 @@ export default function ProductForm({
       : "SKU/EAN serão cadastrados por variação (estilo Bling)."}
   </div>
 
-  {product.format === "variants" && (
-    <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
+{product.format === "variants" && (
+  <div className="pf-format-alert">
+    <div className="s7-alert s7-alert--warning">
       <strong>Observação:</strong> no formato <strong>Com variações</strong>, o <strong>SKU</strong> e o{" "}
       <strong>GTIN</strong> ficam na aba <strong>Variações</strong>, por combinação.
     </div>
-  )}
+  </div>
+)}
+
 </div>
 
 
