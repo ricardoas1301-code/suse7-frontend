@@ -224,51 +224,46 @@ export default function ProductForm({
   };
 
 // ======================================================================
-// COMPONENTE: FieldLabel (com copiar + info tooltip)
-// Objetivo:
-// - Label padrão Suse7
-// - Botão (i) opcional com tooltip (estilo Bling)
-// - Botão copiar opcional
+// COMPONENTE: FieldLabel (label + info + copiar)
+// - info (ícone i) fica ao lado do label (estilo Bling)
+// - tooltip não corta e fica acima de tudo
 // ======================================================================
-const FieldLabel = ({ text, required = false, onCopy, infoText = "" }) => {
+const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
   return (
     <div className="pf-label-row">
-      <span className="s7-label">
-        {text} {required && <span className="s7-required">*</span>}
-      </span>
+      {/* Lado esquerdo: Label + Required + Info */}
+      <div className="pf-label-left">
+        <span className="s7-label">
+          {text} {required && <span className="s7-required">*</span>}
+        </span>
 
-      <div className="pf-label-actions">
-        {/* ------------------------------------------------------------
-            INFO (tooltip) — aparece só quando infoText existir
-        ------------------------------------------------------------ */}
-        {infoText ? (
+        {!!infoText && (
           <button
             type="button"
             className="pf-info-btn"
-            aria-label="Informações"
+            aria-label="Informação"
             data-tooltip={infoText}
           >
             i
           </button>
-        ) : null}
-
-        {/* ------------------------------------------------------------
-            COPIAR — aparece só quando onCopy existir
-        ------------------------------------------------------------ */}
-        {onCopy ? (
-          <button
-            type="button"
-            className="pf-copy-btn"
-            onClick={onCopy}
-            aria-label="Copiar"
-          >
-            ⧉
-          </button>
-        ) : null}
+        )}
       </div>
+
+      {/* Lado direito: Copiar (se existir) */}
+      {onCopy && (
+        <button
+          type="button"
+          className="pf-copy-btn"
+          onClick={onCopy}
+          aria-label="Copiar"
+        >
+          ⧉
+        </button>
+      )}
     </div>
   );
 };
+
 
 
   // ------------------------------------------------------
