@@ -678,7 +678,7 @@ export default function ProductForm({
       {/* ==================================================
          BODY
       ================================================== */}
-      <div className="pf-body" data-active-tab={activeTab}>
+      <div className="pf-body">
         {/* =======================
             ABA: DADOS
         ======================= */}
