@@ -420,7 +420,7 @@
 }
 
 /* ======================================================
-   INFO BUTTON (i) + TOOLTIP (não corta)
+   INFO BUTTON (i) + TOOLTIP (premium, não corta)
 ====================================================== */
 .pf-info-btn{
   width: 18px;
@@ -437,20 +437,19 @@
 
   font-size: 12px;
   font-weight: 900;
+  line-height: 1;
 
   cursor: help;
   position: relative;
 
-  /* ✅ garante que o botão fica acima */
-  z-index: 60;
+  z-index: 9999;
 }
 
+/* Tooltip (aparece para baixo) */
 .pf-info-btn::after{
   content: attr(data-tooltip);
 
   position: absolute;
-
-  /* ✅ aparece para baixo (pra não bater no topo/abas) */
   top: calc(100% + 10px);
   left: 0;
 
@@ -475,16 +474,14 @@
 
   pointer-events: none;
 
-  /* ✅ acima de tudo dentro do card */
-  z-index: 99999;
-
+  z-index: 999999;
   box-shadow: 0 14px 40px rgba(0,0,0,0.22);
 }
 
+/* Setinha */
 .pf-info-btn::before{
   content: "";
   position: absolute;
-
   top: calc(100% + 4px);
   left: 8px;
 
@@ -494,7 +491,7 @@
   opacity: 0;
   transition: opacity 160ms ease;
 
-  z-index: 99999;
+  z-index: 999999;
 }
 
 .pf-info-btn:hover::after,
@@ -506,6 +503,7 @@
 }
 
 
+
 /* ======================================================
    LABEL ACTIONS (ícones à direita)
 ====================================================== */
@@ -515,89 +513,11 @@
   gap: 10px;
 }
 
-/* ======================================================
-   INFO BUTTON (estilo Bling) + TOOLTIP
-====================================================== */
-.pf-info-btn{
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-
-  font-size: 12px;
-  font-weight: 900;
-  line-height: 1;
-
-  color: #64748b;
-  cursor: pointer;
-
-  position: relative;
-  z-index: 80;
-
-  transition: transform 160ms ease, color 160ms ease, border-color 160ms ease;
-}
 
 .pf-info-btn:hover{
   transform: scale(1.08);
   color: var(--s7-primary, #2563eb);
   border-color: rgba(37, 99, 235, 0.45);
-}
-
-/* Tooltip */
-.pf-info-btn::after{
-  content: attr(data-tooltip);
-
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-
-  background: var(--s7-tooltip-bg, #111827);
-  color: #fff;
-
-  font-size: 12px;
-  font-weight: 600;
-
-  padding: 8px 10px;
-  border-radius: 10px;
-
-  white-space: nowrap;
-  box-shadow: 0 10px 26px rgba(0,0,0,0.22);
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 160ms ease;
-
-  z-index: 999;
-}
-
-.pf-info-btn::before{
-  content: "";
-
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-
-  border-width: 6px;
-  border-style: solid;
-  border-color: var(--s7-tooltip-bg, #111827) transparent transparent transparent;
-
-  opacity: 0;
-  transition: opacity 160ms ease;
-
-  z-index: 999;
-}
-
-.pf-info-btn:hover::after,
-.pf-info-btn:hover::before{
-  opacity: 1;
 }
 
 
@@ -1005,3 +925,4 @@
   width: calc(100vw - 96px);
   max-width: 869px; /* mesmo max do pf-container */
 }
+
