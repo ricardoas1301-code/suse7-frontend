@@ -255,10 +255,13 @@
   gap: 33px;
   row-gap: 12px;
   align-items: flex-start;
-  justify-content: space-between; /* ✅ ALINHA À DIREITA */
   margin-bottom: 12px;
   flex-wrap: wrap;
+
+  /* ✅ trava: não deixa “espalhar” os campos */
+  justify-content: flex-start;
 }
+
 
 .pf-row:last-child{ margin-bottom: 0; }
 
