@@ -236,28 +236,28 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
         </span>
 
         {!!infoText && (
-          <button
-            type="button"
-            className="pf-info-btn s7-tip"
-            aria-label="Informação"
-            data-tip={infoText}
-          >
-            i
-          </button>
+<button
+  type="button"
+  className="pf-info-btn s7-tip s7-tip-left"
+  data-tip={infoText}
+  aria-label="Informação"
+>
+  i
+</button>
         )}
       </div>
 
       {/* Lado direito: Copiar */}
       {!!onCopy && (
-        <button
-          type="button"
-          className="pf-copy-btn s7-tip"
-          aria-label="Copiar"
-          data-tip="Copiar"
-          onClick={onCopy}
-        >
-          ⧉
-        </button>
+<button
+  type="button"
+  className="pf-copy-btn s7-tip s7-tip-right"
+  data-tip="Copiar"
+  onClick={onCopy}
+  aria-label="Copiar"
+>
+  ⧉
+</button>
       )}
     </div>
   );

@@ -440,7 +440,7 @@
 .s7-tip[data-tip]::after{
   content: attr(data-tip);
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 10px);
   z-index: 99999;
 
   /* ✅ -33% (menor e premium) */
