@@ -758,7 +758,7 @@ const FieldLabel = ({
   infoText={
     product.format === "simple"
       ? "Produto simples (sem variação de características)"
-      : "Produto com variação de características (Cor, Voltagem)"
+      : "Produto com variação (Ex: Cor ou Voltagem)"
   }
   tipBottom={true}
   wrap={true}
