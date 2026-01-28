@@ -425,6 +425,10 @@
    - Botão copiar (⧉)
 ====================================================== */
 
+/* ======================================================
+   TOOLTIP PADRÃO SUSE7 (HOVER / DATA-TIP)
+====================================================== */
+
 .s7-tip{
   position: relative;
   display: inline-flex;
@@ -432,20 +436,26 @@
   justify-content: center;
 }
 
-/* Bubble */
+/* Bubble (padrão central) */
 .s7-tip[data-tip]::after{
   content: attr(data-tip);
   position: absolute;
+
   left: 50%;
   bottom: calc(100% + 10px);
   transform: translateX(-50%);
+
   z-index: 99999;
 
-  font-size: 13px;                 /* +33% */
-  line-height: 1.2;
-  padding: 10px 14px;              /* +33% */
+  font-size: 13px;
+  line-height: 1.25;
+  padding: 10px 14px;
+
+  /* ✅ evita tooltip gigante / cortado */
+  width: max-content;
   max-width: 360px;
-  white-space: nowrap;
+  white-space: normal;            /* ✅ permite quebrar linha */
+  word-break: break-word;
 
   background: #0f172a;
   color: #ffffff;
@@ -458,16 +468,18 @@
   transition: opacity .15s ease, transform .15s ease;
 }
 
-/* Setinha */
+/* Setinha (padrão central) */
 .s7-tip[data-tip]::before{
   content: "";
   position: absolute;
+
   left: 50%;
   bottom: calc(100% + 4px);
   transform: translateX(-50%);
+
   z-index: 99999;
 
-  border: 7px solid transparent;   /* +33% */
+  border: 7px solid transparent;
   border-top-color: #0f172a;
 
   opacity: 0;
@@ -485,7 +497,45 @@
   transform: translateX(-50%) translateY(-2px);
 }
 
-/* Variante: tooltip abaixo */
+/* ======================================================
+   VARIANTE: ALINHAR À ESQUERDA (evita cortar na esquerda)
+====================================================== */
+.s7-tip.s7-tip-left[data-tip]::after{
+  left: 0;
+  transform: translateX(0);
+}
+
+.s7-tip.s7-tip-left[data-tip]::before{
+  left: 14px;
+  transform: translateX(0);
+}
+
+.s7-tip.s7-tip-left:hover::after{
+  transform: translateX(0) translateY(-2px);
+}
+
+/* ======================================================
+   VARIANTE: ALINHAR À DIREITA (evita cortar na direita)
+====================================================== */
+.s7-tip.s7-tip-right[data-tip]::after{
+  left: auto;
+  right: 0;
+  transform: translateX(0);
+}
+
+.s7-tip.s7-tip-right[data-tip]::before{
+  left: auto;
+  right: 14px;
+  transform: translateX(0);
+}
+
+.s7-tip.s7-tip-right:hover::after{
+  transform: translateX(0) translateY(-2px);
+}
+
+/* ======================================================
+   VARIANTE: tooltip abaixo (quando precisar)
+====================================================== */
 .s7-tip.s7-tip-bottom[data-tip]::after{
   top: calc(100% + 10px);
   bottom: auto;
@@ -494,9 +544,11 @@
 .s7-tip.s7-tip-bottom[data-tip]::before{
   top: calc(100% + 4px);
   bottom: auto;
+
   border-top-color: transparent;
   border-bottom-color: #0f172a;
 }
+
 
 
 /* ======================================================
