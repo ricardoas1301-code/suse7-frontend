@@ -10,7 +10,18 @@
 
 import "./FieldLabel.css";
 
-export default function FieldLabel({ text, required = false, infoText, onCopy }) {
+export default function FieldLabel({
+  text,
+  required = false,
+  infoText,
+  onCopy,
+
+  // ------------------------------------------------------------
+  // PROPS DE TOOLTIP (controle fino sem gambiarra)
+  // ------------------------------------------------------------
+  infoWrap = false,     // ✅ quando tooltip é longo (quebra linhas)
+  infoBottom = false,   // ✅ quando está no topo e corta (mostra para baixo)
+}) {
   return (
     <div className="fl-wrap">
       {/* ------------------------------------------------------------
@@ -28,7 +39,11 @@ export default function FieldLabel({ text, required = false, infoText, onCopy })
         {infoText ? (
           <button
             type="button"
-            className="fl-icon fl-info s7-tip"
+            className={[
+              "fl-icon fl-info s7-tip s7-tip-left",     // ✅ evita cortar na esquerda
+              infoWrap ? "s7-tip-wrap" : "",
+              infoBottom ? "s7-tip-bottom" : "",        // ✅ evita cortar no topo
+            ].join(" ")}
             data-tip={infoText}
             aria-label={`Informações sobre ${text}`}
           >
@@ -39,7 +54,7 @@ export default function FieldLabel({ text, required = false, infoText, onCopy })
         {onCopy ? (
           <button
             type="button"
-            className="fl-icon fl-copy s7-tip"
+            className="fl-icon fl-copy s7-tip s7-tip-right" // ✅ evita cortar na direita
             data-tip="Copiar"
             onClick={onCopy}
             aria-label={`Copiar ${text}`}

@@ -533,22 +533,6 @@
 }
 
 /* ======================================================
-   VARIANTE: TOOLTIP ABAIXO
-====================================================== */
-.s7-tip.s7-tip-bottom[data-tip]::after{
-  top: calc(100% + 10px);
-  bottom: auto;
-}
-
-.s7-tip.s7-tip-bottom[data-tip]::before{
-  top: calc(100% + 2px);
-  bottom: auto;
-
-  border-top-color: transparent;
-  border-bottom-color: #0f172a;
-}
-
-/* ======================================================
    VARIANTE: TOOLTIP COM QUEBRA (textos longos)
    Uso: class="s7-tip s7-tip-wrap"
 ====================================================== */

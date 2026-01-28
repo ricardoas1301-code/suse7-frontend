@@ -223,48 +223,52 @@ export default function ProductForm({
     }
   };
 
-// ======================================================================
-// COMPONENTE: FieldLabel (label + info + copiar) — INLINE
-// ======================================================================
-const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
+// ======================================================
+// COMPONENTE: FieldLabel (label + info + copiar)
+// - wrap: tooltip longo quebra linha bonito
+// - tipBottom: tooltip aparece para baixo (não corta no topo)
+// ======================================================
+const FieldLabel = ({
+  text,
+  required = false,
+  onCopy,
+  infoText,
+  wrap = false,
+  tipBottom = false,
+}) => {
   return (
     <div className="pf-label-row">
-      {/* Lado esquerdo: Label + Required + Info */}
       <div className="pf-label-left">
         <span className="s7-label">
-          {text} {required && <span className="s7-required">*</span>}
+          {text}{required && <span className="s7-required">*</span>}
         </span>
 
         {!!infoText && (
-<button
-  type="button"
-  className="pf-info-btn s7-tip s7-tip-left"
-  data-tip={infoText}
-  aria-label="Informação"
->
-  i
-</button>
+          <button
+            type="button"
+            className={`pf-info-btn s7-tip s7-tip-left ${tipBottom ? "s7-tip-bottom" : ""} ${wrap ? "s7-tip-wrap" : ""}`}
+            data-tip={infoText}
+            aria-label="Informação"
+          >
+            i
+          </button>
         )}
       </div>
 
-      {/* Lado direito: Copiar */}
       {!!onCopy && (
-<button
-  type="button"
-  className="pf-copy-btn s7-tip s7-tip-right"
-  data-tip="Copiar"
-  onClick={onCopy}
-  aria-label="Copiar"
->
-  ⧉
-</button>
+        <button
+          type="button"
+          className="pf-copy-btn s7-tip s7-tip-right"
+          data-tip="Copiar"
+          onClick={onCopy}
+          aria-label="Copiar"
+        >
+          ⧉
+        </button>
       )}
     </div>
   );
 };
-
-
-
 
   // ------------------------------------------------------
   // CHIPS (opções) — adiciona via Enter/Tab/virgula
@@ -716,14 +720,12 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
       FORMATO (sempre visível)
   ------------------------------------------------------ */}
 <div className="pf-group pf-group--xs">
-  <FieldLabel
-    text="Formato"
-    infoText={
-      product.format === "simple"
-        ? "Produto simples (sem variação de características)"
-        : "Produto com variação de características (ex: Cor / Voltagem)"
-    }
-  />
+<FieldLabel
+  text="Formato"
+  infoText="Produto simples (sem variação de características)"
+  infoBottom={true}  // ✅ não corta no topo
+  infoWrap={true}    // ✅ aceita texto longo
+/>
 
   <select
     className="s7-select"
@@ -803,10 +805,10 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
 
             <div className="pf-row">
               <div className="pf-group pf-group--full">
-                <FieldLabel
+<FieldLabel
   text="Palavras-chave SEO"
-  onCopy={() => handleCopyField(product.seo_keywords)}
-  infoText="Separe por vírgulas. Isso ajuda na busca interna e SEO"
+  infoText="Separe por vírgulas. Isso ajuda no SEO de busca de anuncios "
+  infoWrap={true}
 />
 
 
