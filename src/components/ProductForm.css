@@ -255,6 +255,7 @@
   gap: 33px;
   row-gap: 12px;
   align-items: flex-start;
+  justify-content: space-between; /* ✅ ALINHA À DIREITA */
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
@@ -267,6 +268,7 @@
   gap: 6px;
   flex: 1;
   min-width: 0;
+  max-width: 100%; /* garante alinhamento */
 }
 
 .pf-group--full{
