@@ -436,25 +436,20 @@
   justify-content: center;
 }
 
-/* Bubble (padrão central) */
+/* Bubble */
 .s7-tip[data-tip]::after{
   content: attr(data-tip);
   position: absolute;
-
-  left: 50%;
-  bottom: calc(100% + 10px);
-  transform: translateX(-50%);
-
+  bottom: calc(100% + 8px);
   z-index: 99999;
 
-  font-size: 13px;
-  line-height: 1.25;
-  padding: 10px 14px;
+  /* ✅ -33% (menor e premium) */
+  font-size: 11px;
+  line-height: 1.2;
+  padding: 6px 10px;
+  max-width: 240px;
 
-  /* ✅ evita tooltip gigante / cortado */
-  width: max-content;
-  max-width: 360px;
-  white-space: normal;            /* ✅ permite quebrar linha */
+  white-space: normal;
   word-break: break-word;
 
   background: #0f172a;
@@ -468,24 +463,22 @@
   transition: opacity .15s ease, transform .15s ease;
 }
 
-/* Setinha (padrão central) */
+
+/* Setinha */
 .s7-tip[data-tip]::before{
   content: "";
   position: absolute;
-
-  left: 50%;
-  bottom: calc(100% + 4px);
-  transform: translateX(-50%);
-
+  bottom: calc(100% + 2px);
   z-index: 99999;
 
-  border: 7px solid transparent;
+  border: 5px solid transparent;
   border-top-color: #0f172a;
 
   opacity: 0;
   visibility: hidden;
   transition: opacity .15s ease;
 }
+
 
 .s7-tip:hover::after,
 .s7-tip:hover::before{
@@ -547,6 +540,51 @@
 
   border-top-color: transparent;
   border-bottom-color: #0f172a;
+}
+
+/* ==========================================
+   ALINHAMENTOS
+========================================== */
+
+/* Padrão: centralizado */
+.s7-tip[data-tip]::after{
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+}
+.s7-tip[data-tip]::before{
+  left: 50%;
+  transform: translateX(-50%);
+}
+.s7-tip:hover::after{
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* ✅ Alinhar à esquerda (não corta na borda esquerda) */
+.s7-tip.s7-tip-left[data-tip]::after{
+  left: 0;
+  transform: translateX(0) translateY(0);
+}
+.s7-tip.s7-tip-left[data-tip]::before{
+  left: 14px;
+  transform: translateX(0);
+}
+.s7-tip.s7-tip-left:hover::after{
+  transform: translateX(0) translateY(-2px);
+}
+
+/* ✅ Alinhar à direita (não corta na borda direita) */
+.s7-tip.s7-tip-right[data-tip]::after{
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(0);
+}
+.s7-tip.s7-tip-right[data-tip]::before{
+  left: auto;
+  right: 14px;
+  transform: translateX(0);
+}
+.s7-tip.s7-tip-right:hover::after{
+  transform: translateX(0) translateY(-2px);
 }
 
 
