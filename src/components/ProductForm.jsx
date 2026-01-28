@@ -227,34 +227,35 @@ export default function ProductForm({
 // ======================================================
 // COMPONENTE: FieldLabel (label + info + copiar)
 // Objetivo:
-// - Padronizar label dentro do ProductForm (sem depender de arquivo)
 // - Tooltip via Design System: .s7-tip + data-tip
-// Regras:
-// - wrap: permite texto longo (quebra linha)
-// - tipBottom: força tooltip aparecer para baixo (não cortar no topo)
-// - side: alinhamento (left/right/center) pra evitar cortar na lateral
+// - infoBottom: tooltip do "i" aparece abaixo
+// - infoWrap: tooltip do "i" pode quebrar linha (texto longo)
+// - copyBottom: tooltip do copiar aparece abaixo (padrão true)
+// - side: posicionamento lateral do tooltip (left/right)
 // ======================================================
 const FieldLabel = ({
   text,
   required = false,
-  onCopy,
-  infoText,
+  onCopy = null,
+  infoText = "",
   infoWrap = false,
   infoBottom = false,
-  copyBottom = true, // ✅ padrão: copiar sempre pra baixo
+  copyBottom = true,
+  side = "left", // "left" | "right"
 }) => {
   // ------------------------------------------------------
-  // Monta classes do tooltip
+  // Helper: classes do tooltip
   // ------------------------------------------------------
-  const tipClasses = [
-    "s7-tip",
-    tipBottom ? "s7-tip-bottom" : "",
-    wrap ? "s7-tip-wrap" : "",
-    side === "right" ? "s7-tip-right" : "",
-    side === "left" ? "s7-tip-left" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const buildTipClass = ({ bottom = false, wrap = false, side = "left" }) => {
+    return [
+      "s7-tip",
+      bottom ? "s7-tip-bottom" : "",
+      wrap ? "s7-tip-wrap" : "",
+      side === "right" ? "s7-tip-right" : "s7-tip-left",
+    ]
+      .filter(Boolean)
+      .join(" ");
+  };
 
   return (
     <div className="pf-label-row">
@@ -264,39 +265,29 @@ const FieldLabel = ({
           {required && <span className="s7-required">*</span>}
         </span>
 
-{!!infoText && (
-  <button
-    type="button"
-    className={[
-      "pf-info-btn",
-      "s7-tip",
-      infoBottom ? "s7-tip-bottom" : "s7-tip-left",
-      infoWrap ? "s7-tip-wrap" : "",
-    ].join(" ").trim()}
-    data-tip={infoText}
-    aria-label="Informação"
-  >
-    i
-  </button>
-)}
+        {!!infoText && (
+          <button
+            type="button"
+            className={["pf-info-btn", buildTipClass({ bottom: infoBottom, wrap: infoWrap, side })].join(" ")}
+            data-tip={infoText}
+            aria-label={`Informações sobre ${text}`}
+          >
+            i
+          </button>
+        )}
       </div>
 
-{!!onCopy && (
-  <button
-    type="button"
-    className={[
-      "pf-copy-btn",
-      "s7-tip",
-      copyBottom ? "s7-tip-bottom" : "s7-tip-right",
-    ].join(" ").trim()}
-    data-tip="Copiar"
-    onClick={onCopy}
-    aria-label="Copiar"
-  >
-    ⧉
-  </button>
-)}
-
+      {!!onCopy && (
+        <button
+          type="button"
+          className={["pf-copy-btn", buildTipClass({ bottom: copyBottom, wrap: false, side: "right" })].join(" ")}
+          data-tip="Copiar"
+          onClick={onCopy}
+          aria-label={`Copiar ${text}`}
+        >
+          ⧉
+        </button>
+      )}
     </div>
   );
 };
