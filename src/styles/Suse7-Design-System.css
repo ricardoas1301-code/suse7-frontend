@@ -420,13 +420,8 @@
    Uso:
    - class="s7-tip"
    - data-tip="Texto do tooltip"
-   Aplicação:
-   - Ícone (i)
-   - Botão copiar (⧉)
-====================================================== */
-
-/* ======================================================
-   TOOLTIP PADRÃO SUSE7 (HOVER / DATA-TIP)
+   Variantes:
+   - s7-tip-left  | s7-tip-right | s7-tip-bottom
 ====================================================== */
 
 .s7-tip{
@@ -436,21 +431,30 @@
   justify-content: center;
 }
 
-/* Bubble */
+/* Bubble (padrão: centralizado) */
 .s7-tip[data-tip]::after{
   content: attr(data-tip);
   position: absolute;
+
+  left: 50%;
   bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(0);
+
   z-index: 99999;
 
-  /* ✅ -33% (menor e premium) */
+  /* ✅ -33% menor */
   font-size: 11px;
   line-height: 1.2;
   padding: 6px 10px;
+
+  /* ✅ impede “C o p i a r” */
+  width: max-content;
+  min-width: 56px;          /* ajuda textos curtos */
   max-width: 240px;
 
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;      /* ✅ textos curtos não quebram */
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   background: #0f172a;
   color: #ffffff;
@@ -463,12 +467,15 @@
   transition: opacity .15s ease, transform .15s ease;
 }
 
-
-/* Setinha */
+/* Setinha (padrão: centralizado) */
 .s7-tip[data-tip]::before{
   content: "";
   position: absolute;
+
+  left: 50%;
   bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+
   z-index: 99999;
 
   border: 5px solid transparent;
@@ -478,7 +485,6 @@
   visibility: hidden;
   transition: opacity .15s ease;
 }
-
 
 .s7-tip:hover::after,
 .s7-tip:hover::before{
@@ -491,11 +497,11 @@
 }
 
 /* ======================================================
-   VARIANTE: ALINHAR À ESQUERDA (evita cortar na esquerda)
+   VARIANTE: ALINHAR À ESQUERDA
 ====================================================== */
 .s7-tip.s7-tip-left[data-tip]::after{
   left: 0;
-  transform: translateX(0);
+  transform: translateX(0) translateY(0);
 }
 
 .s7-tip.s7-tip-left[data-tip]::before{
@@ -508,12 +514,12 @@
 }
 
 /* ======================================================
-   VARIANTE: ALINHAR À DIREITA (evita cortar na direita)
+   VARIANTE: ALINHAR À DIREITA
 ====================================================== */
 .s7-tip.s7-tip-right[data-tip]::after{
   left: auto;
   right: 0;
-  transform: translateX(0);
+  transform: translateX(0) translateY(0);
 }
 
 .s7-tip.s7-tip-right[data-tip]::before{
@@ -527,7 +533,7 @@
 }
 
 /* ======================================================
-   VARIANTE: tooltip abaixo (quando precisar)
+   VARIANTE: TOOLTIP ABAIXO
 ====================================================== */
 .s7-tip.s7-tip-bottom[data-tip]::after{
   top: calc(100% + 10px);
@@ -535,58 +541,12 @@
 }
 
 .s7-tip.s7-tip-bottom[data-tip]::before{
-  top: calc(100% + 4px);
+  top: calc(100% + 2px);
   bottom: auto;
 
   border-top-color: transparent;
   border-bottom-color: #0f172a;
 }
-
-/* ==========================================
-   ALINHAMENTOS
-========================================== */
-
-/* Padrão: centralizado */
-.s7-tip[data-tip]::after{
-  left: 50%;
-  transform: translateX(-50%) translateY(0);
-}
-.s7-tip[data-tip]::before{
-  left: 50%;
-  transform: translateX(-50%);
-}
-.s7-tip:hover::after{
-  transform: translateX(-50%) translateY(-2px);
-}
-
-/* ✅ Alinhar à esquerda (não corta na borda esquerda) */
-.s7-tip.s7-tip-left[data-tip]::after{
-  left: 0;
-  transform: translateX(0) translateY(0);
-}
-.s7-tip.s7-tip-left[data-tip]::before{
-  left: 14px;
-  transform: translateX(0);
-}
-.s7-tip.s7-tip-left:hover::after{
-  transform: translateX(0) translateY(-2px);
-}
-
-/* ✅ Alinhar à direita (não corta na borda direita) */
-.s7-tip.s7-tip-right[data-tip]::after{
-  left: auto;
-  right: 0;
-  transform: translateX(0) translateY(0);
-}
-.s7-tip.s7-tip-right[data-tip]::before{
-  left: auto;
-  right: 14px;
-  transform: translateX(0);
-}
-.s7-tip.s7-tip-right:hover::after{
-  transform: translateX(0) translateY(-2px);
-}
-
 
 
 /* ======================================================
