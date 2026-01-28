@@ -548,6 +548,36 @@
   border-bottom-color: #0f172a;
 }
 
+/* ======================================================
+   VARIANTE: TOOLTIP COM QUEBRA (textos longos)
+   Uso: class="s7-tip s7-tip-wrap"
+====================================================== */
+.s7-tip.s7-tip-wrap[data-tip]::after{
+  white-space: normal;      /* ✅ quebra em linhas */
+  overflow: visible;
+  text-overflow: initial;
+
+  width: max-content;
+  max-width: 320px;         /* ✅ limite elegante */
+}
+
+/* ======================================================
+   VARIANTE: FORÇAR TOOLTIP PRA BAIXO
+   Uso: class="s7-tip s7-tip-bottom"
+====================================================== */
+.s7-tip.s7-tip-bottom[data-tip]::after{
+  top: calc(100% + 10px);
+  bottom: auto;
+}
+
+.s7-tip.s7-tip-bottom[data-tip]::before{
+  top: calc(100% + 2px);
+  bottom: auto;
+
+  border-top-color: transparent;
+  border-bottom-color: #0f172a;
+}
+
 
 /* ======================================================
    BADGES (status pequenos)
