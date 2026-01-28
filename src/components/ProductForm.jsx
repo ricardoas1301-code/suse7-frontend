@@ -703,6 +703,8 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
          BODY
       ================================================== */}
       <div className="pf-body" data-active-tab={activeTab}>
+        <div className="pf-body-inner"></div>
+        
         {/* =======================
             ABA: DADOS
         ======================= */}

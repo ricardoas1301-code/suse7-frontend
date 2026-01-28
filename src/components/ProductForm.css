@@ -228,7 +228,9 @@
   min-height: 0;
 
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible;
+  position: relative;
+  z-index: 1;
 
   align-items: stretch;
   box-sizing: border-box;
@@ -854,4 +856,9 @@
   max-width: 869px;
 
   box-sizing: border-box;
+}
+
+
+.pf-body-inner{
+  overflow: visible;
 }
