@@ -333,7 +333,11 @@
 .pf-seo-wrapper{
   width: 100%;
   box-sizing: border-box;
+
+  display: flex;
+  justify-content: stretch; /* 🔑 alinha igual aos outros inputs */
 }
+
 
 .pf-seo-wrapper textarea{
   width: 100%;
