@@ -224,9 +224,7 @@ export default function ProductForm({
   };
 
 // ======================================================================
-// COMPONENTE: FieldLabel (label + info + copiar)
-// - info (ícone i) fica ao lado do label (estilo Bling)
-// - tooltip não corta e fica acima de tudo
+// COMPONENTE: FieldLabel (label + info + copiar) — INLINE
 // ======================================================================
 const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
   return (
@@ -240,22 +238,23 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
         {!!infoText && (
           <button
             type="button"
-            className="pf-info-btn"
+            className="pf-info-btn s7-tip"
             aria-label="Informação"
-            data-tooltip={infoText}
+            data-tip={infoText}
           >
             i
           </button>
         )}
       </div>
 
-      {/* Lado direito: Copiar (se existir) */}
-      {onCopy && (
+      {/* Lado direito: Copiar */}
+      {!!onCopy && (
         <button
           type="button"
-          className="pf-copy-btn"
-          onClick={onCopy}
+          className="pf-copy-btn s7-tip"
           aria-label="Copiar"
+          data-tip="Copiar"
+          onClick={onCopy}
         >
           ⧉
         </button>
@@ -263,6 +262,7 @@ const FieldLabel = ({ text, required = false, onCopy, infoText }) => {
     </div>
   );
 };
+
 
 
 
