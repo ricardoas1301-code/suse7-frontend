@@ -237,11 +237,11 @@ export default function ProductForm({
 const FieldLabel = ({
   text,
   required = false,
-  onCopy = null,
-  infoText = "",
-  wrap = false,
-  tipBottom = false,
-  side = "left", // "left" | "right" | "center"
+  onCopy,
+  infoText,
+  infoWrap = false,
+  infoBottom = false,
+  copyBottom = true, // ✅ padrão: copiar sempre pra baixo
 }) => {
   // ------------------------------------------------------
   // Monta classes do tooltip
@@ -264,29 +264,39 @@ const FieldLabel = ({
           {required && <span className="s7-required">*</span>}
         </span>
 
-        {!!infoText && (
-          <button
-            type="button"
-            className={`pf-info-btn ${tipClasses}`}
-            data-tip={infoText}  // ✅ agora usa o infoText de verdade
-            aria-label={`Informações sobre ${text}`}
-          >
-            i
-          </button>
-        )}
+{!!infoText && (
+  <button
+    type="button"
+    className={[
+      "pf-info-btn",
+      "s7-tip",
+      infoBottom ? "s7-tip-bottom" : "s7-tip-left",
+      infoWrap ? "s7-tip-wrap" : "",
+    ].join(" ").trim()}
+    data-tip={infoText}
+    aria-label="Informação"
+  >
+    i
+  </button>
+)}
       </div>
 
-      {!!onCopy && (
-        <button
-          type="button"
-          className={`pf-copy-btn s7-tip s7-tip-right`}
-          data-tip="Copiar"
-          onClick={onCopy}
-          aria-label={`Copiar ${text}`}
-        >
-          ⧉
-        </button>
-      )}
+{!!onCopy && (
+  <button
+    type="button"
+    className={[
+      "pf-copy-btn",
+      "s7-tip",
+      copyBottom ? "s7-tip-bottom" : "s7-tip-right",
+    ].join(" ").trim()}
+    data-tip="Copiar"
+    onClick={onCopy}
+    aria-label="Copiar"
+  >
+    ⧉
+  </button>
+)}
+
     </div>
   );
 };
