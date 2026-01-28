@@ -227,35 +227,46 @@ export default function ProductForm({
 // ======================================================
 // COMPONENTE: FieldLabel (label + info + copiar)
 // Objetivo:
+// - Padronizar label dentro do ProductForm (inline)
 // - Tooltip via Design System: .s7-tip + data-tip
-// - infoBottom: tooltip do "i" aparece abaixo
-// - infoWrap: tooltip do "i" pode quebrar linha (texto longo)
-// - copyBottom: tooltip do copiar aparece abaixo (padrão true)
-// - side: posicionamento lateral do tooltip (left/right)
+// Regras:
+// - wrap: permite tooltip longo quebrar linha
+// - tipBottom: força tooltip aparecer para baixo
+// - side: left | right | center (alinhamento lateral do tooltip)
+// - copyBottom: tooltip do copiar para baixo (padrão true)
 // ======================================================
 const FieldLabel = ({
   text,
   required = false,
-  onCopy = null,
-  infoText = "",
-  infoWrap = false,
-  infoBottom = false,
+  onCopy,
+  infoText,
+  wrap = false,
+  tipBottom = false,
+  side = "left",
   copyBottom = true,
-  side = "left", // "left" | "right"
 }) => {
   // ------------------------------------------------------
-  // Helper: classes do tooltip
+  // Classes do tooltip INFO
   // ------------------------------------------------------
-  const buildTipClass = ({ bottom = false, wrap = false, side = "left" }) => {
-    return [
-      "s7-tip",
-      bottom ? "s7-tip-bottom" : "",
-      wrap ? "s7-tip-wrap" : "",
-      side === "right" ? "s7-tip-right" : "s7-tip-left",
-    ]
-      .filter(Boolean)
-      .join(" ");
-  };
+  const infoTipClass = [
+    "s7-tip",
+    tipBottom ? "s7-tip-bottom" : "",
+    wrap ? "s7-tip-wrap" : "",
+    side === "right" ? "s7-tip-right" : "",
+    side === "left" ? "s7-tip-left" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  // ------------------------------------------------------
+  // Classes do tooltip COPIAR
+  // ------------------------------------------------------
+  const copyTipClass = [
+    "s7-tip",
+    copyBottom ? "s7-tip-bottom" : "s7-tip-right",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div className="pf-label-row">
@@ -268,7 +279,7 @@ const FieldLabel = ({
         {!!infoText && (
           <button
             type="button"
-            className={["pf-info-btn", buildTipClass({ bottom: infoBottom, wrap: infoWrap, side })].join(" ")}
+            className={`pf-info-btn ${infoTipClass}`}
             data-tip={infoText}
             aria-label={`Informações sobre ${text}`}
           >
@@ -280,7 +291,7 @@ const FieldLabel = ({
       {!!onCopy && (
         <button
           type="button"
-          className={["pf-copy-btn", buildTipClass({ bottom: copyBottom, wrap: false, side: "right" })].join(" ")}
+          className={`pf-copy-btn ${copyTipClass}`}
           data-tip="Copiar"
           onClick={onCopy}
           aria-label={`Copiar ${text}`}
@@ -747,13 +758,12 @@ const FieldLabel = ({
   infoText={
     product.format === "simple"
       ? "Produto simples (sem variação de características)"
-      : "Produto com variação de características (ex: Cor / Voltagem)"
+      : "Produto com variação de características (Cor, Voltagem)"
   }
-  tipBottom={true}  // ✅ agora funciona
-  wrap={true}       // ✅ agora funciona
+  tipBottom={true}
+  wrap={true}
   side="left"
 />
-
 
   <select
     className="s7-select"
@@ -836,6 +846,7 @@ const FieldLabel = ({
 <FieldLabel
   text="Palavras-chave SEO"
   infoText="Separe por vírgulas. Isso ajuda no SEO de busca dos anuncios."
+  tipBottom={true}
   wrap={true}
   side="left"
   onCopy={() => handleCopyField(product.seo_keywords)}
