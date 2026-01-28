@@ -807,8 +807,9 @@ const FieldLabel = ({
               <div className="pf-group pf-group--full">
 <FieldLabel
   text="Palavras-chave SEO"
-  infoText="Separe por vírgulas. Isso ajuda no SEO de busca de anuncios "
+  infoText="Separe por vírgulas. Isso no SEO de busca dos anuncios"
   infoWrap={true}
+  onCopy={() => navigator.clipboard.writeText(product?.seo_keywords || "")}
 />
 
 
