@@ -16,6 +16,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./ProductForm.css";
 
+
 export default function ProductForm({
   title = "Novo produto",
   mode = "create", // "create" | "edit"
@@ -225,30 +226,50 @@ export default function ProductForm({
 
 // ======================================================
 // COMPONENTE: FieldLabel (label + info + copiar)
-// - wrap: tooltip longo quebra linha bonito
-// - tipBottom: tooltip aparece para baixo (não corta no topo)
+// Objetivo:
+// - Padronizar label dentro do ProductForm (sem depender de arquivo)
+// - Tooltip via Design System: .s7-tip + data-tip
+// Regras:
+// - wrap: permite texto longo (quebra linha)
+// - tipBottom: força tooltip aparecer para baixo (não cortar no topo)
+// - side: alinhamento (left/right/center) pra evitar cortar na lateral
 // ======================================================
 const FieldLabel = ({
   text,
   required = false,
-  onCopy,
-  infoText,
+  onCopy = null,
+  infoText = "",
   wrap = false,
   tipBottom = false,
+  side = "left", // "left" | "right" | "center"
 }) => {
+  // ------------------------------------------------------
+  // Monta classes do tooltip
+  // ------------------------------------------------------
+  const tipClasses = [
+    "s7-tip",
+    tipBottom ? "s7-tip-bottom" : "",
+    wrap ? "s7-tip-wrap" : "",
+    side === "right" ? "s7-tip-right" : "",
+    side === "left" ? "s7-tip-left" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className="pf-label-row">
       <div className="pf-label-left">
         <span className="s7-label">
-          {text}{required && <span className="s7-required">*</span>}
+          {text}
+          {required && <span className="s7-required">*</span>}
         </span>
 
         {!!infoText && (
           <button
             type="button"
-            className={`pf-info-btn s7-tip s7-tip-left ${tipBottom ? "s7-tip-bottom" : ""} ${wrap ? "s7-tip-wrap" : ""}`}
-            data-tip={infoText}
-            aria-label="Informação"
+            className={`pf-info-btn ${tipClasses}`}
+            data-tip={infoText}  // ✅ agora usa o infoText de verdade
+            aria-label={`Informações sobre ${text}`}
           >
             i
           </button>
@@ -258,10 +279,10 @@ const FieldLabel = ({
       {!!onCopy && (
         <button
           type="button"
-          className="pf-copy-btn s7-tip s7-tip-right"
+          className={`pf-copy-btn s7-tip s7-tip-right`}
           data-tip="Copiar"
           onClick={onCopy}
-          aria-label="Copiar"
+          aria-label={`Copiar ${text}`}
         >
           ⧉
         </button>
@@ -722,10 +743,16 @@ const FieldLabel = ({
 <div className="pf-group pf-group--xs">
 <FieldLabel
   text="Formato"
-  infoText="Produto simples (sem variação de características)"
-  infoBottom={true}  // ✅ não corta no topo
-  infoWrap={true}    // ✅ aceita texto longo
+  infoText={
+    product.format === "simple"
+      ? "Produto simples (sem variação de características)"
+      : "Produto com variação de características (ex: Cor / Voltagem)"
+  }
+  tipBottom={true}  // ✅ agora funciona
+  wrap={true}       // ✅ agora funciona
+  side="left"
 />
+
 
   <select
     className="s7-select"
@@ -807,10 +834,12 @@ const FieldLabel = ({
               <div className="pf-group pf-group--full">
 <FieldLabel
   text="Palavras-chave SEO"
-  infoText="Separe por vírgulas. Isso no SEO de busca dos anuncios"
-  infoWrap={true}
-  onCopy={() => navigator.clipboard.writeText(product?.seo_keywords || "")}
+  infoText="Separe por vírgulas. Isso ajuda no SEO de busca dos anuncios."
+  wrap={true}
+  side="left"
+  onCopy={() => handleCopyField(product.seo_keywords)}
 />
+
 
 
                 <div className="pf-seo-wrapper">
