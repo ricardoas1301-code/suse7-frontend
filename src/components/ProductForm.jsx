@@ -16,6 +16,15 @@
 import { useEffect, useMemo, useState } from "react";
 import "./ProductForm.css";
 
+// ======================================================================
+// HELPER: ID seguro (fora do componente)
+// Objetivo: gerar ids estáveis para rows de UI sem recriar função a cada render
+// ======================================================================
+const createId = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+};
+
 
 export default function ProductForm({
   title = "Novo produto",
@@ -29,14 +38,6 @@ export default function ProductForm({
   // CONTROLE DE ABAS (nova ordem)
   // ------------------------------------------------------
   const [activeTab, setActiveTab] = useState("data");
-
-  // ------------------------------------------------------
-  // HELPER: ID seguro (evita quebrar em browsers)
-  // ------------------------------------------------------
-  const createId = () => {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
-    return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  };
 
   // ------------------------------------------------------
   // STATE: PRODUTO (alinhado com tabela products)
@@ -60,8 +61,6 @@ export default function ProductForm({
     cost_price: "",
     packaging_cost: "",
     operational_cost: "",
-    min_profit_percentage: "",
-    min_profit_value: "",
 
     // =========================
     // DESCRIÇÃO
@@ -132,16 +131,29 @@ export default function ProductForm({
     // Esperado: [{ sku, gtin, price, stock_quantity, active, attributes }]
     if (Array.isArray(initialVariants) && initialVariants.length > 0) {
       setVariantRows(
-        initialVariants.map((v) => ({
-          id: v.id || createId(),
-          sku: v.sku || "",
-          gtin: v.gtin || "",
-          price: v.price ?? "",
-          stock_quantity: v.stock_quantity ?? 0,
-          active: typeof v.active === "boolean" ? v.active : true,
-          attributes: v.attributes || {},
-        }))
-      );
+  initialVariants.map((v) => ({
+    id: v.id || createId(),
+    sku: v.sku || "",
+    gtin: v.gtin || "",
+
+    // ------------------------------------------------------
+    // CUSTO POR VARIAÇÃO (nova coluna do banco)
+    // ------------------------------------------------------
+    cost_price: v.cost_price ?? "",
+
+    // ------------------------------------------------------
+    // ESTOQUE POR VARIAÇÃO
+    // ------------------------------------------------------
+    stock_quantity: v.stock_quantity ?? 0,
+    stock_minimum: v.stock_minimum ?? 0,
+    use_virtual_stock: !!v.use_virtual_stock,
+    virtual_stock_quantity: v.virtual_stock_quantity ?? 0,
+
+    active: typeof v.active === "boolean" ? v.active : true,
+    attributes: v.attributes || {},
+  }))
+);
+
 
       // Tenta reconstruir variationAttributes a partir de attributes existentes (best effort)
       const attrMap = new Map();
@@ -165,7 +177,6 @@ export default function ProductForm({
       }
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProduct, initialVariants]);
 
   // ------------------------------------------------------
@@ -388,12 +399,13 @@ const FieldLabel = ({
     }, 0);
   };
 
-  const handleRemoveVariationAttribute = (attrId) => {
-    setVariationAttributes((prev) => prev.filter((a) => a.id !== attrId));
-    setTimeout(() => {
-      regenerateVariantRows(attrId);
+    const handleRemoveVariationAttribute = (attrId) => {
+     setVariationAttributes((prev) => prev.filter((a) => a.id !== attrId));
+     setTimeout(() => {
+     regenerateVariantRows();
     }, 0);
   };
+
 
   const removeOptionFromAttribute = (attrId, option) => {
     setVariationAttributes((prev) =>
@@ -437,7 +449,7 @@ const FieldLabel = ({
       .map((a) => ({
         name: a.name,
         options: a.options,
-      }));
+       }));
 
     if (attrs.length === 0) {
       setVariantRows([]);
@@ -464,14 +476,23 @@ const FieldLabel = ({
       const existing = currentIndex.get(key);
 
       return {
-        id: existing?.id || createId(),
-        attributes: attributesObj,
-        sku: existing?.sku || "",
-        gtin: existing?.gtin || "",
-        price: existing?.price ?? "",
-        stock_quantity: existing?.stock_quantity ?? 0,
-        active: typeof existing?.active === "boolean" ? existing.active : true,
-      };
+  id: existing?.id || createId(),
+  attributes: attributesObj,
+  sku: existing?.sku || "",
+  gtin: existing?.gtin || "",
+
+  // custo por variação
+  cost_price: existing?.cost_price ?? "",
+
+  // estoque por variação
+  stock_quantity: existing?.stock_quantity ?? 0,
+  stock_minimum: existing?.stock_minimum ?? 0,
+  use_virtual_stock: !!existing?.use_virtual_stock,
+  virtual_stock_quantity: existing?.virtual_stock_quantity ?? 0,
+
+  active: typeof existing?.active === "boolean" ? existing.active : true,
+};
+
     });
 
     setVariantRows(nextRows);
@@ -583,16 +604,25 @@ const FieldLabel = ({
         ...(product.format === "variants" ? { sku: "", gtin: "" } : {}),
       },
       variants:
-        product.format === "variants"
-          ? (variantRows || []).map((r) => ({
-              sku: r.sku,
-              gtin: r.gtin || null,
-              price: r.price === "" ? null : r.price,
-              stock_quantity: Number(r.stock_quantity || 0),
-              active: !!r.active,
-              attributes: r.attributes || {},
-            }))
-          : [],
+  product.format === "variants"
+    ? (variantRows || []).map((r) => ({
+        sku: r.sku,
+        gtin: r.gtin || null,
+
+        // custo por variação
+        cost_price: r.cost_price === "" ? null : r.cost_price,
+
+        // estoque por variação
+        stock_quantity: Number(r.stock_quantity || 0),
+        stock_minimum: Number(r.stock_minimum || 0),
+        use_virtual_stock: !!r.use_virtual_stock,
+        virtual_stock_quantity: Number(r.virtual_stock_quantity || 0),
+
+        active: !!r.active,
+        attributes: r.attributes || {},
+      }))
+    : [],
+
     };
 
     if (typeof onSubmit === "function") {
@@ -621,9 +651,9 @@ const FieldLabel = ({
         const parsed = JSON.parse(v);
         if (Array.isArray(parsed) && parsed[0]) return String(parsed[0]);
         if (parsed?.[0]) return String(parsed[0]);
-      } catch (_) {
-        return "";
-      }
+        } catch {
+          return "";
+        }
     }
 
     return "";
@@ -871,41 +901,152 @@ const FieldLabel = ({
           </div>
         )}
 
-        {/* =======================
-            ABA: CUSTOS & PRECIFICAÇÃO
-        ======================= */}
-        {activeTab === "pricing" && (
-          <div className="pf-container">
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Custo do produto</label>
-                <input className="s7-input" inputMode="decimal" placeholder="Ex: 59,90" value={product.cost_price} onChange={(e) => handleChange("cost_price", e.target.value)} />
-              </div>
+{/* =======================
+    ABA: CUSTOS & PRECIFICAÇÃO (v3)
+    Regras:
+    - simple: custo do produto no products
+    - variants: custo do produto por variação (no grid)
+    - embalagem/operacional: sempre globais (aplicam a todas)
+======================= */}
+{activeTab === "pricing" && (
+  <div className="pf-container">
 
-              <div className="pf-group">
-                <label className="s7-label">Custo Embalagem</label>
-                <input className="s7-input" inputMode="decimal" placeholder="Ex: 4,50" value={product.packaging_cost} onChange={(e) => handleChange("packaging_cost", e.target.value)} />
-              </div>
+    {/* ------------------------------------------------------
+        CUSTOS GLOBAIS (sempre visíveis)
+    ------------------------------------------------------ */}
+    <div className="pf-row">
+      {/* Custo Embalagem */}
+      <div className="pf-group">
+        <FieldLabel
+          text="Custo Embalagem"
+          infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
+          tipBottom={true}
+          wrap={true}
+        />
+        <input
+          className="s7-input"
+          inputMode="decimal"
+          placeholder="Ex: 4,50"
+          value={product.packaging_cost}
+          onChange={(e) => handleChange("packaging_cost", e.target.value)}
+        />
+      </div>
 
-              <div className="pf-group">
-                <label className="s7-label">Custo Operacional</label>
-                <input className="s7-input" inputMode="decimal" placeholder="Ex: 6,90" value={product.operational_cost} onChange={(e) => handleChange("operational_cost", e.target.value)} />
-              </div>
-            </div>
+      {/* Custo Operacional */}
+      <div className="pf-group">
+        <FieldLabel
+          text="Custo Operacional"
+          infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
+          tipBottom={true}
+          wrap={true}
+        />
+        <input
+          className="s7-input"
+          inputMode="decimal"
+          placeholder="Ex: 6,90"
+          value={product.operational_cost}
+          onChange={(e) => handleChange("operational_cost", e.target.value)}
+        />
+      </div>
+    </div>
 
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Lucro mínimo (%)</label>
-                <input className="s7-input" inputMode="decimal" placeholder="Ex: 10" value={product.min_profit_percentage} onChange={(e) => handleChange("min_profit_percentage", e.target.value)} />
-              </div>
+    {/* ------------------------------------------------------
+        FORMATO SIMPLES: custo do produto direto no products
+    ------------------------------------------------------ */}
+    {product.format === "simple" && (
+      <div className="pf-row">
+        <div className="pf-group" style={{ maxWidth: 380 }}>
+          <label className="s7-label">Custo do produto</label>
+          <input
+            className="s7-input"
+            inputMode="decimal"
+            placeholder="Ex: 59,90"
+            value={product.cost_price}
+            onChange={(e) => handleChange("cost_price", e.target.value)}
+          />
+        </div>
+      </div>
+    )}
 
-              <div className="pf-group">
-                <label className="s7-label">Lucro mínimo (R$)</label>
-                <input className="s7-input" inputMode="decimal" placeholder="Ex: 15,00" value={product.min_profit_value} onChange={(e) => handleChange("min_profit_value", e.target.value)} />
-              </div>
-            </div>
+    {/* ------------------------------------------------------
+        FORMATO VARIAÇÕES: custo por variação (bulk só na 1ª)
+        Observação:
+        - No momento estamos reutilizando "price" do variantRows
+          como custo do produto por variação (UI).
+        - Depois o backend pode separar custo vs preço.
+    ------------------------------------------------------ */}
+    {product.format === "variants" && (
+      <div className="section" style={{ marginTop: 10 }}>
+        <div className="section-header">
+          <h3>Custo do produto por variação</h3>
+          <p className="section-subtitle">
+            Preencha o custo por combinação. Você pode aplicar o mesmo custo para todas.
+          </p>
+        </div>
+
+        {variantRows.length === 0 ? (
+          <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
+            Gere as variações na aba <strong>Variações</strong> para preencher os custos por combinação.
+          </div>
+        ) : (
+          <div style={{ marginTop: 12, overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Variação</th>
+                  <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Custo do produto (R$)</th>
+                  <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Ações</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {variantRows.map((row, idx) => {
+                  const label = Object.values(row.attributes || {}).join(" / ") || `Variação ${idx + 1}`;
+
+                  return (
+                    <tr key={row.id}>
+                      <td style={{ padding: "10px 10px", fontWeight: 800, color: "#334155", minWidth: 240 }}>
+                        {label}
+                      </td>
+
+                      <td style={{ padding: "10px 10px", minWidth: 220 }}>
+                        <input
+                          className="s7-input"
+                          inputMode="decimal"
+                          placeholder="Ex: 59,90"
+                          value={row.cost_price}
+                          onChange={(e) => handleVariantRowChange(row.id, "cost_price", e.target.value)}
+                        />
+                      </td>
+
+                      <td style={{ padding: "10px 10px", minWidth: 220 }}>
+                        {/* Bulk só na primeira linha */}
+                        {idx === 0 && (
+                          <button
+                            type="button"
+                            className="s7-btn s7-btn--secondary"
+                            onClick={() => {
+                            const base = String(row.cost_price ?? "");
+                            setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: base })));
+                            }}
+                          >
+                          Aplicar para todas
+                        </button>
+                        )}
+
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
+      </div>
+    )}
+  </div>
+)}
+
 
         {/* =======================
             ABA: IMAGENS (mantém)
@@ -1114,8 +1255,6 @@ const FieldLabel = ({
 
                             <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>SKU *</th>
                             <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>GTIN</th>
-                            <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Preço</th>
-                            <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Estoque</th>
                             <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Ativo</th>
                             <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Ações</th>
                           </tr>
@@ -1151,25 +1290,6 @@ const FieldLabel = ({
                                 />
                               </td>
 
-                              <td style={{ padding: "10px 10px", minWidth: 140 }}>
-                                <input
-                                  className="s7-input"
-                                  inputMode="decimal"
-                                  placeholder="Ex: 199,90"
-                                  value={row.price}
-                                  onChange={(e) => handleVariantRowChange(row.id, "price", e.target.value)}
-                                />
-                              </td>
-
-                              <td style={{ padding: "10px 10px", minWidth: 120 }}>
-                                <input
-                                  className="s7-input"
-                                  inputMode="numeric"
-                                  placeholder="0"
-                                  value={row.stock_quantity}
-                                  onChange={(e) => handleVariantRowChange(row.id, "stock_quantity", e.target.value.replace(/\D/g, ""))}
-                                />
-                              </td>
 
                               <td style={{ padding: "10px 10px", minWidth: 120 }}>
                                 <label className="pf-switch">
@@ -1235,12 +1355,24 @@ const FieldLabel = ({
               </div>
 
               <div className="pf-group">
-                <label className="s7-label">Estoque mínimo</label>
+                <FieldLabel
+                text="Estoque mínimo"
+                infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
+                tipBottom={true}
+                wrap={true}
+              />
+
                 <input className="s7-input" inputMode="numeric" value={product.stock_minimum} onChange={(e) => handleChange("stock_minimum", e.target.value.replace(/\D/g, ""))} />
               </div>
 
               <div className="pf-group" style={{ minWidth: 260 }}>
-                <label className="s7-label">Usar estoque virtual?</label>
+                <FieldLabel
+                text="Usar estoque virtual?"
+                infoText="Estoque inteligente: quando ativado, o Suse7 usa um estoque “virtual” para sincronizar com marketplaces, mantendo controle e reduzindo risco de vender sem disponibilidade. (Regras finais ficam no backend.)"
+                tipBottom={true}
+                wrap={true}
+              />
+
                 <label className="pf-switch" style={{ marginTop: 8 }}>
                   <input
                     type="checkbox"

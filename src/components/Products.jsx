@@ -12,7 +12,6 @@ import { useNavigate } from "react-router-dom";
 export default function Products() {
 const [products, setProducts] = useState([]);
 const [loading, setLoading] = useState(true);
-const [openModal, setOpenModal] = useState(false);
 const navigate = useNavigate(); // ✅ ADD
 
   // ------------------------------------------------------------

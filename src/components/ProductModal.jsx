@@ -13,24 +13,22 @@
 import { useState } from "react";
 import "./ProductModal.css";
 
+// ======================================================================
+// HELPER: ID seguro (fora do componente)
+// Objetivo: evitar Date.now/Math.random dentro do render (lint react-hooks/purity)
+// ======================================================================
+const createId = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+};
+
+
 export default function ProductModal({ open, onClose }) {
   // ------------------------------------------------------
   // CONTROLE DE ABAS
   // ------------------------------------------------------
   const [activeTab, setActiveTab] = useState("basic");
 
-  // ------------------------------------------------------
-  // HELPER: ID seguro para variações (evita quebrar em browsers)
-  // ------------------------------------------------------
-  const createId = () => {
-    // Se tiver crypto.randomUUID, usa
-    if (typeof crypto !== "undefined" && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
-
-    // Fallback simples (UI only)
-    return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  };
 
   // ------------------------------------------------------
   // STATE DO PRODUTO (UI only por enquanto)
