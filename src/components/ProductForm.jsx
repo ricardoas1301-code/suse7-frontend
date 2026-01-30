@@ -1168,6 +1168,7 @@ onClick={() => {
   setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
 }}
 
+                          >
                           Atualizar todos
                         </button>
                         )}
