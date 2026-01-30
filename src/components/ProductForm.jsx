@@ -1131,9 +1131,9 @@ const FieldLabel = ({
                         {label}
                       </td>
 
-                      <td style={{ padding: "10px 10px", minWidth: 220 }}>
+                      <td style={{ padding: "10px 10px", minWidth: 180 }}>
 <input
-  className="s7-input"
+  className="s7-input pf-variant-cost-input"
   type="text"
   inputMode="numeric"
   placeholder="R$ 0,00"
@@ -1141,16 +1141,15 @@ const FieldLabel = ({
   onChange={(e) => {
     const digits = s7ExtractDigits(e.target.value);
 
-    // Atualiza map (UI)
     setVariantCostDigitsById((prev) => ({
       ...prev,
       [row.id]: digits,
     }));
 
-    // Mantém row.cost_price sincronizado em decimal string p/ payload
     handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
   }}
 />
+
 
                       </td>
 

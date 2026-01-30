@@ -872,3 +872,13 @@
 .pf-body-inner{
   overflow: visible;
 }
+
+/* ======================================================================
+   SUSE7 — CUSTOS & PRECIFICAÇÃO
+   Ajuste: input custo por variação (76% menor)
+====================================================================== */
+
+.pf-variant-cost-input{
+  width: 24%;      /* ✅ 100% - 76% = 24% */
+  min-width: 160px; /* ✅ não quebra em telas menores */
+}
