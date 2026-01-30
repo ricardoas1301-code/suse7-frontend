@@ -17,6 +17,49 @@ import { useEffect, useMemo, useState } from "react";
 import "./ProductForm.css";
 
 // ======================================================================
+// SUSE7 — HELPERS: Currency BRL (UI)
+// Objetivo:
+// - Input com máscara "R$" e aceitando somente números
+// - Digitação estilo maquininha: 1234 => R$ 12,34
+// - Frontend apenas UX (cálculo sensível continua no backend)
+// ======================================================================
+
+// ------------------------------------------------------------
+// Converte string de dígitos ("1234") para string BRL "R$ 12,34"
+// ------------------------------------------------------------
+function s7FormatBRLFromDigits(digitsOnly) {
+  const digits = (digitsOnly || "").replace(/\D/g, ""); // ✅ só números
+  if (!digits) return "R$ 0,00";
+
+  const cents = parseInt(digits, 10);
+  const value = cents / 100;
+
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}
+
+// ------------------------------------------------------------
+// Extrai dígitos de um valor exibido (ex: "R$ 12,34" => "1234")
+// ------------------------------------------------------------
+function s7ExtractDigits(value) {
+  return (value || "").replace(/\D/g, "");
+}
+
+// ======================================================================
+// HELPER: dígitos ("450") => decimal string ("4.50")
+// Objetivo: manter precisão e evitar float no frontend
+// ======================================================================
+function s7DigitsToDecimalStr(digitsOnly) {
+  const digits = (digitsOnly || "").replace(/\D/g, "");
+  if (!digits) return "";
+  const cents = parseInt(digits, 10);
+  return (cents / 100).toFixed(2);
+}
+
+
+// ======================================================================
 // HELPER: ID seguro (fora do componente)
 // Objetivo: gerar ids estáveis para rows de UI sem recriar função a cada render
 // ======================================================================
@@ -119,6 +162,22 @@ export default function ProductForm({
 
   const [variantRows, setVariantRows] = useState([]);
 
+  // ======================================================================
+// STATE: Custos (UI) com máscara BRL
+// Regra:
+// - Guardamos "somente dígitos" no state (ex: "450" => R$ 4,50)
+// - Exibimos formatado com Intl
+// - No submit, convertemos para string decimal "4.50"
+// ======================================================================
+const [packagingDigits, setPackagingDigits] = useState("");     // embalagem
+const [operationalDigits, setOperationalDigits] = useState(""); // operacional
+const [simpleCostDigits, setSimpleCostDigits] = useState("");   // custo simples
+
+
+// Custos por variação (id => dígitos)
+const [variantCostDigitsById, setVariantCostDigitsById] = useState({});
+
+
   // ------------------------------------------------------
   // HIDRATAR FORM (modo edição)
   // ------------------------------------------------------
@@ -126,6 +185,22 @@ export default function ProductForm({
     if (initialProduct) {
       setProduct((prev) => ({ ...prev, ...initialProduct }));
     }
+
+    // ------------------------------------------------------
+// HIDRATAR: custos (best effort)
+// - Se vier "4.50" ou "4,50", transforma em dígitos "450"
+// ------------------------------------------------------
+if (initialProduct) {
+  const toDigits = (v) => String(v ?? "")
+    .replace(",", ".")
+    .replace(/[^\d.]/g, "")
+    .replace(".", "");
+
+  setPackagingDigits(toDigits(initialProduct.packaging_cost));
+  setOperationalDigits(toDigits(initialProduct.operational_cost));
+  setSimpleCostDigits(toDigits(initialProduct.cost_price));
+}
+
 
     // Se vierem variantes prontas (edit), carregamos no grid
     // Esperado: [{ sku, gtin, price, stock_quantity, active, attributes }]
@@ -176,6 +251,26 @@ export default function ProductForm({
         setProduct((prev) => ({ ...prev, format: "variants" }));
       }
     }
+
+    // ------------------------------------------------------
+// HIDRATAR: custos por variação (id => dígitos)
+// ------------------------------------------------------
+setVariantCostDigitsById(() => {
+  const map = {};
+  initialVariants.forEach((v) => {
+    const id = v.id || null;
+    if (!id) return;
+
+    const digits = String(v.cost_price ?? "")
+      .replace(",", ".")
+      .replace(/[^\d.]/g, "")
+      .replace(".", "");
+
+    map[id] = digits;
+  });
+  return map;
+});
+
 
   }, [initialProduct, initialVariants]);
 
@@ -923,13 +1018,21 @@ const FieldLabel = ({
           tipBottom={true}
           wrap={true}
         />
-        <input
-          className="s7-input"
-          inputMode="decimal"
-          placeholder="Ex: 4,50"
-          value={product.packaging_cost}
-          onChange={(e) => handleChange("packaging_cost", e.target.value)}
-        />
+<input
+  className="s7-input"
+  type="text"
+  inputMode="numeric"
+  placeholder="R$ 0,00"
+  value={s7FormatBRLFromDigits(packagingDigits)}
+  onChange={(e) => {
+    const digits = s7ExtractDigits(e.target.value);
+    setPackagingDigits(digits);
+
+    // Mantém product sincronizado (string decimal) para payload/back-end
+    handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
+  }}
+/>
+
       </div>
 
       {/* Custo Operacional */}
@@ -940,13 +1043,19 @@ const FieldLabel = ({
           tipBottom={true}
           wrap={true}
         />
-        <input
-          className="s7-input"
-          inputMode="decimal"
-          placeholder="Ex: 6,90"
-          value={product.operational_cost}
-          onChange={(e) => handleChange("operational_cost", e.target.value)}
-        />
+<input
+  className="s7-input"
+  type="text"
+  inputMode="numeric"
+  placeholder="R$ 0,00"
+  value={s7FormatBRLFromDigits(operationalDigits)}
+  onChange={(e) => {
+    const digits = s7ExtractDigits(e.target.value);
+    setOperationalDigits(digits);
+    handleChange("operational_cost", s7DigitsToDecimalStr(digits));
+  }}
+/>
+
       </div>
     </div>
 
@@ -957,13 +1066,19 @@ const FieldLabel = ({
       <div className="pf-row">
         <div className="pf-group" style={{ maxWidth: 380 }}>
           <label className="s7-label">Custo do produto</label>
-          <input
-            className="s7-input"
-            inputMode="decimal"
-            placeholder="Ex: 59,90"
-            value={product.cost_price}
-            onChange={(e) => handleChange("cost_price", e.target.value)}
-          />
+<input
+  className="s7-input"
+  type="text"
+  inputMode="numeric"
+  placeholder="R$ 0,00"
+  value={s7FormatBRLFromDigits(simpleCostDigits)}
+  onChange={(e) => {
+    const digits = s7ExtractDigits(e.target.value);
+    setSimpleCostDigits(digits);
+    handleChange("cost_price", s7DigitsToDecimalStr(digits));
+  }}
+/>
+
         </div>
       </div>
     )}
@@ -980,7 +1095,7 @@ const FieldLabel = ({
         <div className="section-header">
           <h3>Custo do produto por variação</h3>
           <p className="section-subtitle">
-            Preencha o custo por combinação. Você pode aplicar o mesmo custo para todas.
+            Preencha o custo por variação. Você pode aplicar o mesmo custo para todas.
           </p>
         </div>
 
@@ -1010,13 +1125,26 @@ const FieldLabel = ({
                       </td>
 
                       <td style={{ padding: "10px 10px", minWidth: 220 }}>
-                        <input
-                          className="s7-input"
-                          inputMode="decimal"
-                          placeholder="Ex: 59,90"
-                          value={row.cost_price}
-                          onChange={(e) => handleVariantRowChange(row.id, "cost_price", e.target.value)}
-                        />
+<input
+  className="s7-input"
+  type="text"
+  inputMode="numeric"
+  placeholder="R$ 0,00"
+  value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
+  onChange={(e) => {
+    const digits = s7ExtractDigits(e.target.value);
+
+    // Atualiza map (UI)
+    setVariantCostDigitsById((prev) => ({
+      ...prev,
+      [row.id]: digits,
+    }));
+
+    // Mantém row.cost_price sincronizado em decimal string p/ payload
+    handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
+  }}
+/>
+
                       </td>
 
                       <td style={{ padding: "10px 10px", minWidth: 220 }}>
@@ -1025,12 +1153,22 @@ const FieldLabel = ({
                           <button
                             type="button"
                             className="s7-btn s7-btn--secondary"
-                            onClick={() => {
-                            const base = String(row.cost_price ?? "");
-                            setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: base })));
-                            }}
-                          >
-                          Aplicar para todas
+onClick={() => {
+  const baseDigits = variantCostDigitsById[row.id] || "";
+
+  setVariantCostDigitsById((prev) => {
+    const next = { ...prev };
+    (variantRows || []).forEach((r) => {
+      next[r.id] = baseDigits;
+    });
+    return next;
+  });
+
+  const baseDecimal = s7DigitsToDecimalStr(baseDigits);
+  setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
+}}
+
+                          Atualizar todos
                         </button>
                         )}
 
