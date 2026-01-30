@@ -1131,7 +1131,7 @@ const FieldLabel = ({
                         {label}
                       </td>
 
-                      <td style={{ padding: "10px 6px", minWidth: 160 }}>
+                      <td style={{ padding: "10px 6px", minWidth: 79 }}>
 
 <input
   className="s7-input pf-variant-cost-input"
