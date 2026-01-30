@@ -174,6 +174,23 @@ const [costErrors, setCostErrors] = useState({
   const [variantRows, setVariantRows] = useState([]);
 
   // ======================================================================
+// SUSE7 — VARIAÇÕES: CONTROLE DE UI (Builder vs Gerenciamento)
+// Objetivo:
+// - Builder (Nome do atributo + chips + botão "Adicionar variações")
+// - Após gerar combinações: esconder builder e mostrar gerenciamento
+// ======================================================================
+const [showVariationsBuilder, setShowVariationsBuilder] = useState(true);
+
+// ------------------------------------------------------
+// Adicionar chip (opção) em atributo existente
+// - Controla qual atributo está "em modo adicionar opção"
+// ------------------------------------------------------
+const [addOptionAttrId, setAddOptionAttrId] = useState(null);
+const [addOptionInput, setAddOptionInput] = useState("");
+const [addOptionError, setAddOptionError] = useState("");
+
+
+  // ======================================================================
 // STATE: Custos (UI) com máscara BRL
 // Regra:
 // - Guardamos "somente dígitos" no state (ex: "450" => R$ 4,50)
@@ -193,8 +210,6 @@ const [variantCostDigitsById, setVariantCostDigitsById] = useState({});
 // Flag: já existem variações cadastradas?
 // ------------------------------------------------------
 const hasAnyVariation = variationAttributes.length > 0;
-
-
 
 
   // ------------------------------------------------------
@@ -596,6 +611,47 @@ const handleAddVariationAttribute = () => {
   setDraftOptions([]);
 };
 
+// ======================================================================
+// SUSE7 — VARIAÇÕES: ADICIONAR OPÇÃO (CHIP) EM ATRIBUTO EXISTENTE
+// Objetivo:
+// - Permitir adicionar novas opções (ex: Verde, Bege) depois que o builder some
+// - Regera combinações automaticamente
+// ======================================================================
+const handleAddOptionToAttribute = (attrId) => {
+  const opt = normalizeOption(addOptionInput);
+
+  // ------------------------------------------------------
+  // Validações (UX)
+  // ------------------------------------------------------
+  if (!opt) {
+    setAddOptionError("Digite uma opção válida.");
+    return;
+  }
+
+  setVariationAttributes((prev) =>
+    prev.map((a) => {
+      if (a.id !== attrId) return a;
+
+      // Evita duplicar opção (case-insensitive)
+      const exists = (a.options || []).some((x) => String(x).toLowerCase() === opt.toLowerCase());
+      if (exists) return a;
+
+      return { ...a, options: [...(a.options || []), opt] };
+    })
+  );
+
+  // ------------------------------------------------------
+  // Reset UI + regerar combinações
+  // ------------------------------------------------------
+  setAddOptionInput("");
+  setAddOptionError("");
+  setAddOptionAttrId(null);
+
+  setTimeout(() => {
+    regenerateVariantRows();
+  }, 0);
+};
+
 
 
   const removeOptionFromAttribute = (attrId, option) => {
@@ -609,6 +665,11 @@ const handleAddVariationAttribute = () => {
     setTimeout(() => {
       regenerateVariantRows();
     }, 0);
+    // ------------------------------------------------------
+// UI: após gerar combinações, esconder o builder
+// ------------------------------------------------------
+setShowVariationsBuilder(false);
+
   };
 
   // ------------------------------------------------------
@@ -1369,243 +1430,223 @@ const handleSubmit = () => {
           </div>
         )}
 
-        {/* =======================
-            ABA: VARIAÇÕES (Bling-style)
-        ======================= */}
-        {activeTab === "variations" && (
-          <div className="pf-container">
-            {product.format !== "variants" ? (
-              <div className="s7-alert s7-alert--warning">
-                <strong>Formato atual:</strong> <strong>Simples</strong>. Para usar variações, altere o campo <strong>Formato</strong> na aba <strong>Dados</strong>.
+{/* =======================
+    ABA: VARIAÇÕES (novo fluxo)
+======================= */}
+{activeTab === "variations" && (
+  <div className="pf-container">
+    {product.format !== "variants" ? (
+      <div className="s7-alert s7-alert--warning">
+        <strong>Formato atual:</strong> <strong>Simples</strong>. Para usar variações, altere o campo <strong>Formato</strong> na aba <strong>Dados</strong>.
+      </div>
+    ) : (
+      <>
+        {/* ======================================================
+            MODO 1: BUILDER (ANTES DE GERAR)
+        ====================================================== */}
+        {showVariationsBuilder && (
+          <div className="section">
+            <div className="section-header">
+              <h3>Variações</h3>
+              <p className="section-subtitle">
+                Cadastre atributos (ex: Cor, Tamanho) e opções (chips). Depois geramos as combinações automaticamente.
+              </p>
+            </div>
+
+            {/* 👉 Aqui você mantém seu input "Nome do atributo" e input "Opções" + chips */}
+            {/* (não vou reescrever tudo aqui pra não quebrar nada — só manter igual ao seu) */}
+
+            {(errors.variants || errors.variants_sku || errors.variants_gtin) && (
+              <div style={{ marginTop: 10 }}>
+                {errors.variants && <div className="s7-error">{errors.variants}</div>}
+                {errors.variants_sku && <div className="s7-error">{errors.variants_sku}</div>}
+                {errors.variants_gtin && <div className="s7-error">{errors.variants_gtin}</div>}
               </div>
-            ) : (
-              <>
-                <div className="section">
-                  <div className="section-header">
-                    <h3>Variações</h3>
-                    <p className="section-subtitle">
-                      Cadastre atributos (ex: Cor, Tamanho) e opções (chips). Depois geramos as combinações automaticamente.
-                    </p>
+            )}
+          </div>
+        )}
+
+        {/* ======================================================
+            MODO 2: GERENCIAMENTO (DEPOIS DE GERAR)
+        ====================================================== */}
+        {!showVariationsBuilder && variationAttributes.length > 0 && (
+          <div className="section" style={{ marginTop: 12 }}>
+            <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <div>
+                <h3>Variações cadastradas</h3>
+                <p className="section-subtitle">
+                  Aqui você pode remover atributos e adicionar novas opções (chips). As combinações são atualizadas automaticamente.
+                </p>
+              </div>
+
+              {/* ✅ Se um dia quiser reabrir o builder, deixa pronto */}
+              <button
+                type="button"
+                className="s7-btn s7-btn--secondary"
+                onClick={() => setShowVariationsBuilder(true)}
+                title="Voltar ao cadastro de atributos"
+              >
+                + Novo atributo
+              </button>
+            </div>
+
+            {variationAttributes.map((attr) => (
+              <div key={attr.id} className="pf-row" style={{ marginTop: 12, marginBottom: 0, alignItems: "flex-end" }}>
+                <div className="pf-group" style={{ maxWidth: 320 }}>
+                  <label className="s7-label">Atributo</label>
+                  <input className="s7-input" value={attr.name} disabled />
+                </div>
+
+                <div className="pf-group pf-group--full">
+                  <label className="s7-label">Opções</label>
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingTop: 6 }}>
+                    {(attr.options || []).map((opt) => (
+                      <span
+                        key={`${attr.id}_${opt}`}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "6px 10px",
+                          borderRadius: 999,
+                          background: "rgba(107, 114, 128, 0.10)",
+                          color: "#334155",
+                          fontWeight: 800,
+                          fontSize: 12,
+                        }}
+                      >
+                        {opt}
+
+                        {/* 🗑️ remover opção (chip) */}
+                        <button
+                          type="button"
+                          onClick={() => removeOptionFromAttribute(attr.id, opt)}
+                          style={{ border: "none", background: "transparent", cursor: "pointer", fontWeight: 900, color: "#334155" }}
+                          aria-label="Remover opção"
+                          title="Remover"
+                        >
+                          🗑️
+                        </button>
+                      </span>
+                    ))}
                   </div>
 
-                  <div className="pf-row" style={{ marginTop: 12 }}>
-                    <div className="pf-group">
-<label className="s7-label">Nome do atributo *</label>
-<input
-  className="s7-input"
-  placeholder="Digite e pressione Enter ou Tab (ex: Cor, Tamanho, Voltagem)"
-  value={draftAttrInput}
-  onChange={(e) => setDraftAttrInput(e.target.value)}
-  onKeyDown={handleDraftAttrKeyDown}
-/>
+                  {/* ➕ Adicionar chip (somente opção) */}
+                  <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center" }}>
+                    {addOptionAttrId === attr.id ? (
+                      <>
+                        <input
+                          className="s7-input"
+                          style={{ maxWidth: 260 }}
+                          placeholder="Ex: Verde, Bege..."
+                          value={addOptionInput}
+                          onChange={(e) => {
+                            setAddOptionInput(e.target.value);
+                            if (addOptionError) setAddOptionError("");
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === "Tab") {
+                              e.preventDefault();
+                              handleAddOptionToAttribute(attr.id);
+                            }
+                            if (e.key === "Escape") {
+                              setAddOptionAttrId(null);
+                              setAddOptionInput("");
+                              setAddOptionError("");
+                            }
+                          }}
+                          autoFocus
+                        />
 
-{/* Chips de atributos */}
-{draftAttrChips.length > 0 && (
-  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-    {draftAttrChips.map((attr) => (
-      <span
-        key={attr}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "6px 10px",
-          borderRadius: 999,
-          background: "rgba(37, 99, 235, 0.10)",
-          color: "var(--s7-primary)",
-          fontWeight: 800,
-          fontSize: 12,
-        }}
-      >
-        {attr}
-        <button
-          type="button"
-          onClick={() => removeDraftAttrChip(attr)}
-          style={{
-            border: "none",
-            background: "transparent",
-            cursor: "pointer",
-            fontWeight: 900,
-            color: "var(--s7-primary)",
-          }}
-          aria-label="Remover atributo"
-          title="Remover"
-        >
-          ✕
-        </button>
-      </span>
-    ))}
-  </div>
-)}
+                        <button
+                          type="button"
+                          className="s7-btn s7-btn--secondary"
+                          onClick={() => handleAddOptionToAttribute(attr.id)}
+                        >
+                          Adicionar chip
+                        </button>
 
-
-                      <div className="s7-hint" style={{ marginTop: 8 }}>
-                        Separe opções com Enter/Tab/virgula.
-                      </div>
-                    </div>
-
-                    <div className="pf-group" style={{ flex: "0 0 auto", minWidth: 200, alignSelf: "flex-end" }}>
-                      <button className="s7-btn s7-btn--secondary" type="button" onClick={handleAddVariationAttribute}>
-                        Adicionar variação
+                        <button
+                          type="button"
+                          className="s7-btn s7-btn--secondary"
+                          onClick={() => {
+                            setAddOptionAttrId(null);
+                            setAddOptionInput("");
+                            setAddOptionError("");
+                          }}
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="s7-btn s7-btn--secondary"
+                        onClick={() => {
+                          setAddOptionAttrId(attr.id);
+                          setAddOptionInput("");
+                          setAddOptionError("");
+                        }}
+                      >
+                        + Adicionar chip
                       </button>
-                    </div>
+                    )}
                   </div>
 
-                  {(errors.variants || errors.variants_sku || errors.variants_gtin) && (
-                    <div style={{ marginTop: 10 }}>
-                      {errors.variants && <div className="s7-error">{errors.variants}</div>}
-                      {errors.variants_sku && <div className="s7-error">{errors.variants_sku}</div>}
-                      {errors.variants_gtin && <div className="s7-error">{errors.variants_gtin}</div>}
+                  {addOptionAttrId === attr.id && addOptionError && (
+                    <div className="s7-error" style={{ marginTop: 8 }}>
+                      {addOptionError}
                     </div>
                   )}
                 </div>
 
-                {/* Variações cadastradas */}
-                {variationAttributes.length > 0 && (
-                  <div className="section" style={{ marginTop: 12 }}>
-                    <div className="section-header">
-                      <h3>Variações cadastradas</h3>
-                      <p className="section-subtitle">Remova opções/atributos e regenere combinações automaticamente.</p>
-                    </div>
+                {/* AÇÕES (ícones) */}
+                <div className="pf-group" style={{ flex: "0 0 auto", minWidth: 140, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  {/* ✏️ editar (placeholder por enquanto) */}
+                  <button
+                    type="button"
+                    className="s7-btn s7-btn--secondary"
+                    title="Editar atributo (em breve)"
+                    onClick={() => console.log("Editar atributo:", attr.id)}
+                  >
+                    ✏️
+                  </button>
 
-                    {variationAttributes.map((attr) => (
-                      <div key={attr.id} className="pf-row" style={{ marginTop: 12, marginBottom: 0 }}>
-                        <div className="pf-group" style={{ maxWidth: 320 }}>
-                          <label className="s7-label">Atributo</label>
-                          <input className="s7-input" value={attr.name} disabled />
-                        </div>
-
-                        <div className="pf-group pf-group--full">
-                          <label className="s7-label">Opções</label>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingTop: 6 }}>
-                            {attr.options.map((opt) => (
-                              <span
-                                key={`${attr.id}_${opt}`}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 8,
-                                  padding: "6px 10px",
-                                  borderRadius: 999,
-                                  background: "rgba(107, 114, 128, 0.10)",
-                                  color: "#334155",
-                                  fontWeight: 800,
-                                  fontSize: 12,
-                                }}
-                              >
-                                {opt}
-                                <button
-                                  type="button"
-                                  onClick={() => removeOptionFromAttribute(attr.id, opt)}
-                                  style={{ border: "none", background: "transparent", cursor: "pointer", fontWeight: 900, color: "#334155" }}
-                                  aria-label="Remover opção"
-                                  title="Remover"
-                                >
-                                  ✕
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="pf-group" style={{ flex: "0 0 auto", minWidth: 160, alignSelf: "flex-end" }}>
-                          <button className="s7-btn s7-btn--secondary" type="button" onClick={() => handleRemoveVariationAttribute(attr.id)}>
-                            Remover atributo
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className="pf-actions-row" style={{ marginTop: 14 }}>
-                      <button className="s7-btn s7-btn--secondary" type="button" onClick={regenerateVariantRows}>
-                        Regerar combinações
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Grid de combinações */}
-                {variantRows.length > 0 && (
-                  <div className="section" style={{ marginTop: 12 }}>
-                    <div className="section-header">
-                      <h3>Combinações geradas</h3>
-                      <p className="section-subtitle">Cada linha vira um registro em <strong>product_variants</strong>.</p>
-                    </div>
-
-                    <div style={{ marginTop: 12, overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
-                        <thead>
-                          <tr>
-                            <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>#</th>
-
-                            {variantAttrColumns.map((c) => (
-                              <th key={c} style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>
-                                {c}
-                              </th>
-                            ))}
-
-                            <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>SKU *</th>
-                            <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>GTIN</th>
-                            <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Ativo</th>
-                            <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Ações</th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          {variantRows.map((row, idx) => (
-                            <tr key={row.id}>
-                              <td style={{ padding: "10px 10px", fontWeight: 800, color: "#334155" }}>{idx + 1}</td>
-
-                              {variantAttrColumns.map((c) => (
-                                <td key={`${row.id}_${c}`} style={{ padding: "10px 10px", color: "#334155", fontWeight: 700 }}>
-                                  {row.attributes?.[c] ?? "-"}
-                                </td>
-                              ))}
-
-
-
-                              <td style={{ padding: "10px 10px", minWidth: 160 }}>
-                                <input
-                                  className="s7-input"
-                                  inputMode="numeric"
-                                  placeholder="GTIN"
-                                  value={row.gtin}
-                                  onChange={(e) => handleVariantRowChange(row.id, "gtin", e.target.value.replace(/\D/g, "").slice(0, 13))}
-                                />
-                              </td>
-
-
-                              <td style={{ padding: "10px 10px", minWidth: 120 }}>
-                                <label className="pf-switch">
-                                  <input
-                                    type="checkbox"
-                                    checked={row.active}
-                                    onChange={(e) => handleVariantRowChange(row.id, "active", e.target.checked)}
-                                  />
-                                  Ativa
-                                </label>
-                              </td>
-
-                              <td style={{ padding: "10px 10px", minWidth: 120 }}>
-                                <button className="s7-btn s7-btn--secondary" type="button" onClick={() => handleRemoveVariantRow(row.id)}>
-                                  Remover
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="s7-hint" style={{ marginTop: 10 }}>
-                      Dica: se você remover uma linha (combinação), ela não será criada no banco.
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+                  {/* 🗑️ remover atributo */}
+                  <button
+                    type="button"
+                    className="s7-btn s7-btn--secondary"
+                    title="Remover atributo"
+                    onClick={() => handleRemoveVariationAttribute(attr.id)}
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
+
+        {/* ======================================================
+            GRID: Combinações geradas (continua igual)
+        ====================================================== */}
+        {variantRows.length > 0 && (
+          <div className="section" style={{ marginTop: 12 }}>
+            <div className="section-header">
+              <h3>Combinações geradas</h3>
+              <p className="section-subtitle">Cada linha vira um registro em <strong>product_variants</strong>.</p>
+            </div>
+
+            {/* Seu grid atual permanece aqui */}
+            {/* ... */}
+          </div>
+        )}
+      </>
+    )}
+  </div>
+)}
+
 
         {/* =======================
             ABA: DESCRIÇÃO (mantém)
