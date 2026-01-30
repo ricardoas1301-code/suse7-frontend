@@ -887,5 +887,5 @@
 .pf-variant-actions-cell{
   display: flex;
   align-items: center;
-  padding-left: 8px; /* ✅ espaço menor e mais equilibrado */
+  padding-left: 0;   /* 🔥 colado de verdade */
 }

@@ -1131,7 +1131,8 @@ const FieldLabel = ({
                         {label}
                       </td>
 
-                      <td style={{ padding: "10px 10px", minWidth: 180 }}>
+                      <td style={{ padding: "10px 6px", minWidth: 160 }}>
+
 <input
   className="s7-input pf-variant-cost-input"
   type="text"
@@ -1153,7 +1154,7 @@ const FieldLabel = ({
 
                       </td>
 
-                      <td style={{ padding: "10px 10px", minWidth: 220 }}>
+                      <td style={{ padding: "10px 4px", width: 1, whiteSpace: "nowrap" }}>
                         {/* Bulk só na primeira linha */}
                         {idx === 0 && (
                           <button
