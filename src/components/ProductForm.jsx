@@ -1117,8 +1117,7 @@ const FieldLabel = ({
                 <tr>
                   <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Variação</th>
                   <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Custo do produto (R$)</th>
-                  <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Ações</th>
-                </tr>
+                  </tr>
               </thead>
 
               <tbody>
