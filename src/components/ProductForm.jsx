@@ -149,7 +149,7 @@ export default function ProductForm({
   // ------------------------------------------------------
   const [errors, setErrors] = useState({});
 
-  
+
   // ======================================================================
 // STATE: Erros da aba Custos & Precificação (UX) — obrigatório
 // ======================================================================
@@ -695,55 +695,67 @@ const FieldLabel = ({
   //   products: product
   //   product_variants: variantRows (quando format=variants)
   // ------------------------------------------------------
-  const handleSubmit = () => {
-    const okData = validateDataTab();
-    if (!okData) {
-      setActiveTab("data");
-      return;
-    }
+const handleSubmit = () => {
+  // ------------------------------------------------------
+  // 1) DADOS
+  // ------------------------------------------------------
+  const okData = validateDataTab();
+  if (!okData) {
+    setActiveTab("data");
+    return;
+  }
 
-    const okVariants = validateVariantsTab();
-    if (!okVariants) {
-      setActiveTab("variations");
-      return;
-    }
+  // ------------------------------------------------------
+  // 2) CUSTOS & PRECIFICAÇÃO  ✅ vem antes das variações
+  // ------------------------------------------------------
+  const okPricing = validatePricingTab();
+  if (!okPricing) {
+    setActiveTab("pricing");
+    return;
+  }
 
-    const payload = {
-      mode,
-      product: {
-        ...product,
-        // Segurança de UX: se variants, SKU/GTIN do produto ficam vazios
-        ...(product.format === "variants" ? { sku: "", gtin: "" } : {}),
-      },
-      variants:
-  product.format === "variants"
-    ? (variantRows || []).map((r) => ({
-        sku: r.sku,
-        gtin: r.gtin || null,
+  // ------------------------------------------------------
+  // 3) VARIAÇÕES (somente depois)
+  // ------------------------------------------------------
+  const okVariants = validateVariantsTab();
+  if (!okVariants) {
+    setActiveTab("variations");
+    return;
+  }
 
-        // custo por variação
-        cost_price: r.cost_price === "" ? null : r.cost_price,
-
-        // estoque por variação
-        stock_quantity: Number(r.stock_quantity || 0),
-        stock_minimum: Number(r.stock_minimum || 0),
-        use_virtual_stock: !!r.use_virtual_stock,
-        virtual_stock_quantity: Number(r.virtual_stock_quantity || 0),
-
-        active: !!r.active,
-        attributes: r.attributes || {},
-      }))
-    : [],
-
-    };
-
-    if (typeof onSubmit === "function") {
-      onSubmit(payload);
-      return;
-    }
-
-    console.log("Payload a salvar (UI):", payload);
+  // ------------------------------------------------------
+  // PAYLOAD
+  // ------------------------------------------------------
+  const payload = {
+    mode,
+    product: {
+      ...product,
+      ...(product.format === "variants" ? { sku: "", gtin: "" } : {}),
+    },
+    variants:
+      product.format === "variants"
+        ? (variantRows || []).map((r) => ({
+            sku: r.sku,
+            gtin: r.gtin || null,
+            cost_price: r.cost_price === "" ? null : r.cost_price,
+            stock_quantity: Number(r.stock_quantity || 0),
+            stock_minimum: Number(r.stock_minimum || 0),
+            use_virtual_stock: !!r.use_virtual_stock,
+            virtual_stock_quantity: Number(r.virtual_stock_quantity || 0),
+            active: !!r.active,
+            attributes: r.attributes || {},
+          }))
+        : [],
   };
+
+  if (typeof onSubmit === "function") {
+    onSubmit(payload);
+    return;
+  }
+
+  console.log("Payload a salvar (UI):", payload);
+};
+
 
   // ------------------------------------------------------
   // Img1 Produto (preview) — best effort
