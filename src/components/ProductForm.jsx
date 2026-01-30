@@ -874,35 +874,44 @@ const handleSubmit = () => {
       {/* ==================================================
          TABS (nova ordem e nomes)
       ================================================== */}
-      <div className="pf-tabs">
-        <button className={activeTab === "data" ? "active" : ""} onClick={() => setActiveTab("data")} type="button">
-          Dados
-        </button>
-        <button className={activeTab === "pricing" ? "active" : ""} onClick={() => setActiveTab("pricing")} type="button">
-          Custos & precificação
-        </button>
-        <button className={activeTab === "images" ? "active" : ""} onClick={() => setActiveTab("images")} type="button">
-          Imagens
-        </button>
-        <button className={activeTab === "variations" ? "active" : ""} onClick={() => setActiveTab("variations")} type="button">
-          Variações
-        </button>
-        <button className={activeTab === "description" ? "active" : ""} onClick={() => setActiveTab("description")} type="button">
-          Descrição
-        </button>
-        <button className={activeTab === "stock" ? "active" : ""} onClick={() => setActiveTab("stock")} type="button">
-          Estoque
-        </button>
-        <button className={activeTab === "measures" ? "active" : ""} onClick={() => setActiveTab("measures")} type="button">
-          Pesos & medidas
-        </button>
-        <button className={activeTab === "ads" ? "active" : ""} onClick={() => setActiveTab("ads")} type="button">
-          Anúncios
-        </button>
-        <button className={activeTab === "performance" ? "active" : ""} onClick={() => setActiveTab("performance")} type="button">
-          Vendas & desempenho
-        </button>
-      </div>
+<div className="pf-tabs">
+  <button className={activeTab === "data" ? "active" : ""} onClick={() => setActiveTab("data")} type="button">
+    Dados
+  </button>
+
+  <button className={activeTab === "pricing" ? "active" : ""} onClick={() => setActiveTab("pricing")} type="button">
+    Custos & precificação
+  </button>
+
+  <button className={activeTab === "variations" ? "active" : ""} onClick={() => setActiveTab("variations")} type="button">
+    Variações
+  </button>
+
+  <button className={activeTab === "stock" ? "active" : ""} onClick={() => setActiveTab("stock")} type="button">
+    Estoque
+  </button>
+
+  <button className={activeTab === "images" ? "active" : ""} onClick={() => setActiveTab("images")} type="button">
+    Imagens
+  </button>
+
+  <button className={activeTab === "description" ? "active" : ""} onClick={() => setActiveTab("description")} type="button">
+    Descrição
+  </button>
+
+  <button className={activeTab === "measures" ? "active" : ""} onClick={() => setActiveTab("measures")} type="button">
+    Pesos & medidas
+  </button>
+
+  <button className={activeTab === "ads" ? "active" : ""} onClick={() => setActiveTab("ads")} type="button">
+    Anúncios
+  </button>
+
+  <button className={activeTab === "performance" ? "active" : ""} onClick={() => setActiveTab("performance")} type="button">
+    Vendas & desempenho
+  </button>
+</div>
+
 
       {/* ==================================================
          BODY
