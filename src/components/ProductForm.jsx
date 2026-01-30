@@ -166,7 +166,8 @@ const [costErrors, setCostErrors] = useState({
   // 3) variantRows: combinações geradas (cada uma vira product_variants)
   // ------------------------------------------------------
   const [variationAttributes, setVariationAttributes] = useState([]);
-  const [draftAttrName, setDraftAttrName] = useState("");
+  const [draftAttrInput, setDraftAttrInput] = useState("");
+  const [draftAttrChips, setDraftAttrChips] = useState([]);
   const [draftOptionInput, setDraftOptionInput] = useState("");
   const [draftOptions, setDraftOptions] = useState([]);
 
@@ -186,6 +187,14 @@ const [simpleCostDigits, setSimpleCostDigits] = useState("");   // custo simples
 
 // Custos por variação (id => dígitos)
 const [variantCostDigitsById, setVariantCostDigitsById] = useState({});
+
+// ------------------------------------------------------
+// SUSE7 — VARIAÇÕES
+// Flag: já existem variações cadastradas?
+// ------------------------------------------------------
+const hasAnyVariation = variationAttributes.length > 0;
+
+
 
 
   // ------------------------------------------------------
@@ -479,44 +488,114 @@ const FieldLabel = ({
     }
   };
 
+  // ------------------------------------------------------
+// CHIPS (atributos) — adiciona via Enter/Tab/virgula
+// ------------------------------------------------------
+const normalizeAttr = (raw) => String(raw || "").trim().replace(/\s+/g, " ");
+
+const addDraftAttrsFromText = (text) => {
+  const cleaned = String(text || "");
+  const parts = cleaned
+    .split(",")
+    .map((p) => normalizeAttr(p))
+    .filter(Boolean);
+
+  if (parts.length === 0) return;
+
+  setDraftAttrChips((prev) => {
+    const set = new Set(prev.map((x) => x.toLowerCase()));
+    const next = [...prev];
+
+    parts.forEach((p) => {
+      if (!set.has(p.toLowerCase())) {
+        next.push(p);
+        set.add(p.toLowerCase());
+      }
+    });
+
+    return next;
+  });
+};
+
+const handleDraftAttrKeyDown = (e) => {
+  if (e.key === "Enter" || e.key === "Tab") {
+    const value = normalizeAttr(draftAttrInput);
+    if (value) {
+      e.preventDefault();
+      addDraftAttrsFromText(value);
+      setDraftAttrInput("");
+    }
+    return;
+  }
+
+  if (e.key === ",") {
+    const value = normalizeAttr(draftAttrInput);
+    if (value) {
+      e.preventDefault();
+      addDraftAttrsFromText(value);
+      setDraftAttrInput("");
+    }
+    return;
+  }
+};
+
+const removeDraftAttrChip = (attr) => {
+  setDraftAttrChips((prev) => prev.filter((x) => x !== attr));
+};
+
+
   const removeDraftOption = (opt) => {
     setDraftOptions((prev) => prev.filter((x) => x !== opt));
   };
 
-  // ------------------------------------------------------
-  // VARIAÇÕES: adicionar atributo (ex: Cor) + opções (chips)
-  // ------------------------------------------------------
-  const handleAddVariationAttribute = () => {
-    const name = normalizeOption(draftAttrName);
-    if (!name) return;
+// ------------------------------------------------------
+// VARIAÇÕES: adicionar atributo(s) + opções (chips)
+// - Permite cadastrar vários atributos de uma vez
+// - Remove necessidade de "Regerar combinações"
+// ------------------------------------------------------
+const handleAddVariationAttribute = () => {
+  // 1) precisa ter ao menos 1 atributo chip
+  if (!draftAttrChips || draftAttrChips.length === 0) {
+    setErrors((prev) => ({
+      ...prev,
+      variants: "Digite ao menos 1 atributo (ex: Cor) e pressione Enter/Tab para criar o chip.",
+    }));
+    return;
+  }
 
-    if (!draftOptions || draftOptions.length === 0) return;
+  // 2) precisa ter opções
+  if (!draftOptions || draftOptions.length === 0) {
+    setErrors((prev) => ({
+      ...prev,
+      variants: "Adicione ao menos 1 opção (chip) antes de cadastrar o atributo.",
+    }));
+    return;
+  }
 
-    setVariationAttributes((prev) => {
-      const exists = prev.some((a) => a.name.toLowerCase() === name.toLowerCase());
-      if (exists) return prev;
+  setVariationAttributes((prev) => {
+    const next = [...prev];
 
-      const next = [...prev, { id: createId(), name, options: draftOptions }];
-      return next;
+    draftAttrChips.forEach((rawName) => {
+      const name = normalizeOption(rawName);
+      if (!name) return;
+
+      const exists = next.some((a) => a.name.toLowerCase() === name.toLowerCase());
+      if (exists) return;
+
+      next.push({ id: createId(), name, options: [...draftOptions] });
     });
 
-    // Reset draft
-    setDraftAttrName("");
-    setDraftOptionInput("");
-    setDraftOptions([]);
+    return next;
+  });
 
-    // Após adicionar, regenerar combinações
-    setTimeout(() => {
-      regenerateVariantRows();
-    }, 0);
-  };
+  // ✅ limpa erros e drafts
+  setErrors((prev) => ({ ...prev, variants: undefined }));
+  setDraftAttrInput("");
+  setDraftAttrChips([]);
+  setDraftOptionInput("");
+  setDraftOptions([]);
+};
 
-    const handleRemoveVariationAttribute = (attrId) => {
-     setVariationAttributes((prev) => prev.filter((a) => a.id !== attrId));
-     setTimeout(() => {
-     regenerateVariantRows();
-    }, 0);
-  };
 
 
   const removeOptionFromAttribute = (attrId, option) => {
@@ -1311,63 +1390,54 @@ const handleSubmit = () => {
 
                   <div className="pf-row" style={{ marginTop: 12 }}>
                     <div className="pf-group">
-                      <label className="s7-label">Nome do atributo *</label>
-                      <input
-                        className="s7-input"
-                        placeholder="Ex: Cor, Tamanho, Voltagem..."
-                        value={draftAttrName}
-                        onChange={(e) => setDraftAttrName(e.target.value)}
-                      />
-                    </div>
+<label className="s7-label">Nome do atributo *</label>
+<input
+  className="s7-input"
+  placeholder="Digite e pressione Enter ou Tab (ex: Cor, Tamanho, Voltagem)"
+  value={draftAttrInput}
+  onChange={(e) => setDraftAttrInput(e.target.value)}
+  onKeyDown={handleDraftAttrKeyDown}
+/>
 
-                    <div className="pf-group pf-group--full">
-                      <label className="s7-label">Opções *</label>
-                      <input
-                        className="s7-input"
-                        placeholder="Digite e pressione Enter ou Tab (ex: Azul, Preto, Laranja)"
-                        value={draftOptionInput}
-                        onChange={(e) => setDraftOptionInput(e.target.value)}
-                        onKeyDown={handleDraftOptionKeyDown}
-                      />
+{/* Chips de atributos */}
+{draftAttrChips.length > 0 && (
+  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+    {draftAttrChips.map((attr) => (
+      <span
+        key={attr}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "6px 10px",
+          borderRadius: 999,
+          background: "rgba(37, 99, 235, 0.10)",
+          color: "var(--s7-primary)",
+          fontWeight: 800,
+          fontSize: 12,
+        }}
+      >
+        {attr}
+        <button
+          type="button"
+          onClick={() => removeDraftAttrChip(attr)}
+          style={{
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            fontWeight: 900,
+            color: "var(--s7-primary)",
+          }}
+          aria-label="Remover atributo"
+          title="Remover"
+        >
+          ✕
+        </button>
+      </span>
+    ))}
+  </div>
+)}
 
-                      {/* Chips draft */}
-                      {draftOptions.length > 0 && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-                          {draftOptions.map((opt) => (
-                            <span
-                              key={opt}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 8,
-                                padding: "6px 10px",
-                                borderRadius: 999,
-                                background: "rgba(37, 99, 235, 0.10)",
-                                color: "var(--s7-primary)",
-                                fontWeight: 800,
-                                fontSize: 12,
-                              }}
-                            >
-                              {opt}
-                              <button
-                                type="button"
-                                onClick={() => removeDraftOption(opt)}
-                                style={{
-                                  border: "none",
-                                  background: "transparent",
-                                  cursor: "pointer",
-                                  fontWeight: 900,
-                                  color: "var(--s7-primary)",
-                                }}
-                                aria-label="Remover opção"
-                                title="Remover"
-                              >
-                                ✕
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
 
                       <div className="s7-hint" style={{ marginTop: 8 }}>
                         Separe opções com Enter/Tab/virgula.
@@ -1553,6 +1623,7 @@ const handleSubmit = () => {
                   onChange={(e) => handleChange("description", e.target.value)}
                 />
               </div>
+              
             </div>
           </div>
         )}
@@ -1695,6 +1766,7 @@ const handleSubmit = () => {
         ======================= */}
         {activeTab === "ads" && (
           <div className="pf-container">
+            {!hasAnyVariation && (
             <div className="section">
               <div className="section-header">
                 <h3>Anúncios do produto</h3>
@@ -1707,6 +1779,7 @@ const handleSubmit = () => {
                 Importar anúncios (em breve)
               </button>
             </div>
+            )}
           </div>
         )}
 
