@@ -1125,82 +1125,60 @@ const FieldLabel = ({
                   const label = Object.values(row.attributes || {}).join(" / ") || `Variação ${idx + 1}`;
 
                   return (
-                    <tr key={row.id}>
-                      <td style={{ padding: "10px 10px", fontWeight: 800, color: "#334155", minWidth: 240 }}>
-                        {label}
-                      </td>
+  <tr key={row.id}>
+  {/* COLUNA 1: Variação */}
+  <td style={{ padding: "10px 10px", fontWeight: 800, color: "#334155", minWidth: 240 }}>
+    {label}
+  </td>
 
-                      <td style={{ padding: "10px 6px", minWidth: 79 }}>
+  {/* COLUNA 2: Custo (input + botão juntos) */}
+  <td style={{ padding: "10px 10px", minWidth: 320 }}>
+    <div className="pf-variant-cost-row">
+      <input
+        className="s7-input pf-variant-cost-input"
+        type="text"
+        inputMode="numeric"
+        placeholder="R$ 0,00"
+        value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
+        onChange={(e) => {
+          const digits = s7ExtractDigits(e.target.value);
 
-<input
-  className="s7-input pf-variant-cost-input"
-  type="text"
-  inputMode="numeric"
-  placeholder="R$ 0,00"
-  value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
-  onChange={(e) => {
-    const digits = s7ExtractDigits(e.target.value);
+          setVariantCostDigitsById((prev) => ({
+            ...prev,
+            [row.id]: digits,
+          }));
 
-    setVariantCostDigitsById((prev) => ({
-      ...prev,
-      [row.id]: digits,
-    }));
-
-    handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
-  }}
-/>
-
-
-                      </td>
-
-<td style={{ padding: "10px 10px", minWidth: 260 }}>
-  <div className="pf-variant-cost-row">
-    {/* INPUT (custo) */}
-    <input
-      className="s7-input pf-variant-cost-input"
-      type="text"
-      inputMode="numeric"
-      placeholder="R$ 0,00"
-      value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
-      onChange={(e) => {
-        const digits = s7ExtractDigits(e.target.value);
-
-        setVariantCostDigitsById((prev) => ({
-          ...prev,
-          [row.id]: digits,
-        }));
-
-        handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
-      }}
-    />
-
-    {/* BOTÃO (só na primeira linha) */}
-    {idx === 0 && (
-      <button
-        type="button"
-        className="s7-btn s7-btn--secondary"
-        onClick={() => {
-          const baseDigits = variantCostDigitsById[row.id] || "";
-
-          setVariantCostDigitsById((prev) => {
-            const next = { ...prev };
-            (variantRows || []).forEach((r) => {
-              next[r.id] = baseDigits;
-            });
-            return next;
-          });
-
-          const baseDecimal = s7DigitsToDecimalStr(baseDigits);
-          setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
+          handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
         }}
-      >
-        Atualizar todos
-      </button>
-    )}
-  </div>
-</td>
+      />
 
-                    </tr>
+      {/* Botão só na primeira linha */}
+      {idx === 0 && (
+        <button
+          type="button"
+          className="s7-btn s7-btn--secondary"
+          onClick={() => {
+            const baseDigits = variantCostDigitsById[row.id] || "";
+
+            setVariantCostDigitsById((prev) => {
+              const next = { ...prev };
+              (variantRows || []).forEach((r) => {
+                next[r.id] = baseDigits;
+              });
+              return next;
+            });
+
+            const baseDecimal = s7DigitsToDecimalStr(baseDigits);
+            setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
+          }}
+        >
+          Atualizar todos
+        </button>
+      )}
+    </div>
+  </td>
+</tr>
+
                   );
                 })}
               </tbody>
