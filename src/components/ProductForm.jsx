@@ -1072,9 +1072,12 @@ const FieldLabel = ({
     {product.format === "simple" && (
       <div className="pf-row">
         <div className="pf-group" style={{ maxWidth: 380 }}>
-          <label className="s7-label">Custo do produto</label>
+<label className="s7-label">
+  Custo do produto <span className="s7-required">*</span>
+</label>
+
 <input
-  className="s7-input"
+  className={`s7-input ${costErrors.simpleCost ? "s7-input--error" : ""}`}
   type="text"
   inputMode="numeric"
   placeholder="R$ 0,00"
@@ -1083,8 +1086,18 @@ const FieldLabel = ({
     const digits = s7ExtractDigits(e.target.value);
     setSimpleCostDigits(digits);
     handleChange("cost_price", s7DigitsToDecimalStr(digits));
+
+    // ✅ limpa erro ao digitar
+    if (costErrors.simpleCost) {
+      setCostErrors((prev) => ({ ...prev, simpleCost: false }));
+    }
   }}
 />
+
+{costErrors.simpleCost && (
+  <div className="s7-error">Custo do produto é obrigatório.</div>
+)}
+
 
         </div>
       </div>
@@ -1100,7 +1113,10 @@ const FieldLabel = ({
     {product.format === "variants" && (
       <div className="section" style={{ marginTop: 10 }}>
         <div className="section-header">
-          <h3>Custo do produto por variação</h3>
+          <h3>
+  Custo do produto por variação <span className="s7-required">*</span>
+</h3>
+
           <p className="section-subtitle">
             Preencha o custo por variação. Você pode aplicar o mesmo custo para todas.
           </p>
@@ -1123,6 +1139,8 @@ const FieldLabel = ({
               <tbody>
                 {variantRows.map((row, idx) => {
                   const label = Object.values(row.attributes || {}).join(" / ") || `Variação ${idx + 1}`;
+                  const hasCostError = (costErrors.variantsMissingIds || []).includes(row.id);
+
 
                   return (
   <tr key={row.id}>
@@ -1134,23 +1152,33 @@ const FieldLabel = ({
   {/* COLUNA 2: Custo (input + botão juntos) */}
   <td style={{ padding: "10px 10px", minWidth: 320 }}>
     <div className="pf-variant-cost-row">
-      <input
-        className="s7-input pf-variant-cost-input"
-        type="text"
-        inputMode="numeric"
-        placeholder="R$ 0,00"
-        value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
-        onChange={(e) => {
-          const digits = s7ExtractDigits(e.target.value);
+<input
+  className={`s7-input pf-variant-cost-input ${hasCostError ? "s7-input--error" : ""}`}
+  type="text"
+  inputMode="numeric"
+  placeholder="R$ 0,00"
+  value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
+  onChange={(e) => {
+    const digits = s7ExtractDigits(e.target.value);
 
-          setVariantCostDigitsById((prev) => ({
-            ...prev,
-            [row.id]: digits,
-          }));
+    setVariantCostDigitsById((prev) => ({ ...prev, [row.id]: digits }));
+    handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
 
-          handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
-        }}
-      />
+    // ✅ limpa erro dessa linha ao digitar
+    if (hasCostError) {
+      setCostErrors((prev) => ({
+        ...prev,
+        variantsMissingIds: (prev.variantsMissingIds || []).filter((id) => id !== row.id),
+      }));
+    }
+  }}
+/>
+
+{costErrors.variantsMissingIds.length > 0 && (
+  <div className="s7-error" style={{ marginTop: 10 }}>
+    Preencha o custo do produto em todas as variações.
+  </div>
+)}
 
       {/* Botão só na primeira linha */}
       {idx === 0 && (
