@@ -656,38 +656,49 @@ const FieldLabel = ({
     return Object.keys(nextErrors).length === 0;
   };
 
-  const validateVariantsTab = () => {
-    const nextErrors = {};
+// ======================================================================
+// VALIDAR: Custos obrigatórios (UX)
+// Regras:
+// - Simples: custo do produto obrigatório (R$ 0,00 NÃO é válido)
+// - Variações: todas as variações precisam ter custo > 0
+// ======================================================================
+const validatePricingTab = () => {
+  const next = { simpleCost: false, variantsMissingIds: [] };
 
-    if (product.format !== "variants") return true;
+  // ------------------------------------------------------
+  // SIMPLE: custo obrigatório (zero não é válido)
+  // - "R$ 0,00" gera digits "000" => 0
+  // ------------------------------------------------------
+  if (product.format === "simple") {
+    const digits = String(simpleCostDigits || "").replace(/\D/g, "");
+    const cents = Number(digits || "0");
 
-    if (!Array.isArray(variationAttributes) || variationAttributes.length === 0) {
-      nextErrors.variants = "Adicione ao menos 1 atributo (ex: Cor) com opções.";
+    if (cents <= 0) {
+      next.simpleCost = true;
     }
+  }
 
-    if (!Array.isArray(variantRows) || variantRows.length === 0) {
-      nextErrors.variants = "Nenhuma combinação gerada. Verifique os atributos/opções.";
+  // ------------------------------------------------------
+  // VARIANTS: todos obrigatórios (zero não é válido)
+  // ------------------------------------------------------
+  if (product.format === "variants") {
+    const missing = (variantRows || [])
+      .filter((r) => {
+        const digits = String(variantCostDigitsById?.[r.id] || "").replace(/\D/g, "");
+        const cents = Number(digits || "0");
+        return cents <= 0;
+      })
+      .map((r) => r.id);
+
+    if (missing.length > 0) {
+      next.variantsMissingIds = missing;
     }
+  }
 
-    // SKU por variação (recomendado)
-    const missingSku = (variantRows || []).some((r) => !String(r.sku || "").trim());
-    if (missingSku) {
-      nextErrors.variants_sku = "Preencha o SKU em todas as variações (evita erro na integração).";
-    }
+  setCostErrors(next);
+  return !(next.simpleCost || next.variantsMissingIds.length > 0);
+};
 
-    // GTIN por variação (opcional), mas se tiver: numérico e até 13
-    const badGtin = (variantRows || []).some((r) => {
-      const v = String(r.gtin || "").trim();
-      if (!v) return false;
-      return !isDigitsOnly(v) || v.length > 13;
-    });
-    if (badGtin) {
-      nextErrors.variants_gtin = "GTIN das variações deve ser numérico e ter até 13 dígitos.";
-    }
-
-    setErrors((prev) => ({ ...prev, ...nextErrors }));
-    return Object.keys(nextErrors).length === 0;
-  };
 
   // ------------------------------------------------------
   // SUBMIT (UI only por enquanto)
@@ -704,6 +715,9 @@ const handleSubmit = () => {
     setActiveTab("data");
     return;
   }
+
+  
+
 
   // ------------------------------------------------------
   // 2) CUSTOS & PRECIFICAÇÃO  ✅ vem antes das variações
