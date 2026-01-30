@@ -1186,61 +1186,66 @@ const handleSubmit = () => {
   </td>
 
   {/* COLUNA 2: Custo (input + botão juntos) */}
-  <td style={{ padding: "10px 10px", minWidth: 320 }}>
-    <div className="pf-variant-cost-row">
-<input
-  className={`s7-input pf-variant-cost-input ${hasCostError ? "s7-input--error" : ""}`}
-  type="text"
-  inputMode="numeric"
-  placeholder="R$ 0,00"
-  value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
-  onChange={(e) => {
-    const digits = s7ExtractDigits(e.target.value);
+ <td style={{ padding: "10px 10px", minWidth: 320 }}>
+  {/* Linha: input + botão */}
+  <div className="pf-variant-cost-row">
+    <input
+      className={`s7-input pf-variant-cost-input ${hasCostError ? "s7-input--error" : ""}`}
+      type="text"
+      inputMode="numeric"
+      placeholder="R$ 0,00"
+      value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
+      onChange={(e) => {
+        const digits = s7ExtractDigits(e.target.value);
 
-    setVariantCostDigitsById((prev) => ({ ...prev, [row.id]: digits }));
-    handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
+        setVariantCostDigitsById((prev) => ({ ...prev, [row.id]: digits }));
+        handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
 
-    // ✅ limpa erro dessa linha ao digitar
-    if (hasCostError) {
-      setCostErrors((prev) => ({
-        ...prev,
-        variantsMissingIds: (prev.variantsMissingIds || []).filter((id) => id !== row.id),
-      }));
-    }
-  }}
-/>
+        // ✅ limpa erro SOMENTE desta linha ao digitar
+        if (hasCostError) {
+          setCostErrors((prev) => ({
+            ...prev,
+            variantsMissingIds: (prev.variantsMissingIds || []).filter((id) => id !== row.id),
+          }));
+        }
+      }}
+    />
 
-{costErrors.variantsMissingIds.length > 0 && (
-  <div className="s7-error" style={{ marginTop: 10 }}>
-    Preencha o custo do produto em todas as variações.
-  </div>
-)}
+    {/* Botão só na 1ª linha */}
+    {idx === 0 && (
+      <button
+        type="button"
+        className="s7-btn s7-btn--secondary"
+        onClick={() => {
+          const baseDigits = variantCostDigitsById[row.id] || "";
 
-      {/* Botão só na primeira linha */}
-      {idx === 0 && (
-        <button
-          type="button"
-          className="s7-btn s7-btn--secondary"
-          onClick={() => {
-            const baseDigits = variantCostDigitsById[row.id] || "";
-
-            setVariantCostDigitsById((prev) => {
-              const next = { ...prev };
-              (variantRows || []).forEach((r) => {
-                next[r.id] = baseDigits;
-              });
-              return next;
+          setVariantCostDigitsById((prev) => {
+            const next = { ...prev };
+            (variantRows || []).forEach((r) => {
+              next[r.id] = baseDigits;
             });
+            return next;
+          });
 
-            const baseDecimal = s7DigitsToDecimalStr(baseDigits);
-            setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
-          }}
-        >
-          Atualizar todos
-        </button>
-      )}
+          const baseDecimal = s7DigitsToDecimalStr(baseDigits);
+          setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
+
+          // ✅ limpa erros de custo (já que atualizou todos)
+          setCostErrors((prev) => ({ ...prev, variantsMissingIds: [] }));
+        }}
+      >
+        Atualizar todos
+      </button>
+    )}
+  </div>
+
+  {/* ✅ Mensagem abaixo do input (por linha) */}
+  {hasCostError && (
+    <div className="s7-error" style={{ marginTop: 6 }}>
+      Custo do produto é obrigatório.
     </div>
-  </td>
+  )}
+</td>
 </tr>
 
                   );
