@@ -149,6 +149,16 @@ export default function ProductForm({
   // ------------------------------------------------------
   const [errors, setErrors] = useState({});
 
+  
+  // ======================================================================
+// STATE: Erros da aba Custos & Precificação (UX) — obrigatório
+// ======================================================================
+const [costErrors, setCostErrors] = useState({
+  simpleCost: false,
+  variantsMissingIds: [],
+});
+
+
   // ------------------------------------------------------
   // VARIAÇÕES (estilo Bling)
   // 1) variationAttributes: lista de atributos cadastrados (Cor, Tamanho)
