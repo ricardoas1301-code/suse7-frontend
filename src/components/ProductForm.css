@@ -882,3 +882,10 @@
   width: 24%;      /* ✅ 100% - 76% = 24% */
   min-width: 160px; /* ✅ não quebra em telas menores */
 }
+
+
+.pf-variant-actions-cell{
+  display: flex;
+  align-items: center;
+  padding-left: 8px; /* ✅ espaço menor e mais equilibrado */
+}
