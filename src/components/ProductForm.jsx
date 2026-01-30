@@ -255,21 +255,28 @@ if (initialProduct) {
     // ------------------------------------------------------
 // HIDRATAR: custos por variação (id => dígitos)
 // ------------------------------------------------------
+// ------------------------------------------------------
+// HIDRATAR: custos por variação (id => dígitos) — SAFE
+// ------------------------------------------------------
 setVariantCostDigitsById(() => {
   const map = {};
-  initialVariants.forEach((v) => {
-    const id = v.id || null;
+
+  // ✅ blindagem total: se não for array, não faz nada
+  (Array.isArray(initialVariants) ? initialVariants : []).forEach((v) => {
+    const id = v?.id || null;
     if (!id) return;
 
-    const digits = String(v.cost_price ?? "")
+    const digits = String(v?.cost_price ?? "")
       .replace(",", ".")
       .replace(/[^\d.]/g, "")
       .replace(".", "");
 
     map[id] = digits;
   });
+
   return map;
 });
+
 
 
   }, [initialProduct, initialVariants]);
