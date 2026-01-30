@@ -889,3 +889,16 @@
   align-items: center;
   padding-left: 0;   /* 🔥 colado de verdade */
 }
+
+/* ======================================================================
+   SUSE7 — CUSTOS & PRECIFICAÇÃO
+   Input + Botão na mesma célula (colados)
+====================================================================== */
+
+.pf-variant-cost-row{
+  display: flex;
+  align-items: center;
+  gap: 8px; /* ✅ define o quão "junto" fica */
+}
+
+/* Se quiser ainda mais junto, use 4px */
