@@ -675,18 +675,24 @@ const handleAddOptionToAttribute = (attrId) => {
 
 
 
-const removeOptionFromAttribute = (attrId, option) => {
-  setVariationAttributes((prev) =>
-    prev.map((a) => {
-      if (a.id !== attrId) return a;
-      return { ...a, options: a.options.filter((o) => o !== option) };
-    })
-  );
+setVariationAttributes((prev) => {
+  const next = prev.map((a) => {
+    if (a.id !== attrId) return a;
 
-  setTimeout(() => {
-    regenerateVariantRows();
-  }, 0);
-};
+    const exists = (a.options || []).some(
+      (x) => x.toLowerCase() === opt.toLowerCase()
+    );
+    if (exists) return a;
+
+    return { ...a, options: [...a.options, opt] };
+  });
+
+  // 🔥 gera combinações COM O ESTADO NOVO
+  regenerateVariantRowsFromAttributes(next);
+
+  return next;
+});
+
 
 
   // ------------------------------------------------------
@@ -1801,30 +1807,7 @@ const handleSubmit = () => {
                     </div>
                   )}
                 </div>
-
-                {/* AÇÕES (ícones) */}
-                <div className="pf-group" style={{ flex: "0 0 auto", minWidth: 140, display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                  {/* ✏️ editar (placeholder por enquanto) */}
-                  <button
-                    type="button"
-                    className="s7-btn s7-btn--secondary"
-                    title="Editar atributo (em breve)"
-                    onClick={() => console.log("Editar atributo:", attr.id)}
-                  >
-                    ✏️
-                  </button>
-
-                  {/* 🗑️ remover atributo */}
-                  <button
-                    type="button"
-                    className="s7-btn s7-btn--secondary"
-                    title="Remover atributo"
-                    onClick={() => handleRemoveVariationAttribute(attr.id)}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
+             </div>
             ))}
           </div>
         )}
@@ -1835,12 +1818,92 @@ const handleSubmit = () => {
         {variantRows.length > 0 && (
           <div className="section" style={{ marginTop: 12 }}>
             <div className="section-header">
-              <h3>Combinações geradas</h3>
-              <p className="section-subtitle">Cada linha vira um registro em <strong>product_variants</strong>.</p>
-            </div>
+  <h3>Combinações geradas</h3>
+  <p className="section-subtitle">
+    Cada combinação representa uma variação do produto.
+  </p>
+</div>
 
-            {/* Seu grid atual permanece aqui */}
-            {/* ... */}
+<div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+  {variantRows.map((row) => (
+    <div
+      key={row.id}
+      className="s7-card"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr 1fr 120px 60px",
+        gap: 12,
+        alignItems: "center",
+        padding: 12,
+      }}
+    >
+      {/* VARIAÇÕES (Cor / Tamanho / etc) */}
+      {variantAttrColumns.map((attr) => (
+        <div key={attr}>
+          <label className="s7-label">{attr}</label>
+          <div style={{ fontWeight: 700 }}>
+            {row.attributes?.[attr] || "-"}
+          </div>
+        </div>
+      ))}
+
+      {/* SKU */}
+      <div>
+        <label className="s7-label">SKU</label>
+        <input
+          className="s7-input"
+          value={row.sku}
+          onChange={(e) =>
+            handleVariantRowChange(row.id, "sku", e.target.value)
+          }
+        />
+      </div>
+
+      {/* GTIN */}
+      <div>
+        <label className="s7-label">EAN / GTIN</label>
+        <input
+          className="s7-input"
+          inputMode="numeric"
+          value={row.gtin}
+          onChange={(e) =>
+            handleVariantRowChange(
+              row.id,
+              "gtin",
+              e.target.value.replace(/\D/g, "").slice(0, 13)
+            )
+          }
+        />
+      </div>
+
+      {/* SITUAÇÃO */}
+      <div>
+        <label className="s7-label">Situação</label>
+        <label className="pf-switch">
+          <input
+            type="checkbox"
+            checked={row.active}
+            onChange={(e) =>
+              handleVariantRowChange(row.id, "active", e.target.checked)
+            }
+          />
+          Ativo
+        </label>
+      </div>
+
+      {/* LIXEIRA */}
+      <button
+        type="button"
+        className="s7-btn s7-btn--danger"
+        title="Remover variação"
+        onClick={() => handleRemoveVariantRow(row.id)}
+      >
+        🗑️
+      </button>
+    </div>
+  ))}
+</div>
+
           </div>
         )}
       </>
