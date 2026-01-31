@@ -556,12 +556,13 @@ const removeDraftOption = (opt) => {
 
 // ------------------------------------------------------
 // VARIAÇÕES: adicionar 1 atributo + suas opções (chips)
-// Regra correta:
-// - 1 atributo por vez (ex: Cor)
-// - opções desse atributo (ex: Branco, Preto)
+// - adiciona/mescla atributo
+// - gera combinações imediatamente
+// - esconde builder e mostra gerenciamento
 // ------------------------------------------------------
 const handleAddVariationAttribute = () => {
- const attrName = normalizeAttr(draftAttrChips?.[0] || "");
+  const attrName = normalizeAttr(draftAttrChips?.[0] || "");
+
   // 1) precisa ter nome do atributo
   if (!attrName) {
     setErrors((prev) => ({
@@ -580,7 +581,7 @@ const handleAddVariationAttribute = () => {
     return;
   }
 
-  // 3) adiciona (ou mescla) atributo com as opções
+  // 3) adiciona/mescla e já gera combinações com base no "next"
   setVariationAttributes((prev) => {
     const next = [...prev];
 
@@ -588,7 +589,7 @@ const handleAddVariationAttribute = () => {
       (a) => String(a.name).toLowerCase() === attrName.toLowerCase()
     );
 
-    // Se já existir atributo, só mescla opções (sem duplicar)
+    // Se já existir atributo, mescla opções (sem duplicar)
     if (existingIndex >= 0) {
       const current = next[existingIndex];
       const set = new Set((current.options || []).map((x) => String(x).toLowerCase()));
@@ -603,26 +604,32 @@ const handleAddVariationAttribute = () => {
       });
 
       next[existingIndex] = { ...current, options: merged };
-      return next;
+    } else {
+      // Se não existir, cria novo atributo
+      next.push({
+        id: createId(),
+        name: attrName,
+        options: [...draftOptions],
+      });
     }
 
-    // Se não existir, cria novo atributo
-    next.push({
-      id: createId(),
-      name: attrName,
-      options: [...draftOptions],
-    });
+    // ✅ gera combinações usando a lista "next" (estado futuro)
+    regenerateVariantRowsFromAttributes(next);
 
     return next;
   });
 
-// 4) limpa erros e drafts
+  // 4) UI: builder some (mostra gerenciamento)
+  setShowVariationsBuilder(false);
+
+  // 5) limpa erros e drafts
   setErrors((prev) => ({ ...prev, variants: undefined }));
   setDraftAttrInput("");
-  setDraftAttrChips([]); // ✅ limpa o chip do atributo
+  setDraftAttrChips([]);
   setDraftOptionInput("");
   setDraftOptions([]);
 };
+
 
 
 // ======================================================================
