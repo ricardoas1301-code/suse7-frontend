@@ -453,6 +453,43 @@ const FieldLabel = ({
   const normalizeOption = (raw) => String(raw || "").trim().replace(/\s+/g, " ");
   const normalizeAttr   = (raw) => String(raw || "").trim().replace(/\s+/g, " ");
 
+// ------------------------------------------------------
+// CHIPS (atributo) — cria chip com Enter/Tab/Vírgula
+// Regra: 1 atributo por vez (Cor OU Tamanho)
+// ------------------------------------------------------
+const handleDraftAttrKeyDown = (e) => {
+  const isCommitKey = e.key === "Enter" || e.key === "Tab" || e.key === ",";
+  if (!isCommitKey) return;
+
+  const value = normalizeAttr(draftAttrInput);
+
+  // ✅ se não digitou nada, só bloqueia submit/Tab
+  if (!value) {
+    e.preventDefault();
+    return;
+  }
+
+  e.preventDefault();
+
+  // ✅ 1 atributo por vez (substitui o chip anterior)
+  setDraftAttrChips([value]);
+
+  // ✅ limpa input
+  setDraftAttrInput("");
+
+  // ✅ limpa erro da aba variações, se houver
+  setErrors((prev) => ({ ...prev, variants: undefined }));
+};
+
+// ------------------------------------------------------
+// Remover chip do atributo
+// ------------------------------------------------------
+const removeDraftAttrChip = (attr) => {
+  setDraftAttrChips((prev) => prev.filter((x) => x !== attr));
+};
+
+
+
   const addDraftOptionsFromText = (text) => {
     const cleaned = String(text || "");
     const parts = cleaned
@@ -509,8 +546,7 @@ const FieldLabel = ({
 // - opções desse atributo (ex: Branco, Preto)
 // ------------------------------------------------------
 const handleAddVariationAttribute = () => {
-  const attrName = normalizeAttr(draftAttrInput); // ✅ usa o input único
-
+ const attrName = normalizeAttr(draftAttrChips?.[0] || "");
   // 1) precisa ter nome do atributo
   if (!attrName) {
     setErrors((prev) => ({
@@ -565,9 +601,10 @@ const handleAddVariationAttribute = () => {
     return next;
   });
 
-  // 4) limpa erros e drafts
+// 4) limpa erros e drafts
   setErrors((prev) => ({ ...prev, variants: undefined }));
   setDraftAttrInput("");
+  setDraftAttrChips([]); // ✅ limpa o chip do atributo
   setDraftOptionInput("");
   setDraftOptions([]);
 };
@@ -1475,10 +1512,11 @@ const handleSubmit = () => {
 
 <input
   className="s7-input"
-  placeholder="Ex: Cor"
   value={draftAttrInput}
   onChange={(e) => setDraftAttrInput(e.target.value)}
-/>
+  onKeyDown={handleDraftAttrKeyDown}
+ />
+
 
 <div className="s7-hint" style={{ marginTop: 8 }}>
   Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em “Adicionar variações”.
