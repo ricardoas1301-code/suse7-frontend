@@ -167,7 +167,6 @@ const [costErrors, setCostErrors] = useState({
   // ------------------------------------------------------
   const [variationAttributes, setVariationAttributes] = useState([]);
   const [draftAttrInput, setDraftAttrInput] = useState("");
-  const [draftAttrChips, setDraftAttrChips] = useState([]);
   const [draftOptionInput, setDraftOptionInput] = useState("");
   const [draftOptions, setDraftOptions] = useState([]);
 
@@ -350,7 +349,6 @@ const handleFormatChange = (nextFormat) => {
   if (nextFormat === "simple") {
     setVariationAttributes([]);
     setDraftAttrInput("");
-    setDraftAttrChips([]);
     setDraftOptionInput("");
     setDraftOptions([]);
     setVariantRows([]);
@@ -453,6 +451,7 @@ const FieldLabel = ({
   // CHIPS (opções) — adiciona via Enter/Tab/virgula
   // ------------------------------------------------------
   const normalizeOption = (raw) => String(raw || "").trim().replace(/\s+/g, " ");
+  const normalizeAttr   = (raw) => String(raw || "").trim().replace(/\s+/g, " ");
 
   const addDraftOptionsFromText = (text) => {
     const cleaned = String(text || "");
@@ -502,77 +501,21 @@ const FieldLabel = ({
     }
   };
 
-  // ------------------------------------------------------
-// CHIPS (atributos) — adiciona via Enter/Tab/virgula
-// ------------------------------------------------------
-const normalizeAttr = (raw) => String(raw || "").trim().replace(/\s+/g, " ");
-
-const addDraftAttrsFromText = (text) => {
-  const cleaned = String(text || "");
-  const parts = cleaned
-    .split(",")
-    .map((p) => normalizeAttr(p))
-    .filter(Boolean);
-
-  if (parts.length === 0) return;
-
-  setDraftAttrChips((prev) => {
-    const set = new Set(prev.map((x) => x.toLowerCase()));
-    const next = [...prev];
-
-    parts.forEach((p) => {
-      if (!set.has(p.toLowerCase())) {
-        next.push(p);
-        set.add(p.toLowerCase());
-      }
-    });
-
-    return next;
-  });
-};
-
-const handleDraftAttrKeyDown = (e) => {
-  if (e.key === "Enter" || e.key === "Tab") {
-    const value = normalizeAttr(draftAttrInput);
-    if (value) {
-      e.preventDefault();
-      addDraftAttrsFromText(value);
-      setDraftAttrInput("");
-    }
-    return;
-  }
-
-  if (e.key === ",") {
-    const value = normalizeAttr(draftAttrInput);
-    if (value) {
-      e.preventDefault();
-      addDraftAttrsFromText(value);
-      setDraftAttrInput("");
-    }
-    return;
-  }
-};
-
-const removeDraftAttrChip = (attr) => {
-  setDraftAttrChips((prev) => prev.filter((x) => x !== attr));
-};
-
-
-  const removeDraftOption = (opt) => {
-    setDraftOptions((prev) => prev.filter((x) => x !== opt));
-  };
 
 // ------------------------------------------------------
-// VARIAÇÕES: adicionar atributo(s) + opções (chips)
-// - Permite cadastrar vários atributos de uma vez
-// - Remove necessidade de "Regerar combinações"
+// VARIAÇÕES: adicionar 1 atributo + suas opções (chips)
+// Regra correta:
+// - 1 atributo por vez (ex: Cor)
+// - opções desse atributo (ex: Branco, Preto)
 // ------------------------------------------------------
 const handleAddVariationAttribute = () => {
-  // 1) precisa ter ao menos 1 atributo chip
-  if (!draftAttrChips || draftAttrChips.length === 0) {
+  const attrName = normalizeAttr(draftAttrInput); // ✅ usa o input único
+
+  // 1) precisa ter nome do atributo
+  if (!attrName) {
     setErrors((prev) => ({
       ...prev,
-      variants: "Digite ao menos 1 atributo (ex: Cor) e pressione Enter/Tab para criar o chip.",
+      variants: "Digite o nome do atributo (ex: Cor) e depois adicione as opções (chips).",
     }));
     return;
   }
@@ -586,33 +529,49 @@ const handleAddVariationAttribute = () => {
     return;
   }
 
-setVariationAttributes((prev) => {
-  const next = [...prev];
+  // 3) adiciona (ou mescla) atributo com as opções
+  setVariationAttributes((prev) => {
+    const next = [...prev];
 
-  draftAttrChips.forEach((rawName) => {
-    const name = normalizeOption(rawName);
-    if (!name) return;
+    const existingIndex = next.findIndex(
+      (a) => String(a.name).toLowerCase() === attrName.toLowerCase()
+    );
 
-    const exists = next.some((a) => a.name.toLowerCase() === name.toLowerCase());
-    if (exists) return;
+    // Se já existir atributo, só mescla opções (sem duplicar)
+    if (existingIndex >= 0) {
+      const current = next[existingIndex];
+      const set = new Set((current.options || []).map((x) => String(x).toLowerCase()));
 
-    next.push({ id: createId(), name, options: [...draftOptions] });
+      const merged = [...(current.options || [])];
+      (draftOptions || []).forEach((opt) => {
+        const k = String(opt).toLowerCase();
+        if (!set.has(k)) {
+          merged.push(opt);
+          set.add(k);
+        }
+      });
+
+      next[existingIndex] = { ...current, options: merged };
+      return next;
+    }
+
+    // Se não existir, cria novo atributo
+    next.push({
+      id: createId(),
+      name: attrName,
+      options: [...draftOptions],
+    });
+
+    return next;
   });
 
-  // ✅ gera combinações com o "next" real (sem esperar render)
-  regenerateVariantRowsFromAttributes(next);
-
-  return next;
-});
-
-
-  // ✅ limpa erros e drafts
+  // 4) limpa erros e drafts
   setErrors((prev) => ({ ...prev, variants: undefined }));
   setDraftAttrInput("");
-  setDraftAttrChips([]);
   setDraftOptionInput("");
   setDraftOptions([]);
 };
+
 
 // ======================================================================
 // SUSE7 — VARIAÇÕES: ADICIONAR OPÇÃO (CHIP) EM ATRIBUTO EXISTENTE
@@ -1514,48 +1473,18 @@ const handleSubmit = () => {
       wrap={true}
     />
 
-    <input
-      className="s7-input"
-      placeholder="Digite e pressione Enter ou Tab (ex: Cor, Tamanho)"
-      value={draftAttrInput}
-      onChange={(e) => setDraftAttrInput(e.target.value)}
-      onKeyDown={handleDraftAttrKeyDown}
-    />
+<input
+  className="s7-input"
+  placeholder="Ex: Cor"
+  value={draftAttrInput}
+  onChange={(e) => setDraftAttrInput(e.target.value)}
+/>
 
-    {/* Chips do atributo */}
-    {draftAttrChips.length > 0 && (
-      <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {draftAttrChips.map((attr) => (
-          <span
-            key={attr}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "6px 10px",
-              borderRadius: 999,
-              background: "rgba(37, 99, 235, 0.10)",
-              color: "#1e3a8a",
-              fontWeight: 800,
-              fontSize: 12,
-            }}
-          >
-            {attr}
-            <button
-              type="button"
-              onClick={() => removeDraftAttrChip(attr)}
-              style={{ border: "none", background: "transparent", cursor: "pointer", fontWeight: 900, color: "#1e3a8a" }}
-              aria-label="Remover atributo"
-              title="Remover"
-            >
-              ✕
-            </button>
-          </span>
-        ))}
-      </div>
-    )}
+<div className="s7-hint" style={{ marginTop: 8 }}>
+  Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em “Adicionar variações”.
+</div>
 
-    <div className="s7-hint" style={{ marginTop: 8 }}>
+       <div className="s7-hint" style={{ marginTop: 8 }}>
       Separe múltiplos atributos por vírgula (ex: Cor, Tamanho).
     </div>
   </div>
