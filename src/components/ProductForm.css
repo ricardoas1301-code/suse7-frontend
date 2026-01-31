@@ -910,3 +910,35 @@
 }
 
 /* Se quiser ainda mais junto, use 4px */
+
+/* ======================================================
+   SUSE7 — VARIAÇÕES: REFINOS GRID (SKU/GTIN + SITUAÇÃO)
+====================================================== */
+
+/* Inputs ~10% menores, sem quebrar responsivo */
+.pf-variant-sku-input{
+  width: 90%;
+  max-width: 220px;
+}
+
+.pf-variant-gtin-input{
+  width: 90%;
+  max-width: 260px;
+}
+
+/* Em telas pequenas, não aperta demais */
+@media (max-width: 520px){
+  .pf-variant-sku-input,
+  .pf-variant-gtin-input{
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Situação com título no topo da coluna */
+.pf-variant-status{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}

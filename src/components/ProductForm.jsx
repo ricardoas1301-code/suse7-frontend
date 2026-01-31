@@ -1853,46 +1853,40 @@ style={{
       {/* SKU */}
       <div>
         <label className="s7-label">SKU</label>
-        <input
-          className="s7-input"
-          value={row.sku}
-          onChange={(e) =>
-            handleVariantRowChange(row.id, "sku", e.target.value)
-          }
-        />
+<input
+  className="s7-input pf-variant-sku-input"
+  value={row.sku}
+  onChange={(e) => handleVariantRowChange(row.id, "sku", e.target.value)}
+/>
+
       </div>
 
       {/* GTIN */}
       <div>
         <label className="s7-label">EAN / GTIN</label>
-        <input
-          className="s7-input"
-          inputMode="numeric"
-          value={row.gtin}
-          onChange={(e) =>
-            handleVariantRowChange(
-              row.id,
-              "gtin",
-              e.target.value.replace(/\D/g, "").slice(0, 13)
-            )
-          }
-        />
+<input
+  className="s7-input pf-variant-gtin-input"
+  inputMode="numeric"
+  value={row.gtin}
+  onChange={(e) =>
+    handleVariantRowChange(row.id, "gtin", e.target.value.replace(/\D/g, "").slice(0, 13))
+  }
+/>
       </div>
 
       {/* SITUAÇÃO */}
-      <div>
-        <label className="s7-label">Situação</label>
-        <label className="pf-switch">
-          <input
-            type="checkbox"
-            checked={row.active}
-            onChange={(e) =>
-              handleVariantRowChange(row.id, "active", e.target.checked)
-            }
-          />
-          Ativo
-        </label>
-      </div>
+<div className="pf-variant-status">
+  <label className="s7-label">Situação</label>
+
+  <label className="pf-switch">
+    <input
+      type="checkbox"
+      checked={row.active}
+      onChange={(e) => handleVariantRowChange(row.id, "active", e.target.checked)}
+    />
+    Ativo
+  </label>
+</div>
 
       {/* LIXEIRA */}
       <button
