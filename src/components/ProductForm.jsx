@@ -218,108 +218,103 @@ const [variantCostDigitsById, setVariantCostDigitsById] = useState({});
 const hasAnyVariation = variationAttributes.length > 0;
 
 
+// ------------------------------------------------------
+// HIDRATAR FORM (modo edição)
+// ------------------------------------------------------
+useEffect(() => {
   // ------------------------------------------------------
-  // HIDRATAR FORM (modo edição)
+  // Produto base
   // ------------------------------------------------------
-  useEffect(() => {
-    if (initialProduct) {
-      setProduct((prev) => ({ ...prev, ...initialProduct }));
-    }
+  if (initialProduct) {
+    setProduct((prev) => ({ ...prev, ...initialProduct }));
 
     // ------------------------------------------------------
-// HIDRATAR: custos (best effort)
-// - Se vier "4.50" ou "4,50", transforma em dígitos "450"
-// ------------------------------------------------------
-if (initialProduct) {
-  const toDigits = (v) => String(v ?? "")
-    .replace(",", ".")
-    .replace(/[^\d.]/g, "")
-    .replace(".", "");
-
-  setPackagingDigits(toDigits(initialProduct.packaging_cost));
-  setOperationalDigits(toDigits(initialProduct.operational_cost));
-  setSimpleCostDigits(toDigits(initialProduct.cost_price));
-}
-
-
-    // Se vierem variantes prontas (edit), carregamos no grid
-    // Esperado: [{ sku, gtin, price, stock_quantity, active, attributes }]
-    if (Array.isArray(initialVariants) && initialVariants.length > 0) {
-      setVariantRows(
-  initialVariants.map((v) => ({
-    id: v.id || createId(),
-    sku: v.sku || "",
-    gtin: v.gtin || "",
-
+    // HIDRATAR: custos globais (best effort)
+    // - Se vier "4.50" ou "4,50", transforma em dígitos "450"
     // ------------------------------------------------------
-    // CUSTO POR VARIAÇÃO (nova coluna do banco)
-    // ------------------------------------------------------
-    cost_price: v.cost_price ?? "",
+    const toDigits = (v) =>
+      String(v ?? "")
+        .replace(",", ".")
+        .replace(/[^\d.]/g, "")
+        .replace(".", "");
 
-    // ------------------------------------------------------
-    // ESTOQUE POR VARIAÇÃO
-    // ------------------------------------------------------
-    stock_quantity: v.stock_quantity ?? 0,
-    stock_minimum: v.stock_minimum ?? 0,
-    use_virtual_stock: !!v.use_virtual_stock,
-    virtual_stock_quantity: v.virtual_stock_quantity ?? 0,
+    setPackagingDigits(toDigits(initialProduct.packaging_cost));
+    setOperationalDigits(toDigits(initialProduct.operational_cost));
+    setSimpleCostDigits(toDigits(initialProduct.cost_price));
+  }
 
-    active: typeof v.active === "boolean" ? v.active : true,
-    attributes: v.attributes || {},
-  }))
-);
+  // ------------------------------------------------------
+  // HIDRATAR: custos por variação (id => dígitos) — SAFE
+  // ------------------------------------------------------
+  setVariantCostDigitsById(() => {
+    const map = {};
 
+    (Array.isArray(initialVariants) ? initialVariants : []).forEach((v) => {
+      const id = v?.id || null;
+      if (!id) return;
 
-      // Tenta reconstruir variationAttributes a partir de attributes existentes (best effort)
-      const attrMap = new Map();
-      initialVariants.forEach((v) => {
-        const attrs = v.attributes || {};
-        Object.entries(attrs).forEach(([k, val]) => {
-          if (!attrMap.has(k)) attrMap.set(k, new Set());
-          attrMap.get(k).add(String(val));
-        });
-      });
+      const digits = String(v?.cost_price ?? "")
+        .replace(",", ".")
+        .replace(/[^\d.]/g, "")
+        .replace(".", "");
 
-      const reconstructed = Array.from(attrMap.entries()).map(([name, setVals]) => ({
-        id: createId(),
-        name,
-        options: Array.from(setVals),
-      }));
+      map[id] = digits;
+    });
 
-      if (reconstructed.length > 0) {
-        setVariationAttributes(reconstructed);
-        setProduct((prev) => ({ ...prev, format: "variants" }));
-      }
-    }
-
-    // ------------------------------------------------------
-// HIDRATAR: custos por variação (id => dígitos)
-// ------------------------------------------------------
-// ------------------------------------------------------
-// HIDRATAR: custos por variação (id => dígitos) — SAFE
-// ------------------------------------------------------
-setVariantCostDigitsById(() => {
-  const map = {};
-
-  // ✅ blindagem total: se não for array, não faz nada
-  (Array.isArray(initialVariants) ? initialVariants : []).forEach((v) => {
-    const id = v?.id || null;
-    if (!id) return;
-
-    const digits = String(v?.cost_price ?? "")
-      .replace(",", ".")
-      .replace(/[^\d.]/g, "")
-      .replace(".", "");
-
-    map[id] = digits;
+    return map;
   });
 
-  return map;
-});
+  // ------------------------------------------------------
+  // Se vierem variantes prontas (edit), carregamos no grid
+  // ------------------------------------------------------
+  if (Array.isArray(initialVariants) && initialVariants.length > 0) {
+    setVariantRows(
+      initialVariants.map((v) => ({
+        id: v.id || createId(),
+        sku: v.sku || "",
+        gtin: v.gtin || "",
 
+        // custo por variação
+        cost_price: v.cost_price ?? "",
 
+        // estoque por variação
+        stock_quantity: v.stock_quantity ?? 0,
+        stock_minimum: v.stock_minimum ?? 0,
+        use_virtual_stock: !!v.use_virtual_stock,
+        virtual_stock_quantity: v.virtual_stock_quantity ?? 0,
 
-  }, [initialProduct, initialVariants]);
+        active: typeof v.active === "boolean" ? v.active : true,
+        attributes: v.attributes || {},
+      }))
+    );
+
+    // ------------------------------------------------------
+    // Reconstroi variationAttributes (best effort)
+    // ------------------------------------------------------
+    const attrMap = new Map();
+
+    initialVariants.forEach((v) => {
+      const attrs = v.attributes || {};
+      Object.entries(attrs).forEach(([k, val]) => {
+        if (!attrMap.has(k)) attrMap.set(k, new Set());
+        attrMap.get(k).add(String(val));
+      });
+    });
+
+    const reconstructed = Array.from(attrMap.entries()).map(([name, setVals]) => ({
+      id: createId(),
+      name,
+      options: Array.from(setVals),
+    }));
+
+    if (reconstructed.length > 0) {
+      setVariationAttributes(reconstructed);
+      setProduct((prev) => ({ ...prev, format: "variants" }));
+      setShowVariationsBuilder(false); // ✅ se está editando com variações, já cai no modo gerenciamento
+    }
+  }
+}, [initialProduct, initialVariants]);
+
 
   // ------------------------------------------------------
   // HANDLER GENÉRICO
@@ -1835,13 +1830,13 @@ const handleSubmit = () => {
     <div
       key={row.id}
       className="s7-card"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr 1fr 1fr 120px 60px",
-        gap: 12,
-        alignItems: "center",
-        padding: 12,
-      }}
+style={{
+  display: "grid",
+  gridTemplateColumns: `repeat(${variantAttrColumns.length}, 1fr) 1fr 1fr 120px 60px`,
+  gap: 12,
+  alignItems: "center",
+  padding: 12,
+}}
     >
       {/* VARIAÇÕES (Cor / Tamanho / etc) */}
       {variantAttrColumns.map((attr) => (
