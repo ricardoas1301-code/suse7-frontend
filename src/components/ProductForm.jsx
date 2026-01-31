@@ -170,6 +170,13 @@ const [costErrors, setCostErrors] = useState({
   const [draftOptionInput, setDraftOptionInput] = useState("");
   const [draftOptions, setDraftOptions] = useState([]);
 
+// ------------------------------------------------------
+// CHIP DO ATRIBUTO (ex: Cor, Tamanho)
+// Regra: apenas 1 ativo por vez
+// ------------------------------------------------------
+const [draftAttrChips, setDraftAttrChips] = useState([]);
+
+
   const [variantRows, setVariantRows] = useState([]);
 
   // ======================================================================
@@ -1517,6 +1524,43 @@ const handleSubmit = () => {
   onKeyDown={handleDraftAttrKeyDown}
  />
 
+{/* CHIP DO ATRIBUTO */}
+{draftAttrChips.length > 0 && (
+  <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+    {draftAttrChips.map((attr) => (
+      <span
+        key={attr}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "6px 10px",
+          borderRadius: 999,
+          background: "rgba(37, 99, 235, 0.12)",
+          color: "#1e40af",
+          fontWeight: 800,
+          fontSize: 12,
+        }}
+      >
+        {attr}
+        <button
+          type="button"
+          onClick={() => removeDraftAttrChip(attr)}
+          style={{
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            fontWeight: 900,
+            color: "#1e40af",
+          }}
+          title="Remover atributo"
+        >
+          ✕
+        </button>
+      </span>
+    ))}
+  </div>
+)}
 
 <div className="s7-hint" style={{ marginTop: 8 }}>
   Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em “Adicionar variações”.
