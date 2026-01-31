@@ -634,9 +634,6 @@ const handleAddVariationAttribute = () => {
 
 // ======================================================================
 // SUSE7 — VARIAÇÕES: ADICIONAR OPÇÃO (CHIP) EM ATRIBUTO EXISTENTE
-// Objetivo:
-// - Permitir adicionar novas opções (ex: Verde, Bege) depois que o builder some
-// - Regera combinações automaticamente
 // ======================================================================
 const handleAddOptionToAttribute = (attrId) => {
   const opt = normalizeOption(addOptionInput);
@@ -649,29 +646,35 @@ const handleAddOptionToAttribute = (attrId) => {
     return;
   }
 
-  setVariationAttributes((prev) =>
-    prev.map((a) => {
+  // ------------------------------------------------------
+  // Atualiza o atributo e REGERA combinações com estado novo
+  // ------------------------------------------------------
+  setVariationAttributes((prev) => {
+    const next = prev.map((a) => {
       if (a.id !== attrId) return a;
 
-      // Evita duplicar opção (case-insensitive)
-      const exists = (a.options || []).some((x) => String(x).toLowerCase() === opt.toLowerCase());
+      const exists = (a.options || []).some(
+        (x) => String(x).toLowerCase() === String(opt).toLowerCase()
+      );
       if (exists) return a;
 
       return { ...a, options: [...(a.options || []), opt] };
-    })
-  );
+    });
+
+    // ✅ gera com o estado atualizado (sem delay)
+    regenerateVariantRowsFromAttributes(next);
+
+    return next;
+  });
 
   // ------------------------------------------------------
-  // Reset UI + regerar combinações
+  // Reset UI
   // ------------------------------------------------------
   setAddOptionInput("");
   setAddOptionError("");
   setAddOptionAttrId(null);
-
-  setTimeout(() => {
-    regenerateVariantRows();
-  }, 0);
 };
+
 
 
 
