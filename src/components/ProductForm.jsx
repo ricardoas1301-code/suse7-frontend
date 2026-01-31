@@ -533,6 +533,14 @@ const removeDraftAttrChip = (attr) => {
       return;
     }
 
+    // ------------------------------------------------------
+// CHIPS (opções): remover chip individual
+// ------------------------------------------------------
+const removeDraftOption = (opt) => {
+  setDraftOptions((prev) => prev.filter((x) => x !== opt));
+};
+
+
     // Vírgula cria chip
     if (e.key === ",") {
       const value = normalizeOption(draftOptionInput);
