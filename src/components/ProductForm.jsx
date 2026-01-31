@@ -496,6 +496,13 @@ const removeDraftAttrChip = (attr) => {
 };
 
 
+    // ------------------------------------------------------
+// CHIPS (opções): remover chip individual
+// ------------------------------------------------------
+const removeDraftOption = (opt) => {
+  setDraftOptions((prev) => prev.filter((x) => x !== opt));
+};
+
 
   const addDraftOptionsFromText = (text) => {
     const cleaned = String(text || "");
@@ -532,14 +539,6 @@ const removeDraftAttrChip = (attr) => {
       }
       return;
     }
-
-    // ------------------------------------------------------
-// CHIPS (opções): remover chip individual
-// ------------------------------------------------------
-const removeDraftOption = (opt) => {
-  setDraftOptions((prev) => prev.filter((x) => x !== opt));
-};
-
 
     // Vírgula cria chip
     if (e.key === ",") {
@@ -647,27 +646,6 @@ const handleAddOptionToAttribute = (attrId) => {
   }
 
   // ------------------------------------------------------
-  // Atualiza o atributo e REGERA combinações com estado novo
-  // ------------------------------------------------------
-  setVariationAttributes((prev) => {
-    const next = prev.map((a) => {
-      if (a.id !== attrId) return a;
-
-      const exists = (a.options || []).some(
-        (x) => String(x).toLowerCase() === String(opt).toLowerCase()
-      );
-      if (exists) return a;
-
-      return { ...a, options: [...(a.options || []), opt] };
-    });
-
-    // ✅ gera com o estado atualizado (sem delay)
-    regenerateVariantRowsFromAttributes(next);
-
-    return next;
-  });
-
-  // ------------------------------------------------------
   // Reset UI
   // ------------------------------------------------------
   setAddOptionInput("");
@@ -675,6 +653,31 @@ const handleAddOptionToAttribute = (attrId) => {
   setAddOptionAttrId(null);
 };
 
+// ======================================================================
+// SUSE7 — VARIAÇÕES: REMOVER OPÇÃO (CHIP) DE UM ATRIBUTO
+// Objetivo:
+// - Remove opção do atributo
+// - Regera combinações com estado novo
+// ======================================================================
+const removeOptionFromAttribute = (attrId, optToRemove) => {
+  setVariationAttributes((prev) => {
+    const next = prev
+      .map((a) => {
+        if (a.id !== attrId) return a;
+
+        const filtered = (a.options || []).filter(
+          (x) => String(x).toLowerCase() !== String(optToRemove).toLowerCase()
+        );
+
+        return { ...a, options: filtered };
+      })
+      // ✅ remove atributos que ficaram sem opções (opcional, mas saudável)
+      .filter((a) => Array.isArray(a.options) && a.options.length > 0);
+
+    regenerateVariantRowsFromAttributes(next);
+    return next;
+  });
+};
 
 
 
