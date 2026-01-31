@@ -339,25 +339,24 @@ setVariantCostDigitsById(() => {
   // - simple: SKU/GTIN no products
   // - variants: SKU/GTIN por variação (product_variants)
   // ------------------------------------------------------
-  const handleFormatChange = (nextFormat) => {
-    setProduct((prev) => {
-      // Se mudou para variants, limpamos SKU/GTIN do produto para evitar duplicidade/confusão
-      if (nextFormat === "variants") {
-        return { ...prev, format: nextFormat, sku: "", gtin: "" };
-      }
-
-      // Se voltou para simple, limpamos estrutura de variações (UI)
-      return { ...prev, format: nextFormat };
-    });
-
-    if (nextFormat === "simple") {
-      setVariationAttributes([]);
-      setDraftAttrName("");
-      setDraftOptionInput("");
-      setDraftOptions([]);
-      setVariantRows([]);
+const handleFormatChange = (nextFormat) => {
+  setProduct((prev) => {
+    if (nextFormat === "variants") {
+      return { ...prev, format: nextFormat, sku: "", gtin: "" };
     }
-  };
+    return { ...prev, format: nextFormat };
+  });
+
+  if (nextFormat === "simple") {
+    setVariationAttributes([]);
+    setDraftAttrInput("");
+    setDraftAttrChips([]);
+    setDraftOptionInput("");
+    setDraftOptions([]);
+    setVariantRows([]);
+    setShowVariationsBuilder(true); // ✅ volta pro builder quando vira simples
+  }
+};
 
   // ------------------------------------------------------
   // UI: Copiar campo
@@ -587,21 +586,25 @@ const handleAddVariationAttribute = () => {
     return;
   }
 
-  setVariationAttributes((prev) => {
-    const next = [...prev];
+setVariationAttributes((prev) => {
+  const next = [...prev];
 
-    draftAttrChips.forEach((rawName) => {
-      const name = normalizeOption(rawName);
-      if (!name) return;
+  draftAttrChips.forEach((rawName) => {
+    const name = normalizeOption(rawName);
+    if (!name) return;
 
-      const exists = next.some((a) => a.name.toLowerCase() === name.toLowerCase());
-      if (exists) return;
+    const exists = next.some((a) => a.name.toLowerCase() === name.toLowerCase());
+    if (exists) return;
 
-      next.push({ id: createId(), name, options: [...draftOptions] });
-    });
-
-    return next;
+    next.push({ id: createId(), name, options: [...draftOptions] });
   });
+
+  // ✅ gera combinações com o "next" real (sem esperar render)
+  regenerateVariantRowsFromAttributes(next);
+
+  return next;
+});
+
 
   // ✅ limpa erros e drafts
   setErrors((prev) => ({ ...prev, variants: undefined }));
@@ -654,23 +657,19 @@ const handleAddOptionToAttribute = (attrId) => {
 
 
 
-  const removeOptionFromAttribute = (attrId, option) => {
-    setVariationAttributes((prev) =>
-      prev.map((a) => {
-        if (a.id !== attrId) return a;
-        return { ...a, options: a.options.filter((o) => o !== option) };
-      })
-    );
+const removeOptionFromAttribute = (attrId, option) => {
+  setVariationAttributes((prev) =>
+    prev.map((a) => {
+      if (a.id !== attrId) return a;
+      return { ...a, options: a.options.filter((o) => o !== option) };
+    })
+  );
 
-    setTimeout(() => {
-      regenerateVariantRows();
-    }, 0);
-    // ------------------------------------------------------
-// UI: após gerar combinações, esconder o builder
-// ------------------------------------------------------
-setShowVariationsBuilder(false);
+  setTimeout(() => {
+    regenerateVariantRows();
+  }, 0);
+};
 
-  };
 
   // ------------------------------------------------------
   // GERAR COMBINAÇÕES (cartesiano) e preservar dados digitados
@@ -693,6 +692,54 @@ setShowVariationsBuilder(false);
       return next;
     }, [[]]);
   };
+
+  // ------------------------------------------------------
+// GERAR COMBINAÇÕES a partir de uma lista (evita setTimeout)
+// ------------------------------------------------------
+const regenerateVariantRowsFromAttributes = (attrsList) => {
+  const attrs = (attrsList || [])
+    .filter((a) => a.name && Array.isArray(a.options) && a.options.length > 0)
+    .map((a) => ({ name: a.name, options: a.options }));
+
+  if (attrs.length === 0) {
+    setVariantRows([]);
+    return;
+  }
+
+  const arrays = attrs.map((a) => a.options.map((opt) => ({ k: a.name, v: opt })));
+  const combos = cartesian(arrays);
+
+  const currentIndex = new Map();
+  variantRows.forEach((row) => {
+    currentIndex.set(buildVariantKey(row.attributes), row);
+  });
+
+  const nextRows = combos.map((combo) => {
+    const attributesObj = combo.reduce((obj, item) => {
+      obj[item.k] = item.v;
+      return obj;
+    }, {});
+
+    const key = buildVariantKey(attributesObj);
+    const existing = currentIndex.get(key);
+
+    return {
+      id: existing?.id || createId(),
+      attributes: attributesObj,
+      sku: existing?.sku || "",
+      gtin: existing?.gtin || "",
+      cost_price: existing?.cost_price ?? "",
+      stock_quantity: existing?.stock_quantity ?? 0,
+      stock_minimum: existing?.stock_minimum ?? 0,
+      use_virtual_stock: !!existing?.use_virtual_stock,
+      virtual_stock_quantity: existing?.virtual_stock_quantity ?? 0,
+      active: typeof existing?.active === "boolean" ? existing.active : true,
+    };
+  });
+
+  setVariantRows(nextRows);
+};
+
 
   const regenerateVariantRows = () => {
     // Se não tiver atributos completos, limpa
