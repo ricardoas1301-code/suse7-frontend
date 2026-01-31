@@ -628,6 +628,9 @@ const handleAddVariationAttribute = () => {
 
 // ======================================================================
 // SUSE7 — VARIAÇÕES: ADICIONAR OPÇÃO (CHIP) EM ATRIBUTO EXISTENTE
+// Objetivo:
+// - Adiciona opção no atributo
+// - Regera combinações com o estado novo (next)
 // ======================================================================
 const handleAddOptionToAttribute = (attrId) => {
   const opt = normalizeOption(addOptionInput);
@@ -639,6 +642,26 @@ const handleAddOptionToAttribute = (attrId) => {
     setAddOptionError("Digite uma opção válida.");
     return;
   }
+
+  // ------------------------------------------------------
+  // Atualiza atributo + regenera combinações com o estado novo
+  // ------------------------------------------------------
+  setVariationAttributes((prev) => {
+    const next = prev.map((a) => {
+      if (a.id !== attrId) return a;
+
+      const options = Array.isArray(a.options) ? a.options : [];
+      const exists = options.some((x) => String(x).toLowerCase() === opt.toLowerCase());
+      if (exists) return a;
+
+      return { ...a, options: [...options, opt] };
+    });
+
+    // 🔥 gera combinações COM O ESTADO NOVO
+    regenerateVariantRowsFromAttributes(next);
+
+    return next;
+  });
 
   // ------------------------------------------------------
   // Reset UI
@@ -673,27 +696,6 @@ const removeOptionFromAttribute = (attrId, optToRemove) => {
     return next;
   });
 };
-
-
-
-setVariationAttributes((prev) => {
-  const next = prev.map((a) => {
-    if (a.id !== attrId) return a;
-
-    const exists = (a.options || []).some(
-      (x) => x.toLowerCase() === opt.toLowerCase()
-    );
-    if (exists) return a;
-
-    return { ...a, options: [...a.options, opt] };
-  });
-
-  // 🔥 gera combinações COM O ESTADO NOVO
-  regenerateVariantRowsFromAttributes(next);
-
-  return next;
-});
-
 
 
   // ------------------------------------------------------
