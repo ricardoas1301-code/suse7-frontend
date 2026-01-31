@@ -1500,8 +1500,136 @@ const handleSubmit = () => {
               </p>
             </div>
 
-            {/* 👉 Aqui você mantém seu input "Nome do atributo" e input "Opções" + chips */}
-            {/* (não vou reescrever tudo aqui pra não quebrar nada — só manter igual ao seu) */}
+            {/* ======================================================
+    BUILDER — CADASTRO DE ATRIBUTOS + OPÇÕES (CHIPS)
+====================================================== */}
+<div className="pf-row" style={{ marginTop: 12 }}>
+  {/* NOME DO ATRIBUTO (chips) */}
+  <div className="pf-group pf-group--full">
+    <FieldLabel
+      text="Nome do atributo"
+      required
+      infoText="Digite o nome do atributo (ex: Cor, Tamanho, Voltagem) e pressione Enter/Tab para criar o chip."
+      tipBottom={true}
+      wrap={true}
+    />
+
+    <input
+      className="s7-input"
+      placeholder="Digite e pressione Enter ou Tab (ex: Cor, Tamanho)"
+      value={draftAttrInput}
+      onChange={(e) => setDraftAttrInput(e.target.value)}
+      onKeyDown={handleDraftAttrKeyDown}
+    />
+
+    {/* Chips do atributo */}
+    {draftAttrChips.length > 0 && (
+      <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {draftAttrChips.map((attr) => (
+          <span
+            key={attr}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "6px 10px",
+              borderRadius: 999,
+              background: "rgba(37, 99, 235, 0.10)",
+              color: "#1e3a8a",
+              fontWeight: 800,
+              fontSize: 12,
+            }}
+          >
+            {attr}
+            <button
+              type="button"
+              onClick={() => removeDraftAttrChip(attr)}
+              style={{ border: "none", background: "transparent", cursor: "pointer", fontWeight: 900, color: "#1e3a8a" }}
+              aria-label="Remover atributo"
+              title="Remover"
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+      </div>
+    )}
+
+    <div className="s7-hint" style={{ marginTop: 8 }}>
+      Separe múltiplos atributos por vírgula (ex: Cor, Tamanho).
+    </div>
+  </div>
+</div>
+
+<div className="pf-row" style={{ marginTop: 12, alignItems: "flex-end" }}>
+  {/* OPÇÕES (chips) */}
+  <div className="pf-group pf-group--full">
+    <FieldLabel
+      text="Opções (chips)"
+      required
+      infoText="Digite as opções do atributo (ex: Branco, Preto, 127V) e pressione Enter/Tab/virgula."
+      tipBottom={true}
+      wrap={true}
+    />
+
+    <input
+      className="s7-input"
+      placeholder="Digite e pressione Enter/Tab (ex: Branco, Preto, 127V)"
+      value={draftOptionInput}
+      onChange={(e) => setDraftOptionInput(e.target.value)}
+      onKeyDown={handleDraftOptionKeyDown}
+    />
+
+    {/* Chips de opções */}
+    {draftOptions.length > 0 && (
+      <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {draftOptions.map((opt) => (
+          <span
+            key={opt}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "6px 10px",
+              borderRadius: 999,
+              background: "rgba(107, 114, 128, 0.10)",
+              color: "#334155",
+              fontWeight: 800,
+              fontSize: 12,
+            }}
+          >
+            {opt}
+            <button
+              type="button"
+              onClick={() => removeDraftOption(opt)}
+              style={{ border: "none", background: "transparent", cursor: "pointer", fontWeight: 900, color: "#334155" }}
+              aria-label="Remover opção"
+              title="Remover"
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+      </div>
+    )}
+
+    <div className="s7-hint" style={{ marginTop: 8 }}>
+      Separe opções por vírgula (ex: Branco, Preto, Azul).
+    </div>
+  </div>
+
+  {/* BOTÃO GERAR */}
+  <div className="pf-group" style={{ flex: "0 0 auto", minWidth: 220, display: "flex", justifyContent: "flex-end" }}>
+    <button
+      type="button"
+      className="s7-btn s7-btn--primary"
+      onClick={handleAddVariationAttribute}
+      style={{ minWidth: 200 }}
+    >
+      Adicionar variações
+    </button>
+  </div>
+</div>
 
             {(errors.variants || errors.variants_sku || errors.variants_gtin) && (
               <div style={{ marginTop: 10 }}>
