@@ -1329,225 +1329,230 @@ const handleSubmit = () => {
         )}
 
     {/* ==================================================================
-       CARD: Custos & precificação (padrão premium)
-       Objetivo:
-       - Usar o mesmo visual do card das Combinações geradas (aba Variações)
-       - Manter consistência SaaS em toda a experiência
-     ================================================================== */}
-      {activeTab === "pricing" && (
-          <div className="pf-container">
-           <div className="s7-card" style={{ padding: 12 }}>
+    ABA: Custos & precificação (padrão premium)
+    Objetivo:
+    - Mesma pegada visual do “Combinações geradas” (cards)
+    - Consistência SaaS premium
+================================================================== */}
+{activeTab === "pricing" && (
+  <div className="pf-container">
+    <div className="section">
+      <div className="section-header">
+        <h3>Custos & precificação</h3>
+        <p className="section-subtitle">
+          Defina os custos do produto para garantir vendas saudáveis (custos operacionais + embalagem + custo do item).
+        </p>
+      </div>
 
-          {/* ------------------------------------------------------
-          CUSTOS GLOBAIS (sempre visíveis)
-        ------------------------------------------------------ */}
-            <div className="pf-row">
-       {/* Custo Embalagem */}
-          <div className="pf-group">
-        <FieldLabel
-          text="Custo Embalagem"
-          infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
-          tipBottom={true}
-          wrap={true}
-         />
-         <input
-         className="s7-input"
-       type="text"
-        inputMode="numeric"
-       placeholder="R$ 0,00"
-       value={s7FormatBRLFromDigits(packagingDigits)}
-       onChange={(e) => {
-       const digits = s7ExtractDigits(e.target.value);
-        setPackagingDigits(digits);
-
-        // Mantém product sincronizado (string decimal) para payload/back-end
-        handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
-       }}
-       />
-
-       </div>
-
-       {/* Custo Operacional */}
-       <div className="pf-group">
-        <FieldLabel
-          text="Custo Operacional"
-          infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
-          tipBottom={true}
-          wrap={true}
-        />
-        <input
-        className="s7-input"
-        type="text"
-         inputMode="numeric"
-         placeholder="R$ 0,00"
-         value={s7FormatBRLFromDigits(operationalDigits)}
-       onChange={(e) => {
-        const digits = s7ExtractDigits(e.target.value);
-       setOperationalDigits(digits);
-        handleChange("operational_cost", s7DigitsToDecimalStr(digits));
-       }}
-        />
-
-        </div>
-        </div>
-
-        {/* ------------------------------------------------------
-        FORMATO SIMPLES: custo do produto direto no products
-        ------------------------------------------------------ */}
-       {product.format === "simple" && (
+      {/* ======================================================
+          CARD: Custos globais (sempre visíveis)
+      ====================================================== */}
+      <div className="s7-card" style={{ padding: 12 }}>
         <div className="pf-row">
-          <div className="pf-group" style={{ maxWidth: 380 }}>
-        <label className="s7-label">
-        Custo do produto <span className="s7-required">*</span>
-        </label>
+          {/* Custo Embalagem */}
+          <div className="pf-group">
+            <FieldLabel
+              text="Custo Embalagem"
+              infoText="Embalagem do pedido: caixa/saco e proteção (plástico bolha, papel kraft)."
+              tipBottom={true}
+              wrap={true}
+            />
+            <input
+              className="s7-input"
+              type="text"
+              inputMode="numeric"
+              placeholder="R$ 0,00"
+              value={s7FormatBRLFromDigits(packagingDigits)}
+              onChange={(e) => {
+                const digits = s7ExtractDigits(e.target.value);
+                setPackagingDigits(digits);
 
-        <input
-        className={`s7-input ${costErrors.simpleCost ? "s7-input--error" : ""}`}
-        type="text"
-        inputMode="numeric"
-        placeholder="R$ 0,00"
-        value={s7FormatBRLFromDigits(simpleCostDigits)}
-        onChange={(e) => {
-        const digits = s7ExtractDigits(e.target.value);
-        setSimpleCostDigits(digits);
-        handleChange("cost_price", s7DigitsToDecimalStr(digits));
-
-        // ✅ limpa erro ao digitar
-        if (costErrors.simpleCost) {
-        setCostErrors((prev) => ({ ...prev, simpleCost: false }));
-        }
-        }}
-        />
-
-        {costErrors.simpleCost && (
-        <div className="s7-error">Custo do produto é obrigatório.</div>
-        )}
-
-
-        </div>
-        </div>
-        )}
-
-        {/* ------------------------------------------------------
-        FORMATO VARIAÇÕES: custo por variação (bulk só na 1ª)
-        Observação:
-        - No momento estamos reutilizando "price" do variantRows
-          como custo do produto por variação (UI).
-        - Depois o backend pode separar custo vs preço.
-        ------------------------------------------------------ */}
-        {product.format === "variants" && (
-        <div className="section" style={{ marginTop: 10 }}>
-        <div className="section-header">
-          <h3>
-        Custo do produto por variação <span className="s7-required">*</span>
-        </h3>
-
-          <p className="section-subtitle">
-            Preencha o custo por variação. Você pode aplicar o mesmo custo para todas.
-          </p>
-        </div>
-
-        {variantRows.length === 0 ? (
-          <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
-            Gere as variações na aba <strong>Variações</strong> para preencher os custos por combinação.
+                // Mantém product sincronizado (string decimal) para payload/back-end
+                handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
+              }}
+            />
           </div>
-        ) : (
-          <div style={{ marginTop: 12, overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Variação</th>
-                  <th style={{ textAlign: "left", padding: "10px 10px", fontSize: 12, color: "var(--s7-muted)" }}>Custo do produto (R$)</th>
-                  </tr>
-              </thead>
 
-              <tbody>
-                {variantRows.map((row, idx) => {
-                  const label = Object.values(row.attributes || {}).join(" / ") || `Variação ${idx + 1}`;
-                  const hasCostError = (costErrors.variantsMissingIds || []).includes(row.id);
-
-
-                  return (
-        <tr key={row.id}>
-        {/* COLUNA 1: Variação */}
-       <td style={{ padding: "10px 10px", fontWeight: 800, color: "#334155", minWidth: 240 }}>
-        {label}
-        </td>
-
-        {/* COLUNA 2: Custo (input + botão juntos) */}
-        <td style={{ padding: "10px 10px", minWidth: 320 }}>
-        {/* Linha: input + botão */}
-        <div className="pf-variant-cost-row">
-        <input
-         className={`s7-input pf-variant-cost-input ${hasCostError ? "s7-input--error" : ""}`}
-          type="text"
-          inputMode="numeric"
-          placeholder="R$ 0,00"
-          value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
-          onChange={(e) => {
-          const digits = s7ExtractDigits(e.target.value);
-
-        setVariantCostDigitsById((prev) => ({ ...prev, [row.id]: digits }));
-        handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
-
-        // ✅ limpa erro SOMENTE desta linha ao digitar
-        if (hasCostError) {
-          setCostErrors((prev) => ({
-            ...prev,
-            variantsMissingIds: (prev.variantsMissingIds || []).filter((id) => id !== row.id),
-          }));
-        }
-        }}
-        />
-
-        {/* Botão só na 1ª linha */}
-        {idx === 0 && (
-        <button
-        type="button"
-        className="s7-btn s7-btn--secondary"
-        onClick={() => {
-          const baseDigits = variantCostDigitsById[row.id] || "";
-
-          setVariantCostDigitsById((prev) => {
-            const next = { ...prev };
-            (variantRows || []).forEach((r) => {
-              next[r.id] = baseDigits;
-            });
-            return next;
-          });
-
-          const baseDecimal = s7DigitsToDecimalStr(baseDigits);
-          setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
-
-          // ✅ limpa erros de custo (já que atualizou todos)
-          setCostErrors((prev) => ({ ...prev, variantsMissingIds: [] }));
-        }}
-        >
-        Atualizar todos
-        </button>
-        )}
-        </div>
-
-        {/* ✅ Mensagem abaixo do input (por linha) */}
-        {hasCostError && (
-        <div className="s7-error" style={{ marginTop: 6 }}>
-        Custo do produto é obrigatório.
-        </div>
-        )}
-        </td>
-       </tr>
-
-                  );
-                })}
-              </tbody>
-            </table>
+          {/* Custo Operacional */}
+          <div className="pf-group">
+            <FieldLabel
+              text="Custo Operacional"
+              infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo de separação/embalo."
+              tipBottom={true}
+              wrap={true}
+            />
+            <input
+              className="s7-input"
+              type="text"
+              inputMode="numeric"
+              placeholder="R$ 0,00"
+              value={s7FormatBRLFromDigits(operationalDigits)}
+              onChange={(e) => {
+                const digits = s7ExtractDigits(e.target.value);
+                setOperationalDigits(digits);
+                handleChange("operational_cost", s7DigitsToDecimalStr(digits));
+              }}
+            />
           </div>
-        )}
         </div>
- )}
-  </div>
+      </div>
+
+      {/* ======================================================
+          SIMPLE: custo do produto no products
+      ====================================================== */}
+      {product.format === "simple" && (
+        <div className="s7-card" style={{ padding: 12, marginTop: 12 }}>
+          <div className="pf-row">
+            <div className="pf-group" style={{ maxWidth: 420 }}>
+              <FieldLabel
+                text="Custo do produto"
+                required
+                infoText="Custo do item (sem taxas). Isso alimenta os cálculos de margem/lucro no backend."
+                tipBottom={true}
+                wrap={true}
+              />
+
+              <input
+                className={`s7-input ${costErrors.simpleCost ? "s7-input--error" : ""}`}
+                type="text"
+                inputMode="numeric"
+                placeholder="R$ 0,00"
+                value={s7FormatBRLFromDigits(simpleCostDigits)}
+                onChange={(e) => {
+                  const digits = s7ExtractDigits(e.target.value);
+                  setSimpleCostDigits(digits);
+                  handleChange("cost_price", s7DigitsToDecimalStr(digits));
+
+                  // ✅ limpa erro ao digitar
+                  if (costErrors.simpleCost) {
+                    setCostErrors((prev) => ({ ...prev, simpleCost: false }));
+                  }
+                }}
+              />
+
+              {costErrors.simpleCost && (
+                <div className="s7-error" style={{ marginTop: 6 }}>
+                  Custo do produto é obrigatório.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================
+          VARIANTS: custo por variação (cards como “Combinações geradas”)
+      ====================================================== */}
+      {product.format === "variants" && (
+        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+          {variantRows.length === 0 ? (
+            <div className="s7-alert s7-alert--warning">
+              Gere as variações na aba <strong>Variações</strong> para preencher os custos por combinação.
+            </div>
+          ) : (
+            <>
+              {variantRows.map((row, idx) => {
+                const label = Object.values(row.attributes || {}).join(" / ") || `Variação ${idx + 1}`;
+                const hasCostError = (costErrors.variantsMissingIds || []).includes(row.id);
+
+                return (
+                  <div
+                    key={row.id}
+                    className="s7-card"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 320px",
+                      gap: 12,
+                      alignItems: "center",
+                      padding: 12,
+                    }}
+                  >
+                    {/* COLUNA 1: Label da variação */}
+                    <div>
+                      <div className="s7-label" style={{ marginBottom: 6 }}>
+                        Variação
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#334155" }}>{label}</div>
+                    </div>
+
+                    {/* COLUNA 2: Input + botão (na 1ª linha) */}
+                    <div>
+                      <FieldLabel
+                        text="Custo do produto"
+                        required
+                        infoText="Custo do item para esta combinação. Obrigatório para cálculo saudável."
+                        tipBottom={true}
+                        wrap={true}
+                      />
+
+                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                        <input
+                          className={`s7-input ${hasCostError ? "s7-input--error" : ""}`}
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="R$ 0,00"
+                          value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
+                          onChange={(e) => {
+                            const digits = s7ExtractDigits(e.target.value);
+
+                            setVariantCostDigitsById((prev) => ({ ...prev, [row.id]: digits }));
+                            handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
+
+                            // ✅ limpa erro SOMENTE desta linha ao digitar
+                            if (hasCostError) {
+                              setCostErrors((prev) => ({
+                                ...prev,
+                                variantsMissingIds: (prev.variantsMissingIds || []).filter((id) => id !== row.id),
+                              }));
+                            }
+                          }}
+                        />
+
+                        {idx === 0 && (
+                          <button
+                            type="button"
+                            className="s7-btn s7-btn--secondary"
+                            onClick={() => {
+                              const baseDigits = variantCostDigitsById[row.id] || "";
+
+                              setVariantCostDigitsById((prev) => {
+                                const next = { ...prev };
+                                (variantRows || []).forEach((r) => {
+                                  next[r.id] = baseDigits;
+                                });
+                                return next;
+                              });
+
+                              const baseDecimal = s7DigitsToDecimalStr(baseDigits);
+                              setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
+
+                              // ✅ limpa erros de custo
+                              setCostErrors((prev) => ({ ...prev, variantsMissingIds: [] }));
+                            }}
+                            style={{ whiteSpace: "nowrap" }}
+                          >
+                            Atualizar todos
+                          </button>
+                        )}
+                      </div>
+
+                      {hasCostError && (
+                        <div className="s7-error" style={{ marginTop: 6 }}>
+                          Custo do produto é obrigatório.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
+    </div>
   </div>
 )}
+
 
         {/* =======================
             ABA: IMAGENS (mantém)
