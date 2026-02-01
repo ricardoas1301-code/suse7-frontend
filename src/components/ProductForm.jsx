@@ -1441,7 +1441,7 @@ const handleSubmit = () => {
           VARIANTS: custo por variação (cards como “Combinações geradas”)
       ====================================================== */}
       {product.format === "variants" && (
-        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ marginTop: 12, overflowX: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
           {variantRows.length === 0 ? (
             <div className="s7-alert s7-alert--warning">
               Gere as variações na aba <strong>Variações</strong> para preencher os custos por combinação.
