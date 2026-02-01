@@ -1026,10 +1026,11 @@
 }
 
 
-/* Input não pode forçar largura e criar scroll */
+/* Input de custo por variação — largura fixa e alinhada */
 .pf-variant-cost-input{
-  flex: 1 1 auto;
-  min-width: 0;
+  width: 220px;          /* ✅ mesmo tamanho em todos os cards */
+  max-width: 220px;
+  flex: 0 0 auto;
 }
 
 /* Botão “Atualizar todos” não pode estourar */
@@ -1054,4 +1055,13 @@
 .pf-pricing-variant-card .pf-info-btn::after{
   max-width: 260px;
   white-space: normal;
+}
+
+/* ======================================================
+   SUSE7 — TOOLTIP
+   Refino: remover setinha (arrow)
+====================================================== */
+.s7-tip::before,
+.s7-tip::after{
+  display: none !important;
 }
