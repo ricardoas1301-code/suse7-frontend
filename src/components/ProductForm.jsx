@@ -1473,11 +1473,9 @@ const handleSubmit = () => {
             <FieldLabel
               text="Custo do produto"
               required
-              infoText="Custo do item para esta combinação (usado para cálculo saudável)."
-              /* ✅ força tooltip para a esquerda */
-              side="left"
-              /* ✅ e evita estourar para baixo em telas menores */
-              tipBottom={false}
+              infoText="Custo do item para esta combinação (usado para cálculo saudável)." /* ✅ força tooltip para a esquerda */
+              side="left"  /* ✅ e evita estourar para baixo em telas menores */
+              tipBottom={true}
               wrap={true}
             />
 
