@@ -1347,55 +1347,52 @@ const handleSubmit = () => {
       {/* ======================================================
           CARD: Custos globais (sempre visíveis)
       ====================================================== */}
-      <div className="s7-card" style={{ padding: 12 }}>
-        <div className="pf-row">
-          {/* Custo Embalagem */}
-          <div className="pf-group">
-            <FieldLabel
-              text="Custo Embalagem"
-              infoText="Embalagem do pedido: caixa/saco e proteção (plástico bolha, papel kraft)."
-              tipBottom={true}
-              wrap={true}
-            />
-            <input
-              className="s7-input"
-              type="text"
-              inputMode="numeric"
-              placeholder="R$ 0,00"
-              value={s7FormatBRLFromDigits(packagingDigits)}
-              onChange={(e) => {
-                const digits = s7ExtractDigits(e.target.value);
-                setPackagingDigits(digits);
+<div className="pf-row pf-pricing-global-row">
+  {/* Custo Embalagem */}
+  <div className="pf-group pf-pricing-global-group">
+    <FieldLabel
+      text="Custo Embalagem"
+      infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
+      tipBottom={true}
+      wrap={true}
+    />
+    <input
+      className="s7-input"
+      type="text"
+      inputMode="numeric"
+      placeholder="R$ 0,00"
+      value={s7FormatBRLFromDigits(packagingDigits)}
+      onChange={(e) => {
+        const digits = s7ExtractDigits(e.target.value);
+        setPackagingDigits(digits);
+        handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
+      }}
+    />
+  </div>
 
-                // Mantém product sincronizado (string decimal) para payload/back-end
-                handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
-              }}
-            />
-          </div>
+  {/* Custo Operacional */}
+  <div className="pf-group pf-pricing-global-group">
+    <FieldLabel
+      text="Custo Operacional"
+      infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
+      tipBottom={true}
+      wrap={true}
+    />
+    <input
+      className="s7-input"
+      type="text"
+      inputMode="numeric"
+      placeholder="R$ 0,00"
+      value={s7FormatBRLFromDigits(operationalDigits)}
+      onChange={(e) => {
+        const digits = s7ExtractDigits(e.target.value);
+        setOperationalDigits(digits);
+        handleChange("operational_cost", s7DigitsToDecimalStr(digits));
+      }}
+    />
+  </div>
+</div>
 
-          {/* Custo Operacional */}
-          <div className="pf-group">
-            <FieldLabel
-              text="Custo Operacional"
-              infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo de separação/embalo."
-              tipBottom={true}
-              wrap={true}
-            />
-            <input
-              className="s7-input"
-              type="text"
-              inputMode="numeric"
-              placeholder="R$ 0,00"
-              value={s7FormatBRLFromDigits(operationalDigits)}
-              onChange={(e) => {
-                const digits = s7ExtractDigits(e.target.value);
-                setOperationalDigits(digits);
-                handleChange("operational_cost", s7DigitsToDecimalStr(digits));
-              }}
-            />
-          </div>
-        </div>
-      </div>
 
       {/* ======================================================
           SIMPLE: custo do produto no products
@@ -1498,6 +1495,7 @@ const handleSubmit = () => {
                         infoText="Custo do item para esta combinação. Obrigatório para cálculo saudável."
                         tipBottom={true}
                         wrap={true}
+                        side="left"   // ✅ força abrir para a esquerda
                       />
 
                       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>

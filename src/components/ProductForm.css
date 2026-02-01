@@ -954,3 +954,31 @@
   gap: 6px;
   min-width: 0;
 }
+
+/* ======================================================================
+   SUSE7 — PRICING TAB (Refinos finais)
+   Objetivo:
+   - Reduzir largura dos inputs globais (Embalagem / Operacional)
+   - Evitar scroll horizontal desnecessário
+====================================================================== */
+
+.pf-pricing-global-row{
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.pf-pricing-global-group{
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 220px; /* ✅ bem menor (aprox “-79% visual” em telas largas) */
+}
+
+@media (max-width: 720px){
+  .pf-pricing-global-row{
+    flex-direction: column;
+  }
+
+  .pf-pricing-global-group{
+    max-width: 100%;
+  }
+}
