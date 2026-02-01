@@ -1028,8 +1028,8 @@
 
 /* Input de custo por variação — largura fixa e alinhada */
 .pf-variant-cost-input{
-  width: 220px;          /* ✅ mesmo tamanho em todos os cards */
-  max-width: 220px;
+  width: 169px;          /* ✅ mesmo tamanho em todos os cards */
+  max-width: 169px;
   flex: 0 0 auto;
 }
 
