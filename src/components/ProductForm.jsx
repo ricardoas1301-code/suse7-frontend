@@ -1328,119 +1328,119 @@ const handleSubmit = () => {
           </div>
         )}
 
-{/* =======================
-    ABA: CUSTOS & PRECIFICAÇÃO (v3)
-    Regras:
-    - simple: custo do produto no products
-    - variants: custo do produto por variação (no grid)
-    - embalagem/operacional: sempre globais (aplicam a todas)
-======================= */}
-{activeTab === "pricing" && (
-  <div className="pf-container">
+    {/* ==================================================================
+       CARD: Custos & precificação (padrão premium)
+       Objetivo:
+       - Usar o mesmo visual do card das Combinações geradas (aba Variações)
+       - Manter consistência SaaS em toda a experiência
+     ================================================================== */}
+      {activeTab === "pricing" && (
+          <div className="pf-container">
+           <div className="s7-card" style={{ padding: 12 }}>
 
-    {/* ------------------------------------------------------
-        CUSTOS GLOBAIS (sempre visíveis)
-    ------------------------------------------------------ */}
-    <div className="pf-row">
-      {/* Custo Embalagem */}
-      <div className="pf-group">
+          {/* ------------------------------------------------------
+          CUSTOS GLOBAIS (sempre visíveis)
+        ------------------------------------------------------ */}
+            <div className="pf-row">
+       {/* Custo Embalagem */}
+          <div className="pf-group">
         <FieldLabel
           text="Custo Embalagem"
           infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
           tipBottom={true}
           wrap={true}
-        />
-<input
-  className="s7-input"
-  type="text"
-  inputMode="numeric"
-  placeholder="R$ 0,00"
-  value={s7FormatBRLFromDigits(packagingDigits)}
-  onChange={(e) => {
-    const digits = s7ExtractDigits(e.target.value);
-    setPackagingDigits(digits);
+         />
+         <input
+         className="s7-input"
+       type="text"
+        inputMode="numeric"
+       placeholder="R$ 0,00"
+       value={s7FormatBRLFromDigits(packagingDigits)}
+       onChange={(e) => {
+       const digits = s7ExtractDigits(e.target.value);
+        setPackagingDigits(digits);
 
-    // Mantém product sincronizado (string decimal) para payload/back-end
-    handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
-  }}
-/>
+        // Mantém product sincronizado (string decimal) para payload/back-end
+        handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
+       }}
+       />
 
-      </div>
+       </div>
 
-      {/* Custo Operacional */}
-      <div className="pf-group">
+       {/* Custo Operacional */}
+       <div className="pf-group">
         <FieldLabel
           text="Custo Operacional"
           infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
           tipBottom={true}
           wrap={true}
         />
-<input
-  className="s7-input"
-  type="text"
-  inputMode="numeric"
-  placeholder="R$ 0,00"
-  value={s7FormatBRLFromDigits(operationalDigits)}
-  onChange={(e) => {
-    const digits = s7ExtractDigits(e.target.value);
-    setOperationalDigits(digits);
-    handleChange("operational_cost", s7DigitsToDecimalStr(digits));
-  }}
-/>
+        <input
+        className="s7-input"
+        type="text"
+         inputMode="numeric"
+         placeholder="R$ 0,00"
+         value={s7FormatBRLFromDigits(operationalDigits)}
+       onChange={(e) => {
+        const digits = s7ExtractDigits(e.target.value);
+       setOperationalDigits(digits);
+        handleChange("operational_cost", s7DigitsToDecimalStr(digits));
+       }}
+        />
 
-      </div>
-    </div>
+        </div>
+        </div>
 
-    {/* ------------------------------------------------------
+        {/* ------------------------------------------------------
         FORMATO SIMPLES: custo do produto direto no products
-    ------------------------------------------------------ */}
-    {product.format === "simple" && (
-      <div className="pf-row">
-        <div className="pf-group" style={{ maxWidth: 380 }}>
-<label className="s7-label">
-  Custo do produto <span className="s7-required">*</span>
-</label>
+        ------------------------------------------------------ */}
+       {product.format === "simple" && (
+        <div className="pf-row">
+          <div className="pf-group" style={{ maxWidth: 380 }}>
+        <label className="s7-label">
+        Custo do produto <span className="s7-required">*</span>
+        </label>
 
-<input
-  className={`s7-input ${costErrors.simpleCost ? "s7-input--error" : ""}`}
-  type="text"
-  inputMode="numeric"
-  placeholder="R$ 0,00"
-  value={s7FormatBRLFromDigits(simpleCostDigits)}
-  onChange={(e) => {
-    const digits = s7ExtractDigits(e.target.value);
-    setSimpleCostDigits(digits);
-    handleChange("cost_price", s7DigitsToDecimalStr(digits));
+        <input
+        className={`s7-input ${costErrors.simpleCost ? "s7-input--error" : ""}`}
+        type="text"
+        inputMode="numeric"
+        placeholder="R$ 0,00"
+        value={s7FormatBRLFromDigits(simpleCostDigits)}
+        onChange={(e) => {
+        const digits = s7ExtractDigits(e.target.value);
+        setSimpleCostDigits(digits);
+        handleChange("cost_price", s7DigitsToDecimalStr(digits));
 
-    // ✅ limpa erro ao digitar
-    if (costErrors.simpleCost) {
-      setCostErrors((prev) => ({ ...prev, simpleCost: false }));
-    }
-  }}
-/>
+        // ✅ limpa erro ao digitar
+        if (costErrors.simpleCost) {
+        setCostErrors((prev) => ({ ...prev, simpleCost: false }));
+        }
+        }}
+        />
 
-{costErrors.simpleCost && (
-  <div className="s7-error">Custo do produto é obrigatório.</div>
-)}
+        {costErrors.simpleCost && (
+        <div className="s7-error">Custo do produto é obrigatório.</div>
+        )}
 
 
         </div>
-      </div>
-    )}
+        </div>
+        )}
 
-    {/* ------------------------------------------------------
+        {/* ------------------------------------------------------
         FORMATO VARIAÇÕES: custo por variação (bulk só na 1ª)
         Observação:
         - No momento estamos reutilizando "price" do variantRows
           como custo do produto por variação (UI).
         - Depois o backend pode separar custo vs preço.
-    ------------------------------------------------------ */}
-    {product.format === "variants" && (
-      <div className="section" style={{ marginTop: 10 }}>
+        ------------------------------------------------------ */}
+        {product.format === "variants" && (
+        <div className="section" style={{ marginTop: 10 }}>
         <div className="section-header">
           <h3>
-  Custo do produto por variação <span className="s7-required">*</span>
-</h3>
+        Custo do produto por variação <span className="s7-required">*</span>
+        </h3>
 
           <p className="section-subtitle">
             Preencha o custo por variação. Você pode aplicar o mesmo custo para todas.
@@ -1468,24 +1468,24 @@ const handleSubmit = () => {
 
 
                   return (
-  <tr key={row.id}>
-  {/* COLUNA 1: Variação */}
-  <td style={{ padding: "10px 10px", fontWeight: 800, color: "#334155", minWidth: 240 }}>
-    {label}
-  </td>
+        <tr key={row.id}>
+        {/* COLUNA 1: Variação */}
+       <td style={{ padding: "10px 10px", fontWeight: 800, color: "#334155", minWidth: 240 }}>
+        {label}
+        </td>
 
-  {/* COLUNA 2: Custo (input + botão juntos) */}
- <td style={{ padding: "10px 10px", minWidth: 320 }}>
-  {/* Linha: input + botão */}
-  <div className="pf-variant-cost-row">
-    <input
-      className={`s7-input pf-variant-cost-input ${hasCostError ? "s7-input--error" : ""}`}
-      type="text"
-      inputMode="numeric"
-      placeholder="R$ 0,00"
-      value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
-      onChange={(e) => {
-        const digits = s7ExtractDigits(e.target.value);
+        {/* COLUNA 2: Custo (input + botão juntos) */}
+        <td style={{ padding: "10px 10px", minWidth: 320 }}>
+        {/* Linha: input + botão */}
+        <div className="pf-variant-cost-row">
+        <input
+         className={`s7-input pf-variant-cost-input ${hasCostError ? "s7-input--error" : ""}`}
+          type="text"
+          inputMode="numeric"
+          placeholder="R$ 0,00"
+          value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
+          onChange={(e) => {
+          const digits = s7ExtractDigits(e.target.value);
 
         setVariantCostDigitsById((prev) => ({ ...prev, [row.id]: digits }));
         handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
@@ -1497,12 +1497,12 @@ const handleSubmit = () => {
             variantsMissingIds: (prev.variantsMissingIds || []).filter((id) => id !== row.id),
           }));
         }
-      }}
-    />
+        }}
+        />
 
-    {/* Botão só na 1ª linha */}
-    {idx === 0 && (
-      <button
+        {/* Botão só na 1ª linha */}
+        {idx === 0 && (
+        <button
         type="button"
         className="s7-btn s7-btn--secondary"
         onClick={() => {
@@ -1522,20 +1522,20 @@ const handleSubmit = () => {
           // ✅ limpa erros de custo (já que atualizou todos)
           setCostErrors((prev) => ({ ...prev, variantsMissingIds: [] }));
         }}
-      >
+        >
         Atualizar todos
-      </button>
-    )}
-  </div>
+        </button>
+        )}
+        </div>
 
-  {/* ✅ Mensagem abaixo do input (por linha) */}
-  {hasCostError && (
-    <div className="s7-error" style={{ marginTop: 6 }}>
-      Custo do produto é obrigatório.
-    </div>
-  )}
-</td>
-</tr>
+        {/* ✅ Mensagem abaixo do input (por linha) */}
+        {hasCostError && (
+        <div className="s7-error" style={{ marginTop: 6 }}>
+        Custo do produto é obrigatório.
+        </div>
+        )}
+        </td>
+       </tr>
 
                   );
                 })}
@@ -1543,11 +1543,11 @@ const handleSubmit = () => {
             </table>
           </div>
         )}
-      </div>
-    )}
+        </div>
+ )}
+  </div>
   </div>
 )}
-
 
         {/* =======================
             ABA: IMAGENS (mantém)
@@ -1570,17 +1570,17 @@ const handleSubmit = () => {
           </div>
         )}
 
-{/* =======================
-    ABA: VARIAÇÕES (novo fluxo)
-======================= */}
-{activeTab === "variations" && (
-  <div className="pf-container">
-    {product.format !== "variants" ? (
-      <div className="s7-alert s7-alert--warning">
-        <strong>Formato atual:</strong> <strong>Simples</strong>. Para usar variações, altere o campo <strong>Formato</strong> na aba <strong>Dados</strong>.
-      </div>
-    ) : (
-      <>
+        {/* =======================
+         ABA: VARIAÇÕES (novo fluxo)
+         ======================= */}
+        {activeTab === "variations" && (
+        <div className="pf-container">
+        {product.format !== "variants" ? (
+          <div className="s7-alert s7-alert--warning">
+          <strong>Formato atual:</strong> <strong>Simples</strong>. Para usar variações, altere o campo <strong>Formato</strong> na aba <strong>Dados</strong>.
+        </div>
+        ) : (
+        <>
         {/* ======================================================
             MODO 1: BUILDER (ANTES DE GERAR)
         ====================================================== */}
@@ -1594,31 +1594,31 @@ const handleSubmit = () => {
             </div>
 
             {/* ======================================================
-    BUILDER — CADASTRO DE ATRIBUTOS + OPÇÕES (CHIPS)
-====================================================== */}
-<div className="pf-row" style={{ marginTop: 12 }}>
-  {/* NOME DO ATRIBUTO (chips) */}
-  <div className="pf-group pf-group--full">
-    <FieldLabel
-      text="Nome do atributo"
-      required
-      infoText="Digite o nome do atributo (ex: Cor, Tamanho, Voltagem) e pressione Enter/Tab para criar o chip."
-      tipBottom={true}
-      wrap={true}
-    />
+        BUILDER — CADASTRO DE ATRIBUTOS + OPÇÕES (CHIPS)
+        ====================================================== */}
+        <div className="pf-row" style={{ marginTop: 12 }}>
+        {/* NOME DO ATRIBUTO (chips) */}
+        <div className="pf-group pf-group--full">
+        <FieldLabel
+        text="Nome do atributo"
+        required
+        infoText="Digite o nome do atributo (ex: Cor, Tamanho, Voltagem) e pressione Enter/Tab para criar o chip."
+        tipBottom={true}
+        wrap={true}
+        />
 
-<input
-  className="s7-input"
-  value={draftAttrInput}
-  onChange={(e) => setDraftAttrInput(e.target.value)}
-  onKeyDown={handleDraftAttrKeyDown}
- />
+        <input
+        className="s7-input"
+        value={draftAttrInput}
+        onChange={(e) => setDraftAttrInput(e.target.value)}
+        onKeyDown={handleDraftAttrKeyDown}
+        />
 
-{/* CHIP DO ATRIBUTO */}
-{draftAttrChips.length > 0 && (
-  <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-    {draftAttrChips.map((attr) => (
-      <span
+        {/* CHIP DO ATRIBUTO */}
+        {draftAttrChips.length > 0 && (
+        <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        {draftAttrChips.map((attr) => (
+        <span
         key={attr}
         style={{
           display: "inline-flex",
@@ -1631,7 +1631,7 @@ const handleSubmit = () => {
           fontWeight: 800,
           fontSize: 12,
         }}
-      >
+        >
         {attr}
         <button
           type="button"
@@ -1647,43 +1647,43 @@ const handleSubmit = () => {
         >
           ✕
         </button>
-      </span>
-    ))}
-  </div>
-)}
+        </span>
+        ))}
+        </div>
+        )}
 
-<div className="s7-hint" style={{ marginTop: 8 }}>
-  Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em “Adicionar variações”.
-</div>
+        <div className="s7-hint" style={{ marginTop: 8 }}>
+        Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em “Adicionar variações”.
+        </div>
 
        <div className="s7-hint" style={{ marginTop: 8 }}>
-      Separe múltiplos atributos por vírgula (ex: Cor, Tamanho).
-    </div>
-  </div>
-</div>
+        Separe múltiplos atributos por vírgula (ex: Cor, Tamanho).
+        </div>
+        </div>
+        </div>
 
-<div className="pf-row" style={{ marginTop: 12, alignItems: "flex-end" }}>
-  {/* OPÇÕES (chips) */}
-  <div className="pf-group pf-group--full">
-    <FieldLabel
-      text="Opções (chips)"
-      required
-      infoText="Digite as opções do atributo (ex: Branco, Preto, 127V) e pressione Enter/Tab/virgula."
-      tipBottom={true}
-      wrap={true}
-    />
+        <div className="pf-row" style={{ marginTop: 12, alignItems: "flex-end" }}>
+        {/* OPÇÕES (chips) */}
+       <div className="pf-group pf-group--full">
+       <FieldLabel
+        text="Opções (chips)"
+        required
+        infoText="Digite as opções do atributo (ex: Branco, Preto, 127V) e pressione Enter/Tab/virgula."
+        tipBottom={true}
+        wrap={true}
+       />
 
-    <input
-      className="s7-input"
-      placeholder="Digite e pressione Enter/Tab (ex: Branco, Preto, 127V)"
-      value={draftOptionInput}
-      onChange={(e) => setDraftOptionInput(e.target.value)}
-      onKeyDown={handleDraftOptionKeyDown}
-    />
+        <input
+        className="s7-input"
+        placeholder="Digite e pressione Enter/Tab (ex: Branco, Preto, 127V)"
+        value={draftOptionInput}
+        onChange={(e) => setDraftOptionInput(e.target.value)}
+        onKeyDown={handleDraftOptionKeyDown}
+       />
 
-    {/* Chips de opções */}
-    {draftOptions.length > 0 && (
-      <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {/* Chips de opções */}
+        {draftOptions.length > 0 && (
+       <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
         {draftOptions.map((opt) => (
           <span
             key={opt}
@@ -1711,26 +1711,26 @@ const handleSubmit = () => {
             </button>
           </span>
         ))}
-      </div>
-    )}
+       </div>
+       )}
+ 
+       <div className="s7-hint" style={{ marginTop: 8 }}>
+        Separe opções por vírgula (ex: Branco, Preto, Azul).
+       </div>
+       </div>
 
-    <div className="s7-hint" style={{ marginTop: 8 }}>
-      Separe opções por vírgula (ex: Branco, Preto, Azul).
-    </div>
-  </div>
-
-  {/* BOTÃO GERAR */}
-  <div className="pf-group" style={{ flex: "0 0 auto", minWidth: 220, display: "flex", justifyContent: "flex-end" }}>
-    <button
-      type="button"
-      className="s7-btn s7-btn--primary"
-      onClick={handleAddVariationAttribute}
-      style={{ minWidth: 200 }}
-    >
-      Adicionar variações
-    </button>
-  </div>
-</div>
+       {/* BOTÃO GERAR */}
+        <div className="pf-group" style={{ flex: "0 0 auto", minWidth: 220, display: "flex", justifyContent: "flex-end" }}>
+       <button
+       type="button"
+        className="s7-btn s7-btn--primary"
+        onClick={handleAddVariationAttribute}
+        style={{ minWidth: 200 }}
+        >
+        Adicionar variações
+       </button>
+       </div>
+       </div>
 
             {(errors.variants || errors.variants_sku || errors.variants_gtin) && (
               <div style={{ marginTop: 10 }}>
@@ -1887,37 +1887,37 @@ const handleSubmit = () => {
         {variantRows.length > 0 && (
           <div className="section" style={{ marginTop: 12 }}>
             <div className="section-header">
-  <h3>Combinações geradas</h3>
-  <p className="section-subtitle">
-    Cada combinação representa uma variação do produto.
-  </p>
-</div>
+       <h3>Combinações geradas</h3>
+        <p className="section-subtitle">
+       Cada combinação representa uma variação do produto.
+        </p>
+        </div>
 
-<div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-  {variantRows.map((row) => (
-    <div
-      key={row.id}
-      className="s7-card"
-style={{
-  display: "grid",
-  gridTemplateColumns: `repeat(${variantAttrColumns.length}, 1fr) 1fr 1fr 120px 60px`,
-  gap: 12,
-  alignItems: "center",
-  padding: 12,
-}}
-    >
-      {/* VARIAÇÕES (Cor / Tamanho / etc) */}
-      {variantAttrColumns.map((attr) => (
+        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+        {variantRows.map((row) => (
+        <div
+        key={row.id}
+        className="s7-card"
+        style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${variantAttrColumns.length}, 1fr) 1fr 1fr 120px 60px`,
+        gap: 12,
+        alignItems: "center",
+        padding: 12,
+        }}
+        >
+        {/* VARIAÇÕES (Cor / Tamanho / etc) */}
+        {variantAttrColumns.map((attr) => (
         <div key={attr}>
           <label className="s7-label">{attr}</label>
           <div style={{ fontWeight: 700 }}>
             {row.attributes?.[attr] || "-"}
           </div>
         </div>
-      ))}
+        ))}
 
-      {/* SKU */}
-      <div className="pf-variant-field">
+        {/* SKU */}
+        <div className="pf-variant-field">
         <FieldLabel
           text="SKU"
           required
@@ -1949,11 +1949,11 @@ style={{
         />
 
         {skuErrorsById?.[row.id] && <div className="s7-error">{skuErrorsById[row.id]}</div>}
-      </div>
+        </div>
 
 
-      {/* GTIN */}
-      <div className="pf-variant-field">
+        {/* GTIN */}
+        <div className="pf-variant-field">
         <FieldLabel
           text="EAN / GTIN"
           onCopy={() => handleCopyField(row.gtin)}
@@ -1971,42 +1971,42 @@ style={{
             )
           }
         />
-      </div>
+        </div>
 
 
-      {/* SITUAÇÃO */}
-<div className="pf-variant-status">
-  <label className="s7-label">Situação</label>
+        {/* SITUAÇÃO */}
+        <div className="pf-variant-status">
+        <label className="s7-label">Situação</label>
 
-  <label className="pf-switch">
-    <input
-      type="checkbox"
-      checked={row.active}
-      onChange={(e) => handleVariantRowChange(row.id, "active", e.target.checked)}
-    />
-    Ativo
-  </label>
-</div>
+        <label className="pf-switch">
+        <input
+        type="checkbox"
+        checked={row.active}
+        onChange={(e) => handleVariantRowChange(row.id, "active", e.target.checked)}
+        />
+        Ativo
+        </label>
+        </div>
 
-      {/* LIXEIRA */}
-      <button
+        {/* LIXEIRA */}
+        <button
         type="button"
         className="s7-btn s7-btn--danger"
         title="Remover variação"
         onClick={() => handleRemoveVariantRow(row.id)}
-      >
+        >
         🗑️
-      </button>
-    </div>
-  ))}
-</div>
+        </button>
+        </div>
+        ))}
+        </div>
 
           </div>
         )}
-      </>
-    )}
-  </div>
-)}
+        </>
+        )}
+        </div>
+        )}
 
 
         {/* =======================
@@ -2028,11 +2028,11 @@ style={{
               
             </div>
           </div>
-        )}
+          )}
 
-        {/* =======================
+          {/* =======================
             ABA: ESTOQUE (v2)
-        ======================= */}
+          ======================= */}
         {activeTab === "stock" && (
           <div className="pf-container">
             <div className="pf-row">
@@ -2130,9 +2130,9 @@ style={{
                   <input className="s7-input" inputMode="decimal" placeholder="Ex: 2.350" value={product.weight} onChange={(e) => handleChange("weight", e.target.value)} />
                 </div>
               </div>
-            </div>
+             </div>
 
-            <div className="s7-card" style={{ marginTop: 12 }}>
+             <div className="s7-card" style={{ marginTop: 12 }}>
               <div className="s7-card__header">
                 <h3 className="s7-card__title">Medidas do produto (montado)</h3>
                 <p className="s7-card__subtitle">Medidas reais do produto pronto/montado (referência interna).</p>
@@ -2159,17 +2159,17 @@ style={{
                   <input className="s7-input" inputMode="decimal" placeholder="Ex: 8.500" value={product.assembled_weight} onChange={(e) => handleChange("assembled_weight", e.target.value)} />
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+              </div>
+             </div>
+             )}
 
-        {/* =======================
-            ABA: ANÚNCIOS (placeholder)
-        ======================= */}
-        {activeTab === "ads" && (
-          <div className="pf-container">
-            {!hasAnyVariation && (
-            <div className="section">
+              {/* =======================
+              ABA: ANÚNCIOS (placeholder)
+              ======================= */}
+              {activeTab === "ads" && (
+              <div className="pf-container">
+             {!hasAnyVariation && (
+             <div className="section">
               <div className="section-header">
                 <h3>Anúncios do produto</h3>
                 <p className="section-subtitle">Aqui vamos listar os anúncios vinculados a este produto em cada marketplace (ML primeiro).</p>
@@ -2180,17 +2180,17 @@ style={{
               <button className="s7-btn s7-btn--secondary" type="button">
                 Importar anúncios (em breve)
               </button>
-            </div>
-            )}
-          </div>
-        )}
+             </div>
+             )}
+             </div>
+             )}
 
-        {/* =======================
-            ABA: VENDAS & DESEMPENHO (placeholder)
-        ======================= */}
-        {activeTab === "performance" && (
-          <div className="pf-container">
-            <div className="section">
+             {/* =======================
+             ABA: VENDAS & DESEMPENHO (placeholder)
+             ======================= */}
+             {activeTab === "performance" && (
+             <div className="pf-container">
+              <div className="section">
               <div className="section-header">
                 <h3>Vendas & desempenho</h3>
                 <p className="section-subtitle">Painel do produto: histórico de vendas, desempenho por canal e indicadores.</p>
@@ -2201,19 +2201,24 @@ style={{
               <button className="s7-btn s7-btn--secondary" type="button">
                 Ver relatório (em breve)
               </button>
-            </div>
-          </div>
-        )}
-      </div>
+             </div>
+             </div>
+             )}
+             </div>
+      
 
-      {/* ==================================================
-         FOOTER — sticky
-      ================================================== */}
-      <div className="pf-footer pf-footer-right">
-        <button className="s7-btn s7-btn--primary" onClick={handleSubmit} type="button">
-          {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
-        </button>
-      </div>
-    </div>
-  );
+             {/* ==================================================
+    FOOTER — sticky
+================================================== */}
+<div className="pf-footer pf-footer-right">
+  <button className="s7-btn s7-btn--primary" onClick={handleSubmit} type="button">
+    {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+  </button>
+</div>
+
+{/* --------------------------------------------------
+   FIM DO CARD PRINCIPAL
+-------------------------------------------------- */}
+</div>
+);
 }
