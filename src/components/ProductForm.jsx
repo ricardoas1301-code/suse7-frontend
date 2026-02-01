@@ -149,6 +149,13 @@ export default function ProductForm({
   // ------------------------------------------------------
   const [errors, setErrors] = useState({});
 
+// ======================================================================
+// STATE: Erros SKU por variação (UX)
+// Regra: no formato variants, SKU é obrigatório em cada variação
+// ======================================================================
+const [skuErrorsById, setSkuErrorsById] = useState({});
+
+
 
   // ======================================================================
 // STATE: Erros da aba Custos & Precificação (UX) — obrigatório
@@ -692,7 +699,17 @@ const removeOptionFromAttribute = (attrId, optToRemove) => {
       // ✅ remove atributos que ficaram sem opções (opcional, mas saudável)
       .filter((a) => Array.isArray(a.options) && a.options.length > 0);
 
-    regenerateVariantRowsFromAttributes(next);
+      regenerateVariantRowsFromAttributes(next);
+
+     // ------------------------------------------------------
+     // UX: se removeu tudo, volta para o Builder
+     // (evita sumir "+ Novo atributo")
+     // ------------------------------------------------------
+      if (next.length === 0) {
+      setShowVariationsBuilder(true);
+    }
+
+
     return next;
   });
 };
@@ -829,12 +846,27 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   // ------------------------------------------------------
   const handleVariantRowChange = (id, field, value) => {
     setVariantRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
-  };
+    };
 
-  const handleRemoveVariantRow = (id) => {
-    // Remover linha específica é permitido (ex: seller não quer uma combinação)
-    setVariantRows((prev) => prev.filter((r) => r.id !== id));
-  };
+       // ------------------------------------------------------
+       // VARIANT ROWS: remover linha
+       // - Se zerar as linhas, voltamos para o Builder (UX)
+       // ------------------------------------------------------
+       const handleRemoveVariantRow = (id) => {
+       setVariantRows((prev) => {
+       const next = (prev || []).filter((r) => r.id !== id);
+
+        // ------------------------------------------------------
+        // UX: se zerou tudo, volta o builder (e mantém fluxo vivo)
+        // ------------------------------------------------------
+       if (next.length === 0) {
+        setShowVariationsBuilder(true);
+       }
+
+       return next;
+      });
+    };
+
 
   // ------------------------------------------------------
   // VALIDAR (UX)
@@ -869,6 +901,40 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
+
+// ======================================================================
+// VALIDAR: Variações (UX)
+// Regras:
+// - Somente quando format === "variants"
+// - SKU obrigatório por variação
+// ======================================================================
+const validateVariantsTab = () => {
+  // Se não está em variações, nada a validar aqui
+  if (product.format !== "variants") {
+    setSkuErrorsById({});
+    return true;
+  }
+
+  // Se não tem linhas, deixamos passar (o formato variants pode estar “em construção”)
+  if (!Array.isArray(variantRows) || variantRows.length === 0) {
+    setSkuErrorsById({});
+    return true;
+  }
+
+  const nextSkuErrors = {};
+
+  (variantRows || []).forEach((r) => {
+    const sku = String(r?.sku || "").trim();
+    if (!sku) nextSkuErrors[r.id] = "SKU é obrigatório.";
+  });
+
+  setSkuErrorsById(nextSkuErrors);
+
+  // Se tem erro, falha
+  return Object.keys(nextSkuErrors).length === 0;
+};
+
+
 
 // ======================================================================
 // VALIDAR: Custos obrigatórios (UX)
@@ -1851,28 +1917,62 @@ style={{
       ))}
 
       {/* SKU */}
-      <div>
-        <label className="s7-label">SKU</label>
-<input
-  className="s7-input pf-variant-sku-input"
-  value={row.sku}
-  onChange={(e) => handleVariantRowChange(row.id, "sku", e.target.value)}
-/>
+      <div className="pf-variant-field">
+        <FieldLabel
+          text="SKU"
+          required
+          onCopy={() => handleCopyField(row.sku)}
+        />
 
+        <input
+          className={`s7-input pf-variant-sku-input ${
+            skuErrorsById?.[row.id] ? "s7-input--error" : ""
+          }`}
+          value={row.sku}
+          onChange={(e) => {
+            // ------------------------------------------------------
+            // Atualiza SKU
+            // ------------------------------------------------------
+            handleVariantRowChange(row.id, "sku", e.target.value);
+
+            // ------------------------------------------------------
+            // UX: limpa erro ao digitar
+            // ------------------------------------------------------
+            if (skuErrorsById?.[row.id]) {
+              setSkuErrorsById((prev) => {
+                const next = { ...(prev || {}) };
+                delete next[row.id];
+                return next;
+              });
+            }
+          }}
+        />
+
+        {skuErrorsById?.[row.id] && <div className="s7-error">{skuErrorsById[row.id]}</div>}
       </div>
+
 
       {/* GTIN */}
-      <div>
-        <label className="s7-label">EAN / GTIN</label>
-<input
-  className="s7-input pf-variant-gtin-input"
-  inputMode="numeric"
-  value={row.gtin}
-  onChange={(e) =>
-    handleVariantRowChange(row.id, "gtin", e.target.value.replace(/\D/g, "").slice(0, 13))
-  }
-/>
+      <div className="pf-variant-field">
+        <FieldLabel
+          text="EAN / GTIN"
+          onCopy={() => handleCopyField(row.gtin)}
+        />
+
+        <input
+          className="s7-input pf-variant-gtin-input"
+          inputMode="numeric"
+          value={row.gtin}
+          onChange={(e) =>
+            handleVariantRowChange(
+              row.id,
+              "gtin",
+              e.target.value.replace(/\D/g, "").slice(0, 13)
+            )
+          }
+        />
       </div>
+
 
       {/* SITUAÇÃO */}
 <div className="pf-variant-status">

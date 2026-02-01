@@ -942,3 +942,15 @@
   align-items: flex-start;
   gap: 6px;
 }
+
+/* ======================================================================
+   SUSE7 — VARIAÇÕES: Campo padrão dentro do grid
+   Objetivo:
+   - Label sempre em cima do input (independente de qty de variações)
+====================================================================== */
+.pf-variant-field{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
