@@ -1467,13 +1467,28 @@ const handleSubmit = () => {
                       padding: 12,
                     }}
                   >
-                    {/* COLUNA 1: Label da variação */}
-                    <div>
-                      <div className="s7-label" style={{ marginBottom: 6 }}>
-                        Variação
-                      </div>
-                      <div style={{ fontWeight: 800, color: "#334155" }}>{label}</div>
-                    </div>
+{/* ======================================================
+    COLUNA 1: Título das variações (igual aba Variações)
+    - Mostra "Cor" / "Tamanho" e os valores abaixo
+====================================================== */}
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: `repeat(${variantAttrColumns.length}, minmax(120px, 1fr))`,
+    gap: 12,
+    alignItems: "center",
+  }}
+>
+  {variantAttrColumns.map((attr) => (
+    <div key={attr}>
+      <label className="s7-label">{attr}</label>
+      <div style={{ fontWeight: 900, fontSize: 16, color: "#0f172a", textTransform: "none" }}>
+        {row.attributes?.[attr] || "-"}
+      </div>
+    </div>
+  ))}
+</div>
+
 
                     {/* COLUNA 2: Input + botão (na 1ª linha) */}
                     <div>
