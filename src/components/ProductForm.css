@@ -881,16 +881,6 @@
   overflow: visible;
 }
 
-/* ======================================================================
-   SUSE7 — CUSTOS & PRECIFICAÇÃO
-   Ajuste: input custo por variação (76% menor)
-====================================================================== */
-
-.pf-variant-cost-input{
-  width: 24%;      /* ✅ 100% - 76% = 24% */
-  min-width: 160px; /* ✅ não quebra em telas menores */
-}
-
 
 .pf-variant-actions-cell{
   display: flex;
@@ -981,4 +971,68 @@
   .pf-pricing-global-group{
     max-width: 100%;
   }
+}
+
+
+/* ======================================================================
+   SUSE7 — PRICING TAB (Refino final)
+   Objetivo:
+   - Remover scrollbar horizontal interna
+   - Deixar layout igual à aba Variações (cards)
+   - Separar inputs Embalagem/Operacional
+   - Tipografia suave igual Variações
+====================================================================== */
+
+/* Linha dos custos globais: cria respiro entre os dois inputs */
+.pf-pricing-costs-row{
+  gap: 16px;
+}
+
+/* Lista de cards das variações no Pricing */
+.pf-pricing-variants-list{
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Card de cada variação (pricing) */
+.pf-pricing-variant-card{
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 340px);
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  overflow: hidden; /* ✅ evita scrollbar interna */
+}
+
+/* Colunas de atributos */
+.pf-pricing-attrs{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  min-width: 0; /* ✅ permite encolher sem gerar overflow */
+}
+
+/* Valor do atributo (tipografia suave igual variações) */
+.pf-pricing-attr-value{
+  font-weight: 700;
+  color: var(--s7-text, #0f172a);
+}
+
+/* Área do custo */
+.pf-pricing-cost{
+  min-width: 0;
+}
+
+
+/* Input não pode forçar largura e criar scroll */
+.pf-variant-cost-input{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Botão “Atualizar todos” não pode estourar */
+.pf-pricing-variant-card .s7-btn{
+  white-space: nowrap;
 }
