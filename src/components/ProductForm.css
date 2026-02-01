@@ -1057,11 +1057,3 @@
   white-space: normal;
 }
 
-/* ======================================================
-   SUSE7 — TOOLTIP
-   Refino: remover setinha (arrow)
-====================================================== */
-.s7-tip::before,
-.s7-tip::after{
-  display: none !important;
-}
