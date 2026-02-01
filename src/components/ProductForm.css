@@ -1057,3 +1057,11 @@
   white-space: normal;
 }
 
+/* ======================================================
+   SUSE7 — TOOLTIP
+   Refino: remover APENAS a seta (arrow)
+====================================================== */
+.s7-tip::before{
+  content: none !important;
+  display: none !important;
+}
