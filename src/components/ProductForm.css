@@ -985,7 +985,7 @@
 
 /* Linha dos custos globais: cria respiro entre os dois inputs */
 .pf-pricing-costs-row{
-  gap: 16px;
+  gap: 24px;
 }
 
 /* Lista de cards das variações no Pricing */
@@ -996,14 +996,14 @@
   gap: 10px;
 }
 
-/* Card de cada variação (pricing) */
 .pf-pricing-variant-card{
   display: grid;
   grid-template-columns: 1fr minmax(260px, 340px);
   gap: 14px;
   align-items: center;
   padding: 12px;
-  overflow: hidden; /* ✅ evita scrollbar interna */
+
+  overflow: visible; /* ✅ permite tooltip aparecer */
 }
 
 /* Colunas de atributos */

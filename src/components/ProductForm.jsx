@@ -1347,7 +1347,7 @@ const handleSubmit = () => {
       {/* ======================================================
           CARD: Custos globais (sempre visíveis)
       ====================================================== */}
-<div className="pf-row pf-pricing-global-row">
+<div className="pf-row pf-pricing-costs-row">
   {/* Custo Embalagem */}
   <div className="pf-group pf-pricing-global-group">
     <FieldLabel
