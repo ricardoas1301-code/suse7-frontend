@@ -1036,3 +1036,22 @@
 .pf-pricing-variant-card .s7-btn{
   white-space: nowrap;
 }
+
+/* ======================================================================
+   SUSE7 — PRICING: Forçar tooltip do "Custo do produto" para a ESQUERDA
+   Motivo: em cards com borda/overflow, o tooltip padrão pode estourar
+====================================================================== */
+
+/* alvo: tooltip (i) dentro do card de custo por variação */
+.pf-pricing-variant-card .pf-info-btn.s7-tip-left::after,
+.pf-pricing-variant-card .pf-info-btn.s7-tip-left::before{
+  left: auto !important;
+  right: 100% !important;      /* encosta do lado esquerdo do ícone */
+  margin-right: 10px !important;
+}
+
+/* opcional: evita cortar em telas menores */
+.pf-pricing-variant-card .pf-info-btn::after{
+  max-width: 260px;
+  white-space: normal;
+}

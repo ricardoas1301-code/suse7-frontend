@@ -1399,7 +1399,7 @@ const handleSubmit = () => {
       ====================================================== */}
       {product.format === "simple" && (
         <div className="s7-card" style={{ padding: 12, marginTop: 12 }}>
-          <div className="pf-row pf-pricing-costs-row">
+          <div className="pf-row">
             <div className="pf-group" style={{ maxWidth: 420 }}>
               <FieldLabel
                 text="Custo do produto"
