@@ -8,6 +8,8 @@ import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function MLCallback() {
   const [params] = useSearchParams();
 
@@ -38,7 +40,7 @@ export default function MLCallback() {
       // 2. Enviar CODE + user_id para o backend
       // ---------------------------------------------------------
       try {
-        const res = await fetch("https://suse7-backend.vercel.app/ml/token", {
+        const res = await fetch(`${API_BASE_URL}/ml/token`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
