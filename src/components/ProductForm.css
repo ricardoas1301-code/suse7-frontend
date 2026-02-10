@@ -1071,10 +1071,12 @@
 
 .pf-stock-variant-card{
   display: grid;
-  grid-template-columns: 1fr minmax(260px, 420px);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr);
   gap: 14px;
   align-items: flex-start;
   padding: 12px;
+  width: 100%;
+  box-sizing: border-box;
   overflow: visible;
 }
 
@@ -1087,9 +1089,14 @@
 
 .pf-stock-controls{
   display: grid;
-  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
   gap: 12px;
   min-width: 0;
+  align-items: flex-end;
+}
+
+.pf-stock-virtual-placeholder{
+  min-height: 0;
 }
 
 /* ======================================================
