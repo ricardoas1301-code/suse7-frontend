@@ -1086,8 +1086,8 @@
 }
 
 .pf-stock-controls{
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
   gap: 12px;
   min-width: 0;
 }
