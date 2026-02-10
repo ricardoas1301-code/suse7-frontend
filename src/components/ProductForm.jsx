@@ -2030,64 +2030,223 @@ const handleSubmit = () => {
           ======================= */}
         {activeTab === "stock" && (
           <div className="pf-container">
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Estoque</label>
-                <input className="s7-input" inputMode="numeric" value={product.stock_quantity} onChange={(e) => handleChange("stock_quantity", e.target.value.replace(/\D/g, ""))} />
-              </div>
+            {/* ===============================
+                ESTOQUE — FORMATO SIMPLES
+               =============================== */}
+            {product.format !== "variants" && (
+              <>
+                <div className="pf-row">
+                  <div className="pf-group">
+                    <label className="s7-label">Estoque</label>
+                    <input
+                      className="s7-input"
+                      inputMode="numeric"
+                      value={product.stock_quantity}
+                      onChange={(e) =>
+                        handleChange("stock_quantity", e.target.value.replace(/\D/g, ""))
+                      }
+                    />
+                  </div>
 
-              <div className="pf-group">
-                <FieldLabel
-                text="Estoque mínimo"
-                infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
-                tipBottom={true}
-                wrap={true}
-              />
+                  <div className="pf-group">
+                    <FieldLabel
+                      text="Estoque mínimo"
+                      infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
+                      tipBottom={true}
+                      wrap={true}
+                    />
 
-                <input className="s7-input" inputMode="numeric" value={product.stock_minimum} onChange={(e) => handleChange("stock_minimum", e.target.value.replace(/\D/g, ""))} />
-              </div>
+                    <input
+                      className="s7-input"
+                      inputMode="numeric"
+                      value={product.stock_minimum}
+                      onChange={(e) =>
+                        handleChange("stock_minimum", e.target.value.replace(/\D/g, ""))
+                      }
+                    />
+                  </div>
 
-              <div className="pf-group" style={{ minWidth: 260 }}>
-                <FieldLabel
-                text="Usar estoque virtual?"
-                infoText="Estoque inteligente: quando ativado, o Suse7 usa um estoque “virtual” para sincronizar com marketplaces, mantendo controle e reduzindo risco de vender sem disponibilidade. (Regras finais ficam no backend.)"
-                tipBottom={true}
-                wrap={true}
-              />
+                  <div className="pf-group" style={{ minWidth: 260 }}>
+                    <FieldLabel
+                      text="Usar estoque virtual?"
+                      infoText="Estoque inteligente: quando ativado, o Suse7 usa um estoque “virtual” para sincronizar com marketplaces, mantendo controle e reduzindo risco de vender sem disponibilidade. (Regras finais ficam no backend.)"
+                      tipBottom={true}
+                      wrap={true}
+                    />
 
-                <label className="pf-switch" style={{ marginTop: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={!!product.use_virtual_stock}
-                    onChange={(e) => handleChange("use_virtual_stock", e.target.checked)}
-                  />
-                  Ativar
-                </label>
-                <div className="s7-hint" style={{ marginTop: 6 }}>
-                  Quando ativado, este valor será sincronizado nos marketplaces (regra fica no backend).
+                    <label className="pf-switch" style={{ marginTop: 8 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!product.use_virtual_stock}
+                        onChange={(e) =>
+                          handleChange("use_virtual_stock", e.target.checked)
+                        }
+                      />
+                      Ativar
+                    </label>
+                    <div className="s7-hint" style={{ marginTop: 6 }}>
+                      Quando ativado, este valor será sincronizado nos marketplaces (regra fica
+                      no backend).
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {product.use_virtual_stock && (
-              <div className="pf-row">
-                <div className="pf-group" style={{ maxWidth: 320 }}>
-                  <label className="s7-label">Estoque virtual</label>
-                  <input
-                    className="s7-input"
-                    inputMode="numeric"
-                    placeholder="Ex: 200"
-                    value={product.virtual_stock_quantity}
-                    onChange={(e) => handleChange("virtual_stock_quantity", e.target.value.replace(/\D/g, ""))}
-                  />
-                </div>
-              </div>
+                {product.use_virtual_stock && (
+                  <div className="pf-row">
+                    <div className="pf-group" style={{ maxWidth: 320 }}>
+                      <label className="s7-label">Estoque virtual</label>
+                      <input
+                        className="s7-input"
+                        inputMode="numeric"
+                        placeholder="Ex: 200"
+                        value={product.virtual_stock_quantity}
+                        onChange={(e) =>
+                          handleChange(
+                            "virtual_stock_quantity",
+                            e.target.value.replace(/\D/g, "")
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
+            {/* ===============================
+                ESTOQUE — FORMATO COM VARIAÇÕES
+               =============================== */}
+            {product.format === "variants" && (
+              <>
+                {variantRows.length === 0 ? (
+                  <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
+                    Gere as variações na aba <strong>Variações</strong> para preencher o estoque
+                    por combinação.
+                  </div>
+                ) : (
+                  <div className="pf-stock-variants-list">
+                    {variantRows.map((row, idx) => (
+                      <div key={row.id} className="s7-card pf-stock-variant-card">
+                        {/* Bloco 1 — Atributos da variação */}
+                        <div className="pf-stock-attrs">
+                          {variantAttrColumns.map((attr) => (
+                            <div
+                              key={`${row.id}_${attr}`}
+                              className="pf-stock-attr"
+                            >
+                              <label className="s7-label">{attr}</label>
+                              <div className="pf-pricing-attr-value">
+                                {row.attributes?.[attr] || "-"}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Bloco 2 — Controles de estoque */}
+                        <div className="pf-stock-controls">
+                          <div className="pf-group">
+                            <label className="s7-label">Estoque</label>
+                            <input
+                              className="s7-input"
+                              inputMode="numeric"
+                              value={row.stock_quantity}
+                              onChange={(e) =>
+                                handleVariantRowChange(
+                                  row.id,
+                                  "stock_quantity",
+                                  e.target.value.replace(/\D/g, "")
+                                )
+                              }
+                            />
+                          </div>
+
+                          <div className="pf-group">
+                            <FieldLabel
+                              text="Estoque mínimo"
+                              infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
+                              tipBottom={true}
+                              wrap={true}
+                            />
+
+                            <input
+                              className="s7-input"
+                              inputMode="numeric"
+                              value={row.stock_minimum}
+                              onChange={(e) =>
+                                handleVariantRowChange(
+                                  row.id,
+                                  "stock_minimum",
+                                  e.target.value.replace(/\D/g, "")
+                                )
+                              }
+                            />
+                          </div>
+
+                          <div className="pf-group" style={{ minWidth: 260 }}>
+                            <FieldLabel
+                              text="Usar estoque virtual?"
+                              infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
+                              tipBottom={true}
+                              wrap={true}
+                            />
+
+                            <label className="pf-switch" style={{ marginTop: 8 }}>
+                              <input
+                                type="checkbox"
+                                checked={!!row.use_virtual_stock}
+                                onChange={(e) =>
+                                  handleVariantRowChange(
+                                    row.id,
+                                    "use_virtual_stock",
+                                    e.target.checked
+                                  )
+                                }
+                              />
+                              Ativar
+                            </label>
+                            <div className="s7-hint" style={{ marginTop: 6 }}>
+                              Quando ativado, o valor que será sincronizado futuramente é o{" "}
+                              <strong>Estoque virtual</strong> desta variação
+                              {" "}({`virtual_stock_quantity`}).
+                            </div>
+
+                            {row.use_virtual_stock && (
+                              <div style={{ marginTop: 8, maxWidth: 320 }}>
+                                <label className="s7-label">Estoque virtual</label>
+                                <input
+                                  className="s7-input"
+                                  inputMode="numeric"
+                                  placeholder="Ex: 200"
+                                  value={row.virtual_stock_quantity}
+                                  onChange={(e) =>
+                                    handleVariantRowChange(
+                                      row.id,
+                                      "virtual_stock_quantity",
+                                      e.target.value.replace(/\D/g, "")
+                                    )
+                                  }
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Observações — renderizado uma única vez ao final da aba */}
             <div className="pf-row">
               <div className="pf-group pf-group--full">
                 <label className="s7-label">Observações</label>
-                <input className="s7-input" placeholder="Notas internas sobre estoque" value={product.notes} onChange={(e) => handleChange("notes", e.target.value)} />
+                <input
+                  className="s7-input"
+                  placeholder="Notas internas sobre estoque"
+                  value={product.notes}
+                  onChange={(e) => handleChange("notes", e.target.value)}
+                />
               </div>
             </div>
           </div>

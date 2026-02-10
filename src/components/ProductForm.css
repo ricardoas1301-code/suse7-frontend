@@ -1057,6 +1057,41 @@
   white-space: normal;
 }
 
+/* ======================================================================
+   SUSE7 — ESTOQUE: VARIAÇÕES (cards por variação)
+   Layout espelhado da aba de Custos & precificação
+====================================================================== */
+
+.pf-stock-variants-list{
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-stock-variant-card{
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 420px);
+  gap: 14px;
+  align-items: flex-start;
+  padding: 12px;
+  overflow: visible;
+}
+
+.pf-stock-attrs{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.pf-stock-controls{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
 /* ======================================================
    SUSE7 — TOOLTIP
    Refino: remover APENAS a seta (arrow)
