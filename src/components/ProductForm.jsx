@@ -2422,15 +2422,17 @@ const handleSubmit = () => {
     aria-labelledby="s7-modal-title"
   >
     <div className="s7-modal-card">
-      <div className={`s7-modal-icon ${virtualModalMode === "enable" ? "s7-modal-icon--warning" : "s7-modal-icon--success"}`}>
-        {virtualModalMode === "enable" ? "!" : "✓"}
+      <div className="s7-modal-icon-wrap">
+        <div className={`s7-modal-icon ${virtualModalMode === "enable" ? "s7-modal-icon--warning" : "s7-modal-icon--success"}`}>
+          {virtualModalMode === "enable" ? "!" : "✓"}
+        </div>
       </div>
       <h2 id="s7-modal-title" className="s7-modal-title">
         {virtualModalMode === "enable" ? "⚠️ Atenção" : "Estoque virtual desativado"}
       </h2>
       <p className="s7-modal-text">
         {virtualModalMode === "enable"
-          ? "O uso de estoque virtual pode gerar vendas sem estoque disponível, causando atrasos, reclamações e até cancelamentos. Use somente se você entende os riscos e tem processo para manter o estoque real sempre atualizado."
+          ? "O estoque virtual define a quantidade exibida no anúncio. O sistema continuará monitorando o Estoque real como fonte oficial.\n\nSe o estoque real zerar, o anúncio será pausado automaticamente para evitar vendas sem produto disponível.\n\nMantenha seu estoque real sempre atualizado para evitar pausas inesperadas e perda de vendas."
           : "A partir de agora, o estoque considerado para venda e sincronização será o Estoque real desta variação. O valor do Estoque virtual será zerado e não será mais utilizado."}
       </p>
       <div className="s7-modal-actions">
@@ -2453,7 +2455,7 @@ const handleSubmit = () => {
             setPendingVariantId(null);
           }}
         >
-          {virtualModalMode === "enable" ? "Entendi os riscos" : "Entendi"}
+          Entendi
         </button>
       </div>
     </div>
