@@ -1,0 +1,176 @@
+/* ======================================================================
+   ProductFormImagesTab — aba Imagens (Suse7)
+   - Grid de imagens, upload, drag & drop, ações
+====================================================================== */
+
+.pf-images-container {
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.pf-images-loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--s7-muted, #6b7280);
+  font-size: 14px;
+}
+
+.pf-images-section {
+  margin-bottom: 28px;
+}
+
+.pf-images-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--s7-text, #0f172a);
+  margin: 0 0 16px;
+}
+
+.pf-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.pf-images-card {
+  position: relative;
+  border-radius: var(--s7-radius-md, 12px);
+  border: 1px solid var(--s7-border, #dcdfe4);
+  overflow: hidden;
+  background: var(--s7-bg-soft, #f9fafb);
+  cursor: grab;
+}
+
+.pf-images-card:active {
+  cursor: grabbing;
+}
+
+.pf-images-card-preview {
+  aspect-ratio: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+}
+
+.pf-images-card-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pf-images-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #9ca3af;
+}
+
+.pf-images-card-actions {
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.pf-images-badge {
+  background: var(--s7-primary, #2563eb);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.pf-images-btn-sm {
+  background: transparent;
+  border: none;
+  color: var(--s7-muted, #6b7280);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.pf-images-btn-sm:hover {
+  color: var(--s7-text, #0f172a);
+}
+
+.pf-images-btn-delete:hover {
+  color: var(--s7-danger, #ef4444);
+}
+
+.pf-images-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--s7-muted, #6b7280);
+}
+
+.pf-images-check input {
+  width: 14px;
+  height: 14px;
+}
+
+.pf-images-upload-slot {
+  min-height: 140px;
+  border: 2px dashed var(--s7-border, #dcdfe4);
+  border-radius: var(--s7-radius-md, 12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--s7-bg-soft, #f9fafb);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.pf-images-upload-slot:hover {
+  border-color: var(--s7-primary, #2563eb);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.pf-images-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pf-images-variant-select {
+  margin-bottom: 16px;
+  max-width: 320px;
+}
+
+.pf-images-variant-select .s7-label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.pf-images-variant-empty {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: var(--s7-warning-bg, #fff7ed);
+  border: 1px solid var(--s7-warning-border, #fed7aa);
+  border-radius: var(--s7-radius-sm, 8px);
+}
+
+.pf-images-variant-empty p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--s7-text, #0f172a);
+}
+
+.pf-images-fallback-hint {
+  font-size: 12px !important;
+  color: var(--s7-muted, #6b7280) !important;
+}
+
+.pf-images-actions {
+  margin-top: 24px;
+}

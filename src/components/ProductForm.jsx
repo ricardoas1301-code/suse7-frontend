@@ -20,6 +20,7 @@ import {
   dispatchStockBelowMin,
   dispatchStockRealZero,
 } from "../services/stockNotificationDispatch";
+import ProductFormImagesTab from "./ProductFormImagesTab";
 import "./ProductForm.css";
 
 // ======================================================================
@@ -1778,19 +1779,12 @@ const handleSubmit = () => {
         ======================= */}
         {activeTab === "images" && (
           <div className="pf-container">
-            <p className="hint">
-              Adicione até <strong>7 fotos</strong>. Elas poderão ser usadas para atualizar anúncios em todos os canais.
-            </p>
-
-            <div className="photo-uploader">
-              <button className="s7-btn s7-btn--secondary" type="button">
-                Adicionar fotos
-              </button>
-            </div>
-
-            <div className="hint" style={{ marginTop: 12 }}>
-              Campo alvo no Supabase: <strong>product_images</strong>
-            </div>
+            <ProductFormImagesTab
+              productId={product?.id}
+              format={product.format}
+              variantRows={variantRows}
+              buildVariantKey={buildVariantKey}
+            />
           </div>
         )}
 

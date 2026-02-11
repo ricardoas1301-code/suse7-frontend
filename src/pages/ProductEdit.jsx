@@ -41,6 +41,7 @@ export default function ProductEdit() {
 
         // Placeholder para não quebrar:
         setInitialProduct({
+          id: parseInt(id, 10) || id,
           product_name: `Produto #${id}`,
         });
 
