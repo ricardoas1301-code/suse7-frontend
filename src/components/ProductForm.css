@@ -1141,44 +1141,101 @@
 }
 
 /* ======================================================================
-   SUSE7 — MODAL: confirmação estoque virtual
+   SUSE7 — MODAL: confirmação estoque virtual (padrão Suse7)
+   Overlay + card branco + ícone + título + texto + botões
 ====================================================================== */
-.pf-virtual-modal-overlay{
+
+.s7-modal-overlay{
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
 }
 
-.pf-virtual-modal-card{
-  background: var(--s7-bg, #fff);
+.s7-modal-card{
+  background: #fff;
   width: 90%;
   max-width: 420px;
-  border-radius: 14px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+  padding: 28px;
   box-sizing: border-box;
 }
 
-.pf-virtual-modal-title{
+.s7-modal-icon{
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.s7-modal-icon--warning{
+  background: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+}
+
+.s7-modal-icon--success{
+  background: rgba(34, 197, 94, 0.2);
+  color: #16a34a;
+}
+
+.s7-modal-title{
   font-size: 18px;
+  font-weight: 700;
   margin: 0 0 12px;
   color: var(--s7-text, #0f172a);
 }
 
-.pf-virtual-modal-text{
+.s7-modal-text{
   font-size: 14px;
   line-height: 1.5;
   color: var(--s7-muted, #6b7280);
   margin: 0 0 24px;
 }
 
-.pf-virtual-modal-actions{
+.s7-modal-actions{
   display: flex;
   gap: 12px;
   justify-content: flex-end;
   flex-wrap: wrap;
+}
+
+.s7-modal-btn-primary{
+  background: var(--s7-primary, #2563eb);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.s7-modal-btn-primary:hover{
+  background: var(--s7-primary-hover, #1d4ed8);
+}
+
+.s7-modal-btn-secondary{
+  background: transparent;
+  color: var(--s7-muted, #6b7280);
+  border: 1px solid #e5e7eb;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.s7-modal-btn-secondary:hover{
+  color: var(--s7-text, #0f172a);
+  border-color: #d1d5db;
 }

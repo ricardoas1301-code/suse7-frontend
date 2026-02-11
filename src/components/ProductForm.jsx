@@ -171,6 +171,7 @@ const [costErrors, setCostErrors] = useState({
 const [virtualModalOpen, setVirtualModalOpen] = useState(false);
 const [virtualModalMode, setVirtualModalMode] = useState("enable"); // "enable" | "disable"
 const [pendingVariantId, setPendingVariantId] = useState(null);
+const [pendingNextChecked, setPendingNextChecked] = useState(false);
 
   // ------------------------------------------------------
   // VARIAÇÕES (estilo Bling)
@@ -2226,6 +2227,7 @@ const handleSubmit = () => {
                                   onChange={(e) => {
                                     const checked = e.target.checked;
                                     setPendingVariantId(row.id);
+                                    setPendingNextChecked(checked);
                                     setVirtualModalMode(checked ? "enable" : "disable");
                                     setVirtualModalOpen(true);
                                   }}
@@ -2404,11 +2406,11 @@ const handleSubmit = () => {
 </div>
 
 {/* --------------------------------------------------
-   MODAL: confirmação estoque virtual
+   MODAL: confirmação estoque virtual (padrão Suse7)
 -------------------------------------------------- */}
 {virtualModalOpen && (
   <div
-    className="pf-virtual-modal-overlay"
+    className="s7-modal-overlay"
     onClick={(e) => {
       if (e.target === e.currentTarget) {
         setVirtualModalOpen(false);
@@ -2417,35 +2419,36 @@ const handleSubmit = () => {
     }}
     role="dialog"
     aria-modal="true"
-    aria-labelledby="pf-virtual-modal-title"
+    aria-labelledby="s7-modal-title"
   >
-    <div className="pf-virtual-modal-card">
-      <h2 id="pf-virtual-modal-title" className="pf-virtual-modal-title">
-        {virtualModalMode === "enable" ? "⚠️ Atenção" : "✅ Estoque virtual desativado"}
+    <div className="s7-modal-card">
+      <div className={`s7-modal-icon ${virtualModalMode === "enable" ? "s7-modal-icon--warning" : "s7-modal-icon--success"}`}>
+        {virtualModalMode === "enable" ? "!" : "✓"}
+      </div>
+      <h2 id="s7-modal-title" className="s7-modal-title">
+        {virtualModalMode === "enable" ? "⚠️ Atenção" : "Estoque virtual desativado"}
       </h2>
-      <p className="pf-virtual-modal-text">
+      <p className="s7-modal-text">
         {virtualModalMode === "enable"
           ? "O uso de estoque virtual pode gerar vendas sem estoque disponível, causando atrasos, reclamações e até cancelamentos. Use somente se você entende os riscos e tem processo para manter o estoque real sempre atualizado."
           : "A partir de agora, o estoque considerado para venda e sincronização será o Estoque real desta variação. O valor do Estoque virtual será zerado e não será mais utilizado."}
       </p>
-      <div className="pf-virtual-modal-actions">
-        {virtualModalMode === "disable" && (
-          <button
-            type="button"
-            className="s7-btn s7-btn--secondary"
-            onClick={() => {
-              setVirtualModalOpen(false);
-              setPendingVariantId(null);
-            }}
-          >
-            Manter ativado
-          </button>
-        )}
+      <div className="s7-modal-actions">
         <button
           type="button"
-          className="s7-btn s7-btn--primary"
+          className="s7-modal-btn-secondary"
           onClick={() => {
-            handleStockVirtualToggle(pendingVariantId, virtualModalMode === "enable");
+            setVirtualModalOpen(false);
+            setPendingVariantId(null);
+          }}
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          className="s7-modal-btn-primary"
+          onClick={() => {
+            handleStockVirtualToggle(pendingVariantId, pendingNextChecked);
             setVirtualModalOpen(false);
             setPendingVariantId(null);
           }}
