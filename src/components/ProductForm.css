@@ -1139,3 +1139,46 @@
   content: none !important;
   display: none !important;
 }
+
+/* ======================================================================
+   SUSE7 — MODAL: confirmação estoque virtual
+====================================================================== */
+.pf-virtual-modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.pf-virtual-modal-card{
+  background: var(--s7-bg, #fff);
+  width: 90%;
+  max-width: 420px;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.pf-virtual-modal-title{
+  font-size: 18px;
+  margin: 0 0 12px;
+  color: var(--s7-text, #0f172a);
+}
+
+.pf-virtual-modal-text{
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--s7-muted, #6b7280);
+  margin: 0 0 24px;
+}
+
+.pf-virtual-modal-actions{
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}

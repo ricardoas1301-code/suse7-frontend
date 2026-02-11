@@ -165,6 +165,12 @@ const [costErrors, setCostErrors] = useState({
   variantsMissingIds: [],
 });
 
+// ------------------------------------------------------
+// MODAL: confirmação estoque virtual (ativar/desativar)
+// ------------------------------------------------------
+const [virtualModalOpen, setVirtualModalOpen] = useState(false);
+const [virtualModalMode, setVirtualModalMode] = useState("enable"); // "enable" | "disable"
+const [pendingVariantId, setPendingVariantId] = useState(null);
 
   // ------------------------------------------------------
   // VARIAÇÕES (estilo Bling)
@@ -1120,6 +1126,7 @@ const handleSubmit = () => {
   }, [variationAttributes, variantRows]);
 
   return (
+    <>
     <div className="pf-card pf-card--primary">
       {/* ==================================================
          HEADER
@@ -2216,9 +2223,12 @@ const handleSubmit = () => {
                                 <input
                                   type="checkbox"
                                   checked={!!row.use_virtual_stock}
-                                  onChange={(e) =>
-                                    handleStockVirtualToggle(row.id, e.target.checked)
-                                  }
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setPendingVariantId(row.id);
+                                    setVirtualModalMode(checked ? "enable" : "disable");
+                                    setVirtualModalOpen(true);
+                                  }}
                                   aria-label="Usar estoque virtual"
                                 />
                               </label>
@@ -2392,5 +2402,60 @@ const handleSubmit = () => {
    FIM DO CARD PRINCIPAL
 -------------------------------------------------- */}
 </div>
+
+{/* --------------------------------------------------
+   MODAL: confirmação estoque virtual
+-------------------------------------------------- */}
+{virtualModalOpen && (
+  <div
+    className="pf-virtual-modal-overlay"
+    onClick={(e) => {
+      if (e.target === e.currentTarget) {
+        setVirtualModalOpen(false);
+        setPendingVariantId(null);
+      }
+    }}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pf-virtual-modal-title"
+  >
+    <div className="pf-virtual-modal-card">
+      <h2 id="pf-virtual-modal-title" className="pf-virtual-modal-title">
+        {virtualModalMode === "enable" ? "⚠️ Atenção" : "✅ Estoque virtual desativado"}
+      </h2>
+      <p className="pf-virtual-modal-text">
+        {virtualModalMode === "enable"
+          ? "O uso de estoque virtual pode gerar vendas sem estoque disponível, causando atrasos, reclamações e até cancelamentos. Use somente se você entende os riscos e tem processo para manter o estoque real sempre atualizado."
+          : "A partir de agora, o estoque considerado para venda e sincronização será o Estoque real desta variação. O valor do Estoque virtual será zerado e não será mais utilizado."}
+      </p>
+      <div className="pf-virtual-modal-actions">
+        {virtualModalMode === "disable" && (
+          <button
+            type="button"
+            className="s7-btn s7-btn--secondary"
+            onClick={() => {
+              setVirtualModalOpen(false);
+              setPendingVariantId(null);
+            }}
+          >
+            Manter ativado
+          </button>
+        )}
+        <button
+          type="button"
+          className="s7-btn s7-btn--primary"
+          onClick={() => {
+            handleStockVirtualToggle(pendingVariantId, virtualModalMode === "enable");
+            setVirtualModalOpen(false);
+            setPendingVariantId(null);
+          }}
+        >
+          {virtualModalMode === "enable" ? "Entendi os riscos" : "Entendi"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+</>
 );
 }
