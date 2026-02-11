@@ -1108,8 +1108,7 @@
 .pf-stock-virtual-header{
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* Tooltip à esquerda nos cards de estoque (evita quebrar para a direita) */

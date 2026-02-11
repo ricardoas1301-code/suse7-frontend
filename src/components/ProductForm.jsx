@@ -2185,14 +2185,6 @@ const handleSubmit = () => {
 
                           <div className="pf-group" style={{ minWidth: 220 }}>
                             <div className="pf-stock-virtual-header">
-                              <FieldLabel
-                                text="Estoque virtual"
-                                infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
-                                tipBottom={true}
-                                wrap={true}
-                                side="left"
-                              />
-
                               <label className="pf-switch pf-stock-virtual-switch">
                                 <input
                                   type="checkbox"
@@ -2207,6 +2199,13 @@ const handleSubmit = () => {
                                 />
                                 Ativar
                               </label>
+                              <FieldLabel
+                                text="Estoque virtual"
+                                infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
+                                tipBottom={true}
+                                wrap={true}
+                                side="left"
+                              />
                             </div>
 
                             <input
