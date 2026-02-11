@@ -167,7 +167,11 @@ export default function ProductForm({
 // ======================================================================
 const [skuErrorsById, setSkuErrorsById] = useState({});
 
-
+  // ------------------------------------------------------
+  // STATE: Erros da aba Estoque (Estoque real obrigatório)
+  // simple: true | variações: { [rowId]: true }
+  // ------------------------------------------------------
+  const [stockErrors, setStockErrors] = useState({});
 
   // ======================================================================
 // STATE: Erros da aba Custos & Precificação (UX) — obrigatório
@@ -898,8 +902,17 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
 
   // ------------------------------------------------------
   // ESTOQUE: handler unificado (variantes + produto simples)
+  // Limpa erro ao digitar
   // ------------------------------------------------------
   const handleStockRowChange = (id, field, value) => {
+    if (field === "stock_real") {
+      setStockErrors((prev) => {
+        const next = { ...prev };
+        if (id === "simple") delete next.simple;
+        else delete next[id];
+        return next;
+      });
+    }
     if (id === "simple") {
       const productField =
         field === "stock_real"
@@ -1048,6 +1061,24 @@ const validatePricingTab = () => {
   return !(next.simpleCost || next.variantsMissingIds.length > 0);
 };
 
+  // ------------------------------------------------------
+  // VALIDAR: Estoque (Estoque real obrigatório)
+  // Vazio ("") inválido; zero ("0") válido
+  // ------------------------------------------------------
+  const validateStockTab = () => {
+    const next = {};
+    if (product.format === "simple") {
+      const val = String(product.stock_quantity ?? "");
+      if (val === "") next.simple = true;
+    } else if (product.format === "variants" && Array.isArray(variantRows)) {
+      variantRows.forEach((r) => {
+        const val = String(r.stock_real ?? "");
+        if (val === "") next[r.id] = true;
+      });
+    }
+    setStockErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   // ------------------------------------------------------
   // SUBMIT (UI only por enquanto)
@@ -1083,6 +1114,15 @@ const handleSubmit = () => {
   const okVariants = validateVariantsTab();
   if (!okVariants) {
     setActiveTab("variations");
+    return;
+  }
+
+  // ------------------------------------------------------
+  // 4) ESTOQUE (Estoque real obrigatório)
+  // ------------------------------------------------------
+  const okStock = validateStockTab();
+  if (!okStock) {
+    setActiveTab("stock");
     return;
   }
 
@@ -2251,7 +2291,7 @@ const handleSubmit = () => {
                       <div className="pf-group">
                         <label className="s7-label">Estoque</label>
                         <input
-                          className="s7-input"
+                          className={`s7-input ${stockErrors[row.id] || stockErrors.simple ? "s7-input--error" : ""}`}
                           inputMode="numeric"
                           maxLength={10}
                           value={row.stock_real === "0" ? "" : row.stock_real}
@@ -2263,6 +2303,9 @@ const handleSubmit = () => {
                             if (val === "") handleStockRowChange(row.id, "stock_real", "0");
                           }}
                         />
+                        {(stockErrors[row.id] || stockErrors.simple) && (
+                          <div className="s7-error">Estoque é obrigatório.</div>
+                        )}
                       </div>
                       <div className="pf-group">
                         <FieldLabel
@@ -2479,17 +2522,11 @@ const handleSubmit = () => {
   createPortal(
     <div
       className="s7-modal-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          setVirtualModalOpen(false);
-          setPendingVariantId(null);
-        }
-      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="s7-modal-title"
     >
-      <div className="s7-modal-card">
+      <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="s7-modal-icon-wrap">
           <div className={`s7-modal-icon ${virtualModalMode === "enable" ? "s7-modal-icon--warning" : "s7-modal-icon--success"}`}>
             {virtualModalMode === "enable" ? "!" : "✓"}
