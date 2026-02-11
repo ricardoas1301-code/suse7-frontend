@@ -1112,6 +1112,26 @@
   gap: 8px;
 }
 
+/* Tooltip à esquerda nos cards de estoque (evita quebrar para a direita) */
+.pf-stock-variant-card .pf-info-btn.s7-tip-left::after,
+.pf-stock-variant-card .pf-info-btn.s7-tip-left::before{
+  left: auto !important;
+  right: 100% !important;
+  margin-right: 10px !important;
+}
+
+.pf-stock-variant-card .pf-info-btn::after{
+  max-width: 260px;
+  white-space: normal;
+}
+
+/* Input Estoque virtual desabilitado — cor apagada */
+.pf-stock-controls .s7-input:disabled{
+  background-color: var(--s7-bg-soft, #f3f4f6);
+  color: var(--s7-muted, #9ca3af);
+  cursor: not-allowed;
+}
+
 /* ======================================================
    SUSE7 — TOOLTIP
    Refino: remover APENAS a seta (arrow)

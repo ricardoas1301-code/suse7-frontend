@@ -2166,6 +2166,7 @@ const handleSubmit = () => {
                               infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
                               tipBottom={true}
                               wrap={true}
+                              side="left"
                             />
 
                             <input
@@ -2189,6 +2190,7 @@ const handleSubmit = () => {
                                 infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
                                 tipBottom={true}
                                 wrap={true}
+                                side="left"
                               />
 
                               <label className="pf-switch pf-stock-virtual-switch">
