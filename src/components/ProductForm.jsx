@@ -2529,9 +2529,7 @@ const handleSubmit = () => {
     >
       <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="s7-modal-icon-wrap">
-          <div className={`s7-modal-icon ${virtualModalMode === "enable" ? "s7-modal-icon--warning" : "s7-modal-icon--success"}`}>
-            {virtualModalMode === "enable" ? "!" : "✓"}
-          </div>
+          <div className="s7-modal-icon s7-modal-icon--success">✓</div>
         </div>
         <h2 id="s7-modal-title" className="s7-modal-title">
           {virtualModalMode === "enable" ? "Estoque Virtual ativo" : "Estoque virtual desativado"}
