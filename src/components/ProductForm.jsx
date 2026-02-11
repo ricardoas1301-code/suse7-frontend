@@ -768,7 +768,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     const existing = currentIndex.get(key);
 
     return {
-      id: existing?.id || createId(),
+      id: existing?.id || key,
       attributes: attributesObj,
       sku: existing?.sku || "",
       gtin: existing?.gtin || "",
@@ -819,7 +819,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       const existing = currentIndex.get(key);
 
       return {
-  id: existing?.id || createId(),
+  id: existing?.id || key,
   attributes: attributesObj,
   sku: existing?.sku || "",
   gtin: existing?.gtin || "",
@@ -1038,8 +1038,12 @@ const handleSubmit = () => {
   // ------------------------------------------------------
   // PAYLOAD
   // Estoque: converter para inteiro seguro; virtual = 0 se desativado
+  // Garante: campo vazio → 0, NaN → 0, negativo → 0
   // ------------------------------------------------------
-  const toInt = (v) => Math.max(0, parseInt(String(v || "0"), 10) || 0);
+  const toInt = (v) => {
+    const parsed = parseInt(String(v || "0"), 10);
+    return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+  };
 
   const payload = {
     mode,
@@ -2170,6 +2174,7 @@ const handleSubmit = () => {
                             <input
                               className="s7-input"
                               inputMode="numeric"
+                              maxLength={10}
                               value={row.stock_real}
                               onChange={(e) =>
                                 handleVariantRowChange(
@@ -2193,6 +2198,7 @@ const handleSubmit = () => {
                             <input
                               className="s7-input"
                               inputMode="numeric"
+                              maxLength={10}
                               value={row.stock_min}
                               onChange={(e) =>
                                 handleVariantRowChange(
@@ -2228,6 +2234,7 @@ const handleSubmit = () => {
                             <input
                               className="s7-input"
                               inputMode="numeric"
+                              maxLength={10}
                               placeholder="Ex: 200"
                               value={row.stock_virtual}
                               disabled={!row.use_virtual_stock}
