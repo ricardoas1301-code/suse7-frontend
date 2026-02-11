@@ -2196,8 +2196,8 @@ const handleSubmit = () => {
                                       e.target.checked
                                     )
                                   }
+                                  aria-label="Usar estoque virtual"
                                 />
-                                Ativar
                               </label>
                               <FieldLabel
                                 text="Estoque virtual"
