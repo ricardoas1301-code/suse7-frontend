@@ -12,7 +12,7 @@ import NotificationToast from "../components/NotificationToast";
 // ----------------------------------------------------------------------
 // Context
 // ----------------------------------------------------------------------
-const NotificationContext = createContext(null);
+export const NotificationContext = createContext(null);
 
 // ----------------------------------------------------------------------
 // Provider

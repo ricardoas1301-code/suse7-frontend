@@ -2,15 +2,19 @@
 // COMPONENTE: NotificationToast
 // Objetivo: Exibição in-app não bloqueante (toast) com auto-dismiss
 // ======================================================================
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { NotificationContext } from "../contexts/NotificationContext";
 import "./NotificationToast.css";
+
+// ------------------------------------------------------------
+// CONFIG: AUTO DISMISS (ms)
+// ------------------------------------------------------------
 const AUTO_DISMISS_MS = {
+  info: 7000,
   warning: 7000,
   critical: 11000,
-  info: 7000,
 };
-
 function ToastItem({ notification, onDismiss, markAsRead, removeNotification }) {
   const [paused, setPaused] = useState(false);
   const startedAtRef = useRef(Date.now());
