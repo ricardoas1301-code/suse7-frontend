@@ -2433,7 +2433,7 @@ const handleSubmit = () => {
       <p className="s7-modal-text">
         {virtualModalMode === "enable"
           ? "O estoque virtual define a quantidade exibida no anúncio. O sistema continuará monitorando o Estoque real como fonte oficial.\n\nSe o estoque real zerar, o anúncio será pausado automaticamente para evitar vendas sem produto disponível.\n\nMantenha seu estoque real sempre atualizado para evitar pausas inesperadas e perda de vendas."
-          : "A partir de agora, o estoque considerado para venda e sincronização será o Estoque real desta variação. O valor do Estoque virtual será zerado e não será mais utilizado."}
+          : "A partir de agora, o estoque que será sincronizado com os anúncios será o Estoque real desta variação.\n\nO valor do Estoque virtual será zerado e deixará de ser utilizado pelo sistema.\n\nMantenha o estoque real sempre atualizado para evitar pausas automáticas nos anúncios."}
       </p>
       <div className="s7-modal-actions">
         <button
