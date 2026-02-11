@@ -284,11 +284,11 @@ useEffect(() => {
         // custo por variação
         cost_price: v.cost_price ?? "",
 
-        // estoque por variação
-        stock_quantity: v.stock_quantity ?? 0,
-        stock_minimum: v.stock_minimum ?? 0,
+        // estoque por variação (strings para inputs)
+        stock_real: String(v.stock_quantity ?? 0),
+        stock_min: String(v.stock_minimum ?? 0),
         use_virtual_stock: !!v.use_virtual_stock,
-        virtual_stock_quantity: v.virtual_stock_quantity ?? 0,
+        stock_virtual: String(v.virtual_stock_quantity ?? 0),
 
         active: typeof v.active === "boolean" ? v.active : true,
         attributes: v.attributes || {},
@@ -773,10 +773,10 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       sku: existing?.sku || "",
       gtin: existing?.gtin || "",
       cost_price: existing?.cost_price ?? "",
-      stock_quantity: existing?.stock_quantity ?? 0,
-      stock_minimum: existing?.stock_minimum ?? 0,
+      stock_real: String(existing?.stock_real ?? existing?.stock_quantity ?? "0"),
+      stock_min: String(existing?.stock_min ?? existing?.stock_minimum ?? "0"),
       use_virtual_stock: !!existing?.use_virtual_stock,
-      virtual_stock_quantity: existing?.virtual_stock_quantity ?? 0,
+      stock_virtual: String(existing?.stock_virtual ?? existing?.virtual_stock_quantity ?? "0"),
       active: typeof existing?.active === "boolean" ? existing.active : true,
     };
   });
@@ -827,11 +827,11 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   // custo por variação
   cost_price: existing?.cost_price ?? "",
 
-  // estoque por variação
-  stock_quantity: existing?.stock_quantity ?? 0,
-  stock_minimum: existing?.stock_minimum ?? 0,
+  // estoque por variação (strings para inputs)
+  stock_real: String(existing?.stock_real ?? existing?.stock_quantity ?? "0"),
+  stock_min: String(existing?.stock_min ?? existing?.stock_minimum ?? "0"),
   use_virtual_stock: !!existing?.use_virtual_stock,
-  virtual_stock_quantity: existing?.virtual_stock_quantity ?? 0,
+  stock_virtual: String(existing?.stock_virtual ?? existing?.virtual_stock_quantity ?? "0"),
 
   active: typeof existing?.active === "boolean" ? existing.active : true,
 };
@@ -846,7 +846,25 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   // ------------------------------------------------------
   const handleVariantRowChange = (id, field, value) => {
     setVariantRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
-    };
+  };
+
+  // ------------------------------------------------------
+  // VARIANT ROWS: toggle estoque virtual
+  // Ao desmarcar: use_virtual_stock = false e stock_virtual = "0"
+  // ------------------------------------------------------
+  const handleStockVirtualToggle = (id, checked) => {
+    setVariantRows((prev) =>
+      prev.map((r) =>
+        r.id === id
+          ? {
+              ...r,
+              use_virtual_stock: !!checked,
+              stock_virtual: checked ? r.stock_virtual : "0",
+            }
+          : r
+      )
+    );
+  };
 
        // ------------------------------------------------------
        // VARIANT ROWS: remover linha
@@ -1019,7 +1037,10 @@ const handleSubmit = () => {
 
   // ------------------------------------------------------
   // PAYLOAD
+  // Estoque: converter para inteiro seguro; virtual = 0 se desativado
   // ------------------------------------------------------
+  const toInt = (v) => Math.max(0, parseInt(String(v || "0"), 10) || 0);
+
   const payload = {
     mode,
     product: {
@@ -1032,10 +1053,10 @@ const handleSubmit = () => {
             sku: r.sku,
             gtin: r.gtin || null,
             cost_price: r.cost_price === "" ? null : r.cost_price,
-            stock_quantity: Number(r.stock_quantity || 0),
-            stock_minimum: Number(r.stock_minimum || 0),
+            stock_quantity: toInt(r.stock_real),
+            stock_minimum: toInt(r.stock_min),
             use_virtual_stock: !!r.use_virtual_stock,
-            virtual_stock_quantity: Number(r.virtual_stock_quantity || 0),
+            virtual_stock_quantity: r.use_virtual_stock ? toInt(r.stock_virtual) : 0,
             active: !!r.active,
             attributes: r.attributes || {},
           }))
@@ -2149,11 +2170,11 @@ const handleSubmit = () => {
                             <input
                               className="s7-input"
                               inputMode="numeric"
-                              value={row.stock_quantity}
+                              value={row.stock_real}
                               onChange={(e) =>
                                 handleVariantRowChange(
                                   row.id,
-                                  "stock_quantity",
+                                  "stock_real",
                                   e.target.value.replace(/\D/g, "")
                                 )
                               }
@@ -2172,11 +2193,11 @@ const handleSubmit = () => {
                             <input
                               className="s7-input"
                               inputMode="numeric"
-                              value={row.stock_minimum}
+                              value={row.stock_min}
                               onChange={(e) =>
                                 handleVariantRowChange(
                                   row.id,
-                                  "stock_minimum",
+                                  "stock_min",
                                   e.target.value.replace(/\D/g, "")
                                 )
                               }
@@ -2190,11 +2211,7 @@ const handleSubmit = () => {
                                   type="checkbox"
                                   checked={!!row.use_virtual_stock}
                                   onChange={(e) =>
-                                    handleVariantRowChange(
-                                      row.id,
-                                      "use_virtual_stock",
-                                      e.target.checked
-                                    )
+                                    handleStockVirtualToggle(row.id, e.target.checked)
                                   }
                                   aria-label="Usar estoque virtual"
                                 />
@@ -2212,12 +2229,12 @@ const handleSubmit = () => {
                               className="s7-input"
                               inputMode="numeric"
                               placeholder="Ex: 200"
-                              value={row.virtual_stock_quantity}
+                              value={row.stock_virtual}
                               disabled={!row.use_virtual_stock}
                               onChange={(e) =>
                                 handleVariantRowChange(
                                   row.id,
-                                  "virtual_stock_quantity",
+                                  "stock_virtual",
                                   e.target.value.replace(/\D/g, "")
                                 )
                               }
