@@ -1160,9 +1160,10 @@
   width: 90%;
   max-width: 420px;
   border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
   padding: 28px;
   box-sizing: border-box;
+  text-align: center;
 }
 
 .s7-modal-icon-wrap{
@@ -1199,6 +1200,7 @@
   font-weight: 700;
   margin: 0 0 12px;
   color: var(--s7-text, #0f172a);
+  text-align: center;
 }
 
 .s7-modal-text{
@@ -1207,12 +1209,13 @@
   color: var(--s7-muted, #6b7280);
   margin: 0 0 24px;
   white-space: pre-line;
+  text-align: center;
 }
 
 .s7-modal-actions{
   display: flex;
   gap: 12px;
-  justify-content: flex-end;
+  justify-content: center;
   flex-wrap: wrap;
 }
 
