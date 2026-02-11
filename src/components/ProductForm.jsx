@@ -125,8 +125,8 @@ export default function ProductForm({
     // =========================
     // ESTOQUE
     // =========================
-    stock_quantity: 0,
-    stock_minimum: 0,
+    stock_quantity: "",
+    stock_minimum: "",
     use_virtual_stock: false,
     virtual_stock_quantity: 0,
     notes: "",
@@ -177,6 +177,7 @@ const [skuErrorsById, setSkuErrorsById] = useState({});
   // MODAL: confirmação ao salvar com estoque zerado
   // ------------------------------------------------------
   const [zeroStockModalOpen, setZeroStockModalOpen] = useState(false);
+  const [zeroStockModalData, setZeroStockModalData] = useState(null); // { count, examples } quando format === "variants"
 
   // ======================================================================
 // STATE: Erros da aba Custos & Precificação (UX) — obrigatório
@@ -315,8 +316,8 @@ useEffect(() => {
         cost_price: v.cost_price ?? "",
 
         // estoque por variação (strings para inputs)
-        stock_real: String(v.stock_quantity ?? 0),
-        stock_min: String(v.stock_minimum ?? 0),
+        stock_real: String(v.stock_quantity ?? ""),
+        stock_min: String(v.stock_minimum ?? ""),
         use_virtual_stock: !!v.use_virtual_stock,
         stock_virtual: String(v.virtual_stock_quantity ?? 0),
 
@@ -803,8 +804,8 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       sku: existing?.sku || "",
       gtin: existing?.gtin || "",
       cost_price: existing?.cost_price ?? "",
-      stock_real: String(existing?.stock_real ?? existing?.stock_quantity ?? "0"),
-      stock_min: String(existing?.stock_min ?? existing?.stock_minimum ?? "0"),
+      stock_real: String(existing?.stock_real ?? existing?.stock_quantity ?? ""),
+      stock_min: String(existing?.stock_min ?? existing?.stock_minimum ?? ""),
       use_virtual_stock: !!existing?.use_virtual_stock,
       stock_virtual: String(existing?.stock_virtual ?? existing?.virtual_stock_quantity ?? "0"),
       active: typeof existing?.active === "boolean" ? existing.active : true,
@@ -858,8 +859,8 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   cost_price: existing?.cost_price ?? "",
 
   // estoque por variação (strings para inputs)
-  stock_real: String(existing?.stock_real ?? existing?.stock_quantity ?? "0"),
-  stock_min: String(existing?.stock_min ?? existing?.stock_minimum ?? "0"),
+  stock_real: String(existing?.stock_real ?? existing?.stock_quantity ?? ""),
+  stock_min: String(existing?.stock_min ?? existing?.stock_minimum ?? ""),
   use_virtual_stock: !!existing?.use_virtual_stock,
   stock_virtual: String(existing?.stock_virtual ?? existing?.virtual_stock_quantity ?? "0"),
 
@@ -1148,6 +1149,24 @@ const handleSubmit = () => {
     : (variantRows || []).some((r) => toInt(r.stock_real) === 0);
 
   if (hasZeroStock) {
+    if (product.format === "variants" && Array.isArray(variantRows)) {
+      const buildVariantLabel = (row) => {
+        if (row?.attributes && Object.keys(row.attributes).length > 0) {
+          return Object.entries(row.attributes)
+            .map(([k, v]) => `${k} ${v}`)
+            .join(" / ");
+        }
+        return row?.sku || "Variação";
+      };
+      const zeroStockVariants = variantRows.filter((r) => toInt(r.stock_real) === 0);
+      const examples = zeroStockVariants
+        .slice(0, 3)
+        .map(buildVariantLabel)
+        .join("; ");
+      setZeroStockModalData({ count: zeroStockVariants.length, examples });
+    } else {
+      setZeroStockModalData(null);
+    }
     setZeroStockModalOpen(true);
     return;
   }
@@ -1282,8 +1301,8 @@ const handleSubmit = () => {
     return [
       {
         id: SIMPLE_STOCK_KEY,
-        stock_real: String(product.stock_quantity ?? 0),
-        stock_min: String(product.stock_minimum ?? 0),
+        stock_real: String(product.stock_quantity ?? ""),
+        stock_min: String(product.stock_minimum ?? ""),
         use_virtual_stock: !!product.use_virtual_stock,
         stock_virtual: String(product.virtual_stock_quantity ?? 0),
         attributes: {},
@@ -2280,10 +2299,6 @@ const handleSubmit = () => {
                           onChange={(e) =>
                             handleStockRowChange(row.id, "stock_real", e.target.value.replace(/\D/g, ""))
                           }
-                          onBlur={(e) => {
-                            const val = e.target.value.replace(/\D/g, "");
-                            if (val === "") handleStockRowChange(row.id, "stock_real", "0");
-                          }}
                         />
                         {(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) && (
                           <div className="s7-error">Estoque é obrigatório.</div>
@@ -2306,10 +2321,6 @@ const handleSubmit = () => {
                           onChange={(e) =>
                             handleStockRowChange(row.id, "stock_min", e.target.value.replace(/\D/g, ""))
                           }
-                          onBlur={(e) => {
-                            const val = e.target.value.replace(/\D/g, "");
-                            if (val === "") handleStockRowChange(row.id, "stock_min", "0");
-                          }}
                         />
                         {(row.id === SIMPLE_STOCK_KEY ? stockMinErrors[SIMPLE_STOCK_KEY] : stockMinErrors[row.id]) && (
                           <div className="s7-error">Estoque mínimo é obrigatório.</div>
@@ -2565,16 +2576,41 @@ const handleSubmit = () => {
           <div className="s7-modal-icon s7-modal-icon--warning">!</div>
         </div>
         <h2 id="s7-modal-zero-title" className="s7-modal-title">Estoque zerado</h2>
-        <p className="s7-modal-text">
-          Você está salvando com estoque real igual a 0.
-          {"\n\n"}
-          Na próxima sincronização, o Suse7 poderá pausar o anúncio automaticamente para evitar vendas sem produto e proteger a saúde da sua conta.
-        </p>
+        <div className="s7-modal-text">
+          {zeroStockModalData ? (
+            <>
+              {zeroStockModalData.count === 1 ? (
+                <>
+                  <p>A variação abaixo está com estoque zerado:</p>
+                  <p>{zeroStockModalData.examples}</p>
+                </>
+              ) : (
+                <>
+                  <p>{zeroStockModalData.count} variações estão com estoque zerado.</p>
+                  <p>Ex: {zeroStockModalData.examples}</p>
+                </>
+              )}
+          <p>
+            Na próxima sincronização, o Suse7 poderá pausar o anúncio automaticamente para evitar vendas sem produto e proteger a saúde da sua conta.
+          </p>
+            </>
+          ) : (
+            <p>
+              Você está salvando com estoque real igual a 0.
+              {"\n\n"}
+              Na próxima sincronização, o Suse7 poderá pausar o anúncio automaticamente para evitar vendas sem produto e proteger a saúde da sua conta.
+            </p>
+          )}
+        </div>
         <div className="s7-modal-actions">
           <button
             type="button"
             className="s7-modal-btn-secondary"
-            onClick={() => setZeroStockModalOpen(false)}
+            onClick={() => {
+              setZeroStockModalOpen(false);
+              setZeroStockModalData(null);
+              setActiveTab("stock");
+            }}
           >
             Voltar e ajustar
           </button>
@@ -2583,6 +2619,7 @@ const handleSubmit = () => {
             className="s7-modal-btn-primary"
             onClick={() => {
               setZeroStockModalOpen(false);
+              setZeroStockModalData(null);
               executeSubmit();
             }}
           >
