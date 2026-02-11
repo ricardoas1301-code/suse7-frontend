@@ -168,10 +168,15 @@ export default function ProductForm({
 const [skuErrorsById, setSkuErrorsById] = useState({});
 
   // ------------------------------------------------------
-  // STATE: Erros da aba Estoque (Estoque real obrigatório)
-  // simple: true | variações: { [rowId]: true }
+  // STATE: Erros da aba Estoque (Estoque e Estoque mínimo obrigatórios)
   // ------------------------------------------------------
   const [stockErrors, setStockErrors] = useState({});
+  const [stockMinErrors, setStockMinErrors] = useState({});
+
+  // ------------------------------------------------------
+  // MODAL: confirmação ao salvar com estoque zerado
+  // ------------------------------------------------------
+  const [zeroStockModalOpen, setZeroStockModalOpen] = useState(false);
 
   // ======================================================================
 // STATE: Erros da aba Custos & Precificação (UX) — obrigatório
@@ -905,10 +910,17 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   // Limpa erro ao digitar
   // ------------------------------------------------------
   const handleStockRowChange = (id, field, value) => {
+    const key = id === "simple" ? "simple" : id;
     if (field === "stock_real") {
       setStockErrors((prev) => {
         const next = { ...prev };
-        const key = id === "simple" ? "simple" : id;
+        delete next[key];
+        return next;
+      });
+    }
+    if (field === "stock_min") {
+      setStockMinErrors((prev) => {
+        const next = { ...prev };
         delete next[key];
         return next;
       });
@@ -1067,18 +1079,20 @@ const validatePricingTab = () => {
   // ------------------------------------------------------
   const SIMPLE_STOCK_KEY = "simple";
   const validateStockTab = () => {
-    const next = {};
+    const nextStock = {};
+    const nextStockMin = {};
     if (product.format === "simple") {
-      const val = String(product.stock_quantity ?? "");
-      if (val === "") next[SIMPLE_STOCK_KEY] = true;
+      if (String(product.stock_quantity ?? "") === "") nextStock[SIMPLE_STOCK_KEY] = true;
+      if (String(product.stock_minimum ?? "") === "") nextStockMin[SIMPLE_STOCK_KEY] = true;
     } else if (product.format === "variants" && Array.isArray(variantRows)) {
       variantRows.forEach((r) => {
-        const val = String(r.stock_real ?? "");
-        if (val === "") next[r.id] = true;
+        if (String(r.stock_real ?? "") === "") nextStock[r.id] = true;
+        if (String(r.stock_min ?? "") === "") nextStockMin[r.id] = true;
       });
     }
-    setStockErrors(next);
-    return Object.keys(next).length === 0;
+    setStockErrors(nextStock);
+    setStockMinErrors(nextStockMin);
+    return Object.keys(nextStock).length === 0 && Object.keys(nextStockMin).length === 0;
   };
 
   // ------------------------------------------------------
@@ -1124,128 +1138,96 @@ const handleSubmit = () => {
     return;
   }
 
-  // ------------------------------------------------------
-  // PAYLOAD
-  // Estoque: converter para inteiro seguro; virtual = 0 se desativado
-  // Garante: campo vazio → 0, NaN → 0, negativo → 0
-  // ------------------------------------------------------
   const toInt = (v) => {
     const parsed = parseInt(String(v || "0"), 10);
     return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
   };
 
-  const payload = {
-    mode,
-    product: {
-      ...product,
-      ...(product.format === "variants" ? { sku: "", gtin: "" } : {}),
-    },
-    variants:
-      product.format === "variants"
-        ? (variantRows || []).map((r) => ({
-            sku: r.sku,
-            gtin: r.gtin || null,
-            cost_price: r.cost_price === "" ? null : r.cost_price,
-            stock_quantity: toInt(r.stock_real),
-            stock_minimum: toInt(r.stock_min),
-            use_virtual_stock: !!r.use_virtual_stock,
-            virtual_stock_quantity: r.use_virtual_stock ? toInt(r.stock_virtual) : 0,
-            active: !!r.active,
-            attributes: r.attributes || {},
-          }))
-        : [],
-  };
+  const hasZeroStock = product.format === "simple"
+    ? toInt(product.stock_quantity) === 0
+    : (variantRows || []).some((r) => toInt(r.stock_real) === 0);
 
-  // ------------------------------------------------------
-  // NOTIFICAÇÃO: Estoque (payload = stock_quantity, stock_minimum)
-  // Regras: 0 → STOCK_REAL_ZERO critical; 0 < x < min → STOCK_BELOW_MIN warning;
-  // x === min → STOCK_BELOW_MIN info (no limite). DedupeKey evita repetir no mesmo dia.
-  // ------------------------------------------------------
-  const productId = product?.id ?? `draft:${draftIdRef.current}`;
-  if (product.format === "variants" && Array.isArray(payload.variants)) {
-    const zeroStock = payload.variants
-      .map((v, idx) => ({ v, row: variantRows[idx] }))
-      .filter(({ v }) => v.stock_quantity === 0)
-      .map(({ row }) => ({
-        label: row?.attributes
-          ? Object.values(row.attributes).join(" / ")
-          : row?.sku ?? "Variação",
-      }));
-    const belowMin = payload.variants
-      .map((v, idx) => ({ v, row: variantRows[idx] }))
-      .filter(
-        ({ v }) =>
-          v.stock_quantity > 0 &&
-          v.stock_quantity < v.stock_minimum
-      )
-      .map(({ row }) => ({
-        label: row?.attributes
-          ? Object.values(row.attributes).join(" / ")
-          : row?.sku ?? "Variação",
-      }));
-    const atLimit = payload.variants
-      .map((v, idx) => ({ v, row: variantRows[idx] }))
-      .filter(
-        ({ v }) =>
-          v.stock_quantity > 0 && v.stock_quantity === v.stock_minimum
-      )
-      .map(({ row }) => ({
-        label: row?.attributes
-          ? Object.values(row.attributes).join(" / ")
-          : row?.sku ?? "Variação",
-      }));
-
-    if (zeroStock.length > 0) {
-      dispatchStockRealZero(addNotification, {
-        variants: zeroStock,
-        productId,
-      });
-    }
-    if (belowMin.length > 0) {
-      dispatchStockBelowMin(addNotification, {
-        variants: belowMin,
-        severity: "warning",
-        productId,
-      });
-    }
-    if (atLimit.length > 0) {
-      dispatchStockBelowMin(addNotification, {
-        variants: atLimit,
-        severity: "info",
-        productId,
-      });
-    }
-  } else if (product.format === "simple") {
-    const sq = toInt(product.stock_quantity);
-    const sm = toInt(product.stock_minimum);
-    const simpleLabel = { label: "Produto" };
-    if (sq === 0) {
-      dispatchStockRealZero(addNotification, {
-        variants: [simpleLabel],
-        productId,
-      });
-    } else if (sq > 0 && sq < sm) {
-      dispatchStockBelowMin(addNotification, {
-        variants: [simpleLabel],
-        severity: "warning",
-        productId,
-      });
-    } else if (sq > 0 && sq === sm) {
-      dispatchStockBelowMin(addNotification, {
-        variants: [simpleLabel],
-        severity: "info",
-        productId,
-      });
-    }
-  }
-
-  if (typeof onSubmit === "function") {
-    onSubmit(payload);
+  if (hasZeroStock) {
+    setZeroStockModalOpen(true);
     return;
   }
 
-  console.log("Payload a salvar (UI):", payload);
+  executeSubmit();
 };
+
+  const executeSubmit = () => {
+    const toInt = (v) => {
+      const parsed = parseInt(String(v || "0"), 10);
+      return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+    };
+    const payload = {
+      mode,
+      product: {
+        ...product,
+        ...(product.format === "variants" ? { sku: "", gtin: "" } : {}),
+      },
+      variants:
+        product.format === "variants"
+          ? (variantRows || []).map((r) => ({
+              sku: r.sku,
+              gtin: r.gtin || null,
+              cost_price: r.cost_price === "" ? null : r.cost_price,
+              stock_quantity: toInt(r.stock_real),
+              stock_minimum: toInt(r.stock_min),
+              use_virtual_stock: !!r.use_virtual_stock,
+              virtual_stock_quantity: r.use_virtual_stock ? toInt(r.stock_virtual) : 0,
+              active: !!r.active,
+              attributes: r.attributes || {},
+            }))
+          : [],
+    };
+    const productId = product?.id ?? `draft:${draftIdRef.current}`;
+    if (product.format === "variants" && Array.isArray(payload.variants)) {
+      const zeroStock = payload.variants
+        .map((v, idx) => ({ v, row: variantRows[idx] }))
+        .filter(({ v }) => v.stock_quantity === 0)
+        .map(({ row }) => ({
+          label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
+        }));
+      const belowMin = payload.variants
+        .map((v, idx) => ({ v, row: variantRows[idx] }))
+        .filter(({ v }) => v.stock_quantity > 0 && v.stock_quantity < v.stock_minimum)
+        .map(({ row }) => ({
+          label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
+        }));
+      const atLimit = payload.variants
+        .map((v, idx) => ({ v, row: variantRows[idx] }))
+        .filter(({ v }) => v.stock_quantity > 0 && v.stock_quantity === v.stock_minimum)
+        .map(({ row }) => ({
+          label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
+        }));
+      if (zeroStock.length > 0) {
+        dispatchStockRealZero(addNotification, { variants: zeroStock, productId });
+      }
+      if (belowMin.length > 0) {
+        dispatchStockBelowMin(addNotification, { variants: belowMin, severity: "warning", productId });
+      }
+      if (atLimit.length > 0) {
+        dispatchStockBelowMin(addNotification, { variants: atLimit, severity: "info", productId });
+      }
+    } else if (product.format === "simple") {
+      const sq = toInt(product.stock_quantity);
+      const sm = toInt(product.stock_minimum);
+      const simpleLabel = { label: "Produto" };
+      if (sq === 0) {
+        dispatchStockRealZero(addNotification, { variants: [simpleLabel], productId });
+      } else if (sq > 0 && sq < sm) {
+        dispatchStockBelowMin(addNotification, { variants: [simpleLabel], severity: "warning", productId });
+      } else if (sq > 0 && sq === sm) {
+        dispatchStockBelowMin(addNotification, { variants: [simpleLabel], severity: "info", productId });
+      }
+    }
+    if (typeof onSubmit === "function") {
+      onSubmit(payload);
+      return;
+    }
+    console.log("Payload a salvar (UI):", payload);
+  };
 
 
   // ------------------------------------------------------
@@ -2294,7 +2276,7 @@ const handleSubmit = () => {
                           className={`s7-input ${(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) ? "s7-input--error" : ""}`}
                           inputMode="numeric"
                           maxLength={10}
-                          value={row.stock_real === "0" ? "" : row.stock_real}
+                          value={row.stock_real ?? ""}
                           onChange={(e) =>
                             handleStockRowChange(row.id, "stock_real", e.target.value.replace(/\D/g, ""))
                           }
@@ -2310,16 +2292,17 @@ const handleSubmit = () => {
                       <div className="pf-group">
                         <FieldLabel
                           text="Estoque mínimo"
+                          required
                           infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
                           tipBottom={true}
                           wrap={true}
                           side="left"
                         />
                         <input
-                          className="s7-input"
+                          className={`s7-input ${(row.id === SIMPLE_STOCK_KEY ? stockMinErrors[SIMPLE_STOCK_KEY] : stockMinErrors[row.id]) ? "s7-input--error" : ""}`}
                           inputMode="numeric"
                           maxLength={10}
-                          value={row.stock_min === "0" ? "" : row.stock_min}
+                          value={row.stock_min ?? ""}
                           onChange={(e) =>
                             handleStockRowChange(row.id, "stock_min", e.target.value.replace(/\D/g, ""))
                           }
@@ -2328,6 +2311,9 @@ const handleSubmit = () => {
                             if (val === "") handleStockRowChange(row.id, "stock_min", "0");
                           }}
                         />
+                        {(row.id === SIMPLE_STOCK_KEY ? stockMinErrors[SIMPLE_STOCK_KEY] : stockMinErrors[row.id]) && (
+                          <div className="s7-error">Estoque mínimo é obrigatório.</div>
+                        )}
                       </div>
                       <div className="pf-group" style={{ minWidth: 220 }}>
                         <div className="pf-stock-virtual-header">
@@ -2561,6 +2547,46 @@ const handleSubmit = () => {
             }}
           >
             Entendi
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )}
+
+{/* --------------------------------------------------
+   MODAL: confirmação ao salvar com estoque zerado
+-------------------------------------------------- */}
+{zeroStockModalOpen &&
+  createPortal(
+    <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-modal-zero-title">
+      <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="s7-modal-icon-wrap">
+          <div className="s7-modal-icon s7-modal-icon--warning">!</div>
+        </div>
+        <h2 id="s7-modal-zero-title" className="s7-modal-title">Estoque zerado</h2>
+        <p className="s7-modal-text">
+          Você está salvando com estoque real igual a 0.
+          {"\n\n"}
+          Na próxima sincronização, o Suse7 poderá pausar o anúncio automaticamente para evitar vendas sem produto e proteger a saúde da sua conta.
+        </p>
+        <div className="s7-modal-actions">
+          <button
+            type="button"
+            className="s7-modal-btn-secondary"
+            onClick={() => setZeroStockModalOpen(false)}
+          >
+            Voltar e ajustar
+          </button>
+          <button
+            type="button"
+            className="s7-modal-btn-primary"
+            onClick={() => {
+              setZeroStockModalOpen(false);
+              executeSubmit();
+            }}
+          >
+            Salvar mesmo assim
           </button>
         </div>
       </div>
