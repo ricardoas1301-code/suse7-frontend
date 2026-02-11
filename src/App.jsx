@@ -50,6 +50,8 @@ import Products from "./components/Products";
 import ProductCreate from "./pages/ProductCreate";
 import ProductEdit from "./pages/ProductEdit";
 
+// Notificações (in-app toast)
+import { NotificationProvider } from "./contexts/NotificationContext";
 
 // Temporários
 const AnunciosTable = () => <h1>Anúncios</h1>;
@@ -123,7 +125,9 @@ export default function App() {
             path="/"
             element={
               <AuthWrapper>
-                <Layout />
+                <NotificationProvider>
+                  <Layout />
+                </NotificationProvider>
               </AuthWrapper>
             }
           >

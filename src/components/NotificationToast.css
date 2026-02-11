@@ -1,0 +1,90 @@
+/* ======================================================================
+   SUSE7 — NOTIFICATION TOAST
+   Toast não bloqueante, canto inferior direito
+====================================================================== */
+
+.s7-notification-toast-container{
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+  pointer-events: none;
+}
+
+.s7-notification-toast-container > *{
+  pointer-events: auto;
+}
+
+.s7-notification-toast{
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+  background: #fff;
+  border-left: 4px solid var(--s7-primary, #2563eb);
+  animation: s7-toast-in 0.25s ease-out;
+}
+
+@keyframes s7-toast-in{
+  from{
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to{
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.s7-notification-toast--info{
+  border-left-color: var(--s7-primary, #2563eb);
+}
+
+.s7-notification-toast--warning{
+  border-left-color: #d97706;
+}
+
+.s7-notification-toast--critical{
+  border-left-color: #dc2626;
+}
+
+.s7-notification-toast__content{
+  flex: 1;
+  min-width: 0;
+}
+
+.s7-notification-toast__title{
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--s7-text, #0f172a);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.s7-notification-toast__message{
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--s7-muted, #6b7280);
+  margin: 0;
+}
+
+.s7-notification-toast__close{
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.s7-notification-toast__close:hover{
+  color: var(--s7-text, #0f172a);
+}

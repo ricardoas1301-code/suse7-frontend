@@ -13,7 +13,12 @@
 //   aqui (UI) mantemos strings onde o usuário digita.
 // ======================================================================
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNotifications } from "../contexts/NotificationContext";
+import {
+  dispatchStockBelowMin,
+  dispatchStockRealZero,
+} from "../services/stockNotificationDispatch";
 import "./ProductForm.css";
 
 // ======================================================================
@@ -77,6 +82,12 @@ export default function ProductForm({
   onCancel = null,
   onSubmit = null,
 }) {
+  const draftIdRef = useRef(
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `draft_${Date.now()}_${Math.random().toString(36).slice(2)}`
+  );
+
   // ------------------------------------------------------
   // CONTROLE DE ABAS (nova ordem)
   // ------------------------------------------------------
@@ -179,6 +190,8 @@ const [pendingNextChecked, setPendingNextChecked] = useState(false);
   // 2) draft: inputs para cadastrar novo atributo + opções (chips)
   // 3) variantRows: combinações geradas (cada uma vira product_variants)
   // ------------------------------------------------------
+  const { addNotification } = useNotifications();
+
   const [variationAttributes, setVariationAttributes] = useState([]);
   const [draftAttrInput, setDraftAttrInput] = useState("");
   const [draftOptionInput, setDraftOptionInput] = useState("");
@@ -1073,6 +1086,67 @@ const handleSubmit = () => {
           }))
         : [],
   };
+
+  // ------------------------------------------------------
+  // NOTIFICAÇÃO: Estoque (payload = stock_quantity, stock_minimum)
+  // Regras: 0 → STOCK_REAL_ZERO critical; 0 < x < min → STOCK_BELOW_MIN warning;
+  // x === min → STOCK_BELOW_MIN info (no limite). DedupeKey evita repetir no mesmo dia.
+  // ------------------------------------------------------
+  if (product.format === "variants" && Array.isArray(payload.variants)) {
+    const productId = product?.id ?? `draft:${draftIdRef.current}`;
+    const zeroStock = payload.variants
+      .map((v, idx) => ({ v, row: variantRows[idx] }))
+      .filter(({ v }) => v.stock_quantity === 0)
+      .map(({ row }) => ({
+        label: row?.attributes
+          ? Object.values(row.attributes).join(" / ")
+          : row?.sku ?? "Variação",
+      }));
+    const belowMin = payload.variants
+      .map((v, idx) => ({ v, row: variantRows[idx] }))
+      .filter(
+        ({ v }) =>
+          v.stock_quantity > 0 &&
+          v.stock_quantity < v.stock_minimum
+      )
+      .map(({ row }) => ({
+        label: row?.attributes
+          ? Object.values(row.attributes).join(" / ")
+          : row?.sku ?? "Variação",
+      }));
+    const atLimit = payload.variants
+      .map((v, idx) => ({ v, row: variantRows[idx] }))
+      .filter(
+        ({ v }) =>
+          v.stock_quantity > 0 && v.stock_quantity === v.stock_minimum
+      )
+      .map(({ row }) => ({
+        label: row?.attributes
+          ? Object.values(row.attributes).join(" / ")
+          : row?.sku ?? "Variação",
+      }));
+
+    if (zeroStock.length > 0) {
+      dispatchStockRealZero(addNotification, {
+        variants: zeroStock,
+        productId,
+      });
+    }
+    if (belowMin.length > 0) {
+      dispatchStockBelowMin(addNotification, {
+        variants: belowMin,
+        severity: "warning",
+        productId,
+      });
+    }
+    if (atLimit.length > 0) {
+      dispatchStockBelowMin(addNotification, {
+        variants: atLimit,
+        severity: "info",
+        productId,
+      });
+    }
+  }
 
   if (typeof onSubmit === "function") {
     onSubmit(payload);
@@ -2183,7 +2257,7 @@ const handleSubmit = () => {
                               className="s7-input"
                               inputMode="numeric"
                               maxLength={10}
-                              value={row.stock_real}
+                              value={row.stock_real === "0" ? "" : row.stock_real}
                               onChange={(e) =>
                                 handleVariantRowChange(
                                   row.id,
@@ -2191,6 +2265,12 @@ const handleSubmit = () => {
                                   e.target.value.replace(/\D/g, "")
                                 )
                               }
+                              onBlur={(e) => {
+                                const val = e.target.value.replace(/\D/g, "");
+                                if (val === "") {
+                                  handleVariantRowChange(row.id, "stock_real", "0");
+                                }
+                              }}
                             />
                           </div>
 
@@ -2207,7 +2287,7 @@ const handleSubmit = () => {
                               className="s7-input"
                               inputMode="numeric"
                               maxLength={10}
-                              value={row.stock_min}
+                              value={row.stock_min === "0" ? "" : row.stock_min}
                               onChange={(e) =>
                                 handleVariantRowChange(
                                   row.id,
@@ -2215,6 +2295,12 @@ const handleSubmit = () => {
                                   e.target.value.replace(/\D/g, "")
                                 )
                               }
+                              onBlur={(e) => {
+                                const val = e.target.value.replace(/\D/g, "");
+                                if (val === "") {
+                                  handleVariantRowChange(row.id, "stock_min", "0");
+                                }
+                              }}
                             />
                           </div>
 
@@ -2248,7 +2334,7 @@ const handleSubmit = () => {
                               inputMode="numeric"
                               maxLength={10}
                               placeholder="Ex: 200"
-                              value={row.stock_virtual}
+                              value={row.stock_virtual === "0" ? "" : row.stock_virtual}
                               disabled={!row.use_virtual_stock}
                               onChange={(e) =>
                                 handleVariantRowChange(
@@ -2257,6 +2343,12 @@ const handleSubmit = () => {
                                   e.target.value.replace(/\D/g, "")
                                 )
                               }
+                              onBlur={(e) => {
+                                const val = e.target.value.replace(/\D/g, "");
+                                if (val === "") {
+                                  handleVariantRowChange(row.id, "stock_virtual", "0");
+                                }
+                              }}
                             />
                           </div>
                         </div>
