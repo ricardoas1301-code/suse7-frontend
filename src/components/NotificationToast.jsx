@@ -1,14 +1,10 @@
 // ======================================================================
-// SUSE7 — NOTIFICATION TOAST
-// Exibição in-app não bloqueante. Um toast por notificação.
-// Auto-dismiss: 7s (warning), 11s (critical). Pause on hover.
-// Futuro: botão "Ver detalhes" abrindo central de notificações.
+// COMPONENTE: NotificationToast
+// Objetivo: Exibição in-app não bloqueante (toast) com auto-dismiss
 // ======================================================================
-
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { NotificationContext } from "../contexts/NotificationContext";
 import "./NotificationToast.css";
-
 const AUTO_DISMISS_MS = {
   warning: 7000,
   critical: 11000,
