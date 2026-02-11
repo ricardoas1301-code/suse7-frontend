@@ -168,16 +168,16 @@ export default function ProductForm({
 const [skuErrorsById, setSkuErrorsById] = useState({});
 
   // ------------------------------------------------------
-  // STATE: Erros da aba Estoque (Estoque e Estoque mínimo obrigatórios)
+  // STATE: Erros da aba Estoque (apenas Estoque real obrigatório)
   // ------------------------------------------------------
   const [stockErrors, setStockErrors] = useState({});
-  const [stockMinErrors, setStockMinErrors] = useState({});
 
   // ------------------------------------------------------
   // MODAL: confirmação ao salvar com estoque zerado
   // ------------------------------------------------------
   const [zeroStockModalOpen, setZeroStockModalOpen] = useState(false);
   const [zeroStockModalData, setZeroStockModalData] = useState(null); // { count, examples } quando format === "variants"
+  const [zeroStockAttention, setZeroStockAttention] = useState(null); // { simple: boolean, variants: { [rowId]: true } } ao voltar do modal
 
   // ======================================================================
 // STATE: Erros da aba Custos & Precificação (UX) — obrigatório
@@ -918,13 +918,22 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
         delete next[key];
         return next;
       });
-    }
-    if (field === "stock_min") {
-      setStockMinErrors((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      });
+      // Limpar zeroStockAttention quando usuário digita valor > 0
+      const parsed = parseInt(String(value || "0"), 10);
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        setZeroStockAttention((prev) => {
+          if (!prev) return null;
+          if (key === "simple") {
+            const next = { ...prev, simple: false };
+            return (prev.variants && Object.keys(prev.variants).length > 0) ? next : null;
+          }
+          const nextVariants = { ...(prev.variants || {}) };
+          delete nextVariants[key];
+          return (prev.simple || Object.keys(nextVariants).length > 0)
+            ? { ...prev, variants: nextVariants }
+            : null;
+        });
+      }
     }
     if (id === "simple") {
       const productField =
@@ -1075,25 +1084,21 @@ const validatePricingTab = () => {
 };
 
   // ------------------------------------------------------
-  // VALIDAR: Estoque (Estoque real obrigatório)
+  // VALIDAR: Estoque (apenas Estoque real obrigatório; Estoque mínimo opcional)
   // Vazio ("") inválido; zero ("0") válido
   // ------------------------------------------------------
   const SIMPLE_STOCK_KEY = "simple";
   const validateStockTab = () => {
     const nextStock = {};
-    const nextStockMin = {};
     if (product.format === "simple") {
       if (String(product.stock_quantity ?? "") === "") nextStock[SIMPLE_STOCK_KEY] = true;
-      if (String(product.stock_minimum ?? "") === "") nextStockMin[SIMPLE_STOCK_KEY] = true;
     } else if (product.format === "variants" && Array.isArray(variantRows)) {
       variantRows.forEach((r) => {
         if (String(r.stock_real ?? "") === "") nextStock[r.id] = true;
-        if (String(r.stock_min ?? "") === "") nextStockMin[r.id] = true;
       });
     }
     setStockErrors(nextStock);
-    setStockMinErrors(nextStockMin);
-    return Object.keys(nextStock).length === 0 && Object.keys(nextStockMin).length === 0;
+    return Object.keys(nextStock).length === 0;
   };
 
   // ------------------------------------------------------
@@ -2292,7 +2297,7 @@ const handleSubmit = () => {
                           Estoque<span className="s7-required">*</span>
                         </label>
                         <input
-                          className={`s7-input ${(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) ? "s7-input--error" : ""}`}
+                          className={`s7-input ${((row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) || (zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || (zeroStockAttention?.variants?.[row.id])) ? "s7-input--error" : ""}`}
                           inputMode="numeric"
                           maxLength={10}
                           value={row.stock_real ?? ""}
@@ -2303,18 +2308,20 @@ const handleSubmit = () => {
                         {(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) && (
                           <div className="s7-error">Estoque é obrigatório.</div>
                         )}
+                        {!stockErrors[row.id === SIMPLE_STOCK_KEY ? SIMPLE_STOCK_KEY : row.id] && ((zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || zeroStockAttention?.variants?.[row.id]) && (
+                          <div className="s7-error">Ajuste o estoque para continuar.</div>
+                        )}
                       </div>
                       <div className="pf-group">
                         <FieldLabel
                           text="Estoque mínimo"
-                          required
                           infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
                           tipBottom={true}
                           wrap={true}
                           side="left"
                         />
                         <input
-                          className={`s7-input ${(row.id === SIMPLE_STOCK_KEY ? stockMinErrors[SIMPLE_STOCK_KEY] : stockMinErrors[row.id]) ? "s7-input--error" : ""}`}
+                          className="s7-input"
                           inputMode="numeric"
                           maxLength={10}
                           value={row.stock_min ?? ""}
@@ -2322,9 +2329,6 @@ const handleSubmit = () => {
                             handleStockRowChange(row.id, "stock_min", e.target.value.replace(/\D/g, ""))
                           }
                         />
-                        {(row.id === SIMPLE_STOCK_KEY ? stockMinErrors[SIMPLE_STOCK_KEY] : stockMinErrors[row.id]) && (
-                          <div className="s7-error">Estoque mínimo é obrigatório.</div>
-                        )}
                       </div>
                       <div className="pf-group" style={{ minWidth: 220 }}>
                         <div className="pf-stock-virtual-header">
@@ -2573,7 +2577,7 @@ const handleSubmit = () => {
     <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-modal-zero-title">
       <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="s7-modal-icon-wrap">
-          <div className="s7-modal-icon s7-modal-icon--warning">!</div>
+          <div className="s7-modal-icon s7-modal-icon--success">✓</div>
         </div>
         <h2 id="s7-modal-zero-title" className="s7-modal-title">Estoque zerado</h2>
         <div className="s7-modal-text">
@@ -2609,6 +2613,19 @@ const handleSubmit = () => {
             onClick={() => {
               setZeroStockModalOpen(false);
               setZeroStockModalData(null);
+              if (product.format === "simple") {
+                setZeroStockAttention({ simple: true, variants: {} });
+              } else if (Array.isArray(variantRows)) {
+                const toInt = (v) => {
+                  const parsed = parseInt(String(v || "0"), 10);
+                  return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+                };
+                const variants = {};
+                variantRows.forEach((r) => {
+                  if (toInt(r.stock_real) === 0) variants[r.id] = true;
+                });
+                setZeroStockAttention(Object.keys(variants).length > 0 ? { simple: false, variants } : null);
+              }
               setActiveTab("stock");
             }}
           >
@@ -2620,6 +2637,7 @@ const handleSubmit = () => {
             onClick={() => {
               setZeroStockModalOpen(false);
               setZeroStockModalData(null);
+              setZeroStockAttention(null);
               executeSubmit();
             }}
           >
