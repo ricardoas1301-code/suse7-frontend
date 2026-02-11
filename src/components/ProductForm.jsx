@@ -20,6 +20,7 @@ import {
   dispatchStockBelowMin,
   dispatchStockRealZero,
 } from "../services/stockNotificationDispatch";
+import { relinkDraftToProduct } from "../services/images/imageRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
 import "./ProductForm.css";
 
@@ -85,6 +86,12 @@ export default function ProductForm({
   onSubmit = null,
 }) {
   const draftIdRef = useRef(
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `draft_${Date.now()}_${Math.random().toString(36).slice(2)}`
+  );
+
+  const draftKeyRef = useRef(
     typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()
       : `draft_${Date.now()}_${Math.random().toString(36).slice(2)}`
@@ -1108,7 +1115,7 @@ const validatePricingTab = () => {
   //   products: product
   //   product_variants: variantRows (quando format=variants)
   // ------------------------------------------------------
-const handleSubmit = () => {
+const handleSubmit = async () => {
   // ------------------------------------------------------
   // 1) DADOS (Nome do produto, SKU se simple, etc.)
   // ------------------------------------------------------
@@ -1177,16 +1184,17 @@ const handleSubmit = () => {
     return;
   }
 
-  executeSubmit();
+  await executeSubmit();
 };
 
-  const executeSubmit = () => {
+  const executeSubmit = async () => {
     const toInt = (v) => {
       const parsed = parseInt(String(v || "0"), 10);
       return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
     };
     const payload = {
       mode,
+      draftKey: draftKeyRef.current,
       product: {
         ...product,
         ...(product.format === "variants" ? { sku: "", gtin: "" } : {}),
@@ -1248,7 +1256,10 @@ const handleSubmit = () => {
       }
     }
     if (typeof onSubmit === "function") {
-      onSubmit(payload);
+      const result = await Promise.resolve(onSubmit(payload));
+      if (mode === "create" && result?.productId && draftKeyRef.current) {
+        await relinkDraftToProduct(draftKeyRef.current, result.productId);
+      }
       return;
     }
     console.log("Payload a salvar (UI):", payload);
@@ -1781,6 +1792,7 @@ const handleSubmit = () => {
           <div className="pf-container">
             <ProductFormImagesTab
               productId={product?.id}
+              draftKey={draftKeyRef.current}
               format={product.format}
               variantRows={variantRows}
               buildVariantKey={buildVariantKey}
@@ -2630,7 +2642,7 @@ const handleSubmit = () => {
               setZeroStockModalOpen(false);
               setZeroStockModalData(null);
               setZeroStockAttention(null);
-              executeSubmit();
+              executeSubmit().catch(console.error);
             }}
           >
             Salvar mesmo assim

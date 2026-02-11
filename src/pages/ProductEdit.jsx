@@ -75,13 +75,14 @@ export default function ProductEdit() {
   // ------------------------------------------------------
   // SUBMIT (UI only por enquanto)
   // ------------------------------------------------------
-  const handleSubmit = ({ product, variations }) => {
+  const handleSubmit = async ({ product, draftKey, variants }) => {
     console.log("✅ EDIT | id:", id);
     console.log("✅ EDIT | produto:", product);
-    console.log("✅ EDIT | variações:", variations);
+    console.log("✅ EDIT | variações:", variants);
 
     // Futuro:
     // - chamar backend para salvar
+    // - em modo edit não precisa retornar productId (imagens já vinculadas)
     // navigate("/produtos");
   };
 

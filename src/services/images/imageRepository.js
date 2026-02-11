@@ -1,10 +1,11 @@
 /**
  * imageRepository.js — CRUD de image_assets e product_image_links
  * - createAsset: registra asset no banco
- * - createLink: cria vínculo produto/variante ↔ asset
- * - listLinks: lista links por productId e variantKey
+ * - createLink: cria vínculo produto/variante ↔ asset (suporta productId ou draftKey)
+ * - listLinks: lista links por productId ou draftKey e variantKey
  * - updateLink: atualiza sort_order ou is_primary
  * - deleteLink: remove vínculo
+ * - relinkDraftToProduct: migra links de draft para produto salvo
  */
 
 import { supabase } from "../../supabaseClient";
@@ -31,18 +32,29 @@ export async function createAsset(metadata) {
 
 /**
  * Cria link produto/variante ↔ asset.
- * @param {Object} opts - { productId, variantKey, assetId, sortOrder, isPrimary }
+ * Aceita productId OU draftKey (exatamente um).
+ * @param {Object} opts - { productId?, draftKey?, userId, variantKey, assetId, sortOrder, isPrimary }
  */
-export async function createLink({ productId, variantKey, assetId, sortOrder, isPrimary }) {
+export async function createLink({ productId, draftKey, userId, variantKey, assetId, sortOrder, isPrimary }) {
+  const hasProduct = productId != null && productId !== "";
+  const hasDraft = draftKey != null && draftKey !== "";
+  if ((hasProduct && hasDraft) || (!hasProduct && !hasDraft)) {
+    throw new Error("createLink: informe productId OU draftKey (exatamente um)");
+  }
+
+  const payload = {
+    product_id: hasProduct ? productId : null,
+    draft_key: hasDraft ? draftKey : null,
+    user_id: userId,
+    variant_key: variantKey ?? null,
+    asset_id: assetId,
+    sort_order: sortOrder ?? 0,
+    is_primary: !!isPrimary,
+  };
+
   const { data, error } = await supabase
     .from("product_image_links")
-    .insert({
-      product_id: productId,
-      variant_key: variantKey ?? null,
-      asset_id: assetId,
-      sort_order: sortOrder ?? 0,
-      is_primary: !!isPrimary,
-    })
+    .insert(payload)
     .select("id")
     .single();
 
@@ -52,17 +64,24 @@ export async function createLink({ productId, variantKey, assetId, sortOrder, is
 
 /**
  * Lista links com join em image_assets.
- * @param {string|number} productId
- * @param {string|null} variantKey - null para imagens gerais
+ * Consulta por productId OU draftKey.
+ * @param {Object} opts - { productId?, draftKey?, variantKey? }
  * @returns {Promise<Array>} links com asset
  */
-export async function listLinks(productId, variantKey = null) {
-  if (!productId) return [];
+export async function listLinks({ productId, draftKey, variantKey = null }) {
+  const hasProduct = productId != null && productId !== "";
+  const hasDraft = draftKey != null && draftKey !== "";
+  if (!hasProduct && !hasDraft) return [];
 
   let query = supabase
     .from("product_image_links")
-    .select("id, product_id, variant_key, asset_id, sort_order, is_primary")
-    .eq("product_id", productId);
+    .select("id, product_id, draft_key, variant_key, asset_id, sort_order, is_primary");
+
+  if (hasProduct) {
+    query = query.eq("product_id", productId);
+  } else {
+    query = query.eq("draft_key", draftKey);
+  }
 
   if (variantKey === null || variantKey === undefined) {
     query = query.is("variant_key", null);
@@ -92,6 +111,27 @@ export async function listLinks(productId, variantKey = null) {
     ...l,
     asset: assetMap.get(l.asset_id) || null,
   }));
+}
+
+/**
+ * Migra links de draft para produto salvo.
+ * Atualiza product_id e zera draft_key para linhas do draft do usuário atual.
+ * @param {string} draftKey
+ * @param {string|number} productId
+ */
+export async function relinkDraftToProduct(draftKey, productId) {
+  if (!draftKey || productId == null) return;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.id) throw new Error("Usuário não autenticado");
+
+  const { error } = await supabase
+    .from("product_image_links")
+    .update({ product_id: productId, draft_key: null })
+    .eq("draft_key", draftKey)
+    .eq("user_id", user.id);
+
+  if (error) throw new Error(error.message || "Falha ao vincular imagens ao produto");
 }
 
 /**

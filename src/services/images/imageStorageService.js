@@ -11,17 +11,19 @@ const BUCKET_NAME = "product-images";
 
 /**
  * Faz upload de arquivos para o storage.
+ * Usa productId ou draftKey para o path (exatamente um).
  * @param {File[]} files - arquivos para upload
- * @param {Object} opts - { userId, productId }
+ * @param {Object} opts - { userId, productId?, draftKey? }
  * @returns {Promise<Array<{ storage_path: string; mime_type: string; size_bytes: number }>>}
  */
-export async function uploadAssets(files, { userId, productId }) {
-  if (!files?.length || !userId || !productId) return [];
+export async function uploadAssets(files, { userId, productId, draftKey }) {
+  const storageKey = productId ?? draftKey;
+  if (!files?.length || !userId || !storageKey) return [];
   const results = [];
   for (const file of files) {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const storagePath = `${userId}/${productId}/${safeName}`;
+    const storagePath = `${userId}/${storageKey}/${safeName}`;
 
     const { error } = await supabase.storage.from(BUCKET_NAME).upload(storagePath, file, {
       contentType: file.type || "image/jpeg",

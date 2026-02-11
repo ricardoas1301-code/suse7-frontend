@@ -25,14 +25,17 @@ export default function ProductCreate() {
   // ------------------------------------------------------
   // SUBMIT (UI only por enquanto)
   // ------------------------------------------------------
-  const handleSubmit = ({ product, variations }) => {
+  const handleSubmit = async ({ product, draftKey, variants }) => {
     console.log("✅ CREATE | produto:", product);
-    console.log("✅ CREATE | variações:", variations);
+    console.log("✅ CREATE | variações:", variants);
+    console.log("✅ CREATE | draftKey (imagens):", draftKey);
 
     // Futuro:
-    // - chamar backend
-    // - ao salvar, navegar para /produtos ou abrir edição
+    // - chamar backend para criar produto
+    // - retornar { productId: newProduct.id } para vincular imagens do draft
+    // - relinkDraftToProduct é chamado automaticamente pelo ProductForm
     // navigate("/produtos");
+    return { productId: null }; // placeholder: retornar productId real após salvar
   };
 
   return (

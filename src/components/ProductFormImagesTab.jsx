@@ -35,6 +35,7 @@ function formatVariantLabel(attrsObj) {
 
 export default function ProductFormImagesTab({
   productId,
+  draftKey,
   format = "simple",
   variantRows = [],
   buildVariantKey,
@@ -54,20 +55,23 @@ export default function ProductFormImagesTab({
   const [draggedId, setDraggedId] = useState(null);
 
   const hasProductId = !!productId && (typeof productId === "number" || (typeof productId === "string" && !productId.startsWith("draft:")));
+  const hasDraftKey = !!draftKey && typeof draftKey === "string";
+  const canOperate = hasProductId || hasDraftKey;
 
   const loadLinks = useCallback(async () => {
-    if (!hasProductId) return;
+    if (!canOperate) return;
+    const opts = hasProductId ? { productId } : { draftKey };
     setLoading(true);
     setError(null);
     try {
-      const generalLinks = await listLinks(productId, null);
+      const generalLinks = await listLinks({ ...opts, variantKey: null });
       setProductLinks(generalLinks);
 
       if (format === "variants" && variantRows?.length > 0) {
         const uniqueKeys = [...new Set(variantRows.map((r) => variantKeyFn(r.attributes)).filter(Boolean))];
         const map = {};
         for (const vk of uniqueKeys) {
-          map[vk] = await listLinks(productId, vk);
+          map[vk] = await listLinks({ ...opts, variantKey: vk });
         }
         setVariantLinksMap(map);
       }
@@ -76,7 +80,7 @@ export default function ProductFormImagesTab({
     } finally {
       setLoading(false);
     }
-  }, [hasProductId, productId, format, variantRows, variantKeyFn]);
+  }, [canOperate, hasProductId, productId, draftKey, format, variantRows, variantKeyFn]);
 
   useEffect(() => {
     loadLinks();
@@ -88,7 +92,7 @@ export default function ProductFormImagesTab({
   };
 
   const handleUpload = async (files, variantKey = null) => {
-    if (!hasProductId || !files?.length) return;
+    if (!canOperate || !files?.length) return;
     setUploading(true);
     setError(null);
     try {
@@ -96,7 +100,8 @@ export default function ProductFormImagesTab({
       const fileList = Array.from(files).slice(0, MAX_IMAGES);
       const metas = await uploadAssets(fileList, {
         userId,
-        productId,
+        productId: hasProductId ? productId : undefined,
+        draftKey: hasDraftKey ? draftKey : undefined,
       });
 
       const isProduct = variantKey === null || variantKey === undefined;
@@ -108,7 +113,9 @@ export default function ProductFormImagesTab({
         const sortOrder = (currentLinks.length + i) || 0;
         const isPrimary = currentLinks.length === 0 && i === 0;
         await createLink({
-          productId,
+          productId: hasProductId ? productId : undefined,
+          draftKey: hasDraftKey ? draftKey : undefined,
+          userId,
           variantKey: variantKey ?? null,
           assetId,
           sortOrder,
@@ -124,7 +131,7 @@ export default function ProductFormImagesTab({
   };
 
   const handleSetPrimary = async (linkId, variantKey = null) => {
-    if (!hasProductId) return;
+    if (!canOperate) return;
     const isProduct = variantKey === null || variantKey === undefined;
     const links = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
     const updated = ensureSinglePrimary(links, linkId);
@@ -139,7 +146,7 @@ export default function ProductFormImagesTab({
   };
 
   const handleDelete = async (linkId, variantKey = null) => {
-    if (!hasProductId) return;
+    if (!canOperate) return;
     await deleteLink(linkId);
     setSelectedForDownload((prev) => {
       const next = new Set(prev);
@@ -210,11 +217,11 @@ export default function ProductFormImagesTab({
 
   const hasImages = productLinks.length > 0 || Object.values(variantLinksMap).some((arr) => arr?.length > 0);
 
-  if (!hasProductId) {
+  if (!canOperate) {
     return (
       <div className="pf-images-container">
         <div className="s7-alert s7-alert--warning">
-          Salve o produto primeiro para adicionar imagens.
+          Não foi possível carregar o escopo de imagens. Verifique a conexão.
         </div>
       </div>
     );
