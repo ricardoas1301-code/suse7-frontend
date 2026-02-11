@@ -908,8 +908,8 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     if (field === "stock_real") {
       setStockErrors((prev) => {
         const next = { ...prev };
-        if (id === "simple") delete next.simple;
-        else delete next[id];
+        const key = id === "simple" ? "simple" : id;
+        delete next[key];
         return next;
       });
     }
@@ -1065,11 +1065,12 @@ const validatePricingTab = () => {
   // VALIDAR: Estoque (Estoque real obrigatório)
   // Vazio ("") inválido; zero ("0") válido
   // ------------------------------------------------------
+  const SIMPLE_STOCK_KEY = "simple";
   const validateStockTab = () => {
     const next = {};
     if (product.format === "simple") {
       const val = String(product.stock_quantity ?? "");
-      if (val === "") next.simple = true;
+      if (val === "") next[SIMPLE_STOCK_KEY] = true;
     } else if (product.format === "variants" && Array.isArray(variantRows)) {
       variantRows.forEach((r) => {
         const val = String(r.stock_real ?? "");
@@ -1088,7 +1089,7 @@ const validatePricingTab = () => {
   // ------------------------------------------------------
 const handleSubmit = () => {
   // ------------------------------------------------------
-  // 1) DADOS
+  // 1) DADOS (Nome do produto, SKU se simple, etc.)
   // ------------------------------------------------------
   const okData = validateDataTab();
   if (!okData) {
@@ -1096,24 +1097,21 @@ const handleSubmit = () => {
     return;
   }
 
-  
-
-
   // ------------------------------------------------------
-  // 2) CUSTOS & PRECIFICAÇÃO  ✅ vem antes das variações
-  // ------------------------------------------------------
-  const okPricing = validatePricingTab();
-  if (!okPricing) {
-    setActiveTab("pricing");
-    return;
-  }
-
-  // ------------------------------------------------------
-  // 3) VARIAÇÕES (somente depois)
+  // 2) VARIAÇÕES (SKU se format === variants)
   // ------------------------------------------------------
   const okVariants = validateVariantsTab();
   if (!okVariants) {
     setActiveTab("variations");
+    return;
+  }
+
+  // ------------------------------------------------------
+  // 3) CUSTOS & PRECIFICAÇÃO
+  // ------------------------------------------------------
+  const okPricing = validatePricingTab();
+  if (!okPricing) {
+    setActiveTab("pricing");
     return;
   }
 
@@ -1301,7 +1299,7 @@ const handleSubmit = () => {
     if (product.format === "variants") return variantRows;
     return [
       {
-        id: "simple",
+        id: SIMPLE_STOCK_KEY,
         stock_real: String(product.stock_quantity ?? 0),
         stock_min: String(product.stock_minimum ?? 0),
         use_virtual_stock: !!product.use_virtual_stock,
@@ -2289,9 +2287,11 @@ const handleSubmit = () => {
                     </div>
                     <div className="pf-stock-controls">
                       <div className="pf-group">
-                        <label className="s7-label">Estoque</label>
+                        <label className="s7-label">
+                          Estoque<span className="s7-required">*</span>
+                        </label>
                         <input
-                          className={`s7-input ${stockErrors[row.id] || stockErrors.simple ? "s7-input--error" : ""}`}
+                          className={`s7-input ${(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) ? "s7-input--error" : ""}`}
                           inputMode="numeric"
                           maxLength={10}
                           value={row.stock_real === "0" ? "" : row.stock_real}
@@ -2303,7 +2303,7 @@ const handleSubmit = () => {
                             if (val === "") handleStockRowChange(row.id, "stock_real", "0");
                           }}
                         />
-                        {(stockErrors[row.id] || stockErrors.simple) && (
+                        {(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) && (
                           <div className="s7-error">Estoque é obrigatório.</div>
                         )}
                       </div>
