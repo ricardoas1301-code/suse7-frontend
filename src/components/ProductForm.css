@@ -1089,7 +1089,7 @@
 
 .pf-stock-controls{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);
   gap: 12px;
   min-width: 0;
   align-items: flex-end;
@@ -1103,6 +1103,13 @@
 .pf-stock-controls .s7-input{
   width: 130px;
   max-width: 130px;
+}
+
+.pf-stock-virtual-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 /* ======================================================

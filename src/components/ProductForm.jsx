@@ -2182,51 +2182,46 @@ const handleSubmit = () => {
                             />
                           </div>
 
-                          <div className="pf-group" style={{ minWidth: 200 }}>
-                            <FieldLabel
-                              text="Usar estoque virtual?"
-                              infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
-                              tipBottom={true}
-                              wrap={true}
-                            />
-
-                            <label className="pf-switch" style={{ marginTop: 8 }}>
-                              <input
-                                type="checkbox"
-                                checked={!!row.use_virtual_stock}
-                                onChange={(e) =>
-                                  handleVariantRowChange(
-                                    row.id,
-                                    "use_virtual_stock",
-                                    e.target.checked
-                                  )
-                                }
+                          <div className="pf-group" style={{ minWidth: 220 }}>
+                            <div className="pf-stock-virtual-header">
+                              <FieldLabel
+                                text="Estoque virtual"
+                                infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
+                                tipBottom={true}
+                                wrap={true}
                               />
-                              Ativar
-                            </label>
-                          </div>
 
-                          {row.use_virtual_stock ? (
-                            <div className="pf-group" style={{ minWidth: 160 }}>
-                              <label className="s7-label">Estoque virtual</label>
-                              <input
-                                className="s7-input"
-                                inputMode="numeric"
-                                placeholder="Ex: 200"
-                                value={row.virtual_stock_quantity}
-                                onChange={(e) =>
-                                  handleVariantRowChange(
-                                    row.id,
-                                    "virtual_stock_quantity",
-                                    e.target.value.replace(/\D/g, "")
-                                  )
-                                }
-                              />
+                              <label className="pf-switch pf-stock-virtual-switch">
+                                <input
+                                  type="checkbox"
+                                  checked={!!row.use_virtual_stock}
+                                  onChange={(e) =>
+                                    handleVariantRowChange(
+                                      row.id,
+                                      "use_virtual_stock",
+                                      e.target.checked
+                                    )
+                                  }
+                                />
+                                Ativar
+                              </label>
                             </div>
-                          ) : (
-                            // Placeholder para manter a linha alinhada mesmo quando o estoque virtual estiver desativado
-                            <div className="pf-group pf-stock-virtual-placeholder" />
-                          )}
+
+                            <input
+                              className="s7-input"
+                              inputMode="numeric"
+                              placeholder="Ex: 200"
+                              value={row.virtual_stock_quantity}
+                              disabled={!row.use_virtual_stock}
+                              onChange={(e) =>
+                                handleVariantRowChange(
+                                  row.id,
+                                  "virtual_stock_quantity",
+                                  e.target.value.replace(/\D/g, "")
+                                )
+                              }
+                            />
+                          </div>
                         </div>
                       </div>
                     ))}
