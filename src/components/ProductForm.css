@@ -1148,19 +1148,24 @@
 .s7-modal-overlay{
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  width: 100vw;
+  height: 100vh;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+
+  background: rgba(15, 23, 42, 0.45);
+
+  z-index: 9999;
 }
 
 .s7-modal-card{
   background: #fff;
-  width: 90%;
-  max-width: 420px;
   border-radius: 16px;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  max-width: 480px;
+  width: 90%;
   padding: 28px;
   box-sizing: border-box;
   text-align: center;

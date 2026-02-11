@@ -14,6 +14,7 @@
 // ======================================================================
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNotifications } from "../contexts/NotificationContext";
 import {
   dispatchStockBelowMin,
@@ -2238,7 +2239,11 @@ const handleSubmit = () => {
                         : (
                             <div className="pf-stock-attr">
                               <label className="s7-label">Produto</label>
-                              <div className="pf-pricing-attr-value">Produto simples</div>
+                              <div className="pf-pricing-attr-value">
+                              {product?.product_name?.trim()
+                                ? product.product_name
+                                : "Produto sem nome"}
+                            </div>
                             </div>
                           )}
                     </div>
@@ -2467,60 +2472,64 @@ const handleSubmit = () => {
 
 {/* --------------------------------------------------
    MODAL: confirmação estoque virtual (padrão Suse7)
+   Renderizado via Portal em document.body para overlay global
+   (evita transform/filter de ancestrais que quebram position: fixed)
 -------------------------------------------------- */}
-{virtualModalOpen && (
-  <div
-    className="s7-modal-overlay"
-    onClick={(e) => {
-      if (e.target === e.currentTarget) {
-        setVirtualModalOpen(false);
-        setPendingVariantId(null);
-      }
-    }}
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="s7-modal-title"
-  >
-    <div className="s7-modal-card">
-      <div className="s7-modal-icon-wrap">
-        <div className={`s7-modal-icon ${virtualModalMode === "enable" ? "s7-modal-icon--warning" : "s7-modal-icon--success"}`}>
-          {virtualModalMode === "enable" ? "!" : "✓"}
+{virtualModalOpen &&
+  createPortal(
+    <div
+      className="s7-modal-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setVirtualModalOpen(false);
+          setPendingVariantId(null);
+        }
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="s7-modal-title"
+    >
+      <div className="s7-modal-card">
+        <div className="s7-modal-icon-wrap">
+          <div className={`s7-modal-icon ${virtualModalMode === "enable" ? "s7-modal-icon--warning" : "s7-modal-icon--success"}`}>
+            {virtualModalMode === "enable" ? "!" : "✓"}
+          </div>
+        </div>
+        <h2 id="s7-modal-title" className="s7-modal-title">
+          {virtualModalMode === "enable" ? "Estoque Virtual ativo" : "Estoque virtual desativado"}
+        </h2>
+        <p className="s7-modal-text">
+          {virtualModalMode === "enable"
+            ? "O estoque virtual define a quantidade exibida no anúncio. O sistema continuará monitorando o Estoque real como fonte oficial.\n\nSe o estoque real zerar, o anúncio será pausado automaticamente para evitar vendas sem produto disponível.\n\nMantenha seu estoque real sempre atualizado para evitar pausas inesperadas e perda de vendas."
+            : "A partir de agora, o estoque que será sincronizado com os anúncios será o Estoque real desta variação.\n\nO valor do Estoque virtual será zerado e deixará de ser utilizado pelo sistema.\n\nMantenha o estoque real sempre atualizado para evitar pausas automáticas nos anúncios."}
+        </p>
+        <div className="s7-modal-actions">
+          <button
+            type="button"
+            className="s7-modal-btn-secondary"
+            onClick={() => {
+              setVirtualModalOpen(false);
+              setPendingVariantId(null);
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="s7-modal-btn-primary"
+            onClick={() => {
+              handleStockVirtualToggle(pendingVariantId, pendingNextChecked);
+              setVirtualModalOpen(false);
+              setPendingVariantId(null);
+            }}
+          >
+            Entendi
+          </button>
         </div>
       </div>
-      <h2 id="s7-modal-title" className="s7-modal-title">
-        {virtualModalMode === "enable" ? "Estoque Virtual ativo" : "Estoque virtual desativado"}
-      </h2>
-      <p className="s7-modal-text">
-        {virtualModalMode === "enable"
-          ? "O estoque virtual define a quantidade exibida no anúncio. O sistema continuará monitorando o Estoque real como fonte oficial.\n\nSe o estoque real zerar, o anúncio será pausado automaticamente para evitar vendas sem produto disponível.\n\nMantenha seu estoque real sempre atualizado para evitar pausas inesperadas e perda de vendas."
-          : "A partir de agora, o estoque que será sincronizado com os anúncios será o Estoque real desta variação.\n\nO valor do Estoque virtual será zerado e deixará de ser utilizado pelo sistema.\n\nMantenha o estoque real sempre atualizado para evitar pausas automáticas nos anúncios."}
-      </p>
-      <div className="s7-modal-actions">
-        <button
-          type="button"
-          className="s7-modal-btn-secondary"
-          onClick={() => {
-            setVirtualModalOpen(false);
-            setPendingVariantId(null);
-          }}
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          className="s7-modal-btn-primary"
-          onClick={() => {
-            handleStockVirtualToggle(pendingVariantId, pendingNextChecked);
-            setVirtualModalOpen(false);
-            setPendingVariantId(null);
-          }}
-        >
-          Entendi
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+    </div>,
+    document.body
+  )}
 </>
 );
 }
