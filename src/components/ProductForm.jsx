@@ -21,6 +21,7 @@ import {
   dispatchStockRealZero,
 } from "../services/stockNotificationDispatch";
 import { relinkDraftToProduct } from "../services/images/imageRepository";
+import { updateVariantsSortOrder } from "../services/variants/variantRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
 import "./ProductForm.css";
 
@@ -81,7 +82,8 @@ export default function ProductForm({
   title = "Novo produto",
   mode = "create", // "create" | "edit"
   initialProduct = null,
-  initialVariants = null, // lista de product_variants (quando edit)
+  initialVariants = null, // lista de product_variants (quando edit, ordenada por sort_order)
+  initialVariations = null, // alias para initialVariants
   onCancel = null,
   onSubmit = null,
 }) {
@@ -294,8 +296,8 @@ useEffect(() => {
   // ------------------------------------------------------
   setVariantCostDigitsById(() => {
     const map = {};
-
-    (Array.isArray(initialVariants) ? initialVariants : []).forEach((v) => {
+    const vs = initialVariants ?? initialVariations;
+    (Array.isArray(vs) ? vs : []).forEach((v) => {
       const id = v?.id || null;
       if (!id) return;
 
@@ -312,10 +314,12 @@ useEffect(() => {
 
   // ------------------------------------------------------
   // Se vierem variantes prontas (edit), carregamos no grid
+  // Usar listVariants(productId) para carregar ordenado por sort_order
   // ------------------------------------------------------
-  if (Array.isArray(initialVariants) && initialVariants.length > 0) {
+  const variants = initialVariants ?? initialVariations;
+  if (Array.isArray(variants) && variants.length > 0) {
     setVariantRows(
-      initialVariants.map((v) => ({
+      variants.map((v) => ({
         id: v.id || createId(),
         sku: v.sku || "",
         gtin: v.gtin || "",
@@ -339,7 +343,7 @@ useEffect(() => {
     // ------------------------------------------------------
     const attrMap = new Map();
 
-    initialVariants.forEach((v) => {
+    variants.forEach((v) => {
       const attrs = v.attributes || {};
       Object.entries(attrs).forEach(([k, val]) => {
         if (!attrMap.has(k)) attrMap.set(k, new Set());
@@ -359,7 +363,7 @@ useEffect(() => {
       setShowVariationsBuilder(false); // ✅ se está editando com variações, já cai no modo gerenciamento
     }
   }
-}, [initialProduct, initialVariants]);
+}, [initialProduct, initialVariants, initialVariations]);
 
 
   // ------------------------------------------------------
@@ -878,6 +882,25 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     });
 
     setVariantRows(nextRows);
+  };
+
+  // ------------------------------------------------------
+  // VARIANT ROWS: reorder (drag vertical na aba Imagens)
+  // Persiste em product_variants quando em modo edit
+  // ------------------------------------------------------
+  const handleVariantReorder = async (newOrderedRows) => {
+    setVariantRows(newOrderedRows);
+    const pid = product?.id;
+    if (!pid || typeof pid !== "string" || pid.startsWith("draft:")) return;
+    const updates = newOrderedRows
+      .map((r, idx) => (r?.id ? { id: r.id, sort_order: idx } : null))
+      .filter(Boolean);
+    if (updates.length === 0) return;
+    try {
+      await updateVariantsSortOrder(pid, updates);
+    } catch (err) {
+      addNotification({ type: "error", title: "Reorder", message: err?.message || "Erro ao salvar ordem das variações" });
+    }
   };
 
   // ------------------------------------------------------
@@ -1796,6 +1819,7 @@ const handleSubmit = async () => {
               format={product.format}
               variantRows={variantRows}
               buildVariantKey={buildVariantKey}
+              onVariantReorder={handleVariantReorder}
             />
           </div>
         )}

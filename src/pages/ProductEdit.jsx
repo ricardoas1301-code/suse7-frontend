@@ -3,7 +3,7 @@
 // Objetivo:
 // - Página de edição de produto
 // - Reutiliza o ProductForm
-// - (UI only agora) preparado para carregar do backend depois
+// - Para carregar do Supabase: usar listVariants(productId) para variações ordenadas por sort_order
 // ======================================================================
 
 import { useEffect, useState } from "react";
@@ -26,28 +26,26 @@ export default function ProductEdit() {
   const [initialVariations, setInitialVariations] = useState(null);
 
   // ------------------------------------------------------
-  // LOAD PRODUCT (placeholder — backend depois)
+  // LOAD PRODUCT (placeholder — integrar Supabase depois)
+  // Quando integrar: listVariants(id) retorna variantes ordenadas por sort_order asc
   // ------------------------------------------------------
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
 
-        // Futuro:
-        // - buscar produto no Supabase/Backend pelo id
-        // - buscar variações do produto
-        // - setInitialProduct(...)
-        // - setInitialVariations(...)
-
-        // Placeholder para não quebrar:
-        // id vem da URL (UUID string)
+        // Placeholder: id vem da URL (UUID string)
         setInitialProduct({
           id: id,
           product_name: `Produto #${id}`,
         });
 
+        // Placeholder: dados mock. Ao integrar Supabase:
+        // const variants = await listVariants(id);
+        // setInitialVariations(variants);
         setInitialVariations([
           {
+            id: `var-${id}`,
             variation_name: "Cor",
             attribute: "Cor",
             value: "Preto",

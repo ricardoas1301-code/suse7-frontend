@@ -74,6 +74,7 @@ export async function createImageRecord({
 
 /**
  * Lista registros por productId (UUID string) OU draftKey.
+ * Sempre ordenado por sort_order asc.
  * @param {Object} opts - { productId?: string, draftKey?: string, variantKey?: string|null }
  * @returns {Promise<Array>} registros com storage_path, mime_type, etc.
  */
@@ -168,6 +169,17 @@ export async function relinkDraftToProduct(draftKey, productId) {
 export async function updateLink(id, patch) {
   const { error } = await supabase.from(TABLE).update(patch).eq("id", id);
   if (error) throw new Error(error.message || "Falha ao atualizar");
+}
+
+/**
+ * Atualiza sort_order de múltiplos registros em batch (1 RPC, atômico).
+ * @param {Array<{ id: string, sort_order: number }>} updates
+ */
+export async function updateLinksSortOrder(updates) {
+  if (!Array.isArray(updates) || updates.length === 0) return;
+  const payload = updates.map(({ id, sort_order }) => ({ id, sort_order }));
+  const { error } = await supabase.rpc("update_product_image_links_sort_order", { p_payload: payload });
+  if (error) throw new Error(error.message || "Falha ao atualizar sort_order");
 }
 
 /**

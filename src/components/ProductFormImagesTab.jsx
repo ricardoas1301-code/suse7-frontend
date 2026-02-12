@@ -2,11 +2,26 @@
  * ProductFormImagesTab — aba Imagens do ProductForm
  * - Upload, ordenação (drag & drop), definir principal, download, excluir
  * - Suporta produto simples e com variações
- * - Arquitetura modular pronta para expansão
+ * - Drag imagens (horizontal) e variações (vertical) com persistência
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "../supabaseClient";
 import { useNotifications } from "../contexts/NotificationContext";
 import {
@@ -14,6 +29,7 @@ import {
   deleteLink,
   listLinks,
   updateLink,
+  updateLinksSortOrder,
 } from "../services/images/imageRepository";
 import { ensureSinglePrimary, normalizeSortOrder } from "../services/images/imageRules";
 import { getSignedUrl, uploadAssets } from "../services/images/imageStorageService";
@@ -33,6 +49,142 @@ function formatVariantLabel(attrsObj) {
     .join(" / ");
 }
 
+/** Título para variação: "Cor: Vermelho" ou "Cor: Vermelho / Tamanho: P" */
+function formatVariantTitle(attrsObj) {
+  if (!attrsObj || Object.keys(attrsObj).length === 0) return "Geral";
+  return Object.entries(attrsObj)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(" / ");
+}
+
+/** Bloco de variação sortable (drag vertical) */
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onSetPrimary, onDelete, onReorder, onToggleSelect, uploading }) {
+  const vk = variantKeyFn(row.attributes);
+  const title = formatVariantTitle(row.attributes);
+  const variantLinks = variantLinksMap[vk] || [];
+  const rowId = row.id || vk;
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: rowId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`pf-images-variant-block ${isDragging ? "pf-images-variant-block--dragging" : ""}`}
+    >
+      <div className="pf-images-variant-block-header">
+        <h4 className="pf-images-variant-title">{title}</h4>
+        <span
+          className="pf-images-variant-drag-handle"
+          {...attributes}
+          {...listeners}
+          title="Arrastar para reordenar variações"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="9" cy="6" r="1.5" />
+            <circle cx="9" cy="12" r="1.5" />
+            <circle cx="9" cy="18" r="1.5" />
+            <circle cx="15" cy="6" r="1.5" />
+            <circle cx="15" cy="12" r="1.5" />
+            <circle cx="15" cy="18" r="1.5" />
+          </svg>
+        </span>
+      </div>
+      <ImageSlotRow
+        links={variantLinks}
+        previewUrls={previewUrls}
+        selectedForDownload={selectedForDownload}
+        onUpload={(files) => onUpload(files, vk)}
+        onSetPrimary={(id) => onSetPrimary(id, vk)}
+        onDelete={(id) => onDelete(id, vk)}
+        onReorder={(ids) => onReorder(ids, vk)}
+        onToggleSelect={onToggleSelect}
+        uploading={uploading}
+        maxSlots={7}
+        scopeId={vk}
+      />
+    </div>
+  );
+}
+
+/** Seção de blocos de variação com drag vertical */
+function VariationBlocksSection({
+  variantRows,
+  variantKeyFn,
+  variantLinksMap,
+  previewUrls,
+  selectedForDownload,
+  onUpload,
+  onSetPrimary,
+  onDelete,
+  onReorder,
+  onToggleSelect,
+  onVariantReorder,
+  uploading,
+}) {
+  const rowIds = variantRows.map((r) => r.id || variantKeyFn(r.attributes));
+
+  const handleVariantDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !onVariantReorder) return;
+    const oldIndex = rowIds.indexOf(active.id);
+    const newIndex = rowIds.indexOf(over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const newOrderedRows = arrayMove(variantRows, oldIndex, newIndex);
+    onVariantReorder(newOrderedRows);
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  );
+
+  return (
+    <section className="pf-images-section">
+      <h3 className="pf-images-section-title">Imagens por variação</h3>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleVariantDragEnd}
+      >
+        <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
+          <div className="pf-images-variants-list">
+            {variantRows.map((row) => (
+              <SortableVariantBlock
+                key={row.id || variantKeyFn(row.attributes)}
+                row={row}
+                variantKeyFn={variantKeyFn}
+                variantLinksMap={variantLinksMap}
+                previewUrls={previewUrls}
+                selectedForDownload={selectedForDownload}
+                onUpload={onUpload}
+                onSetPrimary={onSetPrimary}
+                onDelete={onDelete}
+                onReorder={onReorder}
+                onToggleSelect={onToggleSelect}
+                uploading={uploading}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </section>
+  );
+}
+
 export default function ProductFormImagesTab({
   productId,
   draftKey,
@@ -40,6 +192,7 @@ export default function ProductFormImagesTab({
   variantRows = [],
   buildVariantKey,
   initialProductImages = null,
+  onVariantReorder = null,
 }) {
   const variantKeyFn = buildVariantKey || buildVariantKeyFromAttrs;
 
@@ -49,10 +202,8 @@ export default function ProductFormImagesTab({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedVariantKey, setSelectedVariantKey] = useState(null);
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [previewUrls, setPreviewUrls] = useState(new Map());
-  const [draggedId, setDraggedId] = useState(null);
 
   const { addNotification } = useNotifications();
 
@@ -213,16 +364,34 @@ export default function ProductFormImagesTab({
     await loadLinks();
   };
 
-  const handleReorder = async (orderedIds, variantKey = null) => {
+  const handleReorder = useCallback(async (orderedIds, variantKey = null) => {
     if (!canOperate || !orderedIds?.length) return;
     const isProduct = variantKey === null || variantKey === undefined;
     const links = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
     const normalized = normalizeSortOrder(links, orderedIds);
-    for (const l of normalized) {
-      await updateLink(l.id, { sort_order: l.sort_order });
+
+    const toUpdate = normalized.filter((l) => {
+      const orig = links.find((x) => x.id === l.id);
+      return !orig || orig.sort_order !== l.sort_order;
+    });
+
+    if (toUpdate.length === 0) return;
+
+    const updates = toUpdate.map((l) => ({ id: l.id, sort_order: l.sort_order }));
+
+    if (isProduct) {
+      setProductLinks(normalized);
+    } else {
+      setVariantLinksMap((prev) => ({ ...prev, [variantKey]: normalized }));
     }
-    await loadLinks();
-  };
+
+    try {
+      await updateLinksSortOrder(updates);
+    } catch (err) {
+      addNotification({ type: "error", title: "Reorder", message: err?.message || "Erro ao salvar ordem" });
+      await loadLinks();
+    }
+  }, [canOperate, productLinks, variantLinksMap, addNotification, loadLinks]);
 
   const toggleSelectForDownload = (linkId) => {
     setSelectedForDownload((prev) => {
@@ -253,12 +422,10 @@ export default function ProductFormImagesTab({
   }, [productLinks, variantLinksMap, getPreviewUrl]);
 
   const handleDownloadSelected = async () => {
-    const scopeLinks = selectedVariantKey
-      ? (variantLinksMap[selectedVariantKey] || [])
-      : productLinks;
+    const allLinks = [...productLinks, ...Object.values(variantLinksMap).flat()];
     const toDownload = selectedForDownload.size > 0
-      ? [...productLinks, ...Object.values(variantLinksMap).flat()].filter((l) => selectedForDownload.has(l.id))
-      : scopeLinks;
+      ? allLinks.filter((l) => selectedForDownload.has(l.id))
+      : allLinks;
 
     for (const link of toDownload) {
       const url = await getSignedUrl(link?.storage_path);
@@ -266,10 +433,6 @@ export default function ProductFormImagesTab({
     }
     setDownloadModalOpen(false);
   };
-
-  const linksForCurrentScope = selectedVariantKey
-    ? (variantLinksMap[selectedVariantKey] || [])
-    : productLinks;
 
   const hasImages = productLinks.length > 0 || Object.values(variantLinksMap).some((arr) => arr?.length > 0);
 
@@ -299,10 +462,10 @@ export default function ProductFormImagesTab({
         <div className="pf-images-loading">Carregando imagens...</div>
       ) : (
         <>
-          {/* Seção 1: Imagens do produto */}
+          {/* Seção 1: Imagens do produto (7 slots fixos) */}
           <section className="pf-images-section">
             <h3 className="pf-images-section-title">Imagens do produto</h3>
-            <ImageGrid
+            <ImageSlotRow
               links={productLinks}
               previewUrls={previewUrls}
               selectedForDownload={selectedForDownload}
@@ -312,81 +475,27 @@ export default function ProductFormImagesTab({
               onReorder={(ids) => handleReorder(ids, null)}
               onToggleSelect={toggleSelectForDownload}
               uploading={uploading}
-              maxImages={MAX_IMAGES}
-              draggedId={draggedId}
-              setDraggedId={setDraggedId}
+              maxSlots={MAX_IMAGES}
+              scopeId="product"
             />
           </section>
 
-          {/* Seção 2: Imagens por variação (apenas se format === variants) */}
+          {/* Seção 2: Imagens por variação (cada variação com título + 7 slots, drag vertical) */}
           {format === "variants" && variantRows?.length > 0 && (
-            <section className="pf-images-section">
-              <h3 className="pf-images-section-title">Imagens por variação</h3>
-              <div className="pf-images-variant-select">
-                <label className="s7-label">Variação</label>
-                <select
-                  className="s7-select"
-                  value={selectedVariantKey || ""}
-                  onChange={(e) => setSelectedVariantKey(e.target.value || null)}
-                >
-                  <option value="">Selecione uma variação</option>
-                  {variantRows.map((row) => {
-                    const vk = variantKeyFn(row.attributes);
-                    return (
-                      <option key={vk} value={vk}>
-                        {formatVariantLabel(row.attributes)}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              {selectedVariantKey ? (
-                <>
-                  {variantLinksMap[selectedVariantKey]?.length > 0 ? (
-                    <ImageGrid
-                      links={variantLinksMap[selectedVariantKey] || []}
-                      previewUrls={previewUrls}
-                      selectedForDownload={selectedForDownload}
-                      onUpload={(files) => handleUpload(files, selectedVariantKey)}
-                      onSetPrimary={(id) => handleSetPrimary(id, selectedVariantKey)}
-                      onDelete={(id) => handleDelete(id, selectedVariantKey)}
-                      onReorder={(ids) => handleReorder(ids, selectedVariantKey)}
-                      onToggleSelect={toggleSelectForDownload}
-                      uploading={uploading}
-                      maxImages={MAX_IMAGES}
-                      draggedId={draggedId}
-                      setDraggedId={setDraggedId}
-                    />
-                  ) : (
-                    <>
-                      <div className="pf-images-variant-empty">
-                        <p>Esta variação não tem imagens próprias.</p>
-                        <p className="pf-images-fallback-hint">
-                          Esta variação usará a imagem principal do produto.
-                        </p>
-                      </div>
-                      <ImageGrid
-                        links={[]}
-                        previewUrls={previewUrls}
-                        selectedForDownload={selectedForDownload}
-                        onUpload={(files) => handleUpload(files, selectedVariantKey)}
-                        onSetPrimary={() => {}}
-                        onDelete={() => {}}
-                        onReorder={() => {}}
-                        onToggleSelect={toggleSelectForDownload}
-                        uploading={uploading}
-                        maxImages={MAX_IMAGES}
-                        draggedId={draggedId}
-                        setDraggedId={setDraggedId}
-                      />
-                    </>
-                  )}
-                </>
-              ) : (
-                <p className="hint">Selecione uma variação para gerenciar suas imagens.</p>
-              )}
-            </section>
+            <VariationBlocksSection
+              variantRows={variantRows}
+              variantKeyFn={variantKeyFn}
+              variantLinksMap={variantLinksMap}
+              previewUrls={previewUrls}
+              selectedForDownload={selectedForDownload}
+              onUpload={handleUpload}
+              onSetPrimary={handleSetPrimary}
+              onDelete={handleDelete}
+              onReorder={handleReorder}
+              onToggleSelect={toggleSelectForDownload}
+              onVariantReorder={onVariantReorder}
+              uploading={uploading}
+            />
           )}
         </>
       )}
@@ -431,7 +540,84 @@ export default function ProductFormImagesTab({
   );
 }
 
-function ImageGrid({
+/** Card de imagem sortable (drag handle no ícone) */
+function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimary, onDelete, onToggleSelect }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`pf-images-card ${isDragging ? "pf-images-card--dragging" : ""}`}
+    >
+      <div className="pf-images-card-preview">
+        {previewUrls.get(link.id) ? (
+          <img src={previewUrls.get(link.id)} alt="" />
+        ) : (
+          <div className="pf-images-card-placeholder">…</div>
+        )}
+      </div>
+      <div className="pf-images-card-actions">
+        {link.is_primary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
+        {!link.is_primary && (
+          <button type="button" className="pf-images-btn-sm" onClick={() => onSetPrimary(link.id)}>
+            Definir principal
+          </button>
+        )}
+        <span
+          className="pf-images-drag-icon"
+          {...attributes}
+          {...listeners}
+          aria-hidden
+          title="Arrastar para reordenar"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="9" cy="6" r="1.5" />
+            <circle cx="9" cy="12" r="1.5" />
+            <circle cx="9" cy="18" r="1.5" />
+            <circle cx="15" cy="6" r="1.5" />
+            <circle cx="15" cy="12" r="1.5" />
+            <circle cx="15" cy="18" r="1.5" />
+          </svg>
+        </span>
+        <label className="pf-images-check">
+          <input
+            type="checkbox"
+            checked={selectedForDownload.has(link.id)}
+            onChange={() => onToggleSelect(link.id)}
+          />
+          Selecionar
+        </label>
+        <button
+          type="button"
+          className="pf-images-btn-delete"
+          onClick={() => onDelete(link.id)}
+          title="Excluir"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+            <path d="M10 11v6M14 11v6" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Linha com 7 slots fixos: imagem (sortable) ou placeholder tracejado */
+function ImageSlotRow({
   links,
   previewUrls,
   selectedForDownload,
@@ -441,67 +627,41 @@ function ImageGrid({
   onReorder,
   onToggleSelect,
   uploading,
-  maxImages,
-  draggedId,
-  setDraggedId,
+  maxSlots,
+  scopeId,
 }) {
   const inputRef = useRef(null);
+  const sortedLinks = [...(links || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || 0);
+  const linkIds = sortedLinks.map((l) => l.id);
 
-  const handleDrop = (e, dropIndex) => {
-    e.preventDefault();
-    const dragId = draggedId;
-    setDraggedId(null);
-    if (dragId == null || links.length === 0) return;
-    const dragIdx = links.findIndex((l) => l.id === dragId);
-    if (dragIdx < 0) return;
-    const newOrder = [...links.map((l) => l.id)];
-    newOrder.splice(dragIdx, 1);
-    newOrder.splice(dropIndex, 0, dragId);
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = linkIds.indexOf(active.id);
+    const newIndex = linkIds.indexOf(over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const newOrder = arrayMove(linkIds, oldIndex, newIndex);
     onReorder(newOrder);
   };
 
-  return (
-    <div className="pf-images-grid">
-      {links.map((link, idx) => (
-        <div
-          key={link.id}
-          className="pf-images-card"
-          draggable
-          onDragStart={() => setDraggedId(link.id)}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => handleDrop(e, idx)}
-        >
-          <div className="pf-images-card-preview">
-            {previewUrls.get(link.id) ? (
-              <img src={previewUrls.get(link.id)} alt="" />
-            ) : (
-              <div className="pf-images-card-placeholder">…</div>
-            )}
-          </div>
-          <div className="pf-images-card-actions">
-            {link.is_primary && <span className="pf-images-badge">Principal</span>}
-            {!link.is_primary && (
-              <button type="button" className="pf-images-btn-sm" onClick={() => onSetPrimary(link.id)}>
-                Definir principal
-              </button>
-            )}
-            <label className="pf-images-check">
-              <input
-                type="checkbox"
-                checked={selectedForDownload.has(link.id)}
-                onChange={() => onToggleSelect(link.id)}
-              />
-              Selecionar
-            </label>
-            <button type="button" className="pf-images-btn-sm pf-images-btn-delete" onClick={() => onDelete(link.id)}>
-              Excluir
-            </button>
-          </div>
-        </div>
-      ))}
+  const triggerUpload = () => {
+    if (!uploading && sortedLinks.length < maxSlots) inputRef?.current?.click();
+  };
 
-      {links.length < maxImages && (
-        <div className="pf-images-upload-slot">
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  );
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={linkIds} strategy={horizontalListSortingStrategy}>
+        <div className="pf-images-slot-row">
           <input
             ref={inputRef}
             type="file"
@@ -513,25 +673,48 @@ function ImageGrid({
                 const raw = e.target.files;
                 const files = raw ? Array.from(raw) : [];
                 e.target.value = "";
-                if (files.length) {
-                  onUpload(files);
-                }
+                if (files.length) onUpload(files);
               } catch (err) {
                 console.error("[ProductFormImagesTab] input onChange error:", err);
                 e.target.value = "";
               }
             }}
           />
-          <button
-            type="button"
-            className="s7-btn s7-btn--secondary"
-            disabled={uploading}
-            onClick={() => inputRef?.current?.click()}
-          >
-            {uploading ? "Enviando…" : "Adicionar fotos"}
-          </button>
+          {Array.from({ length: maxSlots }, (_, index) => {
+            const link = sortedLinks[index];
+            if (link) {
+              return (
+                <SortableImageCard
+                  key={link.id}
+                  link={link}
+                  previewUrls={previewUrls}
+                  selectedForDownload={selectedForDownload}
+                  onSetPrimary={onSetPrimary}
+                  onDelete={onDelete}
+                  onToggleSelect={onToggleSelect}
+                />
+              );
+            }
+            const isFirstEmpty = index === sortedLinks.length;
+            return (
+              <div
+                key={`empty-${scopeId}-${index}`}
+                className={`pf-images-slot-empty ${isFirstEmpty ? "pf-images-slot-empty--upload" : ""}`}
+                onClick={isFirstEmpty ? triggerUpload : undefined}
+                role={isFirstEmpty ? "button" : undefined}
+                tabIndex={isFirstEmpty ? 0 : undefined}
+                onKeyDown={isFirstEmpty ? (e) => e.key === "Enter" && triggerUpload() : undefined}
+              >
+                {isFirstEmpty && (
+                  <span className="pf-images-slot-empty-label">
+                    {uploading ? "Enviando…" : "+ Adicionar"}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
-    </div>
+      </SortableContext>
+    </DndContext>
   );
 }
