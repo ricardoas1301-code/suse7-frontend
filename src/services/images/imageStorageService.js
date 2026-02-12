@@ -18,16 +18,28 @@ const BUCKET_NAME = "product-images";
  */
 export async function uploadAssets(files, { userId, productId, draftKey }) {
   const storageKey = productId ?? draftKey;
-  if (!files?.length || !userId || !storageKey) return [];
+  if (!files?.length) {
+    console.warn("[imageStorageService] uploadAssets: nenhum arquivo");
+    return [];
+  }
+  if (!userId || userId === "anon") {
+    throw new Error("Usuário não autenticado - faça login para enviar imagens");
+  }
+  if (!storageKey || (typeof storageKey === "string" && !storageKey.trim())) {
+    throw new Error("productId ou draftKey é obrigatório para upload");
+  }
+
   const results = [];
   for (const file of files) {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const storagePath = `${userId}/${storageKey}/${safeName}`;
 
+    console.log("[imageStorageService] upload:", { storagePath, size: file.size });
+
     const { error } = await supabase.storage.from(BUCKET_NAME).upload(storagePath, file, {
       contentType: file.type || "image/jpeg",
-      upsert: false,
+      upsert: true,
     });
 
     if (error) {

@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../supabaseClient";
+import { useNotifications } from "../contexts/NotificationContext";
 import {
   createImageRecord,
   deleteLink,
@@ -53,9 +54,15 @@ export default function ProductFormImagesTab({
   const [previewUrls, setPreviewUrls] = useState(new Map());
   const [draggedId, setDraggedId] = useState(null);
 
+  const { addNotification } = useNotifications();
+
   const hasProductId = !!productId && typeof productId === "string" && !productId.startsWith("draft:");
   const hasDraftKey = !!draftKey && typeof draftKey === "string";
   const canOperate = hasProductId || hasDraftKey;
+
+  useEffect(() => {
+    console.log("[ProductFormImagesTab] mount/update", { productId, draftKey: draftKey?.slice?.(0, 8) + "...", hasProductId, hasDraftKey, canOperate });
+  }, [productId, draftKey, hasProductId, hasDraftKey, canOperate]);
 
   const loadLinks = useCallback(async () => {
     if (!canOperate) return;
@@ -91,23 +98,69 @@ export default function ProductFormImagesTab({
   };
 
   const handleUpload = async (files, variantKey = null) => {
-    if (!canOperate || !files?.length) return;
+    if (!files?.length) {
+      console.warn("[ProductFormImagesTab] handleUpload: nenhum arquivo");
+      return;
+    }
+    if (!canOperate) {
+      const msg = "Escopo inválido: informe productId ou draftKey";
+      console.error("[ProductFormImagesTab] handleUpload:", msg);
+      setError(msg);
+      addNotification({ type: "error", title: "Upload", message: msg });
+      return;
+    }
+
+    const storageKey = hasProductId ? productId : draftKey;
+    if (!storageKey || (typeof storageKey === "string" && !storageKey.trim())) {
+      const msg = "productId/draftKey vazio - não é possível fazer upload";
+      console.error("[ProductFormImagesTab] handleUpload:", msg, { productId, draftKey });
+      setError(msg);
+      addNotification({ type: "error", title: "Upload", message: msg });
+      return;
+    }
+
     setUploading(true);
     setError(null);
     try {
       const userId = await getUserId();
-      const fileList = Array.from(files).slice(0, MAX_IMAGES);
+      if (!userId || userId === "anon") {
+        const msg = "Faça login para fazer upload de imagens";
+        console.error("[ProductFormImagesTab] handleUpload:", msg);
+        setError(msg);
+        addNotification({ type: "error", title: "Upload", message: msg });
+        return;
+      }
+
+      const fileList = Array.isArray(files) ? files : Array.from(files || []).slice(0, MAX_IMAGES);
+      if (!fileList.length) {
+        console.warn("[ProductFormImagesTab] handleUpload: nenhum arquivo após normalização");
+        return;
+      }
+      console.log("[ProductFormImagesTab] handleUpload: iniciando", { fileCount: fileList.length, userId, storageKey: storageKey?.slice?.(0, 8) + "..." });
+
       const metas = await uploadAssets(fileList, {
         userId,
         productId: hasProductId ? productId : undefined,
         draftKey: hasDraftKey ? draftKey : undefined,
       });
 
+      if (!metas?.length) {
+        const msg = "Upload retornou vazio (bucket ou storageKey inválido?)";
+        console.error("[ProductFormImagesTab] handleUpload:", msg);
+        setError(msg);
+        addNotification({ type: "error", title: "Upload", message: msg });
+        return;
+      }
+
       const isProduct = variantKey === null || variantKey === undefined;
       const currentLinks = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
 
       for (let i = 0; i < metas.length; i++) {
         const meta = metas[i];
+        if (!meta?.storage_path?.trim()) {
+          console.error("[ProductFormImagesTab] handleUpload: storage_path vazio", meta);
+          throw new Error("storage_path vazio após upload");
+        }
         const sortOrder = (currentLinks.length + i) || 0;
         const isPrimary = currentLinks.length === 0 && i === 0;
         await createImageRecord({
@@ -124,8 +177,12 @@ export default function ProductFormImagesTab({
         });
       }
       await loadLinks();
+      addNotification({ type: "success", title: "Upload", message: `${metas.length} imagem(ns) adicionada(s)` });
     } catch (err) {
-      setError(err.message || "Erro no upload");
+      const msg = err?.message || String(err) || "Erro no upload";
+      console.error("[ProductFormImagesTab] handleUpload erro:", err);
+      setError(msg);
+      addNotification({ type: "error", title: "Upload", message: msg });
     } finally {
       setUploading(false);
     }
@@ -453,8 +510,17 @@ function ImageGrid({
             multiple
             className="pf-images-input-hidden"
             onChange={(e) => {
-              onUpload(e.target.files);
-              e.target.value = "";
+              try {
+                const raw = e.target.files;
+                const files = raw ? Array.from(raw) : [];
+                e.target.value = "";
+                if (files.length) {
+                  onUpload(files);
+                }
+              } catch (err) {
+                console.error("[ProductFormImagesTab] input onChange error:", err);
+                e.target.value = "";
+              }
             }}
           />
           <button

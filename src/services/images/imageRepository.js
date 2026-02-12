@@ -57,6 +57,12 @@ export async function createImageRecord({
     sort_order: sortOrder ?? 0,
   };
 
+  if (!storage_path?.trim()) {
+    throw new Error("createImageRecord: storage_path não pode ser vazio");
+  }
+
+  console.log("[imageRepository] createImageRecord:", { product_id: payload.product_id, draft_key: payload.draft_key?.slice?.(0, 8) + "...", storage_path: payload.storage_path?.slice?.(0, 30) + "..." });
+
   const { data, error } = await supabase
     .from(TABLE)
     .insert(payload)
