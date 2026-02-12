@@ -40,8 +40,9 @@ export default function ProductEdit() {
         // - setInitialVariations(...)
 
         // Placeholder para não quebrar:
+        // id vem da URL (UUID string)
         setInitialProduct({
-          id: parseInt(id, 10) || id,
+          id: id,
           product_name: `Produto #${id}`,
         });
 

@@ -1,84 +1,89 @@
 /**
- * imageRepository.js — CRUD de image_assets e product_image_links
- * - createAsset: registra asset no banco
- * - createLink: cria vínculo produto/variante ↔ asset (suporta productId ou draftKey)
- * - listLinks: lista links por productId ou draftKey e variantKey
+ * imageRepository.js — CRUD de product_image_links
+ * Tabela única: public.product_image_links (metadata inline, sem image_assets)
+ *
+ * - createImageRecord: insere registro com metadata do upload
+ * - listLinks: lista por productId ou draftKey e variantKey
  * - updateLink: atualiza sort_order ou is_primary
- * - deleteLink: remove vínculo
- * - relinkDraftToProduct: migra links de draft para produto salvo
+ * - deleteLink: remove registro
+ * - relinkDraftToProduct: migra draft para produto salvo
+ *
+ * Contrato: productId é sempre UUID string (public.products.id)
  */
 
 import { supabase } from "../../supabaseClient";
 
-/**
- * Cria registro em image_assets.
- * @param {Object} metadata - { storage_path, mime_type, size_bytes }
- * @returns {Promise<{ id: number }>}
- */
-export async function createAsset(metadata) {
-  const { data, error } = await supabase
-    .from("image_assets")
-    .insert({
-      storage_path: metadata.storage_path,
-      mime_type: metadata.mime_type || "image/jpeg",
-      size_bytes: metadata.size_bytes ?? 0,
-    })
-    .select("id")
-    .single();
+const TABLE = "product_image_links";
 
-  if (error) throw new Error(error.message || "Falha ao criar asset");
-  return data;
+/** @param {string} v - garante UUID string */
+function toProductId(v) {
+  if (v == null || v === "") return null;
+  return String(v).trim();
 }
 
 /**
- * Cria link produto/variante ↔ asset.
- * Aceita productId OU draftKey (exatamente um).
- * @param {Object} opts - { productId?, draftKey?, userId, variantKey, assetId, sortOrder, isPrimary }
+ * Cria registro em product_image_links (metadata do upload).
+ * @param {Object} opts - { productId?, draftKey?, userId, variantKey?, storage_path, file_name?, mime_type?, size_bytes?, sortOrder?, isPrimary? }
  */
-export async function createLink({ productId, draftKey, userId, variantKey, assetId, sortOrder, isPrimary }) {
-  const hasProduct = productId != null && productId !== "";
-  const hasDraft = draftKey != null && draftKey !== "";
+export async function createImageRecord({
+  productId,
+  draftKey,
+  userId,
+  variantKey,
+  storage_path,
+  file_name,
+  mime_type,
+  size_bytes,
+  sortOrder,
+  isPrimary,
+}) {
+  const productIdStr = toProductId(productId);
+  const hasProduct = !!productIdStr;
+  const hasDraft = draftKey != null && String(draftKey).trim() !== "";
   if ((hasProduct && hasDraft) || (!hasProduct && !hasDraft)) {
-    throw new Error("createLink: informe productId OU draftKey (exatamente um)");
+    throw new Error("createImageRecord: informe productId OU draftKey (exatamente um)");
   }
 
   const payload = {
-    product_id: hasProduct ? productId : null,
-    draft_key: hasDraft ? draftKey : null,
     user_id: userId,
+    product_id: hasProduct ? productIdStr : null,
+    draft_key: hasDraft ? String(draftKey).trim() : null,
     variant_key: variantKey ?? null,
-    asset_id: assetId,
-    sort_order: sortOrder ?? 0,
+    storage_path,
+    file_name: file_name ?? null,
+    mime_type: mime_type ?? "image/jpeg",
+    size_bytes: size_bytes ?? null,
     is_primary: !!isPrimary,
+    sort_order: sortOrder ?? 0,
   };
 
   const { data, error } = await supabase
-    .from("product_image_links")
+    .from(TABLE)
     .insert(payload)
     .select("id")
     .single();
 
-  if (error) throw new Error(error.message || "Falha ao criar link");
+  if (error) throw new Error(error.message || "Falha ao criar registro de imagem");
   return data;
 }
 
 /**
- * Lista links com join em image_assets.
- * Consulta por productId OU draftKey.
- * @param {Object} opts - { productId?, draftKey?, variantKey? }
- * @returns {Promise<Array>} links com asset
+ * Lista registros por productId (UUID string) OU draftKey.
+ * @param {Object} opts - { productId?: string, draftKey?: string, variantKey?: string|null }
+ * @returns {Promise<Array>} registros com storage_path, mime_type, etc.
  */
 export async function listLinks({ productId, draftKey, variantKey = null }) {
-  const hasProduct = productId != null && productId !== "";
-  const hasDraft = draftKey != null && draftKey !== "";
+  const productIdStr = toProductId(productId);
+  const hasProduct = !!productIdStr;
+  const hasDraft = draftKey != null && String(draftKey).trim() !== "";
   if (!hasProduct && !hasDraft) return [];
 
   let query = supabase
-    .from("product_image_links")
-    .select("id, product_id, draft_key, variant_key, asset_id, sort_order, is_primary");
+    .from(TABLE)
+    .select("id, product_id, draft_key, variant_key, storage_path, file_name, mime_type, size_bytes, sort_order, is_primary");
 
   if (hasProduct) {
-    query = query.eq("product_id", productId);
+    query = query.eq("product_id", productIdStr);
   } else {
     query = query.eq("draft_key", draftKey);
   }
@@ -89,66 +94,82 @@ export async function listLinks({ productId, draftKey, variantKey = null }) {
     query = query.eq("variant_key", variantKey);
   }
 
-  const { data: links, error: linksError } = await query.order("sort_order", { ascending: true });
+  const { data: links, error } = await query.order("sort_order", { ascending: true });
 
-  if (linksError) {
-    console.error("[imageRepository] listLinks error:", linksError);
+  if (error) {
+    console.error("[imageRepository] listLinks error:", error);
     return [];
   }
 
-  if (!links?.length) return [];
-
-  const assetIds = [...new Set(links.map((l) => l.asset_id))];
-  const { data: assets, error: assetsError } = await supabase
-    .from("image_assets")
-    .select("id, storage_path, mime_type, size_bytes")
-    .in("id", assetIds);
-
-  if (assetsError || !assets?.length) return links.map((l) => ({ ...l, asset: null }));
-
-  const assetMap = new Map(assets.map((a) => [a.id, a]));
-  return links.map((l) => ({
-    ...l,
-    asset: assetMap.get(l.asset_id) || null,
-  }));
+  return links || [];
 }
 
 /**
  * Migra links de draft para produto salvo.
- * Atualiza product_id e zera draft_key para linhas do draft do usuário atual.
+ * Valida ownership do produto e resolve conflito de primary.
  * @param {string} draftKey
- * @param {string|number} productId
+ * @param {string} productId - UUID do produto
  */
 export async function relinkDraftToProduct(draftKey, productId) {
-  if (!draftKey || productId == null) return;
+  const draftKeyStr = draftKey?.trim();
+  const productIdStr = toProductId(productId);
+  if (!draftKeyStr || !productIdStr) return;
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id) throw new Error("Usuário não autenticado");
 
-  const { error } = await supabase
-    .from("product_image_links")
-    .update({ product_id: productId, draft_key: null })
-    .eq("draft_key", draftKey)
+  const { data: product, error: productError } = await supabase
+    .from("products")
+    .select("id, user_id")
+    .eq("id", productIdStr)
+    .single();
+
+  if (productError || !product || product.user_id !== user.id) {
+    throw new Error("Produto não encontrado ou sem permissão");
+  }
+
+  const { data: draftLinks } = await supabase
+    .from(TABLE)
+    .select("id, variant_key, is_primary")
+    .eq("draft_key", draftKeyStr)
     .eq("user_id", user.id);
 
-  if (error) throw new Error(error.message || "Falha ao vincular imagens ao produto");
+  if (!draftLinks?.length) return;
+
+  const variantKeysWithPrimary = draftLinks.filter((l) => l.is_primary).map((l) => l.variant_key);
+
+  for (const vk of variantKeysWithPrimary) {
+    let q = supabase.from(TABLE).select("id").eq("product_id", productIdStr).eq("is_primary", true);
+    q = vk == null ? q.is("variant_key", null) : q.eq("variant_key", vk);
+    const { data: existing } = await q.limit(1).maybeSingle();
+    if (existing?.id) {
+      await supabase.from(TABLE).update({ is_primary: false }).eq("id", existing.id).eq("user_id", user.id);
+    }
+  }
+
+  const { error: updateError } = await supabase
+    .from(TABLE)
+    .update({ product_id: productIdStr, draft_key: null })
+    .eq("draft_key", draftKeyStr)
+    .eq("user_id", user.id);
+
+  if (updateError) throw new Error(updateError.message || "Falha ao vincular imagens ao produto");
 }
 
 /**
- * Atualiza link (sort_order, is_primary).
- * @param {number} id - link id
- * @param {Object} patch - { sort_order?, is_primary? }
+ * Atualiza registro (sort_order, is_primary).
+ * @param {string} id - UUID do registro
  */
 export async function updateLink(id, patch) {
-  const { error } = await supabase.from("product_image_links").update(patch).eq("id", id);
-  if (error) throw new Error(error.message || "Falha ao atualizar link");
+  const { error } = await supabase.from(TABLE).update(patch).eq("id", id);
+  if (error) throw new Error(error.message || "Falha ao atualizar");
 }
 
 /**
- * Remove link.
- * @param {number} id - link id
+ * Remove registro.
+ * @param {string} id - UUID do registro
  */
 export async function deleteLink(id) {
-  const { error } = await supabase.from("product_image_links").delete().eq("id", id);
-  if (error) throw new Error(error.message || "Falha ao remover link");
+  const { error } = await supabase.from(TABLE).delete().eq("id", id);
+  if (error) throw new Error(error.message || "Falha ao remover");
 }

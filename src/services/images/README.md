@@ -3,15 +3,15 @@
 ## Estrutura
 
 - **imageStorageService.js** — Upload, signed URL, delete no Supabase Storage
-- **imageRepository.js** — CRUD de `image_assets` e `product_image_links`
+- **imageRepository.js** — CRUD de `product_image_links` (tabela única com metadata inline)
 - **imageRules.js** — Regras puras: `ensureSinglePrimary`, `normalizeSortOrder`, `getFallbackPrimary`
-- **schema.sql** — Script para criar tabelas e bucket no Supabase
+- **schema.sql** — Referência do schema (usar migration 20260212000000)
 
 ## Pré-requisitos
 
 1. Criar bucket `product-images` no Supabase Storage
-2. Executar `schema.sql` no SQL Editor
-3. Configurar RLS/políticas conforme sua regra de negócio
+2. Executar migration `supabase/migrations/20260212000000_create_product_image_links.sql`
+3. Tabela `public.products` deve existir (product_id FK)
 
 ## Uso
 

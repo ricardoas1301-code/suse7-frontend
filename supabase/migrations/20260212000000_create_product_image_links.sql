@@ -1,8 +1,10 @@
 -- ======================================================================
--- Schema de referência: public.product_image_links
--- Alinhado com migration 20260212000000_create_product_image_links.sql
+-- Migration: Criar tabela public.product_image_links
+-- Tabela única com metadata de imagens (sem image_assets separada)
+-- Suporta Draft + Relink com RLS
 -- ======================================================================
 
+-- 1) Tabela product_image_links
 CREATE TABLE public.product_image_links (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT auth.uid(),
@@ -26,6 +28,7 @@ CREATE TABLE public.product_image_links (
     )
 );
 
+-- 2) Índices
 CREATE INDEX idx_product_image_links_product_variant_sort
   ON public.product_image_links(product_id, variant_key, sort_order)
   WHERE product_id IS NOT NULL;
@@ -37,6 +40,7 @@ CREATE INDEX idx_product_image_links_draft_variant_sort
 CREATE INDEX idx_product_image_links_user_id
   ON public.product_image_links(user_id);
 
+-- 3) UNIQUE parciais: 1 primary por escopo (COALESCE garante variant_key NULL)
 CREATE UNIQUE INDEX uq_product_image_links_primary_product
   ON public.product_image_links(product_id, (COALESCE(variant_key, '__global__')))
   WHERE is_primary = true AND product_id IS NOT NULL;
@@ -45,4 +49,33 @@ CREATE UNIQUE INDEX uq_product_image_links_primary_draft
   ON public.product_image_links(draft_key, (COALESCE(variant_key, '__global__')))
   WHERE is_primary = true AND draft_key IS NOT NULL;
 
--- RLS + policies (ver migration completa)
+-- 4) Trigger updated_at
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER product_image_links_updated_at
+  BEFORE UPDATE ON public.product_image_links
+  FOR EACH ROW
+  EXECUTE PROCEDURE public.set_updated_at();
+
+-- 5) RLS
+ALTER TABLE public.product_image_links ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY product_image_links_select_own ON public.product_image_links
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY product_image_links_insert_own ON public.product_image_links
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY product_image_links_update_own ON public.product_image_links
+  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY product_image_links_delete_own ON public.product_image_links
+  FOR DELETE USING (user_id = auth.uid());

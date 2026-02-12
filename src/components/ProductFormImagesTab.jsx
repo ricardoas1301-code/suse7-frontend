@@ -9,8 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../supabaseClient";
 import {
-  createAsset,
-  createLink,
+  createImageRecord,
   deleteLink,
   listLinks,
   updateLink,
@@ -54,7 +53,7 @@ export default function ProductFormImagesTab({
   const [previewUrls, setPreviewUrls] = useState(new Map());
   const [draggedId, setDraggedId] = useState(null);
 
-  const hasProductId = !!productId && (typeof productId === "number" || (typeof productId === "string" && !productId.startsWith("draft:")));
+  const hasProductId = !!productId && typeof productId === "string" && !productId.startsWith("draft:");
   const hasDraftKey = !!draftKey && typeof draftKey === "string";
   const canOperate = hasProductId || hasDraftKey;
 
@@ -109,15 +108,17 @@ export default function ProductFormImagesTab({
 
       for (let i = 0; i < metas.length; i++) {
         const meta = metas[i];
-        const { id: assetId } = await createAsset(meta);
         const sortOrder = (currentLinks.length + i) || 0;
         const isPrimary = currentLinks.length === 0 && i === 0;
-        await createLink({
+        await createImageRecord({
           productId: hasProductId ? productId : undefined,
           draftKey: hasDraftKey ? draftKey : undefined,
           userId,
           variantKey: variantKey ?? null,
-          assetId,
+          storage_path: meta.storage_path,
+          file_name: meta.file_name,
+          mime_type: meta.mime_type,
+          size_bytes: meta.size_bytes,
           sortOrder,
           isPrimary,
         });
@@ -157,7 +158,7 @@ export default function ProductFormImagesTab({
   };
 
   const handleReorder = async (orderedIds, variantKey = null) => {
-    if (!hasProductId || !orderedIds?.length) return;
+    if (!canOperate || !orderedIds?.length) return;
     const isProduct = variantKey === null || variantKey === undefined;
     const links = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
     const normalized = normalizeSortOrder(links, orderedIds);
@@ -177,9 +178,8 @@ export default function ProductFormImagesTab({
   };
 
   const getPreviewUrl = useCallback(async (link) => {
-    if (!link?.asset?.storage_path) return null;
-    const url = await getSignedUrl(link.asset.storage_path);
-    return url;
+    if (!link?.storage_path) return null;
+    return getSignedUrl(link.storage_path);
   }, []);
 
   useEffect(() => {
@@ -205,7 +205,7 @@ export default function ProductFormImagesTab({
       : scopeLinks;
 
     for (const link of toDownload) {
-      const url = await getSignedUrl(link?.asset?.storage_path);
+      const url = await getSignedUrl(link?.storage_path);
       if (url) window.open(url, "_blank");
     }
     setDownloadModalOpen(false);

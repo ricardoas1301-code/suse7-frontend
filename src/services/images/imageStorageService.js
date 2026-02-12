@@ -36,6 +36,7 @@ export async function uploadAssets(files, { userId, productId, draftKey }) {
     }
     results.push({
       storage_path: storagePath,
+      file_name: safeName,
       mime_type: file.type || "image/jpeg",
       size_bytes: file.size,
     });
