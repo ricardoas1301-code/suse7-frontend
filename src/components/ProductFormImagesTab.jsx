@@ -470,25 +470,27 @@ export default function ProductFormImagesTab({
         <div className="pf-images-loading">Carregando imagens...</div>
       ) : (
         <>
-          {/* Seção 1: Imagens do produto (7 slots fixos) */}
-          <section className="pf-images-section">
-            <h3 className="pf-images-section-title">Imagens do produto</h3>
-            <ImageSlotRow
-              links={productLinks}
-              previewUrls={previewUrls}
-              selectedForDownload={selectedForDownload}
-              onUpload={(files) => handleUpload(files, null)}
-              onSetPrimary={(id) => handleSetPrimary(id, null)}
-              onDelete={(id) => handleDelete(id, null)}
-              onReorder={(ids) => handleReorder(ids, null)}
-              onToggleSelect={toggleSelectForDownload}
-              uploading={uploading}
-              maxSlots={MAX_IMAGES}
-              scopeId="product"
-            />
-          </section>
+          {/* Produto simples: apenas Imagens do produto */}
+          {format === "simple" && (
+            <section className="pf-images-section">
+              <h3 className="pf-images-section-title">Imagens do produto</h3>
+              <ImageSlotRow
+                links={productLinks}
+                previewUrls={previewUrls}
+                selectedForDownload={selectedForDownload}
+                onUpload={(files) => handleUpload(files, null)}
+                onSetPrimary={(id) => handleSetPrimary(id, null)}
+                onDelete={(id) => handleDelete(id, null)}
+                onReorder={(ids) => handleReorder(ids, null)}
+                onToggleSelect={toggleSelectForDownload}
+                uploading={uploading}
+                maxSlots={MAX_IMAGES}
+                scopeId="product"
+              />
+            </section>
+          )}
 
-          {/* Seção 2: Imagens por variação (cada variação com título + 7 slots, drag vertical) */}
+          {/* Produto com variações: apenas Imagens por variação (sem seção global) */}
           {format === "variants" && variantRows?.length > 0 && (
             <VariationBlocksSection
               variantRows={variantRows}
@@ -548,8 +550,20 @@ export default function ProductFormImagesTab({
   );
 }
 
-/** Card de imagem sortable (drag handle no ícone) */
-function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimary, onDelete, onToggleSelect }) {
+function StarIcon({ filled }) {
+  return filled ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  );
+}
+
+/** Card de imagem sortable (drag handle, estrela primary, delete no hover) */
+function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimary, onDelete, onToggleSelect, selectMode }) {
   const {
     attributes,
     listeners,
@@ -564,6 +578,16 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimar
     transition,
   };
 
+  const handleStarClick = (e) => {
+    e.stopPropagation();
+    if (!link.is_primary) onSetPrimary(link.id);
+  };
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    onDelete(link.id);
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -576,20 +600,34 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimar
         ) : (
           <div className="pf-images-card-placeholder">…</div>
         )}
+        <button
+          type="button"
+          className="pf-images-btn-delete-overlay"
+          onClick={handleDeleteClick}
+          title="Excluir"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+            <path d="M10 11v6M14 11v6" />
+          </svg>
+        </button>
       </div>
       <div className="pf-images-card-actions">
+        <button
+          type="button"
+          className={`pf-images-btn-star ${link.is_primary ? "pf-images-btn-star--primary" : ""}`}
+          onClick={handleStarClick}
+          title={link.is_primary ? "Principal" : "Definir como principal"}
+        >
+          <StarIcon filled={link.is_primary} />
+        </button>
         {link.is_primary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
-        {!link.is_primary && (
-          <button type="button" className="pf-images-btn-sm" onClick={() => onSetPrimary(link.id)}>
-            Definir principal
-          </button>
-        )}
         <span
-          className="pf-images-drag-icon"
+          className="pf-images-drag-handle"
           {...attributes}
           {...listeners}
           aria-hidden
-          title="Arrastar para reordenar"
+          title="Arraste para ordenar"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="9" cy="6" r="1.5" />
@@ -600,25 +638,16 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimar
             <circle cx="15" cy="18" r="1.5" />
           </svg>
         </span>
-        <label className="pf-images-check">
-          <input
-            type="checkbox"
-            checked={selectedForDownload.has(link.id)}
-            onChange={() => onToggleSelect(link.id)}
-          />
-          Selecionar
-        </label>
-        <button
-          type="button"
-          className="pf-images-btn-delete"
-          onClick={() => onDelete(link.id)}
-          title="Excluir"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-            <path d="M10 11v6M14 11v6" />
-          </svg>
-        </button>
+        {selectMode && (
+          <label className="pf-images-check">
+            <input
+              type="checkbox"
+              checked={selectedForDownload.has(link.id)}
+              onChange={() => onToggleSelect(link.id)}
+            />
+            Selecionar
+          </label>
+        )}
       </div>
     </div>
   );
@@ -639,6 +668,7 @@ function ImageSlotRow({
   scopeId,
 }) {
   const inputRef = useRef(null);
+  const [selectMode, setSelectMode] = useState(false);
   const sortedLinks = [...(links || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || 0);
   const linkIds = sortedLinks.map((l) => l.id);
 
@@ -669,6 +699,18 @@ function ImageSlotRow({
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={linkIds} strategy={horizontalListSortingStrategy}>
+        <div className="pf-images-slot-row-wrap">
+          {sortedLinks.length > 0 && (
+            <div className="pf-images-slot-row-toolbar">
+              <button
+                type="button"
+                className={`s7-btn s7-btn--secondary pf-images-toggle-select ${selectMode ? "pf-images-toggle-select--active" : ""}`}
+                onClick={() => setSelectMode((v) => !v)}
+              >
+                {selectMode ? "Ocultar seleção" : "Selecionar várias"}
+              </button>
+            </div>
+          )}
         <div className="pf-images-slot-row">
           <input
             ref={inputRef}
@@ -700,6 +742,7 @@ function ImageSlotRow({
                   onSetPrimary={onSetPrimary}
                   onDelete={onDelete}
                   onToggleSelect={onToggleSelect}
+                  selectMode={selectMode}
                 />
               );
             }
@@ -721,6 +764,7 @@ function ImageSlotRow({
               </div>
             );
           })}
+        </div>
         </div>
       </SortableContext>
     </DndContext>

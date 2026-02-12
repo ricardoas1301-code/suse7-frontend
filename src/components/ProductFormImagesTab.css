@@ -33,16 +33,36 @@
   gap: 12px;
 }
 
-/* Slot vazio = placeholder com borda tracejada */
+/* Slot vazio = placeholder com borda tracejada (mesmo tamanho do preview) */
 .pf-images-slot-empty {
-  aspect-ratio: 1;
+  height: 120px;
   border: 2px dashed var(--s7-border, #dcdfe4);
   border-radius: var(--s7-radius-md, 12px);
   background: var(--s7-bg-soft, #f9fafb);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100px;
+}
+
+.pf-images-slot-row-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-images-slot-row-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.pf-images-toggle-select {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+.pf-images-toggle-select--active {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--s7-primary, #2563eb);
 }
 
 .pf-images-slot-empty--upload {
@@ -119,20 +139,16 @@
   border: 1px solid var(--s7-border, #dcdfe4);
   overflow: hidden;
   background: var(--s7-bg-soft, #f9fafb);
-  cursor: grab;
-}
-
-.pf-images-card:active {
-  cursor: grabbing;
 }
 
 .pf-images-card-preview {
-  aspect-ratio: 1;
+  height: 120px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #e5e7eb;
+  position: relative;
 }
 
 .pf-images-card-preview img {
@@ -151,8 +167,36 @@
   color: #9ca3af;
 }
 
+/* Delete overlay: só aparece no hover */
+.pf-images-btn-delete-overlay {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.pf-images-card:hover .pf-images-btn-delete-overlay {
+  opacity: 1;
+}
+
+.pf-images-btn-delete-overlay:hover {
+  background: var(--s7-danger, #ef4444);
+}
+
 .pf-images-card-actions {
-  padding: 8px 10px;
+  padding: 6px 8px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -160,8 +204,27 @@
   font-size: 12px;
 }
 
-.pf-images-card-actions .pf-images-btn-delete {
-  margin-left: auto;
+.pf-images-btn-star {
+  background: transparent;
+  border: none;
+  color: var(--s7-muted, #9ca3af);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-images-btn-star:hover {
+  color: #d97706;
+}
+
+.pf-images-btn-star--primary {
+  color: #d97706;
+}
+
+.pf-images-btn-star--primary:hover {
+  color: #b45309;
 }
 
 .pf-images-badge {
@@ -170,7 +233,7 @@
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .pf-images-badge--primary {
@@ -178,48 +241,30 @@
   color: #fff;
 }
 
-.pf-images-btn-sm {
-  background: transparent;
-  border: none;
-  color: var(--s7-muted, #6b7280);
-  cursor: pointer;
-  font-size: 12px;
-  padding: 2px 4px;
-}
-
-.pf-images-btn-sm:hover {
-  color: var(--s7-text, #0f172a);
-}
-
-.pf-images-drag-icon {
+/* Drag handle: área clicável maior, cursor grab */
+.pf-images-drag-handle {
   color: var(--s7-muted, #9ca3af);
-  cursor: default;
+  cursor: grab;
   user-select: none;
   display: inline-flex;
   align-items: center;
-}
-
-.pf-images-drag-icon svg {
-  display: block;
-}
-
-.pf-images-btn-delete {
-  background: transparent;
-  border: none;
-  color: var(--s7-muted, #9ca3af);
-  cursor: pointer;
-  padding: 4px;
-  margin-left: auto;
-  display: flex;
-  align-items: center;
   justify-content: center;
+  padding: 6px;
+  margin: -2px 0;
   border-radius: 4px;
-  transition: color 0.15s ease, background 0.15s ease;
 }
 
-.pf-images-btn-delete:hover {
-  color: var(--s7-danger, #ef4444);
-  background: rgba(239, 68, 68, 0.08);
+.pf-images-drag-handle:active {
+  cursor: grabbing;
+}
+
+.pf-images-drag-handle:hover {
+  color: var(--s7-text, #0f172a);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.pf-images-drag-handle svg {
+  display: block;
 }
 
 .pf-images-check {
