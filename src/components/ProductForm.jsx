@@ -891,6 +891,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   // Persiste em product_variants quando em modo edit
   // ------------------------------------------------------
   const handleVariantReorder = async (newOrderedRows) => {
+    const previousSnapshot = [...variantRows];
     setVariantRows(newOrderedRows);
     const pid = product?.id;
     if (!pid || typeof pid !== "string" || pid.startsWith("draft:")) return;
@@ -898,16 +899,17 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       .map((r, idx) => (r?.id ? { id: r.id, sort_order: idx } : null))
       .filter(Boolean);
     if (updates.length === 0) return;
-    saveStatus.saving("variants-reorder");
+    const opId = saveStatus.saving("variants-reorder");
     try {
       await updateVariantsSortOrder(pid, updates);
-      saveStatus.success("variants-reorder");
+      saveStatus.success("variants-reorder", opId);
     } catch (err) {
-      saveStatus.error("variants-reorder", {
+      saveStatus.error("variants-reorder", opId, {
         message: err?.message || "Falha ao salvar ordem",
         retry: () => handleVariantReorder(newOrderedRows),
       });
       addNotification({ type: "error", title: "Reorder", message: err?.message || "Erro ao salvar ordem das variações" });
+      setVariantRows(previousSnapshot);
     }
   };
 

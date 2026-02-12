@@ -6,12 +6,12 @@
 //
 // PADRÃO DE USO (reaproveitar em outras abas):
 //   const saveStatus = useSaveStatus();
-//   saveStatus.saving("minha-operacao");
+//   const opId = saveStatus.saving("minha-operacao");
 //   try {
 //     await minhaOperacao();
-//     saveStatus.success("minha-operacao");
+//     saveStatus.success("minha-operacao", opId);
 //   } catch (err) {
-//     saveStatus.error("minha-operacao", {
+//     saveStatus.error("minha-operacao", opId, {
 //       message: err?.message,
 //       retry: () => minhaOperacao(), // opcional
 //     });
@@ -23,10 +23,13 @@ import { createContext, useContext, useState, useCallback, useRef, useEffect } f
 const SaveStatusContext = createContext(null);
 
 const SUCCESS_AUTO_HIDE_MS = 1500;
+const MIN_SAVING_DISPLAY_MS = 300;
 
 export function SaveStatusProvider({ children }) {
   const [items, setItems] = useState(() => new Map());
   const successTimersRef = useRef({});
+  const opIdByKeyRef = useRef({});
+  const savingStartedAtRef = useRef({});
 
   useEffect(() => {
     return () => {
@@ -35,35 +38,63 @@ export function SaveStatusProvider({ children }) {
     };
   }, []);
 
-  const setStatus = useCallback((key, status, opts = {}) => {
-    const { message, retry } = opts;
+  const saving = useCallback((key) => {
+    const opId = (opIdByKeyRef.current[key] = (opIdByKeyRef.current[key] || 0) + 1);
+    savingStartedAtRef.current[key] = Date.now();
     setItems((prev) => {
       const next = new Map(prev);
-      if (status === "idle") {
-        next.delete(key);
-      } else {
-        next.set(key, { status, message, retry });
-      }
+      next.set(key, { status: "saving", opId });
       return next;
     });
+    return opId;
+  }, []);
 
-    if (status === "success") {
+  const success = useCallback((key, opId) => {
+    const savingStartedAt = savingStartedAtRef.current[key] ?? Date.now();
+    const elapsed = Date.now() - savingStartedAt;
+    const delay = Math.max(0, MIN_SAVING_DISPLAY_MS - elapsed);
+
+    const doSuccess = () => {
+      setItems((prev) => {
+        const cur = prev.get(key);
+        if (cur?.opId !== opId) return prev; // corrida: só aceita o mais recente
+        const next = new Map(prev);
+        next.set(key, { status: "success", opId });
+        return next;
+      });
       clearTimeout(successTimersRef.current[key]);
       successTimersRef.current[key] = setTimeout(() => {
         setItems((p) => {
           const n = new Map(p);
-          n.delete(key);
+          const cur = n.get(key);
+          if (cur?.opId === opId) n.delete(key);
           return n;
         });
         delete successTimersRef.current[key];
       }, SUCCESS_AUTO_HIDE_MS);
-    }
+    };
+
+    if (delay > 0) setTimeout(doSuccess, delay);
+    else doSuccess();
   }, []);
 
-  const saving = useCallback((key) => setStatus(key, "saving"), [setStatus]);
-  const success = useCallback((key) => setStatus(key, "success"), [setStatus]);
-  const error = useCallback((key, opts = {}) => setStatus(key, "error", opts), [setStatus]);
-  const idle = useCallback((key) => setStatus(key, "idle"), [setStatus]);
+  const error = useCallback((key, opId, opts = {}) => {
+    setItems((prev) => {
+      const cur = prev.get(key);
+      if (cur?.opId !== opId) return prev; // corrida: ignora resultado antigo
+      const next = new Map(prev);
+      next.set(key, { status: "error", opId, message: opts.message, retry: opts.retry });
+      return next;
+    });
+  }, []);
+
+  const idle = useCallback((key) => {
+    setItems((prev) => {
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
+  }, []);
 
   const getActive = useCallback(() => {
     const entries = Array.from(items.entries());

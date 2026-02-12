@@ -387,12 +387,12 @@ export default function ProductFormImagesTab({
       setVariantLinksMap((prev) => ({ ...prev, [variantKey]: normalized }));
     }
 
-    saveStatus.saving("images-reorder");
+    const opId = saveStatus.saving("images-reorder");
     try {
       await updateLinksSortOrder(updates);
-      saveStatus.success("images-reorder");
+      saveStatus.success("images-reorder", opId);
     } catch (err) {
-      saveStatus.error("images-reorder", {
+      saveStatus.error("images-reorder", opId, {
         message: err?.message || "Falha ao salvar ordem",
         retry: () => handleReorder(orderedIds, variantKey),
       });
