@@ -59,7 +59,7 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onSetPrimary, onDelete, onReorder, onToggleSelect, uploading }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, uploading, selectModeActive, onToggleSelectMode, onDownloadSelected }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
@@ -108,13 +108,16 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         previewUrls={previewUrls}
         selectedForDownload={selectedForDownload}
         onUpload={(files) => onUpload(files, vk)}
-        onSetPrimary={(id) => onSetPrimary(id, vk)}
         onDelete={(id) => onDelete(id, vk)}
         onReorder={(ids) => onReorder(ids, vk)}
         onToggleSelect={onToggleSelect}
+        onDownload={onDownload}
         uploading={uploading}
         maxSlots={7}
         scopeId={vk}
+        selectModeActive={selectModeActive}
+        onToggleSelectMode={() => onToggleSelectMode(vk)}
+        onDownloadSelected={() => onDownloadSelected(vk)}
       />
     </div>
   );
@@ -444,8 +447,21 @@ export default function ProductFormImagesTab({
   }, [productLinks, variantLinksMap, getPreviewUrl]);
 
   const handleDownload = async (link) => {
-    const url = await getSignedUrl(link?.storage_path, 60);
-    if (url) window.open(url, "_blank");
+    try {
+      const url = await getSignedUrl(link?.storage_path, 60);
+      if (!url) return;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = link?.file_name || "imagem";
+      a.rel = "noopener noreferrer";
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Erro ao baixar imagem:", err);
+      addNotification({ type: "error", title: "Download", message: err?.message || "Erro ao baixar imagem" });
+    }
   };
 
   const handleDownloadSelected = async (scopeId) => {
@@ -539,12 +555,16 @@ export default function ProductFormImagesTab({
               previewUrls={previewUrls}
               selectedForDownload={selectedForDownload}
               onUpload={handleUpload}
-              onSetPrimary={handleSetPrimary}
-              onDelete={handleDelete}
+              onDelete={handleDeleteRequest}
               onReorder={handleReorder}
               onToggleSelect={toggleSelectForDownload}
+              onDownload={handleDownload}
               onVariantReorder={onVariantReorder}
               uploading={uploading}
+              selectMode={selectMode}
+              activeSelectScope={activeSelectScope}
+              onToggleSelectMode={toggleSelectMode}
+              onDownloadSelected={handleDownloadSelected}
             />
           )}
         </>
@@ -600,7 +620,7 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
 
   const handleDownloadClick = (e) => {
     e.stopPropagation();
-    onDownload(link);
+    onDownload?.(link);
   };
 
   return (
@@ -677,16 +697,18 @@ function ImageSlotRow({
   previewUrls,
   selectedForDownload,
   onUpload,
-  onSetPrimary,
   onDelete,
   onReorder,
   onToggleSelect,
+  onDownload,
   uploading,
   maxSlots,
   scopeId,
+  selectModeActive,
+  onToggleSelectMode,
+  onDownloadSelected,
 }) {
   const inputRef = useRef(null);
-  const [selectMode, setSelectMode] = useState(false);
   const sortedLinks = [...(links || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || 0);
   const linkIds = sortedLinks.map((l) => l.id);
 
@@ -722,11 +744,20 @@ function ImageSlotRow({
             <div className="pf-images-slot-row-toolbar">
               <button
                 type="button"
-                className={`s7-btn s7-btn--secondary pf-images-toggle-select ${selectMode ? "pf-images-toggle-select--active" : ""}`}
-                onClick={() => setSelectMode((v) => !v)}
+                className={`s7-btn s7-btn--secondary pf-images-toggle-select ${selectModeActive ? "pf-images-toggle-select--active" : ""}`}
+                onClick={onToggleSelectMode}
               >
-                {selectMode ? "Ocultar seleção" : "Selecionar várias"}
+                {selectModeActive ? "Desmarcar seleção" : "Baixar várias"}
               </button>
+              {selectModeActive && (
+                <button
+                  type="button"
+                  className="s7-btn s7-btn--secondary"
+                  onClick={onDownloadSelected}
+                >
+                  Baixar imagens
+                </button>
+              )}
             </div>
           )}
         <div className="pf-images-slot-row">
