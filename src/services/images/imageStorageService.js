@@ -57,13 +57,14 @@ export async function uploadAssets(files, { userId, productId, draftKey }) {
 }
 
 /**
- * Obtém URL assinada para download (expira em 1h).
+ * Obtém URL assinada para download.
  * @param {string} storagePath - caminho no storage
+ * @param {number} expiresIn - segundos até expirar (3600 para preview, 60 para download direto)
  * @returns {Promise<string>} URL assinada
  */
-export async function getSignedUrl(storagePath) {
+export async function getSignedUrl(storagePath, expiresIn = 3600) {
   if (!storagePath) return "";
-  const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(storagePath, 3600);
+  const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(storagePath, expiresIn);
   if (error) {
     console.error("[imageStorageService] signedUrl error:", error);
     return "";

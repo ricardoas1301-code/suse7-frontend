@@ -1255,3 +1255,19 @@
   color: var(--s7-text, #0f172a);
   border-color: #d1d5db;
 }
+
+.s7-modal-btn-danger {
+  background: var(--s7-danger, #ef4444);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.s7-modal-btn-danger:hover {
+  background: #dc2626;
+}

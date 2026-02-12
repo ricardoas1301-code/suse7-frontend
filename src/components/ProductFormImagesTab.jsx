@@ -1,6 +1,7 @@
 /**
  * ProductFormImagesTab — aba Imagens do ProductForm
- * - Upload, ordenação (drag & drop), definir principal, download, excluir
+ * - Upload (limite 7/escopo), ordenação (drag & drop), Principal = sort_order 0
+ * - Download individual e em lote (signed URL 60s), excluir com confirmação
  * - Suporta produto simples e com variações
  * - Drag imagens (horizontal) e variações (vertical) com persistência
  */
@@ -29,10 +30,9 @@ import {
   createImageRecord,
   deleteLink,
   listLinks,
-  updateLink,
   updateLinksSortOrder,
 } from "../services/images/imageRepository";
-import { ensureSinglePrimary, normalizeSortOrder } from "../services/images/imageRules";
+import { normalizeSortOrder } from "../services/images/imageRules";
 import { getSignedUrl, uploadAssets } from "../services/images/imageStorageService";
 import "./ProductFormImagesTab.css";
 
@@ -128,12 +128,16 @@ function VariationBlocksSection({
   previewUrls,
   selectedForDownload,
   onUpload,
-  onSetPrimary,
   onDelete,
   onReorder,
   onToggleSelect,
+  onDownload,
   onVariantReorder,
   uploading,
+  selectMode,
+  activeSelectScope,
+  onToggleSelectMode,
+  onDownloadSelected,
 }) {
   const rowIds = variantRows.map((r) => r.id || variantKeyFn(r.attributes));
 
@@ -163,22 +167,28 @@ function VariationBlocksSection({
       >
         <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
           <div className="pf-images-variants-list">
-            {variantRows.map((row) => (
-              <SortableVariantBlock
-                key={row.id || variantKeyFn(row.attributes)}
-                row={row}
-                variantKeyFn={variantKeyFn}
-                variantLinksMap={variantLinksMap}
-                previewUrls={previewUrls}
-                selectedForDownload={selectedForDownload}
-                onUpload={onUpload}
-                onSetPrimary={onSetPrimary}
-                onDelete={onDelete}
-                onReorder={onReorder}
-                onToggleSelect={onToggleSelect}
-                uploading={uploading}
-              />
-            ))}
+            {variantRows.map((row) => {
+              const vk = variantKeyFn(row.attributes);
+              return (
+                <SortableVariantBlock
+                  key={row.id || vk}
+                  row={row}
+                  variantKeyFn={variantKeyFn}
+                  variantLinksMap={variantLinksMap}
+                  previewUrls={previewUrls}
+                  selectedForDownload={selectedForDownload}
+                  onUpload={onUpload}
+                  onDelete={onDelete}
+                  onReorder={onReorder}
+                  onToggleSelect={onToggleSelect}
+                  onDownload={onDownload}
+                  uploading={uploading}
+                  selectModeActive={selectMode && activeSelectScope === vk}
+                  onToggleSelectMode={onToggleSelectMode}
+                  onDownloadSelected={onDownloadSelected}
+                />
+              );
+            })}
           </div>
         </SortableContext>
       </DndContext>
@@ -203,8 +213,10 @@ export default function ProductFormImagesTab({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
-  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [previewUrls, setPreviewUrls] = useState(new Map());
+  const [selectMode, setSelectMode] = useState(false);
+  const [activeSelectScope, setActiveSelectScope] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const { addNotification } = useNotifications();
   const saveStatus = useSaveStatus();
@@ -284,10 +296,26 @@ export default function ProductFormImagesTab({
         return;
       }
 
-      const fileList = Array.isArray(files) ? files : Array.from(files || []).slice(0, MAX_IMAGES);
+      const isProduct = variantKey === null || variantKey === undefined;
+      const currentLinks = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
+      const currentCount = currentLinks.length;
+      const remaining = MAX_IMAGES - currentCount;
+      if (remaining <= 0) {
+        addNotification({ type: "error", title: "Upload", message: "Limite máximo de 7 imagens atingido." });
+        return;
+      }
+      let fileList = Array.isArray(files) ? files : Array.from(files || []);
       if (!fileList.length) {
         console.warn("[ProductFormImagesTab] handleUpload: nenhum arquivo após normalização");
         return;
+      }
+      if (fileList.length > remaining) {
+        fileList = fileList.slice(0, remaining);
+        addNotification({
+          type: "warning",
+          title: "Upload",
+          message: `Apenas ${remaining} imagens foram enviadas. Limite máximo de 7 por variação.`,
+        });
       }
       console.log("[ProductFormImagesTab] handleUpload: iniciando", { fileCount: fileList.length, userId, storageKey: storageKey?.slice?.(0, 8) + "..." });
 
@@ -304,9 +332,6 @@ export default function ProductFormImagesTab({
         addNotification({ type: "error", title: "Upload", message: msg });
         return;
       }
-
-      const isProduct = variantKey === null || variantKey === undefined;
-      const currentLinks = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
 
       for (let i = 0; i < metas.length; i++) {
         const meta = metas[i];
@@ -340,22 +365,11 @@ export default function ProductFormImagesTab({
     }
   };
 
-  const handleSetPrimary = async (linkId, variantKey = null) => {
-    if (!canOperate) return;
-    const isProduct = variantKey === null || variantKey === undefined;
-    const links = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
-    const updated = ensureSinglePrimary(links, linkId);
-    const primary = updated.find((l) => l.id === linkId);
-    if (primary) {
-      await updateLink(linkId, { is_primary: true });
-      for (const l of links) {
-        if (l.id !== linkId && l.is_primary) await updateLink(l.id, { is_primary: false });
-      }
-      await loadLinks();
-    }
+  const handleDeleteRequest = (linkId, variantKey = null) => {
+    setDeleteConfirm({ linkId, variantKey });
   };
 
-  const handleDelete = async (linkId, variantKey = null) => {
+  const handleDeleteConfirm = async () => {
     if (!canOperate) return;
     await deleteLink(linkId);
     setSelectedForDownload((prev) => {
@@ -429,17 +443,40 @@ export default function ProductFormImagesTab({
     return () => { cancelled = true; };
   }, [productLinks, variantLinksMap, getPreviewUrl]);
 
-  const handleDownloadSelected = async () => {
-    const allLinks = [...productLinks, ...Object.values(variantLinksMap).flat()];
-    const toDownload = selectedForDownload.size > 0
-      ? allLinks.filter((l) => selectedForDownload.has(l.id))
-      : allLinks;
+  const handleDownload = async (link) => {
+    const url = await getSignedUrl(link?.storage_path, 60);
+    if (url) window.open(url, "_blank");
+  };
 
+  const handleDownloadSelected = async (scopeId) => {
+    const links = scopeId === "product" || scopeId === null
+      ? productLinks
+      : (variantLinksMap[scopeId] || []);
+    const toDownload = selectedForDownload.size > 0
+      ? links.filter((l) => selectedForDownload.has(l.id))
+      : links;
     for (const link of toDownload) {
-      const url = await getSignedUrl(link?.storage_path);
+      const url = await getSignedUrl(link?.storage_path, 60);
       if (url) window.open(url, "_blank");
     }
-    setDownloadModalOpen(false);
+  };
+
+  const toggleSelectMode = (scopeId) => {
+    if (selectMode && activeSelectScope === scopeId) {
+      setSelectMode(false);
+      setActiveSelectScope(null);
+      const linkIds = scopeId === "product" || scopeId === null
+        ? productLinks.map((l) => l.id)
+        : (variantLinksMap[scopeId] || []).map((l) => l.id);
+      setSelectedForDownload((prev) => {
+        const next = new Set(prev);
+        linkIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectMode(true);
+      setActiveSelectScope(scopeId);
+    }
   };
 
   const hasImages = productLinks.length > 0 || Object.values(variantLinksMap).some((arr) => arr?.length > 0);
@@ -479,13 +516,16 @@ export default function ProductFormImagesTab({
                 previewUrls={previewUrls}
                 selectedForDownload={selectedForDownload}
                 onUpload={(files) => handleUpload(files, null)}
-                onSetPrimary={(id) => handleSetPrimary(id, null)}
-                onDelete={(id) => handleDelete(id, null)}
+                onDelete={(id) => handleDeleteRequest(id, null)}
                 onReorder={(ids) => handleReorder(ids, null)}
                 onToggleSelect={toggleSelectForDownload}
+                onDownload={handleDownload}
                 uploading={uploading}
                 maxSlots={MAX_IMAGES}
                 scopeId="product"
+                selectModeActive={selectMode && activeSelectScope === "product"}
+                onToggleSelectMode={() => toggleSelectMode("product")}
+                onDownloadSelected={() => handleDownloadSelected("product")}
               />
             </section>
           )}
@@ -510,36 +550,21 @@ export default function ProductFormImagesTab({
         </>
       )}
 
-      {/* Botão Baixar imagens */}
-      {hasImages && (
-        <div className="pf-images-actions">
-          <button
-            type="button"
-            className="s7-btn s7-btn--secondary"
-            onClick={() => setDownloadModalOpen(true)}
-          >
-            Baixar imagens
-          </button>
-        </div>
-      )}
-
-      {/* Modal Download */}
-      {downloadModalOpen &&
+      {/* Modal confirmação exclusão */}
+      {deleteConfirm &&
         createPortal(
-          <div className="s7-modal-overlay" role="dialog" aria-modal="true" onClick={() => setDownloadModalOpen(false)}>
+          <div className="s7-modal-overlay" role="dialog" aria-modal="true" onClick={() => setDeleteConfirm(null)}>
             <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
-              <h2 className="s7-modal-title">Baixar imagens</h2>
+              <h2 className="s7-modal-title">Excluir imagem</h2>
               <p className="s7-modal-text">
-                {selectedForDownload.size > 0
-                  ? `Baixar ${selectedForDownload.size} imagem(ns) selecionada(s)?`
-                  : "Baixar todas as imagens do escopo atual? (uma por vez em nova aba)"}
+                Deseja excluir esta imagem? Esta ação não pode ser desfeita.
               </p>
               <div className="s7-modal-actions">
-                <button type="button" className="s7-modal-btn-secondary" onClick={() => setDownloadModalOpen(false)}>
+                <button type="button" className="s7-modal-btn-secondary" onClick={() => setDeleteConfirm(null)}>
                   Cancelar
                 </button>
-                <button type="button" className="s7-modal-btn-primary" onClick={handleDownloadSelected}>
-                  {selectedForDownload.size > 0 ? "Baixar selecionadas" : "Baixar todas"}
+                <button type="button" className="s7-modal-btn-danger" onClick={handleDeleteConfirm}>
+                  Excluir
                 </button>
               </div>
             </div>
@@ -550,20 +575,10 @@ export default function ProductFormImagesTab({
   );
 }
 
-function StarIcon({ filled }) {
-  return filled ? (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-  ) : (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-  );
-}
+/** Card de imagem sortable (Principal = sort_order 0, download e delete na linha inferior) */
+function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, selectModeActive }) {
+  const isPrimary = (link.sort_order ?? 0) === 0;
 
-/** Card de imagem sortable (drag handle, estrela primary, delete no hover) */
-function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimary, onDelete, onToggleSelect, selectMode }) {
   const {
     attributes,
     listeners,
@@ -578,14 +593,14 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimar
     transition,
   };
 
-  const handleStarClick = (e) => {
-    e.stopPropagation();
-    if (!link.is_primary) onSetPrimary(link.id);
-  };
-
   const handleDeleteClick = (e) => {
     e.stopPropagation();
     onDelete(link.id);
+  };
+
+  const handleDownloadClick = (e) => {
+    e.stopPropagation();
+    onDownload(link);
   };
 
   return (
@@ -600,28 +615,30 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimar
         ) : (
           <div className="pf-images-card-placeholder">…</div>
         )}
-        <button
-          type="button"
-          className="pf-images-btn-delete-overlay"
-          onClick={handleDeleteClick}
-          title="Excluir"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-            <path d="M10 11v6M14 11v6" />
-          </svg>
-        </button>
       </div>
       <div className="pf-images-card-actions">
+        {selectModeActive && (
+          <label className="pf-images-check" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={selectedForDownload.has(link.id)}
+              onChange={() => onToggleSelect(link.id)}
+            />
+          </label>
+        )}
         <button
           type="button"
-          className={`pf-images-btn-star ${link.is_primary ? "pf-images-btn-star--primary" : ""}`}
-          onClick={handleStarClick}
-          title={link.is_primary ? "Principal" : "Definir como principal"}
+          className="pf-images-btn-download"
+          onClick={handleDownloadClick}
+          title="Baixar"
         >
-          <StarIcon filled={link.is_primary} />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
         </button>
-        {link.is_primary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
+        {isPrimary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
         <span
           className="pf-images-drag-handle"
           {...attributes}
@@ -638,16 +655,17 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onSetPrimar
             <circle cx="15" cy="18" r="1.5" />
           </svg>
         </span>
-        {selectMode && (
-          <label className="pf-images-check">
-            <input
-              type="checkbox"
-              checked={selectedForDownload.has(link.id)}
-              onChange={() => onToggleSelect(link.id)}
-            />
-            Selecionar
-          </label>
-        )}
+        <button
+          type="button"
+          className="pf-images-btn-delete"
+          onClick={handleDeleteClick}
+          title="Excluir"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+            <path d="M10 11v6M14 11v6" />
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -739,10 +757,10 @@ function ImageSlotRow({
                   link={link}
                   previewUrls={previewUrls}
                   selectedForDownload={selectedForDownload}
-                  onSetPrimary={onSetPrimary}
                   onDelete={onDelete}
                   onToggleSelect={onToggleSelect}
-                  selectMode={selectMode}
+                  onDownload={onDownload}
+                  selectModeActive={selectModeActive}
                 />
               );
             }
