@@ -24,6 +24,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "../supabaseClient";
 import { useNotifications } from "../contexts/NotificationContext";
+import { useSaveStatus } from "../contexts/SaveStatusContext";
 import {
   createImageRecord,
   deleteLink,
@@ -206,6 +207,7 @@ export default function ProductFormImagesTab({
   const [previewUrls, setPreviewUrls] = useState(new Map());
 
   const { addNotification } = useNotifications();
+  const saveStatus = useSaveStatus();
 
   const hasProductId = !!productId && typeof productId === "string" && !productId.startsWith("draft:");
   const hasDraftKey = !!draftKey && typeof draftKey === "string";
@@ -385,13 +387,19 @@ export default function ProductFormImagesTab({
       setVariantLinksMap((prev) => ({ ...prev, [variantKey]: normalized }));
     }
 
+    saveStatus.saving("images-reorder");
     try {
       await updateLinksSortOrder(updates);
+      saveStatus.success("images-reorder");
     } catch (err) {
+      saveStatus.error("images-reorder", {
+        message: err?.message || "Falha ao salvar ordem",
+        retry: () => handleReorder(orderedIds, variantKey),
+      });
       addNotification({ type: "error", title: "Reorder", message: err?.message || "Erro ao salvar ordem" });
       await loadLinks();
     }
-  }, [canOperate, productLinks, variantLinksMap, addNotification, loadLinks]);
+  }, [canOperate, productLinks, variantLinksMap, addNotification, loadLinks, saveStatus]);
 
   const toggleSelectForDownload = (linkId) => {
     setSelectedForDownload((prev) => {

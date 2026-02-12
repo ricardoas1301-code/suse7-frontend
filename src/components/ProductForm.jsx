@@ -16,6 +16,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNotifications } from "../contexts/NotificationContext";
+import { useSaveStatus } from "../contexts/SaveStatusContext";
 import {
   dispatchStockBelowMin,
   dispatchStockRealZero,
@@ -212,6 +213,7 @@ const [pendingNextChecked, setPendingNextChecked] = useState(false);
   // 3) variantRows: combinações geradas (cada uma vira product_variants)
   // ------------------------------------------------------
   const { addNotification } = useNotifications();
+  const saveStatus = useSaveStatus();
 
   const [variationAttributes, setVariationAttributes] = useState([]);
   const [draftAttrInput, setDraftAttrInput] = useState("");
@@ -896,9 +898,15 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       .map((r, idx) => (r?.id ? { id: r.id, sort_order: idx } : null))
       .filter(Boolean);
     if (updates.length === 0) return;
+    saveStatus.saving("variants-reorder");
     try {
       await updateVariantsSortOrder(pid, updates);
+      saveStatus.success("variants-reorder");
     } catch (err) {
+      saveStatus.error("variants-reorder", {
+        message: err?.message || "Falha ao salvar ordem",
+        retry: () => handleVariantReorder(newOrderedRows),
+      });
       addNotification({ type: "error", title: "Reorder", message: err?.message || "Erro ao salvar ordem das variações" });
     }
   };

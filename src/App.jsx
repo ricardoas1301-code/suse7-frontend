@@ -52,6 +52,9 @@ import ProductEdit from "./pages/ProductEdit";
 
 // Notificações (in-app toast)
 import { NotificationProvider } from "./contexts/NotificationContext";
+// Status de save (ampulheta global)
+import { SaveStatusProvider } from "./contexts/SaveStatusContext";
+import SaveStatusIndicator from "./components/SaveStatusIndicator";
 
 // Temporários
 const AnunciosTable = () => <h1>Anúncios</h1>;
@@ -126,7 +129,10 @@ export default function App() {
             element={
               <AuthWrapper>
                 <NotificationProvider>
-                  <Layout />
+                  <SaveStatusProvider>
+                    <Layout />
+                    <SaveStatusIndicator />
+                  </SaveStatusProvider>
                 </NotificationProvider>
               </AuthWrapper>
             }
