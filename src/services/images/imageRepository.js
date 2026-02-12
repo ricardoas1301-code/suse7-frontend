@@ -23,12 +23,12 @@ function toProductId(v) {
 
 /**
  * Cria registro em product_image_links (metadata do upload).
- * @param {Object} opts - { productId?, draftKey?, userId, variantKey?, storage_path, file_name?, mime_type?, size_bytes?, sortOrder?, isPrimary? }
+ * user_id NÃO é enviado: usa DEFAULT auth.uid() no banco (obrigatório para RLS).
+ * @param {Object} opts - { productId?, draftKey?, variantKey?, storage_path, file_name?, mime_type?, size_bytes?, sortOrder?, isPrimary? }
  */
 export async function createImageRecord({
   productId,
   draftKey,
-  userId,
   variantKey,
   storage_path,
   file_name,
@@ -44,8 +44,11 @@ export async function createImageRecord({
     throw new Error("createImageRecord: informe productId OU draftKey (exatamente um)");
   }
 
+  if (!storage_path?.trim()) {
+    throw new Error("createImageRecord: storage_path não pode ser vazio");
+  }
+
   const payload = {
-    user_id: userId,
     product_id: hasProduct ? productIdStr : null,
     draft_key: hasDraft ? String(draftKey).trim() : null,
     variant_key: variantKey ?? null,
@@ -57,11 +60,7 @@ export async function createImageRecord({
     sort_order: sortOrder ?? 0,
   };
 
-  if (!storage_path?.trim()) {
-    throw new Error("createImageRecord: storage_path não pode ser vazio");
-  }
-
-  console.log("[imageRepository] createImageRecord:", { product_id: payload.product_id, draft_key: payload.draft_key?.slice?.(0, 8) + "...", storage_path: payload.storage_path?.slice?.(0, 30) + "..." });
+  console.log("[imageRepository] createImageRecord payload:", payload);
 
   const { data, error } = await supabase
     .from(TABLE)

@@ -166,7 +166,6 @@ export default function ProductFormImagesTab({
         await createImageRecord({
           productId: hasProductId ? productId : undefined,
           draftKey: hasDraftKey ? draftKey : undefined,
-          userId,
           variantKey: variantKey ?? null,
           storage_path: meta.storage_path,
           file_name: meta.file_name,
