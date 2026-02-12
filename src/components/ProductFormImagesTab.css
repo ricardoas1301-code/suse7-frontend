@@ -66,6 +66,11 @@
   color: var(--s7-primary, #2563eb);
 }
 
+.pf-images-slot-row-toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .pf-images-slot-empty--upload {
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease;
@@ -190,6 +195,22 @@
 }
 
 .pf-images-btn-download:hover {
+  color: var(--s7-primary, #2563eb);
+}
+
+.pf-images-btn-open {
+  background: transparent;
+  border: none;
+  color: var(--s7-muted, #9ca3af);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.pf-images-btn-open:hover {
   color: var(--s7-primary, #2563eb);
 }
 

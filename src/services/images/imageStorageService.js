@@ -73,11 +73,35 @@ export async function getSignedUrl(storagePath, expiresIn = 3600) {
 }
 
 /**
+ * Baixa arquivo do storage como Blob e força download no browser.
+ * @param {string} storagePath - caminho no storage
+ * @param {string} fileName - nome do arquivo para download
+ * @returns {Promise<void>}
+ */
+export async function downloadAsBlob(storagePath, fileName = "imagem") {
+  if (!storagePath) throw new Error("storage_path não pode ser vazio");
+  const { data, error } = await supabase.storage.from(BUCKET_NAME).download(storagePath);
+  if (error) throw new Error(error.message || "Falha ao baixar");
+  if (!data) throw new Error("Download retornou vazio");
+  const blobUrl = URL.createObjectURL(data);
+  try {
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = fileName || "imagem";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
+}
+
+/**
  * Remove arquivo do storage.
  * @param {string} storagePath - caminho no storage
  */
 export async function deleteAsset(storagePath) {
   if (!storagePath) return;
   const { error } = await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
-  if (error) console.error("[imageStorageService] delete error:", error);
+  if (error) throw new Error(error.message || "Falha ao remover do storage");
 }

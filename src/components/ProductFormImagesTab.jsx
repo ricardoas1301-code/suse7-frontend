@@ -33,10 +33,11 @@ import {
   updateLinksSortOrder,
 } from "../services/images/imageRepository";
 import { normalizeSortOrder } from "../services/images/imageRules";
-import { getSignedUrl, uploadAssets } from "../services/images/imageStorageService";
+import { deleteAsset, downloadAsBlob, getSignedUrl, uploadAssets } from "../services/images/imageStorageService";
 import "./ProductFormImagesTab.css";
 
 const MAX_IMAGES = 7;
+const EMPTY_SELECTION = new Set();
 
 function buildVariantKeyFromAttrs(attrsObj) {
   const entries = Object.entries(attrsObj || {}).sort(([a], [b]) => a.localeCompare(b));
@@ -59,7 +60,7 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, uploading, selectModeActive, onToggleSelectMode, onDownloadSelected }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenInNewTab, uploading, selectModeActive, onToggleSelectMode, onDownloadSelected }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
@@ -129,12 +130,13 @@ function VariationBlocksSection({
   variantKeyFn,
   variantLinksMap,
   previewUrls,
-  selectedForDownload,
+  selectedForDownloadByScope,
   onUpload,
   onDelete,
   onReorder,
-  onToggleSelect,
+  toggleSelectForDownload,
   onDownload,
+  onOpenInNewTab,
   onVariantReorder,
   uploading,
   selectMode,
@@ -179,14 +181,15 @@ function VariationBlocksSection({
                   variantKeyFn={variantKeyFn}
                   variantLinksMap={variantLinksMap}
                   previewUrls={previewUrls}
-                  selectedForDownload={selectedForDownload}
+                  selectedForDownload={selectedForDownloadByScope[vk] ?? EMPTY_SELECTION}
                   onUpload={onUpload}
                   onDelete={onDelete}
                   onReorder={onReorder}
-                  onToggleSelect={onToggleSelect}
-                  onDownload={onDownload}
-                  uploading={uploading}
-                  selectModeActive={selectMode && activeSelectScope === vk}
+        onToggleSelect={(linkId) => toggleSelectForDownload(linkId, vk)}
+                onDownload={onDownload}
+                onOpenInNewTab={onOpenInNewTab}
+                uploading={uploading}
+                selectModeActive={selectMode && activeSelectScope === vk}
                   onToggleSelectMode={onToggleSelectMode}
                   onDownloadSelected={onDownloadSelected}
                 />
@@ -212,7 +215,7 @@ export default function ProductFormImagesTab({
 
   const [productLinks, setProductLinks] = useState([]);
   const [variantLinksMap, setVariantLinksMap] = useState({});
-  const [selectedForDownload, setSelectedForDownload] = useState(new Set());
+  const [selectedForDownloadByScope, setSelectedForDownloadByScope] = useState({});
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
@@ -372,16 +375,59 @@ export default function ProductFormImagesTab({
     setDeleteConfirm({ linkId, variantKey });
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!canOperate) return;
-    await deleteLink(linkId);
-    setSelectedForDownload((prev) => {
-      const next = new Set(prev);
-      next.delete(linkId);
-      return next;
-    });
-    await loadLinks();
-  };
+  const handleDeleteConfirm = useCallback(async (overrideConfirm) => {
+    const payload = overrideConfirm ?? deleteConfirm;
+    if (!payload || !canOperate) return;
+    const { linkId, variantKey } = payload;
+    if (!overrideConfirm) setDeleteConfirm(null);
+
+    const scopeId = variantKey === null || variantKey === undefined ? "product" : variantKey;
+    const isProduct = variantKey === null || variantKey === undefined;
+    const links = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
+    const linkToDelete = links.find((l) => l.id === linkId);
+    if (!linkToDelete) return;
+
+    const opId = saveStatus.saving("images-delete");
+    try {
+      await deleteAsset(linkToDelete.storage_path);
+      await deleteLink(linkId);
+
+      const remaining = links.filter((l) => l.id !== linkId);
+      const normalized = normalizeSortOrder(remaining, remaining.map((l) => l.id));
+      const updates = normalized.map((l) => ({ id: l.id, sort_order: l.sort_order }));
+
+      if (updates.length > 0) {
+        await updateLinksSortOrder(updates);
+      }
+
+      setSelectedForDownloadByScope((prev) => {
+        const next = { ...prev };
+        if (next[scopeId]) {
+          const set = new Set(next[scopeId]);
+          set.delete(linkId);
+          next[scopeId] = set;
+        }
+        return next;
+      });
+
+      if (isProduct) {
+        setProductLinks(normalized);
+      } else {
+        setVariantLinksMap((prev) => ({ ...prev, [variantKey]: normalized }));
+      }
+
+      saveStatus.success("images-delete", opId);
+      addNotification({ type: "success", title: "Imagem", message: "Imagem excluída" });
+    } catch (err) {
+      saveStatus.error("images-delete", opId, {
+        message: err?.message || "Erro ao excluir",
+        retry: () => handleDeleteConfirm({ linkId, variantKey }),
+      });
+      addNotification({ type: "error", title: "Excluir", message: err?.message || "Erro ao excluir" });
+      if (!overrideConfirm) setDeleteConfirm({ linkId, variantKey });
+      await loadLinks();
+    }
+  }, [deleteConfirm, canOperate, productLinks, variantLinksMap, saveStatus, addNotification, loadLinks]);
 
   const handleReorder = useCallback(async (orderedIds, variantKey = null) => {
     if (!canOperate || !orderedIds?.length) return;
@@ -418,12 +464,12 @@ export default function ProductFormImagesTab({
     }
   }, [canOperate, productLinks, variantLinksMap, addNotification, loadLinks, saveStatus]);
 
-  const toggleSelectForDownload = (linkId) => {
-    setSelectedForDownload((prev) => {
-      const next = new Set(prev);
-      if (next.has(linkId)) next.delete(linkId);
-      else next.add(linkId);
-      return next;
+  const toggleSelectForDownload = (linkId, scopeId) => {
+    setSelectedForDownloadByScope((prev) => {
+      const set = new Set(prev[scopeId] || []);
+      if (set.has(linkId)) set.delete(linkId);
+      else set.add(linkId);
+      return { ...prev, [scopeId]: set };
     });
   };
 
@@ -448,19 +494,20 @@ export default function ProductFormImagesTab({
 
   const handleDownload = async (link) => {
     try {
-      const url = await getSignedUrl(link?.storage_path, 60);
-      if (!url) return;
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = link?.file_name || "imagem";
-      a.rel = "noopener noreferrer";
-      a.target = "_blank";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await downloadAsBlob(link?.storage_path, link?.file_name || "imagem");
     } catch (err) {
       console.error("Erro ao baixar imagem:", err);
       addNotification({ type: "error", title: "Download", message: err?.message || "Erro ao baixar imagem" });
+    }
+  };
+
+  const handleOpenInNewTab = async (link) => {
+    try {
+      const url = await getSignedUrl(link?.storage_path, 60);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Erro ao abrir imagem:", err);
+      addNotification({ type: "error", title: "Abrir", message: err?.message || "Erro ao abrir imagem" });
     }
   };
 
@@ -468,12 +515,17 @@ export default function ProductFormImagesTab({
     const links = scopeId === "product" || scopeId === null
       ? productLinks
       : (variantLinksMap[scopeId] || []);
-    const toDownload = selectedForDownload.size > 0
-      ? links.filter((l) => selectedForDownload.has(l.id))
-      : links;
+    const selectedInScope = selectedForDownloadByScope[scopeId];
+    const toDownload = selectedInScope?.size > 0
+      ? links.filter((l) => selectedInScope.has(l.id))
+      : [];
+    if (toDownload.length === 0) return;
     for (const link of toDownload) {
-      const url = await getSignedUrl(link?.storage_path, 60);
-      if (url) window.open(url, "_blank");
+      try {
+        await downloadAsBlob(link?.storage_path, link?.file_name || "imagem");
+      } catch (err) {
+        addNotification({ type: "error", title: "Download", message: err?.message || "Erro ao baixar" });
+      }
     }
   };
 
@@ -481,12 +533,9 @@ export default function ProductFormImagesTab({
     if (selectMode && activeSelectScope === scopeId) {
       setSelectMode(false);
       setActiveSelectScope(null);
-      const linkIds = scopeId === "product" || scopeId === null
-        ? productLinks.map((l) => l.id)
-        : (variantLinksMap[scopeId] || []).map((l) => l.id);
-      setSelectedForDownload((prev) => {
-        const next = new Set(prev);
-        linkIds.forEach((id) => next.delete(id));
+      setSelectedForDownloadByScope((prev) => {
+        const next = { ...prev };
+        delete next[scopeId];
         return next;
       });
     } else {
@@ -530,12 +579,13 @@ export default function ProductFormImagesTab({
               <ImageSlotRow
                 links={productLinks}
                 previewUrls={previewUrls}
-                selectedForDownload={selectedForDownload}
+                selectedForDownload={selectedForDownloadByScope["product"] ?? EMPTY_SELECTION}
                 onUpload={(files) => handleUpload(files, null)}
                 onDelete={(id) => handleDeleteRequest(id, null)}
                 onReorder={(ids) => handleReorder(ids, null)}
-                onToggleSelect={toggleSelectForDownload}
+                onToggleSelect={(linkId) => toggleSelectForDownload(linkId, "product")}
                 onDownload={handleDownload}
+                onOpenInNewTab={handleOpenInNewTab}
                 uploading={uploading}
                 maxSlots={MAX_IMAGES}
                 scopeId="product"
@@ -553,12 +603,13 @@ export default function ProductFormImagesTab({
               variantKeyFn={variantKeyFn}
               variantLinksMap={variantLinksMap}
               previewUrls={previewUrls}
-              selectedForDownload={selectedForDownload}
+              selectedForDownloadByScope={selectedForDownloadByScope}
               onUpload={handleUpload}
               onDelete={handleDeleteRequest}
               onReorder={handleReorder}
-              onToggleSelect={toggleSelectForDownload}
+              toggleSelectForDownload={toggleSelectForDownload}
               onDownload={handleDownload}
+              onOpenInNewTab={handleOpenInNewTab}
               onVariantReorder={onVariantReorder}
               uploading={uploading}
               selectMode={selectMode}
@@ -577,7 +628,7 @@ export default function ProductFormImagesTab({
             <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
               <h2 className="s7-modal-title">Excluir imagem</h2>
               <p className="s7-modal-text">
-                Deseja excluir esta imagem? Esta ação não pode ser desfeita.
+                Deseja excluir esta imagem?
               </p>
               <div className="s7-modal-actions">
                 <button type="button" className="s7-modal-btn-secondary" onClick={() => setDeleteConfirm(null)}>
@@ -595,8 +646,8 @@ export default function ProductFormImagesTab({
   );
 }
 
-/** Card de imagem sortable (Principal = sort_order 0, download e delete na linha inferior) */
-function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, selectModeActive }) {
+/** Card de imagem sortable (Principal = sort_order 0, download, abrir e delete na linha inferior) */
+function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, onOpenInNewTab, selectModeActive }) {
   const isPrimary = (link.sort_order ?? 0) === 0;
 
   const {
@@ -620,7 +671,13 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
 
   const handleDownloadClick = (e) => {
     e.stopPropagation();
+    if (import.meta.env.DEV && !onDownload) console.warn("[ImagesTab] onDownload missing");
     onDownload?.(link);
+  };
+
+  const handleOpenClick = (e) => {
+    e.stopPropagation();
+    onOpenInNewTab?.(link);
   };
 
   return (
@@ -656,6 +713,18 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="pf-images-btn-open"
+          onClick={handleOpenClick}
+          title="Abrir em nova aba"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
         </button>
         {isPrimary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
@@ -701,6 +770,7 @@ function ImageSlotRow({
   onReorder,
   onToggleSelect,
   onDownload,
+  onOpenInNewTab,
   uploading,
   maxSlots,
   scopeId,
@@ -754,8 +824,10 @@ function ImageSlotRow({
                   type="button"
                   className="s7-btn s7-btn--secondary"
                   onClick={onDownloadSelected}
+                  disabled={selectedForDownload.size === 0}
+                  title={selectedForDownload.size === 0 ? "Selecione ao menos 1 imagem" : undefined}
                 >
-                  Baixar imagens
+                  Baixar selecionadas
                 </button>
               )}
             </div>
@@ -791,6 +863,7 @@ function ImageSlotRow({
                   onDelete={onDelete}
                   onToggleSelect={onToggleSelect}
                   onDownload={onDownload}
+                  onOpenInNewTab={onOpenInNewTab}
                   selectModeActive={selectModeActive}
                 />
               );
