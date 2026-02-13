@@ -108,7 +108,7 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         onDownload={onDownload}
         onOpenPreview={onOpenPreview}
         onPreviewError={onPreviewError}
-                uploading={uploadingScopeId != null && uploadingScopeId === vk}
+        uploading={uploading}
         maxSlots={7}
         scopeId={vk}
         selectModeActive={selectModeActive}
@@ -295,7 +295,7 @@ export default function ProductFormImagesTab({
       return;
     }
 
-    const scopeId = variantKey === null || variantKey === undefined ? "product" : variantKey;
+    const scopeId = variantKey ?? "product";
     setUploadingScopeId(scopeId);
     setError(null);
     try {
