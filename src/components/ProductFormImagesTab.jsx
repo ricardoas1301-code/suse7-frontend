@@ -44,13 +44,6 @@ function buildVariantKeyFromAttrs(attrsObj) {
   return entries.map(([k, v]) => `${k}=${String(v)}`).join("|");
 }
 
-function formatVariantLabel(attrsObj) {
-  if (!attrsObj || Object.keys(attrsObj).length === 0) return "Geral";
-  return Object.entries(attrsObj)
-    .map(([k, v]) => `${k} ${v}`)
-    .join(" / ");
-}
-
 /** Título para variação: "Cor: Vermelho" ou "Cor: Vermelho / Tamanho: P" */
 function formatVariantTitle(attrsObj) {
   if (!attrsObj || Object.keys(attrsObj).length === 0) return "Geral";
@@ -60,7 +53,7 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenInNewTab, uploading, selectModeActive, onToggleSelectMode, onDownloadSelected }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenInNewTab, onPreviewError, uploading, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
@@ -113,12 +106,15 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         onReorder={(ids) => onReorder(ids, vk)}
         onToggleSelect={onToggleSelect}
         onDownload={onDownload}
+        onOpenInNewTab={onOpenInNewTab}
+        onPreviewError={onPreviewError}
         uploading={uploading}
         maxSlots={7}
         scopeId={vk}
         selectModeActive={selectModeActive}
         onToggleSelectMode={() => onToggleSelectMode(vk)}
         onDownloadSelected={() => onDownloadSelected(vk)}
+        downloadingSelected={downloadingSelected}
       />
     </div>
   );
@@ -137,7 +133,9 @@ function VariationBlocksSection({
   toggleSelectForDownload,
   onDownload,
   onOpenInNewTab,
+  onPreviewError,
   onVariantReorder,
+  downloadingSelected,
   uploading,
   selectMode,
   activeSelectScope,
@@ -188,10 +186,12 @@ function VariationBlocksSection({
         onToggleSelect={(linkId) => toggleSelectForDownload(linkId, vk)}
                 onDownload={onDownload}
                 onOpenInNewTab={onOpenInNewTab}
+                onPreviewError={onPreviewError}
                 uploading={uploading}
                 selectModeActive={selectMode && activeSelectScope === vk}
                   onToggleSelectMode={onToggleSelectMode}
                   onDownloadSelected={onDownloadSelected}
+                  downloadingSelected={downloadingSelected}
                 />
               );
             })}
@@ -208,7 +208,6 @@ export default function ProductFormImagesTab({
   format = "simple",
   variantRows = [],
   buildVariantKey,
-  initialProductImages = null,
   onVariantReorder = null,
 }) {
   const variantKeyFn = buildVariantKey || buildVariantKeyFromAttrs;
@@ -220,9 +219,13 @@ export default function ProductFormImagesTab({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [previewUrls, setPreviewUrls] = useState(new Map());
+  const previewFetchedRef = useRef(new Set());
+  const previewContextRef = useRef(null);
+  const [refreshPreviewSeed, setRefreshPreviewSeed] = useState(0);
   const [selectMode, setSelectMode] = useState(false);
   const [activeSelectScope, setActiveSelectScope] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [downloadingSelected, setDownloadingSelected] = useState(false);
 
   const { addNotification } = useNotifications();
   const saveStatus = useSaveStatus();
@@ -246,10 +249,11 @@ export default function ProductFormImagesTab({
 
       if (format === "variants" && variantRows?.length > 0) {
         const uniqueKeys = [...new Set(variantRows.map((r) => variantKeyFn(r.attributes)).filter(Boolean))];
+        const results = await Promise.all(
+          uniqueKeys.map(async (vk) => ({ vk, links: await listLinks({ ...opts, variantKey: vk }) }))
+        );
         const map = {};
-        for (const vk of uniqueKeys) {
-          map[vk] = await listLinks({ ...opts, variantKey: vk });
-        }
+        results.forEach(({ vk, links }) => { map[vk] = links; });
         setVariantLinksMap(map);
       }
     } catch (err) {
@@ -478,19 +482,78 @@ export default function ProductFormImagesTab({
     return getSignedUrl(link.storage_path);
   }, []);
 
+  const previewRefetchCountRef = useRef(new Map());
+
+  const handlePreviewError = useCallback((linkId) => {
+    const count = previewRefetchCountRef.current.get(linkId) ?? 0;
+    if (count >= 1) return;
+    previewRefetchCountRef.current.set(linkId, count + 1);
+    previewFetchedRef.current.delete(linkId);
+    setPreviewUrls((prev) => {
+      const next = new Map(prev);
+      next.delete(linkId);
+      return next;
+    });
+    setRefreshPreviewSeed((s) => s + 1);
+  }, []);
+
   useEffect(() => {
-    const urls = new Map();
+    const contextKey = `${productId ?? ""}_${draftKey ?? ""}`;
+    if (previewContextRef.current !== contextKey) {
+      previewContextRef.current = contextKey;
+      previewFetchedRef.current.clear();
+      previewRefetchCountRef.current.clear();
+      setPreviewUrls(new Map());
+    }
+
     const allLinks = [
       ...productLinks,
       ...Object.values(variantLinksMap).flat(),
     ];
+    const linkIds = new Set(allLinks.map((l) => l.id));
     let cancelled = false;
-    allLinks.forEach(async (link) => {
-      const url = await getPreviewUrl(link);
-      if (!cancelled && url) setPreviewUrls((prev) => new Map(prev).set(link.id, url));
+    const CONCURRENCY = 4;
+
+    setPreviewUrls((prev) => {
+      const next = new Map(prev);
+      prev.forEach((_, id) => {
+        if (!linkIds.has(id)) {
+          next.delete(id);
+          previewFetchedRef.current.delete(id);
+        }
+      });
+      return next;
     });
+
+    const toFetch = allLinks.filter((l) => !previewFetchedRef.current.has(l.id));
+
+    const runBatch = async (batch) => {
+      const results = await Promise.all(
+        batch.map((link) => getPreviewUrl(link).then((url) => ({ link, url })))
+      );
+      if (cancelled) return;
+      setPreviewUrls((prev) => {
+        const next = new Map(prev);
+        results.forEach(({ link, url }) => {
+          if (url) {
+            next.set(link.id, url);
+            previewFetchedRef.current.add(link.id);
+            previewRefetchCountRef.current.delete(link.id);
+          }
+        });
+        return next;
+      });
+    };
+
+    (async () => {
+      for (let i = 0; i < toFetch.length && !cancelled; i += CONCURRENCY) {
+        const batch = toFetch.slice(i, i + CONCURRENCY);
+        await runBatch(batch);
+      }
+    })();
+
     return () => { cancelled = true; };
-  }, [productLinks, variantLinksMap, getPreviewUrl]);
+  }, [productId, draftKey, productLinks, variantLinksMap, getPreviewUrl, refreshPreviewSeed]);
 
   const handleDownload = async (link) => {
     try {
@@ -520,12 +583,35 @@ export default function ProductFormImagesTab({
       ? links.filter((l) => selectedInScope.has(l.id))
       : [];
     if (toDownload.length === 0) return;
-    for (const link of toDownload) {
-      try {
-        await downloadAsBlob(link?.storage_path, link?.file_name || "imagem");
-      } catch (err) {
-        addNotification({ type: "error", title: "Download", message: err?.message || "Erro ao baixar" });
+
+    setDownloadingSelected(true);
+    const total = toDownload.length;
+    addNotification({ type: "info", title: "Download", message: `Baixando ${total} imagem(ns)…` });
+
+    const CONCURRENCY = 2;
+    const errors = [];
+
+    try {
+      for (let i = 0; i < toDownload.length; i += CONCURRENCY) {
+        const chunk = toDownload.slice(i, i + CONCURRENCY);
+        await Promise.all(
+          chunk.map(async (link) => {
+            try {
+              await downloadAsBlob(link?.storage_path, link?.file_name || "imagem");
+            } catch (err) {
+              errors.push(err?.message || "Erro ao baixar");
+            }
+          })
+        );
       }
+    } finally {
+      setDownloadingSelected(false);
+    }
+
+    if (errors.length > 0) {
+      addNotification({ type: "error", title: "Download", message: `${errors.length} falha(s): ${errors.slice(0, 2).join("; ")}${errors.length > 2 ? "…" : ""}` });
+    } else {
+      addNotification({ type: "success", title: "Download", message: `${total} imagem(ns) baixada(s)` });
     }
   };
 
@@ -539,12 +625,16 @@ export default function ProductFormImagesTab({
         return next;
       });
     } else {
+      const scopeToClear = activeSelectScope && activeSelectScope !== scopeId ? activeSelectScope : null;
       setSelectMode(true);
       setActiveSelectScope(scopeId);
+      setSelectedForDownloadByScope((prev) => {
+        const next = { ...prev };
+        if (scopeToClear) delete next[scopeToClear];
+        return next;
+      });
     }
   };
-
-  const hasImages = productLinks.length > 0 || Object.values(variantLinksMap).some((arr) => arr?.length > 0);
 
   if (!canOperate) {
     return (
@@ -586,12 +676,14 @@ export default function ProductFormImagesTab({
                 onToggleSelect={(linkId) => toggleSelectForDownload(linkId, "product")}
                 onDownload={handleDownload}
                 onOpenInNewTab={handleOpenInNewTab}
+                onPreviewError={handlePreviewError}
                 uploading={uploading}
                 maxSlots={MAX_IMAGES}
                 scopeId="product"
                 selectModeActive={selectMode && activeSelectScope === "product"}
                 onToggleSelectMode={() => toggleSelectMode("product")}
                 onDownloadSelected={() => handleDownloadSelected("product")}
+                downloadingSelected={downloadingSelected}
               />
             </section>
           )}
@@ -610,12 +702,14 @@ export default function ProductFormImagesTab({
               toggleSelectForDownload={toggleSelectForDownload}
               onDownload={handleDownload}
               onOpenInNewTab={handleOpenInNewTab}
+              onPreviewError={handlePreviewError}
               onVariantReorder={onVariantReorder}
               uploading={uploading}
               selectMode={selectMode}
               activeSelectScope={activeSelectScope}
               onToggleSelectMode={toggleSelectMode}
               onDownloadSelected={handleDownloadSelected}
+              downloadingSelected={downloadingSelected}
             />
           )}
         </>
@@ -647,7 +741,7 @@ export default function ProductFormImagesTab({
 }
 
 /** Card de imagem sortable (Principal = sort_order 0, download, abrir e delete na linha inferior) */
-function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, onOpenInNewTab, selectModeActive }) {
+function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, onOpenInNewTab, onPreviewError, selectModeActive }) {
   const isPrimary = (link.sort_order ?? 0) === 0;
 
   const {
@@ -688,10 +782,15 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
     >
       <div className="pf-images-card-preview">
         {previewUrls.get(link.id) ? (
-          <img src={previewUrls.get(link.id)} alt="" />
+          <img
+            src={previewUrls.get(link.id)}
+            alt=""
+            onError={() => onPreviewError?.(link.id)}
+          />
         ) : (
           <div className="pf-images-card-placeholder">…</div>
         )}
+        {isPrimary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
       </div>
       <div className="pf-images-card-actions">
         {selectModeActive && (
@@ -727,7 +826,6 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
             <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
         </button>
-        {isPrimary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
         <span
           className="pf-images-drag-handle"
           {...attributes}
@@ -771,12 +869,14 @@ function ImageSlotRow({
   onToggleSelect,
   onDownload,
   onOpenInNewTab,
+  onPreviewError,
   uploading,
   maxSlots,
   scopeId,
   selectModeActive,
   onToggleSelectMode,
   onDownloadSelected,
+  downloadingSelected = false,
 }) {
   const inputRef = useRef(null);
   const sortedLinks = [...(links || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || 0);
@@ -824,10 +924,10 @@ function ImageSlotRow({
                   type="button"
                   className="s7-btn s7-btn--secondary"
                   onClick={onDownloadSelected}
-                  disabled={selectedForDownload.size === 0}
+                  disabled={selectedForDownload.size === 0 || downloadingSelected}
                   title={selectedForDownload.size === 0 ? "Selecione ao menos 1 imagem" : undefined}
                 >
-                  Baixar selecionadas
+                  {downloadingSelected ? "Baixando…" : "Baixar selecionadas"}
                 </button>
               )}
             </div>
@@ -864,6 +964,7 @@ function ImageSlotRow({
                   onToggleSelect={onToggleSelect}
                   onDownload={onDownload}
                   onOpenInNewTab={onOpenInNewTab}
+                  onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
                 />
               );

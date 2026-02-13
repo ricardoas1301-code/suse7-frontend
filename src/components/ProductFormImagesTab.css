@@ -246,8 +246,12 @@
 }
 
 .pf-images-badge--primary {
+  position: absolute;
+  top: 6px;
+  left: 6px;
   background: #2563eb;
   color: #fff;
+  z-index: 1;
 }
 
 /* Drag handle: área clicável maior, cursor grab */
