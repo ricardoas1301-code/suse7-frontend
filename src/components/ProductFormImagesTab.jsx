@@ -53,7 +53,7 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenInNewTab, onPreviewError, uploading, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
@@ -106,8 +106,8 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         onReorder={(ids) => onReorder(ids, vk)}
         onToggleSelect={onToggleSelect}
         onDownload={onDownload}
-        onOpenInNewTab={onOpenInNewTab}
-                onPreviewError={onPreviewError}
+        onOpenPreview={onOpenPreview}
+        onPreviewError={onPreviewError}
                 uploading={uploadingScopeId != null && uploadingScopeId === vk}
         maxSlots={7}
         scopeId={vk}
@@ -132,7 +132,7 @@ function VariationBlocksSection({
   onReorder,
   toggleSelectForDownload,
   onDownload,
-  onOpenInNewTab,
+  onOpenPreview,
   onPreviewError,
   onVariantReorder,
   downloadingSelected,
@@ -185,7 +185,7 @@ function VariationBlocksSection({
                   onReorder={onReorder}
         onToggleSelect={(linkId) => toggleSelectForDownload(linkId, vk)}
                 onDownload={onDownload}
-                onOpenInNewTab={onOpenInNewTab}
+                onOpenPreview={onOpenPreview}
                 onPreviewError={onPreviewError}
                 uploading={uploadingScopeId != null && uploadingScopeId === vk}
                 selectModeActive={selectMode && activeSelectScope === vk}
@@ -578,6 +578,16 @@ export default function ProductFormImagesTab({
     }
   };
 
+  const handleOpenInNewTab = async (link) => {
+    try {
+      const url = await getSignedUrl(link?.storage_path, 60);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Erro ao abrir imagem:", err);
+      addNotification({ type: "error", title: "Abrir", message: err?.message || "Erro ao abrir imagem" });
+    }
+  };
+
   const handleDownloadSelected = async (scopeId) => {
     const links = scopeId === "product" || scopeId === null
       ? productLinks
@@ -679,7 +689,7 @@ export default function ProductFormImagesTab({
                 onReorder={(ids) => handleReorder(ids, null)}
                 onToggleSelect={(linkId) => toggleSelectForDownload(linkId, "product")}
                 onDownload={handleDownload}
-                onOpenInNewTab={handleOpenPreview}
+                onOpenPreview={handleOpenPreview}
                 onPreviewError={handlePreviewError}
                 uploading={uploadingScopeId === "product"}
                 maxSlots={MAX_IMAGES}
@@ -705,7 +715,7 @@ export default function ProductFormImagesTab({
               onReorder={handleReorder}
               toggleSelectForDownload={toggleSelectForDownload}
               onDownload={handleDownload}
-              onOpenInNewTab={handleOpenInNewTab}
+              onOpenPreview={handleOpenPreview}
               onPreviewError={handlePreviewError}
               onVariantReorder={onVariantReorder}
               uploadingScopeId={uploadingScopeId}
@@ -741,7 +751,7 @@ export default function ProductFormImagesTab({
           document.body
         )}
 
-      {/* Modal preview imagem (abrir dentro da página) */}
+      {/* Modal preview imagem (abrir dentro da página — não fecha ao clicar fora, apenas no botão Fechar) */}
       {previewModal.open && previewModal.url &&
         createPortal(
           <div className="s7-modal-overlay pf-images-preview-overlay" role="dialog" aria-modal="true">
@@ -764,7 +774,7 @@ export default function ProductFormImagesTab({
 }
 
 /** Card de imagem sortable (Principal = sort_order 0, download, abrir e delete na linha inferior) */
-function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, onOpenInNewTab, onPreviewError, selectModeActive }) {
+function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, onOpenPreview, onPreviewError, selectModeActive }) {
   const isPrimary = (link.sort_order ?? 0) === 0;
 
   const {
@@ -794,7 +804,7 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
 
   const handleOpenClick = (e) => {
     e.stopPropagation();
-    onOpenInNewTab?.(link);
+    onOpenPreview?.(link);
   };
 
   return (
@@ -891,7 +901,7 @@ function ImageSlotRow({
   onReorder,
   onToggleSelect,
   onDownload,
-  onOpenInNewTab,
+  onOpenPreview,
   onPreviewError,
   uploading,
   maxSlots,
@@ -986,7 +996,7 @@ function ImageSlotRow({
                   onDelete={onDelete}
                   onToggleSelect={onToggleSelect}
                   onDownload={onDownload}
-                  onOpenInNewTab={onOpenInNewTab}
+                  onOpenPreview={onOpenPreview}
                   onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
                 />
