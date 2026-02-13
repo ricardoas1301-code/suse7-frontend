@@ -1,0 +1,10 @@
+{
+  "name": "suse7-frontend",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "postCreateCommand": "npm cache clean --force && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}
