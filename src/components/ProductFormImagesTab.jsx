@@ -107,8 +107,8 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         onToggleSelect={onToggleSelect}
         onDownload={onDownload}
         onOpenInNewTab={onOpenInNewTab}
-        onPreviewError={onPreviewError}
-        uploading={uploading}
+                onPreviewError={onPreviewError}
+                uploading={uploadingScopeId != null && uploadingScopeId === vk}
         maxSlots={7}
         scopeId={vk}
         selectModeActive={selectModeActive}
@@ -136,7 +136,7 @@ function VariationBlocksSection({
   onPreviewError,
   onVariantReorder,
   downloadingSelected,
-  uploading,
+  uploadingScopeId,
   selectMode,
   activeSelectScope,
   onToggleSelectMode,
@@ -187,7 +187,7 @@ function VariationBlocksSection({
                 onDownload={onDownload}
                 onOpenInNewTab={onOpenInNewTab}
                 onPreviewError={onPreviewError}
-                uploading={uploading}
+                uploading={uploadingScopeId != null && uploadingScopeId === vk}
                 selectModeActive={selectMode && activeSelectScope === vk}
                   onToggleSelectMode={onToggleSelectMode}
                   onDownloadSelected={onDownloadSelected}
@@ -216,7 +216,6 @@ export default function ProductFormImagesTab({
   const [variantLinksMap, setVariantLinksMap] = useState({});
   const [selectedForDownloadByScope, setSelectedForDownloadByScope] = useState({});
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [previewUrls, setPreviewUrls] = useState(new Map());
   const previewFetchedRef = useRef(new Set());
@@ -226,6 +225,8 @@ export default function ProductFormImagesTab({
   const [activeSelectScope, setActiveSelectScope] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [downloadingSelected, setDownloadingSelected] = useState(false);
+  const [previewModal, setPreviewModal] = useState({ open: false, url: null, title: null });
+  const [uploadingScopeId, setUploadingScopeId] = useState(null);
 
   const { addNotification } = useNotifications();
   const saveStatus = useSaveStatus();
@@ -294,7 +295,8 @@ export default function ProductFormImagesTab({
       return;
     }
 
-    setUploading(true);
+    const scopeId = variantKey === null || variantKey === undefined ? "product" : variantKey;
+    setUploadingScopeId(scopeId);
     setError(null);
     try {
       const userId = await getUserId();
@@ -371,7 +373,7 @@ export default function ProductFormImagesTab({
       setError(msg);
       addNotification({ type: "error", title: "Upload", message: msg });
     } finally {
-      setUploading(false);
+      setUploadingScopeId(null);
     }
   };
 
@@ -564,10 +566,12 @@ export default function ProductFormImagesTab({
     }
   };
 
-  const handleOpenInNewTab = async (link) => {
+  const handleOpenPreview = async (link) => {
     try {
       const url = await getSignedUrl(link?.storage_path, 60);
-      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      if (url) {
+        setPreviewModal({ open: true, url, title: link?.file_name || "Imagem" });
+      }
     } catch (err) {
       console.error("Erro ao abrir imagem:", err);
       addNotification({ type: "error", title: "Abrir", message: err?.message || "Erro ao abrir imagem" });
@@ -675,9 +679,9 @@ export default function ProductFormImagesTab({
                 onReorder={(ids) => handleReorder(ids, null)}
                 onToggleSelect={(linkId) => toggleSelectForDownload(linkId, "product")}
                 onDownload={handleDownload}
-                onOpenInNewTab={handleOpenInNewTab}
+                onOpenInNewTab={handleOpenPreview}
                 onPreviewError={handlePreviewError}
-                uploading={uploading}
+                uploading={uploadingScopeId === "product"}
                 maxSlots={MAX_IMAGES}
                 scopeId="product"
                 selectModeActive={selectMode && activeSelectScope === "product"}
@@ -704,7 +708,7 @@ export default function ProductFormImagesTab({
               onOpenInNewTab={handleOpenInNewTab}
               onPreviewError={handlePreviewError}
               onVariantReorder={onVariantReorder}
-              uploading={uploading}
+              uploadingScopeId={uploadingScopeId}
               selectMode={selectMode}
               activeSelectScope={activeSelectScope}
               onToggleSelectMode={toggleSelectMode}
@@ -718,8 +722,8 @@ export default function ProductFormImagesTab({
       {/* Modal confirmação exclusão */}
       {deleteConfirm &&
         createPortal(
-          <div className="s7-modal-overlay" role="dialog" aria-modal="true" onClick={() => setDeleteConfirm(null)}>
-            <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="s7-modal-overlay" role="dialog" aria-modal="true">
+            <div className="s7-modal-card">
               <h2 className="s7-modal-title">Excluir imagem</h2>
               <p className="s7-modal-text">
                 Deseja excluir esta imagem?
@@ -728,9 +732,28 @@ export default function ProductFormImagesTab({
                 <button type="button" className="s7-modal-btn-secondary" onClick={() => setDeleteConfirm(null)}>
                   Cancelar
                 </button>
-                <button type="button" className="s7-modal-btn-danger" onClick={handleDeleteConfirm}>
+                <button type="button" className="s7-modal-btn-danger" onClick={() => handleDeleteConfirm()}>
                   Excluir
                 </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Modal preview imagem (abrir dentro da página) */}
+      {previewModal.open && previewModal.url &&
+        createPortal(
+          <div className="s7-modal-overlay pf-images-preview-overlay" role="dialog" aria-modal="true">
+            <div className="pf-images-preview-modal">
+              <div className="pf-images-preview-header">
+                <span className="pf-images-preview-title">{previewModal.title || "Imagem"}</span>
+                <button type="button" className="pf-close" onClick={() => setPreviewModal({ open: false, url: null, title: null })}>
+                  Fechar
+                </button>
+              </div>
+              <div className="pf-images-preview-body">
+                <img src={previewModal.url} alt="" />
               </div>
             </div>
           </div>,
@@ -818,7 +841,7 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
           type="button"
           className="pf-images-btn-open"
           onClick={handleOpenClick}
-          title="Abrir em nova aba"
+          title="Abrir"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
