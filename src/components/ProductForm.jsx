@@ -1831,6 +1831,7 @@ const handleSubmit = async () => {
               buildVariantKey={buildVariantKey}
               onVariantReorder={handleVariantReorder}
               seoKeywords={product?.seo_keywords ?? ""}
+              productName={product?.product_name ?? ""}
               onSwitchToDataTab={() => setActiveTab("data")}
             />
           </div>

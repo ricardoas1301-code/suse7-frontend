@@ -332,6 +332,14 @@
   }
 }
 
+/* Badge "Otimizado" (~1s) após SEO rename */
+.pf-images-seo-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+  animation: pf-images-saved-badge-in 0.2s ease-out;
+}
+
 .pf-images-upload-slot {
   min-height: 140px;
   border: 2px dashed var(--s7-border, #dcdfe4);
