@@ -4,6 +4,7 @@
 // ======================================================================
 
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { NotificationContext } from "../contexts/NotificationContext";
 import "./NotificationToast.css";
 
@@ -84,7 +85,7 @@ export default function NotificationToast() {
 
   if (unread.length === 0) return null;
 
-  return (
+  return createPortal(
     <div className="s7-notification-toast-container" role="region" aria-label="Notificações">
       {unread.map((n) => (
         <ToastItem
@@ -95,6 +96,7 @@ export default function NotificationToast() {
           removeNotification={removeNotification}
         />
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }

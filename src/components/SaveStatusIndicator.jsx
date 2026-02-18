@@ -4,6 +4,7 @@
 // Estados: saving (ampulheta), success (check), error (alert + retry)
 // ======================================================================
 
+import { createPortal } from "react-dom";
 import { useSaveStatus } from "../contexts/SaveStatusContext";
 import "./SaveStatusIndicator.css";
 
@@ -46,26 +47,23 @@ export default function SaveStatusIndicator() {
 
   const [key, { status, message, retry }] = active;
 
+  let content = null;
   if (status === "saving") {
-    return (
+    content = (
       <div className="s7-save-status s7-save-status--saving" role="status" aria-live="polite">
         <LoaderIcon />
         <span>Salvando...</span>
       </div>
     );
-  }
-
-  if (status === "success") {
-    return (
+  } else if (status === "success") {
+    content = (
       <div className="s7-save-status s7-save-status--success" role="status" aria-live="polite">
         <CheckIcon />
         <span>Salvo</span>
       </div>
     );
-  }
-
-  if (status === "error") {
-    return (
+  } else if (status === "error") {
+    content = (
       <div className="s7-save-status s7-save-status--error" role="alert">
         <AlertIcon />
         <span>{message || "Falha ao salvar"}</span>
@@ -78,5 +76,5 @@ export default function SaveStatusIndicator() {
     );
   }
 
-  return null;
+  return content ? createPortal(content, document.body) : null;
 }

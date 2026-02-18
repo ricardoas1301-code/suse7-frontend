@@ -38,6 +38,8 @@ import "./ProductFormImagesTab.css";
 
 const MAX_IMAGES = 7;
 const EMPTY_SELECTION = new Set();
+/** Modo silencioso: reorder/delete não disparam SaveStatus nem toasts de sucesso */
+const SILENT_AUTOSAVE = true;
 
 function buildVariantKeyFromAttrs(attrsObj) {
   const entries = Object.entries(attrsObj || {}).sort(([a], [b]) => a.localeCompare(b));
@@ -53,7 +55,7 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
@@ -103,12 +105,13 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         selectedForDownload={selectedForDownload}
         onUpload={(files) => onUpload(files, vk)}
         onDelete={(id) => onDelete(id, vk)}
-        onReorder={(ids) => onReorder(ids, vk)}
+        onReorder={(ids, slotIndex) => onReorder(ids, vk, slotIndex)}
         onToggleSelect={onToggleSelect}
         onDownload={onDownload}
         onOpenPreview={onOpenPreview}
-        onPreviewError={onPreviewError}
-        uploading={uploading}
+                  onPreviewError={onPreviewError}
+                  uploading={uploading}
+                  recentSavedKey={recentSavedKey}
         maxSlots={7}
         scopeId={vk}
         selectModeActive={selectModeActive}
@@ -137,6 +140,7 @@ function VariationBlocksSection({
   onVariantReorder,
   downloadingSelected,
   uploadingScopeId,
+  recentSavedKey,
   selectMode,
   activeSelectScope,
   onToggleSelectMode,
@@ -227,6 +231,8 @@ export default function ProductFormImagesTab({
   const [downloadingSelected, setDownloadingSelected] = useState(false);
   const [previewModal, setPreviewModal] = useState({ open: false, url: null, title: null });
   const [uploadingScopeId, setUploadingScopeId] = useState(null);
+  const [recentSavedKey, setRecentSavedKey] = useState(null);
+  const recentSavedTimeoutRef = useRef(null);
 
   const { addNotification } = useNotifications();
   const saveStatus = useSaveStatus();
@@ -238,6 +244,12 @@ export default function ProductFormImagesTab({
   useEffect(() => {
     console.log("[ProductFormImagesTab] mount/update", { productId, draftKey: draftKey?.slice?.(0, 8) + "...", hasProductId, hasDraftKey, canOperate });
   }, [productId, draftKey, hasProductId, hasDraftKey, canOperate]);
+
+  useEffect(() => {
+    return () => {
+      if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
+    };
+  }, []);
 
   const loadLinks = useCallback(async () => {
     if (!canOperate) return;
@@ -366,7 +378,9 @@ export default function ProductFormImagesTab({
         });
       }
       await loadLinks();
-      addNotification({ type: "success", title: "Upload", message: `${metas.length} imagem(ns) adicionada(s)` });
+      if (!SILENT_AUTOSAVE) {
+        addNotification({ type: "success", title: "Upload", message: `${metas.length} imagem(ns) adicionada(s)` });
+      }
     } catch (err) {
       const msg = err?.message || String(err) || "Erro no upload";
       console.error("[ProductFormImagesTab] handleUpload erro:", err);
@@ -393,8 +407,7 @@ export default function ProductFormImagesTab({
     const linkToDelete = links.find((l) => l.id === linkId);
     if (!linkToDelete) return;
 
-    const opId = saveStatus.saving("images-delete");
-    try {
+    const runDelete = async () => {
       await deleteAsset(linkToDelete.storage_path);
       await deleteLink(linkId);
 
@@ -421,21 +434,35 @@ export default function ProductFormImagesTab({
       } else {
         setVariantLinksMap((prev) => ({ ...prev, [variantKey]: normalized }));
       }
+    };
 
-      saveStatus.success("images-delete", opId);
-      addNotification({ type: "success", title: "Imagem", message: "Imagem excluída" });
-    } catch (err) {
-      saveStatus.error("images-delete", opId, {
-        message: err?.message || "Erro ao excluir",
-        retry: () => handleDeleteConfirm({ linkId, variantKey }),
-      });
-      addNotification({ type: "error", title: "Excluir", message: err?.message || "Erro ao excluir" });
-      if (!overrideConfirm) setDeleteConfirm({ linkId, variantKey });
-      await loadLinks();
+    if (SILENT_AUTOSAVE) {
+      try {
+        await runDelete();
+      } catch (err) {
+        addNotification({ type: "error", title: "Excluir", message: err?.message || "Erro ao excluir" });
+        if (!overrideConfirm) setDeleteConfirm({ linkId, variantKey });
+        await loadLinks();
+      }
+    } else {
+      const opId = saveStatus.saving("images-delete");
+      try {
+        await runDelete();
+        saveStatus.success("images-delete", opId);
+        addNotification({ type: "success", title: "Imagem", message: "Imagem excluída" });
+      } catch (err) {
+        saveStatus.error("images-delete", opId, {
+          message: err?.message || "Erro ao excluir",
+          retry: () => handleDeleteConfirm({ linkId, variantKey }),
+        });
+        addNotification({ type: "error", title: "Excluir", message: err?.message || "Erro ao excluir" });
+        if (!overrideConfirm) setDeleteConfirm({ linkId, variantKey });
+        await loadLinks();
+      }
     }
   }, [deleteConfirm, canOperate, productLinks, variantLinksMap, saveStatus, addNotification, loadLinks]);
 
-  const handleReorder = useCallback(async (orderedIds, variantKey = null) => {
+  const handleReorder = useCallback(async (orderedIds, variantKey = null, affectedSlotIndex = null) => {
     if (!canOperate || !orderedIds?.length) return;
     const isProduct = variantKey === null || variantKey === undefined;
     const links = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
@@ -456,17 +483,34 @@ export default function ProductFormImagesTab({
       setVariantLinksMap((prev) => ({ ...prev, [variantKey]: normalized }));
     }
 
-    const opId = saveStatus.saving("images-reorder");
-    try {
-      await updateLinksSortOrder(updates);
-      saveStatus.success("images-reorder", opId);
-    } catch (err) {
-      saveStatus.error("images-reorder", opId, {
-        message: err?.message || "Falha ao salvar ordem",
-        retry: () => handleReorder(orderedIds, variantKey),
-      });
-      addNotification({ type: "error", title: "Reorder", message: err?.message || "Erro ao salvar ordem" });
-      await loadLinks();
+    if (SILENT_AUTOSAVE) {
+      try {
+        await updateLinksSortOrder(updates);
+        const scopeId = isProduct ? "product" : variantKey;
+        const slotIndex = affectedSlotIndex ?? 0;
+        if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
+        setRecentSavedKey(`${scopeId}:${slotIndex}`);
+        recentSavedTimeoutRef.current = setTimeout(() => {
+          setRecentSavedKey(null);
+          recentSavedTimeoutRef.current = null;
+        }, 1000);
+      } catch (err) {
+        addNotification({ type: "error", title: "Ordem", message: err?.message || "Erro ao salvar ordem" });
+        await loadLinks();
+      }
+    } else {
+      const opId = saveStatus.saving("images-reorder");
+      try {
+        await updateLinksSortOrder(updates);
+        saveStatus.success("images-reorder", opId);
+      } catch (err) {
+        saveStatus.error("images-reorder", opId, {
+          message: err?.message || "Falha ao salvar ordem",
+          retry: () => handleReorder(orderedIds, variantKey, affectedSlotIndex),
+        });
+        addNotification({ type: "error", title: "Ordem", message: err?.message || "Erro ao salvar ordem" });
+        await loadLinks();
+      }
     }
   }, [canOperate, productLinks, variantLinksMap, addNotification, loadLinks, saveStatus]);
 
@@ -686,7 +730,7 @@ export default function ProductFormImagesTab({
                 selectedForDownload={selectedForDownloadByScope["product"] ?? EMPTY_SELECTION}
                 onUpload={(files) => handleUpload(files, null)}
                 onDelete={(id) => handleDeleteRequest(id, null)}
-                onReorder={(ids) => handleReorder(ids, null)}
+                onReorder={(ids, slotIndex) => handleReorder(ids, null, slotIndex)}
                 onToggleSelect={(linkId) => toggleSelectForDownload(linkId, "product")}
                 onDownload={handleDownload}
                 onOpenPreview={handleOpenPreview}
@@ -694,6 +738,7 @@ export default function ProductFormImagesTab({
                 uploading={uploadingScopeId === "product"}
                 maxSlots={MAX_IMAGES}
                 scopeId="product"
+                recentSavedKey={recentSavedKey}
                 selectModeActive={selectMode && activeSelectScope === "product"}
                 onToggleSelectMode={() => toggleSelectMode("product")}
                 onDownloadSelected={() => handleDownloadSelected("product")}
@@ -719,6 +764,7 @@ export default function ProductFormImagesTab({
               onPreviewError={handlePreviewError}
               onVariantReorder={onVariantReorder}
               uploadingScopeId={uploadingScopeId}
+              recentSavedKey={recentSavedKey}
               selectMode={selectMode}
               activeSelectScope={activeSelectScope}
               onToggleSelectMode={toggleSelectMode}
@@ -774,7 +820,7 @@ export default function ProductFormImagesTab({
 }
 
 /** Card de imagem sortable (Principal = sort_order 0, download, abrir e delete na linha inferior) */
-function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, onOpenPreview, onPreviewError, selectModeActive }) {
+function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, onOpenPreview, onPreviewError, selectModeActive, showRecentSaved }) {
   const isPrimary = (link.sort_order ?? 0) === 0;
 
   const {
@@ -826,66 +872,71 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
         {isPrimary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
       </div>
       <div className="pf-images-card-actions">
-        {selectModeActive && (
-          <label className="pf-images-check" onClick={(e) => e.stopPropagation()}>
-            <input
-              type="checkbox"
-              checked={selectedForDownload.has(link.id)}
-              onChange={() => onToggleSelect(link.id)}
-            />
-          </label>
-        )}
-        <button
-          type="button"
-          className="pf-images-btn-download"
-          onClick={handleDownloadClick}
-          title="Baixar"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          className="pf-images-btn-open"
-          onClick={handleOpenClick}
-          title="Abrir"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-          </svg>
-        </button>
-        <span
-          className="pf-images-drag-handle"
-          {...attributes}
-          {...listeners}
-          aria-hidden
-          title="Arraste para ordenar"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="9" cy="6" r="1.5" />
-            <circle cx="9" cy="12" r="1.5" />
-            <circle cx="9" cy="18" r="1.5" />
-            <circle cx="15" cy="6" r="1.5" />
-            <circle cx="15" cy="12" r="1.5" />
-            <circle cx="15" cy="18" r="1.5" />
-          </svg>
-        </span>
-        <button
-          type="button"
-          className="pf-images-btn-delete"
-          onClick={handleDeleteClick}
-          title="Excluir"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-            <path d="M10 11v6M14 11v6" />
-          </svg>
-        </button>
+        <div className="pf-images-card-actions__left">
+          {selectModeActive && (
+            <label className="pf-images-check" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="checkbox"
+                checked={selectedForDownload.has(link.id)}
+                onChange={() => onToggleSelect(link.id)}
+              />
+            </label>
+          )}
+          {showRecentSaved && <span className="pf-images-saved-badge" aria-hidden title="Salvo" />}
+        </div>
+        <div className="pf-images-card-actions__right">
+          <button
+            type="button"
+            className="pf-images-btn-download"
+            onClick={handleDownloadClick}
+            title="Baixar"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="pf-images-btn-open"
+            onClick={handleOpenClick}
+            title="Abrir"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </button>
+          <span
+            className="pf-images-drag-handle"
+            {...attributes}
+            {...listeners}
+            aria-hidden
+            title="Arraste para ordenar"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="9" cy="6" r="1.5" />
+              <circle cx="9" cy="12" r="1.5" />
+              <circle cx="9" cy="18" r="1.5" />
+              <circle cx="15" cy="6" r="1.5" />
+              <circle cx="15" cy="12" r="1.5" />
+              <circle cx="15" cy="18" r="1.5" />
+            </svg>
+          </span>
+          <button
+            type="button"
+            className="pf-images-btn-delete"
+            onClick={handleDeleteClick}
+            title="Excluir"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+              <path d="M10 11v6M14 11v6" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -922,7 +973,7 @@ function ImageSlotRow({
     const newIndex = linkIds.indexOf(over.id);
     if (oldIndex < 0 || newIndex < 0) return;
     const newOrder = arrayMove(linkIds, oldIndex, newIndex);
-    onReorder(newOrder);
+    onReorder(newOrder, newIndex);
   };
 
   const triggerUpload = () => {
@@ -999,6 +1050,7 @@ function ImageSlotRow({
                   onOpenPreview={onOpenPreview}
                   onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
+                  showRecentSaved={recentSavedKey != null && recentSavedKey === `${scopeId}:${index}`}
                 />
               );
             }

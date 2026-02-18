@@ -35,7 +35,7 @@
 
 /* Slot vazio = placeholder com borda tracejada (mesmo tamanho do preview) */
 .pf-images-slot-empty {
-  height: 120px;
+  height: 132px;
   border: 2px dashed var(--s7-border, #dcdfe4);
   border-radius: var(--s7-radius-md, 12px);
   background: var(--s7-bg-soft, #f9fafb);
@@ -155,7 +155,7 @@
 }
 
 .pf-images-card-preview {
-  height: 120px;
+  height: 132px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -181,65 +181,60 @@
 }
 
 .pf-images-card-actions {
-  padding: 6px 8px;
+  padding: 4px 6px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-wrap: nowrap;
+  gap: 2px;
   align-items: center;
+  justify-content: space-between;
   font-size: 12px;
+  min-height: 28px;
 }
 
-.pf-images-btn-download {
+.pf-images-card-actions__left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.pf-images-card-actions__right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.pf-images-btn-download,
+.pf-images-btn-open,
+.pf-images-btn-delete {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--s7-muted, #9ca3af);
   cursor: pointer;
-  padding: 4px;
+  padding: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 4px;
 }
 
-.pf-images-btn-download:hover {
-  color: var(--s7-primary, #2563eb);
-}
-
-.pf-images-btn-open {
-  background: transparent;
-  border: none;
-  color: var(--s7-muted, #9ca3af);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s ease;
-}
-
+.pf-images-btn-download:hover,
 .pf-images-btn-open:hover {
   color: var(--s7-primary, #2563eb);
+  border-color: transparent;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
 }
 
 .pf-images-btn-delete {
-  background: transparent;
-  border: none;
-  color: var(--s7-muted, #9ca3af);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.15s ease, color 0.15s ease;
-}
-
-.pf-images-card:hover .pf-images-btn-delete {
-  opacity: 1;
+  opacity: 0.85;
 }
 
 .pf-images-btn-delete:hover {
   color: var(--s7-danger, #ef4444);
+  border-color: transparent;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
 }
 
 .pf-images-badge {
@@ -260,7 +255,7 @@
   z-index: 1;
 }
 
-/* Drag handle: área clicável maior, cursor grab */
+/* Drag handle: área clicável, cursor grab */
 .pf-images-drag-handle {
   color: var(--s7-muted, #9ca3af);
   cursor: grab;
@@ -268,9 +263,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
-  margin: -2px 0;
+  padding: 3px;
   border-radius: 4px;
+  border: 1px solid transparent;
+  transition: color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .pf-images-drag-handle:active {
@@ -278,8 +274,8 @@
 }
 
 .pf-images-drag-handle:hover {
-  color: var(--s7-text, #0f172a);
-  background: rgba(0, 0, 0, 0.04);
+  color: var(--s7-primary, #2563eb);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
 }
 
 .pf-images-drag-handle svg {
@@ -289,15 +285,44 @@
 .pf-images-check {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
   cursor: pointer;
   font-size: 12px;
   color: var(--s7-muted, #6b7280);
+  padding: 2px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pf-images-check:hover {
+  color: var(--s7-primary, #2563eb);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
 }
 
 .pf-images-check input {
   width: 14px;
   height: 14px;
+}
+
+/* Mini badge discreto: sucesso silencioso (~1s) */
+.pf-images-saved-badge {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #059669;
+  flex-shrink: 0;
+  animation: pf-images-saved-badge-in 0.2s ease-out;
+}
+
+@keyframes pf-images-saved-badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .pf-images-upload-slot {
