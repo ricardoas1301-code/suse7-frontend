@@ -145,6 +145,9 @@ function VariationBlocksSection({
   activeSelectScope,
   onToggleSelectMode,
   onDownloadSelected,
+  totalImages = 0,
+  seoOptimizing = false,
+  onSeoRenameClick = null,
 }) {
   const rowIds = variantRows.map((r) => r.id || variantKeyFn(r.attributes));
 
@@ -167,6 +170,19 @@ function VariationBlocksSection({
   return (
     <section className="pf-images-section">
       <h3 className="pf-images-section-title">Imagens por variação</h3>
+      {totalImages > 0 && onSeoRenameClick && (
+        <div className="pf-images-section-toolbar">
+          <button
+            type="button"
+            className="s7-btn s7-btn--secondary"
+            onClick={onSeoRenameClick}
+            disabled={seoOptimizing}
+            title="Padronize o nome dos arquivos usando suas palavras-chave para organização e melhor desempenho em SEO/catálogos."
+          >
+            {seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)"}
+          </button>
+        </div>
+      )}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -213,6 +229,8 @@ export default function ProductFormImagesTab({
   variantRows = [],
   buildVariantKey,
   onVariantReorder = null,
+  seoKeywords = "",
+  onSwitchToDataTab = null,
 }) {
   const variantKeyFn = buildVariantKey || buildVariantKeyFromAttrs;
 
@@ -668,6 +686,29 @@ export default function ProductFormImagesTab({
     }
   };
 
+  const totalImages = format === "simple"
+    ? productLinks.length
+    : Object.values(variantLinksMap).flat().length;
+
+  const handleSeoRenameClick = useCallback(() => {
+    const keywords = (seoKeywords || "").trim();
+    if (!keywords) {
+      setSeoKeywordsModalOpen(true);
+      return;
+    }
+    setSeoOptimizing(true);
+    Promise.resolve()
+      .then(() => {
+        /* stub: backend fará a renomeação real */
+      })
+      .finally(() => setSeoOptimizing(false));
+  }, [seoKeywords]);
+
+  const handleSeoModalGoToData = useCallback(() => {
+    setSeoKeywordsModalOpen(false);
+    onSwitchToDataTab?.();
+  }, [onSwitchToDataTab]);
+
   const toggleSelectMode = (scopeId) => {
     if (selectMode && activeSelectScope === scopeId) {
       setSelectMode(false);
@@ -745,6 +786,9 @@ export default function ProductFormImagesTab({
           {/* Produto com variações: apenas Imagens por variação (sem seção global) */}
           {format === "variants" && variantRows?.length > 0 && (
             <VariationBlocksSection
+              totalImages={totalImages}
+              seoOptimizing={seoOptimizing}
+              onSeoRenameClick={handleSeoRenameClick}
               variantRows={variantRows}
               variantKeyFn={variantKeyFn}
               variantLinksMap={variantLinksMap}
@@ -769,6 +813,31 @@ export default function ProductFormImagesTab({
           )}
         </>
       )}
+
+      {/* Modal palavras-chave necessárias (SEO) */}
+      {seoKeywordsModalOpen &&
+        createPortal(
+          <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-modal-seo-title">
+            <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="s7-modal-icon-wrap">
+                <div className="s7-modal-icon s7-modal-icon--success">✓</div>
+              </div>
+              <h2 id="s7-modal-seo-title" className="s7-modal-title">Palavras-chave necessárias</h2>
+              <p className="s7-modal-text">
+                Cadastre as palavras-chave na aba Dados para otimizar o nome das imagens.
+              </p>
+              <div className="s7-modal-actions">
+                <button type="button" className="s7-modal-btn-secondary" onClick={() => setSeoKeywordsModalOpen(false)}>
+                  Cancelar
+                </button>
+                <button type="button" className="s7-modal-btn-primary" onClick={handleSeoModalGoToData}>
+                  Ir para Dados
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Modal confirmação exclusão */}
       {deleteConfirm &&

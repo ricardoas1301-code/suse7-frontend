@@ -26,6 +26,13 @@
   margin: 0 0 16px;
 }
 
+.pf-images-section-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 /* Linha com 7 slots fixos */
 .pf-images-slot-row {
   display: grid;
