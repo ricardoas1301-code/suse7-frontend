@@ -955,6 +955,7 @@ function ImageSlotRow({
   onOpenPreview,
   onPreviewError,
   uploading,
+  recentSavedKey = null,
   maxSlots,
   scopeId,
   selectModeActive,
