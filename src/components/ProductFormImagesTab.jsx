@@ -256,6 +256,10 @@ export default function ProductFormImagesTab({
   const [uploadingScopeId, setUploadingScopeId] = useState(null);
   const [recentSavedKey, setRecentSavedKey] = useState(null);
   const recentSavedTimeoutRef = useRef(null);
+  const [seoKeywordsModalOpen, setSeoKeywordsModalOpen] = useState(false);
+  const [seoOptimizing, setSeoOptimizing] = useState(false);
+  const [seoOptimizedBadge, setSeoOptimizedBadge] = useState(false);
+  const seoOptimizedTimeoutRef = useRef(null);
 
   const { addNotification } = useNotifications();
   const saveStatus = useSaveStatus();
