@@ -643,9 +643,6 @@ export default function ProductFormImagesTab({
     if (toDownload.length === 0) return;
 
     setDownloadingSelected(true);
-    const total = toDownload.length;
-    addNotification({ type: "info", title: "Download", message: `Baixando ${total} imagem(ns)…` });
-
     const CONCURRENCY = 2;
     const errors = [];
 
@@ -668,8 +665,6 @@ export default function ProductFormImagesTab({
 
     if (errors.length > 0) {
       addNotification({ type: "error", title: "Download", message: `${errors.length} falha(s): ${errors.slice(0, 2).join("; ")}${errors.length > 2 ? "…" : ""}` });
-    } else {
-      addNotification({ type: "success", title: "Download", message: `${total} imagem(ns) baixada(s)` });
     }
   };
 
@@ -778,9 +773,12 @@ export default function ProductFormImagesTab({
       {/* Modal confirmação exclusão */}
       {deleteConfirm &&
         createPortal(
-          <div className="s7-modal-overlay" role="dialog" aria-modal="true">
-            <div className="s7-modal-card">
-              <h2 className="s7-modal-title">Excluir imagem</h2>
+          <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-modal-delete-title">
+            <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="s7-modal-icon-wrap">
+                <div className="s7-modal-icon s7-modal-icon--success">✓</div>
+              </div>
+              <h2 id="s7-modal-delete-title" className="s7-modal-title">Excluir imagem</h2>
               <p className="s7-modal-text">
                 Deseja excluir esta imagem?
               </p>
