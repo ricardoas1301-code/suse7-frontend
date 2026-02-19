@@ -539,8 +539,8 @@ export default function ProductFormImagesTab({
 
         if (!isProduct) clearVariantDirty(variantKey);
 
-        const scopeId = isProduct ? "product" : variantKey;
-        const key = movedLinkId ? `${scopeId}:${movedLinkId}` : null;
+        const scopeId = isProduct ? "product" : (variantKey || null);
+        const key = movedLinkId && scopeId ? `${scopeId}:${movedLinkId}` : null;
 
         if (key) {
           if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
@@ -1202,6 +1202,10 @@ function ImageSlotRow({
           {Array.from({ length: maxSlots }, (_, index) => {
             const link = sortedLinks[index];
             if (link) {
+              const badgeScopeId =
+                scopeId === "product"
+                  ? "product"
+                  : (link.variant_key || link.variantKey || scopeId);
               return (
                 <SortableImageCard
                   key={link.id}
@@ -1214,7 +1218,7 @@ function ImageSlotRow({
                   onOpenPreview={onOpenPreview}
                   onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
-                  showRecentSaved={recentSavedKey != null && recentSavedKey === `${scopeId}:${link.id}`}
+                  showRecentSaved={recentSavedKey != null && recentSavedKey === `${badgeScopeId}:${link.id}`}
                 />
               );
             }
