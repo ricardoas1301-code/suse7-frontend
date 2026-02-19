@@ -34,6 +34,7 @@ import {
 } from "../services/images/imageRepository";
 import { normalizeSortOrder } from "../services/images/imageRules";
 import { deleteAsset, downloadAsBlob, getSignedUrl, uploadAssets } from "../services/images/imageStorageService";
+import { API_BASE_URL } from "../config/api";
 import "./ProductFormImagesTab.css";
 
 const MAX_IMAGES = 7;
@@ -223,8 +224,6 @@ function VariationBlocksSection({
     </section>
   );
 }
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 export default function ProductFormImagesTab({
   productId,
@@ -707,7 +706,7 @@ export default function ProductFormImagesTab({
       setSeoKeywordsModalOpen(true);
       return;
     }
-    if (!API_BASE) {
+    if (!API_BASE_URL) {
       addNotification({ type: "error", title: "SEO", message: "API não configurada (VITE_API_BASE_URL)" });
       return;
     }
@@ -720,7 +719,7 @@ export default function ProductFormImagesTab({
         return;
       }
 
-      const res = await fetch(`${API_BASE}/images/seo-rename`, {
+      const res = await fetch(`${API_BASE_URL}/images/seo-rename`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

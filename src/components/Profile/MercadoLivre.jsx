@@ -9,6 +9,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config/api";
 import "./MercadoLivre.css";
 
 import suse7Logo from "../../assets/suse7-logo-redonda.png";
@@ -49,7 +50,7 @@ setUser(user);
         }
 
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/ml/status?user_id=${user.id}`
+          `${API_BASE_URL}/ml/status?user_id=${user.id}`
         );
 
         const data = await response.json();
@@ -77,7 +78,7 @@ setUser(user);
 const handleConnectML = () => {
   if (!user) return;
 
-  window.location.href = `${import.meta.env.VITE_API_URL}/ml/connect?user_id=${user.id}`;
+  window.location.href = `${API_BASE_URL}/ml/connect?user_id=${user.id}`;
 };
 
 

@@ -7,8 +7,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL } from "../config/api";
 
 export default function MLCallback() {
   const [params] = useSearchParams();

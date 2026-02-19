@@ -5,6 +5,7 @@
 
 import { useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { API_BASE_URL } from "../config/api";
 
 export default function MLConnect() {
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function MLConnect() {
       // 3. Redirecionar para o backend (OAuth ML)
       // --------------------------------------------------------
       window.location.href =
-        `${import.meta.env.VITE_API_URL}/ml/connect?user_id=${userId}`;
+        `${API_BASE_URL}/ml/connect?user_id=${userId}`;
     };
 
     iniciarOAuthML();
