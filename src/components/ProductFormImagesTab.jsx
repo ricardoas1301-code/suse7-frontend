@@ -1130,7 +1130,7 @@ function ImageSlotRow({
     const newIndex = linkIds.indexOf(over.id);
     if (oldIndex < 0 || newIndex < 0) return;
     const newOrder = arrayMove(linkIds, oldIndex, newIndex);
-    onReorder(newOrder, newIndex);
+    onReorder(newOrder, oldIndex);
   };
 
   const triggerUpload = () => {
