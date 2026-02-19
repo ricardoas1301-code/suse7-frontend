@@ -563,7 +563,7 @@ export default function ProductFormImagesTab({
       } catch (err) {
         saveStatus.error("images-reorder", opId, {
           message: err?.message || "Falha ao salvar ordem",
-          retry: () => handleReorder(orderedIds, variantKey, affectedSlotIndex, movedLinkId),
+          retry: () => handleReorder(orderedIds, variantKey, null, movedLinkId),
         });
         addNotification({ type: "error", title: "Ordem", message: err?.message || "Erro ao salvar ordem" });
         await loadLinks();
