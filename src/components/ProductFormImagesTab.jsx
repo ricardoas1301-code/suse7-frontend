@@ -56,7 +56,7 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected, isDirty = false }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
@@ -83,7 +83,10 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
       className={`pf-images-variant-block ${isDragging ? "pf-images-variant-block--dragging" : ""}`}
     >
       <div className="pf-images-variant-block-header">
-        <h4 className="pf-images-variant-title">{title}</h4>
+        <h4 className="pf-images-variant-title">
+          {title}
+          {isDirty && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
+        </h4>
         <span
           className="pf-images-variant-drag-handle"
           {...attributes}
@@ -151,6 +154,7 @@ function VariationBlocksSection({
   onSeoRenameClick = null,
   seoOptimizedBadge = false,
   seoRenameAvailable = false,
+  dirtyVariants = new Set(),
 }) {
   const rowIds = variantRows.map((r) => r.id || variantKeyFn(r.attributes));
 
@@ -202,6 +206,7 @@ function VariationBlocksSection({
                   row={row}
                   variantKeyFn={variantKeyFn}
                   variantLinksMap={variantLinksMap}
+                  isDirty={dirtyVariants.has(vk)}
                   previewUrls={previewUrls}
                   selectedForDownload={selectedForDownloadByScope[vk] ?? EMPTY_SELECTION}
                   onUpload={onUpload}
@@ -260,6 +265,21 @@ export default function ProductFormImagesTab({
   const [seoOptimizing, setSeoOptimizing] = useState(false);
   const [seoOptimizedBadge, setSeoOptimizedBadge] = useState(false);
   const seoOptimizedTimeoutRef = useRef(null);
+  const [dirtyVariants, setDirtyVariants] = useState(() => new Set());
+
+  const markVariantDirty = useCallback((variantKey) => {
+    if (!variantKey) return;
+    setDirtyVariants((prev) => new Set(prev).add(variantKey));
+  }, []);
+
+  const clearVariantDirty = useCallback((variantKey) => {
+    if (!variantKey) return;
+    setDirtyVariants((prev) => {
+      const next = new Set(prev);
+      next.delete(variantKey);
+      return next;
+    });
+  }, []);
 
   const { addNotification } = useNotifications();
   const saveStatus = useSaveStatus();
@@ -493,6 +513,7 @@ export default function ProductFormImagesTab({
   const handleReorder = useCallback(async (orderedIds, variantKey = null, affectedSlotIndex = null) => {
     if (!canOperate || !orderedIds?.length) return;
     const isProduct = variantKey === null || variantKey === undefined;
+    if (!isProduct) markVariantDirty(variantKey);
     const links = isProduct ? productLinks : (variantLinksMap[variantKey] || []);
     const normalized = normalizeSortOrder(links, orderedIds);
 
@@ -530,6 +551,7 @@ export default function ProductFormImagesTab({
       const opId = saveStatus.saving("images-reorder");
       try {
         await updateLinksSortOrder(updates);
+        if (!isProduct) clearVariantDirty(variantKey);
         saveStatus.success("images-reorder", opId);
       } catch (err) {
         saveStatus.error("images-reorder", opId, {
@@ -540,7 +562,7 @@ export default function ProductFormImagesTab({
         await loadLinks();
       }
     }
-  }, [canOperate, productLinks, variantLinksMap, addNotification, loadLinks, saveStatus]);
+  }, [canOperate, productLinks, variantLinksMap, addNotification, loadLinks, saveStatus, markVariantDirty, clearVariantDirty]);
 
   const toggleSelectForDownload = (linkId, scopeId) => {
     setSelectedForDownloadByScope((prev) => {
@@ -855,6 +877,7 @@ export default function ProductFormImagesTab({
               onSeoRenameClick={handleSeoRenameClick}
               seoOptimizedBadge={seoOptimizedBadge}
               seoRenameAvailable={hasProductId}
+              dirtyVariants={dirtyVariants}
               variantRows={variantRows}
               variantKeyFn={variantKeyFn}
               variantLinksMap={variantLinksMap}

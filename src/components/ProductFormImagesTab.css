@@ -125,6 +125,15 @@
   font-weight: 600;
   color: var(--s7-text, #0f172a);
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-dirty-dot {
+  color: var(--s7-warning, #f59e0b);
+  font-size: 16px;
+  line-height: 1;
 }
 
 .pf-images-variant-drag-handle {
