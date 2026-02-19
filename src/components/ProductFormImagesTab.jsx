@@ -150,6 +150,7 @@ function VariationBlocksSection({
   seoOptimizing = false,
   onSeoRenameClick = null,
   seoOptimizedBadge = false,
+  seoRenameAvailable = false,
 }) {
   const rowIds = variantRows.map((r) => r.id || variantKeyFn(r.attributes));
 
