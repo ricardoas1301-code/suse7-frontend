@@ -56,7 +56,7 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected, isDirty = false }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, onShowSavedBadge, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected, isDirty = false }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
@@ -113,9 +113,10 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         onToggleSelect={onToggleSelect}
         onDownload={onDownload}
         onOpenPreview={onOpenPreview}
-                  onPreviewError={onPreviewError}
-                  uploading={uploading}
-                  recentSavedKey={recentSavedKey}
+        onPreviewError={onPreviewError}
+        uploading={uploading}
+        recentSavedKey={recentSavedKey}
+        onShowSavedBadge={onShowSavedBadge}
         maxSlots={7}
         scopeId={vk}
         selectModeActive={selectModeActive}
@@ -142,6 +143,7 @@ function VariationBlocksSection({
   onOpenPreview,
   onPreviewError,
   onVariantReorder,
+  onShowSavedBadge,
   downloadingSelected,
   uploadingScopeId,
   recentSavedKey,
@@ -212,12 +214,14 @@ function VariationBlocksSection({
                   onUpload={onUpload}
                   onDelete={onDelete}
                   onReorder={onReorder}
-        onToggleSelect={(linkId) => toggleSelectForDownload(linkId, vk)}
-                onDownload={onDownload}
-                onOpenPreview={onOpenPreview}
-                onPreviewError={onPreviewError}
-                uploading={uploadingScopeId != null && uploadingScopeId === vk}
-                selectModeActive={selectMode && activeSelectScope === vk}
+                  onToggleSelect={(linkId) => toggleSelectForDownload(linkId, vk)}
+                  onDownload={onDownload}
+                  onOpenPreview={onOpenPreview}
+                  onPreviewError={onPreviewError}
+                  onShowSavedBadge={onShowSavedBadge}
+                  recentSavedKey={recentSavedKey}
+                  uploading={uploadingScopeId != null && uploadingScopeId === vk}
+                  selectModeActive={selectMode && activeSelectScope === vk}
                   onToggleSelectMode={onToggleSelectMode}
                   onDownloadSelected={onDownloadSelected}
                   downloadingSelected={downloadingSelected}
@@ -279,6 +283,17 @@ export default function ProductFormImagesTab({
       next.delete(variantKey);
       return next;
     });
+  }, []);
+
+  const showSavedBadge = useCallback((scopeId, linkId) => {
+    if (!scopeId || !linkId) return;
+    const key = `${scopeId}:${linkId}`;
+    if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
+    setRecentSavedKey(key);
+    recentSavedTimeoutRef.current = setTimeout(() => {
+      setRecentSavedKey(null);
+      recentSavedTimeoutRef.current = null;
+    }, 1000);
   }, []);
 
   const { addNotification } = useNotifications();
@@ -538,20 +553,6 @@ export default function ProductFormImagesTab({
         await updateLinksSortOrder(updates);
 
         if (!isProduct) clearVariantDirty(variantKey);
-
-        const movedLink = movedLinkId ? (normalized.find((l) => l.id === movedLinkId) || links.find((l) => l.id === movedLinkId)) : null;
-        const movedScopeId = isProduct ? "product" : (movedLink?.variant_key || movedLink?.variantKey || variantKey || null);
-        const key = movedLinkId && movedScopeId ? `${movedScopeId}:${movedLinkId}` : null;
-        console.log("[S7 Images] reorder badge", { isProduct, variantKey, movedLinkId, movedLinkVariant: movedLink?.variant_key || movedLink?.variantKey, key });
-
-        if (key) {
-          if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
-          setRecentSavedKey(key);
-          recentSavedTimeoutRef.current = setTimeout(() => {
-            setRecentSavedKey(null);
-            recentSavedTimeoutRef.current = null;
-          }, 1000);
-        }
       } catch (err) {
         addNotification({ type: "error", title: "Ordem", message: err?.message || "Erro ao salvar ordem" });
         await loadLinks();
@@ -870,6 +871,7 @@ export default function ProductFormImagesTab({
                 maxSlots={MAX_IMAGES}
                 scopeId="product"
                 recentSavedKey={recentSavedKey}
+                onShowSavedBadge={showSavedBadge}
                 selectModeActive={selectMode && activeSelectScope === "product"}
                 onToggleSelectMode={() => toggleSelectMode("product")}
                 onDownloadSelected={() => handleDownloadSelected("product")}
@@ -900,6 +902,7 @@ export default function ProductFormImagesTab({
               onOpenPreview={handleOpenPreview}
               onPreviewError={handlePreviewError}
               onVariantReorder={onVariantReorder}
+              onShowSavedBadge={showSavedBadge}
               uploadingScopeId={uploadingScopeId}
               recentSavedKey={recentSavedKey}
               selectMode={selectMode}
@@ -1121,6 +1124,7 @@ function ImageSlotRow({
   onPreviewError,
   uploading,
   recentSavedKey = null,
+  onShowSavedBadge,
   maxSlots,
   scopeId,
   selectModeActive,
@@ -1139,6 +1143,12 @@ function ImageSlotRow({
     const newIndex = linkIds.indexOf(over.id);
     if (oldIndex < 0 || newIndex < 0) return;
     const newOrder = arrayMove(linkIds, oldIndex, newIndex);
+    const movedLink = sortedLinks.find((l) => l.id === active.id);
+    const badgeScopeId =
+      scopeId === "product"
+        ? "product"
+        : (movedLink?.variant_key || movedLink?.variantKey || scopeId);
+    onShowSavedBadge?.(badgeScopeId, active.id);
     onReorder(newOrder, newIndex, active.id);
   };
 
@@ -1209,7 +1219,6 @@ function ImageSlotRow({
                   ? "product"
                   : (link.variant_key || link.variantKey || scopeId);
               const match = recentSavedKey === `${badgeScopeId}:${link.id}`;
-              console.log("[S7 Images] card badge", { scopeId, badgeScopeId, linkId: link.id, linkVariant: link.variant_key || link.variantKey, recentSavedKey, match });
               return (
                 <SortableImageCard
                   key={link.id}
