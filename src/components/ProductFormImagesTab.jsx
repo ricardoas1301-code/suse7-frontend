@@ -539,8 +539,10 @@ export default function ProductFormImagesTab({
 
         if (!isProduct) clearVariantDirty(variantKey);
 
-        const scopeId = isProduct ? "product" : (variantKey || null);
-        const key = movedLinkId && scopeId ? `${scopeId}:${movedLinkId}` : null;
+        const movedLink = movedLinkId ? (normalized.find((l) => l.id === movedLinkId) || links.find((l) => l.id === movedLinkId)) : null;
+        const movedScopeId = isProduct ? "product" : (movedLink?.variant_key || movedLink?.variantKey || variantKey || null);
+        const key = movedLinkId && movedScopeId ? `${movedScopeId}:${movedLinkId}` : null;
+        console.log("[S7 Images] reorder badge", { isProduct, variantKey, movedLinkId, movedLinkVariant: movedLink?.variant_key || movedLink?.variantKey, key });
 
         if (key) {
           if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
@@ -1206,6 +1208,8 @@ function ImageSlotRow({
                 scopeId === "product"
                   ? "product"
                   : (link.variant_key || link.variantKey || scopeId);
+              const match = recentSavedKey === `${badgeScopeId}:${link.id}`;
+              console.log("[S7 Images] card badge", { scopeId, badgeScopeId, linkId: link.id, linkVariant: link.variant_key || link.variantKey, recentSavedKey, match });
               return (
                 <SortableImageCard
                   key={link.id}
@@ -1218,7 +1222,7 @@ function ImageSlotRow({
                   onOpenPreview={onOpenPreview}
                   onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
-                  showRecentSaved={recentSavedKey != null && recentSavedKey === `${badgeScopeId}:${link.id}`}
+                  showRecentSaved={recentSavedKey != null && match}
                 />
               );
             }
