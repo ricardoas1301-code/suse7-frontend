@@ -179,7 +179,7 @@ function VariationBlocksSection({
   return (
     <section className="pf-images-section">
       <h3 className="pf-images-section-title">Imagens por variação</h3>
-      {totalImages > 0 && onSeoRenameClick && seoRenameAvailable && (
+      {seoRenameAvailable && totalImages > 0 && onSeoRenameClick && (
         <div className="pf-images-section-toolbar">
           <button
             type="button"
@@ -758,7 +758,12 @@ export default function ProductFormImagesTab({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ productId, variantKey: "__ALL__" }),
+        body: JSON.stringify({
+          productId,
+          variantKey: "__ALL__",
+          seoKeywords: (seoKeywords || "").trim(),
+          productName: (productName || "").trim(),
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -785,7 +790,7 @@ export default function ProductFormImagesTab({
     } finally {
       setSeoOptimizing(false);
     }
-  }, [seoKeywords, hasProductId, productId, addNotification, loadLinks]);
+  }, [seoKeywords, productName, hasProductId, productId, addNotification, loadLinks]);
 
   const handleSeoModalGoToData = useCallback(() => {
     setSeoKeywordsModalOpen(false);
@@ -843,7 +848,7 @@ export default function ProductFormImagesTab({
           {format === "simple" && (
             <section className="pf-images-section">
               <h3 className="pf-images-section-title">Imagens do produto</h3>
-              {totalImages > 0 && hasProductId && (
+              {hasProductId && totalImages > 0 && (
                 <div className="pf-images-section-toolbar">
                   <button
                     type="button"
@@ -854,6 +859,7 @@ export default function ProductFormImagesTab({
                   >
                     {seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)"}
                   </button>
+                  {seoOptimizedBadge && <span className="pf-images-seo-badge" aria-hidden>Otimizado</span>}
                 </div>
               )}
               <ImageSlotRow
