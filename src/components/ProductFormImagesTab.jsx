@@ -85,7 +85,7 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
       <div className="pf-images-variant-block-header">
         <h4 className="pf-images-variant-title">
           {title}
-          {isDirty && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
+          {isDirty && !SILENT_AUTOSAVE && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
         </h4>
         <span
           className="pf-images-variant-drag-handle"
@@ -109,7 +109,7 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         selectedForDownload={selectedForDownload}
         onUpload={(files) => onUpload(files, vk)}
         onDelete={(id) => onDelete(id, vk)}
-        onReorder={(ids, slotIndex) => onReorder(ids, vk, slotIndex)}
+        onReorder={(ids, movedLinkId) => onReorder(ids, vk, movedLinkId)}
         onToggleSelect={onToggleSelect}
         onDownload={onDownload}
         onOpenPreview={onOpenPreview}
@@ -510,7 +510,7 @@ export default function ProductFormImagesTab({
     }
   }, [deleteConfirm, canOperate, productLinks, variantLinksMap, saveStatus, addNotification, loadLinks]);
 
-  const handleReorder = useCallback(async (orderedIds, variantKey = null, affectedSlotIndex = null) => {
+  const handleReorder = useCallback(async (orderedIds, variantKey = null, movedLinkId = null) => {
     if (!canOperate || !orderedIds?.length) return;
     const isProduct = variantKey === null || variantKey === undefined;
     if (!isProduct) markVariantDirty(variantKey);
@@ -556,7 +556,7 @@ export default function ProductFormImagesTab({
       } catch (err) {
         saveStatus.error("images-reorder", opId, {
           message: err?.message || "Falha ao salvar ordem",
-          retry: () => handleReorder(orderedIds, variantKey, affectedSlotIndex),
+          retry: () => handleReorder(orderedIds, variantKey, movedLinkId),
         });
         addNotification({ type: "error", title: "Ordem", message: err?.message || "Erro ao salvar ordem" });
         await loadLinks();
@@ -852,7 +852,7 @@ export default function ProductFormImagesTab({
                 selectedForDownload={selectedForDownloadByScope["product"] ?? EMPTY_SELECTION}
                 onUpload={(files) => handleUpload(files, null)}
                 onDelete={(id) => handleDeleteRequest(id, null)}
-                onReorder={(ids, slotIndex) => handleReorder(ids, null, slotIndex)}
+                onReorder={(ids, movedLinkId) => handleReorder(ids, null, movedLinkId)}
                 onToggleSelect={(linkId) => toggleSelectForDownload(linkId, "product")}
                 onDownload={handleDownload}
                 onOpenPreview={handleOpenPreview}
@@ -1130,7 +1130,7 @@ function ImageSlotRow({
     const newIndex = linkIds.indexOf(over.id);
     if (oldIndex < 0 || newIndex < 0) return;
     const newOrder = arrayMove(linkIds, oldIndex, newIndex);
-    onReorder(newOrder, oldIndex);
+    onReorder(newOrder, active.id);
   };
 
   const triggerUpload = () => {
@@ -1207,7 +1207,7 @@ function ImageSlotRow({
                   onOpenPreview={onOpenPreview}
                   onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
-                  showRecentSaved={recentSavedKey != null && recentSavedKey === `${scopeId}:${index}`}
+                  showRecentSaved={recentSavedKey != null && recentSavedKey === `${scopeId}:${link.id}`}
                 />
               );
             }
