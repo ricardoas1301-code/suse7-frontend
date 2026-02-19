@@ -85,7 +85,7 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
       <div className="pf-images-variant-block-header">
         <h4 className="pf-images-variant-title">
           {title}
-          {isDirty && !SILENT_AUTOSAVE && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
+          {!SILENT_AUTOSAVE && isDirty && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
         </h4>
         <span
           className="pf-images-variant-drag-handle"
@@ -109,7 +109,7 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         selectedForDownload={selectedForDownload}
         onUpload={(files) => onUpload(files, vk)}
         onDelete={(id) => onDelete(id, vk)}
-        onReorder={(ids, movedLinkId) => onReorder(ids, vk, movedLinkId)}
+        onReorder={(ids, slotIndex, movedLinkId) => onReorder(ids, vk, slotIndex, movedLinkId)}
         onToggleSelect={onToggleSelect}
         onDownload={onDownload}
         onOpenPreview={onOpenPreview}
@@ -510,7 +510,8 @@ export default function ProductFormImagesTab({
     }
   }, [deleteConfirm, canOperate, productLinks, variantLinksMap, saveStatus, addNotification, loadLinks]);
 
-  const handleReorder = useCallback(async (orderedIds, variantKey = null, movedLinkId = null) => {
+  const handleReorder = useCallback(
+    async (orderedIds, variantKey = null, affectedSlotIndex = null, movedLinkId = null) => {
     if (!canOperate || !orderedIds?.length) return;
     const isProduct = variantKey === null || variantKey === undefined;
     if (!isProduct) markVariantDirty(variantKey);
@@ -535,14 +536,20 @@ export default function ProductFormImagesTab({
     if (SILENT_AUTOSAVE) {
       try {
         await updateLinksSortOrder(updates);
+
+        if (!isProduct) clearVariantDirty(variantKey);
+
         const scopeId = isProduct ? "product" : variantKey;
-        const slotIndex = affectedSlotIndex ?? 0;
-        if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
-        setRecentSavedKey(`${scopeId}:${slotIndex}`);
-        recentSavedTimeoutRef.current = setTimeout(() => {
-          setRecentSavedKey(null);
-          recentSavedTimeoutRef.current = null;
-        }, 1000);
+        const key = movedLinkId ? `${scopeId}:${movedLinkId}` : null;
+
+        if (key) {
+          if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
+          setRecentSavedKey(key);
+          recentSavedTimeoutRef.current = setTimeout(() => {
+            setRecentSavedKey(null);
+            recentSavedTimeoutRef.current = null;
+          }, 1000);
+        }
       } catch (err) {
         addNotification({ type: "error", title: "Ordem", message: err?.message || "Erro ao salvar ordem" });
         await loadLinks();
@@ -556,7 +563,7 @@ export default function ProductFormImagesTab({
       } catch (err) {
         saveStatus.error("images-reorder", opId, {
           message: err?.message || "Falha ao salvar ordem",
-          retry: () => handleReorder(orderedIds, variantKey, movedLinkId),
+          retry: () => handleReorder(orderedIds, variantKey, affectedSlotIndex, movedLinkId),
         });
         addNotification({ type: "error", title: "Ordem", message: err?.message || "Erro ao salvar ordem" });
         await loadLinks();
@@ -852,7 +859,7 @@ export default function ProductFormImagesTab({
                 selectedForDownload={selectedForDownloadByScope["product"] ?? EMPTY_SELECTION}
                 onUpload={(files) => handleUpload(files, null)}
                 onDelete={(id) => handleDeleteRequest(id, null)}
-                onReorder={(ids, movedLinkId) => handleReorder(ids, null, movedLinkId)}
+                onReorder={(ids, slotIndex, movedLinkId) => handleReorder(ids, null, slotIndex, movedLinkId)}
                 onToggleSelect={(linkId) => toggleSelectForDownload(linkId, "product")}
                 onDownload={handleDownload}
                 onOpenPreview={handleOpenPreview}
@@ -1130,7 +1137,7 @@ function ImageSlotRow({
     const newIndex = linkIds.indexOf(over.id);
     if (oldIndex < 0 || newIndex < 0) return;
     const newOrder = arrayMove(linkIds, oldIndex, newIndex);
-    onReorder(newOrder, active.id);
+    onReorder(newOrder, newIndex, active.id);
   };
 
   const triggerUpload = () => {
