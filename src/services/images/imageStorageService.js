@@ -64,11 +64,14 @@ export async function getSignedUrl(storagePath, expiresIn = 3600) {
   if (!storagePath || typeof storagePath !== "string") return null;
   let path = String(storagePath).trim();
   if (path.includes(",")) path = path.split(",")[0].trim();
+  if (path.includes(" ")) return null;
   if (!path || path === "undefined" || path === "null") return null;
   const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(path, expiresIn);
   if (error) {
-    const msg = error?.message ?? "";
-    const isNotFound = msg.toLowerCase().includes("object not found") || msg.toLowerCase().includes("not found") || msg === "404" || msg === "400";
+    const msg = String(error?.message ?? "").toLowerCase();
+    const code = error?.statusCode ?? error?.status;
+    const isNotFound =
+      msg.includes("object not found") || msg.includes("not found") || code === 404 || code === 400 || msg === "404" || msg === "400";
     if (isNotFound) {
       if (typeof console?.debug === "function") console.debug("[imageStorageService] signedUrl: objeto não encontrado", path);
       return null;
@@ -86,8 +89,10 @@ export async function getSignedUrl(storagePath, expiresIn = 3600) {
  * @returns {Promise<void>}
  */
 export async function downloadAsBlob(storagePath, fileName = "imagem") {
-  if (!storagePath) throw new Error("storage_path não pode ser vazio");
-  const { data, error } = await supabase.storage.from(BUCKET_NAME).download(storagePath);
+  if (!storagePath || typeof storagePath !== "string") throw new Error("storage_path não pode ser vazio");
+  const path = String(storagePath).trim().split(",")[0].trim();
+  if (!path || path.includes(" ")) throw new Error("storage_path inválido");
+  const { data, error } = await supabase.storage.from(BUCKET_NAME).download(path);
   if (error) throw new Error(error.message || "Falha ao baixar");
   if (!data) throw new Error("Download retornou vazio");
   const blobUrl = URL.createObjectURL(data);
@@ -108,7 +113,9 @@ export async function downloadAsBlob(storagePath, fileName = "imagem") {
  * @param {string} storagePath - caminho no storage
  */
 export async function deleteAsset(storagePath) {
-  if (!storagePath) return;
-  const { error } = await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
+  if (!storagePath || typeof storagePath !== "string") return;
+  const path = String(storagePath).trim().split(",")[0].trim();
+  if (!path || path.includes(" ")) return;
+  const { error } = await supabase.storage.from(BUCKET_NAME).remove([path]);
   if (error) throw new Error(error.message || "Falha ao remover do storage");
 }

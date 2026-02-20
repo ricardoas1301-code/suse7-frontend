@@ -42,13 +42,14 @@ const EMPTY_SELECTION = new Set();
 /** Modo silencioso: reorder/delete não disparam SaveStatus nem toasts de sucesso */
 const SILENT_AUTOSAVE = true;
 
-/** Garante storage_path string válida (sem vírgulas, undefined, etc.) */
+/** Garante storage_path string válida (sem vírgulas, espaços, undefined, etc.) */
 function sanitizeStoragePath(p) {
   if (p == null || typeof p !== "string") return null;
-  const raw = String(p).trim();
+  let raw = String(p).trim();
   if (!raw || raw === "undefined" || raw === "null") return null;
-  const clean = raw.includes(",") ? raw.split(",")[0].trim() : raw;
-  return clean || null;
+  if (raw.includes(",")) raw = raw.split(",")[0].trim();
+  if (!raw || raw.includes(" ") || raw.includes("undefined") || raw.includes("null")) return null;
+  return raw;
 }
 
 /** Normaliza link para evitar mismatch storage_path/storagePath, variant_key/variantKey */
@@ -57,7 +58,7 @@ function normalizeLink(link) {
   const p = sanitizeStoragePath(link.storage_path ?? link.storagePath);
   return {
     ...link,
-    storage_path: p,
+    storage_path: p ?? null,
     variant_key: link.variant_key ?? link.variantKey,
     sort_order: link.sort_order ?? link.sortOrder,
   };
@@ -337,10 +338,6 @@ export default function ProductFormImagesTab({
   const hasSeoKeywords = seoKeywordsArray.length > 0;
 
   useEffect(() => {
-    console.log("[ProductFormImagesTab] mount/update", { productId, draftKey: draftKey?.slice?.(0, 8) + "...", hasProductId, hasDraftKey, canOperate });
-  }, [productId, draftKey, hasProductId, hasDraftKey, canOperate]);
-
-  useEffect(() => {
     return () => {
       if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
     };
@@ -436,7 +433,6 @@ export default function ProductFormImagesTab({
           message: `Apenas ${remaining} imagens foram enviadas. Limite máximo de 7 por variação.`,
         });
       }
-      console.log("[ProductFormImagesTab] handleUpload: iniciando", { fileCount: fileList.length, userId, storageKey: storageKey?.slice?.(0, 8) + "..." });
 
       const metas = await uploadAssets(fileList, {
         userId,
@@ -454,12 +450,15 @@ export default function ProductFormImagesTab({
 
       for (let i = 0; i < metas.length; i++) {
         const meta = metas[i];
-        const storagePath = typeof meta?.storage_path === "string"
-          ? meta.storage_path.trim().split(",")[0].trim()
-          : null;
-        if (!storagePath) {
-          console.error("[ProductFormImagesTab] handleUpload: storage_path vazio", meta);
-          throw new Error("storage_path vazio após upload");
+        const raw = meta?.storage_path;
+        const storagePath =
+          typeof raw === "string"
+            ? raw.trim().split(",")[0].trim().replace(/\s+/g, "")
+            : Array.isArray(raw)
+              ? raw.map((s) => String(s ?? "").trim()).filter(Boolean).join("/")
+              : null;
+        if (!storagePath || storagePath.includes(",") || storagePath.includes(" ")) {
+          throw new Error("storage_path inválido após upload");
         }
         const sortOrder = (currentLinks.length + i) || 0;
         const isPrimary = currentLinks.length === 0 && i === 0;
@@ -668,7 +667,11 @@ export default function ProductFormImagesTab({
       return next;
     });
 
-    const toFetch = allLinks.filter((l) => !previewFetchedRef.current.has(l.id));
+    const toFetch = allLinks.filter((l) => {
+      if (previewFetchedRef.current.has(l.id)) return false;
+      const path = sanitizeStoragePath(l.storage_path ?? l.storagePath);
+      return !!path;
+    });
 
     const runBatch = async (batch) => {
       const results = await Promise.all(

@@ -44,10 +44,14 @@ export async function createImageRecord({
     throw new Error("createImageRecord: informe productId OU draftKey (exatamente um)");
   }
 
-  let pathStr = typeof storage_path === "string" ? storage_path.trim() : "";
-  if (pathStr.includes(",")) pathStr = pathStr.split(",")[0].trim();
-  if (!pathStr || pathStr === "undefined" || pathStr === "null") {
-    throw new Error("createImageRecord: storage_path não pode ser vazio");
+  let pathStr =
+    typeof storage_path === "string"
+      ? storage_path.trim().split(",")[0].trim()
+      : Array.isArray(storage_path)
+        ? storage_path.map((s) => String(s ?? "").trim()).filter(Boolean).join("/")
+        : "";
+  if (pathStr.includes(" ") || !pathStr || pathStr === "undefined" || pathStr === "null") {
+    throw new Error("createImageRecord: storage_path inválido");
   }
 
   const payload = {
