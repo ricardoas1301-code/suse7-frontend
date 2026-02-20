@@ -958,7 +958,6 @@ export default function ProductFormImagesTab({
               seoOptimizing={seoOptimizing}
               onSeoRenameClick={handleSeoRenameClick}
               seoOptimizedBadge={seoOptimizedBadge}
-              seoRenameAvailable={hasProductId}
               hasSeoKeywords={(seoKeywords || "").trim().length > 0}
               onSeoRename={handleSeoRenameClick}
               onGoToSeo={onGoToSeo ?? handleSeoModalGoToData}
@@ -1372,7 +1371,6 @@ function ImageSlotRow({
                   onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
                   showRecentSaved={recentSavedKey != null && match}
-                  seoRenameAvailable={seoRenameAvailable}
                   hasSeoKeywords={hasSeoKeywords}
                   onSeoRename={onSeoRename}
                   onGoToSeo={onGoToSeo}
