@@ -669,6 +669,7 @@ export default function ProductFormImagesTab({
     });
 
     const toFetch = allLinks.filter((l) => {
+      if (loading) return false;
       if (previewFetchedRef.current.has(l.id)) return false;
       const path = sanitizeStoragePath(l.storage_path ?? l.storagePath);
       return !!path;
@@ -700,7 +701,7 @@ export default function ProductFormImagesTab({
     })();
 
     return () => { cancelled = true; };
-  }, [productId, draftKey, productLinks, variantLinksMap, getPreviewUrl, refreshPreviewSeed]);
+  }, [productId, draftKey, productLinks, variantLinksMap, getPreviewUrl, refreshPreviewSeed, loading]);
 
   const handleDownload = async (link) => {
     try {
