@@ -782,14 +782,20 @@ export default function ProductFormImagesTab({
     : Object.values(variantLinksMap).flat().length;
 
   const handleSeoRenameClick = useCallback(async (linkOrNull = null) => {
-    if (!hasProductId) return;
+    /* Backend exige productId (produto salvo); draft não suportado */
+    if (!hasProductId) {
+      showToast("Salve o produto para renomear imagens (SEO)");
+      return;
+    }
     const keywords = (seoKeywords || "").trim();
     if (!keywords) {
       setSeoKeywordsModalOpen(true);
       return;
     }
     if (!API_BASE_URL) {
-      addNotification({ type: "error", title: "SEO", message: "API não configurada (VITE_API_BASE_URL)" });
+      const msg = "API não configurada (VITE_API_BASE_URL)";
+      addNotification({ type: "error", title: "SEO", message: msg });
+      showToast(msg);
       return;
     }
     setSeoOptimizing(true);
@@ -797,11 +803,16 @@ export default function ProductFormImagesTab({
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        addNotification({ type: "error", title: "SEO", message: "Sessão expirada. Faça login novamente." });
+        const msg = "Sessão expirada. Faça login novamente.";
+        addNotification({ type: "error", title: "SEO", message: msg });
+        showToast(msg);
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/images/seo-rename`, {
+      const base = API_BASE_URL.replace(/\/+$/, "");
+      const path = base.endsWith("/api") ? "/images/seo-rename" : "/api/images/seo-rename";
+      const url = `${base}${path}`;
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -810,15 +821,15 @@ export default function ProductFormImagesTab({
         body: JSON.stringify({
           productId,
           variantKey: "__ALL__",
-          seoKeywords: (seoKeywords || "").trim(),
-          productName: (productName || "").trim(),
         }),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const msg = data?.error || data?.code || `Erro ${res.status}`;
+        const msg = data?.error || data?.code || `Erro ${res.status}` || "Falha ao renomear";
         addNotification({ type: "error", title: "Otimizar nomes (SEO)", message: msg });
+        showToast("Falha ao renomear — verifique conexão/SEO");
+        console.error("[ProductFormImagesTab] seo-rename error", { status: res.status, data });
         return;
       }
 
@@ -841,13 +852,18 @@ export default function ProductFormImagesTab({
             ];
         markJustOptimized(idsToMark);
         showToast("Nomes otimizados ✅");
+      } else {
+        showToast("Nenhuma imagem no escopo para renomear");
       }
     } catch (err) {
-      addNotification({ type: "error", title: "Otimizar nomes (SEO)", message: err?.message || "Erro ao renomear imagens." });
+      const msg = err?.message || "Erro ao renomear imagens.";
+      addNotification({ type: "error", title: "Otimizar nomes (SEO)", message: msg });
+      showToast("Falha ao renomear — verifique conexão/SEO");
+      console.error("[ProductFormImagesTab] seo-rename exception", err);
     } finally {
       setSeoOptimizing(false);
     }
-  }, [seoKeywords, productName, hasProductId, productId, productLinks, variantLinksMap, addNotification, loadLinks, markJustOptimized, showToast]);
+  }, [seoKeywords, hasProductId, productId, productLinks, variantLinksMap, addNotification, loadLinks, markJustOptimized, showToast]);
 
   const handleSeoModalGoToData = useCallback(() => {
     setSeoKeywordsModalOpen(false);
