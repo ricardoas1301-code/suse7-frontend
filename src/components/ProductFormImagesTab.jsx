@@ -755,8 +755,8 @@ export default function ProductFormImagesTab({
       setSeoKeywordsModalOpen(true);
       return;
     }
-    if (!hasProductId) {
-      showToast("Salve o produto para renomear imagens (SEO)");
+    if (!hasProductId && !hasDraftKey) {
+      showToast("Informe produto ou draft para renomear imagens (SEO)");
       return;
     }
     if (!API_BASE_URL) {
@@ -789,6 +789,10 @@ export default function ProductFormImagesTab({
           scope: hasProductId ? { product_id: productId } : { draft_key: draftKey },
           variant_key: variantKey ?? null,
           mode: "ALL",
+          ...(hasDraftKey && {
+            seo_keywords: keywords,
+            product_name: (productName || "").trim() || "draft",
+          }),
         }),
       });
 
@@ -814,7 +818,7 @@ export default function ProductFormImagesTab({
     } finally {
       setSeoOptimizing(false);
     }
-  }, [seoKeywords, canOperate, hasProductId, productId, draftKey, addNotification, loadLinks, showToast]);
+  }, [seoKeywords, productName, canOperate, hasProductId, hasDraftKey, productId, draftKey, addNotification, loadLinks, showToast]);
 
   const handleSeoModalGoToData = useCallback(() => {
     setSeoKeywordsModalOpen(false);
