@@ -689,9 +689,11 @@ export default function ProductFormImagesTab({
   const handleOpenPreview = async (link) => {
     try {
       const url = await getSignedUrl(link?.storage_path, 60);
-      if (url) {
-        setPreviewModal({ open: true, url, title: link?.file_name || "Imagem" });
+      if (!url) {
+        showToast("Imagem atualizada — tente abrir novamente");
+        return;
       }
+      setPreviewModal({ open: true, url, title: link?.file_name || "Imagem" });
     } catch (err) {
       console.error("Erro ao abrir imagem:", err);
       addNotification({ type: "error", title: "Abrir", message: err?.message || "Erro ao abrir imagem" });
@@ -701,7 +703,11 @@ export default function ProductFormImagesTab({
   const handleOpenInNewTab = async (link) => {
     try {
       const url = await getSignedUrl(link?.storage_path, 60);
-      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      if (!url) {
+        showToast("Imagem atualizada — tente abrir novamente");
+        return;
+      }
+      window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
       console.error("Erro ao abrir imagem:", err);
       addNotification({ type: "error", title: "Abrir", message: err?.message || "Erro ao abrir imagem" });
@@ -806,6 +812,8 @@ export default function ProductFormImagesTab({
       }
 
       const totalRenamed = data.renamed ?? 0;
+      setPreviewModal({ open: false, url: null, title: null });
+      setPreviewUrls(new Map());
       setRefreshPreviewSeed((s) => s + 1);
       previewFetchedRef.current.clear();
       await loadLinks();

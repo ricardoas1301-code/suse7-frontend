@@ -60,16 +60,22 @@ export async function uploadAssets(files, { userId, productId, draftKey }) {
  * Obtém URL assinada para download.
  * @param {string} storagePath - caminho no storage
  * @param {number} expiresIn - segundos até expirar (3600 para preview, 60 para download direto)
- * @returns {Promise<string>} URL assinada
+ * @returns {Promise<string|null>} URL assinada ou null se objeto não existir (ex: após rename)
  */
 export async function getSignedUrl(storagePath, expiresIn = 3600) {
-  if (!storagePath) return "";
+  if (!storagePath) return null;
   const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(storagePath, expiresIn);
   if (error) {
+    const msg = error?.message ?? "";
+    const isNotFound = msg.toLowerCase().includes("object not found") || msg.toLowerCase().includes("not found") || msg === "404" || msg === "400";
+    if (isNotFound) {
+      if (typeof console?.debug === "function") console.debug("[imageStorageService] signedUrl: objeto não encontrado", storagePath);
+      return null;
+    }
     console.error("[imageStorageService] signedUrl error:", error);
-    return "";
+    return null;
   }
-  return data?.signedUrl || "";
+  return data?.signedUrl || null;
 }
 
 /**
