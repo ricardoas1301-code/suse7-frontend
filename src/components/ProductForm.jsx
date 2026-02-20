@@ -1148,7 +1148,19 @@ const validatePricingTab = () => {
   //   products: product
   //   product_variants: variantRows (quando format=variants)
   // ------------------------------------------------------
-const handleSubmit = async () => {
+  const goToSeoKeywords = () => {
+    setActiveTab("data");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("pf-seo-keywords-input");
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus();
+      });
+    });
+  };
+
+  const handleSubmit = async () => {
   // ------------------------------------------------------
   // 1) DADOS (Nome do produto, SKU se simple, etc.)
   // ------------------------------------------------------
@@ -1587,6 +1599,7 @@ const handleSubmit = async () => {
 
                 <div className="pf-seo-wrapper">
                   <textarea
+                    id="pf-seo-keywords-input"
                     className="s7-textarea"
                     rows="4"
                     placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
@@ -1833,6 +1846,7 @@ const handleSubmit = async () => {
               seoKeywords={product?.seo_keywords ?? ""}
               productName={product?.product_name ?? ""}
               onSwitchToDataTab={() => setActiveTab("data")}
+              onGoToSeo={goToSeoKeywords}
             />
           </div>
         )}
