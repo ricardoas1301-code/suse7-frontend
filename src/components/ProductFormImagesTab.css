@@ -254,6 +254,38 @@
   box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
 }
 
+/* CTA SEO no card: Renomear ou Definir palavras-chave */
+.pf-images-card-seo {
+  padding: 4px 6px 6px;
+  border-top: 1px solid var(--s7-border, #e5e7eb);
+}
+.pf-images-btn-seo {
+  width: 100%;
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--s7-muted, #6b7280);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  text-align: center;
+}
+.pf-images-btn-seo:hover {
+  color: var(--s7-primary, #2563eb);
+  background: rgba(37, 99, 235, 0.06);
+}
+.pf-images-btn-seo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.pf-images-btn-seo--define {
+  color: var(--s7-muted, #6b7280);
+}
+.pf-images-btn-seo--define:hover {
+  color: var(--s7-primary, #2563eb);
+}
+
 .pf-images-badge {
   background: var(--s7-muted, #9ca3af);
   color: #fff;

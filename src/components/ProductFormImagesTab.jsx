@@ -42,6 +42,17 @@ const EMPTY_SELECTION = new Set();
 /** Modo silencioso: reorder/delete não disparam SaveStatus nem toasts de sucesso */
 const SILENT_AUTOSAVE = true;
 
+/** Normaliza link para evitar mismatch storage_path/storagePath, variant_key/variantKey */
+function normalizeLink(link) {
+  if (!link) return null;
+  return {
+    ...link,
+    storage_path: link.storage_path ?? link.storagePath,
+    variant_key: link.variant_key ?? link.variantKey,
+    sort_order: link.sort_order ?? link.sortOrder,
+  };
+}
+
 function buildVariantKeyFromAttrs(attrsObj) {
   const entries = Object.entries(attrsObj || {}).sort(([a], [b]) => a.localeCompare(b));
   return entries.map(([k, v]) => `${k}=${String(v)}`).join("|");
@@ -56,7 +67,7 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, onShowSavedBadge, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected, isDirty = false }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, onShowSavedBadge, seoRenameAvailable, hasSeoKeywords, onSeoRename, onGoToSeo, seoOptimizing, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected, isDirty = false }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
@@ -117,6 +128,11 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         uploading={uploading}
         recentSavedKey={recentSavedKey}
         onShowSavedBadge={onShowSavedBadge}
+        seoRenameAvailable={seoRenameAvailable}
+        hasSeoKeywords={hasSeoKeywords}
+        onSeoRename={onSeoRename}
+        onGoToSeo={onGoToSeo}
+        seoOptimizing={seoOptimizing}
         maxSlots={7}
         scopeId={vk}
         selectModeActive={selectModeActive}
@@ -144,6 +160,11 @@ function VariationBlocksSection({
   onPreviewError,
   onVariantReorder,
   onShowSavedBadge,
+  seoRenameAvailable = false,
+  hasSeoKeywords = false,
+  onSeoRename = null,
+  onGoToSeo = null,
+  seoOptimizing = false,
   downloadingSelected,
   uploadingScopeId,
   recentSavedKey,
@@ -152,10 +173,7 @@ function VariationBlocksSection({
   onToggleSelectMode,
   onDownloadSelected,
   totalImages = 0,
-  seoOptimizing = false,
-  onSeoRenameClick = null,
   seoOptimizedBadge = false,
-  seoRenameAvailable = false,
   dirtyVariants = new Set(),
 }) {
   const rowIds = variantRows.map((r) => r.id || variantKeyFn(r.attributes));
@@ -220,6 +238,11 @@ function VariationBlocksSection({
                   onPreviewError={onPreviewError}
                   onShowSavedBadge={onShowSavedBadge}
                   recentSavedKey={recentSavedKey}
+                  seoRenameAvailable={seoRenameAvailable}
+                  hasSeoKeywords={hasSeoKeywords}
+                  onSeoRename={onSeoRename}
+                  onGoToSeo={onGoToSeo}
+                  seoOptimizing={seoOptimizing}
                   uploading={uploadingScopeId != null && uploadingScopeId === vk}
                   selectModeActive={selectMode && activeSelectScope === vk}
                   onToggleSelectMode={onToggleSelectMode}
@@ -878,6 +901,11 @@ export default function ProductFormImagesTab({
                 scopeId="product"
                 recentSavedKey={recentSavedKey}
                 onShowSavedBadge={showSavedBadge}
+                seoRenameAvailable={hasProductId}
+                hasSeoKeywords={(seoKeywords || "").trim().length > 0}
+                onSeoRename={handleSeoRenameClick}
+                onGoToSeo={handleSeoModalGoToData}
+                seoOptimizing={seoOptimizing}
                 selectModeActive={selectMode && activeSelectScope === "product"}
                 onToggleSelectMode={() => toggleSelectMode("product")}
                 onDownloadSelected={() => handleDownloadSelected("product")}
@@ -894,6 +922,9 @@ export default function ProductFormImagesTab({
               onSeoRenameClick={handleSeoRenameClick}
               seoOptimizedBadge={seoOptimizedBadge}
               seoRenameAvailable={hasProductId}
+              hasSeoKeywords={(seoKeywords || "").trim().length > 0}
+              onSeoRename={handleSeoRenameClick}
+              onGoToSeo={handleSeoModalGoToData}
               dirtyVariants={dirtyVariants}
               variantRows={variantRows}
               variantKeyFn={variantKeyFn}
@@ -993,9 +1024,28 @@ export default function ProductFormImagesTab({
   );
 }
 
-/** Card de imagem sortable (Principal = sort_order 0, download, abrir e delete na linha inferior) */
-function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, onToggleSelect, onDownload, onOpenPreview, onPreviewError, selectModeActive, showRecentSaved }) {
-  const isPrimary = (link.sort_order ?? 0) === 0;
+/**
+ * Card de imagem sortable (Principal = sort_order 0, download, abrir, delete, CTA SEO).
+ * CTA SEO: "Renomear (SEO)" se keywords existem; "Definir palavras-chave (SEO)" caso contrário.
+ */
+function SortableImageCard({
+  link,
+  previewUrls,
+  selectedForDownload,
+  onDelete,
+  onToggleSelect,
+  onDownload,
+  onOpenPreview,
+  onPreviewError,
+  selectModeActive,
+  showRecentSaved,
+  seoRenameAvailable = false,
+  hasSeoKeywords = false,
+  onSeoRename,
+  onGoToSeo,
+  seoOptimizing = false,
+}) {
+  const isPrimary = (link?.sort_order ?? 0) === 0; /* link normalizado: sort_order ou sortOrder */
 
   const {
     attributes,
@@ -1026,6 +1076,18 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
     e.stopPropagation();
     onOpenPreview?.(link);
   };
+
+  const handleSeoRenameClick = (e) => {
+    e.stopPropagation();
+    onSeoRename?.();
+  };
+
+  const handleGoToSeoClick = (e) => {
+    e.stopPropagation();
+    onGoToSeo?.();
+  };
+
+  const showSeoCta = seoRenameAvailable && link?.id;
 
   return (
     <div
@@ -1112,6 +1174,31 @@ function SortableImageCard({ link, previewUrls, selectedForDownload, onDelete, o
           </button>
         </div>
       </div>
+      {/* CTA SEO: exibido quando há link (upload concluído) e produto salvo */}
+      {showSeoCta && (
+        <div className="pf-images-card-seo">
+          {hasSeoKeywords ? (
+            <button
+              type="button"
+              className="pf-images-btn-seo pf-images-btn-seo--rename"
+              onClick={handleSeoRenameClick}
+              disabled={seoOptimizing}
+              title="Padronize o nome do arquivo usando palavras-chave (SEO)"
+            >
+              {seoOptimizing ? "Otimizando…" : "Renomear (SEO)"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="pf-images-btn-seo pf-images-btn-seo--define"
+              onClick={handleGoToSeoClick}
+              title="Cadastre palavras-chave na aba Dados para otimizar nomes"
+            >
+              Definir palavras-chave (SEO)
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1131,6 +1218,11 @@ function ImageSlotRow({
   uploading,
   recentSavedKey = null,
   onShowSavedBadge,
+  seoRenameAvailable = false,
+  hasSeoKeywords = false,
+  onSeoRename,
+  onGoToSeo,
+  seoOptimizing = false,
   maxSlots,
   scopeId,
   selectModeActive,
@@ -1220,15 +1312,16 @@ function ImageSlotRow({
           {Array.from({ length: maxSlots }, (_, index) => {
             const link = sortedLinks[index];
             if (link) {
+              const normalizedLink = normalizeLink(link);
               const badgeScopeId =
                 scopeId === "product"
                   ? "product"
-                  : (link.variant_key || link.variantKey || scopeId);
+                  : (normalizedLink.variant_key ?? scopeId);
               const match = recentSavedKey === `${badgeScopeId}:${link.id}`;
               return (
                 <SortableImageCard
                   key={link.id}
-                  link={link}
+                  link={normalizedLink}
                   previewUrls={previewUrls}
                   selectedForDownload={selectedForDownload}
                   onDelete={onDelete}
@@ -1238,6 +1331,11 @@ function ImageSlotRow({
                   onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
                   showRecentSaved={recentSavedKey != null && match}
+                  seoRenameAvailable={seoRenameAvailable}
+                  hasSeoKeywords={hasSeoKeywords}
+                  onSeoRename={onSeoRename}
+                  onGoToSeo={onGoToSeo}
+                  seoOptimizing={seoOptimizing}
                 />
               );
             }
