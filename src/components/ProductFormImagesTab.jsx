@@ -67,11 +67,12 @@ function formatVariantTitle(attrsObj) {
 }
 
 /** Bloco de variação sortable (drag vertical) */
-function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, onShowSavedBadge, hasSeoKeywords, onSeoRename, onGoToSeo, seoOptimizing, seoJustOptimizedIds, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected, isDirty = false }) {
+function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, onShowSavedBadge, hasSeoKeywords, onBulkSeoRename, onGoToSeo, seoOptimizing, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected, isDirty = false }) {
   const vk = variantKeyFn(row.attributes);
   const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
   const rowId = row.id || vk;
+  const hasImages = (variantLinks?.length ?? 0) > 0;
 
   const {
     attributes,
@@ -98,6 +99,17 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
           {title}
           {!SILENT_AUTOSAVE && isDirty && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
         </h4>
+        {hasImages && (
+          <button
+            type="button"
+            className="pf-images-variant-seo-btn"
+            onClick={hasSeoKeywords ? () => onBulkSeoRename?.(vk) : () => onGoToSeo?.()}
+            disabled={seoOptimizing}
+            title={hasSeoKeywords ? "Otimizar nomes das imagens (SEO)" : "Cadastre palavras-chave na aba Dados"}
+          >
+            {hasSeoKeywords ? (seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)") : "Definir palavras-chave (SEO)"}
+          </button>
+        )}
         <span
           className="pf-images-variant-drag-handle"
           {...attributes}
@@ -128,11 +140,6 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         uploading={uploading}
         recentSavedKey={recentSavedKey}
         onShowSavedBadge={onShowSavedBadge}
-        hasSeoKeywords={hasSeoKeywords}
-        onSeoRename={onSeoRename}
-        onGoToSeo={onGoToSeo}
-        seoOptimizing={seoOptimizing}
-        seoJustOptimizedIds={seoJustOptimizedIds}
         maxSlots={7}
         scopeId={vk}
         selectModeActive={selectModeActive}
@@ -161,11 +168,9 @@ function VariationBlocksSection({
   onVariantReorder,
   onShowSavedBadge,
   hasSeoKeywords = false,
-  onSeoRename = null,
-  onSeoRenameClick = null,
+  onBulkSeoRename = null,
   onGoToSeo = null,
   seoOptimizing = false,
-  seoJustOptimizedIds = new Set(),
   downloadingSelected,
   uploadingScopeId,
   recentSavedKey,
@@ -173,8 +178,6 @@ function VariationBlocksSection({
   activeSelectScope,
   onToggleSelectMode,
   onDownloadSelected,
-  totalImages = 0,
-  seoOptimizedBadge = false,
   dirtyVariants = new Set(),
 }) {
   const rowIds = variantRows.map((r) => r.id || variantKeyFn(r.attributes));
@@ -198,20 +201,6 @@ function VariationBlocksSection({
   return (
     <section className="pf-images-section">
       <h3 className="pf-images-section-title">Imagens por variação</h3>
-      {totalImages > 0 && onSeoRenameClick && (
-        <div className="pf-images-section-toolbar">
-          <button
-            type="button"
-            className="s7-btn s7-btn--secondary"
-            onClick={() => onSeoRenameClick?.()}
-            disabled={seoOptimizing}
-            title="Padronize o nome dos arquivos usando suas palavras-chave para organização e melhor desempenho em SEO/catálogos."
-          >
-            {seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)"}
-          </button>
-          {seoOptimizedBadge && <span className="pf-images-seo-badge" aria-hidden>Otimizado</span>}
-        </div>
-      )}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -240,10 +229,9 @@ function VariationBlocksSection({
                   onShowSavedBadge={onShowSavedBadge}
                   recentSavedKey={recentSavedKey}
                   hasSeoKeywords={hasSeoKeywords}
-                  onSeoRename={onSeoRename}
+                  onBulkSeoRename={onBulkSeoRename}
                   onGoToSeo={onGoToSeo}
                   seoOptimizing={seoOptimizing}
-                  seoJustOptimizedIds={seoJustOptimizedIds}
                   uploading={uploadingScopeId != null && uploadingScopeId === vk}
                   selectModeActive={selectMode && activeSelectScope === vk}
                   onToggleSelectMode={onToggleSelectMode}
@@ -292,32 +280,12 @@ export default function ProductFormImagesTab({
   const recentSavedTimeoutRef = useRef(null);
   const [seoKeywordsModalOpen, setSeoKeywordsModalOpen] = useState(false);
   const [seoOptimizing, setSeoOptimizing] = useState(false);
-  const [seoOptimizedBadge, setSeoOptimizedBadge] = useState(false);
-  const seoOptimizedTimeoutRef = useRef(null);
-  const [seoJustOptimizedIds, setSeoJustOptimizedIds] = useState(() => new Set());
   const [toast, setToast] = useState(null);
   const [dirtyVariants, setDirtyVariants] = useState(() => new Set());
 
   const showToast = useCallback((message) => {
     setToast({ message });
     setTimeout(() => setToast(null), 2500);
-  }, []);
-
-  const markJustOptimized = useCallback((idOrIds) => {
-    const ids = Array.isArray(idOrIds) ? idOrIds : (idOrIds ? [idOrIds] : []);
-    if (!ids.length) return;
-    setSeoJustOptimizedIds((prev) => {
-      const next = new Set(prev);
-      ids.forEach((id) => next.add(id));
-      return next;
-    });
-    setTimeout(() => {
-      setSeoJustOptimizedIds((prev) => {
-        const next = new Set(prev);
-        ids.forEach((id) => next.delete(id));
-        return next;
-      });
-    }, 3500);
   }, []);
 
   const markVariantDirty = useCallback((variantKey) => {
@@ -359,7 +327,6 @@ export default function ProductFormImagesTab({
   useEffect(() => {
     return () => {
       if (recentSavedTimeoutRef.current) clearTimeout(recentSavedTimeoutRef.current);
-      if (seoOptimizedTimeoutRef.current) clearTimeout(seoOptimizedTimeoutRef.current);
     };
   }, []);
 
@@ -781,15 +748,15 @@ export default function ProductFormImagesTab({
     ? productLinks.length
     : Object.values(variantLinksMap).flat().length;
 
-  const handleSeoRenameClick = useCallback(async (linkOrNull = null) => {
-    /* Backend exige productId (produto salvo); draft não suportado */
-    if (!hasProductId) {
-      showToast("Salve o produto para renomear imagens (SEO)");
-      return;
-    }
+  const handleBulkSeoRename = useCallback(async (variantKey = null) => {
+    if (!canOperate) return;
     const keywords = (seoKeywords || "").trim();
     if (!keywords) {
       setSeoKeywordsModalOpen(true);
+      return;
+    }
+    if (!hasProductId) {
+      showToast("Salve o produto para renomear imagens (SEO)");
       return;
     }
     if (!API_BASE_URL) {
@@ -819,8 +786,9 @@ export default function ProductFormImagesTab({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          productId,
-          variantKey: "__ALL__",
+          scope: hasProductId ? { product_id: productId } : { draft_key: draftKey },
+          variant_key: variantKey ?? null,
+          mode: "ALL",
         }),
       });
 
@@ -828,42 +796,25 @@ export default function ProductFormImagesTab({
       if (!res.ok) {
         const msg = data?.error || data?.code || `Erro ${res.status}` || "Falha ao renomear";
         addNotification({ type: "error", title: "Otimizar nomes (SEO)", message: msg });
-        showToast("Falha ao renomear — verifique conexão/SEO");
+        showToast("Erro ao renomear imagens — tente novamente");
         console.error("[ProductFormImagesTab] seo-rename error", { status: res.status, data });
         return;
       }
 
       const totalRenamed = data.renamed ?? 0;
-      if (totalRenamed > 0) {
-        setSeoOptimizedBadge(true);
-        if (seoOptimizedTimeoutRef.current) clearTimeout(seoOptimizedTimeoutRef.current);
-        seoOptimizedTimeoutRef.current = setTimeout(() => {
-          setSeoOptimizedBadge(false);
-          seoOptimizedTimeoutRef.current = null;
-        }, 1000);
-        setRefreshPreviewSeed((s) => s + 1);
-        previewFetchedRef.current.clear();
-        await loadLinks();
-        const idsToMark = linkOrNull?.id
-          ? [linkOrNull.id]
-          : [
-              ...productLinks.map((l) => l.id),
-              ...Object.values(variantLinksMap).flat().map((l) => l.id),
-            ];
-        markJustOptimized(idsToMark);
-        showToast("Nomes otimizados ✅");
-      } else {
-        showToast("Nenhuma imagem no escopo para renomear");
-      }
+      setRefreshPreviewSeed((s) => s + 1);
+      previewFetchedRef.current.clear();
+      await loadLinks();
+      showToast(totalRenamed > 0 ? `Nomes otimizados ✅ (${totalRenamed} imagens)` : "Nenhuma imagem no escopo para renomear");
     } catch (err) {
       const msg = err?.message || "Erro ao renomear imagens.";
       addNotification({ type: "error", title: "Otimizar nomes (SEO)", message: msg });
-      showToast("Falha ao renomear — verifique conexão/SEO");
+      showToast("Erro ao renomear imagens — tente novamente");
       console.error("[ProductFormImagesTab] seo-rename exception", err);
     } finally {
       setSeoOptimizing(false);
     }
-  }, [seoKeywords, hasProductId, productId, productLinks, variantLinksMap, addNotification, loadLinks, markJustOptimized, showToast]);
+  }, [seoKeywords, canOperate, hasProductId, productId, draftKey, addNotification, loadLinks, showToast]);
 
   const handleSeoModalGoToData = useCallback(() => {
     setSeoKeywordsModalOpen(false);
@@ -924,18 +875,19 @@ export default function ProductFormImagesTab({
           {format === "simple" && (
             <section className="pf-images-section">
               <h3 className="pf-images-section-title">Imagens do produto</h3>
-              {hasProductId && totalImages > 0 && (
+              {totalImages > 0 && (
                 <div className="pf-images-section-toolbar">
                   <button
                     type="button"
                     className="s7-btn s7-btn--secondary"
-                    onClick={handleSeoRenameClick}
+                    onClick={(seoKeywords || "").trim() ? () => handleBulkSeoRename(null) : (onGoToSeo ?? handleSeoModalGoToData)}
                     disabled={seoOptimizing}
-                    title="Padronize o nome dos arquivos usando suas palavras-chave para organização e melhor desempenho em SEO/catálogos."
+                    title={(seoKeywords || "").trim() ? "Otimizar nomes das imagens (SEO)" : "Cadastre palavras-chave na aba Dados"}
                   >
-                    {seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)"}
+                    {(seoKeywords || "").trim()
+                      ? (seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)")
+                      : "Definir palavras-chave (SEO)"}
                   </button>
-                  {seoOptimizedBadge && <span className="pf-images-seo-badge" aria-hidden>Otimizado</span>}
                 </div>
               )}
               <ImageSlotRow
@@ -954,11 +906,6 @@ export default function ProductFormImagesTab({
                 scopeId="product"
                 recentSavedKey={recentSavedKey}
                 onShowSavedBadge={showSavedBadge}
-                hasSeoKeywords={(seoKeywords || "").trim().length > 0}
-                onSeoRename={handleSeoRenameClick}
-                onGoToSeo={onGoToSeo ?? handleSeoModalGoToData}
-                seoOptimizing={seoOptimizing}
-                seoJustOptimizedIds={seoJustOptimizedIds}
                 selectModeActive={selectMode && activeSelectScope === "product"}
                 onToggleSelectMode={() => toggleSelectMode("product")}
                 onDownloadSelected={() => handleDownloadSelected("product")}
@@ -970,14 +917,10 @@ export default function ProductFormImagesTab({
           {/* Produto com variações: apenas Imagens por variação (sem seção global) */}
           {format === "variants" && variantRows?.length > 0 && (
             <VariationBlocksSection
-              totalImages={totalImages}
               seoOptimizing={seoOptimizing}
-              onSeoRenameClick={handleSeoRenameClick}
-              seoOptimizedBadge={seoOptimizedBadge}
               hasSeoKeywords={(seoKeywords || "").trim().length > 0}
-              onSeoRename={handleSeoRenameClick}
+              onBulkSeoRename={handleBulkSeoRename}
               onGoToSeo={onGoToSeo ?? handleSeoModalGoToData}
-              seoJustOptimizedIds={seoJustOptimizedIds}
               dirtyVariants={dirtyVariants}
               variantRows={variantRows}
               variantKeyFn={variantKeyFn}
@@ -1077,10 +1020,7 @@ export default function ProductFormImagesTab({
   );
 }
 
-/**
- * Card de imagem sortable (Principal = sort_order 0, download, abrir, delete, CTA SEO).
- * CTA SEO: "Renomear (SEO)" se keywords existem; "Definir palavras-chave (SEO)" caso contrário.
- */
+/** Card de imagem sortable (Principal = sort_order 0, download, abrir, delete) */
 function SortableImageCard({
   link,
   previewUrls,
@@ -1092,11 +1032,6 @@ function SortableImageCard({
   onPreviewError,
   selectModeActive,
   showRecentSaved,
-  hasSeoKeywords = false,
-  onSeoRename,
-  onGoToSeo,
-  seoOptimizing = false,
-  seoJustOptimized = false,
 }) {
   const isPrimary = (link?.sort_order ?? 0) === 0; /* link normalizado: sort_order ou sortOrder */
 
@@ -1130,18 +1065,6 @@ function SortableImageCard({
     onOpenPreview?.(link);
   };
 
-  const handleSeoRenameClick = (e) => {
-    e.stopPropagation();
-    onSeoRename?.(link);
-  };
-
-  const handleGoToSeoClick = (e) => {
-    e.stopPropagation();
-    onGoToSeo?.();
-  };
-
-  const showSeoCta = Boolean(link?.id);
-
   return (
     <div
       ref={setNodeRef}
@@ -1159,9 +1082,6 @@ function SortableImageCard({
           <div className="pf-images-card-placeholder">…</div>
         )}
         {isPrimary && <span className="pf-images-badge pf-images-badge--primary">Principal</span>}
-        {seoJustOptimized && (
-          <span className="pf-images-badge-seo-ok" aria-hidden>SEO ✅</span>
-        )}
       </div>
       <div className="pf-images-card-actions">
         <div className="pf-images-card-actions__left">
@@ -1230,31 +1150,6 @@ function SortableImageCard({
           </button>
         </div>
       </div>
-      {/* CTA SEO: exibido quando há link (upload concluído) e produto salvo */}
-      {showSeoCta && (
-        <div className="pf-images-card-seo">
-          {hasSeoKeywords ? (
-            <button
-              type="button"
-              className="pf-images-btn-seo"
-              onClick={handleSeoRenameClick}
-              disabled={seoOptimizing}
-              title="Padronize o nome do arquivo usando palavras-chave (SEO)"
-            >
-              {seoOptimizing ? "Otimizando…" : "Renomear (SEO)"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="pf-images-btn-seo"
-              onClick={handleGoToSeoClick}
-              title="Cadastre palavras-chave na aba Dados para otimizar nomes"
-            >
-              Definir palavras-chave (SEO)
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -1274,11 +1169,6 @@ function ImageSlotRow({
   uploading,
   recentSavedKey = null,
   onShowSavedBadge,
-  hasSeoKeywords = false,
-  onSeoRename,
-  onGoToSeo,
-  seoOptimizing = false,
-  seoJustOptimizedIds = new Set(),
   maxSlots,
   scopeId,
   selectModeActive,
@@ -1387,11 +1277,6 @@ function ImageSlotRow({
                   onPreviewError={onPreviewError}
                   selectModeActive={selectModeActive}
                   showRecentSaved={recentSavedKey != null && match}
-                  hasSeoKeywords={hasSeoKeywords}
-                  onSeoRename={onSeoRename}
-                  onGoToSeo={onGoToSeo}
-                  seoOptimizing={seoOptimizing}
-                  seoJustOptimized={seoJustOptimizedIds.has(link.id)}
                 />
               );
             }

@@ -132,6 +132,27 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.pf-images-variant-seo-btn {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--s7-border, #e5e7eb);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--s7-muted, #6b7280);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.pf-images-variant-seo-btn:hover {
+  color: var(--s7-primary, #2563eb);
+  border-color: rgba(37, 99, 235, 0.3);
+  background: rgba(37, 99, 235, 0.06);
+}
+.pf-images-variant-seo-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .pf-images-variant-title {
@@ -267,38 +288,6 @@
   box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
 }
 
-/* CTA SEO no card: Renomear ou Definir palavras-chave */
-.pf-images-card-seo {
-  padding: 4px 6px 6px;
-  border-top: 1px solid var(--s7-border, #e5e7eb);
-}
-.pf-images-btn-seo {
-  width: 100%;
-  font-size: 11px;
-  padding: 4px 8px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--s7-muted, #6b7280);
-  cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
-  text-align: center;
-}
-.pf-images-btn-seo:hover {
-  color: var(--s7-primary, #2563eb);
-  background: rgba(37, 99, 235, 0.06);
-}
-.pf-images-btn-seo:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.pf-images-btn-seo--define {
-  color: var(--s7-muted, #6b7280);
-}
-.pf-images-btn-seo--define:hover {
-  color: var(--s7-primary, #2563eb);
-}
-
 .pf-images-badge {
   background: var(--s7-muted, #9ca3af);
   color: #fff;
@@ -314,34 +303,6 @@
   left: 6px;
   background: #2563eb;
   color: #fff;
-  z-index: 1;
-}
-
-.pf-images-badge-seo-ok {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.9);
-  z-index: 1;
-}
-
-.pf-images-badge-seo-ok {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.9);
   z-index: 1;
 }
 
