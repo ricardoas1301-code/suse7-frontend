@@ -1,0 +1,97 @@
+/* ======================================================================
+   SeoKeywordsInput — Tag Input estilo Bling
+   Chips claros, borda suave, fontes modernas
+====================================================================== */
+
+.seo-keywords-input {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+
+  font-family: var(--s7-font, system-ui, sans-serif);
+  font-size: var(--s7-fs-input, 14px);
+
+  padding: 6px 10px;
+  border-radius: var(--s7-radius-sm, 8px);
+  border: 1px solid var(--s7-border, #e2e8f0);
+  background: var(--s7-bg-soft, #f8fafc);
+
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.seo-keywords-input:focus-within {
+  outline: none;
+  border-color: var(--s7-primary, #2563eb);
+  box-shadow: var(--s7-ring-focus, 0 0 0 3px rgba(37, 99, 235, 0.15));
+  background: var(--s7-bg, #fff);
+}
+
+.seo-keywords-input-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.seo-keywords-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.seo-keywords-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.15);
+  color: #1e40af;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.seo-keywords-tag-remove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+}
+
+.seo-keywords-input-field {
+  flex: 1;
+  min-width: 120px;
+  padding: 4px 6px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--s7-text, #1e293b);
+}
+
+.seo-keywords-input-field::placeholder {
+  color: #94a3b8;
+}
+
+.seo-keywords-input-field:focus {
+  outline: none;
+}
+
+.seo-keywords-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
+}

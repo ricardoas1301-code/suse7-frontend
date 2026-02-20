@@ -24,6 +24,7 @@ import {
 import { relinkDraftToProduct } from "../services/images/imageRepository";
 import { updateVariantsSortOrder } from "../services/variants/variantRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
+import { SeoKeywordsInput } from "./SeoKeywordsInput";
 import "./ProductForm.css";
 
 // ======================================================================
@@ -1155,7 +1156,8 @@ const validatePricingTab = () => {
         const el = document.getElementById("pf-seo-keywords-input");
         if (!el) return;
         el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.focus();
+        const input = el.querySelector("input");
+        if (input) input.focus();
       });
     });
   };
@@ -1598,13 +1600,11 @@ const validatePricingTab = () => {
 
 
                 <div className="pf-seo-wrapper">
-                  <textarea
+                  <SeoKeywordsInput
                     id="pf-seo-keywords-input"
-                    className="s7-textarea"
-                    rows="4"
-                    placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
                     value={product.seo_keywords}
-                    onChange={(e) => handleChange("seo_keywords", e.target.value)}
+                    onChange={(v) => handleChange("seo_keywords", v)}
+                    placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
                   />
                 </div>
 

@@ -350,13 +350,18 @@
 }
 
 
-.pf-seo-wrapper textarea{
+.pf-seo-wrapper textarea,
+.pf-seo-wrapper .seo-keywords-input{
   width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.pf-seo-wrapper textarea{
   min-height: 140px;
   max-height: 220px;
   resize: none;
   overflow-y: hidden;
-  box-sizing: border-box;
 }
 
 /* ======================================================

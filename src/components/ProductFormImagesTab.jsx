@@ -6,7 +6,7 @@
  * - Drag imagens (horizontal) e variações (vertical) com persistência
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   DndContext,
@@ -319,6 +319,12 @@ export default function ProductFormImagesTab({
   const hasProductId = !!productId && typeof productId === "string" && !productId.startsWith("draft:");
   const hasDraftKey = !!draftKey && typeof draftKey === "string";
   const canOperate = hasProductId || hasDraftKey;
+
+  const seoKeywordsArray = useMemo(() => {
+    if (Array.isArray(seoKeywords)) return seoKeywords.filter(Boolean);
+    return (seoKeywords || "").split(/[,;]+/).map((s) => s.trim()).filter(Boolean);
+  }, [seoKeywords]);
+  const hasSeoKeywords = seoKeywordsArray.length > 0;
 
   useEffect(() => {
     console.log("[ProductFormImagesTab] mount/update", { productId, draftKey: draftKey?.slice?.(0, 8) + "...", hasProductId, hasDraftKey, canOperate });
@@ -756,8 +762,7 @@ export default function ProductFormImagesTab({
 
   const handleBulkSeoRename = useCallback(async (variantKey = null) => {
     if (!canOperate) return;
-    const keywords = (seoKeywords || "").trim();
-    if (!keywords) {
+    if (!hasSeoKeywords) {
       setSeoKeywordsModalOpen(true);
       return;
     }
@@ -796,7 +801,7 @@ export default function ProductFormImagesTab({
           variant_key: variantKey ?? null,
           mode: "ALL",
           ...(hasDraftKey && {
-            seo_keywords: keywords,
+            seo_keywords: seoKeywordsArray,
             product_name: (productName || "").trim() || "draft",
           }),
         }),
@@ -826,7 +831,7 @@ export default function ProductFormImagesTab({
     } finally {
       setSeoOptimizing(false);
     }
-  }, [seoKeywords, productName, canOperate, hasProductId, hasDraftKey, productId, draftKey, addNotification, loadLinks, showToast]);
+  }, [seoKeywordsArray, hasSeoKeywords, productName, canOperate, hasProductId, hasDraftKey, productId, draftKey, addNotification, loadLinks, showToast]);
 
   const handleSeoModalGoToData = useCallback(() => {
     setSeoKeywordsModalOpen(false);
@@ -892,11 +897,11 @@ export default function ProductFormImagesTab({
                   <button
                     type="button"
                     className="s7-btn s7-btn--secondary"
-                    onClick={(seoKeywords || "").trim() ? () => handleBulkSeoRename(null) : (onGoToSeo ?? handleSeoModalGoToData)}
+                    onClick={hasSeoKeywords ? () => handleBulkSeoRename(null) : (onGoToSeo ?? handleSeoModalGoToData)}
                     disabled={seoOptimizing}
-                    title={(seoKeywords || "").trim() ? "Otimizar nomes das imagens (SEO)" : "Cadastre palavras-chave na aba Dados"}
+                    title={hasSeoKeywords ? "Otimizar nomes das imagens (SEO)" : "Cadastre palavras-chave na aba Dados"}
                   >
-                    {(seoKeywords || "").trim()
+                    {hasSeoKeywords
                       ? (seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)")
                       : "Definir palavras-chave (SEO)"}
                   </button>
@@ -930,7 +935,7 @@ export default function ProductFormImagesTab({
           {format === "variants" && variantRows?.length > 0 && (
             <VariationBlocksSection
               seoOptimizing={seoOptimizing}
-              hasSeoKeywords={(seoKeywords || "").trim().length > 0}
+              hasSeoKeywords={hasSeoKeywords}
               onBulkSeoRename={handleBulkSeoRename}
               onGoToSeo={onGoToSeo ?? handleSeoModalGoToData}
               dirtyVariants={dirtyVariants}
