@@ -627,6 +627,7 @@ export default function ProductFormImagesTab({
   const previewRefetchCountRef = useRef(new Map());
 
   const handlePreviewError = useCallback((linkId) => {
+    if (seoOptimizing) return;
     const count = previewRefetchCountRef.current.get(linkId) ?? 0;
     if (count >= 1) return;
     previewRefetchCountRef.current.set(linkId, count + 1);
@@ -637,7 +638,7 @@ export default function ProductFormImagesTab({
       return next;
     });
     setRefreshPreviewSeed((s) => s + 1);
-  }, []);
+  }, [seoOptimizing]);
 
   useEffect(() => {
     const contextKey = `${productId ?? ""}_${draftKey ?? ""}`;
@@ -849,9 +850,9 @@ export default function ProductFormImagesTab({
       const totalRenamed = data.renamed ?? 0;
       setPreviewModal({ open: false, url: null, title: null });
       setPreviewUrls(new Map());
-      setRefreshPreviewSeed((s) => s + 1);
       previewFetchedRef.current.clear();
       await loadLinks();
+      setRefreshPreviewSeed((s) => s + 1);
       showToast(totalRenamed > 0 ? `Nomes otimizados ✅ (${totalRenamed} imagens)` : "Nenhuma imagem no escopo para renomear");
     } catch (err) {
       const msg = err?.message || "Erro ao renomear imagens.";
