@@ -42,12 +42,22 @@ const EMPTY_SELECTION = new Set();
 /** Modo silencioso: reorder/delete não disparam SaveStatus nem toasts de sucesso */
 const SILENT_AUTOSAVE = true;
 
+/** Garante storage_path string válida (sem vírgulas, undefined, etc.) */
+function sanitizeStoragePath(p) {
+  if (p == null || typeof p !== "string") return null;
+  const raw = String(p).trim();
+  if (!raw || raw === "undefined" || raw === "null") return null;
+  const clean = raw.includes(",") ? raw.split(",")[0].trim() : raw;
+  return clean || null;
+}
+
 /** Normaliza link para evitar mismatch storage_path/storagePath, variant_key/variantKey */
 function normalizeLink(link) {
   if (!link) return null;
+  const p = sanitizeStoragePath(link.storage_path ?? link.storagePath);
   return {
     ...link,
-    storage_path: link.storage_path ?? link.storagePath,
+    storage_path: p,
     variant_key: link.variant_key ?? link.variantKey,
     sort_order: link.sort_order ?? link.sortOrder,
   };
@@ -343,7 +353,7 @@ export default function ProductFormImagesTab({
     setError(null);
     try {
       const generalLinks = await listLinks({ ...opts, variantKey: null });
-      setProductLinks(generalLinks);
+      setProductLinks((generalLinks || []).map(normalizeLink).filter(Boolean));
 
       if (format === "variants" && variantRows?.length > 0) {
         const uniqueKeys = [...new Set(variantRows.map((r) => variantKeyFn(r.attributes)).filter(Boolean))];
@@ -351,7 +361,7 @@ export default function ProductFormImagesTab({
           uniqueKeys.map(async (vk) => ({ vk, links: await listLinks({ ...opts, variantKey: vk }) }))
         );
         const map = {};
-        results.forEach(({ vk, links }) => { map[vk] = links; });
+        results.forEach(({ vk, links }) => { map[vk] = (links || []).map(normalizeLink).filter(Boolean); });
         setVariantLinksMap(map);
       }
     } catch (err) {
@@ -444,7 +454,10 @@ export default function ProductFormImagesTab({
 
       for (let i = 0; i < metas.length; i++) {
         const meta = metas[i];
-        if (!meta?.storage_path?.trim()) {
+        const storagePath = typeof meta?.storage_path === "string"
+          ? meta.storage_path.trim().split(",")[0].trim()
+          : null;
+        if (!storagePath) {
           console.error("[ProductFormImagesTab] handleUpload: storage_path vazio", meta);
           throw new Error("storage_path vazio após upload");
         }
@@ -454,7 +467,7 @@ export default function ProductFormImagesTab({
           productId: hasProductId ? productId : undefined,
           draftKey: hasDraftKey ? draftKey : undefined,
           variantKey: variantKey ?? null,
-          storage_path: meta.storage_path,
+          storage_path: storagePath,
           file_name: meta.file_name,
           mime_type: meta.mime_type,
           size_bytes: meta.size_bytes,
@@ -493,7 +506,8 @@ export default function ProductFormImagesTab({
     if (!linkToDelete) return;
 
     const runDelete = async () => {
-      await deleteAsset(linkToDelete.storage_path);
+      const path = sanitizeStoragePath(linkToDelete.storage_path ?? linkToDelete.storagePath);
+      if (path) await deleteAsset(path);
       await deleteLink(linkId);
 
       const remaining = links.filter((l) => l.id !== linkId);
@@ -606,8 +620,9 @@ export default function ProductFormImagesTab({
   };
 
   const getPreviewUrl = useCallback(async (link) => {
-    if (!link?.storage_path) return null;
-    return getSignedUrl(link.storage_path);
+    const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
+    if (!path) return null;
+    return getSignedUrl(path);
   }, []);
 
   const previewRefetchCountRef = useRef(new Map());
@@ -685,7 +700,12 @@ export default function ProductFormImagesTab({
 
   const handleDownload = async (link) => {
     try {
-      await downloadAsBlob(link?.storage_path, link?.file_name || "imagem");
+      const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
+      if (!path) {
+        showToast("Imagem indisponível — atualize/reabra");
+        return;
+      }
+      await downloadAsBlob(path, link?.file_name || "imagem");
     } catch (err) {
       console.error("Erro ao baixar imagem:", err);
       addNotification({ type: "error", title: "Download", message: err?.message || "Erro ao baixar imagem" });
@@ -694,9 +714,10 @@ export default function ProductFormImagesTab({
 
   const handleOpenPreview = async (link) => {
     try {
-      const url = await getSignedUrl(link?.storage_path, 60);
+      const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
+      const url = path ? await getSignedUrl(path, 60) : null;
       if (!url) {
-        showToast("Imagem atualizada — tente abrir novamente");
+        showToast("Imagem indisponível — atualize/reabra");
         return;
       }
       setPreviewModal({ open: true, url, title: link?.file_name || "Imagem" });
@@ -708,9 +729,10 @@ export default function ProductFormImagesTab({
 
   const handleOpenInNewTab = async (link) => {
     try {
-      const url = await getSignedUrl(link?.storage_path, 60);
+      const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
+      const url = path ? await getSignedUrl(path, 60) : null;
       if (!url) {
-        showToast("Imagem atualizada — tente abrir novamente");
+        showToast("Imagem indisponível — atualize/reabra");
         return;
       }
       window.open(url, "_blank", "noopener,noreferrer");
@@ -740,7 +762,12 @@ export default function ProductFormImagesTab({
         await Promise.all(
           chunk.map(async (link) => {
             try {
-              await downloadAsBlob(link?.storage_path, link?.file_name || "imagem");
+              const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
+              if (!path) {
+                errors.push("Imagem indisponível");
+                return;
+              }
+              await downloadAsBlob(path, link?.file_name || "imagem");
             } catch (err) {
               errors.push(err?.message || "Erro ao baixar");
             }

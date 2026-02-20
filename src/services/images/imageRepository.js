@@ -44,7 +44,9 @@ export async function createImageRecord({
     throw new Error("createImageRecord: informe productId OU draftKey (exatamente um)");
   }
 
-  if (!storage_path?.trim()) {
+  let pathStr = typeof storage_path === "string" ? storage_path.trim() : "";
+  if (pathStr.includes(",")) pathStr = pathStr.split(",")[0].trim();
+  if (!pathStr || pathStr === "undefined" || pathStr === "null") {
     throw new Error("createImageRecord: storage_path não pode ser vazio");
   }
 
@@ -52,15 +54,13 @@ export async function createImageRecord({
     product_id: hasProduct ? productIdStr : null,
     draft_key: hasDraft ? String(draftKey).trim() : null,
     variant_key: variantKey ?? null,
-    storage_path,
+    storage_path: pathStr,
     file_name: file_name ?? null,
     mime_type: mime_type ?? "image/jpeg",
     size_bytes: size_bytes ?? null,
     is_primary: !!isPrimary,
     sort_order: sortOrder ?? 0,
   };
-
-  console.log("[imageRepository] createImageRecord payload:", payload);
 
   const { data, error } = await supabase
     .from(TABLE)

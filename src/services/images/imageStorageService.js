@@ -35,8 +35,6 @@ export async function uploadAssets(files, { userId, productId, draftKey }) {
     const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const storagePath = `${userId}/${storageKey}/${safeName}`;
 
-    console.log("[imageStorageService] upload:", { storagePath, size: file.size });
-
     const { error } = await supabase.storage.from(BUCKET_NAME).upload(storagePath, file, {
       contentType: file.type || "image/jpeg",
       upsert: true,
@@ -63,13 +61,16 @@ export async function uploadAssets(files, { userId, productId, draftKey }) {
  * @returns {Promise<string|null>} URL assinada ou null se objeto não existir (ex: após rename)
  */
 export async function getSignedUrl(storagePath, expiresIn = 3600) {
-  if (!storagePath) return null;
-  const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(storagePath, expiresIn);
+  if (!storagePath || typeof storagePath !== "string") return null;
+  let path = String(storagePath).trim();
+  if (path.includes(",")) path = path.split(",")[0].trim();
+  if (!path || path === "undefined" || path === "null") return null;
+  const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(path, expiresIn);
   if (error) {
     const msg = error?.message ?? "";
     const isNotFound = msg.toLowerCase().includes("object not found") || msg.toLowerCase().includes("not found") || msg === "404" || msg === "400";
     if (isNotFound) {
-      if (typeof console?.debug === "function") console.debug("[imageStorageService] signedUrl: objeto não encontrado", storagePath);
+      if (typeof console?.debug === "function") console.debug("[imageStorageService] signedUrl: objeto não encontrado", path);
       return null;
     }
     console.error("[imageStorageService] signedUrl error:", error);
