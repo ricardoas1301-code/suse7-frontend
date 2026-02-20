@@ -103,8 +103,16 @@ export default function ProductForm({
 
   // ------------------------------------------------------
   // CONTROLE DE ABAS (nova ordem)
+  // Variações só existe quando format=variants
   // ------------------------------------------------------
   const [activeTab, setActiveTab] = useState("data");
+
+  // Redireciona para "data" se estiver em "variations" e format mudar para simple
+  useEffect(() => {
+    if (product.format === "simple" && activeTab === "variations") {
+      setActiveTab("data");
+    }
+  }, [product.format, activeTab]);
 
   // ------------------------------------------------------
   // STATE: PRODUTO (alinhado com tabela products)
@@ -206,6 +214,12 @@ const [virtualModalOpen, setVirtualModalOpen] = useState(false);
 const [virtualModalMode, setVirtualModalMode] = useState("enable"); // "enable" | "disable"
 const [pendingVariantId, setPendingVariantId] = useState(null);
 const [pendingNextChecked, setPendingNextChecked] = useState(false);
+
+  // ------------------------------------------------------
+  // MODAL: confirmação ao voltar para Simples (draft com variações)
+  // Regra: se draft tem variações e usuário quer Simples, pedir confirmação
+  // ------------------------------------------------------
+  const [formatToSimpleModalOpen, setFormatToSimpleModalOpen] = useState(false);
 
   // ------------------------------------------------------
   // VARIAÇÕES (estilo Bling)
@@ -389,27 +403,38 @@ useEffect(() => {
   const isDigitsOnly = (v) => /^\d+$/.test(String(v || ""));
 
   // ------------------------------------------------------
-  // FORMATO: SIMPLE x VARIANTS (regra de UX)
-  // - simple: SKU/GTIN no products
-  // - variants: SKU/GTIN por variação (product_variants)
+  // FORMATO: SIMPLE x VARIANTS (regra de UX + negócio)
+  // - Produto salvo como "variants" NÃO pode voltar para "simple" (formatLocked)
+  // - Draft: pode alternar; se tem variações e quer simple, pedir confirmação
   // ------------------------------------------------------
-const handleFormatChange = (nextFormat) => {
-  setProduct((prev) => {
-    if (nextFormat === "variants") {
-      return { ...prev, format: nextFormat, sku: "", gtin: "" };
-    }
-    return { ...prev, format: nextFormat };
-  });
+  const formatLocked = mode === "edit" && product?.id && product.format === "variants";
 
-  if (nextFormat === "simple") {
+  const applyFormatToSimple = () => {
+    setProduct((prev) => ({ ...prev, format: "simple" }));
     setVariationAttributes([]);
     setDraftAttrInput("");
     setDraftOptionInput("");
     setDraftOptions([]);
     setVariantRows([]);
-    setShowVariationsBuilder(true); // ✅ volta pro builder quando vira simples
-  }
-};
+    setShowVariationsBuilder(true);
+    setFormatToSimpleModalOpen(false);
+  };
+
+  const handleFormatChange = (nextFormat) => {
+    if (nextFormat === "variants") {
+      setProduct((prev) => ({ ...prev, format: nextFormat, sku: "", gtin: "" }));
+      return;
+    }
+    if (nextFormat === "simple") {
+      if (formatLocked) return;
+      const hasVariations = Array.isArray(variantRows) && variantRows.length > 0;
+      if (hasVariations) {
+        setFormatToSimpleModalOpen(true);
+        return;
+      }
+      applyFormatToSimple();
+    }
+  };
 
   // ------------------------------------------------------
   // UI: Copiar campo
@@ -1440,44 +1465,31 @@ const validatePricingTab = () => {
 
 
       {/* ==================================================
-         TABS (nova ordem e nomes)
+         TABS (dinâmicas: Variações só quando format=variants, logo após Dados)
+         Ordem Simples: Dados | Custos | Estoque | Imagens | Descrição | Pesos | Anúncios | Vendas
+         Ordem Com variações: Dados | Variações | Custos | Estoque | Imagens | Descrição | Pesos | Anúncios | Vendas
       ================================================== */}
 <div className="pf-tabs">
-  <button className={activeTab === "data" ? "active" : ""} onClick={() => setActiveTab("data")} type="button">
-    Dados
-  </button>
-
-  <button className={activeTab === "pricing" ? "active" : ""} onClick={() => setActiveTab("pricing")} type="button">
-    Custos & precificação
-  </button>
-
-  <button className={activeTab === "variations" ? "active" : ""} onClick={() => setActiveTab("variations")} type="button">
-    Variações
-  </button>
-
-  <button className={activeTab === "stock" ? "active" : ""} onClick={() => setActiveTab("stock")} type="button">
-    Estoque
-  </button>
-
-  <button className={activeTab === "images" ? "active" : ""} onClick={() => setActiveTab("images")} type="button">
-    Imagens
-  </button>
-
-  <button className={activeTab === "description" ? "active" : ""} onClick={() => setActiveTab("description")} type="button">
-    Descrição
-  </button>
-
-  <button className={activeTab === "measures" ? "active" : ""} onClick={() => setActiveTab("measures")} type="button">
-    Pesos & medidas
-  </button>
-
-  <button className={activeTab === "ads" ? "active" : ""} onClick={() => setActiveTab("ads")} type="button">
-    Anúncios
-  </button>
-
-  <button className={activeTab === "performance" ? "active" : ""} onClick={() => setActiveTab("performance")} type="button">
-    Vendas & desempenho
-  </button>
+  {[
+    { id: "data", label: "Dados" },
+    ...(product.format === "variants" ? [{ id: "variations", label: "Variações" }] : []),
+    { id: "pricing", label: "Custos & precificação" },
+    { id: "stock", label: "Estoque" },
+    { id: "images", label: "Imagens" },
+    { id: "description", label: "Descrição" },
+    { id: "measures", label: "Pesos & medidas" },
+    { id: "ads", label: "Anúncios" },
+    { id: "performance", label: "Vendas & desempenho" },
+  ].map((tab) => (
+    <button
+      key={tab.id}
+      className={activeTab === tab.id ? "active" : ""}
+      onClick={() => setActiveTab(tab.id)}
+      type="button"
+    >
+      {tab.label}
+    </button>
+  ))}
 </div>
 
 
@@ -1501,9 +1513,11 @@ const validatePricingTab = () => {
 <FieldLabel
   text="Formato"
   infoText={
-    product.format === "simple"
-      ? "Produto simples (sem variação de características)"
-      : "Produto com variação (Ex: Cor ou Voltagem)"
+    formatLocked
+      ? "Produtos com variações não podem ser convertidos para simples após salvar."
+      : product.format === "simple"
+        ? "Produto simples (sem variação de características)"
+        : "Produto com variação (Ex: Cor ou Voltagem)"
   }
   tipBottom={true}
   wrap={true}
@@ -1514,6 +1528,8 @@ const validatePricingTab = () => {
     className="s7-select"
     value={product.format}
     onChange={(e) => handleFormatChange(e.target.value)}
+    disabled={formatLocked}
+    title={formatLocked ? "Produtos com variações não podem ser convertidos para simples" : undefined}
   >
     <option value="simple">Simples</option>
     <option value="variants">Com variações</option>
@@ -2697,6 +2713,42 @@ const validatePricingTab = () => {
             }}
           >
             Salvar mesmo assim
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )}
+
+{/* --------------------------------------------------
+   MODAL: confirmação ao voltar para Simples (draft com variações)
+   Regra: remove variações criadas neste rascunho
+-------------------------------------------------- */}
+{formatToSimpleModalOpen &&
+  createPortal(
+    <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-modal-format-title">
+      <div className="s7-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="s7-modal-icon-wrap">
+          <div className="s7-modal-icon s7-modal-icon--success">?</div>
+        </div>
+        <h2 id="s7-modal-format-title" className="s7-modal-title">Voltar para Simples</h2>
+        <p className="s7-modal-text">
+          Isso removerá as variações criadas neste rascunho. Deseja continuar?
+        </p>
+        <div className="s7-modal-actions">
+          <button
+            type="button"
+            className="s7-modal-btn-secondary"
+            onClick={() => setFormatToSimpleModalOpen(false)}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="s7-modal-btn-primary"
+            onClick={applyFormatToSimple}
+          >
+            Sim, remover variações
           </button>
         </div>
       </div>
