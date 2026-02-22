@@ -429,8 +429,9 @@ useEffect(() => {
   const isDigitsOnly = (v) => /^\d+$/.test(String(v || ""));
 
   // ------------------------------------------------------
-  // FORMATO: SIMPLE x VARIANTS (regra de UX + negócio)
-  // - Produto salvo como "variants" NÃO pode voltar para "simple" (formatLocked)
+  // FORMATO: SIMPLE x VARIANTS (UX alinhada ao backend)
+  // - Produto salvo como "variants" → select desabilitado (formatLocked)
+  // - Backend é fonte de verdade; UI apenas impede tentativa desnecessária
   // - Draft: pode alternar; se tem variações e quer simple, pedir confirmação
   // ------------------------------------------------------
   const formatLocked = mode === "edit" && product?.id && product.format === "variants";
@@ -1355,9 +1356,19 @@ const validatePricingTab = () => {
       }
     }
     if (typeof onSubmit === "function") {
-      const result = await Promise.resolve(onSubmit(payload));
-      if (mode === "create" && result?.productId && draftKeyRef.current) {
-        await relinkDraftToProduct(draftKeyRef.current, result.productId);
+      try {
+        const result = await Promise.resolve(onSubmit(payload));
+        if (result?.error) {
+          addNotification({ type: "error", title: "Erro ao salvar", message: result.error });
+          return;
+        }
+        if (mode === "create" && result?.productId && draftKeyRef.current) {
+          await relinkDraftToProduct(draftKeyRef.current, result.productId);
+        }
+      } catch (err) {
+        // 409 (variants→simple) ou outro erro: exibe mensagem do backend
+        const msg = err?.message ?? err?.error ?? "Erro ao salvar produto.";
+        addNotification({ type: "error", title: "Erro ao salvar", message: msg });
       }
       return;
     }
@@ -1531,7 +1542,7 @@ const validatePricingTab = () => {
   text="Formato"
   infoText={
     formatLocked
-      ? "Produtos com variações não podem ser convertidos para simples após salvar."
+      ? "Produto com variações não pode voltar para simples após salvo."
       : product.format === "simple"
         ? "Produto simples (sem variação de características)"
         : "Produto com variação (Ex: Cor ou Voltagem)"
@@ -1546,7 +1557,7 @@ const validatePricingTab = () => {
     value={product.format}
     onChange={(e) => handleFormatChange(e.target.value)}
     disabled={formatLocked}
-    title={formatLocked ? "Produtos com variações não podem ser convertidos para simples" : undefined}
+    title={formatLocked ? "Produto com variações não pode voltar para simples após salvo." : undefined}
   >
     <option value="simple">Simples</option>
     <option value="variants">Com variações</option>
