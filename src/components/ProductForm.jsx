@@ -107,12 +107,39 @@ export default function ProductForm({
   // ------------------------------------------------------
   const [activeTab, setActiveTab] = useState("data");
 
-  // Redireciona para "data" se estiver em "variations" e format mudar para simple
+  const hasVariations = product?.format === "variants";
+
+  const availableTabs = useMemo(() => {
+    const base = [
+      { id: "data", label: "Dados" },
+      ...(hasVariations ? [{ id: "variations", label: "Variações" }] : []),
+      { id: "pricing", label: "Custos & precificação" },
+      { id: "stock", label: "Estoque" },
+      { id: "images", label: "Imagens" },
+      { id: "description", label: "Descrição" },
+      { id: "measures", label: "Pesos & medidas" },
+      { id: "ads", label: "Anúncios" },
+      { id: "performance", label: "Vendas & desempenho" },
+    ];
+    return base;
+  }, [hasVariations]);
+
+  const availableTabIds = useMemo(() => availableTabs.map((t) => t.id), [availableTabs]);
+
+  const safeTab = availableTabIds.includes(activeTab) ? activeTab : availableTabIds[0];
+
   useEffect(() => {
-    if (product.format === "simple" && activeTab === "variations") {
-      setActiveTab("data");
+    if (!availableTabIds.includes(activeTab)) {
+      if (import.meta.env?.DEV) {
+        console.error("[ProductForm] activeTab inválido (aba indisponível), corrigindo:", {
+          activeTab,
+          hasVariations,
+          availableTabIds,
+        });
+      }
+      setActiveTab(availableTabIds[0]);
     }
-  }, [product.format, activeTab]);
+  }, [activeTab, availableTabIds, hasVariations]);
 
   // ------------------------------------------------------
   // STATE: PRODUTO (alinhado com tabela products)
@@ -1202,7 +1229,8 @@ const validatePricingTab = () => {
   // ------------------------------------------------------
   const okVariants = validateVariantsTab();
   if (!okVariants) {
-    setActiveTab("variations");
+    if (hasVariations) setActiveTab("variations");
+    else setActiveTab("data");
     return;
   }
 
@@ -1470,20 +1498,10 @@ const validatePricingTab = () => {
          Ordem Com variações: Dados | Variações | Custos | Estoque | Imagens | Descrição | Pesos | Anúncios | Vendas
       ================================================== */}
 <div className="pf-tabs">
-  {[
-    { id: "data", label: "Dados" },
-    ...(product.format === "variants" ? [{ id: "variations", label: "Variações" }] : []),
-    { id: "pricing", label: "Custos & precificação" },
-    { id: "stock", label: "Estoque" },
-    { id: "images", label: "Imagens" },
-    { id: "description", label: "Descrição" },
-    { id: "measures", label: "Pesos & medidas" },
-    { id: "ads", label: "Anúncios" },
-    { id: "performance", label: "Vendas & desempenho" },
-  ].map((tab) => (
+  {availableTabs.map((tab) => (
     <button
       key={tab.id}
-      className={activeTab === tab.id ? "active" : ""}
+      className={safeTab === tab.id ? "active" : ""}
       onClick={() => setActiveTab(tab.id)}
       type="button"
     >
@@ -1496,13 +1514,13 @@ const validatePricingTab = () => {
       {/* ==================================================
          BODY
       ================================================== */}
-      <div className="pf-body" data-active-tab={activeTab}>
+      <div className="pf-body" data-active-tab={safeTab}>
         <div className="pf-body-inner"></div>
         
         {/* =======================
             ABA: DADOS
         ======================= */}
-        {activeTab === "data" && (
+        {safeTab === "data" && (
           <div className="pf-container">
 
             <div className="pf-row">
@@ -1637,7 +1655,7 @@ const validatePricingTab = () => {
     - Mesma pegada visual do “Combinações geradas” (cards)
     - Consistência SaaS premium
 ================================================================== */}
-{activeTab === "pricing" && (
+{safeTab === "pricing" && (
   <div className="pf-container">
     <div className="section">
       <div className="section-header">
@@ -1850,7 +1868,7 @@ const validatePricingTab = () => {
         {/* =======================
             ABA: IMAGENS (mantém)
         ======================= */}
-        {activeTab === "images" && (
+        {safeTab === "images" && (
           <div className="pf-container">
             <ProductFormImagesTab
               productId={product?.id}
@@ -1870,7 +1888,7 @@ const validatePricingTab = () => {
         {/* =======================
          ABA: VARIAÇÕES (novo fluxo)
          ======================= */}
-        {activeTab === "variations" && (
+        {safeTab === "variations" && hasVariations && (
         <div className="pf-container">
         {product.format !== "variants" ? (
           <div className="s7-alert s7-alert--warning">
@@ -2309,7 +2327,7 @@ const validatePricingTab = () => {
         {/* =======================
             ABA: DESCRIÇÃO (mantém)
         ======================= */}
-        {activeTab === "description" && (
+        {safeTab === "description" && (
           <div className="pf-container">
             <div className="pf-group">
               <FieldLabel text="Descrição do produto" onCopy={() => handleCopyField(product.description)} />
@@ -2330,7 +2348,7 @@ const validatePricingTab = () => {
           {/* =======================
             ABA: ESTOQUE (v2)
           ======================= */}
-        {activeTab === "stock" && (
+        {safeTab === "stock" && (
           <div className="pf-container">
             {/* ===============================
                 ESTOQUE — FORMATO SIMPLES
@@ -2467,7 +2485,7 @@ const validatePricingTab = () => {
         {/* =======================
             ABA: PESOS & MEDIDAS (mantém)
         ======================= */}
-        {activeTab === "measures" && (
+        {safeTab === "measures" && (
           <div className="pf-container">
             <div className="s7-card">
               <div className="s7-card__header">
@@ -2532,7 +2550,7 @@ const validatePricingTab = () => {
               {/* =======================
               ABA: ANÚNCIOS (placeholder)
               ======================= */}
-              {activeTab === "ads" && (
+              {safeTab === "ads" && (
               <div className="pf-container">
              {!hasAnyVariation && (
              <div className="section">
@@ -2554,7 +2572,7 @@ const validatePricingTab = () => {
              {/* =======================
              ABA: VENDAS & DESEMPENHO (placeholder)
              ======================= */}
-             {activeTab === "performance" && (
+             {safeTab === "performance" && (
              <div className="pf-container">
               <div className="section">
               <div className="section-header">
