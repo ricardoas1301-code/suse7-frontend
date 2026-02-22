@@ -24,6 +24,7 @@ import {
 import suse7Logo from "../assets/suse7-logo-redonda.png";
 
 // ---------------- Componentes ----------------
+import NotificationBell from "./NotificationBell";
 import AvatarMenu from "./AvatarMenu";
 
 export default function Layout() {
@@ -64,7 +65,6 @@ useEffect(() => {
     window.removeEventListener("logoUpdated", handleLogoUpdate);
   };
 }, []);
-;
 
   // -----------------------------------------------------
   // Itens do menu central
@@ -117,8 +117,9 @@ className={`nav-item ${
           })}
         </div>
 
-        {/* Menu da empresa (logo + dropdown) */}
+        {/* Menu da empresa (sino + logo + dropdown) */}
         <div className="nav-right">
+          <NotificationBell />
           <AvatarMenu
             empresaNome={empresaNome}
             logoUrl={logoUrl}

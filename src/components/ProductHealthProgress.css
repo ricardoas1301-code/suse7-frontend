@@ -1,0 +1,80 @@
+/* ======================================================================
+   SUSE7 — Product Health Progress
+   Círculo de progresso do cadastro (cores Suse7: azuis + cinza)
+   ====================================================================== */
+
+.php-wrap {
+  --php-size: 72px;
+  --php-color-bg: var(--s7-divider, #eef0f3);
+  --php-color-progress: var(--s7-primary, #2563eb);
+  --php-color-text: var(--s7-text, #1f2937);
+  --php-color-muted: var(--s7-muted, #6b7280);
+
+  width: var(--php-size);
+  height: var(--php-size);
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.php-wrap--disabled {
+  cursor: default;
+}
+
+.php-wrap--disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.php-wrap:hover {
+  transform: scale(1.03);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.php-wrap:focus-visible {
+  outline: 2px solid var(--php-color-progress);
+  outline-offset: 2px;
+}
+
+.php-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.php-bg {
+  stroke: var(--php-color-bg);
+  transition: stroke 0.2s ease;
+}
+
+.php-progress {
+  stroke: var(--php-color-progress);
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.php-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  pointer-events: none;
+}
+
+.php-percent {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--php-color-text);
+  line-height: 1.1;
+}
+
+.php-label {
+  font-size: 10px;
+  color: var(--php-color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}

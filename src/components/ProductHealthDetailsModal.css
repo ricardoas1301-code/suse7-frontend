@@ -1,0 +1,218 @@
+/* ======================================================================
+   SUSE7 — Product Health Details Modal
+   Estilos isolados (cores Suse7: azuis + cinza)
+   ====================================================================== */
+
+.phdm-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 80px 16px 24px;
+  z-index: 999;
+  animation: phdm-fadeIn 0.2s ease;
+}
+
+@keyframes phdm-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.phdm-box {
+  background: var(--s7-bg, #ffffff);
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 120px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  animation: phdm-slideIn 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@keyframes phdm-slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.phdm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--s7-divider, #eef0f3);
+}
+
+.phdm-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--s7-text, #1f2937);
+  margin: 0;
+}
+
+.phdm-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--s7-muted, #6b7280);
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.phdm-close:hover {
+  color: var(--s7-text, #1f2937);
+  background: var(--s7-bg-soft, #f9fafb);
+}
+
+.phdm-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.phdm-banner {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  background: rgba(220, 38, 38, 0.08);
+  border-left: 4px solid var(--s7-error, #dc2626);
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: var(--s7-text, #1f2937);
+  line-height: 1.4;
+}
+
+.phdm-section {
+  margin-bottom: 20px;
+}
+
+.phdm-section:last-child {
+  margin-bottom: 0;
+}
+
+.phdm-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--s7-text, #1f2937);
+  margin: 0 0 8px 0;
+}
+
+.phdm-section-title--blocking {
+  color: var(--s7-error, #dc2626);
+}
+
+.phdm-section-title--warning {
+  color: var(--s7-warning, #d97706);
+}
+
+.phdm-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--s7-muted, #6b7280);
+}
+
+.phdm-meta-item {
+  padding: 4px 8px;
+  background: var(--s7-bg-soft, #f9fafb);
+  border-radius: 6px;
+}
+
+.phdm-empty {
+  font-size: 13px;
+  color: var(--s7-muted, #6b7280);
+  margin: 0;
+}
+
+.phdm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.phdm-list-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.phdm-list-item--blocking {
+  background: rgba(220, 38, 38, 0.06);
+  border-left: 3px solid var(--s7-error, #dc2626);
+}
+
+.phdm-list-item--warning {
+  background: rgba(217, 119, 6, 0.06);
+  border-left: 3px solid var(--s7-warning, #d97706);
+}
+
+.phdm-message {
+  font-size: 13px;
+  color: var(--s7-text, #1f2937);
+}
+
+.phdm-field {
+  font-size: 11px;
+  color: var(--s7-muted, #6b7280);
+}
+
+.phdm-goto-tab {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--s7-primary, #2563eb);
+  background: transparent;
+  border: 1px solid var(--s7-primary, #2563eb);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.phdm-goto-tab:hover {
+  background: var(--s7-primary, #2563eb);
+  color: #fff;
+}
+
+.phdm-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--s7-divider, #eef0f3);
+}
+
+.phdm-btn-close {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--s7-text, #1f2937);
+  background: var(--s7-bg-soft, #f9fafb);
+  border: 1px solid var(--s7-divider, #eef0f3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.phdm-btn-close:hover {
+  background: var(--s7-divider, #eef0f3);
+}

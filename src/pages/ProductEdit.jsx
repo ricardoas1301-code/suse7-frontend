@@ -7,8 +7,9 @@
 // ======================================================================
 
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ProductForm from "../components/ProductForm";
+import { upsertProduct } from "../services/products/productRepository";
 import "./ProductEdit.css";
 
 export default function ProductEdit() {
@@ -16,7 +17,9 @@ export default function ProductEdit() {
   // PARAMS / NAV
   // ------------------------------------------------------
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const initialTab = searchParams.get("tab") || null;
 
   // ------------------------------------------------------
   // STATE: LOAD (placeholder)
@@ -72,17 +75,12 @@ export default function ProductEdit() {
   };
 
   // ------------------------------------------------------
-  // SUBMIT (UI only por enquanto)
+  // SUBMIT (chama API; 409 SKU duplicado → ProductForm exibe toast)
   // ------------------------------------------------------
-  const handleSubmit = async ({ product, draftKey, variants }) => {
-    console.log("✅ EDIT | id:", id);
-    console.log("✅ EDIT | produto:", product);
-    console.log("✅ EDIT | variações:", variants);
-
-    // Futuro:
-    // - chamar backend para salvar
-    // - em modo edit não precisa retornar productId (imagens já vinculadas)
-    // navigate("/produtos");
+  const handleSubmit = async ({ product, mode, draftKey, variants }) => {
+    const result = await upsertProduct({ product, mode, draftKey, variants });
+    if (result?.error) return { error: result.error };
+    return { productId: result?.productId ?? product?.id ?? null };
   };
 
   if (loading) {
@@ -100,8 +98,10 @@ export default function ProductEdit() {
         mode="edit"
         initialProduct={initialProduct}
         initialVariations={initialVariations}
+        initialTab={initialTab}
         onCancel={handleCancel}
         onSubmit={handleSubmit}
+        onSuccess={() => navigate("/produtos")}
       />
     </div>
   );

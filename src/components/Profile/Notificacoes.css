@@ -1,0 +1,85 @@
+/* ======================================================================
+   SUSE7 — Perfil > Preferências > Notificações
+   Estilos isolados (padrão Suse7)
+   ====================================================================== */
+
+.notif-page {
+  max-width: 560px;
+}
+
+.notif-types {
+  margin-top: 24px;
+}
+
+.notif-types h3,
+.notif-modals h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--s7-text, #1f2937);
+  margin: 0 0 12px 0;
+}
+
+.notif-loading {
+  font-size: 14px;
+  color: var(--s7-muted, #6b7280);
+  margin: 0;
+}
+
+.notif-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.notif-type-card {
+  padding: 16px;
+  background: var(--s7-bg-soft, #f9fafb);
+  border: 1px solid var(--s7-divider, #e5e7eb);
+  border-radius: 10px;
+}
+
+.notif-type-card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--s7-text, #1f2937);
+  margin: 0 0 12px 0;
+}
+
+.notif-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--s7-text, #1f2937);
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.notif-toggle:last-of-type {
+  margin-bottom: 0;
+}
+
+.notif-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--s7-primary, #2563eb);
+  cursor: pointer;
+}
+
+.notif-whatsapp-hint {
+  font-size: 12px;
+  color: var(--s7-muted, #6b7280);
+  margin: 8px 0 0 0;
+}
+
+.notif-modals {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--s7-divider, #e5e7eb);
+}
+
+.notif-modals p {
+  font-size: 13px;
+  color: var(--s7-muted, #6b7280);
+  margin: 0 0 12px 0;
+}

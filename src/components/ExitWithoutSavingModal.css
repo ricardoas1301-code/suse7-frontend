@@ -1,0 +1,93 @@
+/* ======================================================================
+   SUSE7 — Exit Without Saving Modal
+   Estilo Suse7 (azuis + cinza)
+   ====================================================================== */
+
+.ews-modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: ews-fadeIn 0.2s ease;
+}
+
+@keyframes ews-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ews-modal-box {
+  background: var(--s7-bg, #ffffff);
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  padding: 24px;
+  animation: ews-slideIn 0.25s ease;
+}
+
+@keyframes ews-slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ews-modal-header {
+  margin-bottom: 12px;
+}
+
+.ews-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--s7-text, #1f2937);
+  margin: 0;
+}
+
+.ews-modal-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--s7-muted, #6b7280);
+  margin: 0 0 16px 0;
+}
+
+.ews-modal-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--s7-text, #1f2937);
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.ews-modal-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--s7-primary, #2563eb);
+  cursor: pointer;
+}
+
+.ews-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.ews-modal-btn-exit {
+  background: var(--s7-error, #dc2626) !important;
+  border-color: var(--s7-error, #dc2626) !important;
+}
+
+.ews-modal-btn-exit:hover {
+  background: #b91c1c !important;
+  border-color: #b91c1c !important;
+}

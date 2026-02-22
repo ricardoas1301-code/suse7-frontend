@@ -15,6 +15,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useBlocker } from "react-router-dom";
 import { useNotifications } from "../contexts/NotificationContext";
 import { useSaveStatus } from "../contexts/SaveStatusContext";
 import {
@@ -25,6 +26,12 @@ import { relinkDraftToProduct } from "../services/images/imageRepository";
 import { updateVariantsSortOrder } from "../services/variants/variantRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
 import { SeoKeywordsInput } from "./SeoKeywordsInput";
+import ProductHealthProgress from "./ProductHealthProgress";
+import ProductHealthDetailsModal from "./ProductHealthDetailsModal";
+import { getProductHealth } from "../services/productHealthService";
+import { changeStatus } from "../services/productStatusService";
+import { getPreferences, setPreference } from "../services/userPreferencesService";
+import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
 import "./ProductForm.css";
 
 // ======================================================================
@@ -79,6 +86,19 @@ const createId = () => {
   return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 };
 
+// ----------------------------------------------------------------------
+// Health: cálculo de percentual (MVP simples, backend é fonte de verdade)
+// percent = 100 - min(blocking*15, 70) - min(warnings*5, 30)
+// Se readyToPublish => 100
+// ----------------------------------------------------------------------
+function calcPercentFromHealth(health) {
+  if (!health) return 0;
+  if (health.readyToPublish === true) return 100;
+  const blocking = Math.max(0, parseInt(health.blocking?.length ?? 0, 10));
+  const warnings = Math.max(0, parseInt(health.warnings?.length ?? 0, 10));
+  let percent = 100 - Math.min(blocking * 15, 70) - Math.min(warnings * 5, 30);
+  return Math.max(0, Math.min(100, Math.round(percent)));
+}
 
 export default function ProductForm({
   title = "Novo produto",
@@ -86,8 +106,10 @@ export default function ProductForm({
   initialProduct = null,
   initialVariants = null, // lista de product_variants (quando edit, ordenada por sort_order)
   initialVariations = null, // alias para initialVariants
+  initialTab = null, // ex: "stock" para deep link ?tab=stock
   onCancel = null,
   onSubmit = null,
+  onSuccess = null, // chamado após submit ok e relink (se create)
 }) {
   const draftIdRef = useRef(
     typeof crypto !== "undefined" && crypto.randomUUID
@@ -168,7 +190,7 @@ export default function ProductForm({
   // CONTROLE DE ABAS (nova ordem)
   // Variações só existe quando format=variants
   // ------------------------------------------------------
-  const [activeTab, setActiveTab] = useState("data");
+  const [activeTab, setActiveTab] = useState(initialTab || "data");
   const hasVariations = product?.format === "variants";
 
   const availableTabs = useMemo(() => {
@@ -201,6 +223,13 @@ export default function ProductForm({
       setActiveTab(availableTabIds[0]);
     }
   }, [activeTab, availableTabIds, hasVariations]);
+
+  // Deep link: ?tab=stock (sincroniza quando initialTab muda)
+  useEffect(() => {
+    if (initialTab && availableTabIds.includes(initialTab)) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, availableTabIds]);
 
   // ------------------------------------------------------
   // STATE: ERROS (UX)
@@ -246,6 +275,18 @@ const [pendingNextChecked, setPendingNextChecked] = useState(false);
   // Regra: se draft tem variações e usuário quer Simples, pedir confirmação
   // ------------------------------------------------------
   const [formatToSimpleModalOpen, setFormatToSimpleModalOpen] = useState(false);
+
+  // ------------------------------------------------------
+  // HEALTH: progresso circular do cadastro (backend como fonte de verdade)
+  // ------------------------------------------------------
+  const [productHealth, setProductHealth] = useState(null);
+  const [healthModalOpen, setHealthModalOpen] = useState(false);
+  const [healthModalBannerMessage, setHealthModalBannerMessage] = useState(null); // ex: PRODUCT_NOT_READY
+  const [healthProductId, setHealthProductId] = useState(null); // para create: id após save
+  const [markReadyLoading, setMarkReadyLoading] = useState(false);
+  const [exitWithoutSavingHidden, setExitWithoutSavingHidden] = useState(false);
+  const healthLastFetchRef = useRef(0);
+  const lastSavedSnapshotRef = useRef(null);
 
   // ------------------------------------------------------
   // VARIAÇÕES (estilo Bling)
@@ -308,6 +349,36 @@ const [variantCostDigitsById, setVariantCostDigitsById] = useState({});
 // ------------------------------------------------------
 const hasAnyVariation = variationAttributes.length > 0;
 
+// ----------------------------------------------------------------------
+// Guard: snapshot determinístico (evitar falso dirty)
+// stableStringify ordena chaves recursivamente para serialização estável
+// ----------------------------------------------------------------------
+function stableStringify(obj) {
+  if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
+  if (Array.isArray(obj)) {
+    const arr = obj.map((v) => {
+      const s = stableStringify(v);
+      return typeof v === "object" && v !== null && !Array.isArray(v) && "id" in v
+        ? { k: String(v?.id ?? ""), s }
+        : { k: s, s };
+    });
+    arr.sort((a, b) => a.k.localeCompare(b.k));
+    return "[" + arr.map((x) => x.s).join(",") + "]";
+  }
+  const keys = Object.keys(obj).sort();
+  const pairs = keys.map((k) => JSON.stringify(k) + ":" + stableStringify(obj[k]));
+  return "{" + pairs.join(",") + "}";
+}
+
+function getFormSnapshotForGuard(p, rows, attrs) {
+  const prod = { ...(p || {}), product_images: null };
+  const sortedRows = [...(rows || [])].sort((a, b) => String(a?.id ?? "").localeCompare(String(b?.id ?? "")));
+  const sortedAttrs = [...(attrs || [])].map((a) => ({
+    ...a,
+    options: [...(a?.options || [])].sort((x, y) => String(x).localeCompare(String(y))),
+  })).sort((a, b) => String(a?.id ?? "").localeCompare(String(b?.id ?? "")));
+  return stableStringify({ product: prod, variantRows: sortedRows, variationAttributes: sortedAttrs });
+}
 
 // ------------------------------------------------------
 // HIDRATAR FORM (modo edição)
@@ -406,8 +477,147 @@ useEffect(() => {
       setShowVariationsBuilder(false); // ✅ se está editando com variações, já cai no modo gerenciamento
     }
   }
+
+  // Snapshot inicial para dirty check (após hidratação)
+  if (initialProduct) {
+    const prod = { ...product, ...initialProduct };
+    const vs = initialVariants ?? initialVariations;
+    const rows = Array.isArray(vs) && vs.length > 0
+      ? vs.map((v) => ({
+          id: v.id || createId(),
+          sku: v.sku || "",
+          gtin: v.gtin || "",
+          cost_price: v.cost_price ?? "",
+          stock_real: String(v.stock_quantity ?? ""),
+          stock_min: String(v.stock_minimum ?? ""),
+          use_virtual_stock: !!v.use_virtual_stock,
+          stock_virtual: String(v.virtual_stock_quantity ?? 0),
+          active: typeof v.active === "boolean" ? v.active : true,
+          attributes: v.attributes || {},
+        }))
+      : [];
+    const attrMap = new Map();
+    (Array.isArray(vs) ? vs : []).forEach((v) => {
+      Object.entries(v?.attributes || {}).forEach(([k, val]) => {
+        if (!attrMap.has(k)) attrMap.set(k, new Set());
+        attrMap.get(k).add(String(val));
+      });
+    });
+    const attrs = Array.from(attrMap.entries()).map(([name, setVals]) => ({
+      id: createId(),
+      name,
+      options: Array.from(setVals),
+    }));
+    lastSavedSnapshotRef.current = getFormSnapshotForGuard(prod, rows, attrs);
+  } else {
+    lastSavedSnapshotRef.current = getFormSnapshotForGuard(product, variantRows, variationAttributes);
+  }
 }, [initialProduct, initialVariants, initialVariations]);
 
+  // ------------------------------------------------------
+  // GUARD: Sair sem salvar (dirty state + preferências)
+  // ------------------------------------------------------
+  const isDirty = useMemo(() => {
+    const last = lastSavedSnapshotRef.current;
+    if (last == null) return false;
+    const current = getFormSnapshotForGuard(product, variantRows, variationAttributes);
+    return current !== last;
+  }, [product, variantRows, variationAttributes]);
+
+  // Carregar preferência "modal.exit_without_saving" no mount
+  useEffect(() => {
+    let cancelled = false;
+    getPreferences("modal.").then(({ ok, data }) => {
+      if (cancelled) return;
+      const val = data?.["modal.exit_without_saving"];
+      setExitWithoutSavingHidden(val?.hidden === true);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // beforeunload: aviso nativo ao fechar/recarregar
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  // useBlocker: interceptar navegação (Fechar, menu, back)
+  const shouldBlock = isDirty && !exitWithoutSavingHidden;
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      shouldBlock && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // ------------------------------------------------------
+  // HEALTH: buscar e atualizar (mount, após save, opcional: troca de aba 1x/10s)
+  // ------------------------------------------------------
+  const productIdForHealth = product?.id ?? healthProductId;
+
+  const fetchHealth = async (pid) => {
+    if (!pid) return;
+    const { ok, data } = await getProductHealth(pid);
+    if (ok && data) {
+      setProductHealth(data);
+      healthLastFetchRef.current = Date.now();
+    } else {
+      setProductHealth(null);
+    }
+  };
+
+  useEffect(() => {
+    if (productIdForHealth) {
+      fetchHealth(productIdForHealth);
+    } else {
+      setProductHealth(null);
+    }
+  }, [productIdForHealth]);
+
+  // Opcional: ao trocar aba, buscar health no máximo 1x a cada 10s
+  useEffect(() => {
+    if (!productIdForHealth) return;
+    if (Date.now() - healthLastFetchRef.current < 10000) return;
+    fetchHealth(productIdForHealth);
+  }, [safeTab]);
+
+  // ------------------------------------------------------
+  // MARCAR COMO PRONTO (Ready)
+  // Backend é fonte de verdade; frontend apenas dispara e exibe feedback
+  // ------------------------------------------------------
+  const handleMarkReady = async () => {
+    const pid = product?.id ?? healthProductId;
+    if (!pid) return;
+    setMarkReadyLoading(true);
+    setHealthModalBannerMessage(null);
+    try {
+      const result = await changeStatus(pid, "ready");
+      if (result.ok) {
+        const nextProduct = { ...product, status: "ready" };
+        setProduct((prev) => ({ ...prev, status: "ready" }));
+        lastSavedSnapshotRef.current = getFormSnapshotForGuard(nextProduct, variantRows, variationAttributes);
+        await fetchHealth(pid);
+        addNotification({ type: "success", title: "Sucesso", message: "Produto marcado como pronto ✅" });
+      } else {
+        if (result.code === "PRODUCT_NOT_READY") {
+          await fetchHealth(pid);
+          setHealthModalBannerMessage("Antes de marcar como pronto, resolva as pendências abaixo.");
+          setHealthModalOpen(true);
+        } else if (result.code === "INVALID_STATUS_TRANSITION") {
+          addNotification({ type: "error", title: "Erro", message: result.error ?? "Transição de status inválida." });
+        } else {
+          addNotification({ type: "error", title: "Erro", message: result.error ?? "Não foi possível marcar como pronto. Tente novamente." });
+        }
+      }
+    } catch (err) {
+      addNotification({ type: "error", title: "Erro", message: "Não foi possível marcar como pronto. Tente novamente." });
+    } finally {
+      setMarkReadyLoading(false);
+    }
+  };
 
   // ------------------------------------------------------
   // HANDLER GENÉRICO
@@ -1364,7 +1574,13 @@ const validatePricingTab = () => {
         }
         if (mode === "create" && result?.productId && draftKeyRef.current) {
           await relinkDraftToProduct(draftKeyRef.current, result.productId);
+          setHealthProductId(result.productId);
+          fetchHealth(result.productId);
+        } else if (result?.productId || product?.id) {
+          fetchHealth(result?.productId ?? product?.id);
         }
+        lastSavedSnapshotRef.current = getFormSnapshotForGuard(product, variantRows, variationAttributes);
+        if (typeof onSuccess === "function") onSuccess();
       } catch (err) {
         // 409 (variants→simple) ou outro erro: exibe mensagem do backend
         const msg = err?.message ?? err?.error ?? "Erro ao salvar produto.";
@@ -1497,6 +1713,20 @@ const validatePricingTab = () => {
       />
 
       {errors.product_name && <div className="s7-error">{errors.product_name}</div>}
+    </div>
+
+    {/* ------------------------------------------------------------
+        Progresso circular do cadastro (health report)
+    ------------------------------------------------------------ */}
+    <div className="pf-product-health-wrap">
+      <ProductHealthProgress
+        percent={productIdForHealth ? calcPercentFromHealth(productHealth) : 0}
+        status={productHealth?.status ?? ""}
+        blockingCount={productHealth?.blocking?.length ?? 0}
+        warningsCount={productHealth?.warnings?.length ?? 0}
+        hint={!productIdForHealth ? "Salve para calcular" : null}
+        onClick={productIdForHealth ? () => setHealthModalOpen(true) : undefined}
+      />
     </div>
   </div>
 </div>
@@ -2605,6 +2835,30 @@ const validatePricingTab = () => {
     FOOTER — sticky
 ================================================== */}
 <div className="pf-footer pf-footer-right">
+  {/* Marcar como pronto — só habilitado quando produto salvo e status não é ready/published */}
+  <button
+    type="button"
+    className="s7-btn s7-btn--secondary"
+    disabled={!productIdForHealth || product?.status === "ready" || product?.status === "published" || markReadyLoading}
+    title={
+      !productIdForHealth
+        ? "Salve o produto para marcar como pronto."
+        : product?.status === "ready"
+          ? "Produto pronto"
+          : product?.status === "published"
+            ? "Produto publicado"
+            : undefined
+    }
+    onClick={handleMarkReady}
+  >
+    {markReadyLoading
+      ? "Validando..."
+      : product?.status === "ready"
+        ? "Produto pronto"
+        : product?.status === "published"
+          ? "Produto publicado"
+          : "Marcar como pronto"}
+  </button>
   <button className="s7-btn s7-btn--primary" onClick={handleSubmit} type="button">
     {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
   </button>
@@ -2781,6 +3035,43 @@ const validatePricingTab = () => {
         </div>
       </div>
     </div>,
+    document.body
+  )}
+
+{/* --------------------------------------------------
+   MODAL: detalhes do health (pendências e sugestões)
+-------------------------------------------------- */}
+<ProductHealthDetailsModal
+  open={healthModalOpen}
+  onClose={() => {
+    setHealthModalOpen(false);
+    setHealthModalBannerMessage(null);
+  }}
+  health={productHealth}
+  bannerMessage={healthModalBannerMessage}
+  onGoToTab={(tabId) => {
+    setActiveTab(tabId);
+    setHealthModalOpen(false);
+    setHealthModalBannerMessage(null);
+  }}
+/>
+
+{/* --------------------------------------------------
+   MODAL: Sair sem salvar (guard de navegação)
+-------------------------------------------------- */}
+{blocker.state === "blocked" &&
+  createPortal(
+    <ExitWithoutSavingModal
+      open={true}
+      onCancel={() => blocker.reset()}
+      onConfirm={() => blocker.proceed()}
+      onDontShowAgainChange={(checked) => {
+        if (checked) {
+          setExitWithoutSavingHidden(true); // imediato: não bloquear sessão atual
+          setPreference("modal.exit_without_saving", { hidden: true }).catch(() => {}); // fire-and-forget
+        }
+      }}
+    />,
     document.body
   )}
 </>

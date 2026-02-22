@@ -7,6 +7,7 @@
 
 import { useNavigate } from "react-router-dom";
 import ProductForm from "../components/ProductForm";
+import { upsertProduct } from "../services/products/productRepository";
 import "./ProductCreate.css";
 
 export default function ProductCreate() {
@@ -23,19 +24,12 @@ export default function ProductCreate() {
   };
 
   // ------------------------------------------------------
-  // SUBMIT (UI only por enquanto)
+  // SUBMIT (chama API; 409 SKU duplicado → ProductForm exibe toast)
   // ------------------------------------------------------
-  const handleSubmit = async ({ product, draftKey, variants }) => {
-    console.log("✅ CREATE | produto:", product);
-    console.log("✅ CREATE | variações:", variants);
-    console.log("✅ CREATE | draftKey (imagens):", draftKey);
-
-    // Futuro:
-    // - chamar backend para criar produto
-    // - retornar { productId: newProduct.id } para vincular imagens do draft
-    // - relinkDraftToProduct é chamado automaticamente pelo ProductForm
-    // navigate("/produtos");
-    return { productId: null }; // placeholder: retornar productId real após salvar
+  const handleSubmit = async ({ product, mode, draftKey, variants }) => {
+    const result = await upsertProduct({ product, mode, draftKey, variants });
+    if (result?.error) return { error: result.error };
+    return { productId: result?.productId ?? null };
   };
 
   return (
@@ -45,6 +39,7 @@ export default function ProductCreate() {
         mode="create"
         onCancel={handleCancel}
         onSubmit={handleSubmit}
+        onSuccess={() => navigate("/produtos")}
       />
     </div>
   );
