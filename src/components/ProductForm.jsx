@@ -102,47 +102,8 @@ export default function ProductForm({
   );
 
   // ------------------------------------------------------
-  // CONTROLE DE ABAS (nova ordem)
-  // Variações só existe quando format=variants
-  // ------------------------------------------------------
-  const [activeTab, setActiveTab] = useState("data");
-
-  const hasVariations = product?.format === "variants";
-
-  const availableTabs = useMemo(() => {
-    const base = [
-      { id: "data", label: "Dados" },
-      ...(hasVariations ? [{ id: "variations", label: "Variações" }] : []),
-      { id: "pricing", label: "Custos & precificação" },
-      { id: "stock", label: "Estoque" },
-      { id: "images", label: "Imagens" },
-      { id: "description", label: "Descrição" },
-      { id: "measures", label: "Pesos & medidas" },
-      { id: "ads", label: "Anúncios" },
-      { id: "performance", label: "Vendas & desempenho" },
-    ];
-    return base;
-  }, [hasVariations]);
-
-  const availableTabIds = useMemo(() => availableTabs.map((t) => t.id), [availableTabs]);
-
-  const safeTab = availableTabIds.includes(activeTab) ? activeTab : availableTabIds[0];
-
-  useEffect(() => {
-    if (!availableTabIds.includes(activeTab)) {
-      if (import.meta.env?.DEV) {
-        console.error("[ProductForm] activeTab inválido (aba indisponível), corrigindo:", {
-          activeTab,
-          hasVariations,
-          availableTabIds,
-        });
-      }
-      setActiveTab(availableTabIds[0]);
-    }
-  }, [activeTab, availableTabIds, hasVariations]);
-
-  // ------------------------------------------------------
   // STATE: PRODUTO (alinhado com tabela products)
+  // Deve vir antes de hasVariations/availableTabs que dependem dele
   // ------------------------------------------------------
   const [product, setProduct] = useState({
     // =========================
@@ -202,6 +163,44 @@ export default function ProductForm({
     // =========================
     active: true,
   });
+
+  // ------------------------------------------------------
+  // CONTROLE DE ABAS (nova ordem)
+  // Variações só existe quando format=variants
+  // ------------------------------------------------------
+  const [activeTab, setActiveTab] = useState("data");
+  const hasVariations = product?.format === "variants";
+
+  const availableTabs = useMemo(() => {
+    const base = [
+      { id: "data", label: "Dados" },
+      ...(hasVariations ? [{ id: "variations", label: "Variações" }] : []),
+      { id: "pricing", label: "Custos & precificação" },
+      { id: "stock", label: "Estoque" },
+      { id: "images", label: "Imagens" },
+      { id: "description", label: "Descrição" },
+      { id: "measures", label: "Pesos & medidas" },
+      { id: "ads", label: "Anúncios" },
+      { id: "performance", label: "Vendas & desempenho" },
+    ];
+    return base;
+  }, [hasVariations]);
+
+  const availableTabIds = useMemo(() => availableTabs.map((t) => t.id), [availableTabs]);
+  const safeTab = availableTabIds.includes(activeTab) ? activeTab : availableTabIds[0];
+
+  useEffect(() => {
+    if (!availableTabIds.includes(activeTab)) {
+      if (import.meta.env?.DEV) {
+        console.error("[ProductForm] activeTab inválido (aba indisponível), corrigindo:", {
+          activeTab,
+          hasVariations,
+          availableTabIds,
+        });
+      }
+      setActiveTab(availableTabIds[0]);
+    }
+  }, [activeTab, availableTabIds, hasVariations]);
 
   // ------------------------------------------------------
   // STATE: ERROS (UX)
