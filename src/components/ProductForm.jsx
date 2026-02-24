@@ -15,7 +15,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useBlocker } from "react-router-dom";
 import { useNotifications } from "../contexts/NotificationContext";
 import { useSaveStatus } from "../contexts/SaveStatusContext";
 import {
@@ -546,12 +545,15 @@ useEffect(() => {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
-  // useBlocker: interceptar navegação (Fechar, menu, back)
-  const shouldBlock = isDirty && !exitWithoutSavingHidden;
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      shouldBlock && currentLocation.pathname !== nextLocation.pathname
-  );
+  // Modal "Sair sem salvar" (substitui useBlocker — não disponível com BrowserRouter)
+  const [showExitModal, setShowExitModal] = useState(false);
+  const handleClose = () => {
+    if (isDirty && !exitWithoutSavingHidden) {
+      setShowExitModal(true);
+    } else {
+      onCancel?.();
+    }
+  };
 
   // ------------------------------------------------------
   // HEALTH: buscar e atualizar (mount, após save, opcional: troca de aba 1x/10s)
@@ -1672,7 +1674,7 @@ const validatePricingTab = () => {
           <div className="s7-hint">* Campos obrigatórios</div>
         </div>
 
-        <button type="button" className="pf-close" onClick={onCancel}>
+        <button type="button" className="pf-close" onClick={handleClose}>
           Fechar
         </button>
       </div>
@@ -3057,18 +3059,21 @@ const validatePricingTab = () => {
 />
 
 {/* --------------------------------------------------
-   MODAL: Sair sem salvar (guard de navegação)
+   MODAL: Sair sem salvar (substitui useBlocker — compatível com BrowserRouter)
 -------------------------------------------------- */}
-{blocker.state === "blocked" &&
+{showExitModal &&
   createPortal(
     <ExitWithoutSavingModal
       open={true}
-      onCancel={() => blocker.reset()}
-      onConfirm={() => blocker.proceed()}
+      onCancel={() => setShowExitModal(false)}
+      onConfirm={() => {
+        setShowExitModal(false);
+        onCancel?.();
+      }}
       onDontShowAgainChange={(checked) => {
         if (checked) {
-          setExitWithoutSavingHidden(true); // imediato: não bloquear sessão atual
-          setPreference("modal.exit_without_saving", { hidden: true }).catch(() => {}); // fire-and-forget
+          setExitWithoutSavingHidden(true);
+          setPreference("modal.exit_without_saving", { hidden: true }).catch(() => {});
         }
       }}
     />,
