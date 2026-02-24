@@ -3,9 +3,8 @@
 // ======================================================================
 
 import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
+  createBrowserRouter,
+  RouterProvider,
   Navigate,
   useLocation,
   useNavigate,
@@ -104,73 +103,72 @@ function MLRedirectHandler({ children }) {
 }
 
 // ======================================================================
+// ROUTER (createBrowserRouter — compatível com useBlocker se necessário)
+// ======================================================================
+const router = createBrowserRouter([
+  { path: "/login", element: <Login /> },
+  { path: "/signup", element: <Signup /> },
+  { path: "/termos", element: <Terms /> },
+  { path: "/privacidade", element: <Privacidade /> },
+  { path: "/forgot-password", element: <PasswordForgot /> },
+  { path: "/reset-password", element: <PasswordReset /> },
+  { path: "/ml/connect", element: <MLConnect /> },
+  { path: "/ml/callback", element: <MLCallback /> },
+  {
+    path: "/",
+    element: (
+      <MLRedirectHandler>
+        <AuthWrapper>
+          <NotificationProvider>
+            <SaveStatusProvider>
+              <Layout />
+              <SaveStatusIndicator />
+            </SaveStatusProvider>
+          </NotificationProvider>
+        </AuthWrapper>
+      </MLRedirectHandler>
+    ),
+    children: [
+      { index: true, element: <Dashboard /> },
+      {
+        path: "perfil",
+        element: <Profile />,
+        children: [
+          { index: true, element: <DadosEmpresa /> },
+          { path: "dados-empresa", element: <DadosEmpresa /> },
+          { path: "alterar-senha", element: <AlterarSenha /> },
+          { path: "integracoes/mercado-livre", element: <MercadoLivre /> },
+          { path: "pagamentos/formas", element: <FormasPagamento /> },
+          { path: "pagamentos/extrato", element: <ExtratoConta /> },
+          {
+            path: "preferencias",
+            element: <Preferencias />,
+            children: [
+              { index: true, element: <Notificacoes /> },
+              { path: "notificacoes", element: <Notificacoes /> },
+            ],
+          },
+        ],
+      },
+      { path: "anuncios", element: <AnunciosTable /> },
+      { path: "produtos", element: <Products /> },
+      { path: "clientes", element: <Clientes /> },
+      { path: "faturas", element: <Faturas /> },
+      { path: "relatorios", element: <Relatorios /> },
+      { path: "monitoramento", element: <Monitoramento /> },
+      { path: "registros", element: <Registros /> },
+      { path: "configuracoes", element: <Navigate to="/perfil" replace /> },
+      { path: "precificacoes", element: <Precificacoes /> },
+      { path: "produtos/novo", element: <ProductCreate /> },
+      { path: "produtos/:id/editar", element: <ProductEdit /> },
+      { path: "*", element: <Navigate to="/" replace /> },
+    ],
+  },
+]);
+
+// ======================================================================
 // APP
 // ======================================================================
 export default function App() {
-  return (
-    <Router>
-      <MLRedirectHandler>
-        <Routes>
-          {/* Públicas */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/termos" element={<Terms />} />
-          <Route path="/privacidade" element={<Privacidade />} />
-          <Route path="/forgot-password" element={<PasswordForgot />} />
-          <Route path="/reset-password" element={<PasswordReset />} />
-
-          {/* Mercado Livre */}
-          <Route path="/ml/connect" element={<MLConnect />} />
-          <Route path="/ml/callback" element={<MLCallback />} />
-
-          {/* Protegidas */}
-          <Route
-            path="/"
-            element={
-              <AuthWrapper>
-                <NotificationProvider>
-                  <SaveStatusProvider>
-                    <Layout />
-                    <SaveStatusIndicator />
-                  </SaveStatusProvider>
-                </NotificationProvider>
-              </AuthWrapper>
-            }
-          >
-            <Route index element={<Dashboard />} />
-
-            {/* Perfil */}
-            <Route path="perfil" element={<Profile />}>
-              <Route index element={<DadosEmpresa />} />
-              <Route path="dados-empresa" element={<DadosEmpresa />} />
-              <Route path="alterar-senha" element={<AlterarSenha />} />
-              <Route path="integracoes/mercado-livre" element={<MercadoLivre />} />
-              <Route path="pagamentos/formas" element={<FormasPagamento />} />
-              <Route path="pagamentos/extrato" element={<ExtratoConta />} />
-              <Route path="preferencias" element={<Preferencias />}>
-              <Route index element={<Notificacoes />} />
-              <Route path="notificacoes" element={<Notificacoes />} />
-              </Route>
-            </Route>
-
-            {/* Outras */}
-            <Route path="anuncios" element={<AnunciosTable />} />
-            <Route path="produtos" element={<Products />} />
-            <Route path="clientes" element={<Clientes />} />
-            <Route path="faturas" element={<Faturas />} />
-            <Route path="relatorios" element={<Relatorios />} />
-            <Route path="monitoramento" element={<Monitoramento />} />
-            <Route path="registros" element={<Registros />} />
-            <Route path="/configuracoes" element={<Navigate to="/perfil" />} />
-            <Route path="precificacoes" element={<Precificacoes />} />
-            <Route path="produtos/novo" element={<ProductCreate />} />
-            <Route path="produtos/:id/editar" element={<ProductEdit />} />
-          </Route>
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </MLRedirectHandler>
-    </Router>
-  );
+  return <RouterProvider router={router} />;
 }

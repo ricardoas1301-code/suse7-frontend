@@ -14,6 +14,7 @@
 // ======================================================================
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useBeforeUnload } from "../hooks/useBeforeUnload";
 import { createPortal } from "react-dom";
 import { useNotifications } from "../contexts/NotificationContext";
 import { useSaveStatus } from "../contexts/SaveStatusContext";
@@ -534,18 +535,10 @@ useEffect(() => {
     return () => { cancelled = true; };
   }, []);
 
-  // beforeunload: aviso nativo ao fechar/recarregar
-  useEffect(() => {
-    if (!isDirty) return;
-    const handler = (e) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [isDirty]);
+  // beforeunload: aviso nativo ao fechar/recarregar (não usa useBlocker)
+  useBeforeUnload(isDirty);
 
-  // Modal "Sair sem salvar" (substitui useBlocker — não disponível com BrowserRouter)
+  // Modal "Sair sem salvar" (botão Voltar / Cancelar)
   const [showExitModal, setShowExitModal] = useState(false);
   const handleClose = () => {
     if (isDirty && !exitWithoutSavingHidden) {
