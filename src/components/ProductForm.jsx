@@ -4,7 +4,7 @@
 // - Cadastro/edição de produtos (modo página)
 // - Abas (nova ordem):
 //   Dados | Custos & precificação | Imagens | Variações | Descrição |
-//   Estoque | Pesos & Medidas | Anúncios | Vendas & desempenho
+//   Estoque | Pesos & Medidas | Título do anúncio | Anúncios | Vendas & desempenho
 //
 // Regras (Suse7):
 // - Frontend: UI/UX apenas (sem regra sensível).
@@ -25,6 +25,7 @@ import {
 import { relinkDraftToProduct } from "../services/images/imageRepository";
 import { updateVariantsSortOrder } from "../services/variants/variantRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
+import "./ProductAdTitlesTab.css";
 import { SeoKeywordsInput } from "./SeoKeywordsInput";
 import ProductHealthProgress from "./ProductHealthProgress";
 import ProductHealthDetailsModal from "./ProductHealthDetailsModal";
@@ -181,6 +182,13 @@ export default function ProductForm({
     product_images: null,
 
     // =========================
+    // TÍTULOS DO ANÚNCIO (até 10 por produto)
+    // - Formato: [{ id, value }]
+    // - Backend valida duplicidade e regras por marketplace
+    // =========================
+    ad_titles: [{ id: createId(), value: "" }],
+
+    // =========================
     // SISTEMA
     // =========================
     active: true,
@@ -202,6 +210,7 @@ export default function ProductForm({
       { id: "images", label: "Imagens" },
       { id: "description", label: "Descrição" },
       { id: "measures", label: "Pesos & medidas" },
+      { id: "ad_titles", label: "Título do anúncio" },
       { id: "ads", label: "Anúncios" },
       { id: "performance", label: "Vendas & desempenho" },
     ];
@@ -388,7 +397,18 @@ useEffect(() => {
   // Produto base
   // ------------------------------------------------------
   if (initialProduct) {
-    setProduct((prev) => ({ ...prev, ...initialProduct }));
+    const toMerge = { ...initialProduct };
+    // Normalizar ad_titles: backend pode retornar { id, title } ou { id, value }
+    if (toMerge.ad_titles && Array.isArray(toMerge.ad_titles)) {
+      toMerge.ad_titles = toMerge.ad_titles.map((t) => ({
+        id: t.id || createId(),
+        value: t.title !== undefined ? t.title : (t.value ?? ""),
+      }));
+      if (toMerge.ad_titles.length === 0) {
+        toMerge.ad_titles = [{ id: createId(), value: "" }];
+      }
+    }
+    setProduct((prev) => ({ ...prev, ...toMerge }));
 
     // ------------------------------------------------------
     // HIDRATAR: custos globais (best effort)
@@ -678,6 +698,38 @@ useEffect(() => {
     } catch (err) {
       console.error("❌ Falha ao copiar campo:", err);
     }
+  };
+
+  // ------------------------------------------------------
+  // TÍTULOS DO ANÚNCIO (até 10 por produto)
+  // - Frontend: UI apenas (sem validação de duplicidade)
+  // - Backend: fonte de verdade para duplicados e regras por marketplace
+  // ------------------------------------------------------
+  const handleAddTitle = () => {
+    const list = product?.ad_titles ?? [];
+    if (list.length >= 10) return;
+    setProduct((prev) => ({
+      ...prev,
+      ad_titles: [...(prev.ad_titles ?? []), { id: createId(), value: "" }],
+    }));
+  };
+
+  const handleRemoveTitle = (id) => {
+    const list = product?.ad_titles ?? [];
+    if (list.length <= 1) return;
+    setProduct((prev) => ({
+      ...prev,
+      ad_titles: (prev.ad_titles ?? []).filter((t) => t.id !== id),
+    }));
+  };
+
+  const handleChangeTitle = (id, value) => {
+    setProduct((prev) => ({
+      ...prev,
+      ad_titles: (prev.ad_titles ?? []).map((t) =>
+        t.id === id ? { ...t, value } : t
+      ),
+    }));
   };
 
 // ======================================================
@@ -2781,6 +2833,71 @@ const validatePricingTab = () => {
               </div>
              </div>
              )}
+
+              {/* =======================
+              ABA: TÍTULO DO ANÚNCIO
+              Títulos alternativos para marketplaces (ML, etc.)
+              Até 10 títulos por produto. Backend valida duplicidade e regras.
+              FUTURE V2:
+              Aqui será integrado gerador de títulos, descrições e palavras-chave via IA.
+              Backend será responsável por gerar sugestões contextualizadas por marketplace.
+              ======================= */}
+              {safeTab === "ad_titles" && (
+              <div className="pf-container">
+                <div className="section">
+                  <div className="section-header">
+                    <h3>Título do anúncio</h3>
+                    <p className="section-subtitle">
+                      Múltiplos títulos permitem criar múltiplos anúncios no mesmo marketplace (ex: Mercado Livre). Até 10 títulos por produto.
+                    </p>
+                  </div>
+
+                  <div className="s7-ad-titles-list pf-ad-titles-list">
+                    {(product?.ad_titles ?? []).map((item, idx) => (
+                      <div key={item.id} className="pf-group s7-ad-titles-row">
+                        <div className="s7-ad-titles-row-header">
+                          <FieldLabel
+                            text={`Título ${idx + 1}`}
+                            required
+                            onCopy={() => handleCopyField(item.value)}
+                          />
+                          {(product?.ad_titles ?? []).length > 1 && (
+                            <button
+                              type="button"
+                              className="s7-btn s7-btn--sm s7-btn--danger s7-ad-titles-remove"
+                              onClick={() => handleRemoveTitle(item.id)}
+                              aria-label="Remover título"
+                            >
+                              🗑️
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          className="s7-input"
+                          placeholder="Ex: Produto XYZ - Marca - Modelo"
+                          value={item.value}
+                          onChange={(e) => handleChangeTitle(item.id, e.target.value)}
+                        />
+                        <span className="s7-ad-titles-counter">
+                          {item.value?.length ?? 0} caracteres
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {(product?.ad_titles ?? []).length < 10 && (
+                    <button
+                      type="button"
+                      className="s7-btn s7-btn--secondary"
+                      onClick={handleAddTitle}
+                    >
+                      + Adicionar título
+                    </button>
+                  )}
+                </div>
+              </div>
+              )}
 
               {/* =======================
               ABA: ANÚNCIOS (placeholder)

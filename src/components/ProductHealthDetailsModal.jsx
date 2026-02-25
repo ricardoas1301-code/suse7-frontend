@@ -20,7 +20,7 @@ const FIELD_TO_TAB = {
   images: "images",
   product_images: "images",
   description: "description",
-  ad_titles: "ads",
+  ad_titles: "ad_titles",
 };
 
 const TAB_LABELS = {
@@ -30,6 +30,7 @@ const TAB_LABELS = {
   stock: "Estoque",
   images: "Imagens",
   description: "Descrição",
+  ad_titles: "Título do anúncio",
   ads: "Anúncios",
 };
 
