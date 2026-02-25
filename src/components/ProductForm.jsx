@@ -399,14 +399,14 @@ useEffect(() => {
   if (initialProduct) {
     const toMerge = { ...initialProduct };
     // Normalizar ad_titles: backend pode retornar { id, title } ou { id, value }
-    if (toMerge.ad_titles && Array.isArray(toMerge.ad_titles)) {
+    // Regra: sempre iniciar com pelo menos 1 título
+    if (!toMerge.ad_titles || !Array.isArray(toMerge.ad_titles) || toMerge.ad_titles.length === 0) {
+      toMerge.ad_titles = [{ id: createId(), value: "" }];
+    } else {
       toMerge.ad_titles = toMerge.ad_titles.map((t) => ({
         id: t.id || createId(),
         value: t.title !== undefined ? t.title : (t.value ?? ""),
       }));
-      if (toMerge.ad_titles.length === 0) {
-        toMerge.ad_titles = [{ id: createId(), value: "" }];
-      }
     }
     setProduct((prev) => ({ ...prev, ...toMerge }));
 
@@ -2886,15 +2886,26 @@ const validatePricingTab = () => {
                     ))}
                   </div>
 
-                  {(product?.ad_titles ?? []).length < 10 && (
+                  <div className="pf-ad-titles-actions-row">
+                    {(product?.ad_titles ?? []).length < 10 && (
+                      <button
+                        type="button"
+                        className="s7-btn s7-btn--secondary"
+                        onClick={handleAddTitle}
+                      >
+                        + Adicionar título
+                      </button>
+                    )}
+                    {/* FUTURE V2: Gerador de títulos via IA */}
                     <button
                       type="button"
                       className="s7-btn s7-btn--secondary"
-                      onClick={handleAddTitle}
+                      disabled
+                      title="Em breve: sugestões via IA"
                     >
-                      + Adicionar título
+                      Gerar sugestões (em breve)
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
               )}

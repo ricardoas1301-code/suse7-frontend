@@ -91,6 +91,14 @@
   gap: 8px;
 }
 
+/* Ações: Adicionar título + Gerar sugestões */
+.pf-ad-titles-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
 /* Layout inline no ProductForm (aba ad_titles) */
 .pf-ad-titles-list {
   display: flex;
