@@ -120,6 +120,12 @@
   gap: 8px;
 }
 
+/* Label + copiar: mesmo padrão do Nome do produto (pf-label-row) */
+.s7-ad-titles-label-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
 .s7-ad-titles-remove {
   flex-shrink: 0;
 }

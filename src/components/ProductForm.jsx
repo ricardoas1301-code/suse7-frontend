@@ -208,9 +208,9 @@ export default function ProductForm({
       { id: "pricing", label: "Custos & precificação" },
       { id: "stock", label: "Estoque" },
       { id: "images", label: "Imagens" },
+      { id: "ad_titles", label: "Título do anúncio" },
       { id: "description", label: "Descrição" },
       { id: "measures", label: "Pesos & medidas" },
-      { id: "ad_titles", label: "Título do anúncio" },
       { id: "ads", label: "Anúncios" },
       { id: "performance", label: "Vendas & desempenho" },
     ];
@@ -2848,7 +2848,7 @@ const validatePricingTab = () => {
                   <div className="section-header">
                     <h3>Título do anúncio</h3>
                     <p className="section-subtitle">
-                      Múltiplos títulos permitem criar múltiplos anúncios no mesmo marketplace (ex: Mercado Livre). Até 10 títulos por produto.
+                      Crie até 10 títulos por produto
                     </p>
                   </div>
 
@@ -2856,11 +2856,12 @@ const validatePricingTab = () => {
                     {(product?.ad_titles ?? []).map((item, idx) => (
                       <div key={item.id} className="pf-group s7-ad-titles-row">
                         <div className="s7-ad-titles-row-header">
-                          <FieldLabel
-                            text={`Título ${idx + 1}`}
-                            required
-                            onCopy={() => handleCopyField(item.value)}
-                          />
+                          <div className="s7-ad-titles-label-wrap">
+                            <FieldLabel
+                              text={`Título ${idx + 1}`}
+                              onCopy={() => handleCopyField(item.value)}
+                            />
+                          </div>
                           {(product?.ad_titles ?? []).length > 1 && (
                             <button
                               type="button"
