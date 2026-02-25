@@ -45,7 +45,10 @@ export async function upsertProduct({ product, mode, draftKey, variants }) {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    const msg = data?.message ?? data?.error ?? `Erro ${res.status}`;
+    let msg = data?.message ?? data?.error ?? `Erro ${res.status}`;
+    if (data?.details && typeof data.details === "string") {
+      msg += ` — ${data.details}`;
+    }
     return { error: msg };
   }
 
