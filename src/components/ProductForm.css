@@ -6,35 +6,53 @@
 ====================================================================== */
 
 /* ======================================================
-   CARD PRINCIPAL
+   SUSE7 — PRODUCT FORM: PAGE LAYOUT (FULL WIDTH)
+====================================================== */
+.pf-page{
+  width: 100%;
+  min-height: calc(100vh - 72px);
+  background: var(--s7-page-bg, #f3f7ff);
+  padding: 18px 18px 28px;
+  box-sizing: border-box;
+}
+
+.pf-page-inner{
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ======================================================
+   CARD PRINCIPAL (container neutro full-page)
 ====================================================== */
 .pf-card{
   width: 100%;
-  height: 100%;
+  height: auto;
   min-height: 0;
 
   display: flex;
   flex-direction: column;
 
-  /* ✅ Tooltip respirar (Suse7 Design System: .s7-tip) */
   overflow: visible;
-
   box-sizing: border-box;
-  background: var(--s7-bg, #fff);
-  border-radius: var(--s7-radius-lg, 16px);
-  box-shadow: var(--s7-shadow-card, 0 18px 46px rgba(0,0,0,0.10));
-  border: 1px solid rgba(37, 99, 235, 0.55);
-  margin: 9px 3px; /* topo/baixo | esquerda/direita */
+
+  /* full-page container */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
 }
 
-.pf-card--primary{ border-color: rgba(37, 99, 235, 0.55); }
-.pf-card--danger{  border-color: rgba(239, 68, 68, 0.55); }
+.pf-card--primary{ opacity: 1; } /* no-op: mantido para futuro */
+.pf-card--danger{ opacity: 1; }  /* no-op: mantido para futuro */
 
 /* ======================================================
    HEADER
 ====================================================== */
 .pf-header{
-  padding: 20px 24px;
+  padding: 16px 0;
   border-bottom: 1px solid var(--s7-divider, #eef0f3);
 
   display: grid;
@@ -76,7 +94,7 @@
    NOME DO PRODUTO (FIXO)
 ====================================================== */
 .pf-product-name-fixed{
-  padding: 16px 24px;
+  padding: 14px 0;
   border-bottom: 1px solid var(--s7-divider, #eef0f3);
 
   display: flex;
@@ -167,7 +185,7 @@
   display: flex;
   gap: 0;
 
-  padding: 12px 24px 0;
+  padding: 10px 0 0;
   border-bottom: 1px solid var(--s7-divider, #eef0f3);
 
   flex-wrap: wrap;
@@ -222,13 +240,10 @@
 }
 
 /* ======================================================
-   BODY (scroll interno) + padding padrão
-   ✅ Requisito: margens internas iguais em todos os lados
+   BODY (scroll da página, não interno)
 ====================================================== */
 .pf-body{
-  /* ✅ Todas iguais ao "topo" (padrão superior) */
-  padding: 24px;
-
+  padding: 18px 0 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -236,8 +251,9 @@
   flex: 1;
   min-height: 0;
 
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-x: visible;
+
   position: relative;
   z-index: 1;
 
@@ -826,11 +842,15 @@
   gap: 12px;
 
   flex-shrink: 0;
-  background: var(--s7-bg, #fff);
+  background: #fff;
 
   position: sticky;
   bottom: 0;
   z-index: 5;
+
+  margin-top: 12px;
+  border-radius: 12px;
+  box-shadow: var(--s7-shadow-section, 0 10px 26px rgba(0,0,0,0.04));
 
   box-sizing: border-box;
 }

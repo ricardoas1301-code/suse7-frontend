@@ -1709,7 +1709,9 @@ const validatePricingTab = () => {
 
   return (
     <>
-    <div className="pf-card pf-card--primary">
+    <div className="pf-page">
+      <div className="pf-page-inner">
+        <div className="pf-card pf-card--primary">
       {/* ==================================================
          HEADER
       ================================================== */}
