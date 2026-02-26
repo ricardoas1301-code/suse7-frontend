@@ -2994,6 +2994,8 @@ const validatePricingTab = () => {
    FIM DO CARD PRINCIPAL
 -------------------------------------------------- */}
 </div>
+      </div>
+    </div>
 
 {/* --------------------------------------------------
    MODAL: confirmação estoque virtual (padrão Suse7)
