@@ -22,3 +22,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase local artifacts / dumps
+supabase/.temp/
+supabase/migrations_backup/
+supabase/migrations_hold/
+
+# Local exports / schema dumps
+prod_schema.sql
+
+# Supabase generated snapshots (keep repo clean)
+supabase/migrations/*remote_schema*.sql
+supabase/migrations/*baseline*.sql
+
+# Node lock (only if this repo does NOT version it)
+package-lock.json
