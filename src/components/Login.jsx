@@ -46,12 +46,16 @@ export default function Login() {
 
   // --------------------------------------------------------
   // Login com Google
+  // - Usa redirectTo baseado em env (VITE_FRONTEND_URL) para PROD/DEV
   // --------------------------------------------------------
   const handleGoogleLogin = async () => {
+    const redirectTo =
+      import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        redirectTo,
       },
     });
 

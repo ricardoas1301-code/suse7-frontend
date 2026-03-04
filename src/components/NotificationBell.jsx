@@ -1,11 +1,13 @@
 // ======================================================================
 // SUSE7 — Notification Bell (sininho + badge)
-// Abre o drawer de notificações ao clicar
+// Abre o drawer de notificações ao clicar.
+// Só chama APIs quando houver sessão (auth ready), evitando 401 desnecessários.
 // ======================================================================
 
 import { useState, useEffect, useRef } from "react";
 import { Bell } from "lucide-react";
 import { useNotificationCenter } from "../hooks/useNotificationCenter";
+import { getSessionToken } from "../config/api";
 import NotificationsDrawer from "./NotificationsDrawer";
 import "./NotificationBell.css";
 
@@ -25,20 +27,28 @@ export default function NotificationBell() {
   } = useNotificationCenter();
   const pollRef = useRef(null);
 
+  // --------------------------------------------------------------------
+  // Só carrega preferências e notificações quando houver sessão (auth ready)
+  // --------------------------------------------------------------------
   useEffect(() => {
     let cancelled = false;
-    loadNotifyPrefs().then((prefs) => {
-      if (cancelled) return;
-      refresh({}, prefs ?? {});
+    getSessionToken().then((token) => {
+      if (cancelled || !token) return;
+      loadNotifyPrefs().then((prefs) => {
+        if (cancelled) return;
+        refresh({}, prefs ?? {});
+      });
     });
     return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    if (drawerOpen) {
+    if (!drawerOpen) return;
+    getSessionToken().then((token) => {
+      if (!token) return;
       loadNotifyPrefs().then((prefs) => refresh({}, prefs ?? {}));
-      pollRef.current = setInterval(() => refresh(), 60000);
-    }
+    });
+    pollRef.current = setInterval(() => refresh(), 60000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };

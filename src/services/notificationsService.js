@@ -1,27 +1,26 @@
 // ======================================================================
 // SUSE7 — Notifications Service (Centro de Notificações)
-// Consumo da API de notificações do backend
+// Consumo da API de notificações do backend.
+// Usa fetch central (config/api) com Bearer token e tratamento 401.
 // ======================================================================
 
-import { supabase } from "../supabaseClient";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL, buildApiUrl, apiFetch, getSessionToken } from "../config/api";
 
 // ----------------------------------------------------------------------
-// Flags de erro de rede (evitam flood no console em DEV)
+// Estado compartilhado DEV para backend offline
+// - Reaproveita o mesmo objeto usado em userPreferencesService
 // ----------------------------------------------------------------------
 const IS_DEV = import.meta.env.DEV;
-let hasLoggedNetworkErrorList = false;
+let DEV_BACKEND_STATE = { offline: false, loggedUserPrefsOnce: false, loggedNotificationsOnce: false };
 
-function buildUrl(path) {
-  if (!API_BASE_URL) return null;
-  const base = API_BASE_URL.replace(/\/+$/, "");
-  const suffix = base.endsWith("/api") ? path.replace(/^\/api/, "") : path;
-  return `${base}${suffix}`;
+if (typeof window !== "undefined") {
+  window.__S7_DEV_BACKEND_STATE =
+    window.__S7_DEV_BACKEND_STATE || { offline: false, loggedUserPrefsOnce: false, loggedNotificationsOnce: false };
+  DEV_BACKEND_STATE = window.__S7_DEV_BACKEND_STATE;
 }
 
-async function getToken() {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+function buildUrl(path) {
+  return buildApiUrl(path);
 }
 
 /**
@@ -38,9 +37,12 @@ export async function listNotifications({ unread, active, limit = 50 } = {}) {
     return { ok: false, error: "API não configurada (VITE_API_BASE_URL)" };
   }
 
-  const token = await getToken();
-  if (!token) {
-    return { ok: false, error: "Sessão expirada. Faça login novamente." };
+  // ------------------------------------------------------------------
+  // Curto-circuito em DEV se backend já foi marcado como offline
+  // - Evita novas chamadas de rede e novos erros no console
+  // ------------------------------------------------------------------
+  if (IS_DEV && DEV_BACKEND_STATE.offline) {
+    return { ok: true, data: [] };
   }
 
   const url = buildUrl("/api/notifications");
@@ -53,23 +55,27 @@ export async function listNotifications({ unread, active, limit = 50 } = {}) {
   const fullUrl = `${url}?${params}`;
 
   try {
-    const res = await fetch(fullUrl, {
+    const result = await apiFetch(fullUrl, {
       method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
+      unauthorizedFallback: [],
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      const msg = data?.message ?? data?.error ?? `Erro ${res.status}`;
-      return { ok: false, error: msg };
+    if (result.status === 401) {
+      return { ok: true, data: Array.isArray(result.data) ? result.data : [] };
+    }
+    if (!result.ok) {
+      return { ok: false, error: result.error };
     }
 
-    const list = Array.isArray(data?.notifications) ? data.notifications : (Array.isArray(data) ? data : []);
-
-    if (hasLoggedNetworkErrorList) {
-      // Se o backend voltar a responder, limpa flag para voltar a logar
-      hasLoggedNetworkErrorList = false;
+    const list = Array.isArray(result.data?.notifications)
+      ? result.data.notifications
+      : Array.isArray(result.data)
+        ? result.data
+        : [];
+    // Se o backend voltar a responder, limpa flag DEV
+    if (IS_DEV && DEV_BACKEND_STATE.offline) {
+      DEV_BACKEND_STATE.offline = false;
+      DEV_BACKEND_STATE.loggedNotificationsOnce = false;
     }
 
     return { ok: true, data: list };
@@ -80,12 +86,14 @@ export async function listNotifications({ unread, active, limit = 50 } = {}) {
     // - Dashboard continua utilizável com lista vazia
     // ------------------------------------------------------------------
     if (IS_DEV) {
-      if (!hasLoggedNetworkErrorList) {
+      DEV_BACKEND_STATE.offline = true;
+
+      if (!DEV_BACKEND_STATE.loggedNotificationsOnce) {
         console.error(
           "[notificationsService] listNotifications: backend offline? usando lista vazia.",
           err
         );
-        hasLoggedNetworkErrorList = true;
+        DEV_BACKEND_STATE.loggedNotificationsOnce = true;
       }
       return { ok: true, data: [] };
     }
@@ -107,7 +115,7 @@ export async function markRead({ ids } = {}) {
     return { ok: false, error: "API não configurada (VITE_API_BASE_URL)" };
   }
 
-  const token = await getToken();
+  const token = await getSessionToken();
   if (!token) {
     return { ok: false, error: "Sessão expirada. Faça login novamente." };
   }
@@ -117,20 +125,14 @@ export async function markRead({ ids } = {}) {
 
   try {
     const body = Array.isArray(ids) && ids.length > 0 ? { ids } : { all: true };
-    const res = await fetch(url, {
+    const result = await apiFetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      const msg = data?.message ?? data?.error ?? `Erro ${res.status}`;
-      return { ok: false, error: msg };
+    if (!result.ok) {
+      return { ok: false, error: result.error };
     }
 
     return { ok: true };

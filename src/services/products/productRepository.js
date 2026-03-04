@@ -17,6 +17,9 @@ export async function upsertProduct({ product, mode, draftKey, variants }) {
   if (!API_BASE_URL) {
     return { error: "API não configurada (VITE_API_BASE_URL)" };
   }
+  if (!product || typeof product !== "object") {
+    return { error: "Dados do produto são obrigatórios." };
+  }
 
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;

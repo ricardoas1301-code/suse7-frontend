@@ -1,6 +1,7 @@
 // ======================================================================
 // SUSE7 — Product Health Service
-// Consumo do endpoint de saúde do produto (backend como fonte de verdade)
+// Consumo do endpoint de saúde do produto (backend como fonte de verdade).
+// Padrão Suse7: buildApiUrl + apiFetch (token e 401 centralizados).
 // ======================================================================
 
 import { API_BASE_URL, buildApiUrl, apiFetch } from "../config/api";
@@ -27,14 +28,17 @@ export async function getProductHealth(productId) {
     return { ok: false, error: "API não configurada (VITE_API_BASE_URL)" };
   }
 
-  const url = buildApiUrl("/api/products/health");
-  if (!url) return { ok: false, error: "URL da API inválida" };
+  const baseUrl = buildApiUrl("/api/products/health");
+  if (!baseUrl) return { ok: false, error: "URL da API inválida" };
 
   const params = new URLSearchParams({ product_id: productId });
-  const fullUrl = `${url}?${params}`;
+  const url = `${baseUrl}?${params}`;
 
   try {
-    const result = await apiFetch(fullUrl, { method: "GET" });
+    const result = await apiFetch(url, {
+      method: "GET",
+      unauthorizedFallback: fallbackData(productId),
+    });
 
     if (result.ok && result.data != null) {
       return { ok: true, data: result.data };

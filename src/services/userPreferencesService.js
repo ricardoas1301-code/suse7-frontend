@@ -2,10 +2,11 @@
 // SUSE7 — User Preferences Service
 // Consumo da API de preferências (backend como fonte de verdade).
 // Cache segmentado por prefixo (evita overwrite entre modal./tooltip./etc).
+// Usa fetch central (config/api) com Bearer token e tratamento 401.
 // ======================================================================
 
 import { supabase } from "../supabaseClient";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL, buildApiUrl, apiFetch, getSessionToken } from "../config/api";
 
 // ----------------------------------------------------------------------
 // Cache segmentado por prefixo
@@ -17,10 +18,18 @@ let cache = {
 };
 
 // ----------------------------------------------------------------------
-// Flags de erro de rede (evitam flood no console em DEV)
+// Estado compartilhado DEV para backend offline
+// - Evita flood de requisições e de logs quando o backend está caído
+// - Compartilhado entre services via window.__S7_DEV_BACKEND_STATE
 // ----------------------------------------------------------------------
 const IS_DEV = import.meta.env.DEV;
-let hasLoggedNetworkErrorGet = false;
+let DEV_BACKEND_STATE = { offline: false, loggedUserPrefsOnce: false };
+
+if (typeof window !== "undefined") {
+  window.__S7_DEV_BACKEND_STATE =
+    window.__S7_DEV_BACKEND_STATE || { offline: false, loggedUserPrefsOnce: false, loggedNotificationsOnce: false };
+  DEV_BACKEND_STATE = window.__S7_DEV_BACKEND_STATE;
+}
 
 function inferPrefix(key) {
   const k = String(key ?? "").trim();
@@ -71,15 +80,7 @@ function removeCacheKey(key) {
  * Não usa window.location — funciona em dev e produção.
  */
 function buildUrl(path) {
-  if (!API_BASE_URL) return null;
-  const base = API_BASE_URL.replace(/\/+$/, "");
-  const suffix = base.endsWith("/api") ? path.replace(/^\/api/, "") : path;
-  return `${base}${suffix}`;
-}
-
-async function getToken() {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+  return buildApiUrl(path);
 }
 
 // ----------------------------------------------------------------------
@@ -99,9 +100,13 @@ export async function getPreferences(prefix = null) {
     return { ok: false, error: "API não configurada (VITE_API_BASE_URL)" };
   }
 
-  const token = await getToken();
-  if (!token) {
-    return { ok: false, error: "Sessão expirada. Faça login novamente." };
+  // --------------------------------------------------------------------
+  // Curto-circuito em DEV se já sabemos que o backend está offline
+  // - Evita novas chamadas de rede (e novos net::ERR_CONNECTION_REFUSED)
+  // - Retorna mapa vazio para não travar o dashboard
+  // --------------------------------------------------------------------
+  if (IS_DEV && DEV_BACKEND_STATE.offline) {
+    return { ok: true, data: {} };
   }
 
   const url = buildUrl("/api/user/preferences");
@@ -113,21 +118,19 @@ export async function getPreferences(prefix = null) {
   const fullUrl = query ? `${url}?${query}` : url;
 
   try {
-    const res = await fetch(fullUrl, {
+    const result = await apiFetch(fullUrl, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      unauthorizedFallback: {},
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      const msg = data?.message ?? data?.error ?? `Erro ${res.status}`;
-      return { ok: false, error: msg };
+    if (result.status === 401) {
+      return { ok: true, data: result.data ?? {} };
+    }
+    if (!result.ok) {
+      return { ok: false, error: result.error };
     }
 
-    const list = data?.preferences ?? [];
+    const list = result.data?.preferences ?? [];
     const map = {};
     for (const p of list) {
       if (p?.key != null) map[p.key] = p.value ?? {};
@@ -137,9 +140,10 @@ export async function getPreferences(prefix = null) {
     cache.byPrefix[prefixKey] = map;
     rebuildAll();
 
-  if (hasLoggedNetworkErrorGet) {
-    // Se o backend voltar a responder, limpa flag para voltar a logar
-    hasLoggedNetworkErrorGet = false;
+  // Se o backend voltar a responder, limpa flag DEV
+  if (IS_DEV && DEV_BACKEND_STATE.offline) {
+    DEV_BACKEND_STATE.offline = false;
+    DEV_BACKEND_STATE.loggedUserPrefsOnce = false;
   }
 
   return { ok: true, data: map };
@@ -150,12 +154,14 @@ export async function getPreferences(prefix = null) {
   // - Dashboard continua utilizável com preferências vazias
   // --------------------------------------------------------------------
   if (IS_DEV) {
-    if (!hasLoggedNetworkErrorGet) {
+    DEV_BACKEND_STATE.offline = true;
+
+    if (!DEV_BACKEND_STATE.loggedUserPrefsOnce) {
       console.error(
         "[userPreferencesService] getPreferences: backend offline? usando fallback vazio.",
         err
       );
-      hasLoggedNetworkErrorGet = true;
+      DEV_BACKEND_STATE.loggedUserPrefsOnce = true;
     }
     return { ok: true, data: {} };
   }
@@ -178,7 +184,7 @@ export async function setPreference(key, value) {
     return { ok: false, error: "API não configurada (VITE_API_BASE_URL)" };
   }
 
-  const token = await getToken();
+  const token = await getSessionToken();
   if (!token) {
     return { ok: false, error: "Sessão expirada. Faça login novamente." };
   }
@@ -187,23 +193,18 @@ export async function setPreference(key, value) {
   if (!url) return { ok: false, error: "URL da API inválida" };
 
   try {
-    const res = await fetch(url, {
+    const resBody = {
+      key: String(key ?? "").trim(),
+      value: value != null && typeof value === "object" ? value : {},
+    };
+    const result = await apiFetch(url, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        key: String(key ?? "").trim(),
-        value: value != null && typeof value === "object" ? value : {},
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(resBody),
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      const msg = data?.message ?? data?.error ?? `Erro ${res.status}`;
-      return { ok: false, error: msg };
+    if (!result.ok) {
+      return { ok: false, error: result.error };
     }
 
     const k = String(key ?? "").trim().toLowerCase().replace(/\s+/g, "_");
@@ -227,7 +228,7 @@ export async function deletePreference(key) {
     return { ok: false, error: "API não configurada (VITE_API_BASE_URL)" };
   }
 
-  const token = await getToken();
+  const token = await getSessionToken();
   if (!token) {
     return { ok: false, error: "Sessão expirada. Faça login novamente." };
   }
@@ -239,18 +240,12 @@ export async function deletePreference(key) {
   const fullUrl = `${url}?${params}`;
 
   try {
-    const res = await fetch(fullUrl, {
+    const result = await apiFetch(fullUrl, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      const msg = data?.message ?? data?.error ?? `Erro ${res.status}`;
-      return { ok: false, error: msg };
+    if (!result.ok) {
+      return { ok: false, error: result.error };
     }
 
     const k = String(key ?? "").trim().toLowerCase().replace(/\s+/g, "_");
@@ -274,7 +269,7 @@ export async function resetPreferences(prefix) {
     return { ok: false, error: "API não configurada (VITE_API_BASE_URL)" };
   }
 
-  const token = await getToken();
+  const token = await getSessionToken();
   if (!token) {
     return { ok: false, error: "Sessão expirada. Faça login novamente." };
   }
@@ -287,24 +282,18 @@ export async function resetPreferences(prefix) {
   }
 
   try {
-    const res = await fetch(url, {
+    const result = await apiFetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prefix: String(prefix).trim() }),
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      const msg = data?.message ?? data?.error ?? `Erro ${res.status}`;
-      return { ok: false, error: msg };
+    if (!result.ok) {
+      return { ok: false, error: result.error };
     }
 
     invalidatePrefix(String(prefix).trim());
-    return { ok: true, count: data?.count ?? 0 };
+    return { ok: true, count: result.data?.count ?? 0 };
   } catch (err) {
     console.error("[userPreferencesService] resetPreferences:", err);
     return { ok: false, error: err?.message ?? "Erro ao resetar preferências" };
