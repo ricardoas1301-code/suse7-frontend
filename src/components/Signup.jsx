@@ -1,4 +1,8 @@
-// src/components/Signup.jsx
+// ======================================================================
+// SUSE7 — Signup (cadastro de usuário)
+// Dois fluxos: formulário (email/senha) e login social (Google).
+// Regra primeiro_login: formulário = false, social = true.
+// ======================================================================
 
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
@@ -211,12 +215,20 @@ export default function Signup() {
     return Object.keys(e).length === 0;
   };
 
- // ----------------------------------------
-// Google Login (com criação automática de profile)
+// ----------------------------------------
+// Google Login (cadastro/entrada via OAuth)
+// - Cria profile com primeiro_login = true (usuário ainda completa cadastro depois).
+// - redirectTo baseado em env (VITE_FRONTEND_URL) para PROD/DEV.
 // ----------------------------------------
 const handleGoogleLogin = async () => {
+  const redirectTo =
+    import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
+    options: {
+      redirectTo,
+    },
   });
 
   if (error) {
@@ -228,36 +240,35 @@ const handleGoogleLogin = async () => {
     return;
   }
 
-  // Pequeno delay para esperar o Google retornar o usuário
+  // Após retorno do OAuth: se profile não existir, cria com primeiro_login = true
+  // (compatibilidade login social — modal de completar cadastro no Dashboard)
   setTimeout(async () => {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return;
 
-    // Verifica se esse profile já existe
     const { data: existingProfile } = await supabase
       .from("profiles")
       .select("id")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (existingProfile) return; // já existe → não cria de novo
+    if (existingProfile) return;
 
-    // Criar o profile inicial
     await supabase.from("profiles").insert({
       id: user.id,
       email: user.email,
-      primeiro_login: true, // FLAG IMPORTANTE
+      primeiro_login: true,
       created_at: new Date(),
       last_login: new Date(),
     });
-
   }, 800);
 };
 
 
   // ----------------------------------------
   // Enviar cadastro para Supabase
+  // Fluxo: 1) Auth signUp  2) Profile upsert com primeiro_login = false
   // ----------------------------------------
  const handleSubmit = async (e) => {
   e.preventDefault();
@@ -304,8 +315,12 @@ const handleGoogleLogin = async () => {
     return;
   }
 
-  // 2) Criar profile COMPLETO já com primeiro_login = false
-  const { error: profileError } = await supabase.from("profiles").insert({
+  // ----------------------------------------
+  // 2) Criar ou atualizar profile (formulário = cadastro completo)
+  //    - UPSERT garante primeiro_login = false mesmo se um trigger já criou a linha.
+  //    - Signup via formulário → primeiro_login = false (popup de completar não aparece).
+  // ----------------------------------------
+  const profilePayload = {
     id: user.id,
     nome: form.nome,
     nome_loja: form.nome_loja,
@@ -321,12 +336,15 @@ const handleGoogleLogin = async () => {
     cidade: form.cidade,
     estado: form.estado,
     imposto_percentual: Number(form.imposto_percentual.replace("%", "")),
-
-    primeiro_login: false,   // 👈 AGORA SIM! CADASTRO COMPLETO
+    primeiro_login: false,
     created_at: new Date(),
     last_login: new Date(),
     photo_url: "",
-  });
+  };
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .upsert(profilePayload, { onConflict: "id" });
 
   if (profileError) {
     console.error("Erro ao criar perfil:", profileError);

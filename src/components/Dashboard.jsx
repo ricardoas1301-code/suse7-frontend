@@ -61,8 +61,8 @@ useEffect(() => {
         .maybeSingle();
 
       // --------------------------------------------------
-      // 3) Se profile NÃO existir (caso login social),
-      //    cria automaticamente um profile inicial
+      // 3) Se profile NÃO existir (ex.: login social sem profile ainda),
+      //    cria profile inicial com primeiro_login = true (modal completar cadastro)
       // --------------------------------------------------
       if (!profile) {
 
@@ -71,7 +71,7 @@ useEffect(() => {
           .insert({
             id: user.id,
             email: user.email,
-            primeiro_login: true,      // Força abertura do modal
+            primeiro_login: true,
             created_at: new Date(),
             last_login: new Date(),
           })
@@ -118,7 +118,6 @@ useEffect(() => {
 
 
   const handleConnectML = () => navigate("/ml/connect");
-  console.log("perfilIncompleto:", perfilIncompleto);
 
 
   return (
