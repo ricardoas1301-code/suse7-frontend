@@ -6,6 +6,12 @@
 import { supabase } from "../supabaseClient";
 import { API_BASE_URL } from "../config/api";
 
+// ----------------------------------------------------------------------
+// Flags de erro de rede (evitam flood no console em DEV)
+// ----------------------------------------------------------------------
+const IS_DEV = import.meta.env.DEV;
+let hasLoggedNetworkErrorList = false;
+
 function buildUrl(path) {
   if (!API_BASE_URL) return null;
   const base = API_BASE_URL.replace(/\/+$/, "");
@@ -60,8 +66,30 @@ export async function listNotifications({ unread, active, limit = 50 } = {}) {
     }
 
     const list = Array.isArray(data?.notifications) ? data.notifications : (Array.isArray(data) ? data : []);
+
+    if (hasLoggedNetworkErrorList) {
+      // Se o backend voltar a responder, limpa flag para voltar a logar
+      hasLoggedNetworkErrorList = false;
+    }
+
     return { ok: true, data: list };
   } catch (err) {
+    // ------------------------------------------------------------------
+    // Fallback em DEV quando backend estiver offline
+    // - Evita flood de erros no console
+    // - Dashboard continua utilizável com lista vazia
+    // ------------------------------------------------------------------
+    if (IS_DEV) {
+      if (!hasLoggedNetworkErrorList) {
+        console.error(
+          "[notificationsService] listNotifications: backend offline? usando lista vazia.",
+          err
+        );
+        hasLoggedNetworkErrorList = true;
+      }
+      return { ok: true, data: [] };
+    }
+
     console.error("[notificationsService] listNotifications:", err);
     return { ok: false, error: err?.message ?? "Erro ao buscar notificações" };
   }

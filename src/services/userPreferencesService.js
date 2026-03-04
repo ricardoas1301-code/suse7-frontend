@@ -16,6 +16,12 @@ let cache = {
   all: {},
 };
 
+// ----------------------------------------------------------------------
+// Flags de erro de rede (evitam flood no console em DEV)
+// ----------------------------------------------------------------------
+const IS_DEV = import.meta.env.DEV;
+let hasLoggedNetworkErrorGet = false;
+
 function inferPrefix(key) {
   const k = String(key ?? "").trim();
   const dot = k.indexOf(".");
@@ -131,10 +137,31 @@ export async function getPreferences(prefix = null) {
     cache.byPrefix[prefixKey] = map;
     rebuildAll();
 
-    return { ok: true, data: map };
+  if (hasLoggedNetworkErrorGet) {
+    // Se o backend voltar a responder, limpa flag para voltar a logar
+    hasLoggedNetworkErrorGet = false;
+  }
+
+  return { ok: true, data: map };
   } catch (err) {
-    console.error("[userPreferencesService] getPreferences:", err);
-    return { ok: false, error: err?.message ?? "Erro ao buscar preferências" };
+  // --------------------------------------------------------------------
+  // Fallback em DEV quando backend estiver offline
+  // - Evita flood de erros no console
+  // - Dashboard continua utilizável com preferências vazias
+  // --------------------------------------------------------------------
+  if (IS_DEV) {
+    if (!hasLoggedNetworkErrorGet) {
+      console.error(
+        "[userPreferencesService] getPreferences: backend offline? usando fallback vazio.",
+        err
+      );
+      hasLoggedNetworkErrorGet = true;
+    }
+    return { ok: true, data: {} };
+  }
+
+  console.error("[userPreferencesService] getPreferences:", err);
+  return { ok: false, error: err?.message ?? "Erro ao buscar preferências" };
   }
 }
 
