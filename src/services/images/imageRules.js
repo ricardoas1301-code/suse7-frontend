@@ -26,12 +26,33 @@ export function ensureSinglePrimary(links, primaryLinkId) {
  * @returns {Array} links com sort_order atualizado
  */
 export function normalizeSortOrder(links, orderedIds) {
-  if (!Array.isArray(links) || !Array.isArray(orderedIds)) return links;
+  if (!Array.isArray(links) || !Array.isArray(orderedIds)) return Array.isArray(links) ? links : [];
+
+  // Mapa de links por id (cópias imutáveis)
   const byId = new Map(links.map((l) => [l.id, { ...l }]));
+
+  // 1) Recria array na ordem de orderedIds, atualizando sort_order sequencial
+  const ordered = [];
   orderedIds.forEach((id, idx) => {
-    if (byId.has(id)) byId.get(id).sort_order = idx;
+    const item = byId.get(id);
+    if (item) {
+      item.sort_order = idx;
+      ordered.push(item);
+      byId.delete(id);
+    }
   });
-  return Array.from(byId.values());
+
+  // 2) Quaisquer links que não estavam em orderedIds vão para o fim,
+  //    preservando a ordem relativa original.
+  if (byId.size > 0) {
+    let nextIndex = ordered.length;
+    for (const item of byId.values()) {
+      item.sort_order = nextIndex++;
+      ordered.push(item);
+    }
+  }
+
+  return ordered;
 }
 
 /**

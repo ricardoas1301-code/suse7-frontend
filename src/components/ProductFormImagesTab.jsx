@@ -1118,6 +1118,8 @@ function SortableImageCard({
     <div
       ref={setNodeRef}
       style={style}
+      {...attributes}
+      {...listeners}
       className={`pf-images-card ${isDragging ? "pf-images-card--dragging" : ""}`}
     >
       <div className="pf-images-card-preview">
@@ -1172,8 +1174,6 @@ function SortableImageCard({
           </button>
           <span
             className="pf-images-drag-handle"
-            {...attributes}
-            {...listeners}
             aria-hidden
             title="Arraste para ordenar"
           >
@@ -1226,8 +1226,15 @@ function ImageSlotRow({
   downloadingSelected = false,
 }) {
   const inputRef = useRef(null);
-  const sortedLinks = [...(links || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || 0);
-  const linkIds = sortedLinks.map((l) => l.id);
+  // ======================================================
+  // S7 — Ordem de render das imagens
+  // Regra: a UI respeita a ordem do array de links vindo
+  // do estado (fonte de verdade), e o backend já garante
+  // listagem por sort_order. Evita “voltar” visualmente
+  // durante o drag & drop.
+  // ======================================================
+  const sortedLinks = useMemo(() => (links ? [...links] : []), [links]);
+  const linkIds = useMemo(() => sortedLinks.map((l) => l.id), [sortedLinks]);
 
   const handleDragEnd = (event) => {
     const { active, over } = event;

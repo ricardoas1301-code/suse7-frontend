@@ -15,6 +15,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useBeforeUnload } from "../hooks/useBeforeUnload";
+import { useCopyFeedback } from "../hooks/useCopyFeedback";
 import { createPortal } from "react-dom";
 import { useNotifications } from "../contexts/NotificationContext";
 import { useSaveStatus } from "../contexts/SaveStatusContext";
@@ -33,7 +34,11 @@ import { getProductHealth } from "../services/productHealthService";
 import { changeStatus } from "../services/productStatusService";
 import { getPreferences, setPreference } from "../services/userPreferencesService";
 import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
+import ProductFormTabs from "./ProductFormTabs";
+import ProductFormRightPanel from "./ProductFormRightPanel";
 import "./ProductForm.css";
+import { Repeat } from "lucide-react";
+import { useFormProgress } from "../hooks/useFormProgress";
 
 // ======================================================================
 // SUSE7 — HELPERS: Currency BRL (UI)
@@ -689,16 +694,9 @@ useEffect(() => {
   };
 
   // ------------------------------------------------------
-  // UI: Copiar campo
+  // UI: Copiar campo com feedback ✓ por 5s
   // ------------------------------------------------------
-  const handleCopyField = async (value) => {
-    try {
-      await navigator.clipboard.writeText(value || "");
-      console.log("✅ Campo copiado");
-    } catch (err) {
-      console.error("❌ Falha ao copiar campo:", err);
-    }
-  };
+  const { copiedKey, handleCopy } = useCopyFeedback();
 
   // ------------------------------------------------------
   // TÍTULOS DO ANÚNCIO (até 10 por produto)
@@ -732,11 +730,21 @@ useEffect(() => {
     }));
   };
 
+  // ------------------------------------------------------
+  // PROGRESSO GLOBAL DO FORM (todas as abas, simple/variants)
+  // ------------------------------------------------------
+  const { percent: globalProgressPercent } = useFormProgress({
+    product,
+    variationAttributes,
+    variantRows,
+  });
+
 // ======================================================
 // COMPONENTE: FieldLabel (label + info + copiar)
 // Objetivo:
 // - Padronizar label dentro do ProductForm (inline)
 // - Tooltip via Design System: .s7-tip + data-tip
+// - copyKey/copiedKey: mostra ✓ por 5s após copiar
 // Regras:
 // - wrap: permite tooltip longo quebrar linha
 // - tipBottom: força tooltip aparecer para baixo
@@ -747,12 +755,16 @@ const FieldLabel = ({
   text,
   required = false,
   onCopy,
+  copyKey,
+  copiedKey,
   infoText,
   wrap = false,
   tipBottom = false,
   side = "left",
   copyBottom = true,
 }) => {
+  const showCopyCheck = copyKey != null && copiedKey === copyKey;
+  const effectiveOnCopy = showCopyCheck ? undefined : onCopy;
   // ------------------------------------------------------
   // Classes do tooltip INFO
   // ------------------------------------------------------
@@ -800,11 +812,11 @@ const FieldLabel = ({
         <button
           type="button"
           className={`pf-copy-btn ${copyTipClass}`}
-          data-tip="Copiar"
-          onClick={onCopy}
+          data-tip={showCopyCheck ? "Copiado!" : "Copiar"}
+          onClick={effectiveOnCopy}
           aria-label={`Copiar ${text}`}
         >
-          ⧉
+          {showCopyCheck ? "✓" : "⧉"}
         </button>
       )}
     </div>
@@ -1709,49 +1721,59 @@ const validatePricingTab = () => {
 
   return (
     <>
-    <div className="pf-page">
-      <div className="pf-page-inner">
-        <div className="pf-card pf-card--primary">
-      {/* ==================================================
-         HEADER
-      ================================================== */}
-      <div className="pf-header">
-        <div className="pf-title-block">
-          <h2 className="s7-title">{title}</h2>
-          <div className="s7-hint">* Campos obrigatórios</div>
-        </div>
+    <div className="pf-page pf-page--bleed">
+      <div className="pf-wrap">
+        {/* ==================================================
+           LAYOUT PRINCIPAL: painel à esquerda + formulário à direita (Bling-like)
+        ================================================== */}
+        <div className="pf-layout">
+          <ProductFormRightPanel
+            title={mode === "edit" ? "Editar produto" : "Novo produto"}
+            steps={availableTabs}
+            activeId={safeTab}
+            onStepChange={setActiveTab}
+            onSave={handleSubmit}
+            saveLabel={mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+          />
 
+          <div className="pf-card pf-card--primary">
+      {/* ==================================================
+         HEADER: botão Fechar no topo direito
+      ================================================== */}
+      <div className="pf-header-bar">
         <button type="button" className="pf-close" onClick={handleClose}>
           Fechar
         </button>
       </div>
 
-    {/* ==================================================
-   NOME FIXO (mantemos premium)
-   - IMG1 à esquerda do nome (preview)
-================================================== */}
+        <div className="pf-form-area">
+      {/* ==================================================
+         NOME DO PRODUTO (sem título duplicado — título está no painel)
+      ================================================== */}
 <div className="pf-product-name-fixed">
   <div className="pf-product-name-line">
     {/* ------------------------------------------------------------
-        IMG1 (preview) — usa mainImageUrl (já existe)
+        IMG1 (preview) — apenas no modo edição
     ------------------------------------------------------------ */}
-    <div
-      className="pf-product-thumb"
-      title={mainImageUrl ? "Imagem principal do produto" : "Sem imagem"}
-      aria-label="Imagem principal do produto"
-    >
-      {mainImageUrl ? (
-        <img src={mainImageUrl} alt="Imagem principal do produto" />
-      ) : (
-        <span className="pf-product-thumb__placeholder">IMG</span>
-      )}
-    </div>
+    {mode === "edit" && (
+      <div
+        className="pf-product-thumb"
+        title={mainImageUrl ? "Imagem principal do produto" : "Sem imagem"}
+        aria-label="Imagem principal do produto"
+      >
+        {mainImageUrl ? (
+          <img src={mainImageUrl} alt="Imagem principal do produto" />
+        ) : (
+          <span className="pf-product-thumb__placeholder">IMG</span>
+        )}
+      </div>
+    )}
 
     {/* ------------------------------------------------------------
         Nome do produto (label + input)
     ------------------------------------------------------------ */}
     <div className="pf-product-name-fields">
-      <FieldLabel text="Nome do produto" required onCopy={() => handleCopyField(product.product_name)} />
+      <FieldLabel text="Nome do produto" required copyKey="product_name" copiedKey={copiedKey} onCopy={() => handleCopy(product.product_name, "product_name")} />
 
       <input
         className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
@@ -1765,44 +1787,29 @@ const validatePricingTab = () => {
     </div>
 
     {/* ------------------------------------------------------------
-        Progresso circular do cadastro (health report)
+        Progresso circular do cadastro (global, todas abas)
     ------------------------------------------------------------ */}
     <div className="pf-product-health-wrap">
       <ProductHealthProgress
-        percent={productIdForHealth ? calcPercentFromHealth(productHealth) : 0}
-        status={productHealth?.status ?? ""}
-        blockingCount={productHealth?.blocking?.length ?? 0}
-        warningsCount={productHealth?.warnings?.length ?? 0}
-        hint={!productIdForHealth ? "Salve para calcular" : null}
-        onClick={productIdForHealth ? () => setHealthModalOpen(true) : undefined}
+        percent={globalProgressPercent}
+        status=""
+        blockingCount={0}
+        warningsCount={0}
+        hint={null}
+        showLabel={false}
+        onClick={undefined}
       />
     </div>
   </div>
 </div>
 
 
-      {/* ==================================================
-         TABS (dinâmicas: Variações só quando format=variants, logo após Dados)
-         Ordem Simples: Dados | Custos | Estoque | Imagens | Descrição | Pesos | Anúncios | Vendas
-         Ordem Com variações: Dados | Variações | Custos | Estoque | Imagens | Descrição | Pesos | Anúncios | Vendas
-      ================================================== */}
-<div className="pf-tabs">
-  {availableTabs.map((tab) => (
-    <button
-      key={tab.id}
-      className={safeTab === tab.id ? "active" : ""}
-      onClick={() => setActiveTab(tab.id)}
-      type="button"
-    >
-      {tab.label}
-    </button>
-  ))}
-</div>
+      <ProductFormTabs
+        steps={availableTabs}
+        activeId={safeTab}
+        onTabChange={setActiveTab}
+      />
 
-
-      {/* ==================================================
-         BODY
-      ================================================== */}
       <div className="pf-body" data-active-tab={safeTab}>
         <div className="pf-body-inner"></div>
         
@@ -1811,116 +1818,141 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "data" && (
           <div className="pf-container">
-
+            {/* Linha 1: Formato + SKU */}
             <div className="pf-row">
-  {/* ------------------------------------------------------
-      FORMATO (sempre visível)
-  ------------------------------------------------------ */}
-<div className="pf-group pf-group--xs">
-<FieldLabel
-  text="Formato"
-  infoText={
-    formatLocked
-      ? "Produto com variações não pode voltar para simples após salvo."
-      : product.format === "simple"
-        ? "Produto simples (sem variação de características)"
-        : "Produto com variação (Ex: Cor ou Voltagem)"
-  }
-  tipBottom={true}
-  wrap={true}
-  side="left"
-/>
-
-  <select
-    className="s7-select"
-    value={product.format}
-    onChange={(e) => handleFormatChange(e.target.value)}
-    disabled={formatLocked}
-    title={formatLocked ? "Produto com variações não pode voltar para simples após salvo." : undefined}
-  >
-    <option value="simple">Simples</option>
-    <option value="variants">Com variações</option>
-  </select>
-</div>
-
-
-  {/* ------------------------------------------------------
-      SKU / GTIN (apenas no formato simples)
-  ------------------------------------------------------ */}
-  {product.format === "simple" && (
-    <>
-      <div className="pf-group pf-group--sm">
-        <FieldLabel text="SKU" required onCopy={() => handleCopyField(product.sku)} />
-        <input
-          className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
-          placeholder="SKU interno"
-          value={product.sku}
-          onChange={(e) => handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())}
-        />
-        {errors.sku && <div className="s7-error">{errors.sku}</div>}
-      </div>
-
-      <div className="pf-group pf-group--sm">
-        <FieldLabel text="EAN / GTIN" onCopy={() => handleCopyField(product.gtin)} />
-        <input
-          className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
-          inputMode="numeric"
-          placeholder="Código de barras"
-          value={product.gtin}
-          onChange={(e) => handleChange("gtin", e.target.value.replace(/\D/g, "").slice(0, 13))}
-        />
-        {errors.gtin && <div className="s7-error">{errors.gtin}</div>}
-      </div>
-    </>
-  )}
-
-  {/* ------------------------------------------------------
-      NCM (sempre visível)
-  ------------------------------------------------------ */}
-  <div className="pf-group pf-group--sm">
-    <FieldLabel text="NCM" onCopy={() => handleCopyField(product.ncm)} />
-    <input
-      className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
-      inputMode="numeric"
-      placeholder="Ex: 94036000"
-      value={product.ncm}
-      onChange={(e) => {
-        const masked = formatNcm(e.target.value);
-        handleChange("ncm", masked);
-
-        const digits = masked.replace(/\D/g, "");
-        if (digits.length === 8) setErrors((prev) => ({ ...prev, ncm: undefined }));
-      }}
-    />
-    {errors.ncm && <div className="s7-error">{errors.ncm}</div>}
-  </div>
-</div>
-
-
-            <div className="pf-row">
-              <div className="pf-group">
-                <label className="s7-label">Marca</label>
-                <input className="s7-input" value={product.brand} onChange={(e) => handleChange("brand", e.target.value)} />
+              <div className="pf-group pf-data-col">
+                <FieldLabel
+                  text="Formato"
+                  infoText={
+                    formatLocked
+                      ? "Produto com variações não pode voltar para simples após salvo."
+                      : product.format === "simple"
+                        ? "Produto simples (sem variação de características)"
+                        : "Produto com variação (Ex: Cor ou Voltagem)"
+                  }
+                  tipBottom={true}
+                  wrap={true}
+                  side="left"
+                />
+                <select
+                  className="s7-select"
+                  value={product.format}
+                  onChange={(e) => handleFormatChange(e.target.value)}
+                  disabled={formatLocked}
+                  title={formatLocked ? "Produto com variações não pode voltar para simples após salvo." : undefined}
+                >
+                  <option value="simple">Simples</option>
+                  <option value="variants">Com variações</option>
+                </select>
               </div>
 
-              <div className="pf-group">
-                <label className="s7-label">Modelo</label>
-                <input className="s7-input" value={product.model} onChange={(e) => handleChange("model", e.target.value)} />
+              {product.format === "simple" && (
+                <div className="pf-group pf-data-col">
+                  <FieldLabel
+                    text="SKU"
+                    required
+                    copyKey="sku"
+                    copiedKey={copiedKey}
+                    onCopy={() => handleCopy(product.sku, "sku")}
+                  />
+                  <input
+                    className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
+                    placeholder="SKU interno"
+                    value={product.sku}
+                    onChange={(e) =>
+                      handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())
+                    }
+                  />
+                  {errors.sku && <div className="s7-error">{errors.sku}</div>}
+                </div>
+              )}
+            </div>
+
+            {/* Linha 2: EAN/GTIN + NCM */}
+            <div className="pf-row">
+              {product.format === "simple" && (
+                <div className="pf-group pf-data-col">
+                  <FieldLabel
+                    text="EAN / GTIN"
+                    copyKey="gtin"
+                    copiedKey={copiedKey}
+                    onCopy={() => handleCopy(product.gtin, "gtin")}
+                  />
+                  <input
+                    className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
+                    inputMode="numeric"
+                    placeholder="Código de barras"
+                    value={product.gtin}
+                    onChange={(e) =>
+                      handleChange(
+                        "gtin",
+                        e.target.value.replace(/\D/g, "").slice(0, 13)
+                      )
+                    }
+                  />
+                  {errors.gtin && <div className="s7-error">{errors.gtin}</div>}
+                </div>
+              )}
+
+              <div className="pf-group pf-data-col">
+                <FieldLabel
+                  text="NCM"
+                  copyKey="ncm"
+                  copiedKey={copiedKey}
+                  onCopy={() => handleCopy(product.ncm, "ncm")}
+                />
+                <input
+                  className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
+                  inputMode="numeric"
+                  placeholder="Ex: 94036000"
+                  value={product.ncm}
+                  onChange={(e) => {
+                    const masked = formatNcm(e.target.value);
+                    handleChange("ncm", masked);
+
+                    const digits = masked.replace(/\D/g, "");
+                    if (digits.length === 8)
+                      setErrors((prev) => ({ ...prev, ncm: undefined }));
+                  }}
+                />
+                {errors.ncm && <div className="s7-error">{errors.ncm}</div>}
               </div>
             </div>
 
+            {/* Linha 3: Marca + Modelo (mais compactos e alinhados com os de cima) */}
             <div className="pf-row">
-              <div className="pf-group pf-group--full">
-<FieldLabel
-  text="Palavras-chave SEO"
-  infoText="Separe por vírgulas. Isso ajuda no SEO de busca dos anuncios."
-  tipBottom={true}
-  wrap={true}
-  side="left"
-  onCopy={() => handleCopyField(product.seo_keywords)}
-/>
+              <div className="pf-group pf-data-col">
+                <label className="s7-label">Marca</label>
+                <input
+                  className="s7-input"
+                  value={product.brand}
+                  onChange={(e) => handleChange("brand", e.target.value)}
+                />
+              </div>
 
+              <div className="pf-group pf-data-col">
+                <label className="s7-label">Modelo</label>
+                <input
+                  className="s7-input"
+                  value={product.model}
+                  onChange={(e) => handleChange("model", e.target.value)}
+                />
+              </div>
+            </div>
 
+            {/* Linha 4: Palavras-chave SEO (mais estreito) */}
+            <div className="pf-row">
+              <div className="pf-group pf-group--full pf-group--seo">
+                <FieldLabel
+                  text="Palavras-chave SEO"
+                  infoText="Separe por vírgulas. Isso ajuda no SEO de busca dos anuncios."
+                  tipBottom={true}
+                  wrap={true}
+                  side="left"
+                  copyKey="seo_keywords"
+                  copiedKey={copiedKey}
+                  onCopy={() => handleCopy(product.seo_keywords, "seo_keywords")}
+                />
 
                 <div className="pf-seo-wrapper">
                   <SeoKeywordsInput
@@ -1930,229 +1962,269 @@ const validatePricingTab = () => {
                     placeholder="Ex: armário cozinha, armário 3 portas, armário branco"
                   />
                 </div>
-
               </div>
             </div>
-
-
           </div>
         )}
 
-    {/* ==================================================================
-    ABA: Custos & precificação (padrão premium)
-    Objetivo:
-    - Mesma pegada visual do “Combinações geradas” (cards)
-    - Consistência SaaS premium
-================================================================== */}
-{safeTab === "pricing" && (
-  <div className="pf-container">
-    <div className="section">
-      <div className="section-header">
-        <h3>Custos & precificação</h3>
-        <p className="section-subtitle">
-          Defina os custos do produto para garantir vendas saudáveis (custos operacionais + embalagem + custo do item).
-        </p>
-      </div>
+        {/* ==================================================================
+            ABA: Custos & precificação (padrão premium)
+            Objetivo:
+            - Mesma pegada visual do “Combinações geradas” (cards)
+            - Consistência SaaS premium
+        ================================================================== */}
+        {safeTab === "pricing" && (
+          <div className="pf-container">
+            {/* SIMPLE: campos em coluna */}
+            {product.format === "simple" && (
+              <div className="pf-pricing-simple-column">
+                {/* Custo do produto */}
+                <div className="pf-row">
+                  <div className="pf-group pf-pricing-global-group">
+                    <FieldLabel
+                      text="Custo do produto"
+                      required
+                      infoText="Custo do item (sem taxas). Isso alimenta os cálculos de margem/lucro no backend."
+                      tipBottom={true}
+                      wrap={true}
+                    />
+                    <input
+                      className={`s7-input ${costErrors.simpleCost ? "s7-input--error" : ""}`}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="R$ 0,00"
+                      value={s7FormatBRLFromDigits(simpleCostDigits)}
+                      onChange={(e) => {
+                        const digits = s7ExtractDigits(e.target.value);
+                        setSimpleCostDigits(digits);
+                        handleChange("cost_price", s7DigitsToDecimalStr(digits));
 
-      {/* ======================================================
-          CARD: Custos globais (sempre visíveis)
-      ====================================================== */}
-<div className="pf-row pf-pricing-costs-row">
-  {/* Custo Embalagem */}
-  <div className="pf-group pf-pricing-global-group">
-    <FieldLabel
-      text="Custo Embalagem"
-      infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
-      tipBottom={true}
-      wrap={true}
-    />
-    <input
-      className="s7-input"
-      type="text"
-      inputMode="numeric"
-      placeholder="R$ 0,00"
-      value={s7FormatBRLFromDigits(packagingDigits)}
-      onChange={(e) => {
-        const digits = s7ExtractDigits(e.target.value);
-        setPackagingDigits(digits);
-        handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
-      }}
-    />
-  </div>
-
-  {/* Custo Operacional */}
-  <div className="pf-group pf-pricing-global-group">
-    <FieldLabel
-      text="Custo Operacional"
-      infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
-      tipBottom={true}
-      wrap={true}
-    />
-    <input
-      className="s7-input"
-      type="text"
-      inputMode="numeric"
-      placeholder="R$ 0,00"
-      value={s7FormatBRLFromDigits(operationalDigits)}
-      onChange={(e) => {
-        const digits = s7ExtractDigits(e.target.value);
-        setOperationalDigits(digits);
-        handleChange("operational_cost", s7DigitsToDecimalStr(digits));
-      }}
-    />
-  </div>
-</div>
-
-
-      {/* ======================================================
-          SIMPLE: custo do produto no products
-      ====================================================== */}
-      {product.format === "simple" && (
-        <div className="s7-card" style={{ padding: 12, marginTop: 12 }}>
-          <div className="pf-row">
-            <div className="pf-group" style={{ maxWidth: 420 }}>
-              <FieldLabel
-                text="Custo do produto"
-                required
-                infoText="Custo do item (sem taxas). Isso alimenta os cálculos de margem/lucro no backend."
-                tipBottom={true}
-                wrap={true}
-              />
-
-              <input
-                className={`s7-input ${costErrors.simpleCost ? "s7-input--error" : ""}`}
-                type="text"
-                inputMode="numeric"
-                placeholder="R$ 0,00"
-                value={s7FormatBRLFromDigits(simpleCostDigits)}
-                onChange={(e) => {
-                  const digits = s7ExtractDigits(e.target.value);
-                  setSimpleCostDigits(digits);
-                  handleChange("cost_price", s7DigitsToDecimalStr(digits));
-
-                  // ✅ limpa erro ao digitar
-                  if (costErrors.simpleCost) {
-                    setCostErrors((prev) => ({ ...prev, simpleCost: false }));
-                  }
-                }}
-              />
-
-              {costErrors.simpleCost && (
-                <div className="s7-error" style={{ marginTop: 6 }}>
-                  Custo do produto é obrigatório.
+                        if (costErrors.simpleCost) {
+                          setCostErrors((prev) => ({ ...prev, simpleCost: false }));
+                        }
+                      }}
+                    />
+                    {costErrors.simpleCost && (
+                      <div className="s7-error" style={{ marginTop: 6 }}>
+                        Custo do produto é obrigatório.
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ======================================================
-          VARIANTS: custo por variação (cards como “Combinações geradas”)
-      ====================================================== */}
-      {product.format === "variants" && (
-        <div style={{ marginTop: 12, overflowX: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
-{variantRows.length === 0 ? (
-  <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
-    Gere as variações na aba <strong>Variações</strong> para preencher os custos por combinação.
-  </div>
-) : (
-  <div className="pf-pricing-variants-list">
-    {variantRows.map((row, idx) => {
-      const label = Object.values(row.attributes || {}).join(" / ") || `Variação ${idx + 1}`;
-      const hasCostError = (costErrors.variantsMissingIds || []).includes(row.id);
+                {/* Custo Embalagem */}
+                <div className="pf-row">
+                  <div className="pf-group pf-pricing-global-group">
+                    <FieldLabel
+                      text="Custo Embalagem"
+                      infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
+                      tipBottom={true}
+                      wrap={true}
+                    />
+                    <input
+                      className="s7-input"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="R$ 0,00"
+                      value={s7FormatBRLFromDigits(packagingDigits)}
+                      onChange={(e) => {
+                        const digits = s7ExtractDigits(e.target.value);
+                        setPackagingDigits(digits);
+                        handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
+                      }}
+                    />
+                  </div>
+                </div>
 
-      return (
-        <div key={row.id} className="s7-card pf-pricing-variant-card">
-          {/* =========================
-              COLUNAS DE ATRIBUTOS (igual aba Variações)
-          ========================= */}
-          <div className="pf-pricing-attrs">
-            {variantAttrColumns.map((attr) => (
-              <div key={`${row.id}_${attr}`} className="pf-pricing-attr">
-                <label className="s7-label">{attr}</label>
-                <div className="pf-pricing-attr-value">{row.attributes?.[attr] || "-"}</div>
+                {/* Custo Operacional */}
+                <div className="pf-row">
+                  <div className="pf-group pf-pricing-global-group">
+                    <FieldLabel
+                      text="Custo Operacional"
+                      infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
+                      tipBottom={true}
+                      wrap={true}
+                    />
+                    <input
+                      className="s7-input"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="R$ 0,00"
+                      value={s7FormatBRLFromDigits(operationalDigits)}
+                      onChange={(e) => {
+                        const digits = s7ExtractDigits(e.target.value);
+                        setOperationalDigits(digits);
+                        handleChange("operational_cost", s7DigitsToDecimalStr(digits));
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
+            )}
 
-          {/* =========================
-              CUSTO DO PRODUTO (tooltip à ESQUERDA)
-          ========================= */}
-          <div className="pf-pricing-cost">
-            <FieldLabel
-              text="Custo do produto"
-              required
-              infoText="Custo do item para esta variação" /* ✅ força tooltip para a esquerda */
-              side="left"  /* ✅ e evita estourar para baixo em telas menores */
-              tipBottom={true}
-              wrap={true}
-            />
+            {/* VARIANTS: globais lado a lado + cards */}
+            {product.format === "variants" && (
+              <>
+                {/* Custos globais (sempre visíveis) */}
+                <div className="pf-row pf-pricing-costs-row">
+                  {/* Custo Embalagem */}
+                  <div className="pf-group pf-pricing-global-group">
+                    <FieldLabel
+                      text="Custo Embalagem"
+                      infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
+                      tipBottom={true}
+                      wrap={true}
+                    />
+                    <input
+                      className="s7-input"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="R$ 0,00"
+                      value={s7FormatBRLFromDigits(packagingDigits)}
+                      onChange={(e) => {
+                        const digits = s7ExtractDigits(e.target.value);
+                        setPackagingDigits(digits);
+                        handleChange("packaging_cost", s7DigitsToDecimalStr(digits));
+                      }}
+                    />
+                  </div>
 
-            <div className="pf-variant-cost-row">
-              <input
-                className={`s7-input pf-variant-cost-input ${hasCostError ? "s7-input--error" : ""}`}
-                type="text"
-                inputMode="numeric"
-                placeholder="R$ 0,00"
-                value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
-                onChange={(e) => {
-                  const digits = s7ExtractDigits(e.target.value);
+                  {/* Custo Operacional */}
+                  <div className="pf-group pf-pricing-global-group">
+                    <FieldLabel
+                      text="Custo Operacional"
+                      infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
+                      tipBottom={true}
+                      wrap={true}
+                    />
+                    <input
+                      className="s7-input"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="R$ 0,00"
+                      value={s7FormatBRLFromDigits(operationalDigits)}
+                      onChange={(e) => {
+                        const digits = s7ExtractDigits(e.target.value);
+                        setOperationalDigits(digits);
+                        handleChange("operational_cost", s7DigitsToDecimalStr(digits));
+                      }}
+                    />
+                  </div>
+                </div>
 
-                  setVariantCostDigitsById((prev) => ({ ...prev, [row.id]: digits }));
-                  handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
-
-                  // ✅ limpa erro SOMENTE desta linha ao digitar
-                  if (hasCostError) {
-                    setCostErrors((prev) => ({
-                      ...prev,
-                      variantsMissingIds: (prev.variantsMissingIds || []).filter((id) => id !== row.id),
-                    }));
-                  }
-                }}
-              />
-
-              {/* Botão só na 1ª linha */}
-              {idx === 0 && (
-                <button
-                  type="button"
-                  className="s7-btn s7-btn--secondary"
-                  onClick={() => {
-                    const baseDigits = variantCostDigitsById[row.id] || "";
-
-                    setVariantCostDigitsById((prev) => {
-                      const next = { ...prev };
-                      (variantRows || []).forEach((r) => {
-                        next[r.id] = baseDigits;
-                      });
-                      return next;
-                    });
-
-                    const baseDecimal = s7DigitsToDecimalStr(baseDigits);
-                    setVariantRows((prev) => prev.map((r) => ({ ...r, cost_price: baseDecimal })));
-
-                    // ✅ limpa erros de custo (já que atualizou todos)
-                    setCostErrors((prev) => ({ ...prev, variantsMissingIds: [] }));
+                {/* VARIANTS: custo por variação (cards como “Combinações geradas”) */}
+                <div
+                  style={{
+                    marginTop: 12,
+                    overflowX: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
                   }}
                 >
-                  Atualizar todos
-                </button>
-              )}
-            </div>
+                  {variantRows.length === 0 ? (
+                    <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
+                      Gere as variações na aba <strong>Variações</strong> para preencher os custos por combinação.
+                    </div>
+                  ) : (
+                    <div className="pf-pricing-variants-list">
+                      {variantRows.map((row, idx) => {
+                        const hasCostError = (costErrors.variantsMissingIds || []).includes(row.id);
 
-            {hasCostError && <div className="s7-error" style={{ marginTop: 6 }}>Custo do produto é obrigatório.</div>}
+                        return (
+                          <div key={row.id} className="s7-card pf-pricing-variant-card pf-variant-row">
+                            <div className="pf-pricing-attrs">
+                              {variantAttrColumns.map((attr) => (
+                                <div key={`${row.id}_${attr}`} className="pf-variant-attr">
+                                  <span className="pf-variant-attr-label">{attr}</span>
+                                  <span className="pf-variant-attr-value">
+                                    {row.attributes?.[attr] || "-"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="pf-pricing-cost">
+                              <FieldLabel
+                                text="Custo do produto"
+                                required
+                                infoText="Custo do item para esta variação"
+                                side="left"
+                                tipBottom={true}
+                                wrap={true}
+                              />
+
+                              <div className="pf-variant-cost-row">
+                                <input
+                                  className={`s7-input pf-variant-cost-input ${
+                                    hasCostError ? "s7-input--error" : ""
+                                  }`}
+                                  type="text"
+                                  inputMode="numeric"
+                                  placeholder="R$ 0,00"
+                                  value={s7FormatBRLFromDigits(variantCostDigitsById[row.id] || "")}
+                                  onChange={(e) => {
+                                    const digits = s7ExtractDigits(e.target.value);
+
+                                    setVariantCostDigitsById((prev) => ({ ...prev, [row.id]: digits }));
+                                    handleVariantRowChange(row.id, "cost_price", s7DigitsToDecimalStr(digits));
+
+                                    if (hasCostError) {
+                                      setCostErrors((prev) => ({
+                                        ...prev,
+                                        variantsMissingIds: (prev.variantsMissingIds || []).filter(
+                                          (id) => id !== row.id
+                                        ),
+                                      }));
+                                    }
+                                  }}
+                                />
+
+                                {idx === 0 && variantRows.length > 1 && (
+                                  <button
+                                    type="button"
+                                    className="pf-apply-all-btn"
+                                    onClick={() => {
+                                      const baseDigits = variantCostDigitsById[row.id] || "";
+
+                                      setVariantCostDigitsById((prev) => {
+                                        const next = { ...prev };
+                                        (variantRows || []).forEach((r) => {
+                                          next[r.id] = baseDigits;
+                                        });
+                                        return next;
+                                      });
+
+                                      const baseDecimal = s7DigitsToDecimalStr(baseDigits);
+                                      setVariantRows((prev) =>
+                                        prev.map((r) => ({ ...r, cost_price: baseDecimal }))
+                                      );
+
+                                      setCostErrors((prev) => ({ ...prev, variantsMissingIds: [] }));
+                                    }}
+                                  >
+                                    <Repeat size={14} />
+                                    Aplicar a todas
+                                  </button>
+                                )}
+                              </div>
+
+                              {hasCostError && (
+                                <div className="s7-error" style={{ marginTop: 6 }}>
+                                  Custo do produto é obrigatório.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
-        </div>
-      );
-    })}
-  </div>
-)}
-</div>
-      )}
-    </div>
-  </div>
-)}
-
+        )}
 
         {/* =======================
             ABA: IMAGENS (mantém)
@@ -2178,13 +2250,13 @@ const validatePricingTab = () => {
          ABA: VARIAÇÕES (novo fluxo)
          ======================= */}
         {safeTab === "variations" && hasVariations && (
-        <div className="pf-container">
-        {product.format !== "variants" ? (
-          <div className="s7-alert s7-alert--warning">
-          <strong>Formato atual:</strong> <strong>Simples</strong>. Para usar variações, altere o campo <strong>Formato</strong> na aba <strong>Dados</strong>.
-        </div>
-        ) : (
-        <>
+          <div className="pf-container">
+            {product.format !== "variants" ? (
+              <div className="s7-alert s7-alert--warning">
+                <strong>Formato atual:</strong> <strong>Simples</strong>. Para usar variações, altere o campo <strong>Formato</strong> na aba <strong>Dados</strong>.
+              </div>
+            ) : (
+              <>
         {/* ======================================================
             MODO 1: BUILDER (ANTES DE GERAR)
         ====================================================== */}
@@ -2525,7 +2597,9 @@ const validatePricingTab = () => {
         <FieldLabel
           text="SKU"
           required
-          onCopy={() => handleCopyField(row.sku)}
+          onCopy={() => handleCopy(row.sku, `variant_sku_${row.id}`)}
+          copyKey={`variant_sku_${row.id}`}
+          copiedKey={copiedKey}
         />
 
         <input
@@ -2560,7 +2634,9 @@ const validatePricingTab = () => {
         <div className="pf-variant-field">
         <FieldLabel
           text="EAN / GTIN"
-          onCopy={() => handleCopyField(row.gtin)}
+          onCopy={() => handleCopy(row.gtin, `variant_gtin_${row.id}`)}
+          copyKey={`variant_gtin_${row.id}`}
+          copiedKey={copiedKey}
         />
 
         <input
@@ -2619,7 +2695,7 @@ const validatePricingTab = () => {
         {safeTab === "description" && (
           <div className="pf-container">
             <div className="pf-group">
-              <FieldLabel text="Descrição do produto" onCopy={() => handleCopyField(product.description)} />
+              <FieldLabel text="Descrição do produto" copyKey="description" copiedKey={copiedKey} onCopy={() => handleCopy(product.description, "description")} />
               <div className="description-wrapper pf-desc-wrapper">
                 <textarea
                   className="s7-textarea"
@@ -2651,123 +2727,205 @@ const validatePricingTab = () => {
             {(product.format === "variants" && variantRows.length > 0) || product.format === "simple" ? (
               <div className="pf-stock-variants-list">
                 {stockRowsForRender.map((row, idx) => (
-                  <div key={row.id} className="s7-card pf-stock-variant-card">
-                    <div className="pf-stock-attrs">
-                      {variantAttrColumns.length > 0
-                        ? variantAttrColumns.map((attr) => (
+                  <div
+                    key={row.id}
+                    className={`pf-stock-variant-card ${product.format === "simple" ? "pf-stock-simple" : "s7-card"}`}
+                  >
+                    {product.format === "simple" ? (
+                      /* Modo simples: só Estoque, Estoque mínimo, Estoque virtual (empilhados, sem nome do produto) */
+                      <div className="pf-stock-simple-column">
+                        <div className="pf-row">
+                          <div className="pf-group">
+                            <FieldLabel
+                              text="Estoque"
+                              required
+                              infoText="Informe a quantidade disponível para venda. Se você não controla estoque, pode usar o Estoque virtual."
+                              tipBottom={true}
+                              wrap={true}
+                              side="right"
+                            />
+                            <input
+                              className={`s7-input ${((row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) || (zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || (zeroStockAttention?.variants?.[row.id])) ? "s7-input--error" : ""}`}
+                              inputMode="numeric"
+                              maxLength={10}
+                              value={row.stock_real ?? ""}
+                              onChange={(e) =>
+                                handleStockRowChange(row.id, "stock_real", e.target.value.replace(/\D/g, ""))
+                              }
+                            />
+                            {(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) && (
+                              <div className="s7-error">Estoque é obrigatório.</div>
+                            )}
+                            {!stockErrors[row.id === SIMPLE_STOCK_KEY ? SIMPLE_STOCK_KEY : row.id] && ((zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || zeroStockAttention?.variants?.[row.id]) && (
+                              <div className="s7-error">Ajuste o estoque para continuar.</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="pf-row">
+                          <div className="pf-group">
+                            <FieldLabel
+                              text="Estoque mínimo"
+                              infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
+                              tipBottom={true}
+                              wrap={true}
+                              side="right"
+                            />
+                            <input
+                              className="s7-input"
+                              inputMode="numeric"
+                              maxLength={10}
+                              value={row.stock_min ?? ""}
+                              onChange={(e) =>
+                                handleStockRowChange(row.id, "stock_min", e.target.value.replace(/\D/g, ""))
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="pf-row">
+                          <div className="pf-group" style={{ minWidth: 220 }}>
+                            <div className="pf-stock-virtual-header">
+                              <label className="pf-switch pf-stock-virtual-switch">
+                                <input
+                                  type="checkbox"
+                                  checked={!!row.use_virtual_stock}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setPendingVariantId(row.id);
+                                    setPendingNextChecked(checked);
+                                    setVirtualModalMode(checked ? "enable" : "disable");
+                                    setVirtualModalOpen(true);
+                                  }}
+                                  aria-label="Usar estoque virtual"
+                                />
+                              </label>
+                              <FieldLabel
+                                text="Estoque virtual"
+                                infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
+                                tipBottom={true}
+                                wrap={true}
+                                side="right"
+                              />
+                            </div>
+                            <input
+                              className="s7-input"
+                              inputMode="numeric"
+                              maxLength={10}
+                              placeholder="Ex: 200"
+                              value={row.stock_virtual === "0" ? "" : row.stock_virtual}
+                              disabled={!row.use_virtual_stock}
+                              onChange={(e) =>
+                                handleStockRowChange(row.id, "stock_virtual", e.target.value.replace(/\D/g, ""))
+                              }
+                              onBlur={(e) => {
+                                const val = e.target.value.replace(/\D/g, "");
+                                if (val === "") handleStockRowChange(row.id, "stock_virtual", "0");
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Modo variações: card com atributos + controles (igual ao atual) */
+                      <>
+                        <div className="pf-stock-attrs">
+                          {variantAttrColumns.map((attr) => (
                             <div key={`${row.id}_${attr}`} className="pf-stock-attr">
                               <label className="s7-label">{attr}</label>
                               <div className="pf-pricing-attr-value">{row.attributes?.[attr] || "-"}</div>
                             </div>
-                          ))
-                        : (
-                            <div className="pf-stock-attr">
-                              <label className="s7-label">Produto</label>
-                              <div className="pf-pricing-attr-value">
-                              {product?.product_name?.trim()
-                                ? product.product_name
-                                : "Produto sem nome"}
-                            </div>
-                            </div>
-                          )}
-                    </div>
-                    <div className="pf-stock-controls">
-                      <div className="pf-group">
-                        <label className="s7-label">
-                          Estoque<span className="s7-required">*</span>
-                        </label>
-                        <input
-                          className={`s7-input ${((row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) || (zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || (zeroStockAttention?.variants?.[row.id])) ? "s7-input--error" : ""}`}
-                          inputMode="numeric"
-                          maxLength={10}
-                          value={row.stock_real ?? ""}
-                          onChange={(e) =>
-                            handleStockRowChange(row.id, "stock_real", e.target.value.replace(/\D/g, ""))
-                          }
-                        />
-                        {(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) && (
-                          <div className="s7-error">Estoque é obrigatório.</div>
-                        )}
-                        {!stockErrors[row.id === SIMPLE_STOCK_KEY ? SIMPLE_STOCK_KEY : row.id] && ((zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || zeroStockAttention?.variants?.[row.id]) && (
-                          <div className="s7-error">Ajuste o estoque para continuar.</div>
-                        )}
-                      </div>
-                      <div className="pf-group">
-                        <FieldLabel
-                          text="Estoque mínimo"
-                          infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
-                          tipBottom={true}
-                          wrap={true}
-                          side="left"
-                        />
-                        <input
-                          className="s7-input"
-                          inputMode="numeric"
-                          maxLength={10}
-                          value={row.stock_min ?? ""}
-                          onChange={(e) =>
-                            handleStockRowChange(row.id, "stock_min", e.target.value.replace(/\D/g, ""))
-                          }
-                        />
-                      </div>
-                      <div className="pf-group" style={{ minWidth: 220 }}>
-                        <div className="pf-stock-virtual-header">
-                          <label className="pf-switch pf-stock-virtual-switch">
-                            <input
-                              type="checkbox"
-                              checked={!!row.use_virtual_stock}
-                              onChange={(e) => {
-                                const checked = e.target.checked;
-                                setPendingVariantId(row.id);
-                                setPendingNextChecked(checked);
-                                setVirtualModalMode(checked ? "enable" : "disable");
-                                setVirtualModalOpen(true);
-                              }}
-                              aria-label="Usar estoque virtual"
-                            />
-                          </label>
-                          <FieldLabel
-                            text="Estoque virtual"
-                            infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
-                            tipBottom={true}
-                            wrap={true}
-                            side="left"
-                          />
+                          ))}
                         </div>
-                        <input
-                          className="s7-input"
-                          inputMode="numeric"
-                          maxLength={10}
-                          placeholder="Ex: 200"
-                          value={row.stock_virtual === "0" ? "" : row.stock_virtual}
-                          disabled={!row.use_virtual_stock}
-                          onChange={(e) =>
-                            handleStockRowChange(row.id, "stock_virtual", e.target.value.replace(/\D/g, ""))
-                          }
-                          onBlur={(e) => {
-                            const val = e.target.value.replace(/\D/g, "");
-                            if (val === "") handleStockRowChange(row.id, "stock_virtual", "0");
-                          }}
-                        />
-                      </div>
-                    </div>
+                        <div className="pf-stock-controls">
+                          <div className="pf-group">
+                            <FieldLabel
+                              text="Estoque"
+                              required
+                              infoText="Informe a quantidade disponível para venda. Se você não controla estoque, pode usar o Estoque virtual."
+                              tipBottom={true}
+                              wrap={true}
+                              side="right"
+                            />
+                            <input
+                              className={`s7-input ${((row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) || (zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || (zeroStockAttention?.variants?.[row.id])) ? "s7-input--error" : ""}`}
+                              inputMode="numeric"
+                              maxLength={10}
+                              value={row.stock_real ?? ""}
+                              onChange={(e) =>
+                                handleStockRowChange(row.id, "stock_real", e.target.value.replace(/\D/g, ""))
+                              }
+                            />
+                            {(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) && (
+                              <div className="s7-error">Estoque é obrigatório.</div>
+                            )}
+                            {!stockErrors[row.id === SIMPLE_STOCK_KEY ? SIMPLE_STOCK_KEY : row.id] && ((zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || zeroStockAttention?.variants?.[row.id]) && (
+                              <div className="s7-error">Ajuste o estoque para continuar.</div>
+                            )}
+                          </div>
+                          <div className="pf-group">
+                            <FieldLabel
+                              text="Estoque mínimo"
+                              infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
+                              tipBottom={true}
+                              wrap={true}
+                              side="right"
+                            />
+                            <input
+                              className="s7-input"
+                              inputMode="numeric"
+                              maxLength={10}
+                              value={row.stock_min ?? ""}
+                              onChange={(e) =>
+                                handleStockRowChange(row.id, "stock_min", e.target.value.replace(/\D/g, ""))
+                              }
+                            />
+                          </div>
+                          <div className="pf-group" style={{ minWidth: 220 }}>
+                            <div className="pf-stock-virtual-header">
+                              <label className="pf-switch pf-stock-virtual-switch">
+                                <input
+                                  type="checkbox"
+                                  checked={!!row.use_virtual_stock}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setPendingVariantId(row.id);
+                                    setPendingNextChecked(checked);
+                                    setVirtualModalMode(checked ? "enable" : "disable");
+                                    setVirtualModalOpen(true);
+                                  }}
+                                  aria-label="Usar estoque virtual"
+                                />
+                              </label>
+                              <FieldLabel
+                                text="Estoque virtual"
+                                infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
+                                tipBottom={true}
+                                wrap={true}
+                                side="right"
+                              />
+                            </div>
+                            <input
+                              className="s7-input"
+                              inputMode="numeric"
+                              maxLength={10}
+                              placeholder="Ex: 200"
+                              value={row.stock_virtual === "0" ? "" : row.stock_virtual}
+                              disabled={!row.use_virtual_stock}
+                              onChange={(e) =>
+                                handleStockRowChange(row.id, "stock_virtual", e.target.value.replace(/\D/g, ""))
+                              }
+                              onBlur={(e) => {
+                                const val = e.target.value.replace(/\D/g, "");
+                                if (val === "") handleStockRowChange(row.id, "stock_virtual", "0");
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
             ) : null}
-
-            {/* Observações — renderizado uma única vez ao final da aba */}
-            <div className="pf-row">
-              <div className="pf-group pf-group--full">
-                <label className="s7-label">Observações</label>
-                <input
-                  className="s7-input"
-                  placeholder="Notas internas sobre estoque"
-                  value={product.notes}
-                  onChange={(e) => handleChange("notes", e.target.value)}
-                />
-              </div>
-            </div>
           </div>
         )}
 
@@ -2861,7 +3019,9 @@ const validatePricingTab = () => {
                           <div className="s7-ad-titles-label-wrap">
                             <FieldLabel
                               text={`Título ${idx + 1}`}
-                              onCopy={() => handleCopyField(item.value)}
+                              onCopy={() => handleCopy(item.value, `ad_title_${item.id}`)}
+                            copyKey={`ad_title_${item.id}`}
+                            copiedKey={copiedKey}
                             />
                           </div>
                           {(product?.ad_titles ?? []).length > 1 && (
@@ -2956,46 +3116,15 @@ const validatePricingTab = () => {
              )}
              </div>
       
-
-             {/* ==================================================
-    FOOTER — sticky
-================================================== */}
-<div className="pf-footer pf-footer-right">
-  {/* Marcar como pronto — só habilitado quando produto salvo e status não é ready/published */}
-  <button
-    type="button"
-    className="s7-btn s7-btn--secondary"
-    disabled={!productIdForHealth || product?.status === "ready" || product?.status === "published" || markReadyLoading}
-    title={
-      !productIdForHealth
-        ? "Salve o produto para marcar como pronto."
-        : product?.status === "ready"
-          ? "Produto pronto"
-          : product?.status === "published"
-            ? "Produto publicado"
-            : undefined
-    }
-    onClick={handleMarkReady}
-  >
-    {markReadyLoading
-      ? "Validando..."
-      : product?.status === "ready"
-        ? "Produto pronto"
-        : product?.status === "published"
-          ? "Produto publicado"
-          : "Marcar como pronto"}
-  </button>
-  <button className="s7-btn s7-btn--primary" onClick={handleSubmit} type="button">
-    {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
-  </button>
-</div>
+        </div>
+      </div>
+    </div>
 
 {/* --------------------------------------------------
    FIM DO CARD PRINCIPAL
 -------------------------------------------------- */}
 </div>
       </div>
-    </div>
 
 {/* --------------------------------------------------
    MODAL: confirmação estoque virtual (padrão Suse7)

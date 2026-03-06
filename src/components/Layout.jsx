@@ -79,8 +79,15 @@ useEffect(() => {
     { path: "/registros", label: "Registros", icon: FileText },
   ];
 
+  // -----------------------------------------------------
+  // Flag: telas de cadastro/edição de produto (full-bleed)
+  // -----------------------------------------------------
+  const isProductForm =
+    location.pathname.startsWith("/produtos/novo") ||
+    /^\/produtos\/[^/]+$/.test(location.pathname);
+
   return (
-    <div className="app-container">
+    <div className={`app-container ${isProductForm ? "app-container--pf-bleed" : ""}`}>
       {/* ===================== NAVBAR ===================== */}
       <nav className="navbar-premium">
         {/* Logo Suse7 */}
@@ -128,7 +135,7 @@ className={`nav-item ${
       </nav>
 
       {/* ===================== CONTEÚDO ===================== */}
-      <main className="page-content">
+      <main className={`page-content ${isProductForm ? "page-content--pf-bleed" : ""}`}>
         <Outlet />
       </main>
     </div>

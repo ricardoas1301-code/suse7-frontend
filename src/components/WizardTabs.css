@@ -1,0 +1,123 @@
+.wizard-tabs{
+  width: 100%;
+  max-width: 1120px;
+  margin: 16px auto 20px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.wizard-tabs-track{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.wizard-step{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wizard-step-button{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.12s ease;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.wizard-step-pill{
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.wizard-step-number{
+  display: inline-block;
+}
+
+.wizard-step-label{
+  font-weight: 500;
+}
+
+.wizard-step-connector{
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  flex-shrink: 0;
+}
+
+/* Estado: pending (padrão) */
+.wizard-step--pending .wizard-step-pill{
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.wizard-step--pending .wizard-step-label{
+  color: #6b7280;
+}
+
+.wizard-step--pending .wizard-step-button:hover{
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* Estado: completed */
+.wizard-step--completed .wizard-step-pill{
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+}
+
+.wizard-step--completed .wizard-step-label{
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.wizard-step--completed .wizard-step-connector{
+  background: rgba(37, 99, 235, 0.55);
+}
+
+/* Estado: active */
+.wizard-step--active .wizard-step-pill{
+  background: #2563eb;
+  color: #fff;
+}
+
+.wizard-step--active .wizard-step-label{
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.wizard-step--active .wizard-step-button{
+  background: #eff6ff;
+}
+
+.wizard-step--active .wizard-step-connector{
+  background: rgba(37, 99, 235, 0.8);
+}
+
+@media (max-width: 720px){
+  .wizard-tabs{
+    margin-top: 8px;
+    margin-bottom: 16px;
+  }
+}
+

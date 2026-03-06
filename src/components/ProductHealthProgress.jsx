@@ -12,6 +12,7 @@ export default function ProductHealthProgress({
   warningsCount = 0,
   onClick,
   hint = null, // ex: "Salve para calcular"
+  showLabel = true, // quando false, esconde o texto abaixo do percentual
 }) {
   const clamped = Math.max(0, Math.min(100, percent));
   const circumference = 2 * Math.PI * 45;
@@ -64,9 +65,9 @@ export default function ProductHealthProgress({
           transform="rotate(-90 50 50)"
         />
       </svg>
-      <div className="php-content">
+      <div className={`php-content ${!showLabel ? "php-content--no-label" : ""}`}>
         <span className="php-percent">{Math.round(clamped)}%</span>
-        <span className="php-label">{hint || "Cadastro"}</span>
+        {showLabel && <span className="php-label">{hint || "Cadastro"}</span>}
       </div>
     </div>
   );

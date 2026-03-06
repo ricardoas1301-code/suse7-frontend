@@ -180,3 +180,38 @@
 .page-content {
   height: 100%;
 }
+
+/* ======================================================
+   PF BLEED — liberar container que limita a largura
+   (apenas telas de produto, via app-container--pf-bleed)
+====================================================== */
+.app-container--pf-bleed{
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  overflow-x: visible !important;
+}
+
+/* ======================================================
+   PF BLEED: evitar clipping do full-bleed no cadastro
+   Escopo: apenas quando Layout adiciona .page-content--pf-bleed
+====================================================== */
+.page-content--pf-bleed{
+  max-width: none !important;
+  width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  overflow: visible !important;
+  overflow-x: visible !important;
+}
+
+/* Override forte para o cadastro de produtos:
+   gutters verticais e laterais consistentes (estilo Bling) */
+.app-container--pf-bleed .page-content{
+  max-width: none !important;
+  width: 100% !important;
+  padding: 16px 24px 16px 24px !important; /* mesmo espaço em cima e embaixo */
+  box-sizing: border-box;
+}

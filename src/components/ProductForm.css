@@ -11,15 +11,18 @@
 .pf-page{
   width: 100%;
   min-height: calc(100vh - 72px);
-  background: var(--s7-page-bg, #f3f7ff);
-  padding: 18px 18px 28px;
+  /* Padrão Suse7 para páginas de cadastro (mesmo da tela Alterar Senha) */
+  background: var(--s7-page-bg, #f5f7fb);
+  padding: 0; /* deixa o padding vertical a cargo do layout (page-content) */
   box-sizing: border-box;
 }
 
-.pf-page-inner{
+/* Container geral do cadastro (centralizado estilo Bling) */
+.pf-wrap{
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0; /* evita somar padding vertical com o do layout */
   box-sizing: border-box;
 }
 
@@ -28,8 +31,8 @@
 ====================================================== */
 .pf-card{
   width: 100%;
-  height: auto;
-  min-height: 0;
+  height: calc(100vh - 200px); /* encurta ainda mais o card para reduzir área inferior */
+  min-height: 500px;           /* mantém uma base confortável em telas menores */
 
   display: flex;
   flex-direction: column;
@@ -37,11 +40,11 @@
   overflow: visible;
   box-sizing: border-box;
 
-  /* full-page container */
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
+  /* moldura branca — mesmo estilo visual do painel esquerdo */
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
   margin: 0;
 }
 
@@ -51,24 +54,14 @@
 /* ======================================================
    HEADER
 ====================================================== */
-.pf-header{
-  padding: 16px 0;
-  border-bottom: 1px solid var(--s7-divider, #eef0f3);
-
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: start;
-  column-gap: 12px;
+.pf-header-bar{
+  padding: 10px 16px 0; /* desce um pouco o botão Fechar */
+  display: flex;
+  justify-content: flex-end;
   box-sizing: border-box;
 }
 
-.pf-title-block{
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Botão fechar — padrão ContactModal */
+/* Botão fechar */
 .pf-close{
   background: transparent;
   border: none;
@@ -81,6 +74,7 @@
 
   justify-self: end;
   align-self: start;
+  margin-top: 6px; /* alinha verticalmente com o título, padrão modal */
 
   transition: color 0.2s ease, transform 0.2s ease;
 }
@@ -94,7 +88,7 @@
    NOME DO PRODUTO (FIXO)
 ====================================================== */
 .pf-product-name-fixed{
-  padding: 14px 0;
+  padding: 8px 16px 16px; /* sobe o bloco e alinha com as laterais do formulário */
   border-bottom: 1px solid var(--s7-divider, #eef0f3);
 
   display: flex;
@@ -104,10 +98,37 @@
   box-sizing: border-box;
 }
 
+/* Linha superior: título + obrigatórios + fechar dentro do mesmo card */
+.pf-product-header-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.pf-product-header-left{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-product-title{
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--s7-text, #0f172a);
+}
+
+.pf-product-required-hint{
+  font-size: 12px;
+  color: var(--s7-muted, #6b7280);
+}
+
 /* Linha com IMG + campos */
 .pf-product-name-line{
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -159,6 +180,15 @@
   gap: 6px;
 }
 
+.pf-product-health-wrap{
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;      /* centraliza o círculo no próprio bloco */
+  align-items: center;
+  margin-left: auto;            /* empurra o medidor para a faixa direita */
+  margin-right: 40px;           /* afasta da lateral direita e equilibra visualmente */
+}
+
 /* Mantém largura 50% (padrão atual) */
 .pf-product-name-fixed .s7-input,
 .pf-product-name-fixed .pf-label-row{
@@ -183,16 +213,18 @@
 ====================================================== */
 .pf-tabs{
   display: flex;
-  gap: 0;
+  gap: 16px;
 
-  padding: 10px 0 0;
-  border-bottom: 1px solid var(--s7-divider, #eef0f3);
+  padding: 12px 0 0;
+  border-bottom: 1px solid var(--s7-divider, #e5e7eb);
 
-  flex-wrap: wrap;
-  overflow: hidden;
-  white-space: normal;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
 
   box-sizing: border-box;
+  background: transparent;
 }
 
 .pf-tabs::-webkit-scrollbar{ display: none; }
@@ -201,73 +233,109 @@
   flex: 0 0 auto;
   min-width: auto;
 
-  padding: 9px 12px;
+  padding: 10px 2px;
+  margin: 0 10px 0 0;
   font-size: 13px;
+  font-weight: 500;
 
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-bottom: none;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
 
-  border-radius: 10px 10px 0 0;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin: 0;
+  color: #4b5563;
 }
-
-.pf-tabs button + button{ border-left: none; }
-
-/* 🔵 Hover das abas INATIVAS — padrão Suse7 */
-.pf-tabs button:not(.active):hover{
-  background: rgba(37, 99, 235, 0.10); /* azul claro */
-  color: var(--s7-primary, #2563eb);
-  border-color: rgba(37, 99, 235, 0.25);
-}
-
 
 .pf-tabs button.active{
-  background: var(--s7-primary, #2563eb) !important;
-  color: #fff !important;
-  border-color: var(--s7-primary, #2563eb) !important;
+  color: var(--s7-primary, #2563eb) !important;
+  border-bottom-color: var(--s7-primary, #2563eb) !important;
+  font-weight: 700;
+}
 
-  position: relative;
-  top: 1px;
-  box-shadow: 0 -2px 10px rgba(37, 99, 235, 0.35);
+.pf-tabs button:not(.active):hover{
+  color: var(--s7-primary, #2563eb);
+  border-bottom-color: rgba(37, 99, 235, 0.35);
 }
 
 .pf-tabs button.active:hover{
-  background: var(--s7-primary-hover, #1e40af) !important;
-  border-color: var(--s7-primary-hover, #1e40af) !important;
+  color: var(--s7-primary-hover, #1e40af) !important;
 }
 
 /* ======================================================
    BODY (scroll da página, não interno)
 ====================================================== */
 .pf-body{
-  padding: 18px 0 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  flex: 1;
+  padding: 4px 24px 0; /* volta ao estado anterior: topo leve, base próxima do último input */
+  flex: 1 1 auto;
   min-height: 0;
-
-  overflow-y: visible;
-  overflow-x: visible;
-
-  position: relative;
-  z-index: 1;
-
-  align-items: stretch;
   box-sizing: border-box;
+  overflow-y: auto; /* scroll interno por aba */
+  overflow-x: hidden;
 }
 
 /* ======================================================
-   CONTAINER CENTRAL (trilho premium)
+   CONTAINER CENTRAL (trilho premium — alinhado Bling)
 ====================================================== */
 .pf-container{
   width: 100%;
-  max-width: 1120px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
+  padding: 0; /* mantém alinhamento horizontal, reduzindo ainda mais a área inferior */
+  box-sizing: border-box;
+}
+
+.pf-page--bleed{
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =====================================================
+   LAYOUT: PAINEL 16% + FORM 84%
+===================================================== */
+
+.pf-layout{
+  display: grid;
+  grid-template-columns: 16% 1fr;
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+
+.pf-form-area{
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto; /* ocupa o restante vertical do card, junto com pf-body */
+}
+
+@media (max-width: 960px){
+  .pf-layout{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Layout antigo (removido do JSX, mantido só se algo ainda referenciar) */
+.pf-main-layout{
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  box-sizing: border-box;
+}
+
+.pf-main-left{
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-right-panel-wrap{
+  width: 320px;
+  min-width: 320px;
+  flex: 0 0 320px;
   box-sizing: border-box;
 }
 
@@ -276,13 +344,11 @@
 ====================================================== */
 .pf-row{
   display: flex;
-  gap: 33px;
+  gap: 48px; /* espaço maior entre Formato/SKU, EAN/NCM, Marca/Modelo */
   row-gap: 12px;
   align-items: flex-start;
   margin-bottom: 12px;
   flex-wrap: wrap;
-
-  /* ✅ trava: não deixa “espalhar” os campos */
   justify-content: flex-start;
 }
 
@@ -303,6 +369,12 @@
   width: 100%;
 }
 
+/* Versão reduzida para campos largos que não devem ocupar 100%
+   Palavras‑chave SEO: ligeiramente mais largo (~10% a mais) */
+.pf-group--full.pf-group--seo{
+  max-width: 80%;
+}
+
 .pf-group--btn{
   flex: 0 0 auto;
   width: 210px;
@@ -317,8 +389,20 @@
 }
 
 .pf-group--sm{
-  flex: 0 0 260px;
-  max-width: 260px;
+  flex: 0 0 220px;
+  max-width: 220px;
+}
+
+/* Colunas principais da aba Dados (Formato, SKU, EAN/GTIN, NCM, Marca, Modelo) */
+.pf-data-col{
+  flex: 0 0 220px;
+  max-width: 220px;
+}
+
+/* Garante que selects e inputs usem exatamente a mesma largura dentro da coluna */
+.pf-data-col .s7-select,
+.pf-data-col .s7-input{
+  width: 100%;
 }
 
 /* ======================================================
@@ -369,8 +453,20 @@
 .pf-seo-wrapper textarea,
 .pf-seo-wrapper .seo-keywords-input{
   width: 100%;
-  min-height: 44px;
+  min-height: 0;        /* usa a altura padrão dos inputs Suse7 */
+  height: auto;
   box-sizing: border-box;
+}
+
+/* Deixa o campo SEO com altura visual bem próxima dos inputs comuns */
+.pf-seo-wrapper .seo-keywords-input{
+  padding: 6px 8px;  /* mesmo padding base do .s7-input */
+  min-height: 0;     /* anula min-height: 44px do componente base */
+}
+
+.pf-seo-wrapper .seo-keywords-input-inner{
+  min-height: 0;     /* deixa a altura ser definida só pelo conteúdo + padding */
+  align-items: center;
 }
 
 .pf-seo-wrapper textarea{
@@ -834,7 +930,7 @@
    FOOTER (sticky)
 ====================================================== */
 .pf-footer{
-  padding: 18px 24px;
+  padding: 10px 16px;
   border-top: 1px solid var(--s7-divider, #eef0f3);
 
   display: flex;
@@ -842,15 +938,16 @@
   gap: 12px;
 
   flex-shrink: 0;
-  background: #fff;
+  background: rgba(248, 250, 252, 0.98);
 
   position: sticky;
   bottom: 0;
   z-index: 5;
 
-  margin-top: 12px;
+  margin: 8px auto 0;
+  max-width: 1120px; /* alinha com pf-container */
   border-radius: 12px;
-  box-shadow: var(--s7-shadow-section, 0 10px 26px rgba(0,0,0,0.04));
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
 
   box-sizing: border-box;
 }
@@ -1013,6 +1110,15 @@
   gap: 24px;
 }
 
+/* Modo simples: coluna com todos os inputs do mesmo tamanho */
+.pf-pricing-simple-column{
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 220px;
+}
+
 /* Lista de cards das variações no Pricing */
 .pf-pricing-variants-list{
   margin-top: 12px;
@@ -1031,6 +1137,10 @@
   overflow: visible; /* ✅ permite tooltip aparecer */
 }
 
+.pf-variant-row + .pf-variant-row{
+  border-top:1px solid #f1f5f9;
+}
+
 /* Colunas de atributos */
 .pf-pricing-attrs{
   display: grid;
@@ -1039,10 +1149,22 @@
   min-width: 0; /* ✅ permite encolher sem gerar overflow */
 }
 
-/* Valor do atributo (tipografia suave igual variações) */
-.pf-pricing-attr-value{
-  font-weight: 700;
-  color: var(--s7-text, #0f172a);
+.pf-variant-attr{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.pf-variant-attr-label{
+  font-size:12px;
+  font-weight:600;
+  color:#2563eb; /* azul padrão Suse7 */
+}
+
+.pf-variant-attr-value{
+  font-size:14px;
+  font-weight:600;
+  color:#111827;
 }
 
 /* Área do custo */
@@ -1058,9 +1180,27 @@
   flex: 0 0 auto;
 }
 
-/* Botão “Atualizar todos” não pode estourar */
-.pf-pricing-variant-card .s7-btn{
-  white-space: nowrap;
+/* Botão premium "Aplicar a todas" */
+.pf-apply-all-btn{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:13px;
+  font-weight:500;
+  color:#374151;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  transition:all .15s ease;
+  white-space:nowrap;
+}
+
+.pf-apply-all-btn:hover{
+  background:#eef2ff;
+  border-color:#c7d2fe;
+  color:#1d4ed8;
 }
 
 /* ======================================================================
@@ -1092,6 +1232,22 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Modo simples: sem moldura (alinhado às outras abas) */
+.pf-stock-variant-card.pf-stock-simple{
+  border: none;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Modo simples: campos empilhados (igual Custos & precificação) */
+.pf-stock-simple-column{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 220px;
 }
 
 .pf-stock-variant-card{
@@ -1136,12 +1292,31 @@
   gap: 6px;
 }
 
-/* Tooltip à esquerda nos cards de estoque (evita quebrar para a direita) */
-.pf-stock-variant-card .pf-info-btn.s7-tip-left::after,
-.pf-stock-variant-card .pf-info-btn.s7-tip-left::before{
-  left: auto !important;
-  right: 100% !important;
-  margin-right: 10px !important;
+/* Tooltip à direita na aba Estoque (simples e variações) */
+.pf-stock-simple-column .pf-info-btn.s7-tip-right[data-tip]::after,
+.pf-stock-variant-card .pf-info-btn.s7-tip-right[data-tip]::after{
+  left: calc(100% + 8px);
+  right: auto;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+}
+
+.pf-stock-simple-column .pf-info-btn.s7-tip-right[data-tip]::before,
+.pf-stock-variant-card .pf-info-btn.s7-tip-right[data-tip]::before{
+  left: -6px;
+  right: auto;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent #0f172a transparent transparent;
+}
+
+.pf-stock-simple-column .pf-info-btn.s7-tip-right:hover::after,
+.pf-stock-variant-card .pf-info-btn.s7-tip-right:hover::after{
+  transform: translateY(-50%);
 }
 
 .pf-stock-variant-card .pf-info-btn::after{
@@ -1149,11 +1324,16 @@
   white-space: normal;
 }
 
-/* Input Estoque virtual desabilitado — cor apagada */
-.pf-stock-controls .s7-input:disabled{
-  background-color: var(--s7-bg-soft, #f3f4f6);
-  color: var(--s7-muted, #9ca3af);
+/* Input Estoque virtual desabilitado — cor apagada + cursor proibido */
+.pf-stock-controls .s7-input:disabled,
+.pf-stock-simple-column .s7-input:disabled{
+  background-color: #f3f4f6;
+  color: #9ca3af;
   cursor: not-allowed;
+}
+
+.pf-stock-simple-column .s7-input:disabled::placeholder{
+  color: #cbd5e1;
 }
 
 /* ======================================================
