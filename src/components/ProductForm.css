@@ -373,6 +373,7 @@
    Palavras‑chave SEO: ligeiramente mais largo (~10% a mais) */
 .pf-group--full.pf-group--seo{
   max-width: 80%;
+  margin-bottom: 8px; /* pequeno respiro ao final da aba Dados */
 }
 
 .pf-group--btn{
@@ -399,10 +400,13 @@
   max-width: 220px;
 }
 
-/* Garante que selects e inputs usem exatamente a mesma largura dentro da coluna */
+/* Garante que selects e inputs usem exatamente a mesma largura e altura dentro da coluna */
 .pf-data-col .s7-select,
 .pf-data-col .s7-input{
   width: 100%;
+  box-sizing: border-box;
+  height: 32px;
+  min-height: 32px;
 }
 
 /* ======================================================
@@ -453,20 +457,43 @@
 .pf-seo-wrapper textarea,
 .pf-seo-wrapper .seo-keywords-input{
   width: 100%;
-  min-height: 0;        /* usa a altura padrão dos inputs Suse7 */
+  box-sizing: border-box;
+}
+
+/* Campo SEO: comportamento multilinha premium */
+.pf-seo-wrapper .seo-keywords-input{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding: 8px 10px;
+  min-height: 44px;        /* ~33% menor, ainda confortável */
   height: auto;
   box-sizing: border-box;
 }
 
-/* Deixa o campo SEO com altura visual bem próxima dos inputs comuns */
-.pf-seo-wrapper .seo-keywords-input{
-  padding: 6px 8px;  /* mesmo padding base do .s7-input */
-  min-height: 0;     /* anula min-height: 44px do componente base */
+.pf-seo-wrapper .seo-keywords-input-inner{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  min-height: 32px;
+  box-sizing: border-box;
 }
 
-.pf-seo-wrapper .seo-keywords-input-inner{
-  min-height: 0;     /* deixa a altura ser definida só pelo conteúdo + padding */
-  align-items: center;
+/* Input interno do SEO: alinhado com os chips */
+.pf-seo-wrapper .seo-keywords-input-field{
+  flex: 1;
+  min-width: 120px;
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
+  color: var(--s7-text, #0f172a);
+}
+
+.pf-seo-wrapper .seo-keywords-input-field::placeholder{
+  color: #9ca3af; /* mesma paleta dos outros placeholders da aba */
 }
 
 .pf-seo-wrapper textarea{
@@ -1149,22 +1176,29 @@
   min-width: 0; /* ✅ permite encolher sem gerar overflow */
 }
 
+/* Bloco atributo/valor da variação — padrão compartilhado (Pricing + Estoque) */
 .pf-variant-attr{
   display:flex;
   flex-direction:column;
   gap:2px;
 }
 
-.pf-variant-attr-label{
-  font-size:12px;
-  font-weight:600;
-  color:#2563eb; /* azul padrão Suse7 */
+/* Label do atributo (ex: Cor) */
+.pf-variant-attr-label,
+.pf-stock-attr .s7-label{
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-label);
+  font-weight: 700;            /* mesma pegada da aba Estoque */
+  color:#2563eb;               /* azul da aba de Custos & precificação */
 }
 
-.pf-variant-attr-value{
-  font-size:14px;
-  font-weight:600;
-  color:#111827;
+/* Valor da variação (ex: Branco, Preto) */
+.pf-variant-attr-value,
+.pf-stock-attr .pf-pricing-attr-value{
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-input);  /* tipografia base usada na aba Estoque */
+  font-weight: 600;
+  color:#111827;                  /* cor de texto da aba Custos & precificação */
 }
 
 /* Área do custo */
@@ -1322,6 +1356,93 @@
 .pf-stock-variant-card .pf-info-btn::after{
   max-width: 260px;
   white-space: normal;
+}
+
+/* ======================================================================
+   PADRÃO SUSE7 — TOOLTIP DE ÍCONE INFO (pf-info-btn)
+   Posição: SEMPRE abaixo e à direita do ícone.
+   
+   Como usar:
+   1. No JSX: classes do botão
+      className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
+      data-tip="Texto do tooltip"
+   
+   2. No CSS: se o ícone estiver em um contexto novo, replicar este bloco
+      trocando o seletor pelo wrapper do seu ícone (ex.: .s7-ad-titles-header):
+   
+      [SEU-SELETOR] .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
+        top: calc(100% + 8px);
+        bottom: auto;
+        left: 100%;
+        margin-left: 8px;
+        right: auto;
+        transform: translateX(0);
+        z-index: 100000;
+      }
+      [SEU-SELETOR] .pf-info-btn.s7-tip-bottom.s7-tip-right:hover::after {
+        transform: translateX(0) translateY(2px);
+      }
+      [SEU-SELETOR] .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before {
+        top: calc(100% + 2px);
+        bottom: auto;
+        left: 100%;
+        margin-left: 2px;
+        right: auto;
+        border-top-color: #0f172a;
+        border-bottom-color: transparent;
+      }
+   
+   Referência: aba Imagens (.pf-images-seo-action) e aba Título do anúncio (.s7-ad-titles-header).
+====================================================================== */
+
+/* Tooltip na aba Imagens (botões SEO) — à direita e abaixo do ícone, na frente das imagens */
+.pf-images-seo-action .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after{
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 100%;
+  margin-left: 8px;
+  right: auto;
+  transform: translateX(0);
+  z-index: 100000;
+}
+
+.pf-images-seo-action .pf-info-btn.s7-tip-bottom.s7-tip-right:hover::after{
+  transform: translateX(0) translateY(2px);
+}
+
+.pf-images-seo-action .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before{
+  top: calc(100% + 2px);
+  bottom: auto;
+  left: 100%;
+  margin-left: 2px;
+  right: auto;
+  border-top-color: #0f172a;
+  border-bottom-color: transparent;
+}
+
+/* Tooltip aba Título do anúncio — mesmo padrão: abaixo e à direita do ícone "i" */
+.s7-ad-titles-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 100%;
+  margin-left: 8px;
+  right: auto;
+  transform: translateX(0);
+  z-index: 100000;
+}
+
+.s7-ad-titles-header .pf-info-btn.s7-tip-bottom.s7-tip-right:hover::after {
+  transform: translateX(0) translateY(2px);
+}
+
+.s7-ad-titles-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before {
+  top: calc(100% + 2px);
+  bottom: auto;
+  left: 100%;
+  margin-left: 2px;
+  right: auto;
+  border-top-color: #0f172a;
+  border-bottom-color: transparent;
 }
 
 /* Input Estoque virtual desabilitado — cor apagada + cursor proibido */

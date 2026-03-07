@@ -69,18 +69,9 @@ function buildVariantKeyFromAttrs(attrsObj) {
   return entries.map(([k, v]) => `${k}=${String(v)}`).join("|");
 }
 
-/** Título para variação: "Cor: Vermelho" ou "Cor: Vermelho / Tamanho: P" */
-function formatVariantTitle(attrsObj) {
-  if (!attrsObj || Object.keys(attrsObj).length === 0) return "Geral";
-  return Object.entries(attrsObj)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join(" / ");
-}
-
 /** Bloco de variação sortable (drag vertical) */
 function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls, selectedForDownload, onUpload, onDelete, onReorder, onToggleSelect, onDownload, onOpenPreview, onPreviewError, uploading, recentSavedKey, onShowSavedBadge, hasSeoKeywords, onBulkSeoRename, onGoToSeo, seoOptimizing, selectModeActive, onToggleSelectMode, onDownloadSelected, downloadingSelected, isDirty = false }) {
   const vk = variantKeyFn(row.attributes);
-  const title = formatVariantTitle(row.attributes);
   const variantLinks = variantLinksMap[vk] || [];
   const rowId = row.id || vk;
   const hasImages = (variantLinks?.length ?? 0) > 0;
@@ -99,27 +90,57 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
     transition,
   };
 
+  const hasKeywords = !!hasSeoKeywords;
+  const seoButtonLabel = hasKeywords
+    ? (seoOptimizing ? "Renomeando…" : "Renomear imagens (SEO)")
+    : "Definir palavras-chave (SEO)";
+  const seoButtonTip = hasKeywords
+    ? "Renomeia automaticamente as imagens usando as palavras-chave SEO do produto. Isso ajuda na organização dos arquivos e na otimização para marketplaces e buscadores."
+    : "Defina palavras-chave que serão usadas para otimizar os nomes das imagens e ajudar no SEO dos anúncios.";
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`pf-images-variant-block ${isDragging ? "pf-images-variant-block--dragging" : ""}`}
+      className={`pf-images-variant-block s7-card ${isDragging ? "pf-images-variant-block--dragging" : ""}`}
     >
       <div className="pf-images-variant-block-header">
         <h4 className="pf-images-variant-title">
-          {title}
+          {row.attributes && Object.keys(row.attributes).length > 0 ? (
+            <>
+              {Object.entries(row.attributes).map(([k, v], i) => (
+                <span key={k}>
+                  {i > 0 && <span className="pf-images-attr-sep"> / </span>}
+                  <span className="pf-images-attr-label">{k}</span>
+                  <span className="pf-images-attr-sep">: </span>
+                  <span className="pf-images-attr-value">{v}</span>
+                </span>
+              ))}
+            </>
+          ) : (
+            "Geral"
+          )}
           {!SILENT_AUTOSAVE && isDirty && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
         </h4>
         {hasImages && (
-          <button
-            type="button"
-            className="pf-images-variant-seo-btn"
-            onClick={hasSeoKeywords ? () => onBulkSeoRename?.(vk) : () => onGoToSeo?.()}
-            disabled={seoOptimizing}
-            title={hasSeoKeywords ? "Otimizar nomes das imagens (SEO)" : "Cadastre palavras-chave na aba Dados"}
-          >
-            {hasSeoKeywords ? (seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)") : "Definir palavras-chave (SEO)"}
-          </button>
+          <div className="pf-images-seo-action">
+            <button
+              type="button"
+              className="pf-images-secondary-btn pf-images-variant-seo-btn"
+              onClick={hasKeywords ? () => onBulkSeoRename?.(vk) : () => onGoToSeo?.()}
+              disabled={seoOptimizing}
+            >
+              {seoButtonLabel}
+            </button>
+            <button
+              type="button"
+              className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
+              data-tip={seoButtonTip}
+              aria-label={hasKeywords ? "Informações sobre renomear imagens (SEO)" : "Informações sobre definir palavras-chave (SEO)"}
+            >
+              i
+            </button>
+          </div>
         )}
         <span
           className="pf-images-variant-drag-handle"
@@ -136,6 +157,28 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
             <circle cx="15" cy="18" r="1.5" />
           </svg>
         </span>
+        {hasImages && (
+          <div className="pf-images-slot-row-toolbar">
+            <button
+              type="button"
+              className={`pf-images-secondary-btn pf-images-toggle-select ${selectModeActive ? "pf-images-toggle-select--active" : ""}`}
+              onClick={() => onToggleSelectMode(vk)}
+            >
+              {selectModeActive ? "Desmarcar seleção" : "Baixar várias"}
+            </button>
+            {selectModeActive && (
+              <button
+                type="button"
+                className="pf-images-secondary-btn"
+                onClick={() => onDownloadSelected(vk)}
+                disabled={selectedForDownload.size === 0 || downloadingSelected}
+                title={selectedForDownload.size === 0 ? "Selecione ao menos 1 imagem" : undefined}
+              >
+                {downloadingSelected ? "Baixando…" : "Baixar selecionadas"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
       <ImageSlotRow
         links={variantLinks}
@@ -157,6 +200,7 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
         onToggleSelectMode={() => onToggleSelectMode(vk)}
         onDownloadSelected={() => onDownloadSelected(vk)}
         downloadingSelected={downloadingSelected}
+        showToolbar={false}
       />
     </div>
   );
@@ -842,7 +886,7 @@ export default function ProductFormImagesTab({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msg = data?.error || data?.code || `Erro ${res.status}` || "Falha ao renomear";
-        addNotification({ type: "error", title: "Otimizar nomes (SEO)", message: msg });
+        addNotification({ type: "error", title: "Renomear imagens (SEO)", message: msg });
         showToast("Erro ao renomear imagens — tente novamente");
         console.error("[ProductFormImagesTab] seo-rename error", { status: res.status, data });
         return;
@@ -857,7 +901,7 @@ export default function ProductFormImagesTab({
       showToast(totalRenamed > 0 ? `Nomes otimizados ✅ (${totalRenamed} imagens)` : "Nenhuma imagem no escopo para renomear");
     } catch (err) {
       const msg = err?.message || "Erro ao renomear imagens.";
-      addNotification({ type: "error", title: "Otimizar nomes (SEO)", message: msg });
+      addNotification({ type: "error", title: "Renomear imagens (SEO)", message: msg });
       showToast("Erro ao renomear imagens — tente novamente");
       console.error("[ProductFormImagesTab] seo-rename exception", err);
     } finally {
@@ -906,9 +950,74 @@ export default function ProductFormImagesTab({
       {toast?.message && (
         <div className="pf-toast" role="status">{toast.message}</div>
       )}
-      <p className="hint">
-        Adicione até <strong>{MAX_IMAGES}</strong> fotos. Elas poderão ser usadas para atualizar anúncios em todos os canais.
-      </p>
+
+      {format === "simple" && (
+        <div className="pf-images-header">
+          <strong>Adicione até {MAX_IMAGES} fotos</strong>
+          {totalImages > 0 && (
+            hasSeoKeywords ? (
+              <div className="pf-images-seo-action">
+                <button
+                  type="button"
+                  className="pf-images-secondary-btn pf-images-seo-btn"
+                  onClick={() => handleBulkSeoRename(null)}
+                  disabled={seoOptimizing}
+                >
+                  {seoOptimizing ? "Renomeando…" : "Renomear imagens (SEO)"}
+                </button>
+                <button
+                  type="button"
+                  className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
+                  data-tip="Renomeia automaticamente as imagens usando as palavras-chave SEO do produto. Isso ajuda na organização dos arquivos e na otimização para marketplaces e buscadores."
+                  aria-label="Informações sobre renomear imagens (SEO)"
+                >
+                  i
+                </button>
+              </div>
+            ) : (
+              <div className="pf-images-seo-action">
+                <button
+                  type="button"
+                  className="pf-images-secondary-btn pf-images-seo-btn"
+                  onClick={onGoToSeo ?? handleSeoModalGoToData}
+                >
+                  Definir palavras chaves (SEO)
+                </button>
+                <button
+                  type="button"
+                  className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
+                  data-tip="Defina palavras-chave que serão usadas para otimizar os nomes das imagens e ajudar no SEO dos anúncios."
+                  aria-label="Informações sobre definir palavras chaves (SEO)"
+                >
+                  i
+                </button>
+              </div>
+            )
+          )}
+          {totalImages > 0 && (
+            <div className="pf-images-slot-row-toolbar">
+              <button
+                type="button"
+                className={`pf-images-secondary-btn pf-images-toggle-select ${selectMode && activeSelectScope === "product" ? "pf-images-toggle-select--active" : ""}`}
+                onClick={() => toggleSelectMode("product")}
+              >
+                {selectMode && activeSelectScope === "product" ? "Desmarcar seleção" : "Baixar várias"}
+              </button>
+              {selectMode && activeSelectScope === "product" && (
+                <button
+                  type="button"
+                  className="pf-images-secondary-btn"
+                  onClick={() => handleDownloadSelected("product")}
+                  disabled={(selectedForDownloadByScope["product"] ?? EMPTY_SELECTION).size === 0 || downloadingSelected}
+                  title={(selectedForDownloadByScope["product"] ?? EMPTY_SELECTION).size === 0 ? "Selecione ao menos 1 imagem" : undefined}
+                >
+                  {downloadingSelected ? "Baixando…" : "Baixar selecionadas"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="s7-alert s7-alert--danger" style={{ marginBottom: 12 }}>
@@ -920,25 +1029,9 @@ export default function ProductFormImagesTab({
         <div className="pf-images-loading">Carregando imagens...</div>
       ) : (
         <>
-          {/* Produto simples: apenas Imagens do produto */}
+          {/* Produto simples: apenas grid de Imagens do produto (sem título redundante) */}
           {format === "simple" && (
             <section className="pf-images-section">
-              <h3 className="pf-images-section-title">Imagens do produto</h3>
-              {totalImages > 0 && (
-                <div className="pf-images-section-toolbar">
-                  <button
-                    type="button"
-                    className="s7-btn s7-btn--secondary"
-                    onClick={hasSeoKeywords ? () => handleBulkSeoRename(null) : (onGoToSeo ?? handleSeoModalGoToData)}
-                    disabled={seoOptimizing}
-                    title={hasSeoKeywords ? "Otimizar nomes das imagens (SEO)" : "Cadastre palavras-chave na aba Dados"}
-                  >
-                    {hasSeoKeywords
-                      ? (seoOptimizing ? "Otimizando…" : "Otimizar nomes (SEO)")
-                      : "Definir palavras-chave (SEO)"}
-                  </button>
-                </div>
-              )}
               <ImageSlotRow
                 links={productLinks}
                 previewUrls={previewUrls}
@@ -959,6 +1052,7 @@ export default function ProductFormImagesTab({
                 onToggleSelectMode={() => toggleSelectMode("product")}
                 onDownloadSelected={() => handleDownloadSelected("product")}
                 downloadingSelected={downloadingSelected}
+                showToolbar={false}
               />
             </section>
           )}
@@ -1224,6 +1318,7 @@ function ImageSlotRow({
   onToggleSelectMode,
   onDownloadSelected,
   downloadingSelected = false,
+  showToolbar = true,
 }) {
   const inputRef = useRef(null);
   // ======================================================
@@ -1270,11 +1365,11 @@ function ImageSlotRow({
     >
       <SortableContext items={linkIds} strategy={horizontalListSortingStrategy}>
         <div className="pf-images-slot-row-wrap">
-          {sortedLinks.length > 0 && (
+          {showToolbar && sortedLinks.length > 0 && (
             <div className="pf-images-slot-row-toolbar">
               <button
                 type="button"
-                className={`s7-btn s7-btn--secondary pf-images-toggle-select ${selectModeActive ? "pf-images-toggle-select--active" : ""}`}
+                className={`pf-images-secondary-btn pf-images-toggle-select ${selectModeActive ? "pf-images-toggle-select--active" : ""}`}
                 onClick={onToggleSelectMode}
               >
                 {selectModeActive ? "Desmarcar seleção" : "Baixar várias"}
@@ -1282,7 +1377,7 @@ function ImageSlotRow({
               {selectModeActive && (
                 <button
                   type="button"
-                  className="s7-btn s7-btn--secondary"
+                  className="pf-images-secondary-btn"
                   onClick={onDownloadSelected}
                   disabled={selectedForDownload.size === 0 || downloadingSelected}
                   title={selectedForDownload.size === 0 ? "Selecione ao menos 1 imagem" : undefined}

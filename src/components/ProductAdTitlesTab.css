@@ -28,6 +28,12 @@
   width: 100%;
 }
 
+.s7-ad-titles-input {
+  width: 100%;
+}
+
+/* (Largura do bloco título é controlada por .s7-ad-title-input-wrap: max-width 700px) */
+
 .s7-ad-titles-counter {
   font-size: 12px;
   color: var(--s7-muted, #6b7280);
@@ -128,4 +134,210 @@
 
 .s7-ad-titles-remove {
   flex-shrink: 0;
+}
+
+/* ======================================================================
+   ProductForm — aba Título do anúncio (refatoração UX)
+   - Header sem card; um card por título; input + ações na mesma linha
+====================================================================== */
+
+/* Header da aba: texto + ícone info (tooltip) + botão Adicionar na mesma linha */
+.s7-ad-titles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Wrapper: texto "Crie até 10 títulos..." + ícone "i" (tooltip) */
+.s7-ad-titles-header-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.s7-ad-titles-intro {
+  font-weight: 600;
+  margin: 0;
+  color: var(--s7-text, #111827);
+  font-size: 14px;
+}
+
+/* Ícone info — padrão Suse7 (pf-info-btn); tooltip em ProductForm.css (abaixo e à direita) */
+.s7-ad-titles-info-icon {
+  flex-shrink: 0;
+}
+
+/* Contador de títulos no header: 1/10, 2/10 ... 10/10 — badge discreto Suse7 */
+.s7-ad-titles-header-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--s7-bg-soft, #eff6ff);
+  color: var(--s7-primary, #2563eb);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.s7-ad-titles-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.s7-ad-titles-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.s7-ad-titles-card-label {
+  display: block;
+  font-size: var(--s7-fs-label, 13px);
+  font-weight: 700;
+  color: var(--s7-text, #111827);
+}
+
+/* Linha: "Título N" à esquerda + copiar no final (direita), acima do input */
+.s7-ad-title-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.s7-ad-title-copy-row .s7-ad-titles-card-label {
+  margin: 0;
+}
+
+.s7-ad-title-copy-wrap {
+  flex: 1;
+  min-width: 0;
+  max-width: 700px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.s7-ad-title-copy-wrap .pf-copy-btn {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin-right: 59px;
+  font-size: 14px;
+  color: var(--s7-muted, #6b7280);
+}
+
+.s7-ad-title-copy-wrap .pf-copy-btn:hover {
+  color: var(--s7-text, #0f172a);
+}
+
+/* Linha: input + contador abaixo + lixeira */
+.s7-ad-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Wrapper do input: input + contador abaixo */
+.s7-ad-title-input-wrap {
+  flex: 1;
+  min-width: 0;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.s7-ad-title-input-wrap .s7-ad-title-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Contador: canto inferior direito do input */
+.s7-ad-title-count {
+  font-size: 12px;
+  color: var(--s7-muted, #6b7280);
+  white-space: nowrap;
+  align-self: flex-end;
+}
+
+.s7-ad-title-input {
+  min-width: 0;
+}
+
+.s7-ad-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.s7-ad-titles-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.s7-ad-titles-card-header .pf-label-row {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Botão excluir título — ícone minimalista (Trash2) */
+.s7-title-delete-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.s7-title-delete-btn:hover {
+  color: #ef4444;
+}
+
+.s7-ad-titles-card .s7-ad-titles-counter {
+  font-size: 12px;
+  color: var(--s7-muted, #6b7280);
+}
+
+/* Botão "+ Adicionar título" — sem moldura; hover: um pouco maior + cor padrão Suse7 */
+.s7-ad-titles-add-btn.s7-ad-title-add-btn,
+.s7-ad-titles-add-btn {
+  height: 30px;
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 400;
+  border-radius: var(--s7-radius-sm, 6px);
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  color: var(--s7-text);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.s7-ad-titles-add-btn:hover,
+.s7-ad-titles-add-btn.s7-ad-title-add-btn:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--s7-primary, #2563eb);
+  transform: scale(1.04);
 }

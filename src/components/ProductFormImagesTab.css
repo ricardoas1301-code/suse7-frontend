@@ -39,11 +39,76 @@
   margin: 0 0 16px;
 }
 
-.pf-images-section-toolbar {
+/* Header principal da aba Imagens (texto + botão SEO + toolbar na mesma linha) */
+.pf-images-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 12px;
+  overflow: visible;
+}
+
+.pf-images-header strong{
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--s7-text, #0f172a);
+}
+
+/* Ação SEO (botão + ícone info) */
+.pf-images-seo-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 50;
+}
+
+/* =========================================================
+   BOTÕES SECUNDÁRIOS — ABA IMAGENS
+   Referência visual: botão "Otimizar nomes (SEO)"
+   Padrão aplicado também a:
+   - Baixar várias
+   - Baixar selecionadas
+   - Renomear imagens / Definir palavras-chave (SEO)
+========================================================= */
+.pf-images-action-btn,
+.pf-images-secondary-btn {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #6b7280;
+  font-family: var(--s7-font);
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-sizing: border-box;
+  white-space: nowrap;
+  appearance: none;
+  box-shadow: none;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.pf-images-action-btn:hover,
+.pf-images-secondary-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #4b5563;
+}
+
+.pf-images-action-btn:disabled,
+.pf-images-secondary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pf-images-seo-btn {
+  /* mesmo padrão .pf-images-action-btn / .pf-images-secondary-btn */
 }
 
 /* Linha com 7 slots fixos */
@@ -53,15 +118,17 @@
   gap: 12px;
 }
 
-/* Slot vazio = placeholder com borda tracejada (mesmo tamanho do preview) */
+/* Slot vazio = placeholder quadrado (1:1) com borda tracejada */
 .pf-images-slot-empty {
-  height: 132px;
-  border: 2px dashed var(--s7-border, #dcdfe4);
-  border-radius: var(--s7-radius-md, 12px);
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 2px dashed var(--s7-border, #d1d5db);
+  border-radius: 12px;
   background: var(--s7-bg-soft, #f9fafb);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .pf-images-slot-row-wrap {
@@ -77,21 +144,17 @@
   gap: 8px;
 }
 
-.pf-images-toggle-select {
-  font-size: 13px;
-  padding: 6px 12px;
-}
-
-.pf-images-toggle-select:hover,
-.pf-images-slot-row-toolbar .s7-btn--secondary:hover {
+.pf-images-slot-row-toolbar .pf-images-action-btn:hover,
+.pf-images-slot-row-toolbar .pf-images-secondary-btn:hover {
   background: rgba(37, 99, 235, 0.1);
-  color: var(--s7-primary, #2563eb);
+  color: #2563eb;
   border-color: rgba(37, 99, 235, 0.25);
 }
 
 .pf-images-toggle-select--active {
   background: rgba(37, 99, 235, 0.1);
   color: var(--s7-primary, #2563eb);
+  border-color: rgba(37, 99, 235, 0.25);
 }
 
 .pf-images-slot-row-toolbar button:disabled {
@@ -120,11 +183,8 @@
 
 /* Bloco por variação */
 .pf-images-variant-block {
-  margin-bottom: 24px;
-}
-
-.pf-images-variant-block:last-child {
-  margin-bottom: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .pf-images-variant-block-header {
@@ -133,17 +193,39 @@
   gap: 8px;
   margin-bottom: 10px;
   flex-wrap: wrap;
+  overflow: visible;
+}
+
+/* Tipografia do atributo/variação = mesmo padrão da aba Estoque */
+.pf-images-variant-title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  font-family: var(--s7-font);
+}
+
+.pf-images-variant-title .pf-images-attr-label {
+  font-size: var(--s7-fs-label);
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.pf-images-variant-title .pf-images-attr-value {
+  font-size: var(--s7-fs-input);
+  font-weight: 600;
+  color: #111827;
+}
+
+.pf-images-variant-title .pf-images-attr-sep {
+  font-size: var(--s7-fs-input);
+  font-weight: 600;
+  color: #111827;
 }
 
 .pf-images-variant-seo-btn {
-  font-size: 12px;
-  padding: 4px 10px;
-  border: 1px solid var(--s7-border, #e5e7eb);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--s7-muted, #6b7280);
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  /* base em .pf-images-secondary-btn; hover específico abaixo */
 }
 .pf-images-variant-seo-btn:hover {
   color: var(--s7-primary, #2563eb);
@@ -153,16 +235,6 @@
 .pf-images-variant-seo-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.pf-images-variant-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--s7-text, #0f172a);
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .pf-dirty-dot {
@@ -189,7 +261,7 @@
 .pf-images-variants-list {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 10px;
 }
 
 .pf-images-card--dragging {
@@ -199,14 +271,18 @@
 
 .pf-images-card {
   position: relative;
-  border-radius: var(--s7-radius-md, 12px);
+  width: 100%;
+  border-radius: 12px;
   border: 1px solid var(--s7-border, #dcdfe4);
   overflow: hidden;
   background: var(--s7-bg-soft, #f9fafb);
+  box-sizing: border-box;
 }
 
+/* Área da imagem: quadrada (1:1), bordas arredondadas */
 .pf-images-card-preview {
-  height: 132px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -219,6 +295,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .pf-images-card-placeholder {

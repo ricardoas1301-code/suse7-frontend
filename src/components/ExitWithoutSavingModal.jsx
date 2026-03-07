@@ -4,7 +4,7 @@
 // Integrado com userPreferences (não mostrar mais)
 // ======================================================================
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./ExitWithoutSavingModal.css";
 
 export default function ExitWithoutSavingModal({
@@ -14,6 +14,19 @@ export default function ExitWithoutSavingModal({
   onDontShowAgainChange,
 }) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  // Não fechar com ESC; apenas Cancelar ou Sair
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [open]);
 
   if (!open) return null;
 
@@ -32,12 +45,11 @@ export default function ExitWithoutSavingModal({
   return (
     <div
       className="ews-modal-bg"
-      onClick={handleCancel}
       role="presentation"
+      aria-hidden="true"
     >
       <div
         className="ews-modal-box"
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-labelledby="ews-modal-title"
         aria-modal="true"

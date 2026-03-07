@@ -14,6 +14,7 @@
 // ======================================================================
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useBlocker } from "react-router-dom";
 import { useBeforeUnload } from "../hooks/useBeforeUnload";
 import { useCopyFeedback } from "../hooks/useCopyFeedback";
 import { createPortal } from "react-dom";
@@ -26,7 +27,9 @@ import {
 import { relinkDraftToProduct } from "../services/images/imageRepository";
 import { updateVariantsSortOrder } from "../services/variants/variantRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
+import "./FieldLabel.css";
 import "./ProductAdTitlesTab.css";
+import { Trash2 } from "lucide-react";
 import { SeoKeywordsInput } from "./SeoKeywordsInput";
 import ProductHealthProgress from "./ProductHealthProgress";
 import ProductHealthDetailsModal from "./ProductHealthDetailsModal";
@@ -289,6 +292,11 @@ const [pendingNextChecked, setPendingNextChecked] = useState(false);
   // Regra: se draft tem variações e usuário quer Simples, pedir confirmação
   // ------------------------------------------------------
   const [formatToSimpleModalOpen, setFormatToSimpleModalOpen] = useState(false);
+
+  // ------------------------------------------------------
+  // MODAL: confirmação exclusão de título do anúncio (padrão Suse7)
+  // ------------------------------------------------------
+  const [adTitleDeleteId, setAdTitleDeleteId] = useState(null);
 
   // ------------------------------------------------------
   // HEALTH: progresso circular do cadastro (backend como fonte de verdade)
@@ -560,15 +568,48 @@ useEffect(() => {
     return () => { cancelled = true; };
   }, []);
 
-  // beforeunload: aviso nativo ao fechar/recarregar (não usa useBlocker)
+  // beforeunload: aviso nativo ao fechar/recarregar (F5/fechar aba)
   useBeforeUnload(isDirty);
 
-  // Modal "Sair sem salvar" (botão Voltar / Cancelar)
+  // Bloqueio de navegação interna (menu, links, rota): exibe modal "Sair sem salvar?"
+  const skipExitGuardRef = useRef(false); // bypass quando usuário confirmou saída pelo botão Fechar
+  const shouldBlockNav = isDirty && !exitWithoutSavingHidden && !skipExitGuardRef.current;
+  const blocker = useBlocker(shouldBlockNav);
+
+  // Modal "Sair sem salvar" (Fechar ou navegação interna bloqueada)
   const [showExitModal, setShowExitModal] = useState(false);
+  const exitModalSourceRef = useRef("close"); // "close" = botão Fechar | "blocker" = navegação bloqueada
+
+  // Quando o blocker intercepta uma navegação, abrir o modal
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      exitModalSourceRef.current = "blocker";
+      setShowExitModal(true);
+    }
+  }, [blocker.state]);
+
   const handleClose = () => {
     if (isDirty && !exitWithoutSavingHidden) {
+      exitModalSourceRef.current = "close";
       setShowExitModal(true);
     } else {
+      onCancel?.();
+    }
+  };
+
+  const handleExitModalCancel = () => {
+    setShowExitModal(false);
+    if (blocker.state === "blocked") blocker.reset();
+  };
+
+  const handleExitModalConfirm = () => {
+    const source = exitModalSourceRef.current;
+    setShowExitModal(false);
+    if (source === "blocker") {
+      blocker.proceed();
+    } else {
+      // Fluxo "close": ativar bypass para a navegação via onCancel não ser bloqueada de novo
+      skipExitGuardRef.current = true;
       onCancel?.();
     }
   };
@@ -1835,7 +1876,7 @@ const validatePricingTab = () => {
                   side="left"
                 />
                 <select
-                  className="s7-select"
+                  className="s7-select s7-input"
                   value={product.format}
                   onChange={(e) => handleFormatChange(e.target.value)}
                   disabled={formatLocked}
@@ -3004,74 +3045,124 @@ const validatePricingTab = () => {
               ======================= */}
               {safeTab === "ad_titles" && (
               <div className="pf-container">
-                <div className="section">
-                  <div className="section-header">
-                    <h3>Título do anúncio</h3>
-                    <p className="section-subtitle">
-                      Crie até 10 títulos por produto
-                    </p>
-                  </div>
-
-                  <div className="s7-ad-titles-list pf-ad-titles-list">
-                    {(product?.ad_titles ?? []).map((item, idx) => (
-                      <div key={item.id} className="pf-group s7-ad-titles-row">
-                        <div className="s7-ad-titles-row-header">
-                          <div className="s7-ad-titles-label-wrap">
-                            <FieldLabel
-                              text={`Título ${idx + 1}`}
-                              onCopy={() => handleCopy(item.value, `ad_title_${item.id}`)}
-                            copyKey={`ad_title_${item.id}`}
-                            copiedKey={copiedKey}
-                            />
-                          </div>
-                          {(product?.ad_titles ?? []).length > 1 && (
-                            <button
-                              type="button"
-                              className="s7-btn s7-btn--sm s7-btn--danger s7-ad-titles-remove"
-                              onClick={() => handleRemoveTitle(item.id)}
-                              aria-label="Remover título"
-                            >
-                              🗑️
-                            </button>
-                          )}
-                        </div>
-                        <input
-                          type="text"
-                          className="s7-input"
-                          placeholder="Ex: Produto XYZ - Marca - Modelo"
-                          value={item.value}
-                          onChange={(e) => handleChangeTitle(item.id, e.target.value)}
-                        />
-                        <span className="s7-ad-titles-counter">
-                          {item.value?.length ?? 0} caracteres
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pf-ad-titles-actions-row">
-                    {(product?.ad_titles ?? []).length < 10 && (
-                      <button
-                        type="button"
-                        className="s7-btn s7-btn--secondary"
-                        onClick={handleAddTitle}
-                      >
-                        + Adicionar título
-                      </button>
-                    )}
-                    {/* FUTURE V2: Gerador de títulos via IA */}
+                {/* Header da aba: texto + ícone info (tooltip) + botão Adicionar */}
+                <div className="s7-ad-titles-header">
+                  <div className="s7-ad-titles-header-label">
+                    <p className="s7-ad-titles-intro">Crie até 10 títulos por produto</p>
                     <button
                       type="button"
-                      className="s7-btn s7-btn--secondary"
-                      disabled
-                      title="Em breve: sugestões via IA"
+                      className="pf-info-btn s7-ad-titles-info-icon s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
+                      data-tip="Um título bem elaborado ajuda seu anúncio a ser encontrado com mais facilidade, melhora a relevância nas buscas e pode aumentar o desempenho do produto no marketplace."
+                      aria-label="Informações sobre títulos do anúncio"
                     >
-                      Gerar sugestões (em breve)
+                      i
                     </button>
+                    <span className="s7-ad-titles-header-count" aria-label="Quantidade de títulos">
+                      {(product?.ad_titles ?? []).length}/10
+                    </span>
                   </div>
+                  {(product?.ad_titles ?? []).length < 10 && (
+                    <button
+                      type="button"
+                      className="s7-btn s7-btn--secondary s7-ad-titles-add-btn s7-ad-title-add-btn"
+                      onClick={handleAddTitle}
+                    >
+                      + Adicionar título
+                    </button>
+                  )}
+                </div>
+
+                {/* Lista de cards (um por título) */}
+                <div className="s7-ad-titles-cards">
+                  {(product?.ad_titles ?? []).map((item, idx) => (
+                    <div key={item.id} className="s7-card s7-ad-titles-card">
+                      {/* Título N e ícone copiar na mesma linha; copiar no final (direita), acima do input */}
+                      <div className="s7-ad-title-copy-row">
+                        <span className="s7-label s7-ad-titles-card-label">Título {idx + 1}</span>
+                        <div className="s7-ad-title-copy-wrap">
+                          <button
+                            type="button"
+                            className="pf-copy-btn s7-tip s7-tip-bottom"
+                            onClick={() => handleCopy(item.value, `ad_title_${item.id}`)}
+                            aria-label="Copiar título"
+                            data-tip={copiedKey === `ad_title_${item.id}` ? "Copiado!" : "Copiar"}
+                          >
+                            {copiedKey === `ad_title_${item.id}` ? "✓" : "⧉"}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="s7-ad-title-row">
+                        <div className="s7-ad-title-input-wrap">
+                          <input
+                            type="text"
+                            className="s7-input s7-ad-title-input"
+                            placeholder="Ex: Produto XYZ - Marca - Modelo"
+                            value={item.value}
+                            onChange={(e) => handleChangeTitle(item.id, e.target.value)}
+                          />
+                          <span className="s7-ad-title-count">
+                            {item.value?.length ?? 0} caracteres
+                          </span>
+                        </div>
+                        {(product?.ad_titles ?? []).length > 1 && (
+                          <button
+                            type="button"
+                            className="s7-title-delete-btn"
+                            onClick={() => setAdTitleDeleteId(item.id)}
+                            aria-label="Excluir título"
+                          >
+                            <Trash2 size={18} strokeWidth={2} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               )}
+
+              {/* Modal confirmação exclusão título do anúncio (padrão Suse7) */}
+              {adTitleDeleteId != null &&
+                createPortal(
+                  <div
+                    className="s7-modal-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="s7-ad-title-delete-modal-title"
+                  >
+                    <div className="s7-modal-card">
+                      <div className="s7-modal-icon-wrap">
+                        <div className="s7-modal-icon s7-modal-icon--warning">!</div>
+                      </div>
+                      <h2 id="s7-ad-title-delete-modal-title" className="s7-modal-title">
+                        Excluir título
+                      </h2>
+                      <p className="s7-modal-text">
+                        Deseja realmente excluir este título?
+                      </p>
+                      <div className="s7-modal-actions">
+                        <button
+                          type="button"
+                          className="s7-modal-btn-secondary"
+                          onClick={() => setAdTitleDeleteId(null)}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          className="s7-modal-btn-danger"
+                          onClick={() => {
+                            handleRemoveTitle(adTitleDeleteId);
+                            setAdTitleDeleteId(null);
+                          }}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
 
               {/* =======================
               ABA: ANÚNCIOS (placeholder)
@@ -3314,17 +3405,15 @@ const validatePricingTab = () => {
 />
 
 {/* --------------------------------------------------
-   MODAL: Sair sem salvar (substitui useBlocker — compatível com BrowserRouter)
+   MODAL: Sair sem salvar (Fechar ou navegação interna bloqueada)
+   Só fecha com Cancelar ou Sair; não fecha ao clicar fora nem com ESC.
 -------------------------------------------------- */}
 {showExitModal &&
   createPortal(
     <ExitWithoutSavingModal
       open={true}
-      onCancel={() => setShowExitModal(false)}
-      onConfirm={() => {
-        setShowExitModal(false);
-        onCancel?.();
-      }}
+      onCancel={handleExitModalCancel}
+      onConfirm={handleExitModalConfirm}
       onDontShowAgainChange={(checked) => {
         if (checked) {
           setExitWithoutSavingHidden(true);
