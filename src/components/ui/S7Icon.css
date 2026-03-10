@@ -1,0 +1,11 @@
+/* ======================================================
+COMPONENTE: S7Icon
+Objetivo:
+- Definir comportamento visual base dos ícones do Suse7
+====================================================== */
+
+.s7-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}

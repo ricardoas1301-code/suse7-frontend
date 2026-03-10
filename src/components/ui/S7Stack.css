@@ -1,0 +1,41 @@
+/* ======================================================
+COMPONENTE: S7Stack
+Objetivo:
+- Organizar elementos em coluna ou linha
+- Espaçamento consistente (gap) entre itens
+====================================================== */
+
+.s7-stack {
+  display: flex;
+}
+
+.s7-stack--vertical {
+  flex-direction: column;
+}
+
+.s7-stack--horizontal {
+  flex-direction: row;
+}
+
+/* ======================================================
+GAP
+====================================================== */
+.s7-stack--gap-xs {
+  gap: 4px;
+}
+
+.s7-stack--gap-sm {
+  gap: 8px;
+}
+
+.s7-stack--gap-md {
+  gap: 12px;
+}
+
+.s7-stack--gap-lg {
+  gap: 16px;
+}
+
+.s7-stack--gap-xl {
+  gap: 24px;
+}

@@ -1,0 +1,39 @@
+/* ======================================================
+DESIGN TOKENS — TIPOGRAFIA
+Objetivo:
+Padronizar tamanhos, pesos e espaçamento vertical
+dos textos no Suse7.
+====================================================== */
+
+:root {
+
+  /* ======================================================
+  FONT SIZE
+  Escala pensada para UI SaaS
+  ====================================================== */
+
+  --s7-font-xs: 12px;
+  --s7-font-sm: 13px;
+  --s7-font-md: 14px;
+  --s7-font-lg: 16px;
+  --s7-font-xl: 18px;
+  --s7-font-2xl: 20px;
+
+  /* ======================================================
+  FONT WEIGHT
+  ====================================================== */
+
+  --s7-font-regular: 400;
+  --s7-font-medium: 500;
+  --s7-font-semibold: 600;
+  --s7-font-bold: 700;
+
+  /* ======================================================
+  LINE HEIGHT
+  ====================================================== */
+
+  --s7-line-tight: 1.2;
+  --s7-line-normal: 1.4;
+  --s7-line-relaxed: 1.6;
+
+}

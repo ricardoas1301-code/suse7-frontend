@@ -1,0 +1,28 @@
+/* ======================================================
+DESIGN TOKENS — CORES
+Objetivo:
+Centralizar cores principais do Suse7
+====================================================== */
+
+:root {
+
+  /* PRIMARY */
+  --s7-color-primary: #2563eb;
+  --s7-color-primary-hover: #1d4ed8;
+
+  /* BACKGROUNDS */
+  --s7-bg-soft: #f9fafb;
+  --s7-bg-card: #ffffff;
+
+  /* BORDER */
+  --s7-border-default: #d1d5db;
+  --s7-border-soft: #e5e7eb;
+
+  /* TEXT */
+  --s7-text-primary: #111827;
+  --s7-text-muted: #6b7280;
+
+  /* ERROR */
+  --s7-color-error: #dc2626;
+
+}

@@ -1,0 +1,80 @@
+/* ======================================================
+COMPONENTE: S7FormField
+Objetivo:
+- Agrupar label + tooltip + campo + mensagem (erro/hint)
+- Padrão visual alinhado ao S7Input (label e mensagens)
+====================================================== */
+
+/* ======================================================
+WRAPPER
+====================================================== */
+.s7-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+/* ======================================================
+LABEL + TOOLTIP
+====================================================== */
+.s7-form-field__label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.s7-form-field__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.s7-form-field__required {
+  color: #dc2626;
+}
+
+/* Ícone (i) ao lado do label quando há tooltip */
+.s7-form-field__info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f3f4f6;
+  border-radius: 50%;
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.s7-form-field__info-icon:hover {
+  color: #374151;
+  background: #e5e7eb;
+}
+
+/* ======================================================
+CONTROL (campo filho)
+====================================================== */
+.s7-form-field__control {
+  width: 100%;
+}
+
+/* ======================================================
+MENSAGENS (erro / hint)
+====================================================== */
+.s7-form-field__message {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.s7-form-field__message--error {
+  color: #dc2626;
+}
+
+.s7-form-field__message--hint {
+  color: #6b7280;
+}

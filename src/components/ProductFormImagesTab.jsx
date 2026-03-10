@@ -35,6 +35,8 @@ import {
 import { normalizeSortOrder } from "../services/images/imageRules";
 import { deleteAsset, downloadAsBlob, getSignedUrl, uploadAssets } from "../services/images/imageStorageService";
 import { API_BASE_URL } from "../config/api";
+import S7Button from "./ui/S7Button";
+import S7ActionBar from "./ui/S7ActionBar";
 import "./ProductFormImagesTab.css";
 
 const MAX_IMAGES = 7;
@@ -104,82 +106,90 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
       style={style}
       className={`pf-images-variant-block s7-card ${isDragging ? "pf-images-variant-block--dragging" : ""}`}
     >
-      <div className="pf-images-variant-block-header">
-        <h4 className="pf-images-variant-title">
-          {row.attributes && Object.keys(row.attributes).length > 0 ? (
-            <>
-              {Object.entries(row.attributes).map(([k, v], i) => (
-                <span key={k}>
-                  {i > 0 && <span className="pf-images-attr-sep"> / </span>}
-                  <span className="pf-images-attr-label">{k}</span>
-                  <span className="pf-images-attr-sep">: </span>
-                  <span className="pf-images-attr-value">{v}</span>
-                </span>
-              ))}
-            </>
-          ) : (
-            "Geral"
-          )}
-          {!SILENT_AUTOSAVE && isDirty && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
-        </h4>
-        {hasImages && (
-          <div className="pf-images-seo-action">
-            <button
-              type="button"
-              className="pf-images-secondary-btn pf-images-variant-seo-btn"
-              onClick={hasKeywords ? () => onBulkSeoRename?.(vk) : () => onGoToSeo?.()}
-              disabled={seoOptimizing}
-            >
-              {seoButtonLabel}
-            </button>
-            <button
-              type="button"
-              className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
-              data-tip={seoButtonTip}
-              aria-label={hasKeywords ? "Informações sobre renomear imagens (SEO)" : "Informações sobre definir palavras-chave (SEO)"}
-            >
-              i
-            </button>
-          </div>
-        )}
-        <span
-          className="pf-images-variant-drag-handle"
-          {...attributes}
-          {...listeners}
-          title="Arrastar para reordenar variações"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="9" cy="6" r="1.5" />
-            <circle cx="9" cy="12" r="1.5" />
-            <circle cx="9" cy="18" r="1.5" />
-            <circle cx="15" cy="6" r="1.5" />
-            <circle cx="15" cy="12" r="1.5" />
-            <circle cx="15" cy="18" r="1.5" />
-          </svg>
-        </span>
-        {hasImages && (
-          <div className="pf-images-slot-row-toolbar">
-            <button
-              type="button"
-              className={`pf-images-secondary-btn pf-images-toggle-select ${selectModeActive ? "pf-images-toggle-select--active" : ""}`}
-              onClick={() => onToggleSelectMode(vk)}
-            >
-              {selectModeActive ? "Desmarcar seleção" : "Baixar várias"}
-            </button>
-            {selectModeActive && (
+      <S7ActionBar
+        leftContent={
+          <div className="pf-images-variant-block-title-row">
+            <h4 className="pf-images-variant-title">
+              {row.attributes && Object.keys(row.attributes).length > 0 ? (
+                <>
+                  {Object.entries(row.attributes).map(([k, v], i) => (
+                    <span key={k}>
+                      {i > 0 && <span className="pf-images-attr-sep"> / </span>}
+                      <span className="pf-images-attr-label">{k}</span>
+                      <span className="pf-images-attr-sep">: </span>
+                      <span className="pf-images-attr-value">{v}</span>
+                    </span>
+                  ))}
+                </>
+              ) : (
+                "Geral"
+              )}
+              {!SILENT_AUTOSAVE && isDirty && <span className="pf-dirty-dot" aria-hidden title="Alterações não salvas">•</span>}
+            </h4>
+            {hasImages && (
               <button
                 type="button"
-                className="pf-images-secondary-btn"
-                onClick={() => onDownloadSelected(vk)}
-                disabled={selectedForDownload.size === 0 || downloadingSelected}
-                title={selectedForDownload.size === 0 ? "Selecione ao menos 1 imagem" : undefined}
+                className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
+                data-tip={seoButtonTip}
+                aria-label={hasKeywords ? "Informações sobre renomear imagens (SEO)" : "Informações sobre definir palavras-chave (SEO)"}
               >
-                {downloadingSelected ? "Baixando…" : "Baixar selecionadas"}
+                i
               </button>
             )}
+            <span
+              className="pf-images-variant-drag-handle"
+              {...attributes}
+              {...listeners}
+              title="Arrastar para reordenar variações"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="9" cy="6" r="1.5" />
+                <circle cx="9" cy="12" r="1.5" />
+                <circle cx="9" cy="18" r="1.5" />
+                <circle cx="15" cy="6" r="1.5" />
+                <circle cx="15" cy="12" r="1.5" />
+                <circle cx="15" cy="18" r="1.5" />
+              </svg>
+            </span>
           </div>
-        )}
-      </div>
+        }
+        rightContent={
+          hasImages ? (
+            <>
+              <S7Button
+                variant="secondary"
+                size="sm"
+                iconName="image"
+                onClick={hasKeywords ? () => onBulkSeoRename?.(vk) : () => onGoToSeo?.()}
+                disabled={seoOptimizing}
+              >
+                {seoButtonLabel}
+              </S7Button>
+              <S7Button
+                variant="secondary"
+                size="sm"
+                iconName="copy"
+                className={selectModeActive ? "pf-images-toggle-select--active" : ""}
+                onClick={() => onToggleSelectMode(vk)}
+              >
+                {selectModeActive ? "Desmarcar seleção" : "Baixar várias"}
+              </S7Button>
+              {selectModeActive && (
+                <S7Button
+                  variant="secondary"
+                  size="sm"
+                  iconName="download"
+                  onClick={() => onDownloadSelected(vk)}
+                  disabled={selectedForDownload.size === 0 || downloadingSelected}
+                  title={selectedForDownload.size === 0 ? "Selecione ao menos 1 imagem" : undefined}
+                >
+                  {downloadingSelected ? "Baixando…" : "Baixar selecionadas"}
+                </S7Button>
+              )}
+            </>
+          ) : null
+        }
+      />
       <ImageSlotRow
         links={variantLinks}
         previewUrls={previewUrls}
@@ -952,71 +962,63 @@ export default function ProductFormImagesTab({
       )}
 
       {format === "simple" && (
-        <div className="pf-images-header">
-          <strong>Adicione até {MAX_IMAGES} fotos</strong>
-          {totalImages > 0 && (
-            hasSeoKeywords ? (
-              <div className="pf-images-seo-action">
-                <button
-                  type="button"
-                  className="pf-images-secondary-btn pf-images-seo-btn"
-                  onClick={() => handleBulkSeoRename(null)}
-                  disabled={seoOptimizing}
+        <S7ActionBar
+          title={`Adicione até ${MAX_IMAGES} fotos`}
+          tooltip={
+            totalImages > 0
+              ? hasSeoKeywords
+                ? "Renomeia automaticamente as imagens usando as palavras-chave SEO do produto. Isso ajuda na organização dos arquivos e na otimização para marketplaces e buscadores."
+                : "Defina palavras-chave que serão usadas para otimizar os nomes das imagens e ajudar no SEO dos anúncios."
+              : ""
+          }
+          rightContent={
+            totalImages > 0 ? (
+              <>
+                {hasSeoKeywords ? (
+                  <S7Button
+                    variant="secondary"
+                    size="sm"
+                    iconName="image"
+                    onClick={() => handleBulkSeoRename(null)}
+                    disabled={seoOptimizing}
+                  >
+                    {seoOptimizing ? "Renomeando…" : "Renomear imagens (SEO)"}
+                  </S7Button>
+                ) : (
+                  <S7Button
+                    variant="secondary"
+                    size="sm"
+                    iconName="image"
+                    onClick={onGoToSeo ?? handleSeoModalGoToData}
+                  >
+                    Definir palavras chaves (SEO)
+                  </S7Button>
+                )}
+                <S7Button
+                  variant="secondary"
+                  size="sm"
+                  iconName="copy"
+                  className={selectMode && activeSelectScope === "product" ? "pf-images-toggle-select--active" : ""}
+                  onClick={() => toggleSelectMode("product")}
                 >
-                  {seoOptimizing ? "Renomeando…" : "Renomear imagens (SEO)"}
-                </button>
-                <button
-                  type="button"
-                  className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
-                  data-tip="Renomeia automaticamente as imagens usando as palavras-chave SEO do produto. Isso ajuda na organização dos arquivos e na otimização para marketplaces e buscadores."
-                  aria-label="Informações sobre renomear imagens (SEO)"
-                >
-                  i
-                </button>
-              </div>
-            ) : (
-              <div className="pf-images-seo-action">
-                <button
-                  type="button"
-                  className="pf-images-secondary-btn pf-images-seo-btn"
-                  onClick={onGoToSeo ?? handleSeoModalGoToData}
-                >
-                  Definir palavras chaves (SEO)
-                </button>
-                <button
-                  type="button"
-                  className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
-                  data-tip="Defina palavras-chave que serão usadas para otimizar os nomes das imagens e ajudar no SEO dos anúncios."
-                  aria-label="Informações sobre definir palavras chaves (SEO)"
-                >
-                  i
-                </button>
-              </div>
-            )
-          )}
-          {totalImages > 0 && (
-            <div className="pf-images-slot-row-toolbar">
-              <button
-                type="button"
-                className={`pf-images-secondary-btn pf-images-toggle-select ${selectMode && activeSelectScope === "product" ? "pf-images-toggle-select--active" : ""}`}
-                onClick={() => toggleSelectMode("product")}
-              >
-                {selectMode && activeSelectScope === "product" ? "Desmarcar seleção" : "Baixar várias"}
-              </button>
-              {selectMode && activeSelectScope === "product" && (
-                <button
-                  type="button"
-                  className="pf-images-secondary-btn"
-                  onClick={() => handleDownloadSelected("product")}
-                  disabled={(selectedForDownloadByScope["product"] ?? EMPTY_SELECTION).size === 0 || downloadingSelected}
-                  title={(selectedForDownloadByScope["product"] ?? EMPTY_SELECTION).size === 0 ? "Selecione ao menos 1 imagem" : undefined}
-                >
-                  {downloadingSelected ? "Baixando…" : "Baixar selecionadas"}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+                  {selectMode && activeSelectScope === "product" ? "Desmarcar seleção" : "Baixar várias"}
+                </S7Button>
+                {selectMode && activeSelectScope === "product" && (
+                  <S7Button
+                    variant="secondary"
+                    size="sm"
+                    iconName="download"
+                    onClick={() => handleDownloadSelected("product")}
+                    disabled={(selectedForDownloadByScope["product"] ?? EMPTY_SELECTION).size === 0 || downloadingSelected}
+                    title={(selectedForDownloadByScope["product"] ?? EMPTY_SELECTION).size === 0 ? "Selecione ao menos 1 imagem" : undefined}
+                  >
+                    {downloadingSelected ? "Baixando…" : "Baixar selecionadas"}
+                  </S7Button>
+                )}
+              </>
+            ) : null
+          }
+        />
       )}
 
       {error && (
@@ -1367,23 +1369,24 @@ function ImageSlotRow({
         <div className="pf-images-slot-row-wrap">
           {showToolbar && sortedLinks.length > 0 && (
             <div className="pf-images-slot-row-toolbar">
-              <button
-                type="button"
-                className={`pf-images-secondary-btn pf-images-toggle-select ${selectModeActive ? "pf-images-toggle-select--active" : ""}`}
+              <S7Button
+                variant="secondary"
+                size="sm"
+                className={selectModeActive ? "pf-images-toggle-select--active" : ""}
                 onClick={onToggleSelectMode}
               >
                 {selectModeActive ? "Desmarcar seleção" : "Baixar várias"}
-              </button>
+              </S7Button>
               {selectModeActive && (
-                <button
-                  type="button"
-                  className="pf-images-secondary-btn"
+                <S7Button
+                  variant="secondary"
+                  size="sm"
                   onClick={onDownloadSelected}
                   disabled={selectedForDownload.size === 0 || downloadingSelected}
                   title={selectedForDownload.size === 0 ? "Selecione ao menos 1 imagem" : undefined}
                 >
                   {downloadingSelected ? "Baixando…" : "Baixar selecionadas"}
-                </button>
+                </S7Button>
               )}
             </div>
           )}

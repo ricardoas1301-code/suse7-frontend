@@ -39,23 +39,36 @@
   margin: 0 0 16px;
 }
 
-/* Header principal da aba Imagens (texto + botão SEO + toolbar na mesma linha) */
-.pf-images-header {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 0 0 12px;
-  overflow: visible;
+/* Header principal: S7ActionBar — margem inferior para separar do conteúdo */
+.pf-images-container > .s7-action-bar {
+  margin-bottom: 12px;
 }
 
-.pf-images-header strong{
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--s7-text, #0f172a);
+/* Bloco por variação: S7ActionBar — margem inferior antes do grid de imagens */
+.pf-images-variant-block .s7-action-bar {
+  margin-bottom: 10px;
 }
 
-/* Ação SEO (botão + ícone info) */
+/* Botões da aba Imagens: sem negrito, mesma altura do "+ Adicionar título" (font-weight 400, height 30px) */
+.pf-images-container .s7-action-bar .s7-btn,
+.pf-images-container .s7-action-bar .s7-btn .s7-btn__label,
+.pf-images-variant-block .s7-action-bar .s7-btn,
+.pf-images-variant-block .s7-action-bar .s7-btn .s7-btn__label,
+.pf-images-slot-row-toolbar .s7-btn,
+.pf-images-slot-row-toolbar .s7-btn .s7-btn__label {
+  font-weight: 400 !important;
+}
+
+.pf-images-container .s7-action-bar .s7-btn.s7-btn--secondary.s7-btn--sm,
+.pf-images-variant-block .s7-action-bar .s7-btn.s7-btn--secondary.s7-btn--sm,
+.pf-images-slot-row-toolbar .s7-btn.s7-btn--secondary.s7-btn--sm {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 6px !important;
+  box-sizing: border-box;
+}
+
+/* Ação SEO (botão + ícone info) — mantido para uso em bloco de variação */
 .pf-images-seo-action {
   display: inline-flex;
   align-items: center;
@@ -189,11 +202,17 @@
 
 .pf-images-variant-block-header {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 10px;
-  flex-wrap: wrap;
   overflow: visible;
+}
+
+.pf-images-variant-block-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* Tipografia do atributo/variação = mesmo padrão da aba Estoque */
@@ -309,7 +328,7 @@
 }
 
 .pf-images-card-actions {
-  padding: 4px 6px;
+  padding: 6px 6px 4px;
   display: flex;
   flex-wrap: nowrap;
   gap: 2px;

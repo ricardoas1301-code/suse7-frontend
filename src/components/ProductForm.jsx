@@ -39,6 +39,7 @@ import { getPreferences, setPreference } from "../services/userPreferencesServic
 import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
 import ProductFormTabs from "./ProductFormTabs";
 import ProductFormRightPanel from "./ProductFormRightPanel";
+import { S7ActionBar, S7Button } from "./ui";
 import "./ProductForm.css";
 import { Repeat } from "lucide-react";
 import { useFormProgress } from "../hooks/useFormProgress";
@@ -3045,32 +3046,22 @@ const validatePricingTab = () => {
               ======================= */}
               {safeTab === "ad_titles" && (
               <div className="pf-container">
-                {/* Header da aba: texto + ícone info (tooltip) + botão Adicionar */}
-                <div className="s7-ad-titles-header">
-                  <div className="s7-ad-titles-header-label">
-                    <p className="s7-ad-titles-intro">Crie até 10 títulos por produto</p>
-                    <button
-                      type="button"
-                      className="pf-info-btn s7-ad-titles-info-icon s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
-                      data-tip="Um título bem elaborado ajuda seu anúncio a ser encontrado com mais facilidade, melhora a relevância nas buscas e pode aumentar o desempenho do produto no marketplace."
-                      aria-label="Informações sobre títulos do anúncio"
-                    >
-                      i
-                    </button>
+                <S7ActionBar
+                  title="Crie até 10 títulos por produto"
+                  tooltip="Um título bem elaborado ajuda seu anúncio a ser encontrado com mais facilidade, melhora a relevância nas buscas e pode aumentar o desempenho do produto no marketplace."
+                  meta={
                     <span className="s7-ad-titles-header-count" aria-label="Quantidade de títulos">
                       {(product?.ad_titles ?? []).length}/10
                     </span>
-                  </div>
-                  {(product?.ad_titles ?? []).length < 10 && (
-                    <button
-                      type="button"
-                      className="s7-btn s7-btn--secondary s7-ad-titles-add-btn s7-ad-title-add-btn"
-                      onClick={handleAddTitle}
-                    >
-                      + Adicionar título
-                    </button>
-                  )}
-                </div>
+                  }
+                  rightContent={
+                    (product?.ad_titles ?? []).length < 10 ? (
+                      <S7Button variant="secondary" size="sm" iconName="plus" onClick={handleAddTitle}>
+                        Adicionar título
+                      </S7Button>
+                    ) : null
+                  }
+                />
 
                 {/* Lista de cards (um por título) */}
                 <div className="s7-ad-titles-cards">

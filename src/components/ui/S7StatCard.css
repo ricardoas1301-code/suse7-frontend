@@ -1,0 +1,176 @@
+/* ======================================================
+COMPONENTE: S7StatCard
+Objetivo:
+- Definir o padrão visual dos cards de métricas do Suse7
+- Garantir leitura rápida, hierarquia e consistência
+====================================================== */
+
+.s7-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  min-height: 132px;
+  padding: 16px;
+
+  background: var(--s7-bg-card, #ffffff);
+  border: 1px solid var(--s7-border-soft, #e5e7eb);
+  border-radius: var(--s7-radius-lg, 12px);
+  box-shadow: var(--s7-shadow-sm);
+
+  position: relative;
+  overflow: hidden;
+}
+
+.s7-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+
+  width: 100%;
+  height: 3px;
+  background: transparent;
+}
+
+.s7-stat-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.s7-stat-card__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.s7-stat-card__title {
+  font-size: var(--s7-font-sm, 13px);
+  font-weight: var(--s7-font-semibold, 600);
+  line-height: var(--s7-line-tight, 1.2);
+  color: var(--s7-text-muted, #6b7280);
+}
+
+.s7-stat-card__subtitle {
+  font-size: var(--s7-font-xs, 12px);
+  font-weight: var(--s7-font-regular, 400);
+  line-height: var(--s7-line-normal, 1.4);
+  color: var(--s7-text-muted, #6b7280);
+}
+
+.s7-stat-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 999px;
+  background: var(--s7-bg-soft, #f9fafb);
+  color: var(--s7-color-primary, #2563eb);
+
+  flex-shrink: 0;
+}
+
+.s7-stat-card__value {
+  font-size: clamp(24px, 2vw, 30px);
+  font-weight: var(--s7-font-bold, 700);
+  line-height: 1.1;
+  color: var(--s7-text-primary, #111827);
+
+  letter-spacing: -0.02em;
+}
+
+.s7-stat-card__trend {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+
+  min-height: 24px;
+  padding: 2px 8px;
+
+  border-radius: 999px;
+  font-size: var(--s7-font-xs, 12px);
+  font-weight: var(--s7-font-medium, 500);
+  line-height: var(--s7-line-tight, 1.2);
+}
+
+/* ======================================================
+TREND STATES
+====================================================== */
+.s7-stat-card__trend--positive {
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
+}
+
+.s7-stat-card__trend--negative {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+.s7-stat-card__trend--neutral {
+  background: rgba(107, 114, 128, 0.1);
+  color: #4b5563;
+}
+
+/* ======================================================
+VARIANTS
+====================================================== */
+.s7-stat-card--default::before {
+  background: var(--s7-border-soft, #e5e7eb);
+}
+
+.s7-stat-card--info::before {
+  background: var(--s7-color-primary, #2563eb);
+}
+
+.s7-stat-card--success::before {
+  background: #16a34a;
+}
+
+.s7-stat-card--warning::before {
+  background: #d97706;
+}
+
+.s7-stat-card--danger::before {
+  background: #dc2626;
+}
+
+.s7-stat-card--info .s7-stat-card__icon {
+  color: var(--s7-color-primary, #2563eb);
+}
+
+.s7-stat-card--success .s7-stat-card__icon {
+  color: #16a34a;
+}
+
+.s7-stat-card--warning .s7-stat-card__icon {
+  color: #d97706;
+}
+
+.s7-stat-card--danger .s7-stat-card__icon {
+  color: #dc2626;
+}
+
+/* ======================================================
+HIGHLIGHT
+====================================================== */
+.s7-stat-card--highlight {
+  border-color: rgba(37, 99, 235, 0.25);
+  box-shadow:
+    0 2px 8px rgba(37, 99, 235, 0.06),
+    0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+/* ======================================================
+RESPONSIVIDADE
+====================================================== */
+@media (max-width: 768px) {
+  .s7-stat-card {
+    min-height: 120px;
+    padding: 14px;
+  }
+}

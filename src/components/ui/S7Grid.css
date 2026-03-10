@@ -1,0 +1,33 @@
+/* ======================================================
+COMPONENTE: S7Grid
+Objetivo:
+- Organizar elementos em grid responsivo
+- Número de colunas configurável via prop
+====================================================== */
+
+.s7-grid {
+  display: grid;
+}
+
+/* ======================================================
+GAP
+====================================================== */
+.s7-grid--gap-xs {
+  gap: 4px;
+}
+
+.s7-grid--gap-sm {
+  gap: 8px;
+}
+
+.s7-grid--gap-md {
+  gap: 12px;
+}
+
+.s7-grid--gap-lg {
+  gap: 16px;
+}
+
+.s7-grid--gap-xl {
+  gap: 24px;
+}

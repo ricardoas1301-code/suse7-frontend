@@ -1,0 +1,54 @@
+/* ======================================================
+COMPONENTE: S7EmptyState
+Objetivo:
+- Definir o padrão visual dos estados vazios do Suse7
+====================================================== */
+
+.s7-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  width: 100%;
+  min-height: 220px;
+
+  padding: 24px;
+  text-align: center;
+}
+
+.s7-empty-state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 56px;
+  height: 56px;
+
+  border-radius: 999px;
+  background: var(--s7-bg-soft, #f9fafb);
+  color: var(--s7-text-muted, #6b7280);
+}
+
+.s7-empty-state__title {
+  font-size: var(--s7-font-lg, 16px);
+  font-weight: var(--s7-font-semibold, 600);
+  line-height: var(--s7-line-tight, 1.2);
+  color: var(--s7-text-primary, #111827);
+}
+
+.s7-empty-state__description {
+  max-width: 420px;
+  font-size: var(--s7-font-md, 14px);
+  font-weight: var(--s7-font-regular, 400);
+  line-height: var(--s7-line-relaxed, 1.6);
+  color: var(--s7-text-muted, #6b7280);
+}
+
+.s7-empty-state__action {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

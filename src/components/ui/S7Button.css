@@ -1,0 +1,139 @@
+/* ======================================================
+   COMPONENTE: S7Button
+   Objetivo:
+   - Definir os padrões visuais oficiais de botões do Suse7
+   - Garantir consistência entre telas e ações
+   - Variante secondary = equivalente ao botão "+ Adicionar título"
+====================================================== */
+
+/* ======================================================
+   BASE
+====================================================== */
+.s7-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border: 1px solid transparent;
+  border-radius: var(--s7-radius-sm, 6px);
+  box-sizing: border-box;
+
+  font-family: var(--s7-font, inherit);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* ======================================================
+   TAMANHOS
+====================================================== */
+.s7-btn--md {
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.s7-btn--sm {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 6px;
+  font-size: 14px;
+}
+
+/* secondary+sm = mesmo estilo do botão "+ Adicionar título": font-weight 400, altura fixa 30px */
+.s7-btn--secondary.s7-btn--sm {
+  font-weight: 400;
+}
+
+/* ======================================================
+   VARIANTE: PRIMARY
+   Uso: ação principal da tela (Salvar, Confirmar, Publicar)
+====================================================== */
+.s7-btn--primary {
+  background: var(--s7-primary, #2563eb);
+  border-color: var(--s7-primary, #2563eb);
+  color: #ffffff;
+}
+
+.s7-btn--primary:hover:not(:disabled) {
+  background: var(--s7-primary-hover, #1d4ed8);
+  border-color: var(--s7-primary-hover, #1d4ed8);
+}
+
+/* ======================================================
+   VARIANTE: SECONDARY
+   Baseado no botão "+ Adicionar título" (transparente + hover azul)
+   Hover: background, cor e animação de leve crescimento (scale 1.04)
+====================================================== */
+.s7-btn--secondary {
+  background: transparent;
+  border: none;
+  color: var(--s7-text, #111827);
+  font-weight: 400;
+  border-radius: 8px;
+}
+
+.s7-btn--secondary:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--s7-primary, #2563eb);
+  transform: scale(1.02);
+}
+
+.s7-btn--secondary:hover:disabled {
+  transform: none;
+}
+
+/* ======================================================
+   VARIANTE: UTILITY
+   Uso: ações discretas (copiar, excluir, ícones)
+====================================================== */
+.s7-btn--utility {
+  background: transparent;
+  border: none;
+  color: var(--s7-muted, #6b7280);
+  padding: 0;
+  min-height: auto;
+}
+
+.s7-btn--utility:hover:not(:disabled) {
+  color: var(--s7-text, #374151);
+  background: transparent;
+  border: none;
+}
+
+/* ======================================================
+   DISABLED
+====================================================== */
+.s7-btn:disabled,
+.s7-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ======================================================
+   CONTEÚDO INTERNO
+   Alinhamento vertical ícone + texto; gap consistente
+====================================================== */
+.s7-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.s7-btn__label {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
