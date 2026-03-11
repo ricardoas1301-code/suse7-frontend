@@ -358,8 +358,8 @@
 /* Grid compacto para aba Pesos & medidas (medidas de envio/produto) */
 .pf-dimensions-grid {
   display: grid;
-  grid-template-columns: repeat(4, max-content);
-  gap: 16px;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 20px;
   align-items: flex-end;
 }
 
@@ -389,14 +389,24 @@
   width: 210px;
 }
 
-/* Inputs numéricos de dimensões — largura visual reduzida (~36%) */
+/* Inputs numéricos de dimensões — largura visual equilibrada nos cards */
 .pf-dimension-input {
-  max-width: 160px;
+  width: 100%;
+  max-width: 180px;
 }
 
-/* Espaçamento entre os dois cards de medidas */
-.s7-card + .s7-card {
-  margin-top: 12px;
+/* Remover spinners nativos de inputs numéricos de dimensões */
+/* Chrome, Safari, Edge, Opera */
+.pf-dimension-input::-webkit-outer-spin-button,
+.pf-dimension-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+.pf-dimension-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* ======================================================
