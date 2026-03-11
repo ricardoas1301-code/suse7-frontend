@@ -1371,6 +1371,99 @@
 
 /* (Tooltips específicos de Imagens/Estoque removidos — todos usam o padrão único .s7-tip agora) */
 
+/* ======================================================
+   TOOLTIP — HEADER DA ABA IMAGENS
+   Objetivo:
+   - nascer no pé do ícone
+   - ficar na frente da galeria
+   ====================================================== */
+.pf-images-container > .s7-local-section-header {
+  position: relative;
+  z-index: 30;
+  overflow: visible;
+}
+
+.pf-images-container > .s7-local-section-header .s7-local-section-header-left {
+  position: relative;
+  overflow: visible;
+}
+
+.pf-images-container > .s7-local-section-header .pf-info-btn {
+  position: relative;
+  z-index: 31;
+}
+
+.pf-images-container > .s7-local-section-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  bottom: auto;
+  margin-left: 0;
+  transform: translateX(0);
+  z-index: 100000;
+}
+
+.pf-images-container > .s7-local-section-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before {
+  top: calc(100% + 2px);
+  left: 6px;
+  right: auto;
+  bottom: auto;
+  margin-left: 0;
+  transform: none;
+}
+
+/* deixa a galeria abaixo da camada do header */
+.pf-images-slot-row,
+.pf-images-grid,
+.pf-images-cards,
+.pf-images-card-list {
+  position: relative;
+  z-index: 1;
+}
+
+/* fallback para cards individuais */
+.pf-images-card,
+.pf-images-card-preview {
+  position: relative;
+  z-index: 1;
+}
+
+/* ======================================================
+   TOOLTIP — ABA ESTOQUE
+   Objetivo:
+   - nascer no pé do ícone
+   - não ficar à esquerda
+   ====================================================== */
+.pf-stock-simple-column .pf-info-btn,
+.pf-stock-variant-card .pf-info-btn,
+.pf-label-row .pf-info-btn {
+  position: relative;
+  z-index: 20;
+}
+
+.pf-stock-simple-column .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after,
+.pf-stock-variant-card .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after,
+.pf-label-row .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  bottom: auto;
+  margin-left: 0;
+  transform: translateX(0);
+  z-index: 100000;
+}
+
+.pf-stock-simple-column .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before,
+.pf-stock-variant-card .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before,
+.pf-label-row .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before {
+  top: calc(100% + 2px);
+  left: 6px;
+  right: auto;
+  bottom: auto;
+  margin-left: 0;
+  transform: none;
+}
+
 
 /* Tooltip aba Título do anúncio — mesmo padrão: abaixo e à direita do ícone "i" */
 .s7-ad-titles-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
