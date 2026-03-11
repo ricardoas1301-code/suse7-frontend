@@ -1369,63 +1369,7 @@
    Referência: aba Imagens (.pf-images-seo-action) e aba Título do anúncio (.s7-ad-titles-header).
 ====================================================================== */
 
-/* Tooltip na aba Imagens (botões SEO) — abaixo e à direita do ícone "i" */
-.pf-images-seo-action .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after{
-  top: calc(100% + 8px);
-  bottom: auto;
-  left: 100%;
-  right: auto;
-  margin-left: 0;
-  transform: translateX(0);
-  z-index: 100000;
-}
-
-.pf-images-seo-action .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before{
-  top: calc(100% + 2px);
-  bottom: auto;
-  left: 100%;
-  right: auto;
-  margin-left: 2px;
-}
-
-/* Tooltip no header da aba Imagens — abaixo e à direita do ícone "i" */
-.pf-images-container .s7-local-section-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after{
-  top: calc(100% + 8px);
-  bottom: auto;
-  left: 100%;
-  right: auto;
-  margin-left: 0;
-  transform: translateX(0);
-  z-index: 100000;
-}
-
-.pf-images-container .s7-local-section-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before{
-  top: calc(100% + 2px);
-  bottom: auto;
-  left: 100%;
-  right: auto;
-  margin-left: 2px;
-}
-
-/* Tooltip na aba Estoque — abaixo e à direita do ícone "i" (mesmo padrão visual) */
-.pf-stock-simple-column .pf-info-btn.s7-tip-right[data-tip]::after,
-.pf-stock-variant-card .pf-info-btn.s7-tip-right[data-tip]::after{
-  top: calc(100% + 8px);
-  bottom: auto;
-  left: 100%;
-  margin-left: 0;
-  right: auto;
-  transform: translateX(0);
-}
-
-.pf-stock-simple-column .pf-info-btn.s7-tip-right[data-tip]::before,
-.pf-stock-variant-card .pf-info-btn.s7-tip-right[data-tip]::before{
-  top: calc(100% + 2px);
-  bottom: auto;
-  left: 100%;
-  margin-left: 2px;
-  right: auto;
-}
+/* (Tooltips específicos de Imagens/Estoque removidos — todos usam o padrão único .s7-tip agora) */
 
 
 /* Tooltip aba Título do anúncio — mesmo padrão: abaixo e à direita do ícone "i" */
