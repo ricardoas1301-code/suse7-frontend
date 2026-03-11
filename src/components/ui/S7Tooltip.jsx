@@ -15,7 +15,7 @@ import "./S7Tooltip.css";
 
 export default function S7Tooltip({
   content = "",
-  position = "top",
+  position = "right",
   children,
   className = "",
 }) {

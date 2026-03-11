@@ -1326,32 +1326,6 @@
   gap: 6px;
 }
 
-/* Tooltip à direita na aba Estoque (simples e variações) */
-.pf-stock-simple-column .pf-info-btn.s7-tip-right[data-tip]::after,
-.pf-stock-variant-card .pf-info-btn.s7-tip-right[data-tip]::after{
-  left: calc(100% + 8px);
-  right: auto;
-  top: 50%;
-  bottom: auto;
-  transform: translateY(-50%);
-}
-
-.pf-stock-simple-column .pf-info-btn.s7-tip-right[data-tip]::before,
-.pf-stock-variant-card .pf-info-btn.s7-tip-right[data-tip]::before{
-  left: -6px;
-  right: auto;
-  top: 50%;
-  bottom: auto;
-  transform: translateY(-50%);
-  border-width: 6px;
-  border-style: solid;
-  border-color: transparent #0f172a transparent transparent;
-}
-
-.pf-stock-simple-column .pf-info-btn.s7-tip-right:hover::after,
-.pf-stock-variant-card .pf-info-btn.s7-tip-right:hover::after{
-  transform: translateY(-50%);
-}
 
 .pf-stock-variant-card .pf-info-btn::after{
   max-width: 260px;
@@ -1395,30 +1369,64 @@
    Referência: aba Imagens (.pf-images-seo-action) e aba Título do anúncio (.s7-ad-titles-header).
 ====================================================================== */
 
-/* Tooltip na aba Imagens (botões SEO) — à direita e abaixo do ícone, na frente das imagens */
+/* Tooltip na aba Imagens (botões SEO) — abaixo e à direita do ícone "i" */
 .pf-images-seo-action .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after{
   top: calc(100% + 8px);
   bottom: auto;
   left: 100%;
-  margin-left: 8px;
   right: auto;
+  margin-left: 0;
   transform: translateX(0);
   z-index: 100000;
-}
-
-.pf-images-seo-action .pf-info-btn.s7-tip-bottom.s7-tip-right:hover::after{
-  transform: translateX(0) translateY(2px);
 }
 
 .pf-images-seo-action .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before{
   top: calc(100% + 2px);
   bottom: auto;
   left: 100%;
+  right: auto;
+  margin-left: 2px;
+}
+
+/* Tooltip no header da aba Imagens — abaixo e à direita do ícone "i" */
+.pf-images-container .s7-local-section-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after{
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 100%;
+  right: auto;
+  margin-left: 0;
+  transform: translateX(0);
+  z-index: 100000;
+}
+
+.pf-images-container .s7-local-section-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before{
+  top: calc(100% + 2px);
+  bottom: auto;
+  left: 100%;
+  right: auto;
+  margin-left: 2px;
+}
+
+/* Tooltip na aba Estoque — abaixo e à direita do ícone "i" (mesmo padrão visual) */
+.pf-stock-simple-column .pf-info-btn.s7-tip-right[data-tip]::after,
+.pf-stock-variant-card .pf-info-btn.s7-tip-right[data-tip]::after{
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 100%;
+  margin-left: 0;
+  right: auto;
+  transform: translateX(0);
+}
+
+.pf-stock-simple-column .pf-info-btn.s7-tip-right[data-tip]::before,
+.pf-stock-variant-card .pf-info-btn.s7-tip-right[data-tip]::before{
+  top: calc(100% + 2px);
+  bottom: auto;
+  left: 100%;
   margin-left: 2px;
   right: auto;
-  border-top-color: #0f172a;
-  border-bottom-color: transparent;
 }
+
 
 /* Tooltip aba Título do anúncio — mesmo padrão: abaixo e à direita do ícone "i" */
 .s7-ad-titles-header .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
