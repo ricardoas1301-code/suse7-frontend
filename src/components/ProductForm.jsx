@@ -2736,14 +2736,10 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "description" && (
           <div className="pf-container">
-            <div className="pf-group pf-desc-group">
-              <FieldLabel
-                text="Descrição do produto"
-                copyKey="description"
-                copiedKey={copiedKey}
-                onCopy={() => handleCopy(product.description, "description")}
-              />
-              <div className="description-wrapper pf-desc-wrapper">
+            <div className="pf-description-section">
+              <label className="s7-label">Descrição do produto</label>
+
+              <div className="pf-description-wrapper">
                 <textarea
                   className="s7-input pf-description-textarea"
                   placeholder="Descreva o produto destacando benefícios, materiais, dimensões, diferenciais e informações importantes para o cliente."
@@ -2751,6 +2747,7 @@ const validatePricingTab = () => {
                   onChange={(e) => handleChange("description", e.target.value)}
                 />
               </div>
+
               <span className="pf-description-count">
                 {(product?.description ?? "").length} caracteres
               </span>

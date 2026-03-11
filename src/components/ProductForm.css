@@ -503,49 +503,32 @@
   overflow-y: hidden;
 }
 
-/* ======================================================
-   DESCRIÇÃO (mantido)
-====================================================== */
-.description-wrapper{
-  position: relative;
-  max-width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 0;
-}
+/* ======================================================================
+   SUSE7 — TEXTAREA DESCRIÇÃO
+   Área confortável para escrita de descrição de produto
+====================================================================== */
 
- .description-wrapper textarea{
-  width: 100%;
-  height: 220px;
-  max-height: 220px;
-  resize: none;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-.pf-desc-group{
+.pf-description-section {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  height: 100%;
   min-height: 0;
 }
 
-.pf-desc-wrapper{
-  flex: 1;
+.pf-description-wrapper {
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
 }
-
-.pf-desc-wrapper textarea{ flex: 1; }
-
-/* ======================================================================
-SUSE7 — TEXTAREA DESCRIÇÃO
-Área confortável para escrita de descrição de produto
-====================================================================== */
 
 .pf-description-textarea {
   width: 100%;
-  min-height: 360px;
-  resize: vertical;
+  height: 100%;
+  min-height: 240px;
+  max-height: 100%;
+  resize: none;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .pf-description-count {
@@ -554,6 +537,7 @@ SUSE7 — TEXTAREA DESCRIÇÃO
   font-size: 12px;
   color: #6b7280;
   text-align: right;
+  flex-shrink: 0;
 }
 
 /* ======================================================
