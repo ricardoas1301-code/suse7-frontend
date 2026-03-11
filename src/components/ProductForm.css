@@ -355,6 +355,14 @@
 
 .pf-row:last-child{ margin-bottom: 0; }
 
+/* Grid compacto para aba Pesos & medidas (medidas de envio/produto) */
+.pf-dimensions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, max-content);
+  gap: 16px;
+  align-items: flex-end;
+}
+
 .pf-group{
   display: flex;
   flex-direction: column;
@@ -379,6 +387,16 @@
 .pf-group--btn{
   flex: 0 0 auto;
   width: 210px;
+}
+
+/* Inputs numéricos de dimensões — largura visual reduzida (~36%) */
+.pf-dimension-input {
+  max-width: 160px;
+}
+
+/* Espaçamento entre os dois cards de medidas */
+.s7-card + .s7-card {
+  margin-top: 12px;
 }
 
 /* ======================================================

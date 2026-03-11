@@ -2985,25 +2985,61 @@ const validatePricingTab = () => {
                 <p className="s7-card__subtitle">Medidas usadas para cálculo de frete e logística.</p>
               </div>
 
-              <div className="pf-row">
+              <div className="pf-row pf-dimensions-grid">
                 <div className="pf-group">
                   <label className="s7-label">Largura (cm)</label>
-                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 30" value={product.width} onChange={(e) => handleChange("width", e.target.value)} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    className="s7-input pf-dimension-input"
+                    placeholder="Ex: 30"
+                    value={product.width}
+                    onChange={(e) => handleChange("width", e.target.value)}
+                    onWheel={(e) => e.target.blur()}
+                  />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Altura (cm)</label>
-                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 15" value={product.height} onChange={(e) => handleChange("height", e.target.value)} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    className="s7-input pf-dimension-input"
+                    placeholder="Ex: 15"
+                    value={product.height}
+                    onChange={(e) => handleChange("height", e.target.value)}
+                    onWheel={(e) => e.target.blur()}
+                  />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Comprimento (cm)</label>
-                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 45" value={product.length} onChange={(e) => handleChange("length", e.target.value)} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    className="s7-input pf-dimension-input"
+                    placeholder="Ex: 45"
+                    value={product.length}
+                    onChange={(e) => handleChange("length", e.target.value)}
+                    onWheel={(e) => e.target.blur()}
+                  />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Peso (kg)</label>
-                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 2.350" value={product.weight} onChange={(e) => handleChange("weight", e.target.value)} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    className="s7-input pf-dimension-input"
+                    placeholder="Ex: 2.350"
+                    value={product.weight}
+                    onChange={(e) => handleChange("weight", e.target.value)}
+                    onWheel={(e) => e.target.blur()}
+                  />
                 </div>
               </div>
              </div>
@@ -3014,25 +3050,61 @@ const validatePricingTab = () => {
                 <p className="s7-card__subtitle">Medidas reais do produto pronto/montado (referência interna).</p>
               </div>
 
-              <div className="pf-row">
+              <div className="pf-row pf-dimensions-grid">
                 <div className="pf-group">
                   <label className="s7-label">Largura (cm)</label>
-                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 32" value={product.assembled_width} onChange={(e) => handleChange("assembled_width", e.target.value)} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    className="s7-input pf-dimension-input"
+                    placeholder="Ex: 32"
+                    value={product.assembled_width}
+                    onChange={(e) => handleChange("assembled_width", e.target.value)}
+                    onWheel={(e) => e.target.blur()}
+                  />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Altura (cm)</label>
-                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 80" value={product.assembled_height} onChange={(e) => handleChange("assembled_height", e.target.value)} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    className="s7-input pf-dimension-input"
+                    placeholder="Ex: 80"
+                    value={product.assembled_height}
+                    onChange={(e) => handleChange("assembled_height", e.target.value)}
+                    onWheel={(e) => e.target.blur()}
+                  />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Comprimento (cm)</label>
-                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 42" value={product.assembled_length} onChange={(e) => handleChange("assembled_length", e.target.value)} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    className="s7-input pf-dimension-input"
+                    placeholder="Ex: 42"
+                    value={product.assembled_length}
+                    onChange={(e) => handleChange("assembled_length", e.target.value)}
+                    onWheel={(e) => e.target.blur()}
+                  />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Peso (kg)</label>
-                  <input className="s7-input" inputMode="decimal" placeholder="Ex: 8.500" value={product.assembled_weight} onChange={(e) => handleChange("assembled_weight", e.target.value)} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    className="s7-input pf-dimension-input"
+                    placeholder="Ex: 8.500"
+                    value={product.assembled_weight}
+                    onChange={(e) => handleChange("assembled_weight", e.target.value)}
+                    onWheel={(e) => e.target.blur()}
+                  />
                 </div>
               </div>
               </div>
