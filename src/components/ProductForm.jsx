@@ -2736,21 +2736,27 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "description" && (
           <div className="pf-container">
-            <div className="pf-group">
-              <FieldLabel text="Descrição do produto" copyKey="description" copiedKey={copiedKey} onCopy={() => handleCopy(product.description, "description")} />
+            <div className="pf-group pf-desc-group">
+              <FieldLabel
+                text="Descrição do produto"
+                copyKey="description"
+                copiedKey={copiedKey}
+                onCopy={() => handleCopy(product.description, "description")}
+              />
               <div className="description-wrapper pf-desc-wrapper">
                 <textarea
-                  className="s7-textarea"
-                  rows="8"
-                  placeholder="Descrição base do produto. Esta descrição poderá ser usada em todos os anúncios."
-                  value={product.description}
+                  className="s7-input pf-description-textarea"
+                  placeholder="Descreva o produto destacando benefícios, materiais, dimensões, diferenciais e informações importantes para o cliente."
+                  value={product.description || ""}
                   onChange={(e) => handleChange("description", e.target.value)}
                 />
               </div>
-              
+              <span className="pf-description-count">
+                {(product?.description ?? "").length} caracteres
+              </span>
             </div>
           </div>
-          )}
+        )}
 
           {/* =======================
             ABA: ESTOQUE (v2)
