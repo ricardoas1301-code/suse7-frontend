@@ -2979,7 +2979,7 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "measures" && (
           <div className="pf-container">
-            <div className="s7-card">
+            <div className="s7-card pf-dimensions-card">
               <div className="s7-card__header">
                 <h3 className="s7-card__title">Medidas de envio</h3>
                 <p className="s7-card__subtitle">Medidas usadas para cálculo de frete e logística.</p>
@@ -2997,6 +2997,9 @@ const validatePricingTab = () => {
                     value={product.width}
                     onChange={(e) => handleChange("width", e.target.value)}
                     onWheel={(e) => e.target.blur()}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
 
@@ -3011,6 +3014,9 @@ const validatePricingTab = () => {
                     value={product.height}
                     onChange={(e) => handleChange("height", e.target.value)}
                     onWheel={(e) => e.target.blur()}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
 
@@ -3025,6 +3031,9 @@ const validatePricingTab = () => {
                     value={product.length}
                     onChange={(e) => handleChange("length", e.target.value)}
                     onWheel={(e) => e.target.blur()}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
 
@@ -3039,12 +3048,15 @@ const validatePricingTab = () => {
                     value={product.weight}
                     onChange={(e) => handleChange("weight", e.target.value)}
                     onWheel={(e) => e.target.blur()}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
               </div>
              </div>
 
-             <div className="s7-card" style={{ marginTop: 12 }}>
+             <div className="s7-card pf-dimensions-card" style={{ marginTop: 12 }}>
               <div className="s7-card__header">
                 <h3 className="s7-card__title">Medidas do produto (montado)</h3>
                 <p className="s7-card__subtitle">Medidas reais do produto pronto/montado (referência interna).</p>
@@ -3062,6 +3074,9 @@ const validatePricingTab = () => {
                     value={product.assembled_width}
                     onChange={(e) => handleChange("assembled_width", e.target.value)}
                     onWheel={(e) => e.target.blur()}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
 
@@ -3076,6 +3091,9 @@ const validatePricingTab = () => {
                     value={product.assembled_height}
                     onChange={(e) => handleChange("assembled_height", e.target.value)}
                     onWheel={(e) => e.target.blur()}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
 
@@ -3090,6 +3108,9 @@ const validatePricingTab = () => {
                     value={product.assembled_length}
                     onChange={(e) => handleChange("assembled_length", e.target.value)}
                     onWheel={(e) => e.target.blur()}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
 
@@ -3104,6 +3125,9 @@ const validatePricingTab = () => {
                     value={product.assembled_weight}
                     onChange={(e) => handleChange("assembled_weight", e.target.value)}
                     onWheel={(e) => e.target.blur()}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
               </div>

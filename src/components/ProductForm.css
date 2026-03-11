@@ -409,6 +409,11 @@
   appearance: textfield;
 }
 
+/* Respiro inferior para o último card de Pesos & medidas */
+.pf-dimensions-card:last-child {
+  margin-bottom: 16px;
+}
+
 /* ======================================================
    GROUP WIDTH HELPERS — ABA DADOS
 ====================================================== */
