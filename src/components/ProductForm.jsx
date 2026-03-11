@@ -3052,15 +3052,6 @@ const validatePricingTab = () => {
                         Crie até 10 títulos por produto
                       </span>
 
-                      <button
-                        type="button"
-                        className="s7-local-info-btn"
-                        aria-label="Informações sobre títulos"
-                        title="O título é usado no anúncio do marketplace. Crie variações com palavras-chave para melhorar SEO e CTR."
-                      >
-                        i
-                      </button>
-
                       <span
                         className="s7-local-section-count"
                         aria-label="Quantidade de títulos"

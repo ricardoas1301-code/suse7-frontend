@@ -1642,24 +1642,6 @@
   flex-wrap: wrap;
 }
 
-.s7-local-info-btn {
-  width: 18px;
-  height: 18px;
-  border: none;
-  border-radius: 999px;
-  background: #e5e7eb;
-  color: #374151;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: help;
-  padding: 0;
-  box-shadow: none;
-}
-
-.s7-local-info-btn:hover {
-  background: #dbe3ee;
+.s7-local-info-icon {
+  flex-shrink: 0;
 }

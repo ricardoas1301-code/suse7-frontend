@@ -972,9 +972,17 @@ export default function ProductFormImagesTab({
 
             <button
               type="button"
-              className="s7-local-info-btn"
-              aria-label="Informações sobre imagens"
-              title="Adicione imagens nítidas e bem enquadradas para melhorar a apresentação do produto."
+              className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap s7-local-info-icon"
+              data-tip={
+                hasSeoKeywords
+                  ? "Renomear as imagens com palavras-chave SEO ajuda na organização dos arquivos e pode contribuir para a busca e relevância dos anúncios nos marketplaces."
+                  : "Defina palavras-chave SEO para poder renomear as imagens e melhorar a organização e otimização dos anúncios."
+              }
+              aria-label={
+                hasSeoKeywords
+                  ? "Informações sobre renomear imagens com SEO"
+                  : "Informações sobre definir palavras-chave SEO"
+              }
             >
               i
             </button>
