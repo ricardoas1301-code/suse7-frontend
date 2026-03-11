@@ -2273,18 +2273,24 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "images" && (
           <div className="pf-container">
-            <ProductFormImagesTab
-              productId={product?.id}
-              draftKey={draftKeyRef.current}
-              format={product.format}
-              variantRows={variantRows}
-              buildVariantKey={buildVariantKey}
-              onVariantReorder={handleVariantReorder}
-              seoKeywords={product?.seo_keywords ?? ""}
-              productName={product?.product_name ?? ""}
-              onSwitchToDataTab={() => setActiveTab("data")}
-              onGoToSeo={goToSeoKeywords}
-            />
+            {product.format === "variants" && variantRows.length === 0 ? (
+              <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
+                Gere as variações na aba <strong>Variações</strong> para adicionar imagens por combinação.
+              </div>
+            ) : (
+              <ProductFormImagesTab
+                productId={product?.id}
+                draftKey={draftKeyRef.current}
+                format={product.format}
+                variantRows={variantRows}
+                buildVariantKey={buildVariantKey}
+                onVariantReorder={handleVariantReorder}
+                seoKeywords={product?.seo_keywords ?? ""}
+                productName={product?.product_name ?? ""}
+                onSwitchToDataTab={() => setActiveTab("data")}
+                onGoToSeo={goToSeoKeywords}
+              />
+            )}
           </div>
         )}
 
