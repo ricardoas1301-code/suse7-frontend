@@ -39,28 +39,20 @@
   margin: 0 0 16px;
 }
 
-/* Header principal: S7ActionBar — margem inferior para separar do conteúdo */
-.pf-images-container > .s7-action-bar {
+/* Header principal: margem inferior para separar do conteúdo */
+.pf-images-container > .s7-local-section-header {
   margin-bottom: 12px;
 }
 
-/* Bloco por variação: S7ActionBar — margem inferior antes do grid de imagens */
-.pf-images-variant-block .s7-action-bar {
-  margin-bottom: 10px;
-}
-
 /* Botões da aba Imagens: sem negrito, mesma altura do "+ Adicionar título" (font-weight 400, height 30px) */
-.pf-images-container .s7-action-bar .s7-btn,
-.pf-images-container .s7-action-bar .s7-btn .s7-btn__label,
-.pf-images-variant-block .s7-action-bar .s7-btn,
-.pf-images-variant-block .s7-action-bar .s7-btn .s7-btn__label,
+.pf-images-container .s7-local-section-header .s7-btn,
+.pf-images-container .s7-local-section-header .s7-btn .s7-btn__label,
 .pf-images-slot-row-toolbar .s7-btn,
 .pf-images-slot-row-toolbar .s7-btn .s7-btn__label {
   font-weight: 400 !important;
 }
 
-.pf-images-container .s7-action-bar .s7-btn.s7-btn--secondary.s7-btn--sm,
-.pf-images-variant-block .s7-action-bar .s7-btn.s7-btn--secondary.s7-btn--sm,
+.pf-images-container .s7-local-section-header .s7-btn.s7-btn--secondary.s7-btn--sm,
 .pf-images-slot-row-toolbar .s7-btn.s7-btn--secondary.s7-btn--sm {
   height: 30px !important;
   min-height: 30px !important;

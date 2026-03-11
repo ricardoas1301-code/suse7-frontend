@@ -39,7 +39,7 @@ import { getPreferences, setPreference } from "../services/userPreferencesServic
 import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
 import ProductFormTabs from "./ProductFormTabs";
 import ProductFormRightPanel from "./ProductFormRightPanel";
-import { S7ActionBar, S7Button } from "./ui";
+import { S7Button } from "./ui";
 import "./ProductForm.css";
 import { Repeat } from "lucide-react";
 import { useFormProgress } from "../hooks/useFormProgress";
@@ -3045,71 +3045,90 @@ const validatePricingTab = () => {
               Backend será responsável por gerar sugestões contextualizadas por marketplace.
               ======================= */}
               {safeTab === "ad_titles" && (
-              <div className="pf-container">
-                <S7ActionBar
-                  title="Crie até 10 títulos por produto"
-                  tooltip="Um título bem elaborado ajuda seu anúncio a ser encontrado com mais facilidade, melhora a relevância nas buscas e pode aumentar o desempenho do produto no marketplace."
-                  meta={
-                    <span className="s7-ad-titles-header-count" aria-label="Quantidade de títulos">
-                      {(product?.ad_titles ?? []).length}/10
-                    </span>
-                  }
-                  rightContent={
-                    (product?.ad_titles ?? []).length < 10 ? (
-                      <S7Button variant="secondary" size="sm" iconName="plus" onClick={handleAddTitle}>
-                        Adicionar título
-                      </S7Button>
-                    ) : null
-                  }
-                />
+                <div className="pf-container">
+                  <div className="s7-local-section-header">
+                    <div className="s7-local-section-header-left">
+                      <span className="s7-local-section-title">
+                        Crie até 10 títulos por produto
+                      </span>
 
-                {/* Lista de cards (um por título) */}
-                <div className="s7-ad-titles-cards">
-                  {(product?.ad_titles ?? []).map((item, idx) => (
-                    <div key={item.id} className="s7-card s7-ad-titles-card">
-                      {/* Título N e ícone copiar na mesma linha; copiar no final (direita), acima do input */}
-                      <div className="s7-ad-title-copy-row">
-                        <span className="s7-label s7-ad-titles-card-label">Título {idx + 1}</span>
-                        <div className="s7-ad-title-copy-wrap">
-                          <button
-                            type="button"
-                            className="pf-copy-btn s7-tip s7-tip-bottom"
-                            onClick={() => handleCopy(item.value, `ad_title_${item.id}`)}
-                            aria-label="Copiar título"
-                            data-tip={copiedKey === `ad_title_${item.id}` ? "Copiado!" : "Copiar"}
-                          >
-                            {copiedKey === `ad_title_${item.id}` ? "✓" : "⧉"}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="s7-ad-title-row">
-                        <div className="s7-ad-title-input-wrap">
-                          <input
-                            type="text"
-                            className="s7-input s7-ad-title-input"
-                            placeholder="Ex: Produto XYZ - Marca - Modelo"
-                            value={item.value}
-                            onChange={(e) => handleChangeTitle(item.id, e.target.value)}
-                          />
-                          <span className="s7-ad-title-count">
-                            {item.value?.length ?? 0} caracteres
-                          </span>
-                        </div>
-                        {(product?.ad_titles ?? []).length > 1 && (
-                          <button
-                            type="button"
-                            className="s7-title-delete-btn"
-                            onClick={() => setAdTitleDeleteId(item.id)}
-                            aria-label="Excluir título"
-                          >
-                            <Trash2 size={18} strokeWidth={2} />
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        type="button"
+                        className="s7-local-info-btn"
+                        aria-label="Informações sobre títulos"
+                        title="O título é usado no anúncio do marketplace. Crie variações com palavras-chave para melhorar SEO e CTR."
+                      >
+                        i
+                      </button>
+
+                      <span
+                        className="s7-local-section-count"
+                        aria-label="Quantidade de títulos"
+                      >
+                        {(product?.ad_titles ?? []).length}/10
+                      </span>
                     </div>
-                  ))}
+
+                    <div className="s7-local-section-actions">
+                      {(product?.ad_titles ?? []).length < 10 && (
+                        <button
+                          type="button"
+                          className="s7-btn s7-btn--secondary s7-ad-titles-add-btn s7-ad-title-add-btn"
+                          onClick={handleAddTitle}
+                        >
+                          + Adicionar título
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Lista de cards (um por título) */}
+                  <div className="s7-ad-titles-cards">
+                    {(product?.ad_titles ?? []).map((item, idx) => (
+                      <div key={item.id} className="s7-card s7-ad-titles-card">
+                        {/* Título N e ícone copiar na mesma linha; copiar no final (direita), acima do input */}
+                        <div className="s7-ad-title-copy-row">
+                          <span className="s7-label s7-ad-titles-card-label">Título {idx + 1}</span>
+                          <div className="s7-ad-title-copy-wrap">
+                            <button
+                              type="button"
+                              className="pf-copy-btn s7-tip s7-tip-bottom"
+                              onClick={() => handleCopy(item.value, `ad_title_${item.id}`)}
+                              aria-label="Copiar título"
+                              data-tip={copiedKey === `ad_title_${item.id}` ? "Copiado!" : "Copiar"}
+                            >
+                              {copiedKey === `ad_title_${item.id}` ? "✓" : "⧉"}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="s7-ad-title-row">
+                          <div className="s7-ad-title-input-wrap">
+                            <input
+                              type="text"
+                              className="s7-input s7-ad-title-input"
+                              placeholder="Ex: Produto XYZ - Marca - Modelo"
+                              value={item.value}
+                              onChange={(e) => handleChangeTitle(item.id, e.target.value)}
+                            />
+                            <span className="s7-ad-title-count">
+                              {item.value?.length ?? 0} caracteres
+                            </span>
+                          </div>
+                          {(product?.ad_titles ?? []).length > 1 && (
+                            <button
+                              type="button"
+                              className="s7-title-delete-btn"
+                              onClick={() => setAdTitleDeleteId(item.id)}
+                              aria-label="Excluir título"
+                            >
+                              <Trash2 size={18} strokeWidth={2} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
               )}
 
               {/* Modal confirmação exclusão título do anúncio (padrão Suse7) */}

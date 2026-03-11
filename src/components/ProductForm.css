@@ -1597,3 +1597,69 @@
 .s7-modal-btn-danger:hover {
   background: #dc2626;
 }
+
+/* ======================================================================
+   SUSE7 — HEADERS LOCAIS (Imagens / Título do anúncio)
+   Objetivo: substituir S7ActionBar em abas específicas por estrutura simples,
+   previsível e sem dependência de componente global.
+====================================================================== */
+
+.s7-local-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.s7-local-section-header-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.s7-local-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.s7-local-section-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  background: #eff6ff;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.s7-local-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.s7-local-info-btn {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  padding: 0;
+  box-shadow: none;
+}
+
+.s7-local-info-btn:hover {
+  background: #dbe3ee;
+}
