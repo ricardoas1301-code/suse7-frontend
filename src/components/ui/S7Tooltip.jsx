@@ -15,7 +15,10 @@ import "./S7Tooltip.css";
 
 export default function S7Tooltip({
   content = "",
-  position = "right",
+  placement = "bottom-start",
+  offset = 6,
+  maxWidth,
+  zIndex,
   children,
   className = "",
 }) {
@@ -38,11 +41,19 @@ export default function S7Tooltip({
   const wrapperClasses = [
     "s7-tooltip",
     visible ? "s7-tooltip--visible" : "",
-    `s7-tooltip--${position}`,
+    // bottom-start, bottom, top, left, right, etc.
+    placement ? `s7-tooltip--${placement}` : "",
     className,
   ]
     .filter(Boolean)
     .join(" ");
+
+  const bubbleStyle = {
+    ...(typeof maxWidth === "number" ? { maxWidth } : {}),
+    ...(typeof zIndex === "number" ? { zIndex } : {}),
+    // offset sempre aplicado na vertical; a direção é controlada no CSS
+    "--s7-tooltip-offset": `${offset}px`,
+  };
 
   return (
     <span
@@ -56,7 +67,7 @@ export default function S7Tooltip({
     >
       <span className="s7-tooltip__trigger">{children}</span>
       {content ? (
-        <span className="s7-tooltip__bubble" role="tooltip">
+        <span className="s7-tooltip__bubble" role="tooltip" style={bubbleStyle}>
           {content}
         </span>
       ) : null}

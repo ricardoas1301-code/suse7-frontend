@@ -48,7 +48,7 @@ background #111827, color white, sombra, radius 6px
 }
 
 /* ======================================================
-POSIÇÃO: TOP (padrão)
+POSIÇÃO: TOP (centro)
 ====================================================== */
 .s7-tooltip--top .s7-tooltip__bubble {
   bottom: 100%;
@@ -61,7 +61,7 @@ POSIÇÃO: TOP (padrão)
 }
 
 /* ======================================================
-POSIÇÃO: BOTTOM
+POSIÇÃO: BOTTOM (centro)
 ====================================================== */
 .s7-tooltip--bottom .s7-tooltip__bubble {
   top: 100%;
@@ -97,4 +97,17 @@ POSIÇÃO: RIGHT
 
 .s7-tooltip--right.s7-tooltip--visible .s7-tooltip__bubble {
   transform: translate(4px, -50%);
+}
+
+/* ======================================================
+POSIÇÃO: BOTTOM-START (padrão oficial)
+====================================================== */
+.s7-tooltip--bottom-start .s7-tooltip__bubble {
+  top: 100%;
+  left: 0;
+  transform: translate(0, calc(-1 * var(--s7-tooltip-offset, 6px)));
+}
+
+.s7-tooltip--bottom-start.s7-tooltip--visible .s7-tooltip__bubble {
+  transform: translate(0, 2px);
 }
