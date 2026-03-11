@@ -2331,56 +2331,35 @@ const validatePricingTab = () => {
         wrap={true}
         />
 
+        <div className="pf-chipbox">
+        {draftAttrChips.map((attr) => (
+          <span key={attr} className="pf-chip">
+            {attr}
+            <button
+              type="button"
+              className="pf-chip-x"
+              onClick={() => removeDraftAttrChip(attr)}
+              title="Remover atributo"
+              aria-label="Remover atributo"
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+
         <input
-        className="s7-input"
+        className="pf-chipbox-input"
         value={draftAttrInput}
         onChange={(e) => setDraftAttrInput(e.target.value)}
         onKeyDown={handleDraftAttrKeyDown}
         />
-
-        {/* CHIP DO ATRIBUTO */}
-        {draftAttrChips.length > 0 && (
-        <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-        {draftAttrChips.map((attr) => (
-        <span
-        key={attr}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "6px 10px",
-          borderRadius: 999,
-          background: "rgba(37, 99, 235, 0.12)",
-          color: "#1e40af",
-          fontWeight: 800,
-          fontSize: 12,
-        }}
-        >
-        {attr}
-        <button
-          type="button"
-          onClick={() => removeDraftAttrChip(attr)}
-          style={{
-            border: "none",
-            background: "transparent",
-            cursor: "pointer",
-            fontWeight: 900,
-            color: "#1e40af",
-          }}
-          title="Remover atributo"
-        >
-          ✕
-        </button>
-        </span>
-        ))}
         </div>
-        )}
 
         <div className="s7-hint" style={{ marginTop: 8 }}>
         Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em “Adicionar variações”.
         </div>
 
-       <div className="s7-hint" style={{ marginTop: 8 }}>
+        <div className="s7-hint" style={{ marginTop: 8 }}>
         Separe múltiplos atributos por vírgula (ex: Cor, Tamanho).
         </div>
         </div>
@@ -2397,37 +2376,14 @@ const validatePricingTab = () => {
         wrap={true}
        />
 
-        <input
-        className="s7-input"
-        placeholder="Digite e pressione Enter/Tab (ex: Branco, Preto, 127V)"
-        value={draftOptionInput}
-        onChange={(e) => setDraftOptionInput(e.target.value)}
-        onKeyDown={handleDraftOptionKeyDown}
-       />
-
-        {/* Chips de opções */}
-        {draftOptions.length > 0 && (
-       <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
+        <div className="pf-chipbox">
         {draftOptions.map((opt) => (
-          <span
-            key={opt}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "6px 10px",
-              borderRadius: 999,
-              background: "rgba(107, 114, 128, 0.10)",
-              color: "#334155",
-              fontWeight: 800,
-              fontSize: 12,
-            }}
-          >
+          <span key={opt} className="pf-chip pf-chip--soft">
             {opt}
             <button
               type="button"
+              className="pf-chip-x"
               onClick={() => removeDraftOption(opt)}
-              style={{ border: "none", background: "transparent", cursor: "pointer", fontWeight: 900, color: "#334155" }}
               aria-label="Remover opção"
               title="Remover"
             >
@@ -2435,9 +2391,16 @@ const validatePricingTab = () => {
             </button>
           </span>
         ))}
+
+        <input
+        className="pf-chipbox-input"
+        placeholder="Digite e pressione Enter/Tab (ex: Branco, Preto, 127V)"
+        value={draftOptionInput}
+        onChange={(e) => setDraftOptionInput(e.target.value)}
+        onKeyDown={handleDraftOptionKeyDown}
+       />
        </div>
-       )}
- 
+
        <div className="s7-hint" style={{ marginTop: 8 }}>
         Separe opções por vírgula (ex: Branco, Preto, Azul).
        </div>
