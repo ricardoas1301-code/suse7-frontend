@@ -335,12 +335,34 @@ const [draftAttrChips, setDraftAttrChips] = useState([]);
   const [variantRows, setVariantRows] = useState([]);
 
   // ======================================================================
-// SUSE7 — VARIAÇÕES: CONTROLE DE UI (Builder vs Gerenciamento)
-// Objetivo:
-// - Builder (Nome do atributo + chips + botão "Adicionar variações")
-// - Após gerar combinações: esconder builder e mostrar gerenciamento
+// SUSE7 — VARIAÇÕES: Modal de confirmação ao excluir variação
+// - deleteVariantRowId: id da linha em confirmação (null = modal fechado)
 // ======================================================================
-const [showVariationsBuilder, setShowVariationsBuilder] = useState(true);
+const [deleteVariantRowId, setDeleteVariantRowId] = useState(null);
+
+// ------------------------------------------------------
+// SUSE7 — VARIAÇÕES: Modais da geração de SKU (global, regeração, individual, integrada)
+// - skuSuccessModal: após geração global (X gerados, Y mantidos)
+// - skuRegenerateModalOpen: super alerta quando já existem SKUs (3 ações)
+// - skuIndividualModal: confirmação ao gerar SKU em linha que já tem SKU
+// - skuManualIntegratedModal: alerta ao alterar SKU manualmente em variação integrada (backend: row.linked_to_marketplaces)
+// - skuAtFocusRef: SKU ao focar no input (para fluxo de alteração manual integrada)
+// ------------------------------------------------------
+const [skuSuccessModal, setSkuSuccessModal] = useState({ show: false, generated: 0, kept: 0 });
+const [skuRegenerateModalOpen, setSkuRegenerateModalOpen] = useState(false);
+const [skuIndividualModal, setSkuIndividualModal] = useState(null); // { rowId, currentSku, newSku }
+const [skuManualIntegratedModal, setSkuManualIntegratedModal] = useState(null); // { rowId, nextSku }
+const skuAtFocusRef = useRef({});
+
+// ------------------------------------------------------
+// SUSE7 — Raiz do SKU (aba Variações)
+// Origem oficial: product.sku_base. Formato persistido: chave1_chave2 (uma ou duas chaves com "_").
+// Chips na UI (máx. 2 chaves, 6 caracteres cada); leitura ao abrir, escrita ao editar, enviado no payload do save.
+// ------------------------------------------------------
+const [skuBaseChips, setSkuBaseChips] = useState([]);
+const [skuBaseInput, setSkuBaseInput] = useState("");
+const [skuBaseError, setSkuBaseError] = useState("");
+const skuBaseInputRef = useRef(null);
 
 // ------------------------------------------------------
 // Adicionar chip (opção) em atributo existente
@@ -868,7 +890,8 @@ const FieldLabel = ({
   // ------------------------------------------------------
   // CHIPS (opções) — adiciona via Enter/Tab/virgula
   // ------------------------------------------------------
-  const normalizeOption = (raw) => String(raw || "").trim().replace(/\s+/g, " ");
+  /** Normalização de opção de variação: trim, colapsar espaços, lowercase (evita Preto/preto/PRETO) */
+  const normalizeOption = (raw) => String(raw || "").trim().replace(/\s+/g, " ").toLowerCase();
   const normalizeAttr   = (raw) => String(raw || "").trim().replace(/\s+/g, " ");
 
 // ------------------------------------------------------
@@ -1029,9 +1052,7 @@ const handleAddVariationAttribute = () => {
     return next;
   });
 
-  // 4) UI: builder some (mostra gerenciamento)
-  setShowVariationsBuilder(false);
-
+  // 4) Linha de criação permanece visível; novo atributo aparece abaixo (fluxo contínuo)
   // 5) limpa erros e drafts
   setErrors((prev) => ({ ...prev, variants: undefined }));
   setDraftAttrInput("");
@@ -1088,6 +1109,23 @@ const handleAddOptionToAttribute = (attrId) => {
 };
 
 // ======================================================================
+// SUSE7 — VARIAÇÕES: EDITAR NOME DO ATRIBUTO
+// - Atualiza o nome no atributo e regenera combinações (preservando dados por chave)
+// ======================================================================
+const handleChangeAttributeName = (attrId, newName) => {
+  const normalized = normalizeAttr(newName || "");
+  if (!normalized) return;
+
+  setVariationAttributes((prev) => {
+    const next = prev.map((a) =>
+      a.id === attrId ? { ...a, name: normalized } : a
+    );
+    regenerateVariantRowsFromAttributes(next);
+    return next;
+  });
+};
+
+// ======================================================================
 // SUSE7 — VARIAÇÕES: REMOVER OPÇÃO (CHIP) DE UM ATRIBUTO
 // Objetivo:
 // - Remove opção do atributo
@@ -1109,16 +1147,6 @@ const removeOptionFromAttribute = (attrId, optToRemove) => {
       .filter((a) => Array.isArray(a.options) && a.options.length > 0);
 
       regenerateVariantRowsFromAttributes(next);
-
-     // ------------------------------------------------------
-     // UX: se removeu tudo, volta para o Builder
-     // (evita sumir "+ Novo atributo")
-     // ------------------------------------------------------
-      if (next.length === 0) {
-      setShowVariationsBuilder(true);
-    }
-
-
     return next;
   });
 };
@@ -1167,6 +1195,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     currentIndex.set(buildVariantKey(row.attributes), row);
   });
 
+  // Preservar sku, ean_gtin (gtin), active nas combinações que continuam existindo (chave determinística)
   const nextRows = combos.map((combo) => {
     const attributesObj = combo.reduce((obj, item) => {
       obj[item.k] = item.v;
@@ -1180,7 +1209,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       id: existing?.id || key,
       attributes: attributesObj,
       sku: existing?.sku || "",
-      gtin: existing?.gtin || "",
+      gtin: existing?.gtin || "", // ean_gtin no backend
       cost_price: existing?.cost_price ?? "",
       stock_real: String(existing?.stock_real ?? existing?.stock_quantity ?? ""),
       stock_min: String(existing?.stock_min ?? existing?.stock_minimum ?? ""),
@@ -1361,21 +1390,255 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
        // VARIANT ROWS: remover linha
        // - Se zerar as linhas, voltamos para o Builder (UX)
        // ------------------------------------------------------
+       // Remove uma combinação da lista (após confirmação no modal)
        const handleRemoveVariantRow = (id) => {
-       setVariantRows((prev) => {
-       const next = (prev || []).filter((r) => r.id !== id);
-
-        // ------------------------------------------------------
-        // UX: se zerou tudo, volta o builder (e mantém fluxo vivo)
-        // ------------------------------------------------------
-       if (next.length === 0) {
-        setShowVariationsBuilder(true);
-       }
-
-       return next;
-      });
+       setVariantRows((prev) => (prev || []).filter((r) => r.id !== id));
+       setDeleteVariantRowId(null);
     };
 
+  // ------------------------------------------------------
+  // SUSE7 — Geração de SKU (base + atributos, separador "_")
+  // Formato: sku_base + "_" + atributos; apenas letras, números e "_"; máx. 24 caracteres.
+  // Anti-colisão: sufixo incremental _2, _3... quando SKU já existir no produto ou no lote.
+  // ------------------------------------------------------
+  /** Normalização para SKU: remove acentos, espaços; mantém apenas letras, números e "_" */
+  const sanitizeSku = (str) => {
+    let t = String(str)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+    t = t.replace(/[\s.\-]+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").replace(/_+/g, "_");
+    if (t.startsWith("_")) t = t.slice(1);
+    if (t.endsWith("_")) t = t.slice(0, -1);
+    return t;
+  };
+
+  /** Retorna o próximo SKU disponível evitando colisão: base, base_2, base_3... até não estar em usedSet; respeita maxLen */
+  const getNextAvailableSku = (baseSku, usedSet, maxLen) => {
+    const baseTruncated = baseSku.slice(0, maxLen);
+    let candidate = baseTruncated;
+    let n = 1;
+    while (usedSet.has(candidate) || candidate.length > maxLen) {
+      const suffix = "_" + n;
+      candidate = (baseTruncated.slice(0, maxLen - suffix.length) + suffix).replace(/_+/g, "_");
+      n += 1;
+    }
+    return candidate;
+  };
+
+  const abbreviateOptionForSku = (str) => {
+    const s = String(str).trim().toUpperCase().replace(/\s+/g, "");
+    const raw = s.length > 3 ? s.substring(0, 3) : s || "";
+    return sanitizeSku(raw) || raw;
+  };
+
+  /** Normaliza uma chave da raiz do SKU: remove acentos, espaços, lowercase, máx. 6 caracteres */
+  const normalizeSkuBaseKey = (str) => {
+    const s = String(str)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "")
+      .toLowerCase();
+    return s.replace(/[^a-z0-9]/g, "").slice(0, 6);
+  };
+
+  /** Converte product.sku_base (string com "_") em chips da UI. Aceita também "." para compatibilidade. */
+  const parseSkuBaseToChips = (str) => {
+    if (str == null || String(str).trim() === "") return [];
+    return String(str)
+      .split(/[_.]/)
+      .slice(0, 2)
+      .map(normalizeSkuBaseKey)
+      .filter(Boolean);
+  };
+
+  /** Converte chips da UI em string para persistir em product.sku_base. Formato oficial: chave1_chave2 */
+  const buildSkuBaseFromChips = (chips) => {
+    if (!Array.isArray(chips) || chips.length === 0) return "";
+    return chips.join("_");
+  };
+
+  /** Base do SKU: raiz dos chips (product.sku_base); usado na geração. Formato persistido: chave1_chave2 com "_". */
+  const getSkuBase = () => {
+    if (skuBaseChips.length > 0) {
+      return buildSkuBaseFromChips(skuBaseChips);
+    }
+    const fallback = String(product.sku || product.product_name || "PROD").trim();
+    return sanitizeSku(fallback) || fallback.toUpperCase().replace(/\s+/g, "_");
+  };
+
+  // Leitura ao abrir formulário: product.sku_base → chips da UI (formato persistido: chave1_chave2)
+  useEffect(() => {
+    const chips = parseSkuBaseToChips(product.sku_base);
+    if (chips.length > 0) {
+      setSkuBaseChips(chips);
+    }
+  }, [product.sku_base]);
+
+  /** Adiciona uma chave à raiz do SKU (máx. 2 chaves, 6 caracteres cada); persiste em product.sku_base com "_" */
+  const addSkuBaseChip = () => {
+    const key = normalizeSkuBaseKey(skuBaseInput);
+    if (!key) return;
+    if (skuBaseChips.length >= 2) return;
+    if (skuBaseChips.some((c) => c === key)) {
+      setSkuBaseInput("");
+      return;
+    }
+    const next = [...skuBaseChips, key];
+    setSkuBaseChips(next);
+    handleChange("sku_base", buildSkuBaseFromChips(next));
+    setSkuBaseInput("");
+    setSkuBaseError("");
+  };
+
+  /** Remove uma chave da raiz do SKU; persiste em product.sku_base */
+  const removeSkuBaseChip = (key) => {
+    const next = skuBaseChips.filter((c) => c !== key);
+    setSkuBaseChips(next);
+    handleChange("sku_base", buildSkuBaseFromChips(next));
+    setSkuBaseError("");
+  };
+
+  /** Enter/Tab no input da raiz: adiciona chip */
+  const handleSkuBaseKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      addSkuBaseChip();
+    }
+  };
+
+  /** Valida se há pelo menos uma chave na raiz; se não, destaca campo, mostra erro e foca. Retorna true se válido. */
+  const validateSkuBase = () => {
+    if (skuBaseChips.length > 0) {
+      setSkuBaseError("");
+      return true;
+    }
+    setSkuBaseError("Informe pelo menos uma chave para gerar o SKU. Você pode usar até duas palavras curtas.");
+    skuBaseInputRef.current?.focus();
+    return false;
+  };
+
+  /**
+   * Gera o SKU para uma linha (não aplica no state). Formato: base_attr1_attr2; sanitizado; anti-colisão com _2, _3...
+   * Usado por geração individual e por exibição no modal. Limite 24 caracteres.
+   */
+  const generateSkuForRow = (row) => {
+    const base = getSkuBase();
+    const parts = Object.entries(row.attributes || {})
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => abbreviateOptionForSku(String(v)));
+    const baseSku = sanitizeSku(base + (parts.length ? "_" + parts.join("_") : ""));
+    const used = new Set((variantRows || []).filter((r) => r.id !== row.id).map((r) => r.sku).filter(Boolean));
+    return getNextAvailableSku(baseSku.slice(0, 24), used, 24);
+  };
+
+  /**
+   * Aplica geração global de SKU. Formato "_"; anti-colisão no lote e com SKUs já existentes.
+   * @param {boolean} onlyEmpty - true = só preenche vazios; false = substitui todos
+   * @returns {{ generated: number, kept: number }}
+   */
+  const applyGenerateSkuGlobal = (onlyEmpty) => {
+    const rows = variantRows || [];
+    const emptyCount = rows.filter((r) => !String(r.sku || "").trim()).length;
+    const keptCount = onlyEmpty ? rows.length - emptyCount : 0;
+    const generatedCount = onlyEmpty ? emptyCount : rows.length;
+
+    const base = getSkuBase();
+    const used = new Set(rows.map((r) => r.sku).filter(Boolean));
+    const nextRows = rows.map((row) => {
+      const hasSku = row.sku != null && String(row.sku).trim() !== "";
+      if (onlyEmpty && hasSku) return row;
+      const parts = Object.entries(row.attributes || {})
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([, v]) => abbreviateOptionForSku(String(v)));
+      const baseSku = sanitizeSku(base + (parts.length ? "_" + parts.join("_") : ""));
+      const sku = getNextAvailableSku(baseSku.slice(0, 24), used, 24);
+      used.add(sku);
+      return { ...row, sku };
+    });
+    setVariantRows(nextRows);
+    return { generated: generatedCount, kept: keptCount };
+  };
+
+  /** Conta quantas variações têm SKU preenchido vs vazio */
+  const getSkuCounts = () => {
+    const rows = variantRows || [];
+    const withSku = rows.filter((r) => String(r.sku || "").trim() !== "").length;
+    return { empty: rows.length - withSku, filled: withSku };
+  };
+
+  /**
+   * Botão principal "Gerar SKU automaticamente":
+   * - Valida raiz (pelo menos uma chave); se inválido, destaca campo e foca.
+   * - Se todos vazios → geração global, modal sucesso (X gerados, 0 mantidos)
+   * - Se algum preenchido → abre modal de regeração (3 ações)
+   */
+  const handleGenerateSkuAuto = () => {
+    if (!validateSkuBase()) return;
+    const { empty, filled } = getSkuCounts();
+    if (filled === 0) {
+      const { generated, kept } = applyGenerateSkuGlobal(true);
+      setSkuSuccessModal({ show: true, generated, kept });
+      return;
+    }
+    setSkuRegenerateModalOpen(true);
+  };
+
+  /**
+   * Regeração: apenas vazios. Fecha modal regeração e abre sucesso. Valida raiz antes.
+   */
+  const handleSkuRegenerateOnlyEmpty = () => {
+    if (!validateSkuBase()) return;
+    const { generated, kept } = applyGenerateSkuGlobal(true);
+    setSkuRegenerateModalOpen(false);
+    setSkuSuccessModal({ show: true, generated, kept });
+  };
+
+  /**
+   * Regeração: substituir todos. Fecha modal regeração e abre sucesso. Valida raiz antes.
+   */
+  const handleSkuRegenerateAll = () => {
+    if (!validateSkuBase()) return;
+    const total = (variantRows || []).length;
+    applyGenerateSkuGlobal(false);
+    setSkuRegenerateModalOpen(false);
+    setSkuSuccessModal({ show: true, generated: total, kept: 0 });
+  };
+
+  /**
+   * Geração individual por linha. Valida raiz; se SKU vazio → aplica direto. Se preenchido → abre modal.
+   */
+  const handleGenerateSkuForRow = (row) => {
+    if (!validateSkuBase()) return;
+    const newSku = generateSkuForRow(row);
+    const hasSku = row.sku != null && String(row.sku).trim() !== "";
+    if (!hasSku) {
+      handleVariantRowChange(row.id, "sku", newSku);
+      return;
+    }
+    setSkuIndividualModal({ rowId: row.id, currentSku: row.sku, newSku });
+  };
+
+  /** Confirma substituição de SKU no modal individual */
+  const handleConfirmIndividualSkuReplace = () => {
+    if (!skuIndividualModal) return;
+    handleVariantRowChange(skuIndividualModal.rowId, "sku", skuIndividualModal.newSku);
+    setSkuIndividualModal(null);
+  };
+
+  /**
+   * Placeholder para backend: variação já vinculada a marketplaces.
+   * Quando true, ao alterar SKU manualmente exibe modal de alerta.
+   * Frontend não implementa lógica por marketplace; backend informará row.linked_to_marketplaces.
+   */
+  const isVariantLinkedToMarketplaces = (row) => Boolean(row?.linked_to_marketplaces);
+
+  /** Confirma alteração manual de SKU em variação integrada (após modal de alerta) */
+  const handleConfirmManualSkuIntegrated = () => {
+    if (!skuManualIntegratedModal) return;
+    handleVariantRowChange(skuManualIntegratedModal.rowId, "sku", skuManualIntegratedModal.nextSku);
+    setSkuManualIntegratedModal(null);
+  };
 
   // ------------------------------------------------------
   // VALIDAR (UX)
@@ -2306,22 +2569,21 @@ const validatePricingTab = () => {
             ) : (
               <>
         {/* ======================================================
-            MODO 1: BUILDER (ANTES DE GERAR)
+            VARIAÇÕES — Fluxo contínuo (linha de criação sempre visível)
         ====================================================== */}
-        {showVariationsBuilder && (
-          <div className="section">
-            <div className="section-header">
-              <h3>Variações</h3>
-              <p className="section-subtitle">
-                Cadastre atributos (ex: Cor, Tamanho) e opções (chips). Depois geramos as combinações automaticamente.
-              </p>
-            </div>
+        <div className="section">
+          <div className="section-header">
+            <h3>Variações</h3>
+            <p className="section-subtitle">
+              Cadastre atributos (ex: Cor, Tamanho) e opções (chips). As combinações são geradas automaticamente.
+            </p>
+          </div>
 
             {/* ======================================================
         BUILDER — CADASTRO DE ATRIBUTOS + OPÇÕES (CHIPS)
         ====================================================== */}
         <div className="pf-variation-create-row" style={{ marginTop: 12 }}>
-          {/* NOME DO ATRIBUTO (chips) */}
+          {/* NOME DO ATRIBUTO (chips) — estilo Suse7: label e chips em azul padrão */}
           <div className="pf-variation-create-col pf-variation-create-col--attribute">
             <FieldLabel
               text="Nome do atributo"
@@ -2331,9 +2593,9 @@ const validatePricingTab = () => {
               wrap={true}
             />
 
-            <div className="pf-chipbox">
+            <div className="pf-chipbox pf-variation-chipbox">
               {draftAttrChips.map((attr) => (
-                <span key={attr} className="pf-chip">
+                <span key={attr} className="pf-chip pf-variation-chip">
                   {attr}
                   <button
                     type="button"
@@ -2348,7 +2610,7 @@ const validatePricingTab = () => {
               ))}
 
               <input
-                className="pf-chipbox-input"
+                className="pf-chipbox-input pf-variation-input"
                 value={draftAttrInput}
                 onChange={(e) => setDraftAttrInput(e.target.value)}
                 onKeyDown={handleDraftAttrKeyDown}
@@ -2356,7 +2618,7 @@ const validatePricingTab = () => {
             </div>
           </div>
 
-          {/* OPÇÕES (chips) */}
+          {/* OPÇÕES (chips) — normalizadas em lowercase na criação */}
           <div className="pf-variation-create-col pf-variation-create-col--options">
             <FieldLabel
               text="Opções (chips)"
@@ -2366,9 +2628,9 @@ const validatePricingTab = () => {
               wrap={true}
             />
 
-            <div className="pf-chipbox">
+            <div className="pf-chipbox pf-variation-chipbox">
               {draftOptions.map((opt) => (
-                <span key={opt} className="pf-chip pf-chip--soft">
+                <span key={opt} className="pf-chip pf-chip--soft pf-variation-chip">
                   {opt}
                   <button
                     type="button"
@@ -2383,7 +2645,7 @@ const validatePricingTab = () => {
               ))}
 
               <input
-                className="pf-chipbox-input"
+                className="pf-chipbox-input pf-variation-input"
                 placeholder="Digite e pressione Enter/Tab (ex: Branco, Preto, 127V)"
                 value={draftOptionInput}
                 onChange={(e) => setDraftOptionInput(e.target.value)}
@@ -2399,15 +2661,63 @@ const validatePricingTab = () => {
               className="s7-btn s7-btn--primary"
               onClick={handleAddVariationAttribute}
             >
-              Adicionar variações
+              Adicionar variação
             </button>
           </div>
         </div>
 
         <div className="s7-hint" style={{ marginTop: 8 }}>
-          Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em “Adicionar variações”.
-          Separe múltiplos atributos e opções por vírgula (ex: Cor, Tamanho / Branco, Preto, Azul).
+          Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em &quot;Adicionar variação&quot;.
+          Se todas as opções de um atributo forem removidas, o atributo é excluído automaticamente.
         </div>
+
+          {/* Atributos já cadastrados — mesmo formato (nome editável + chips) */}
+          {variationAttributes.length > 0 && variationAttributes.map((attr) => (
+            <div key={attr.id} className="pf-variation-create-row" style={{ marginTop: 12 }}>
+              <div className="pf-variation-create-col pf-variation-create-col--attribute">
+                <label className="s7-label pf-variation-chip-label">Nome do atributo</label>
+                <input
+                  className="s7-input pf-variation-input"
+                  value={attr.name}
+                  onChange={(e) => handleChangeAttributeName(attr.id, e.target.value)}
+                  onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== attr.name) handleChangeAttributeName(attr.id, v); }}
+                  placeholder="Ex: Cor, Tamanho"
+                />
+              </div>
+              <div className="pf-variation-create-col pf-variation-create-col--options">
+                <label className="s7-label pf-variation-chip-label">Opções</label>
+                <div className="pf-chipbox pf-variation-chipbox">
+                  {(attr.options || []).map((opt) => (
+                    <span key={`${attr.id}_${opt}`} className="pf-chip pf-chip--soft pf-variation-chip">
+                      {opt}
+                      <button type="button" className="pf-chip-x" onClick={() => removeOptionFromAttribute(attr.id, opt)} aria-label="Remover opção" title="Remover">✕</button>
+                    </span>
+                  ))}
+                  {addOptionAttrId === attr.id ? (
+                    <>
+                      <input
+                        className="pf-chipbox-input pf-variation-input"
+                        placeholder="Ex: Verde, Bege..."
+                        value={addOptionInput}
+                        onChange={(e) => { setAddOptionInput(e.target.value); if (addOptionError) setAddOptionError(""); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); handleAddOptionToAttribute(attr.id); }
+                          if (e.key === "Escape") { setAddOptionAttrId(null); setAddOptionInput(""); setAddOptionError(""); }
+                        }}
+                        autoFocus
+                      />
+                      <button type="button" className="s7-btn s7-btn--secondary" style={{ marginLeft: 8 }} onClick={() => handleAddOptionToAttribute(attr.id)}>Adicionar chip</button>
+                      <button type="button" className="s7-btn s7-btn--secondary" onClick={() => { setAddOptionAttrId(null); setAddOptionInput(""); setAddOptionError(""); }}>Cancelar</button>
+                    </>
+                  ) : (
+                    <button type="button" className="s7-btn s7-btn--secondary" onClick={() => { setAddOptionAttrId(attr.id); setAddOptionInput(""); setAddOptionError(""); }}>+ Adicionar chip</button>
+                  )}
+                </div>
+                {addOptionAttrId === attr.id && addOptionError && <div className="s7-error" style={{ marginTop: 8 }}>{addOptionError}</div>}
+              </div>
+              <div className="pf-variation-create-col pf-variation-create-col--action" />
+            </div>
+          ))}
 
             {(errors.variants || errors.variants_sku || errors.variants_gtin) && (
               <div style={{ marginTop: 10 }}>
@@ -2417,158 +2727,58 @@ const validatePricingTab = () => {
               </div>
             )}
           </div>
-        )}
 
-        {/* ======================================================
-            MODO 2: GERENCIAMENTO (DEPOIS DE GERAR)
-        ====================================================== */}
-        {!showVariationsBuilder && variationAttributes.length > 0 && (
-          <div className="section" style={{ marginTop: 12 }}>
-            <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-              <div>
-                <h3>Variações cadastradas</h3>
-                <p className="section-subtitle">
-                  Aqui você pode remover atributos e adicionar novas opções (chips). As combinações são atualizadas automaticamente.
-                </p>
-              </div>
-
-              {/* ✅ Se um dia quiser reabrir o builder, deixa pronto */}
-              <button
-                type="button"
-                className="s7-btn s7-btn--secondary"
-                onClick={() => setShowVariationsBuilder(true)}
-                title="Voltar ao cadastro de atributos"
-              >
-                + Novo atributo
-              </button>
+        {/* Combinações geradas — contador + Gerar SKU + grid */}
+        {variantRows.length > 0 && (
+          <>
+            <div className="section-header" style={{ marginTop: 24 }}>
+              <h3>Combinações geradas</h3>
+              <p className="section-subtitle">
+                {variantRows.length} combinações geradas automaticamente
+              </p>
             </div>
-
-            {variationAttributes.map((attr) => (
-              <div key={attr.id} className="pf-row" style={{ marginTop: 12, marginBottom: 0, alignItems: "flex-end" }}>
-                <div className="pf-group" style={{ maxWidth: 320 }}>
-                  <label className="s7-label">Atributo</label>
-                  <input className="s7-input" value={attr.name} disabled />
+            {/* Botão global + Raiz do SKU na mesma linha (design system Suse7) */}
+            <div style={{ marginTop: 8, marginBottom: 12, display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 16 }}>
+              <div>
+                <label className="s7-label" style={{ visibility: "hidden" }}>Gerar</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <button type="button" className="s7-btn s7-btn--secondary" onClick={handleGenerateSkuAuto}>
+                    {variantRows.some((row) => row.sku) ? "🔄 Regerar SKUs automaticamente" : "⚡ Gerar SKU automaticamente"}
+                  </button>
                 </div>
-
-                <div className="pf-group pf-group--full">
-                  <label className="s7-label">Opções</label>
-
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingTop: 6 }}>
-                    {(attr.options || []).map((opt) => (
-                      <span
-                        key={`${attr.id}_${opt}`}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 8,
-                          padding: "6px 10px",
-                          borderRadius: 999,
-                          background: "rgba(107, 114, 128, 0.10)",
-                          color: "#334155",
-                          fontWeight: 800,
-                          fontSize: 12,
-                        }}
-                      >
-                        {opt}
-
-                        {/* 🗑️ remover opção (chip) */}
-                        <button
-                          type="button"
-                          onClick={() => removeOptionFromAttribute(attr.id, opt)}
-                          style={{ border: "none", background: "transparent", cursor: "pointer", fontWeight: 900, color: "#334155" }}
-                          aria-label="Remover opção"
-                          title="Remover"
-                        >
-                          🗑️
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* ➕ Adicionar chip (somente opção) */}
-                  <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center" }}>
-                    {addOptionAttrId === attr.id ? (
-                      <>
-                        <input
-                          className="s7-input"
-                          style={{ maxWidth: 260 }}
-                          placeholder="Ex: Verde, Bege..."
-                          value={addOptionInput}
-                          onChange={(e) => {
-                            setAddOptionInput(e.target.value);
-                            if (addOptionError) setAddOptionError("");
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === "Tab") {
-                              e.preventDefault();
-                              handleAddOptionToAttribute(attr.id);
-                            }
-                            if (e.key === "Escape") {
-                              setAddOptionAttrId(null);
-                              setAddOptionInput("");
-                              setAddOptionError("");
-                            }
-                          }}
-                          autoFocus
-                        />
-
-                        <button
-                          type="button"
-                          className="s7-btn s7-btn--secondary"
-                          onClick={() => handleAddOptionToAttribute(attr.id)}
-                        >
-                          Adicionar chip
-                        </button>
-
-                        <button
-                          type="button"
-                          className="s7-btn s7-btn--secondary"
-                          onClick={() => {
-                            setAddOptionAttrId(null);
-                            setAddOptionInput("");
-                            setAddOptionError("");
-                          }}
-                        >
-                          Cancelar
-                        </button>
-                      </>
-                    ) : (
+              </div>
+              <div style={{ minWidth: 200 }}>
+                <label className="s7-label pf-variation-chip-label">Raiz do SKU *</label>
+                <div className={`pf-chipbox pf-variation-chipbox ${skuBaseError ? "s7-input--error" : ""}`} style={{ marginTop: 4 }}>
+                  {skuBaseChips.map((key) => (
+                    <span key={key} className="pf-chip pf-chip--soft pf-variation-chip">
+                      {key}
                       <button
                         type="button"
-                        className="s7-btn s7-btn--secondary"
-                        onClick={() => {
-                          setAddOptionAttrId(attr.id);
-                          setAddOptionInput("");
-                          setAddOptionError("");
-                        }}
+                        className="pf-chip-x"
+                        onClick={() => removeSkuBaseChip(key)}
+                        aria-label="Remover chave"
+                        title="Remover"
                       >
-                        + Adicionar chip
+                        ✕
                       </button>
-                    )}
-                  </div>
-
-                  {addOptionAttrId === attr.id && addOptionError && (
-                    <div className="s7-error" style={{ marginTop: 8 }}>
-                      {addOptionError}
-                    </div>
+                    </span>
+                  ))}
+                  {skuBaseChips.length < 2 && (
+                    <input
+                      ref={skuBaseInputRef}
+                      className="pf-chipbox-input pf-variation-input"
+                      value={skuBaseInput}
+                      onChange={(e) => setSkuBaseInput(e.target.value)}
+                      onKeyDown={handleSkuBaseKeyDown}
+                      placeholder={skuBaseChips.length === 0 ? "Ex: calca, churra" : "Ex: eletr"}
+                      maxLength={6}
+                    />
                   )}
                 </div>
-             </div>
-            ))}
-          </div>
-        )}
-
-        {/* ======================================================
-            GRID: Combinações geradas (continua igual)
-        ====================================================== */}
-        {variantRows.length > 0 && (
-          <div className="section" style={{ marginTop: 12 }}>
-            <div className="section-header">
-       <h3>Combinações geradas</h3>
-        <p className="section-subtitle">
-       Cada combinação representa uma variação do produto.
-        </p>
-        </div>
+                {skuBaseError && <div className="s7-error" style={{ marginTop: 6 }}>{skuBaseError}</div>}
+              </div>
+            </div>
 
         <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
         {variantRows.map((row) => (
@@ -2577,9 +2787,9 @@ const validatePricingTab = () => {
         className="s7-card"
         style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${variantAttrColumns.length}, 1fr) 1fr 1fr 120px 60px`,
+        gridTemplateColumns: `repeat(${variantAttrColumns.length}, 1fr) 1fr 1fr 60px`,
         gap: 12,
-        alignItems: "center",
+        alignItems: "start",
         padding: 12,
         }}
         >
@@ -2593,7 +2803,7 @@ const validatePricingTab = () => {
         </div>
         ))}
 
-        {/* SKU */}
+        {/* SKU — label + Copiar na mesma linha (canto direito); abaixo: input + Regerar */}
         <div className="pf-variant-field">
         <FieldLabel
           text="SKU"
@@ -2602,36 +2812,50 @@ const validatePricingTab = () => {
           copyKey={`variant_sku_${row.id}`}
           copiedKey={copiedKey}
         />
-
-        <input
-          className={`s7-input pf-variant-sku-input ${
-            skuErrorsById?.[row.id] ? "s7-input--error" : ""
-          }`}
-          value={row.sku}
-          onChange={(e) => {
-            // ------------------------------------------------------
-            // Atualiza SKU
-            // ------------------------------------------------------
-            handleVariantRowChange(row.id, "sku", e.target.value);
-
-            // ------------------------------------------------------
-            // UX: limpa erro ao digitar
-            // ------------------------------------------------------
-            if (skuErrorsById?.[row.id]) {
-              setSkuErrorsById((prev) => {
-                const next = { ...(prev || {}) };
-                delete next[row.id];
-                return next;
-              });
-            }
-          }}
-        />
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <input
+            className={`s7-input pf-variant-sku-input ${
+              skuErrorsById?.[row.id] ? "s7-input--error" : ""
+            }`}
+            value={row.sku}
+            onFocus={() => { skuAtFocusRef.current[row.id] = row.sku; }}
+            onChange={(e) => {
+              handleVariantRowChange(row.id, "sku", e.target.value);
+              if (skuErrorsById?.[row.id]) {
+                setSkuErrorsById((prev) => {
+                  const next = { ...(prev || {}) };
+                  delete next[row.id];
+                  return next;
+                });
+              }
+            }}
+            onBlur={(e) => {
+              const atFocus = skuAtFocusRef.current[row.id];
+              const currentValue = row.sku;
+              if (atFocus !== currentValue && isVariantLinkedToMarketplaces(row)) {
+                handleVariantRowChange(row.id, "sku", atFocus ?? "");
+                setSkuManualIntegratedModal({ rowId: row.id, nextSku: currentValue });
+              }
+              delete skuAtFocusRef.current[row.id];
+            }}
+          />
+          <button
+            type="button"
+            className="s7-btn s7-btn--secondary"
+            style={{ padding: "6px 8px", minWidth: "auto", fontSize: 12 }}
+            title={row.sku ? "Regerar SKU desta variação" : "Gerar SKU automaticamente para esta variação"}
+            onClick={() => handleGenerateSkuForRow(row)}
+            aria-label={row.sku ? "Regerar SKU desta variação" : "Gerar SKU para esta variação"}
+          >
+            {row.sku ? "🔄 Regerar" : "⚡ Gerar"}
+          </button>
+        </div>
 
         {skuErrorsById?.[row.id] && <div className="s7-error">{skuErrorsById[row.id]}</div>}
         </div>
 
 
-        {/* GTIN */}
+        {/* EAN / GTIN — label + Copiar na mesma linha (canto direito); abaixo: input */}
         <div className="pf-variant-field">
         <FieldLabel
           text="EAN / GTIN"
@@ -2655,34 +2879,20 @@ const validatePricingTab = () => {
         </div>
 
 
-        {/* SITUAÇÃO */}
-        <div className="pf-variant-status">
-        <label className="s7-label">Situação</label>
-
-        <label className="pf-switch">
-        <input
-        type="checkbox"
-        checked={row.active}
-        onChange={(e) => handleVariantRowChange(row.id, "active", e.target.checked)}
-        />
-        Ativo
-        </label>
-        </div>
-
-        {/* LIXEIRA */}
+        {/* Excluir variação — ícone destrutivo Suse7, sem fundo (abre modal de confirmação) */}
         <button
-        type="button"
-        className="s7-btn s7-btn--danger"
-        title="Remover variação"
-        onClick={() => handleRemoveVariantRow(row.id)}
+          type="button"
+          className="pf-variant-delete-btn"
+          title="Excluir variação"
+          onClick={() => setDeleteVariantRowId(row.id)}
+          aria-label="Excluir variação"
         >
-        🗑️
+          <Trash2 size={20} strokeWidth={2} />
         </button>
         </div>
         ))}
         </div>
-
-          </div>
+          </>
         )}
         </>
         )}
@@ -3216,6 +3426,177 @@ const validatePricingTab = () => {
                           }}
                         >
                           Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+
+              {/* Modal confirmação exclusão de variação (aba Variações) */}
+              {deleteVariantRowId != null &&
+                createPortal(
+                  <div
+                    className="s7-modal-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="s7-delete-variant-modal-title"
+                  >
+                    <div className="s7-modal-card">
+                      <div className="s7-modal-icon-wrap">
+                        <div className="s7-modal-icon s7-modal-icon--warning">!</div>
+                      </div>
+                      <h2 id="s7-delete-variant-modal-title" className="s7-modal-title">
+                        Excluir variação
+                      </h2>
+                      <p className="s7-modal-text">
+                        Tem certeza que deseja excluir esta variação?
+                        <br />
+                        Esta ação removerá o SKU e todas as informações associadas a esta combinação.
+                      </p>
+                      {(() => {
+                        const row = (variantRows || []).find((r) => r.id === deleteVariantRowId);
+                        return row && row.attributes && Object.keys(row.attributes).length > 0 ? (
+                          <p className="s7-modal-text" style={{ marginTop: 8, fontWeight: 700 }}>
+                            Exemplo: {Object.entries(row.attributes).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                          </p>
+                        ) : null;
+                      })()}
+                      <div className="s7-modal-actions">
+                        <button
+                          type="button"
+                          className="s7-modal-btn-secondary"
+                          onClick={() => setDeleteVariantRowId(null)}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          className="s7-modal-btn-danger"
+                          onClick={() => {
+                            handleRemoveVariantRow(deleteVariantRowId);
+                          }}
+                        >
+                          Excluir variação
+                        </button>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+
+              {/* Modal sucesso: SKUs gerados (global) */}
+              {skuSuccessModal.show &&
+                createPortal(
+                  <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-sku-success-title">
+                    <div className="s7-modal-card">
+                      <div className="s7-modal-icon-wrap">
+                        <div className="s7-modal-icon s7-modal-icon--success">✓</div>
+                      </div>
+                      <h2 id="s7-sku-success-title" className="s7-modal-title">SKUs gerados com sucesso</h2>
+                      <p className="s7-modal-text">
+                        {skuSuccessModal.generated} SKU(s) foram gerados automaticamente. {skuSuccessModal.kept} variação(ões) já possuíam SKU e foram mantidas.
+                      </p>
+                      <div className="s7-modal-actions">
+                        <button type="button" className="s7-modal-btn-primary" onClick={() => setSkuSuccessModal({ show: false, generated: 0, kept: 0 })}>
+                          Fechar
+                        </button>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+
+              {/* Modal regeração: já existem SKUs — 3 ações */}
+              {skuRegenerateModalOpen &&
+                createPortal(
+                  <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-sku-regen-title">
+                    <div className="s7-modal-card">
+                      <div className="s7-modal-icon-wrap">
+                        <div className="s7-modal-icon s7-modal-icon--warning">!</div>
+                      </div>
+                      <h2 id="s7-sku-regen-title" className="s7-modal-title">Regerar SKUs das variações</h2>
+                      <p className="s7-modal-text">
+                        Já existem variações com SKU preenchido. Regerar SKUs pode alterar identificadores já usados no sistema e nas integrações com marketplaces.
+                      </p>
+                      <p className="s7-modal-text" style={{ marginTop: 8 }}>
+                        Essa ação deve ser usada com cuidado. Alterar SKUs pode exigir atualização automática dos anúncios integrados.
+                      </p>
+                      <div className="s7-modal-actions">
+                        <button type="button" className="s7-modal-btn-secondary" onClick={() => setSkuRegenerateModalOpen(false)}>
+                          Cancelar
+                        </button>
+                        <button type="button" className="s7-modal-btn-secondary" onClick={handleSkuRegenerateOnlyEmpty}>
+                          Gerar apenas para SKUs vazios
+                        </button>
+                        <button type="button" className="s7-modal-btn-danger" onClick={handleSkuRegenerateAll}>
+                          Substituir todos os SKUs
+                        </button>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+
+              {/* Modal individual: substituir SKU desta variação (já possui SKU) */}
+              {skuIndividualModal != null &&
+                createPortal(
+                  <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-sku-individual-title">
+                    <div className="s7-modal-card">
+                      <div className="s7-modal-icon-wrap">
+                        <div className="s7-modal-icon s7-modal-icon--warning">!</div>
+                      </div>
+                      <h2 id="s7-sku-individual-title" className="s7-modal-title">Alterar SKU desta variação</h2>
+                      <p className="s7-modal-text">
+                        Esta variação já possui um SKU preenchido. Deseja substituir pelo SKU gerado automaticamente?
+                      </p>
+                      {(() => {
+                        const r = (variantRows || []).find((x) => x.id === skuIndividualModal.rowId);
+                        return r && r.attributes && Object.keys(r.attributes).length > 0 ? (
+                          <p className="s7-modal-text" style={{ marginTop: 8, fontWeight: 700 }}>
+                            Variação: {Object.entries(r.attributes).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                          </p>
+                        ) : null;
+                      })()}
+                      <p className="s7-modal-text" style={{ marginTop: 8 }}>
+                        <strong>SKU atual:</strong> {skuIndividualModal.currentSku}
+                        <br />
+                        <strong>Novo SKU:</strong> {skuIndividualModal.newSku}
+                      </p>
+                      <div className="s7-modal-actions">
+                        <button type="button" className="s7-modal-btn-secondary" onClick={() => setSkuIndividualModal(null)}>
+                          Cancelar
+                        </button>
+                        <button type="button" className="s7-modal-btn-danger" onClick={handleConfirmIndividualSkuReplace}>
+                          Substituir SKU
+                        </button>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+
+              {/* Modal alteração manual de SKU em variação integrada (placeholder: row.linked_to_marketplaces) */}
+              {skuManualIntegratedModal != null &&
+                createPortal(
+                  <div className="s7-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-sku-integrated-title">
+                    <div className="s7-modal-card">
+                      <div className="s7-modal-icon-wrap">
+                        <div className="s7-modal-icon s7-modal-icon--warning">!</div>
+                      </div>
+                      <h2 id="s7-sku-integrated-title" className="s7-modal-title">Alterar SKU de variação integrada</h2>
+                      <p className="s7-modal-text">
+                        Esta variação já está vinculada a um ou mais marketplaces. Alterar o SKU fará com que o Suse7 atualize automaticamente essa identificação nas integrações compatíveis.
+                      </p>
+                      <p className="s7-modal-text" style={{ marginTop: 8 }}>
+                        Use essa ação com cuidado para evitar inconsistências em estoque, anúncios e relatórios.
+                      </p>
+                      <div className="s7-modal-actions">
+                        <button type="button" className="s7-modal-btn-secondary" onClick={() => setSkuManualIntegratedModal(null)}>
+                          Cancelar
+                        </button>
+                        <button type="button" className="s7-modal-btn-primary" onClick={handleConfirmManualSkuIntegrated}>
+                          Alterar SKU
                         </button>
                       </div>
                     </div>

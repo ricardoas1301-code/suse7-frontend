@@ -3,18 +3,19 @@
    Chips claros, borda suave, fontes modernas
 ====================================================================== */
 
+/* Container do input de chips — padrão Suse7 (igual à aba Variações) */
 .seo-keywords-input {
   width: 100%;
-  min-height: 44px;
+  min-height: 38px;
   box-sizing: border-box;
 
   font-family: var(--s7-font, system-ui, sans-serif);
-  font-size: var(--s7-fs-input, 14px);
+  font-size: 14px;
 
-  padding: 6px 10px;
-  border-radius: var(--s7-radius-sm, 8px);
-  border: 1px solid var(--s7-border, #e2e8f0);
-  background: var(--s7-bg-soft, #f8fafc);
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
 
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
@@ -30,19 +31,20 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-height: 28px;
+  width: 100%;
 }
 
+/* Chip: idêntico à aba Variações — background #eef2ff, texto #2563eb */
 .seo-keywords-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  gap: 6px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(37, 99, 235, 0.25);
-  color: #1e40af;
+  background: #eef2ff;
+  color: var(--s7-primary, #2563eb);
   font-size: 13px;
   font-weight: 600;
 }
@@ -57,12 +59,12 @@
   margin: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(37, 99, 235, 0.15);
-  color: #1e40af;
+  background: transparent;
+  color: var(--s7-primary, #2563eb);
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease;
 }
 
 .seo-keywords-tag-remove:hover {
@@ -78,7 +80,7 @@
   background: transparent;
   font-family: inherit;
   font-size: inherit;
-  color: var(--s7-text, #1e293b);
+  color: var(--s7-primary, #2563eb);
 }
 
 .seo-keywords-input-field::placeholder {

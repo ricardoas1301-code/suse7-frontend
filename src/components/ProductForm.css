@@ -750,71 +750,86 @@
 }
 
 /* ======================================================
-   CHIPBOX (opções com Enter)
+   CHIPBOX — idêntico ao container do input Palavras-chave SEO
+   Usado em: Nome do atributo *, Opções (chips) *, Nome do atributo, Opções, Raiz do SKU
 ====================================================== */
-.pf-chipbox{
+.pf-chipbox {
   width: 100%;
   min-height: 38px;
+  box-sizing: border-box;
 
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  font-family: var(--s7-font, system-ui, sans-serif);
+  font-size: 14px;
 
   padding: 6px 8px;
-  border-radius: var(--s7-radius-sm, 8px);
-  border: 1px solid var(--s7-border, #dcdfe4);
-  background: var(--s7-bg-soft, #f9fafb);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
 
-  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.pf-chipbox:focus-within{
+.pf-chipbox:focus-within {
   border-color: var(--s7-primary, #2563eb);
-  box-shadow: var(--s7-ring-focus, 0 0 0 2px rgba(37, 99, 235, 0.12));
+  box-shadow: var(--s7-ring-focus, 0 0 0 3px rgba(37, 99, 235, 0.15));
   background: var(--s7-bg, #fff);
 }
 
-.pf-chipbox-input{
+/* Texto dentro do input de chips — azul padrão Suse7 (igual ao SEO) */
+.pf-chipbox-input {
   border: none;
   outline: none;
   background: transparent;
   font-size: 14px;
   min-width: 220px;
   flex: 1;
+  color: var(--s7-primary, #2563eb);
 }
 
-.pf-chip{
+/* Chip: idêntico ao SEO — background #eef2ff, texto azul #2563eb */
+.pf-chip,
+.pf-chip--soft {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 
-  padding: 5px 10px;
+  padding: 4px 10px;
   border-radius: 999px;
 
-  background: rgba(37, 99, 235, 0.10);
+  background: #eef2ff;
   color: var(--s7-primary, #2563eb);
-  font-weight: 800;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: 13px;
 }
 
-.pf-chip--soft{
-  background: rgba(107, 114, 128, 0.12);
-  color: #334155;
-  font-weight: 800;
-}
-
-.pf-chip-x{
+/* Botão X do chip — 29% menor que o padrão SEO, hover vermelho redondo */
+.pf-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  margin: 0;
   border: none;
+  border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 9px;
   line-height: 1;
   color: inherit;
-  opacity: 0.8;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.pf-chip-x:hover{ opacity: 1; transform: scale(1.05); }
+.pf-chip-x:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+}
 
 /* ======================================================
    VARIAÇÕES — LINHA DE CRIAÇÃO (atributo + opções + botão)
@@ -849,6 +864,26 @@
   .pf-variation-create-col--action {
     align-items: flex-start;
   }
+}
+
+/* Labels da aba Variações permanecem no padrão atual (cor preta); apenas inputs seguem o padrão SEO */
+
+/* Inputs da aba Variações — mesmo padrão visual do input SEO (Nome do atributo, etc.) */
+.pf-variation-create-row .s7-input.pf-variation-input {
+  padding: 6px 8px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.pf-variation-create-row .pf-chipbox-input.pf-variation-input,
+.pf-chipbox-input.pf-variation-input {
+  padding: 6px 8px;
+  font-size: 14px;
+  background: transparent;
 }
 
 .pf-chipbox-hint{
@@ -1164,6 +1199,60 @@
   flex-direction: column;
   gap: 6px;
   min-width: 0;
+}
+/* Label + Copiar na mesma linha, Copiar no canto direito da célula (igual NCM) */
+.pf-variant-field .pf-label-row {
+  width: 100%;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+.pf-variant-field .pf-label-left {
+  min-width: 0;
+  overflow: hidden;
+}
+.pf-variant-field .pf-label-left .s7-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-variant-field .pf-copy-btn {
+  flex-shrink: 0;
+}
+
+/* Linha do input: input ocupa espaço; Copiar no canto direito do campo (mesma linha) */
+.pf-variant-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.pf-variant-input-row .s7-input {
+  flex: 1;
+  min-width: 0;
+}
+.pf-variant-input-row .pf-variant-copy {
+  flex-shrink: 0;
+}
+
+/* Botão excluir variação — ícone neutro, vermelho só no hover (menos peso visual) */
+.pf-variant-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--s7-muted, #6b7280);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.pf-variant-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--s7-danger, #ef4444);
 }
 
 /* ======================================================================
