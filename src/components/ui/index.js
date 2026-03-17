@@ -12,7 +12,6 @@ export { default as S7ActionBar } from "./S7ActionBar";
 export { default as S7Input } from "./S7Input";
 export { default as S7Textarea } from "./S7Textarea";
 export { default as S7Select } from "./S7Select";
-export { default as S7Tooltip } from "./S7Tooltip";
 export { default as S7FormField } from "./S7FormField";
 export { default as S7Stack } from "./S7Stack";
 export { default as S7Grid } from "./S7Grid";

@@ -773,13 +773,43 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-/* Na linha de criação de variações, manter altura fixa igual ao s7-input.
-   Evita que "Nome do atributo" e "Opções (chips)" cresçam ao digitar chips. */
+/* ====================================================================== */
+/* ABA VARIAÇÕES — CHIPBOXES DA LINHA DE CRIAÇÃO COM ALTURA FIXA          */
+/* Objetivo:                                                              */
+/*   - manter Nome do atributo e Opções com altura visual padrão S7       */
+/*   - impedir crescimento vertical ao digitar ou adicionar chips         */
+/*   - permitir scroll horizontal quando necessário                       */
+/* ====================================================================== */
 .pf-variation-create-row .pf-variation-chipbox {
   height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  display: flex;
   align-items: center;
   flex-wrap: nowrap;
   overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding: 6px 8px;
+  box-sizing: border-box;
+}
+
+/* ====================================================================== */
+/* INPUT INTERNO DOS CHIPBOXES DE CRIAÇÃO                                 */
+/* Objetivo:                                                              */
+/*   - impedir que o input interno aumente a altura do chipbox            */
+/*   - manter o campo com comportamento de linha única                    */
+/* ====================================================================== */
+.pf-variation-create-row .pf-chipbox-input.pf-variation-input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
+  flex: 1 0 140px;
 }
 
 .pf-chipbox:focus-within {
@@ -1173,13 +1203,11 @@
 .pf-variant-sku-input{
   width: 90%;
   max-width: 220px;
-  height: 38px;       /* altura fixa local, igual NCM */
 }
 
 .pf-variant-gtin-input{
   width: 90%;
   max-width: 260px;
-  height: 38px;       /* altura fixa local, igual NCM */
 }
 
 /* Em telas pequenas, não aperta demais */
@@ -1369,7 +1397,7 @@
   display: grid;
   grid-template-columns: 1fr minmax(260px, 340px);
   gap: 14px;
-  align-items: center;
+  align-items: flex-start; /* igual ao card de Estoque (mesmo assentamento vertical) */
   padding: 12px;
 
   overflow: visible; /* ✅ permite tooltip aparecer */
@@ -1500,7 +1528,7 @@
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr);
   gap: 14px;
   align-items: flex-start;
-  padding: 12px;
+  padding: 11px; /* ~6% menor que 12px */
   width: 100%;
   box-sizing: border-box;
   overflow: visible;

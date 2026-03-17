@@ -10,7 +10,6 @@
 // - Componente de layout e composição
 // ======================================================
 
-import S7Tooltip from "./S7Tooltip";
 import "./S7FormField.css";
 
 export default function S7FormField({
@@ -22,6 +21,7 @@ export default function S7FormField({
   children,
   className = "",
   htmlFor = "",
+  topRightAction = null,
 }) {
   const wrapperClasses = [
     "s7-form-field",
@@ -33,21 +33,33 @@ export default function S7FormField({
 
   return (
     <div className={wrapperClasses}>
-      {label ? (
+      {(label || topRightAction) && (
         <div className="s7-form-field__label-row">
-          <label className="s7-form-field__label" htmlFor={htmlFor || undefined}>
-            {label}
-            {required ? <span className="s7-form-field__required"> *</span> : null}
-          </label>
-          {tooltip ? (
-            <S7Tooltip content={tooltip} position="top">
-              <span className="s7-form-field__info-icon" aria-hidden="true">
+          <div className="s7-form-field__label-left">
+            {label && (
+              <label className="s7-form-field__label" htmlFor={htmlFor || undefined}>
+                {label}
+                {required ? <span className="s7-form-field__required"> *</span> : null}
+              </label>
+            )}
+            {tooltip ? (
+              <span
+                className="s7-form-field__info-icon pf-info-btn s7-tip s7-tip-left s7-tip-bottom"
+                data-tip={tooltip}
+                aria-hidden="true"
+              >
                 i
               </span>
-            </S7Tooltip>
-          ) : null}
+            ) : null}
+          </div>
+
+          {topRightAction && (
+            <div className="s7-form-field__label-right">
+              {topRightAction}
+            </div>
+          )}
         </div>
-      ) : null}
+      )}
 
       <div className="s7-form-field__control">
         {children}

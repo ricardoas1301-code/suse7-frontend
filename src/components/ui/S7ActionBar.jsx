@@ -6,7 +6,6 @@
 // - Garantir consistência visual em áreas analíticas e operacionais
 // ======================================================
 
-import S7Tooltip from "./S7Tooltip";
 import S7Icon from "./S7Icon";
 import "./S7ActionBar.css";
 
@@ -33,11 +32,13 @@ export default function S7ActionBar({
                 ) : null}
 
                 {tooltip ? (
-                  <S7Tooltip content={tooltip}>
-                    <span className="s7-action-bar__tooltip-trigger">
-                      <S7Icon name="info" size={16} />
-                    </span>
-                  </S7Tooltip>
+                  <span
+                    className="pf-info-btn s7-tip"
+                    data-tip={tooltip}
+                    aria-label="Informações"
+                  >
+                    <S7Icon name="info" size={16} />
+                  </span>
                 ) : null}
 
                 {meta ? (

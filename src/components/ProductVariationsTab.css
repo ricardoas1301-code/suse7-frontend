@@ -1,0 +1,310 @@
+/* ======================================================================
+   ProductVariationsTab — layout da aba Variações
+   Foco apenas em layout visual; lógica permanece no ProductForm.
+====================================================================== */
+
+.pvt-builder-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr auto;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+@media (max-width: 960px) {
+  .pvt-builder-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pvt-builder-col {
+  min-width: 0;
+}
+
+.pvt-builder-col--action {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.pf-variants-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* Card das variações — igual ao card do Estoque */
+.pf-variant-row.s7-card {
+  padding: 12px;
+}
+
+.pf-variant-row {
+  /* Espelho do card da aba Estoque */
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr);
+  gap: 14px;
+  align-items: flex-start;
+  padding: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Mantém compatibilidade: alinhamento vem do grid espelhado do card Estoque */
+.pf-variant-row.s7-card {
+  align-items: flex-start;
+}
+
+.pf-variant-left {
+  flex: 0 0 220px;
+  max-width: 220px;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center; /* centraliza o bloco de atributos dentro do card */
+  column-gap: 180px; /* espaço entre "cor/preto" e "Tamanho/p" ainda maior */
+}
+
+.pf-variant-attr {
+  display: flex;
+  flex-direction: column; /* linha 1: label, linha 2: valor */
+  gap: 2px;
+}
+
+.pf-variant-attr-label,
+.pf-variant-attr-value {
+  font-family: var(--s7-font);
+}
+
+.pf-variant-attr-label {
+  font-size: var(--s7-fs-label);
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.pf-variant-attr-value {
+  font-size: var(--s7-fs-input);
+  font-weight: 600;
+  color: #111827;
+}
+
+.pf-variant-right {
+  display: flex;
+  align-items: center; /* centraliza verticalmente SKU + EAN/GTIN + lixeira dentro do card */
+  column-gap: 20px;
+  margin-left: auto;
+  flex-wrap: nowrap;
+}
+
+/* Aproxima ao máximo o texto "SKU" do grupo de ações (gerar + copiar) */
+.pf-variant-sku-field .s7-form-field__label-row {
+  gap: 0; /* padrão global é 8px */
+}
+
+/* Wrapper visual do campo SKU/EAN — ancora label + copiar + input na mesma largura */
+.pf-variant-field-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+}
+
+/* Ajuste local: aproxima label do input no card de Variações
+   Motivo: S7FormField usa gap padrão de 6px entre label-row e control. */
+.pf-variant-field-wrap .s7-form-field {
+  gap: 4px;
+}
+
+.pf-variant-sku-top-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Botão Gerar SKU dentro do card das variações: sem sombra no hover */
+.pv-card__field .s7-btn.s7-btn--secondary:hover {
+  box-shadow: none;
+}
+
+.pv-card__field .s7-btn.s7-btn--secondary {
+  transition: box-shadow 160ms ease;
+}
+
+.pf-variant-delete-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* ======================================================================
+   pv-card — Card reconstruído das variações geradas
+   Referência visual: card da aba Estoque
+   ====================================================================== */
+.pv-card__left {
+  display: flex;
+}
+
+.pv-card__attrs-inline {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: flex-start; /* mantém Cor e Tamanho mais próximos (move Tamanho para a esquerda) */
+}
+
+/* Move "Tamanho" para a esquerda, mantendo "Cor" no lugar. */
+.pv-card__attrs-inline .pv-card__attr:nth-child(2) {
+  margin-left: 174px; /* mais 10x para a direita */
+}
+
+.pv-card__right {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 16px;
+  align-items: flex-end;
+  width: 100%;
+  overflow: visible;
+}
+
+.pv-card__fields {
+  display: grid;
+  grid-template-columns: 240px 240px;
+  column-gap: 20px;
+  align-items: flex-end;
+}
+
+.pv-card__field {
+  width: 240px;
+}
+
+.pv-card__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end; /* volta ao comportamento anterior */
+  padding: 0;
+  margin: 0;
+  transform: translateX(-16px); /* move bem pouco para a esquerda */
+}
+
+/* Forçar bubble do tooltip para esquerda do ícone (mesmo padrão do Formato) */
+.pv-card__delete button.pf-variant-delete-btn.s7-tip[data-tip]::after {
+  left: 0 !important;
+  right: auto !important;
+  transform: translateX(-47px) translateY(0) !important; /* -18px - 29px */
+}
+
+.pv-card__delete button.pf-variant-delete-btn.s7-tip[data-tip]::before {
+  left: 14px !important;
+  right: auto !important;
+  transform: translateX(-47px) !important; /* mantém */
+}
+
+/* Mover bubble do "Copiar EAN/GTIN" para a esquerda */
+.pv-card__fields > .pv-card__field:nth-child(2) button.pf-copy-btn.s7-tip[data-tip]::after {
+  transform: translateX(-9px) translateY(0) !important;
+}
+
+
+.pv-card__attr {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pv-card__attr-label {
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-label);
+  font-weight: 700;
+  color: #2563eb;
+  line-height: 1.2;
+}
+
+.pv-card__attr-value {
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-input);
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.2;
+}
+
+/* ======================================================================
+   pv-card-field — campos compactos (sem S7FormField) no card de variações
+   Objetivo: controlar proximidade vertical label->input no card.
+   ====================================================================== */
+.pv-card-field {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* menos espaço entre label e input */
+}
+
+.pv-card-field__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 18px;
+}
+
+.pv-card-field__label {
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-label);
+  font-weight: 700;
+  color: #111827;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.pv-card-field__required {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.pv-card-field__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pv-card-field__control {
+  width: 100%;
+}
+
+.pv-card-field__control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.pv-card-field__control-row .s7-input {
+  flex: 1 1 auto;
+}
+
+/* Para SKU: manter largura do input igual ao EAN/GTIN
+   (o botão fica posicionado sobre a borda direita da linha). */
+.pv-card-field__control-row .s7-btn.pv-card-field__generate-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  flex: 0 0 auto;
+}
+
+.pv-card-field__control-row .s7-input {
+  padding-right: 40px; /* espaço para não encostar no botão */
+}
+
+.pv-card-field__header .pv-card-field__copy-btn {
+  padding: 0;
+  margin: 0;
+}
+
+.pv-card-field__copy-btn {
+  padding: 0;
+  margin: 0;
+}
+

@@ -31,18 +31,23 @@ export default function S7Input({
   rightElement = null,
   ...rest
 }) {
-  const wrapperClasses = [
-    "s7-input",
-    error ? "s7-input--error" : "",
-    disabled ? "s7-input--disabled" : "",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const stateClassTokens = ["s7-input", "s7-input--error", "s7-input--disabled"];
+  const incomingTokens = String(className || "")
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const hasErrorToken = incomingTokens.includes("s7-input--error") || !!error;
+  const hasDisabledToken = incomingTokens.includes("s7-input--disabled") || !!disabled;
+
+  const safeWrapperTokens = incomingTokens.filter((t) => !stateClassTokens.includes(t));
+
+  const wrapperClasses = ["s7-input__wrapper", ...safeWrapperTokens].join(" ");
 
   const fieldClasses = [
     "s7-input__field",
     inputClassName,
+    hasErrorToken ? "s7-input--error" : "",
+    hasDisabledToken ? "s7-input--disabled" : "",
   ]
     .filter(Boolean)
     .join(" ");

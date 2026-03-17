@@ -8,7 +8,7 @@ Objetivo:
 /* ======================================================
 WRAPPER
 ====================================================== */
-.s7-input {
+.s7-input__wrapper {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -90,12 +90,12 @@ FOCUS
 /* ======================================================
 ERROR
 ====================================================== */
-.s7-input--error .s7-input__field {
+.s7-input__field.s7-input--error {
   border-color: #f87171;
   background: #fffafa;
 }
 
-.s7-input--error .s7-input__field:focus {
+.s7-input__field.s7-input--error:focus {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
@@ -113,10 +113,7 @@ ERROR
   color: #6b7280;
 }
 
-/* ======================================================
-DISABLED
-====================================================== */
-.s7-input--disabled .s7-input__field,
+.s7-input__field.s7-input--disabled,
 .s7-input__field:disabled {
   background: #f3f4f6;
   color: #9ca3af;

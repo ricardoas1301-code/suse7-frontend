@@ -39,7 +39,8 @@ import { getPreferences, setPreference } from "../services/userPreferencesServic
 import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
 import ProductFormTabs from "./ProductFormTabs";
 import ProductFormRightPanel from "./ProductFormRightPanel";
-import { S7Button, S7Tooltip } from "./ui";
+import ProductVariationsTab from "./ProductVariationsTab";
+import { S7Button } from "./ui";
 import "./ProductForm.css";
 import { Repeat } from "lucide-react";
 import { useFormProgress } from "../hooks/useFormProgress";
@@ -2558,356 +2559,54 @@ const validatePricingTab = () => {
         )}
 
         {/* =======================
-         ABA: VARIAÇÕES (novo fluxo)
+         ABA: VARIAÇÕES (novo fluxo — via ProductVariationsTab)
          ======================= */}
         {safeTab === "variations" && hasVariations && (
-          <div className="pf-container">
-            {product.format !== "variants" ? (
-              <div className="s7-alert s7-alert--warning">
-                <strong>Formato atual:</strong> <strong>Simples</strong>. Para usar variações, altere o campo <strong>Formato</strong> na aba <strong>Dados</strong>.
-              </div>
-            ) : (
-              <>
-        {/* ======================================================
-            VARIAÇÕES — Fluxo contínuo (linha de criação sempre visível)
-        ====================================================== */}
-        <div className="section">
-          <div className="section-header">
-            <h3>Variações</h3>
-          </div>
-
-            {/* ======================================================
-        BUILDER — CADASTRO DE ATRIBUTOS + OPÇÕES (CHIPS)
-        ====================================================== */}
-        <div className="pf-variation-create-row" style={{ marginTop: 12 }}>
-          {/* NOME DO ATRIBUTO (chips) — estilo Suse7: label e chips em azul padrão */}
-          <div className="pf-variation-create-col pf-variation-create-col--attribute">
-            <FieldLabel
-              text="Nome do atributo"
-              required
-              infoText="Digite o nome do atributo (ex: Cor, Tamanho, Voltagem) e pressione Enter/Tab para criar o chip."
-              tipBottom={true}
-              wrap={true}
-            />
-
-            <div className="pf-chipbox pf-variation-chipbox">
-              {draftAttrChips.map((attr) => (
-                <span key={attr} className="pf-chip pf-variation-chip">
-                  {attr}
-                  <button
-                    type="button"
-                    className="pf-chip-x"
-                    onClick={() => removeDraftAttrChip(attr)}
-                    title="Remover atributo"
-                    aria-label="Remover atributo"
-                  >
-                    ✕
-                  </button>
-                </span>
-              ))}
-
-              <input
-                className="pf-chipbox-input pf-variation-input"
-                value={draftAttrInput}
-                onChange={(e) => setDraftAttrInput(e.target.value)}
-                onKeyDown={handleDraftAttrKeyDown}
-              />
-            </div>
-          </div>
-
-          {/* OPÇÕES (chips) — normalizadas em lowercase na criação */}
-          <div className="pf-variation-create-col pf-variation-create-col--options">
-            <FieldLabel
-              text="Opções (chips)"
-              required
-              infoText="Digite as opções do atributo (ex: Branco, Preto, 127V) e pressione Enter/Tab/virgula."
-              tipBottom={true}
-              wrap={true}
-            />
-
-            <div className="pf-chipbox pf-variation-chipbox">
-              {draftOptions.map((opt) => (
-                <span key={opt} className="pf-chip pf-chip--soft pf-variation-chip">
-                  {opt}
-                  <button
-                    type="button"
-                    className="pf-chip-x"
-                    onClick={() => removeDraftOption(opt)}
-                    aria-label="Remover opção"
-                    title="Remover"
-                  >
-                    ✕
-                  </button>
-                </span>
-              ))}
-
-              <input
-                className="pf-chipbox-input pf-variation-input"
-                placeholder="Digite e pressione Enter/Tab (ex: Branco, Preto, 127V)"
-                value={draftOptionInput}
-                onChange={(e) => setDraftOptionInput(e.target.value)}
-                onKeyDown={handleDraftOptionKeyDown}
-              />
-            </div>
-          </div>
-
-          {/* BOTÃO GERAR */}
-          <div className="pf-variation-create-col pf-variation-create-col--action">
-            <button
-              type="button"
-              className="s7-btn s7-btn--primary"
-              onClick={handleAddVariationAttribute}
-            >
-              Adicionar variação
-            </button>
-          </div>
-        </div>
-
-          {/* Atributos já cadastrados — mesmo formato (nome editável + chips) */}
-          {variationAttributes.length > 0 && variationAttributes.map((attr) => (
-            <div key={attr.id} className="pf-variation-create-row" style={{ marginTop: 12 }}>
-              <div className="pf-variation-create-col pf-variation-create-col--attribute">
-                <label className="s7-label pf-variation-chip-label">Nome do atributo</label>
-                <input
-                  className="s7-input pf-variation-input"
-                  value={attr.name}
-                  onChange={(e) => handleChangeAttributeName(attr.id, e.target.value)}
-                  onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== attr.name) handleChangeAttributeName(attr.id, v); }}
-                  placeholder="Ex: Cor, Tamanho"
-                />
-              </div>
-              <div className="pf-variation-create-col pf-variation-create-col--options">
-                <label className="s7-label pf-variation-chip-label">Opções</label>
-                <div className="pf-chipbox pf-variation-chipbox">
-                  {(attr.options || []).map((opt) => (
-                    <span key={`${attr.id}_${opt}`} className="pf-chip pf-chip--soft pf-variation-chip">
-                      {opt}
-                      <button type="button" className="pf-chip-x" onClick={() => removeOptionFromAttribute(attr.id, opt)} aria-label="Remover opção" title="Remover">✕</button>
-                    </span>
-                  ))}
-                  {addOptionAttrId === attr.id ? (
-                    <>
-                      <input
-                        className="pf-chipbox-input pf-variation-input"
-                        placeholder="Ex: Verde, Bege..."
-                        value={addOptionInput}
-                        onChange={(e) => { setAddOptionInput(e.target.value); if (addOptionError) setAddOptionError(""); }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); handleAddOptionToAttribute(attr.id); }
-                          if (e.key === "Escape") { setAddOptionAttrId(null); setAddOptionInput(""); setAddOptionError(""); }
-                        }}
-                        autoFocus
-                      />
-                      <button type="button" className="s7-btn s7-btn--secondary" style={{ marginLeft: 8 }} onClick={() => handleAddOptionToAttribute(attr.id)}>Adicionar chip</button>
-                      <button type="button" className="s7-btn s7-btn--secondary" onClick={() => { setAddOptionAttrId(null); setAddOptionInput(""); setAddOptionError(""); }}>Cancelar</button>
-                    </>
-                  ) : (
-                    <button type="button" className="s7-btn s7-btn--secondary" onClick={() => { setAddOptionAttrId(attr.id); setAddOptionInput(""); setAddOptionError(""); }}>+ Adicionar chip</button>
-                  )}
-                </div>
-                {addOptionAttrId === attr.id && addOptionError && <div className="s7-error" style={{ marginTop: 8 }}>{addOptionError}</div>}
-              </div>
-              <div className="pf-variation-create-col pf-variation-create-col--action" />
-            </div>
-          ))}
-
-            {(errors.variants || errors.variants_sku || errors.variants_gtin) && (
-              <div style={{ marginTop: 10 }}>
-                {errors.variants && <div className="s7-error">{errors.variants}</div>}
-                {errors.variants_sku && <div className="s7-error">{errors.variants_sku}</div>}
-                {errors.variants_gtin && <div className="s7-error">{errors.variants_gtin}</div>}
-              </div>
-            )}
-          </div>
-
-        {/* Variações geradas — contador + Gerar SKU + grid */}
-        {variantRows.length > 0 && (
-          <>
-            <div className="pf-variants-generated-header">
-              <h3 className="pf-variants-generated-title">
-                {variantRows.length}{" "}
-                {variantRows.length === 1 ? "Variação Gerada" : "Variações Geradas"}
-              </h3>
-
-              <div className="pf-variants-generated-actions">
-                <div className="pf-variants-generated-actions-left">
-                  <label className="s7-label">Gerar SKU</label>
-                  <button
-                    type="button"
-                    className="s7-btn s7-btn--secondary"
-                    onClick={handleGenerateSkuAuto}
-                  >
-                    {variantRows.some((row) => row.sku)
-                      ? "🔄 Regerar SKUs automaticamente"
-                      : "⚡ Gerar SKU automaticamente"}
-                  </button>
-                </div>
-                <div className="pf-variants-generated-actions-right">
-                <label className="s7-label pf-variation-chip-label">
-                  Raiz do SKU *
-                  <S7Tooltip
-                    content="Define a base do SKU usada para gerar automaticamente os SKUs das variações combinando os atributos (ex: camisa_preta_P)."
-                    placement="bottom-start"
-                    offset={6}
-                  >
-                    <button
-                      type="button"
-                      className="pf-info-btn"
-                      aria-label="Ajuda sobre Raiz do SKU"
-                    >
-                      i
-                    </button>
-                  </S7Tooltip>
-                </label>
-                <div className={`pf-chipbox pf-variation-chipbox ${skuBaseError ? "s7-input--error" : ""}`} style={{ marginTop: 4 }}>
-                  {skuBaseChips.map((key) => (
-                    <span key={key} className="pf-chip pf-chip--soft pf-variation-chip">
-                      {key}
-                      <button
-                        type="button"
-                        className="pf-chip-x"
-                        onClick={() => removeSkuBaseChip(key)}
-                        aria-label="Remover chave"
-                        title="Remover"
-                      >
-                        ✕
-                      </button>
-                    </span>
-                  ))}
-                  {skuBaseChips.length < 2 && (
-                    <input
-                      ref={skuBaseInputRef}
-                      className="pf-chipbox-input pf-variation-input"
-                      value={skuBaseInput}
-                      onChange={(e) => setSkuBaseInput(e.target.value)}
-                      onKeyDown={handleSkuBaseKeyDown}
-                      placeholder={skuBaseChips.length === 0 ? "Ex: calca, churra" : "Ex: eletr"}
-                      maxLength={6}
-                    />
-                  )}
-                </div>
-                {skuBaseError && <div className="s7-error" style={{ marginTop: 6 }}>{skuBaseError}</div>}
-              </div>
-              </div>
-            </div>
-
-        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-        {variantRows.map((row) => (
-        <div
-        key={row.id}
-        className="s7-card"
-        style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${variantAttrColumns.length}, 1fr) 1fr 1fr 60px`,
-        gap: 12,
-        alignItems: "start",
-        padding: 12,
-        }}
-        >
-        {/* VARIAÇÕES (Cor / Tamanho / etc) */}
-        {variantAttrColumns.map((attr) => (
-        <div key={attr}>
-          <label className="s7-label">{attr}</label>
-          <div style={{ fontWeight: 700 }}>
-            {row.attributes?.[attr] || "-"}
-          </div>
-        </div>
-        ))}
-
-        {/* SKU — label + Copiar na mesma linha (canto direito); abaixo: input + Regerar */}
-        <div className="pf-variant-field">
-        <FieldLabel
-          text="SKU"
-          required
-          onCopy={() => handleCopy(row.sku, `variant_sku_${row.id}`)}
-          copyKey={`variant_sku_${row.id}`}
-          copiedKey={copiedKey}
-        />
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input
-            className={`s7-input pf-variant-sku-input ${
-              skuErrorsById?.[row.id] ? "s7-input--error" : ""
-            }`}
-            value={row.sku}
-            onFocus={() => { skuAtFocusRef.current[row.id] = row.sku; }}
-            onChange={(e) => {
-              handleVariantRowChange(row.id, "sku", e.target.value);
-              if (skuErrorsById?.[row.id]) {
-                setSkuErrorsById((prev) => {
-                  const next = { ...(prev || {}) };
-                  delete next[row.id];
-                  return next;
-                });
-              }
-            }}
-            onBlur={(e) => {
-              const atFocus = skuAtFocusRef.current[row.id];
-              const currentValue = row.sku;
-              if (atFocus !== currentValue && isVariantLinkedToMarketplaces(row)) {
-                handleVariantRowChange(row.id, "sku", atFocus ?? "");
-                setSkuManualIntegratedModal({ rowId: row.id, nextSku: currentValue });
-              }
-              delete skuAtFocusRef.current[row.id];
-            }}
+          <ProductVariationsTab
+            product={product}
+            errors={errors}
+            hasVariations={hasVariations}
+            variationAttributes={variationAttributes}
+            draftAttrChips={draftAttrChips}
+            draftAttrInput={draftAttrInput}
+            setDraftAttrInput={setDraftAttrInput}
+            draftOptions={draftOptions}
+            draftOptionInput={draftOptionInput}
+            setDraftOptionInput={setDraftOptionInput}
+            addOptionAttrId={addOptionAttrId}
+            addOptionInput={addOptionInput}
+            addOptionError={addOptionError}
+            skuBaseChips={skuBaseChips}
+            skuBaseInput={skuBaseInput}
+            setSkuBaseInput={setSkuBaseInput}
+            skuBaseInputRef={skuBaseInputRef}
+            skuBaseError={skuBaseError}
+            variantRows={variantRows}
+            variantAttrColumns={variantAttrColumns}
+            copiedKey={copiedKey}
+            skuErrorsById={skuErrorsById}
+            skuAtFocusRef={skuAtFocusRef}
+            removeDraftAttrChip={removeDraftAttrChip}
+            handleDraftAttrKeyDown={handleDraftAttrKeyDown}
+            removeDraftOption={removeDraftOption}
+            handleDraftOptionKeyDown={handleDraftOptionKeyDown}
+            handleAddVariationAttribute={handleAddVariationAttribute}
+            handleChangeAttributeName={handleChangeAttributeName}
+            removeOptionFromAttribute={removeOptionFromAttribute}
+            handleAddOptionToAttribute={handleAddOptionToAttribute}
+            setAddOptionAttrId={setAddOptionAttrId}
+            setAddOptionInput={setAddOptionInput}
+            setAddOptionError={setAddOptionError}
+            handleGenerateSkuAuto={handleGenerateSkuAuto}
+            removeSkuBaseChip={removeSkuBaseChip}
+            handleSkuBaseKeyDown={handleSkuBaseKeyDown}
+            handleCopy={handleCopy}
+            handleVariantRowChange={handleVariantRowChange}
+            isVariantLinkedToMarketplaces={isVariantLinkedToMarketplaces}
+            setSkuManualIntegratedModal={setSkuManualIntegratedModal}
+            handleGenerateSkuForRow={handleGenerateSkuForRow}
+            setDeleteVariantRowId={setDeleteVariantRowId}
           />
-          <button
-            type="button"
-            className="s7-btn s7-btn--secondary"
-            style={{ padding: "6px 8px", minWidth: "auto", fontSize: 12 }}
-            title={row.sku ? "Regerar SKU desta variação" : "Gerar SKU automaticamente para esta variação"}
-            onClick={() => handleGenerateSkuForRow(row)}
-            aria-label={row.sku ? "Regerar SKU desta variação" : "Gerar SKU para esta variação"}
-          >
-            {row.sku ? "🔄 Regerar" : "⚡ Gerar"}
-          </button>
-        </div>
-
-        {skuErrorsById?.[row.id] && <div className="s7-error">{skuErrorsById[row.id]}</div>}
-        </div>
-
-
-        {/* EAN / GTIN — label + Copiar na mesma linha (canto direito); abaixo: input */}
-        <div className="pf-variant-field">
-        <FieldLabel
-          text="EAN / GTIN"
-          onCopy={() => handleCopy(row.gtin, `variant_gtin_${row.id}`)}
-          copyKey={`variant_gtin_${row.id}`}
-          copiedKey={copiedKey}
-        />
-
-        <input
-          className="s7-input pf-variant-gtin-input"
-          inputMode="numeric"
-          value={row.gtin}
-          onChange={(e) =>
-            handleVariantRowChange(
-              row.id,
-              "gtin",
-              e.target.value.replace(/\D/g, "").slice(0, 13)
-            )
-          }
-        />
-        </div>
-
-
-        {/* Excluir variação — ícone destrutivo Suse7, sem fundo (abre modal de confirmação) */}
-        <button
-          type="button"
-          className="pf-variant-delete-btn"
-          title="Excluir variação"
-          onClick={() => setDeleteVariantRowId(row.id)}
-          aria-label="Excluir variação"
-        >
-          <Trash2 size={20} strokeWidth={2} />
-        </button>
-        </div>
-        ))}
-        </div>
-          </>
-        )}
-        </>
-        )}
-        </div>
         )}
 
 

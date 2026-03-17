@@ -75,3 +75,224 @@ desenvolvimento de novas telas no Suse7.
   - ou adicionar uma variação controlada (prop) em um componente
     existente.
 
+## Regra 10 — Protocolo de Refino UX Suse7
+
+Para evitar loops de microajustes e garantir previsibilidade, todo refino visual deve seguir este protocolo:
+
+### 10.1 — Sempre partir de uma referência oficial
+
+1. **Definir referência e alvo**
+   - Antes de qualquer ajuste, declarar explicitamente:
+     - **referência**: componente/tela que será copiado (ex.: campo NCM na aba Dados, card de Estoque na aba Estoque).
+     - **alvo**: componente/tela que receberá o padrão (ex.: SKU/EAN na aba Variações).
+   - Proibido trabalhar com instruções vagas do tipo “um pouco mais para a direita” ou “reduz 30%”. Sempre usar “copiar padrão X”.
+
+### 10.2 — Classificar o tipo de ajuste (UX-TYPE)
+
+2. **Definir obrigatoriamente o UX-TYPE da task antes de implementar**
+   - **Tipo A — Ajuste sistêmico (S7)**:
+     - Se o ajuste for reaproveitável em outras telas, implementar direto no Design System (componentes em `src/components/ui/**` ou em `styles/Suse7-Design-System.css`).
+   - **Tipo B — Ajuste local (tela)**:
+     - Se for realmente específico daquela tela, aplicar localmente, sem criar componente reutilizável artificial.
+
+### 10.3 — Implementar no lugar correto (ordem obrigatória)
+
+3. **Ordem de implementação**
+   - 1º: ajustar/criar componente S7 (quando for Tipo A).
+   - 2º: aplicar o componente ou padrão na tela.
+   - 3º: só então, se necessário, fazer pequenos ajustes locais de layout (nunca reimplementar o padrão ali).
+   - Proibido resolver layout complexo só com CSS local de card ou com “gambiarras” de `margin`/`padding`.
+
+### 10.4 — Criação de componentes intermediários
+
+4. **Criar componentes intermediários quando surgir padrão repetido**
+   - Quando um padrão for usado em mais de uma tela (ex.: campo com ações no canto superior direito), criar um componente S7 dedicado (ex.: `S7FieldWithInlineActions`), com:
+     - responsabilidade clara,
+     - props bem definidas (`label`, `required`, `actions`, `inputProps`),
+     - uso previsto em múltiplas telas.
+   - Não criar componente novo apenas para resolver um caso isolado.
+
+   - Sempre que um componente S7 novo for criado, documentar **no próprio arquivo**:
+     - Nome do componente,
+     - Responsabilidade,
+     - Reutilização prevista (em quais telas/casos será usado).
+
+### 10.5 — Uso obrigatório de debug visual após 2 tentativas
+
+5. **Ativar debug quando o layout não responde**
+   - Se depois de **2 rodadas** o layout ainda não respondeu como esperado:
+     - ativar uma classe de debug temporária:
+       - `.s7-debug-outline * { outline: 1px solid rgba(0, 0, 255, 0.2); }`
+     - aplicar no container relevante e identificar:
+       - quem é o container real,
+       - quem controla largura/alinhamento,
+       - onde o layout está quebrando.
+   - Proibido continuar ajustando “no escuro”.
+
+### 10.6 — Limite de tentativas por refino
+
+6. **Máximo de 2 rodadas “no escuro”**
+   - Cada refino visual tem, no máximo, **2 rodadas** de ajuste direto.
+   - Se não resolver:
+     - parar,
+     - inspecionar com debug,
+     - ou escalar para ajuste estrutural (Tipo A no S7).
+
+### 10.7 — Regra de congelamento (UX freeze)
+
+7. **Evitar desperdício em refinos que não trazem ganho**
+   - Se o refino:
+     - não impacta funcionalidade,
+     - está consumindo tempo excessivo,
+     - está gerando desgaste,
+   - então:
+     - congelar o refino atual,
+     - registrar como pendência (“refino visual futuro”),
+     - seguir para outra parte do produto.
+
+### 10.8 — Prioridade sempre no sistema, não no pixel
+
+8. **Sistema acima de microajustes**
+   - O Suse7 é guiado por **padrões de sistema**, não por ajustes manuais de pixel.
+   - Consequências práticas:
+     - menos microajustes isolados,
+     - mais padronização via S7,
+     - mais consistência entre abas e telas.
+
+### 10.9 — Critério de qualidade de um refino
+
+9. **Quando um refino é considerado concluído**
+   - Um refino é considerado concluído quando:
+     - segue um padrão oficial já definido **ou**
+     - originou um novo padrão reutilizável no S7 (documentado aqui e implementado em componente).
+   - Não é considerado concluído se:
+     - depende de “sentir” visualmente a cada tela,
+     - não pode ser reaplicado em outra tela sem nova rodada de tentativa e erro.
+
+### 10.10 — Registro de pendências UX (UX Backlog)
+
+10. **Manter um backlog explícito de refinos UX**
+    - Pendências de refino visual devem ser registradas em um backlog simples (arquivo markdown, issue tracker ou seção dedicada), por exemplo:
+      - `UX Backlog:`
+      - `- [ ] alinhar horizontalmente card de variações`
+      - `- [ ] ajustar espaçamento X`
+      - `- [ ] revisar comportamento Y`
+    - Pendências não devem depender de memória ou histórico de conversa: sempre registrar.
+
+### 10.11 — Confirmação de escopo antes de implementar
+
+11. **Antes de começar qualquer refino, o escopo deve estar explícito**
+    - Toda task de UX deve declarar:
+      - `Referência: [componente/tela X]`
+      - `Alvo: [componente/tela Y]`
+      - `Tipo: [UX-TYPE-A ou UX-TYPE-B]`
+    - Sem essa confirmação de escopo, o refino não deve ser iniciado.
+
+## Regra 13 — Padrão Oficial de Tooltips (fonte única)
+
+Para padronizar tooltips do Suse7 e eliminar divergências visuais, o tooltip validado no campo **“Formato”** da aba **Dados** passa a ser a **fonte oficial única** para o sistema.
+
+### Adoção obrigatória (exceções controladas)
+- Salvo exceções realmente justificadas e registradas, todo tooltip do Suse7 deve seguir **exatamente**:
+  - mesmo ícone (ícone “i” azul em círculo branco com borda azul suave),
+  - mesmo posicionamento,
+  - mesma bubble (fundo escuro, texto branco, `border-radius` e sombra compatíveis com o padrão atual),
+  - mesma interação (hover simples com leve crescimento do ícone).
+- Proibido criar novos estilos locais de tooltip.
+- Proibido variar posicionamento sem necessidade real.
+
+### Padrão default oficial (resumo)
+- **Trigger**: ícone “i” azul com fundo branco, borda azul suave; hover com leve crescimento do ícone.
+- **Bubble**: fundo escuro, texto branco, raio e sombra iguais ao padrão validado.
+- **Posicionamento**: idêntico ao do tooltip do campo “Formato” (aba Dados).
+
+### Exceções / pendências
+- Qualquer tooltip existente fora desse padrão deve ser listado como **pendência de migração** (não migrar automaticamente sem validação visual).
+
+## Checklist Oficial de Tooltip Suse7
+
+✅ Checklist — Tooltip Suse7
+
+Antes de considerar um tooltip como pronto, validar:
+
+🎯 Referência obrigatória
+
+ O tooltip segue exatamente o padrão do campo Formato (aba Dados)
+
+🎨 Trigger (ícone)
+
+ Ícone “i” em círculo branco
+
+ Cor azul (var(--s7-primary))
+
+ Borda azul suave
+
+ Tamanho: 18px
+
+ Hover com leve scale(1.08)
+
+ Cursor: help
+
+💬 Bubble (tooltip)
+
+ Fundo escuro (#0f172a)
+
+ Texto branco
+
+ Font-size: 11px
+
+ Line-height: 1.2
+
+ Padding: 6px 10px
+
+ Border-radius: 12px
+
+ Box-shadow: var(--s7-shadow-float)
+
+ Sem quebra estranha de texto (white-space correto)
+
+📐 Posicionamento
+
+ Mesmo posicionamento do tooltip do campo Formato
+
+ Distância consistente do ícone
+
+ Não deslocado lateralmente
+
+ Não “flutuando” fora do contexto visual
+
+⚙️ Comportamento
+
+ Aparece no hover
+
+ Desaparece ao sair
+
+ Sem flicker
+
+ Sem atraso perceptível
+
+ Não depende de JS desnecessário
+
+🚫 Regras de bloqueio
+
+ Não usa estilo custom fora do padrão
+
+ Não cria novo tipo de tooltip
+
+ Não altera z-index sem necessidade
+
+ Não usa lógica complexa (ex: interval, hacks)
+
+🧪 Validação final
+
+ Comparado lado a lado com o campo Formato
+
+ Visual idêntico (1:1)
+
+ Aprovado sem necessidade de microajuste
+
+📌 Observação importante
+
+Este checklist é obrigatório para qualquer implementação ou refino de tooltip no Suse7.
+O tooltip do campo Formato (aba Dados) é a fonte única de verdade.
+

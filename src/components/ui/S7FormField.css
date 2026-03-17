@@ -21,7 +21,21 @@ LABEL + TOOLTIP
 .s7-form-field__label-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.s7-form-field__label-left {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
+  min-width: 0;
+}
+
+.s7-form-field__label-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .s7-form-field__label {
@@ -35,25 +49,28 @@ LABEL + TOOLTIP
   color: #dc2626;
 }
 
-/* Ícone (i) ao lado do label quando há tooltip */
+/* Ícone (i) ao lado do label quando há tooltip — copia padrão pf-info-btn (aba Dados > Formato) */
 .s7-form-field__info-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 18px;
   height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: #fff;
+  color: var(--s7-primary, #2563eb);
   font-size: 12px;
-  font-weight: 600;
-  color: #6b7280;
-  background: #f3f4f6;
-  border-radius: 50%;
+  font-weight: 900;
+  line-height: 1;
   cursor: help;
   flex-shrink: 0;
+  transition: transform 160ms ease, border-color 160ms ease;
 }
 
 .s7-form-field__info-icon:hover {
-  color: #374151;
-  background: #e5e7eb;
+  transform: scale(1.08);
+  border-color: rgba(37, 99, 235, 0.45);
 }
 
 /* ======================================================
