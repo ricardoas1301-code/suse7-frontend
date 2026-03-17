@@ -1,0 +1,39 @@
+/* ======================================================================
+   S7Table — tabela básica padronizada
+====================================================================== */
+
+.s7-table__wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.s7-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-table th,
+.s7-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--s7-border, #e5e7eb);
+  text-align: left;
+}
+
+.s7-table th {
+  font-weight: 600;
+  color: var(--s7-muted, #6b7280);
+  background: var(--s7-bg-soft, #f9fafb);
+}
+
+.s7-table tr:nth-child(even) td {
+  background: var(--s7-bg-subtle, #f8fafc);
+}
+
+.s7-table__empty {
+  text-align: center;
+  color: var(--s7-muted, #6b7280);
+  padding: 16px 12px;
+}
+

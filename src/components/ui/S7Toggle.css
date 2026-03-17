@@ -1,0 +1,76 @@
+/* ======================================================================
+   S7Toggle — switch padrão Suse7
+====================================================================== */
+
+.s7-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.s7-toggle--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.s7-toggle__control {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.s7-toggle__input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+}
+
+.s7-toggle__slider {
+  position: absolute;
+  inset: 0;
+  background: #e5e7eb;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.s7-toggle__slider::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.s7-toggle__input:checked + .s7-toggle__slider {
+  background: var(--s7-primary, #2563eb);
+}
+
+.s7-toggle__input:checked + .s7-toggle__slider::before {
+  transform: translateX(16px);
+}
+
+.s7-toggle__texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.s7-toggle__label {
+  font-size: 14px;
+  color: var(--s7-text, #0f172a);
+  font-weight: 500;
+}
+
+.s7-toggle__description {
+  font-size: 12px;
+  color: var(--s7-muted, #6b7280);
+}
+

@@ -1,0 +1,50 @@
+/* ======================================================================
+   S7Section — bloco de seção padrão
+   Objetivo:
+   - Título + descrição + ações alinhados
+   - Corpo com espaçamento consistente
+====================================================================== */
+
+.s7-section {
+  margin: 16px 0;
+}
+
+.s7-section__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.s7-section__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.s7-section__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-section__description {
+  margin: 0;
+  font-size: 13px;
+  color: var(--s7-muted, #6b7280);
+}
+
+.s7-section__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.s7-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+

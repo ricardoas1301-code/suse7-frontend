@@ -755,7 +755,6 @@
 ====================================================== */
 .pf-chipbox {
   width: 100%;
-  min-height: 38px;
   box-sizing: border-box;
 
   font-family: var(--s7-font, system-ui, sans-serif);
@@ -767,11 +766,20 @@
   background: #f9fafb;
 
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
 
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+/* Na linha de criação de variações, manter altura fixa igual ao s7-input.
+   Evita que "Nome do atributo" e "Opções (chips)" cresçam ao digitar chips. */
+.pf-variation-create-row .pf-variation-chipbox {
+  height: 38px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .pf-chipbox:focus-within {
@@ -869,19 +877,19 @@
 /* Labels da aba Variações permanecem no padrão atual (cor preta); apenas inputs seguem o padrão SEO */
 
 /* Inputs da aba Variações — mesmo padrão visual do input SEO (Nome do atributo, etc.) */
-.pf-variation-create-row .s7-input.pf-variation-input {
+.s7-input.pf-variation-input {
   padding: 6px 8px;
   font-size: 14px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #f9fafb;
-  min-height: 38px;
   box-sizing: border-box;
+  height: 38px;          /* altura fixa local, igual NCM */
 }
 
 .pf-variation-create-row .pf-chipbox-input.pf-variation-input,
 .pf-chipbox-input.pf-variation-input {
-  padding: 6px 8px;
+  padding: 0;              /* altura vem do padding da .pf-chipbox */
   font-size: 14px;
   background: transparent;
 }
@@ -1165,11 +1173,13 @@
 .pf-variant-sku-input{
   width: 90%;
   max-width: 220px;
+  height: 38px;       /* altura fixa local, igual NCM */
 }
 
 .pf-variant-gtin-input{
   width: 90%;
   max-width: 260px;
+  height: 38px;       /* altura fixa local, igual NCM */
 }
 
 /* Em telas pequenas, não aperta demais */
@@ -1254,6 +1264,46 @@
   background: rgba(239, 68, 68, 0.1);
   color: var(--s7-danger, #ef4444);
 }
+
+/* ======================================================================
+   SUSE7 — VARIAÇÕES GERADAS: Cabeçalho + linha de ações (Gerar SKU + Raiz)
+   Objetivo:
+   - Agrupar visualmente o título "X Variações Geradas" e a linha de configuração
+   - Manter padrão de seção premium Suse7
+====================================================================== */
+.pf-variants-generated-header {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-variants-generated-title {
+  margin: 0;
+}
+
+.pf-variants-generated-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.pf-variants-generated-actions-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-variants-generated-actions-left .s7-label {
+  visibility: hidden; /* só para alinhamento vertical com a Raiz do SKU */
+}
+
+.pf-variants-generated-actions-right {
+  min-width: 220px;
+}
+
 
 /* ======================================================================
    SUSE7 — PRICING TAB (Refinos finais)

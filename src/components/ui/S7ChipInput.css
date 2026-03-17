@@ -1,0 +1,71 @@
+/* ======================================================================
+   S7ChipInput — campo com chips padrão
+====================================================================== */
+
+.s7-chip-input {
+  width: 100%;
+  min-height: 38px;
+  box-sizing: border-box;
+
+  font-family: var(--s7-font, system-ui, sans-serif);
+  font-size: 14px;
+
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.s7-chip-input--disabled {
+  opacity: 0.6;
+}
+
+.s7-chip-input__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: var(--s7-primary, #2563eb);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.s7-chip-input__chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  color: inherit;
+}
+
+.s7-chip-input__chip-remove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+}
+
+.s7-chip-input__field {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  outline: none;
+  color: var(--s7-text, #0f172a);
+}
+

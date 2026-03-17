@@ -1,0 +1,37 @@
+/* ======================================================================
+   S7PageHeader — cabeçalho padrão de páginas
+====================================================================== */
+
+.s7-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.s7-page-header__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.s7-page-header__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-page-header__subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--s7-muted, #6b7280);
+}
+
+.s7-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+

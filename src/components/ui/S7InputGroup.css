@@ -1,0 +1,28 @@
+/* ======================================================================
+   S7InputGroup — layout de linha para inputs + ações
+====================================================================== */
+
+.s7-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--s7-input-group-gap, 6px);
+  min-width: 0;
+}
+
+.s7-input-group--start {
+  align-items: flex-start;
+}
+
+.s7-input-group--center {
+  align-items: center;
+}
+
+.s7-input-group--end {
+  align-items: flex-end;
+}
+
+.s7-input-group > *:first-child {
+  flex: 1;
+  min-width: 0;
+}
+

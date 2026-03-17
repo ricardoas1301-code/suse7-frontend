@@ -39,7 +39,7 @@ import { getPreferences, setPreference } from "../services/userPreferencesServic
 import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
 import ProductFormTabs from "./ProductFormTabs";
 import ProductFormRightPanel from "./ProductFormRightPanel";
-import { S7Button } from "./ui";
+import { S7Button, S7Tooltip } from "./ui";
 import "./ProductForm.css";
 import { Repeat } from "lucide-react";
 import { useFormProgress } from "../hooks/useFormProgress";
@@ -2574,9 +2574,6 @@ const validatePricingTab = () => {
         <div className="section">
           <div className="section-header">
             <h3>Variações</h3>
-            <p className="section-subtitle">
-              Cadastre atributos (ex: Cor, Tamanho) e opções (chips). As combinações são geradas automaticamente.
-            </p>
           </div>
 
             {/* ======================================================
@@ -2666,11 +2663,6 @@ const validatePricingTab = () => {
           </div>
         </div>
 
-        <div className="s7-hint" style={{ marginTop: 8 }}>
-          Cadastre 1 atributo por vez (ex: Cor). Depois informe as opções e clique em &quot;Adicionar variação&quot;.
-          Se todas as opções de um atributo forem removidas, o atributo é excluído automaticamente.
-        </div>
-
           {/* Atributos já cadastrados — mesmo formato (nome editável + chips) */}
           {variationAttributes.length > 0 && variationAttributes.map((attr) => (
             <div key={attr.id} className="pf-variation-create-row" style={{ marginTop: 12 }}>
@@ -2728,27 +2720,45 @@ const validatePricingTab = () => {
             )}
           </div>
 
-        {/* Combinações geradas — contador + Gerar SKU + grid */}
+        {/* Variações geradas — contador + Gerar SKU + grid */}
         {variantRows.length > 0 && (
           <>
-            <div className="section-header" style={{ marginTop: 24 }}>
-              <h3>Combinações geradas</h3>
-              <p className="section-subtitle">
-                {variantRows.length} combinações geradas automaticamente
-              </p>
-            </div>
-            {/* Botão global + Raiz do SKU na mesma linha (design system Suse7) */}
-            <div style={{ marginTop: 8, marginBottom: 12, display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 16 }}>
-              <div>
-                <label className="s7-label" style={{ visibility: "hidden" }}>Gerar</label>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <button type="button" className="s7-btn s7-btn--secondary" onClick={handleGenerateSkuAuto}>
-                    {variantRows.some((row) => row.sku) ? "🔄 Regerar SKUs automaticamente" : "⚡ Gerar SKU automaticamente"}
+            <div className="pf-variants-generated-header">
+              <h3 className="pf-variants-generated-title">
+                {variantRows.length}{" "}
+                {variantRows.length === 1 ? "Variação Gerada" : "Variações Geradas"}
+              </h3>
+
+              <div className="pf-variants-generated-actions">
+                <div className="pf-variants-generated-actions-left">
+                  <label className="s7-label">Gerar SKU</label>
+                  <button
+                    type="button"
+                    className="s7-btn s7-btn--secondary"
+                    onClick={handleGenerateSkuAuto}
+                  >
+                    {variantRows.some((row) => row.sku)
+                      ? "🔄 Regerar SKUs automaticamente"
+                      : "⚡ Gerar SKU automaticamente"}
                   </button>
                 </div>
-              </div>
-              <div style={{ minWidth: 200 }}>
-                <label className="s7-label pf-variation-chip-label">Raiz do SKU *</label>
+                <div className="pf-variants-generated-actions-right">
+                <label className="s7-label pf-variation-chip-label">
+                  Raiz do SKU *
+                  <S7Tooltip
+                    content="Define a base do SKU usada para gerar automaticamente os SKUs das variações combinando os atributos (ex: camisa_preta_P)."
+                    placement="bottom-start"
+                    offset={6}
+                  >
+                    <button
+                      type="button"
+                      className="pf-info-btn"
+                      aria-label="Ajuda sobre Raiz do SKU"
+                    >
+                      i
+                    </button>
+                  </S7Tooltip>
+                </label>
                 <div className={`pf-chipbox pf-variation-chipbox ${skuBaseError ? "s7-input--error" : ""}`} style={{ marginTop: 4 }}>
                   {skuBaseChips.map((key) => (
                     <span key={key} className="pf-chip pf-chip--soft pf-variation-chip">
@@ -2777,6 +2787,7 @@ const validatePricingTab = () => {
                   )}
                 </div>
                 {skuBaseError && <div className="s7-error" style={{ marginTop: 6 }}>{skuBaseError}</div>}
+              </div>
               </div>
             </div>
 
