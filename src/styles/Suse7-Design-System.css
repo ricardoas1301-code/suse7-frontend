@@ -181,11 +181,31 @@
 }
 
 .s7-error{
-  margin-top: 6px;
+  margin-top: 4px;
   font-family: var(--s7-font);
   font-size: 12px;
   font-weight: 800;
   color: var(--s7-danger);
+  min-height: 16px;
+}
+
+/* Campo com área fixa para mensagem de erro (ex.: Raiz do SKU) */
+.s7-field{
+  display: flex;
+  flex-direction: column;
+}
+
+.s7-field-error{
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--s7-danger);
+  margin-top: 4px;
+  transition: opacity 0.2s ease;
+  opacity: 1;
+}
+
+.s7-field-error:empty{
+  opacity: 0;
 }
 
 /* ======================================================

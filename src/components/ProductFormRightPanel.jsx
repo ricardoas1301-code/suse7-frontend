@@ -7,6 +7,7 @@
 // ======================================================================
 
 import "./ProductFormRightPanel.css";
+import ProductHealthProgress from "./ProductHealthProgress";
 
 /**
  * @param {{
@@ -19,6 +20,8 @@ import "./ProductFormRightPanel.css";
  *   saveLabel?: string;
  *   saving?: boolean;
  *   statusText?: string;
+ *   progressPercent?: number;
+ *   stepsClickable?: boolean;
  * }} props
  */
 export default function ProductFormRightPanel({
@@ -31,6 +34,8 @@ export default function ProductFormRightPanel({
   saveLabel = "Salvar produto",
   saving = false,
   statusText = "",
+  progressPercent = 0,
+  stepsClickable = true,
 }) {
   if (!Array.isArray(steps) || steps.length === 0) {
     return null;
@@ -40,6 +45,7 @@ export default function ProductFormRightPanel({
   const activeIndex = rawIndex >= 0 ? rawIndex : 0;
 
   const handleStepClick = (id) => {
+    if (!stepsClickable) return;
     if (typeof onStepChange === "function") {
       onStepChange(id);
     }
@@ -68,6 +74,18 @@ export default function ProductFormRightPanel({
         <span className="pf-right-required-hint">* Campos obrigatórios</span>
       </div>
 
+      <div className="pf-right-progress-semi">
+        <ProductHealthProgress
+          percent={progressPercent}
+          status=""
+          blockingCount={0}
+          warningsCount={0}
+          hint={null}
+          showLabel={false}
+          variant="semi"
+        />
+      </div>
+
       <div className="pf-right-steps">
         <ol className="pf-right-steps-list">
           {steps.map((step, index) => {
@@ -80,8 +98,10 @@ export default function ProductFormRightPanel({
               >
                 <button
                   type="button"
-                  className="pf-right-step-button"
+                  className={`pf-right-step-button ${!stepsClickable ? "pf-right-step-button--static" : ""}`}
                   onClick={() => handleStepClick(step.id)}
+                  aria-disabled={!stepsClickable}
+                  tabIndex={stepsClickable ? 0 : -1}
                 >
                   <span className="pf-right-step-icon">
                     {index + 1}
@@ -94,21 +114,25 @@ export default function ProductFormRightPanel({
         </ol>
       </div>
 
-      <div className="pf-right-footer">
-        {statusText && (
-          <div className="pf-right-status">
-            {statusText}
-          </div>
-        )}
-        <button
-          type="button"
-          className="s7-btn s7-btn--primary pf-right-save-btn"
-          onClick={handleSaveClick}
-          disabled={saving}
-        >
-          {saving ? "Salvando..." : saveLabel}
-        </button>
-      </div>
+      {(statusText || typeof onSave === "function") && (
+        <div className="pf-right-footer">
+          {statusText && (
+            <div className="pf-right-status">
+              {statusText}
+            </div>
+          )}
+          {typeof onSave === "function" && (
+            <button
+              type="button"
+              className="s7-btn s7-btn--primary pf-right-save-btn"
+              onClick={handleSaveClick}
+              disabled={saving}
+            >
+              {saving ? "Salvando..." : saveLabel}
+            </button>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

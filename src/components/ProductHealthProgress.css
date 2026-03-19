@@ -19,6 +19,40 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.php-wrap--semi {
+  --php-size: 97px; /* ~19% menor que 120px */
+  width: var(--php-size);
+  height: 50px;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.php-wrap--semi .php-svg--semi {
+  width: var(--php-size);
+  height: 48px;
+}
+
+.php-wrap--semi .php-content {
+  inset: 0;
+  justify-content: flex-end;
+  padding-bottom: 4px;
+}
+
+.php-wrap--semi .php-content.php-content--no-label {
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 0;
+  transform: translateY(10px);
+}
+
+.php-wrap--semi .php-percent {
+  font-size: 20px;
+  line-height: 1;
+  width: 100%;
+  text-align: center;
+  color: #f59e0b;
+}
+
 .php-wrap--disabled {
   cursor: default;
 }

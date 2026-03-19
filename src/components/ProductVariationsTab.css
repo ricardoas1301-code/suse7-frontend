@@ -26,6 +26,11 @@
   justify-content: flex-end;
 }
 
+/* Chipbox de variações: base para botão limpar */
+.pf-variation-chipbox {
+  position: relative;
+}
+
 .pf-variants-list {
   margin-top: 16px;
   display: flex;
@@ -93,6 +98,46 @@
   column-gap: 20px;
   margin-left: auto;
   flex-wrap: nowrap;
+}
+
+/* ======================================================================
+   Card "Configuração de variações" — corpo recolhível
+   ====================================================================== */
+.pf-variations-config-body {
+  padding-top: 10px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease, padding-top 0.2s ease, margin-top 0.2s ease, border-top-color 0.2s ease;
+  border-top: none !important; /* remove qualquer linha logo abaixo do resumo de atributos/variações */
+}
+
+.pf-variations-config-body--expanded {
+  max-height: 1000px;
+  opacity: 1;
+  /* Permite que tooltips (s7-tip) ultrapassem o corpo sem serem cortados */
+  overflow: visible;
+}
+
+.pf-variations-config-body--collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  margin-top: 0;
+  pointer-events: none;
+}
+
+/* Conteúdo interno da aba Variações: cards empilhados com respiro uniforme */
+.pf-variations-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pf-variations-general-error{
+  margin: 2px 0 0;
 }
 
 /* Aproxima ao máximo o texto "SKU" do grupo de ações (gerar + copiar) */
@@ -306,5 +351,245 @@
 .pv-card-field__copy-btn {
   padding: 0;
   margin: 0;
+}
+
+.pv-card-field__copy-btn {
+  padding: 0;
+  margin: 0;
+}
+
+/* ======================================================================
+   Altura fixa dos inputs/chips da aba Variações
+   - Nome do atributo (builder)
+   - Opções (chips) (builder)
+   - Nome do atributo (gerado)
+   - Opções (gerada)
+   - Raiz do SKU
+   ====================================================================== */
+
+/* Containers de chips: altura fixa e sem quebra de linha */
+.pf-variation-chipbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+
+  /* Esconde scrollbar visual mantendo scroll horizontal (padrão premium Suse7) */
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/Edge legado */
+}
+
+/* Raiz do SKU: altura e aparência fixas com e sem erro (sobrescreve global .s7-input--error) */
+.pf-sku-base-field-block {
+  width: 100%;
+}
+
+/* Base e erro: mesmas dimensões — evita qualquer crescimento visual */
+.pf-sku-base-field-block .pf-chipbox,
+.pf-sku-base-field-block .pf-chipbox.s7-input--error {
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  box-sizing: border-box;
+  align-items: center;
+  padding: 6px 8px;
+  border-width: 1px;
+  line-height: 1;
+}
+
+/* Erro: só cor da borda; sem anel (global usa box-shadow !important, por isso !important aqui) */
+.pf-sku-base-field-block .pf-chipbox.s7-input--error {
+  box-shadow: none !important;
+}
+
+.pf-sku-base-error-slot {
+  min-height: 18px;
+  margin-top: 4px;
+}
+
+.pf-variation-chipbox::-webkit-scrollbar {
+  display: none;                  /* Chrome/Safari */
+}
+
+/* Chips dentro dos containers locais não podem empurrar a altura */
+.pf-variation-chipbox .pf-chip,
+.pf-variation-chipbox .pf-variation-chip {
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+
+  padding: 0 8px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+/* Input interno dos chipboxes acompanha 100% da altura fixa */
+.pf-variation-chipbox .pf-chipbox-input.pf-variation-input {
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+
+  font-size: 14px;
+  flex: 1 0 auto;
+  min-width: 80px;
+}
+
+/* Chipbox do builder com botão limpar inline
+   - reserva espaço real no container para o botão
+   - o input/chips não invadem essa área à direita */
+.pf-variation-chipbox--with-clear {
+  padding-right: 32px;
+}
+
+.pf-variation-chipbox--with-clear .pf-chipbox-input.pf-variation-input {
+  flex: 1 1 auto;
+  min-width: 40px;
+  padding-right: 0;
+}
+
+.pf-variation-chipbox-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+  z-index: 5;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.pf-variation-chipbox-clear:hover {
+  color: #111827;
+}
+
+/* Garantir que tooltips dentro do card de variações sempre fiquem acima dos inputs */
+.pf-variations-config-card .s7-tip {
+  position: relative;
+  z-index: 9999;
+}
+
+/* Wrapper local do input "Nome do atributo" (gerado) com altura fixa */
+.pf-variation-create-row .s7-input__wrapper.pf-variation-input {
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Lista de atributos já cadastrados — coluna com respiro entre cards */
+.pf-variation-attribute-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Mini card de atributo (leve, padrão Suse7) */
+.pf-variation-attribute-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Card do builder de atributos/opções */
+.pf-variation-builder-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Card da Raiz do SKU + botão Gerar SKU */
+.pf-sku-base-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 5px 16px; /* card bem compacto, mantendo espaçamento interno confortável */
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: flex;
+  align-items: center; /* centraliza verticalmente o conteúdo dentro do card */
+}
+
+/* Ajuste fino: desce levemente o label "Raiz do SKU" dentro do card */
+.pf-sku-base-card .s7-form-field__label-row {
+  margin-top: 8px;
+}
+
+/* Aproxima label "Raiz do SKU" do chipbox dentro do card */
+.pf-sku-base-card .s7-form-field {
+  gap: 4px; /* padrão global é 6px */
+}
+
+/* ======================================================================
+   Lista de atributos já cadastrados — layout horizontal compacto
+   ====================================================================== */
+.pf-variation-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  padding: 8px 0;
+}
+
+.pf-variation-attr {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  max-width: 200px;
+  flex: 0 0 180px;
+}
+
+.pf-variation-attr-value {
+  margin-top: 4px;
+  font-family: var(--s7-font);
+  font-size: var(--s7-fs-input);
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-variation-options {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-variation-chips {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 

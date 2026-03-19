@@ -55,10 +55,16 @@
    HEADER
 ====================================================== */
 .pf-header-bar{
-  padding: 10px 16px 0; /* desce um pouco o botão Fechar */
+  padding: 10px 16px 0;
   display: flex;
   justify-content: flex-end;
   box-sizing: border-box;
+}
+
+.pf-header-actions{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Botão fechar */
@@ -74,7 +80,7 @@
 
   justify-self: end;
   align-self: start;
-  margin-top: 6px; /* alinha verticalmente com o título, padrão modal */
+  margin-top: 0;
 
   transition: color 0.2s ease, transform 0.2s ease;
 }
@@ -88,14 +94,21 @@
    NOME DO PRODUTO (FIXO)
 ====================================================== */
 .pf-product-name-fixed{
-  padding: 8px 16px 16px; /* sobe o bloco e alinha com as laterais do formulário */
+  padding: 2px 16px 4px; /* header global mais compacto */
   border-bottom: 1px solid var(--s7-divider, #eef0f3);
 
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 
   box-sizing: border-box;
+}
+
+/* Quando o Nome do produto estiver dentro da aba Dados, não usa o divisor global */
+.pf-product-name-fixed--in-data{
+  padding: 0 0 10px;
+  border-bottom: none;
+  margin-bottom: 2px;
 }
 
 /* Linha superior: título + obrigatórios + fechar dentro do mesmo card */
@@ -104,13 +117,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 2px;
 }
 
 .pf-product-header-left{
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .pf-product-title{
@@ -128,14 +141,14 @@
 /* Linha com IMG + campos */
 .pf-product-name-line{
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Thumb (padrão avatar do Logo da Empresa) */
 .pf-product-thumb{
-  width: 86px;
-  height: 86px;
+  width: 52px;
+  height: 52px;
   border-radius: 999px;
   border: 1px solid var(--s7-divider, #eef0f3);
   background: var(--s7-bg-soft, #f9fafb);
@@ -177,7 +190,7 @@
 
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .pf-product-health-wrap{
@@ -187,6 +200,10 @@
   align-items: center;
   margin-left: auto;            /* empurra o medidor para a faixa direita */
   margin-right: 40px;           /* afasta da lateral direita e equilibra visualmente */
+}
+
+.pf-header-actions .pf-product-health-wrap{
+  margin: 0;
 }
 
 /* Mantém largura 50% (padrão atual) */
@@ -209,70 +226,47 @@
 }
 
 /* ======================================================
-   ABAS
-====================================================== */
-.pf-tabs{
-  display: flex;
-  gap: 16px;
-
-  padding: 12px 0 0;
-  border-bottom: 1px solid var(--s7-divider, #e5e7eb);
-
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-
-  box-sizing: border-box;
-  background: transparent;
-}
-
-.pf-tabs::-webkit-scrollbar{ display: none; }
-
-.pf-tabs button{
-  flex: 0 0 auto;
-  min-width: auto;
-
-  padding: 10px 2px;
-  margin: 0 10px 0 0;
-  font-size: 13px;
-  font-weight: 500;
-
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #4b5563;
-}
-
-.pf-tabs button.active{
-  color: var(--s7-primary, #2563eb) !important;
-  border-bottom-color: var(--s7-primary, #2563eb) !important;
-  font-weight: 700;
-}
-
-.pf-tabs button:not(.active):hover{
-  color: var(--s7-primary, #2563eb);
-  border-bottom-color: rgba(37, 99, 235, 0.35);
-}
-
-.pf-tabs button.active:hover{
-  color: var(--s7-primary-hover, #1e40af) !important;
-}
-
-/* ======================================================
    BODY (scroll da página, não interno)
 ====================================================== */
 .pf-body{
-  padding: 4px 24px 0; /* volta ao estado anterior: topo leve, base próxima do último input */
+  padding: 10px 24px 0;
   flex: 1 1 auto;
   min-height: 0;
   box-sizing: border-box;
   overflow-y: auto; /* scroll interno por aba */
   overflow-x: hidden;
+}
+
+.pf-body-footer{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-top: 0;
+  border-top: 1px solid var(--s7-divider, #e5e7eb);
+  flex-shrink: 0;
+  background: #ffffff;
+  box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.04);
+  border-radius: 10px 10px 0 0;
+}
+
+.pf-body-footer > div{
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+}
+
+.pf-body-footer .s7-btn{
+  min-width: 104px;
+}
+
+.pf-body-footer-btn{
+  height: var(--s7-btn-h);
+  padding: 0 16px;
+  border-radius: var(--s7-radius-sm);
+  font-size: 14px;
+  font-weight: 700;
 }
 
 /* ======================================================
@@ -282,7 +276,7 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 0; /* mantém alinhamento horizontal, reduzindo ainda mais a área inferior */
+  padding: 0 0 10px; /* leve respiro antes do footer do wizard */
   box-sizing: border-box;
 }
 
@@ -347,7 +341,7 @@
   gap: 48px; /* espaço maior entre Formato/SKU, EAN/NCM, Marca/Modelo */
   row-gap: 12px;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
   justify-content: flex-start;
 }
@@ -781,9 +775,9 @@
 /*   - permitir scroll horizontal quando necessário                       */
 /* ====================================================================== */
 .pf-variation-create-row .pf-variation-chipbox {
-  height: 38px;
-  min-height: 38px;
-  max-height: 38px;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
@@ -886,12 +880,70 @@
 .pf-variation-create-col--action {
   display: flex;
   align-items: flex-end;
+  gap: 8px;
 }
 
 .pf-variation-create-col--action .s7-btn,
 .pf-variation-create-col--action button {
   height: 38px;
   white-space: nowrap;
+}
+
+/* Botão de ação leve (ex.: Adicionar variação, + Adicionar chip) — versão local neutra */
+.pf-ghost-btn {
+  height: 30px;
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 400;
+  border-radius: var(--s7-radius-sm, 6px);
+  background: transparent;
+  border: none;
+  color: var(--s7-text, #111827);
+  transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+}
+
+.pf-ghost-btn:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--s7-primary, #2563eb);
+  transform: scale(1.04);
+}
+
+/* Versão inline do botão "+ Adicionar chip" dentro do chipbox das variações criadas */
+.pf-variation-add-chip-btn {
+  height: 26px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Display-only das opções nas variações já criadas (sem cara de input) */
+.pf-variation-options-display {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 34px;
+}
+
+/* Agrupa input + cancelar lado a lado durante criação de nova opção */
+.pf-variation-add-chip-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* Input dentro do bloco inline (nova opção) não deve ocupar toda a linha */
+.pf-variation-add-chip-inline .pf-chipbox-input.pf-variation-input {
+  flex: 0 0 auto;
+  min-width: 80px;
+  width: auto;
+}
+
+/* Botão Cancelar encostado no input */
+.pf-variation-add-chip-inline .pf-variation-add-chip-btn {
+  padding-left: 2px;
+  padding-right: 4px;
 }
 
 @media (max-width: 980px) {
@@ -915,6 +967,21 @@
   background: #f9fafb;
   box-sizing: border-box;
   height: 38px;          /* altura fixa local, igual NCM */
+}
+
+/* Nome do atributo nas variações criadas — visual de texto (sem caixa de input) */
+.s7-input__wrapper.pf-variation-attr-display {
+  height: 34px;
+  display: flex;
+  align-items: center;
+}
+
+.pf-variation-attr-display .s7-input__field {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 .pf-variation-create-row .pf-chipbox-input.pf-variation-input,
@@ -1314,22 +1381,111 @@
 .pf-variants-generated-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center; /* alinha verticalmente botão e campo Raiz do SKU */
   gap: 16px;
 }
 
 .pf-variants-generated-actions-left {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 6px; /* igual ao espaçamento padrão label -> campo */
 }
 
 .pf-variants-generated-actions-left .s7-label {
   visibility: hidden; /* só para alinhamento vertical com a Raiz do SKU */
+  min-height: 17px;   /* reserva a mesma altura visual do label à direita */
+  line-height: 1.3;
 }
 
 .pf-variants-generated-actions-right {
   min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Título da seção de variações geradas logo abaixo da configuração de SKU */
+.pf-variants-generated-title-row {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.pf-variants-generated-title-row .s7-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Card de configuração de variações (aba Variações) */
+.pf-variations-config-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-sizing: border-box;
+}
+
+.pf-variations-config-header {
+  width: 100%;
+  padding: 4px 0 10px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.pf-variations-config-header:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.pf-variations-config-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.pf-variations-config-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--s7-primary, #2563eb);
+}
+
+.pf-variations-config-summary {
+  font-size: 12px;
+  color: #111827;
+}
+
+.pf-variations-config-header-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-variations-config-chevron {
+  transition: transform 0.16s ease;
+}
+
+.pf-variations-config-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+.pf-variations-config-body {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 

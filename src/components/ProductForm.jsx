@@ -31,13 +31,11 @@ import "./FieldLabel.css";
 import "./ProductAdTitlesTab.css";
 import { Trash2 } from "lucide-react";
 import { SeoKeywordsInput } from "./SeoKeywordsInput";
-import ProductHealthProgress from "./ProductHealthProgress";
 import ProductHealthDetailsModal from "./ProductHealthDetailsModal";
 import { getProductHealth } from "../services/productHealthService";
 import { changeStatus } from "../services/productStatusService";
 import { getPreferences, setPreference } from "../services/userPreferencesService";
 import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
-import ProductFormTabs from "./ProductFormTabs";
 import ProductFormRightPanel from "./ProductFormRightPanel";
 import ProductVariationsTab from "./ProductVariationsTab";
 import { S7Button } from "./ui";
@@ -229,6 +227,12 @@ export default function ProductForm({
 
   const availableTabIds = useMemo(() => availableTabs.map((t) => t.id), [availableTabs]);
   const safeTab = availableTabIds.includes(activeTab) ? activeTab : availableTabIds[0];
+  const safeTabIndex = Math.max(0, availableTabIds.indexOf(safeTab));
+  const isFirstStep = safeTabIndex === 0;
+  const isLastStep = safeTabIndex === availableTabIds.length - 1;
+  const hasVisitedVariationsTabRef = useRef(false);
+  const [collapseVariationsConfigOnEnter, setCollapseVariationsConfigOnEnter] = useState(false);
+  const prevSafeTabRef = useRef(safeTab);
 
   useEffect(() => {
     if (!availableTabIds.includes(activeTab)) {
@@ -249,6 +253,78 @@ export default function ProductForm({
       setActiveTab(initialTab);
     }
   }, [initialTab, availableTabIds]);
+
+  const goToPreviousStep = () => {
+    if (isFirstStep) return;
+    const prevId = availableTabIds[safeTabIndex - 1];
+    if (prevId) setActiveTab(prevId);
+  };
+
+  const goToNextStep = () => {
+    if (isLastStep) return;
+    const nextId = availableTabIds[safeTabIndex + 1];
+    if (nextId) setActiveTab(nextId);
+  };
+
+  const focusFirstInvalidField = (tabId) => {
+    if (typeof document === "undefined") return;
+    requestAnimationFrame(() => {
+      const root = document.querySelector(".pf-body");
+      if (!root) return;
+
+      if (tabId === "variations" && product.format === "variants" && (!Array.isArray(variantRows) || variantRows.length === 0)) {
+        const variationsCard = root.querySelector(".pf-variations-config-card");
+        if (variationsCard) {
+          if (typeof variationsCard.focus === "function") {
+            variationsCard.focus({ preventScroll: true });
+          }
+          if (typeof variationsCard.scrollIntoView === "function") {
+            variationsCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+          return;
+        }
+      }
+
+      const invalid = root.querySelector(
+        ".s7-input--error, .s7-select.s7-input--error, .pf-chipbox.s7-input--error, [aria-invalid='true']"
+      );
+      if (!invalid) return;
+
+      const focusTarget =
+        invalid.matches("input, select, textarea, button, [tabindex]") ? invalid : invalid.querySelector("input, select, textarea, button, [tabindex]");
+      if (focusTarget && typeof focusTarget.focus === "function") {
+        focusTarget.focus({ preventScroll: true });
+      }
+
+      if (typeof invalid.scrollIntoView === "function") {
+        invalid.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  };
+
+  const validateCurrentStep = () => {
+    switch (safeTab) {
+      case "data":
+        return validateDataTab();
+      case "variations":
+        return validateVariantsTab();
+      case "pricing":
+        return validatePricingTab();
+      case "stock":
+        return validateStockTab();
+      default:
+        return true;
+    }
+  };
+
+  const handleNextStep = () => {
+    const isStepValid = validateCurrentStep();
+    if (!isStepValid) {
+      focusFirstInvalidField(safeTab);
+      return;
+    }
+    goToNextStep();
+  };
 
   // ------------------------------------------------------
   // STATE: ERROS (UX)
@@ -334,6 +410,30 @@ const [draftAttrChips, setDraftAttrChips] = useState([]);
 
 
   const [variantRows, setVariantRows] = useState([]);
+
+  useEffect(() => {
+    if (safeTab === "variations") {
+      hasVisitedVariationsTabRef.current = true;
+    }
+
+    const prevTab = prevSafeTabRef.current;
+    if (
+      prevTab === "variations" &&
+      safeTab !== "variations" &&
+      product.format === "variants" &&
+      Array.isArray(variantRows) &&
+      variantRows.length > 0
+    ) {
+      setCollapseVariationsConfigOnEnter(true);
+    }
+
+    if (product.format !== "variants" || !Array.isArray(variantRows) || variantRows.length === 0) {
+      setCollapseVariationsConfigOnEnter(false);
+      hasVisitedVariationsTabRef.current = false;
+    }
+
+    prevSafeTabRef.current = safeTab;
+  }, [safeTab, product.format, variantRows]);
 
   // ======================================================================
 // SUSE7 — VARIAÇÕES: Modal de confirmação ao excluir variação
@@ -596,7 +696,8 @@ useEffect(() => {
   useBeforeUnload(isDirty);
 
   // Bloqueio de navegação interna (menu, links, rota): exibe modal "Sair sem salvar?"
-  const skipExitGuardRef = useRef(false); // bypass quando usuário confirmou saída pelo botão Fechar
+  const skipExitGuardRef = useRef(false); // bypass quando usuário confirmou saída
+  const suppressNextBlockerModalRef = useRef(false); // evita reabrir modal logo após saída confirmada
   const shouldBlockNav = isDirty && !exitWithoutSavingHidden && !skipExitGuardRef.current;
   const blocker = useBlocker(shouldBlockNav);
 
@@ -604,17 +705,28 @@ useEffect(() => {
   const [showExitModal, setShowExitModal] = useState(false);
   const exitModalSourceRef = useRef("close"); // "close" = botão Fechar | "blocker" = navegação bloqueada
 
-  // Quando o blocker intercepta uma navegação, abrir o modal
+  // Quando o blocker intercepta uma navegação, abrir o modal (guardado)
   useEffect(() => {
-    if (blocker.state === "blocked") {
-      exitModalSourceRef.current = "blocker";
-      setShowExitModal(true);
+    if (blocker.state !== "blocked") return;
+
+    // Se já confirmamos saída e queremos apenas prosseguir, não reabrir modal
+    if (skipExitGuardRef.current || suppressNextBlockerModalRef.current) {
+      suppressNextBlockerModalRef.current = false;
+      blocker.proceed();
+      return;
     }
-  }, [blocker.state]);
+
+    // Evita abrir novamente se o modal já está visível
+    if (showExitModal) return;
+
+    exitModalSourceRef.current = "blocker";
+    setShowExitModal(true);
+  }, [blocker.state, showExitModal]);
 
   const handleClose = () => {
     if (isDirty && !exitWithoutSavingHidden) {
       exitModalSourceRef.current = "close";
+      suppressNextBlockerModalRef.current = true;
       setShowExitModal(true);
     } else {
       onCancel?.();
@@ -627,15 +739,30 @@ useEffect(() => {
   };
 
   const handleExitModalConfirm = () => {
-    const source = exitModalSourceRef.current;
+    console.log("ProductForm.handleExitModalConfirm", {
+      blockerState: blocker?.state,
+      skipExitGuard: skipExitGuardRef.current,
+      isDirty,
+      showExitModal,
+    });
+
     setShowExitModal(false);
-    if (source === "blocker") {
+
+    // Garante que o guard não bloqueie novamente após a confirmação
+    skipExitGuardRef.current = true;
+
+    const source = exitModalSourceRef.current;
+
+    // Navegação interna interceptada pelo useBlocker
+    if (source === "blocker" && blocker?.state === "blocked") {
+      console.log("ProductForm.handleExitModalConfirm: exit path = blocker.proceed()");
       blocker.proceed();
-    } else {
-      // Fluxo "close": ativar bypass para a navegação via onCancel não ser bloqueada de novo
-      skipExitGuardRef.current = true;
-      onCancel?.();
+      return;
     }
+
+    console.log("ProductForm.handleExitModalConfirm: exit path = onCancel()");
+    // Fluxo "close" (botão Fechar do formulário)
+    onCancel?.();
   };
 
   // ------------------------------------------------------
@@ -919,8 +1046,8 @@ const handleDraftAttrKeyDown = (e) => {
   // ✅ limpa input
   setDraftAttrInput("");
 
-  // ✅ limpa erro da aba variações, se houver
-  setErrors((prev) => ({ ...prev, variants: undefined }));
+  // ✅ limpa erro do nome do atributo, se houver
+  setErrors((prev) => ({ ...prev, variants_attr: undefined }));
 };
 
 // ------------------------------------------------------
@@ -961,6 +1088,9 @@ const removeDraftOption = (opt) => {
 
       return next;
     });
+
+    // Ao criar pelo menos 1 opção válida, limpa erro de opções do builder
+    setErrors((prev) => ({ ...prev, variants_options: undefined }));
   };
 
   const handleDraftOptionKeyDown = (e) => {
@@ -1001,7 +1131,8 @@ const handleAddVariationAttribute = () => {
   if (!attrName) {
     setErrors((prev) => ({
       ...prev,
-      variants: "Digite o nome do atributo (ex: Cor) e depois adicione as opções (chips).",
+      variants_attr: "Digite o nome do atributo (ex: Cor).",
+      variants_options: undefined,
     }));
     return;
   }
@@ -1010,7 +1141,8 @@ const handleAddVariationAttribute = () => {
   if (!draftOptions || draftOptions.length === 0) {
     setErrors((prev) => ({
       ...prev,
-      variants: "Adicione ao menos 1 opção (chip) antes de cadastrar o atributo.",
+      variants_attr: undefined,
+      variants_options: "Adicione ao menos 1 opção (chip) antes de cadastrar o atributo.",
     }));
     return;
   }
@@ -1055,7 +1187,12 @@ const handleAddVariationAttribute = () => {
 
   // 4) Linha de criação permanece visível; novo atributo aparece abaixo (fluxo contínuo)
   // 5) limpa erros e drafts
-  setErrors((prev) => ({ ...prev, variants: undefined }));
+  setErrors((prev) => ({
+    ...prev,
+    variants: undefined,
+    variants_attr: undefined,
+    variants_options: undefined,
+  }));
   setDraftAttrInput("");
   setDraftAttrChips([]);
   setDraftOptionInput("");
@@ -1387,22 +1524,65 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     handleVariantRowChange(id, field, value);
   };
 
-       // ------------------------------------------------------
-       // VARIANT ROWS: remover linha
-       // - Se zerar as linhas, voltamos para o Builder (UX)
-       // ------------------------------------------------------
-       // Remove uma combinação da lista (após confirmação no modal)
-       const handleRemoveVariantRow = (id) => {
-       setVariantRows((prev) => (prev || []).filter((r) => r.id !== id));
-       setDeleteVariantRowId(null);
-    };
+  // ------------------------------------------------------
+  // VARIANT ROWS: remover linha / opção via lixeira
+  // Regra:
+  // - Lixeira é a ação oficial de exclusão
+  // - Se a opção de um atributo não for usada em nenhuma outra variação,
+  //   ela também é removida de variationAttributes (e as combinações são
+  //   regeneradas a partir daí).
+  // - Se ainda houver outras variações usando aquela opção, removemos
+  //   apenas a combinação atual.
+  // ------------------------------------------------------
+  const handleRemoveVariantRow = (id) => {
+    const rows = variantRows || [];
+    const rowToDelete = rows.find((r) => r.id === id);
+
+    if (!rowToDelete) {
+      setVariantRows((prev) => (prev || []).filter((r) => r.id !== id));
+      setDeleteVariantRowId(null);
+      return;
+    }
+
+    let removedViaAttributes = false;
+
+    Object.entries(rowToDelete.attributes || {}).forEach(([attrName, value]) => {
+      const attr = (variationAttributes || []).find(
+        (a) => String(a.name).toLowerCase() === String(attrName).toLowerCase()
+      );
+      if (!attr) return;
+
+      const isValueUsedElsewhere = rows.some(
+        (r) =>
+          r.id !== id &&
+          r.attributes &&
+          String(r.attributes[attrName]).toLowerCase() === String(value).toLowerCase()
+      );
+
+      // Se mais nenhuma variação usar esta opção, removemos a opção do atributo.
+      if (!isValueUsedElsewhere) {
+        removedViaAttributes = true;
+        removeOptionFromAttribute(attr.id, value);
+      }
+    });
+
+    // Se nenhuma opção foi removida dos atributos (ex.: opção ainda usada em outras linhas),
+    // removemos apenas esta combinação específica.
+    if (!removedViaAttributes) {
+      setVariantRows((prev) => (prev || []).filter((r) => r.id !== id));
+    }
+
+    setDeleteVariantRowId(null);
+  };
 
   // ------------------------------------------------------
   // SUSE7 — Geração de SKU (base + atributos, separador "_")
   // Formato: sku_base + "_" + atributos; apenas letras, números e "_"; máx. 24 caracteres.
   // Anti-colisão: sufixo incremental _2, _3... quando SKU já existir no produto ou no lote.
   // ------------------------------------------------------
-  /** Normalização para SKU: remove acentos, espaços; mantém apenas letras, números e "_" */
+  /** Normalização para SKU: remove acentos, espaços; mantém apenas letras, números e "_".
+   *  OBS: não força minúsculo aqui para não impactar outros fluxos; minúsculo é garantido na montagem final.
+   */
   const sanitizeSku = (str) => {
     let t = String(str)
       .normalize("NFD")
@@ -1430,7 +1610,8 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   const abbreviateOptionForSku = (str) => {
     const s = String(str).trim().toUpperCase().replace(/\s+/g, "");
     const raw = s.length > 3 ? s.substring(0, 3) : s || "";
-    return sanitizeSku(raw) || raw;
+    const sanitized = sanitizeSku(raw) || raw;
+    return sanitized.toLowerCase();
   };
 
   /** Normaliza uma chave da raiz do SKU: remove acentos, espaços, lowercase, máx. 6 caracteres */
@@ -1514,7 +1695,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       setSkuBaseError("");
       return true;
     }
-    setSkuBaseError("Informe pelo menos uma chave para gerar o SKU. Você pode usar até duas palavras curtas.");
+    setSkuBaseError("Informe pelo menos uma chave. Você pode usar até duas palavras curtas.");
     skuBaseInputRef.current?.focus();
     return false;
   };
@@ -1685,13 +1866,18 @@ const validateVariantsTab = () => {
   // Se não está em variações, nada a validar aqui
   if (product.format !== "variants") {
     setSkuErrorsById({});
+    setErrors((prev) => ({ ...prev, variants: undefined }));
     return true;
   }
 
-  // Se não tem linhas, deixamos passar (o formato variants pode estar “em construção”)
+  // Formato com variações exige ao menos 1 variação criada para avançar no wizard
   if (!Array.isArray(variantRows) || variantRows.length === 0) {
     setSkuErrorsById({});
-    return true;
+    setErrors((prev) => ({
+      ...prev,
+      variants: "Crie ao menos uma variação para continuar.",
+    }));
+    return false;
   }
 
   const nextSkuErrors = {};
@@ -1702,6 +1888,7 @@ const validateVariantsTab = () => {
   });
 
   setSkuErrorsById(nextSkuErrors);
+  setErrors((prev) => ({ ...prev, variants: undefined }));
 
   // Se tem erro, falha
   return Object.keys(nextSkuErrors).length === 0;
@@ -2037,9 +2224,8 @@ const validatePricingTab = () => {
             title={mode === "edit" ? "Editar produto" : "Novo produto"}
             steps={availableTabs}
             activeId={safeTab}
-            onStepChange={setActiveTab}
-            onSave={handleSubmit}
-            saveLabel={mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+            stepsClickable={false}
+            progressPercent={globalProgressPercent}
           />
 
           <div className="pf-card pf-card--primary">
@@ -2047,75 +2233,14 @@ const validatePricingTab = () => {
          HEADER: botão Fechar no topo direito
       ================================================== */}
       <div className="pf-header-bar">
-        <button type="button" className="pf-close" onClick={handleClose}>
-          Fechar
-        </button>
+        <div className="pf-header-actions">
+          <button type="button" className="pf-close" onClick={handleClose}>
+            Fechar
+          </button>
+        </div>
       </div>
 
         <div className="pf-form-area">
-      {/* ==================================================
-         NOME DO PRODUTO (sem título duplicado — título está no painel)
-      ================================================== */}
-<div className="pf-product-name-fixed">
-  <div className="pf-product-name-line">
-    {/* ------------------------------------------------------------
-        IMG1 (preview) — apenas no modo edição
-    ------------------------------------------------------------ */}
-    {mode === "edit" && (
-      <div
-        className="pf-product-thumb"
-        title={mainImageUrl ? "Imagem principal do produto" : "Sem imagem"}
-        aria-label="Imagem principal do produto"
-      >
-        {mainImageUrl ? (
-          <img src={mainImageUrl} alt="Imagem principal do produto" />
-        ) : (
-          <span className="pf-product-thumb__placeholder">IMG</span>
-        )}
-      </div>
-    )}
-
-    {/* ------------------------------------------------------------
-        Nome do produto (label + input)
-    ------------------------------------------------------------ */}
-    <div className="pf-product-name-fields">
-      <FieldLabel text="Nome do produto" required copyKey="product_name" copiedKey={copiedKey} onCopy={() => handleCopy(product.product_name, "product_name")} />
-
-      <input
-        className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
-        type="text"
-        placeholder="Ex: Armário de cozinha 3 portas"
-        value={product.product_name}
-        onChange={(e) => handleChange("product_name", e.target.value)}
-      />
-
-      {errors.product_name && <div className="s7-error">{errors.product_name}</div>}
-    </div>
-
-    {/* ------------------------------------------------------------
-        Progresso circular do cadastro (global, todas abas)
-    ------------------------------------------------------------ */}
-    <div className="pf-product-health-wrap">
-      <ProductHealthProgress
-        percent={globalProgressPercent}
-        status=""
-        blockingCount={0}
-        warningsCount={0}
-        hint={null}
-        showLabel={false}
-        onClick={undefined}
-      />
-    </div>
-  </div>
-</div>
-
-
-      <ProductFormTabs
-        steps={availableTabs}
-        activeId={safeTab}
-        onTabChange={setActiveTab}
-      />
-
       <div className="pf-body" data-active-tab={safeTab}>
         <div className="pf-body-inner"></div>
         
@@ -2124,6 +2249,44 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "data" && (
           <div className="pf-container">
+            <div className="pf-product-name-fixed pf-product-name-fixed--in-data">
+              <div className="pf-product-name-line">
+                {mode === "edit" && (
+                  <div
+                    className="pf-product-thumb"
+                    title={mainImageUrl ? "Imagem principal do produto" : "Sem imagem"}
+                    aria-label="Imagem principal do produto"
+                  >
+                    {mainImageUrl ? (
+                      <img src={mainImageUrl} alt="Imagem principal do produto" />
+                    ) : (
+                      <span className="pf-product-thumb__placeholder">IMG</span>
+                    )}
+                  </div>
+                )}
+
+                <div className="pf-product-name-fields">
+                  <FieldLabel
+                    text="Nome do produto"
+                    required
+                    copyKey="product_name"
+                    copiedKey={copiedKey}
+                    onCopy={() => handleCopy(product.product_name, "product_name")}
+                  />
+
+                  <input
+                    className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
+                    type="text"
+                    placeholder="Ex: Armário de cozinha 3 portas"
+                    value={product.product_name}
+                    onChange={(e) => handleChange("product_name", e.target.value)}
+                  />
+
+                  {errors.product_name && <div className="s7-error">{errors.product_name}</div>}
+                </div>
+              </div>
+            </div>
+
             {/* Linha 1: Formato + SKU */}
             <div className="pf-row">
               <div className="pf-group pf-data-col">
@@ -2606,6 +2769,7 @@ const validatePricingTab = () => {
             setSkuManualIntegratedModal={setSkuManualIntegratedModal}
             handleGenerateSkuForRow={handleGenerateSkuForRow}
             setDeleteVariantRowId={setDeleteVariantRowId}
+            initialConfigCollapsed={collapseVariationsConfigOnEnter}
           />
         )}
 
@@ -3355,16 +3519,45 @@ const validatePricingTab = () => {
              </div>
              </div>
              )}
+
              </div>
       
         </div>
+        <div className="pf-body-footer">
+          <div>
+            {!isFirstStep && (
+              <button
+                type="button"
+                className="s7-btn s7-btn--secondary pf-body-footer-btn"
+                onClick={goToPreviousStep}
+              >
+                Voltar
+              </button>
+            )}
+          </div>
+          <div>
+            {isLastStep ? (
+              <button
+                type="button"
+                className="s7-btn s7-btn--primary pf-body-footer-btn"
+                onClick={handleSubmit}
+              >
+                {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="s7-btn s7-btn--primary pf-body-footer-btn"
+                onClick={handleNextStep}
+              >
+                Avançar
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
-
-{/* --------------------------------------------------
-   FIM DO CARD PRINCIPAL
--------------------------------------------------- */}
-</div>
+        </div>
       </div>
 
 {/* --------------------------------------------------
