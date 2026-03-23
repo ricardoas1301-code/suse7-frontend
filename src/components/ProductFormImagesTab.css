@@ -8,21 +8,6 @@
   box-sizing: border-box;
 }
 
-/* Toast inline da aba Imagens — mesmo idioma visual do toast global (não bloqueante) */
-.pf-toast {
-  position: sticky;
-  top: 12px;
-  z-index: 20;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-left: 4px solid var(--s7-contextual-accent, var(--s7-orange, #d97706));
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
-  font-size: 14px;
-}
-
 .pf-images-loading {
   padding: 24px;
   text-align: center;
@@ -32,6 +17,7 @@
 
 .pf-images-section {
   margin-bottom: 28px;
+  overflow: visible;
 }
 
 .pf-images-section-title {
@@ -39,6 +25,27 @@
   font-weight: 700;
   color: var(--s7-text, #0f172a);
   margin: 0 0 16px;
+}
+
+/* Título + (i) na mesma linha — seções simples e variações */
+.pf-images-heading-with-tip {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  overflow: visible;
+}
+
+.pf-images-section-heading--variants {
+  margin-bottom: 16px;
+}
+
+.pf-images-section--variants .pf-images-section-title.pf-images-heading-with-tip {
+  margin-bottom: 0;
+}
+
+.pf-images-heading-title-text {
+  line-height: 1.3;
 }
 
 /* Header principal: margem inferior para separar do conteúdo */

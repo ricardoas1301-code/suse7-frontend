@@ -35,13 +35,39 @@ import {
 import { normalizeSortOrder } from "../services/images/imageRules";
 import { deleteAsset, downloadAsBlob, getSignedUrl, uploadAssets } from "../services/images/imageStorageService";
 import { API_BASE_URL } from "../config/api";
+import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
+import { buildImageProgressSnapshot, variantProgressRowId } from "../utils/formProgress";
 import S7Button from "./ui/S7Button";
 import "./ProductFormImagesTab.css";
+
+/** Mensagem de sucesso do SEO rename (plural/singular) — toast global */
+function seoRenameSuccessMessage(count) {
+  if (count <= 0) return "Nenhuma imagem no escopo para renomear.";
+  if (count === 1) return "1 imagem renomeada com sucesso.";
+  return `${count} imagens renomeadas com sucesso.`;
+}
 
 const MAX_IMAGES = 7;
 const EMPTY_SELECTION = new Set();
 /** Modo silencioso: reorder/delete não disparam SaveStatus nem toasts de sucesso */
 const SILENT_AUTOSAVE = true;
+
+/** Texto único do (i) nos títulos de seção (simples e variações) — fora da grid */
+const IMAGES_SECTION_QUALITY_TIP =
+  "Imagens de qualidade aumentam a conversão. Use fotos claras, mostrando detalhes, variações e o uso do produto.";
+
+function ImagesSectionQualityTipIcon({ className = "" }) {
+  return (
+    <button
+      type="button"
+      className={`pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap pf-images-section-tip-btn ${className}`.trim()}
+      data-tip={IMAGES_SECTION_QUALITY_TIP}
+      aria-label="Informações sobre fotos do produto"
+    >
+      i
+    </button>
+  );
+}
 
 /** Garante storage_path string válida (sem vírgulas, espaços, undefined, etc.) */
 function sanitizeStoragePath(p) {
@@ -63,6 +89,29 @@ function normalizeLink(link) {
     variant_key: link.variant_key ?? link.variantKey,
     sort_order: link.sort_order ?? link.sortOrder,
   };
+}
+
+/** Chave estável do path para comparar antes/depois do SEO rename */
+function storagePathKey(link) {
+  return sanitizeStoragePath(link?.storage_path ?? link?.storagePath) || "";
+}
+
+/**
+ * IDs de links cujo storage mudou (ou entrou/saiu da lista) — só estes precisam refetch de preview.
+ * Evita limpar toda a grade e reduz piscar após renomeação SEO.
+ */
+function previewIdsToInvalidate(prevFlat, nextFlat) {
+  const prevById = new Map((prevFlat || []).filter(Boolean).map((l) => [l.id, l]));
+  const nextById = new Map((nextFlat || []).filter(Boolean).map((l) => [l.id, l]));
+  const ids = new Set();
+  for (const [id, p] of prevById) {
+    const n = nextById.get(id);
+    if (!n || storagePathKey(p) !== storagePathKey(n)) ids.add(id);
+  }
+  for (const [id] of nextById) {
+    if (!prevById.has(id)) ids.add(id);
+  }
+  return ids;
 }
 
 function buildVariantKeyFromAttrs(attrsObj) {
@@ -95,9 +144,6 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
   const seoButtonLabel = hasKeywords
     ? (seoOptimizing ? "Renomeando…" : "Renomear imagens (SEO)")
     : "Definir palavras-chave (SEO)";
-  const seoButtonTip = hasKeywords
-    ? "Renomeia automaticamente as imagens usando as palavras-chave SEO do produto. Isso ajuda na organização dos arquivos e na otimização para marketplaces e buscadores."
-    : "Defina palavras-chave que serão usadas para otimizar os nomes das imagens e ajudar no SEO dos anúncios.";
 
   return (
     <div
@@ -113,7 +159,7 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
                 <span key={k}>
                   {i > 0 && <span className="pf-images-attr-sep"> / </span>}
                   <span className="pf-images-attr-label">{k}</span>
-                  <span className="pf-images-attr-sep">: </span>
+                  <span className="pf-images-attr-sep"> </span>
                   <span className="pf-images-attr-value">{v}</span>
                 </span>
               ))}
@@ -127,20 +173,6 @@ function SortableVariantBlock({ row, variantKeyFn, variantLinksMap, previewUrls,
             </span>
           )}
         </h4>
-        {hasImages && (
-          <button
-            type="button"
-            className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap"
-            data-tip={seoButtonTip}
-            aria-label={
-              hasKeywords
-                ? "Informações sobre renomear imagens (SEO)"
-                : "Informações sobre definir palavras-chave (SEO)"
-            }
-          >
-            i
-          </button>
-        )}
         <span
           className="pf-images-variant-drag-handle"
           {...attributes}
@@ -266,8 +298,13 @@ function VariationBlocksSection({
   );
 
   return (
-    <section className="pf-images-section">
-      <h3 className="pf-images-section-title">Imagens por variação</h3>
+    <section className="pf-images-section pf-images-section--variants">
+      <div className="pf-images-section-heading pf-images-section-heading--variants">
+        <h3 className="pf-images-section-title pf-images-heading-with-tip">
+          <span className="pf-images-heading-title-text">Imagens por variação</span>
+          <ImagesSectionQualityTipIcon />
+        </h3>
+      </div>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -325,6 +362,8 @@ export default function ProductFormImagesTab({
   productName = "",
   onSwitchToDataTab = null,
   onGoToSeo = null,
+  /** @type {((snapshot: { productHasImage: boolean; variantHasImageByKey: Record<string, boolean> }) => void) | null} */
+  onImageProgressChange = null,
 }) {
   const variantKeyFn = buildVariantKey || buildVariantKeyFromAttrs;
 
@@ -347,13 +386,7 @@ export default function ProductFormImagesTab({
   const recentSavedTimeoutRef = useRef(null);
   const [seoKeywordsModalOpen, setSeoKeywordsModalOpen] = useState(false);
   const [seoOptimizing, setSeoOptimizing] = useState(false);
-  const [toast, setToast] = useState(null);
   const [dirtyVariants, setDirtyVariants] = useState(() => new Set());
-
-  const showToast = useCallback((message) => {
-    setToast({ message });
-    setTimeout(() => setToast(null), 2500);
-  }, []);
 
   const markVariantDirty = useCallback((variantKey) => {
     if (!variantKey) return;
@@ -399,14 +432,21 @@ export default function ProductFormImagesTab({
     };
   }, []);
 
-  const loadLinks = useCallback(async () => {
-    if (!canOperate) return;
+  const loadLinks = useCallback(async (loadOptions = {}) => {
+    const silent = loadOptions.silent === true;
+    if (!canOperate) return null;
     const opts = hasProductId ? { productId } : { draftKey };
-    setLoading(true);
-    setError(null);
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
+    let mappedGeneral = [];
+    /** undefined = não alteramos variantLinksMap nesta rodada (ex.: formato simples) */
+    let variantMapResult = undefined;
     try {
       const generalLinks = await listLinks({ ...opts, variantKey: null });
-      setProductLinks((generalLinks || []).map(normalizeLink).filter(Boolean));
+      mappedGeneral = (generalLinks || []).map(normalizeLink).filter(Boolean);
+      setProductLinks(mappedGeneral);
 
       if (format === "variants" && variantRows?.length > 0) {
         const uniqueKeys = [...new Set(variantRows.map((r) => variantKeyFn(r.attributes)).filter(Boolean))];
@@ -414,19 +454,44 @@ export default function ProductFormImagesTab({
           uniqueKeys.map(async (vk) => ({ vk, links: await listLinks({ ...opts, variantKey: vk }) }))
         );
         const map = {};
-        results.forEach(({ vk, links }) => { map[vk] = (links || []).map(normalizeLink).filter(Boolean); });
+        results.forEach(({ vk, links }) => {
+          map[vk] = (links || []).map(normalizeLink).filter(Boolean);
+        });
+        variantMapResult = map;
         setVariantLinksMap(map);
       }
     } catch (err) {
       setError(err.message || "Erro ao carregar imagens");
+      return null;
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
+    return { productLinks: mappedGeneral, variantLinksMap: variantMapResult };
   }, [canOperate, hasProductId, productId, draftKey, format, variantRows, variantKeyFn]);
 
   useEffect(() => {
     loadLinks();
   }, [loadLinks]);
+
+  useEffect(() => {
+    if (typeof onImageProgressChange !== "function") return;
+    const variantLinksByRowId = {};
+    if (Array.isArray(variantRows)) {
+      variantRows.forEach((r, idx) => {
+        const rowId = String(variantProgressRowId(r, idx));
+        const vk = variantKeyFn(r.attributes);
+        variantLinksByRowId[rowId] = (vk && variantLinksMap[vk]) || [];
+      });
+    }
+    const snap = buildImageProgressSnapshot({
+      format,
+      variantRows,
+      productLinks,
+      variantLinksByRowId,
+      buildVariantKey: variantKeyFn,
+    });
+    onImageProgressChange(snap);
+  }, [format, variantRows, variantKeyFn, productLinks, variantLinksMap, onImageProgressChange]);
 
   const getUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -532,7 +597,12 @@ export default function ProductFormImagesTab({
       }
       await loadLinks();
       if (!SILENT_AUTOSAVE) {
-        addNotification({ type: "success", title: "Upload", message: `${metas.length} imagem(ns) adicionada(s)` });
+        const uploadedCount = metas.length;
+        addNotification({
+          type: "success",
+          title: "Upload",
+          message: `${uploadedCount} imagem(ns) adicionada(s)`,
+        });
       }
     } catch (err) {
       const msg = err?.message || String(err) || "Erro no upload";
@@ -763,7 +833,12 @@ export default function ProductFormImagesTab({
     try {
       const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
       if (!path) {
-        showToast("Imagem indisponível — atualize/reabra");
+        addNotification({
+          event_type: "IMAGE_UNAVAILABLE",
+          title: "Imagens",
+          message: "Imagem indisponível — atualize ou reabra.",
+          severity: NOTIFICATION_SEVERITY.INFO,
+        });
         return;
       }
       await downloadAsBlob(path, link?.file_name || "imagem");
@@ -778,7 +853,12 @@ export default function ProductFormImagesTab({
       const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
       const url = path ? await getSignedUrl(path, 60) : null;
       if (!url) {
-        showToast("Imagem indisponível — atualize/reabra");
+        addNotification({
+          event_type: "IMAGE_UNAVAILABLE",
+          title: "Imagens",
+          message: "Imagem indisponível — atualize ou reabra.",
+          severity: NOTIFICATION_SEVERITY.INFO,
+        });
         return;
       }
       setPreviewModal({ open: true, url, title: link?.file_name || "Imagem" });
@@ -793,7 +873,12 @@ export default function ProductFormImagesTab({
       const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
       const url = path ? await getSignedUrl(path, 60) : null;
       if (!url) {
-        showToast("Imagem indisponível — atualize/reabra");
+        addNotification({
+          event_type: "IMAGE_UNAVAILABLE",
+          title: "Imagens",
+          message: "Imagem indisponível — atualize ou reabra.",
+          severity: NOTIFICATION_SEVERITY.INFO,
+        });
         return;
       }
       window.open(url, "_blank", "noopener,noreferrer");
@@ -855,13 +940,17 @@ export default function ProductFormImagesTab({
       return;
     }
     if (!hasProductId && !hasDraftKey) {
-      showToast("Informe produto ou draft para renomear imagens (SEO)");
+      addNotification({
+        event_type: "SEO_RENAME_BLOCKED",
+        title: "Renomear imagens (SEO)",
+        message: "Informe produto ou rascunho para renomear imagens (SEO).",
+        severity: NOTIFICATION_SEVERITY.INFO,
+      });
       return;
     }
     if (!API_BASE_URL) {
       const msg = "API não configurada (VITE_API_BASE_URL)";
       addNotification({ type: "error", title: "SEO", message: msg });
-      showToast(msg);
       return;
     }
     setSeoOptimizing(true);
@@ -871,7 +960,6 @@ export default function ProductFormImagesTab({
       if (!token) {
         const msg = "Sessão expirada. Faça login novamente.";
         addNotification({ type: "error", title: "SEO", message: msg });
-        showToast(msg);
         return;
       }
 
@@ -899,27 +987,57 @@ export default function ProductFormImagesTab({
       if (!res.ok) {
         const msg = data?.error || data?.code || `Erro ${res.status}` || "Falha ao renomear";
         addNotification({ type: "error", title: "Renomear imagens (SEO)", message: msg });
-        showToast("Erro ao renomear imagens — tente novamente");
         console.error("[ProductFormImagesTab] seo-rename error", { status: res.status, data });
         return;
       }
 
       const totalRenamed = data.renamed ?? 0;
       setPreviewModal({ open: false, url: null, title: null });
-      setPreviewUrls(new Map());
-      previewFetchedRef.current.clear();
-      await loadLinks();
-      setRefreshPreviewSeed((s) => s + 1);
-      showToast(totalRenamed > 0 ? `Nomes otimizados ✅ (${totalRenamed} imagens)` : "Nenhuma imagem no escopo para renomear");
+
+      const prevFlat = [...productLinks, ...Object.values(variantLinksMap).flat()];
+      const fetchResult = await loadLinks({ silent: true });
+      if (fetchResult) {
+        const { productLinks: nextProduct, variantLinksMap: nextVariantMaybe } = fetchResult;
+        const nextVariant = nextVariantMaybe !== undefined ? nextVariantMaybe : variantLinksMap;
+        const nextFlat = [...nextProduct, ...Object.values(nextVariant).flat()];
+        const invalidateIds = previewIdsToInvalidate(prevFlat, nextFlat);
+        if (invalidateIds.size > 0) {
+          setPreviewUrls((prev) => {
+            const next = new Map(prev);
+            invalidateIds.forEach((id) => next.delete(id));
+            return next;
+          });
+          invalidateIds.forEach((id) => previewFetchedRef.current.delete(id));
+        }
+      }
+
+      addNotification({
+        event_type: "SEO_RENAME_OK",
+        title: "Renomear imagens (SEO)",
+        message: seoRenameSuccessMessage(totalRenamed),
+        severity: NOTIFICATION_SEVERITY.INFO,
+      });
     } catch (err) {
       const msg = err?.message || "Erro ao renomear imagens.";
       addNotification({ type: "error", title: "Renomear imagens (SEO)", message: msg });
-      showToast("Erro ao renomear imagens — tente novamente");
       console.error("[ProductFormImagesTab] seo-rename exception", err);
     } finally {
       setSeoOptimizing(false);
     }
-  }, [seoKeywordsArray, hasSeoKeywords, productName, canOperate, hasProductId, hasDraftKey, productId, draftKey, addNotification, loadLinks, showToast]);
+  }, [
+    seoKeywordsArray,
+    hasSeoKeywords,
+    productName,
+    canOperate,
+    hasProductId,
+    hasDraftKey,
+    productId,
+    draftKey,
+    productLinks,
+    variantLinksMap,
+    addNotification,
+    loadLinks,
+  ]);
 
   const handleSeoModalGoToData = useCallback(() => {
     setSeoKeywordsModalOpen(false);
@@ -959,33 +1077,13 @@ export default function ProductFormImagesTab({
 
   return (
     <div className="pf-images-container">
-      {toast?.message && (
-        <div className="pf-toast" role="status">{toast.message}</div>
-      )}
-
       {format === "simple" && (
         <div className="s7-local-section-header">
           <div className="s7-local-section-header-left">
-            <span className="s7-local-section-title">
+            <span className="s7-local-section-title pf-images-heading-with-tip">
               Adicione até {MAX_IMAGES} fotos
+              <ImagesSectionQualityTipIcon className="s7-local-info-icon" />
             </span>
-
-            <button
-              type="button"
-              className="pf-info-btn s7-tip s7-tip-bottom s7-tip-right s7-tip-wrap s7-local-info-icon"
-              data-tip={
-                hasSeoKeywords
-                  ? "Renomear as imagens com palavras-chave SEO ajuda na organização dos arquivos e pode contribuir para a busca e relevância dos anúncios nos marketplaces."
-                  : "Defina palavras-chave SEO para poder renomear as imagens e melhorar a organização e otimização dos anúncios."
-              }
-              aria-label={
-                hasSeoKeywords
-                  ? "Informações sobre renomear imagens com SEO"
-                  : "Informações sobre definir palavras-chave SEO"
-              }
-            >
-              i
-            </button>
           </div>
 
           {totalImages > 0 && (

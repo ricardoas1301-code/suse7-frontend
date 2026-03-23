@@ -39,7 +39,6 @@ export default function ProductCreate() {
         mode="create"
         onCancel={handleCancel}
         onSubmit={handleSubmit}
-        onSuccess={() => navigate("/produtos")}
       />
     </div>
   );

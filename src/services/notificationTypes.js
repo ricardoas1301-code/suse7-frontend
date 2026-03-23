@@ -49,16 +49,25 @@ export function createNotificationEvent(options) {
   const {
     id = `notif_${Date.now()}_${Math.random().toString(36).slice(2)}`,
     user_id = null,
-    event_type,
+    event_type = "GENERIC",
     entity_type = "product_variant",
     entity_id = null,
     title,
     message,
-    severity = NOTIFICATION_SEVERITY.INFO,
+    severity: severityIn,
     created_at = new Date().toISOString(),
     read = false,
     dedupeKey = null,
+    /** @deprecated Preferir `severity`; usado se `severity` não for enviado */
+    type,
   } = options;
+
+  const resolvedSeverity =
+    severityIn != null
+      ? severityIn
+      : type === "error" || type === "critical"
+        ? NOTIFICATION_SEVERITY.CRITICAL
+        : NOTIFICATION_SEVERITY.INFO;
 
   return {
     id,
@@ -68,7 +77,7 @@ export function createNotificationEvent(options) {
     entity_id,
     title,
     message,
-    severity,
+    severity: resolvedSeverity,
     created_at,
     read,
     dedupeKey,

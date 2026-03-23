@@ -1,17 +1,61 @@
 // ======================================================================
 // HOOK: useFormProgress
 // Objetivo:
-// - Recalcular progresso global do ProductForm (todas as abas)
-// - Funciona em "simple" e "variants"
-// - Conta TODOS os inputs editáveis (não só obrigatórios)
+// - Progresso = inputs visíveis preenchidos / total (cadastro produto)
 // ======================================================================
 
 import { useMemo } from "react";
-import { calcProgress } from "../utils/formProgress";
+import { calcVisibleFormProgress } from "../utils/formProgress";
 
-export function useFormProgress({ product, variationAttributes, variantRows }) {
+/**
+ * @param {{
+ *   product: object;
+ *   variantRows: Array<object>;
+ *   variationAttributes: Array<object>;
+ *   simpleCostDigits: string;
+ *   variantCostDigitsById: Record<string, string>;
+ *   packagingDigits: string;
+ *   operationalDigits: string;
+ *   skuBaseChips: string[];
+ *   imageProgress: { productHasImage: boolean; variantHasImageByKey: Record<string, boolean> };
+ *   buildVariantKey?: (attrs: object) => string;
+ * }} params
+ */
+export function useFormProgress({
+  product,
+  variantRows,
+  variationAttributes,
+  simpleCostDigits,
+  variantCostDigitsById,
+  packagingDigits,
+  operationalDigits,
+  skuBaseChips,
+  imageProgress,
+  buildVariantKey,
+}) {
   return useMemo(() => {
-    return calcProgress({ product, variationAttributes, variantRows });
-  }, [product, variationAttributes, variantRows]);
+    return calcVisibleFormProgress({
+      product,
+      variantRows,
+      variationAttributes,
+      simpleCostDigits,
+      variantCostDigitsById,
+      packagingDigits,
+      operationalDigits,
+      skuBaseChips,
+      imageProgress,
+      buildVariantKey,
+    });
+  }, [
+    product,
+    variantRows,
+    variationAttributes,
+    simpleCostDigits,
+    variantCostDigitsById,
+    packagingDigits,
+    operationalDigits,
+    skuBaseChips,
+    imageProgress,
+    buildVariantKey,
+  ]);
 }
-

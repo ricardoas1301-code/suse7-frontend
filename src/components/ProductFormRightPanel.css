@@ -128,6 +128,23 @@
   color: #4b5563;
 }
 
+/* Etapa ainda não alcançada (Avançar) — não clicável */
+.pf-right-step--locked .pf-right-step-button{
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pf-right-step--locked.pf-right-step--pending .pf-right-step-button:hover{
+  background: transparent;
+  color: inherit;
+}
+
+.pf-right-step--locked.pf-right-step--pending .pf-right-step-button:hover .pf-right-step-icon,
+.pf-right-step--locked.pf-right-step--pending .pf-right-step-button:hover .pf-right-step-label{
+  color: inherit;
+}
+
 /* Padrão Suse7: item ativo azul com texto branco */
 .pf-right-step--active .pf-right-step-button{
   background: #2563eb;

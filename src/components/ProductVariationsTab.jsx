@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { S7Section, S7FormField, S7Input, S7Button } from "./ui";
+import { PvLabelWithTooltip } from "./PvLocalTooltip";
 import "./ProductVariationsTab.css";
 
 export default function ProductVariationsTab({
@@ -36,6 +37,11 @@ export default function ProductVariationsTab({
   variantAttrColumns,
   copiedKey,
   skuErrorsById,
+  /** Exibir erros de SKU após Avançar/Salvar/painel ou blur no campo */
+  variationsSubmitAttempted = false,
+  /** @type {Record<string, boolean>} chaves `sku:${rowId}` */
+  variationsTouchedFields = {},
+  onVariantSkuBlur,
   skuAtFocusRef,
   // handlers
   removeDraftAttrChip,
@@ -59,6 +65,8 @@ export default function ProductVariationsTab({
   handleGenerateSkuForRow,
   setDeleteVariantRowId,
   initialConfigCollapsed = false,
+  /** ref.current = () => void — expande o card de configuração (Raiz do SKU) */
+  expandVariationsConfigRef,
 }) {
   const [isConfigCollapsed, setIsConfigCollapsed] = useState(
     Boolean(initialConfigCollapsed) && variantRows.length > 0
@@ -89,6 +97,15 @@ export default function ProductVariationsTab({
     prevVariantCountRef.current = variantRows.length;
   }, [variantRows.length]);
 
+  // Registra expansão do card para o ProductForm (UX: guiar até a Raiz do SKU)
+  useEffect(() => {
+    if (!expandVariationsConfigRef) return;
+    expandVariationsConfigRef.current = () => setIsConfigCollapsed(false);
+    return () => {
+      expandVariationsConfigRef.current = null;
+    };
+  }, [expandVariationsConfigRef]);
+
   // Regra 3: quando já existem variações, clicar fora do card recolhe.
   useEffect(() => {
     if (variantRows.length === 0) {
@@ -99,6 +116,8 @@ export default function ProductVariationsTab({
     }
 
     function handleClickOutside(event) {
+      // Botões de gerar SKU na lista de variações ficam fora do card; não recolher ao usá-los (evita flicker).
+      if (event.target.closest?.("[data-pf-variation-sku-generate]")) return;
       if (!configCardRef.current) return;
       if (!configCardRef.current.contains(event.target)) {
         setIsConfigCollapsed(true);
@@ -113,6 +132,7 @@ export default function ProductVariationsTab({
   if (product.format !== "variants") {
     return (
       <div className="pf-container">
+        <h2 className="pf-tab-title">Variações</h2>
         <div className="s7-alert s7-alert--warning">
           <strong>Formato atual:</strong> <strong>Simples</strong>. Para usar variações, altere o campo{" "}
           <strong>Formato</strong> na aba <strong>Dados</strong>.
@@ -123,8 +143,9 @@ export default function ProductVariationsTab({
 
   return (
     <div className="pf-container">
+      <h2 className="pf-tab-title">Variações</h2>
       {/* Bloco 1 — Configuração das variações (card recolhível) */}
-      <S7Section title="Variações">
+      <S7Section>
         <div className="pf-variations-config-card" ref={configCardRef} tabIndex={-1}>
           <button
             type="button"
@@ -161,7 +182,7 @@ export default function ProductVariationsTab({
                 : "pf-variations-config-body pf-variations-config-body--expanded"
             }
           >
-            {errors.variants && (
+            {variationsSubmitAttempted && errors.variants && (
               <div className="s7-error pf-variations-general-error">{errors.variants}</div>
             )}
             <div className="pf-variations-content">
@@ -170,9 +191,15 @@ export default function ProductVariationsTab({
                 {/* Nome do atributo */}
                 <div className="pvt-builder-col">
                   <S7FormField
-                    label="Nome do atributo"
-                    required
-                    tooltip="Digite o nome do atributo (ex: Cor, Tamanho, Voltagem) e pressione Enter/Tab para criar o chip."
+                    label={
+                      <PvLabelWithTooltip
+                        required
+                        tooltipText="Digite o nome do atributo (ex: Cor, Tamanho, Voltagem) e pressione Enter/Tab para criar o chip."
+                      >
+                        Nome do atributo
+                      </PvLabelWithTooltip>
+                    }
+                    required={false}
                   >
                     <div className="pf-chipbox pf-variation-chipbox">
                       {draftAttrChips.map((attr) => (
@@ -209,9 +236,15 @@ export default function ProductVariationsTab({
                 {/* Opções (chips) */}
                 <div className="pvt-builder-col">
                   <S7FormField
-                    label="Opções (chips)"
-                    required
-                    tooltip="Digite as opções do atributo (ex: Branco, Preto, 127V) e pressione Enter/Tab/virgula."
+                    label={
+                      <PvLabelWithTooltip
+                        required
+                        tooltipText="Digite as opções do atributo (ex: Branco, Preto, 127V) e pressione Enter/Tab/virgula."
+                      >
+                        Opções (chips)
+                      </PvLabelWithTooltip>
+                    }
+                    required={false}
                   >
                     <div className="pf-chipbox pf-variation-chipbox pf-variation-chipbox--with-clear">
                       {draftOptions.map((opt) => (
@@ -388,9 +421,15 @@ export default function ProductVariationsTab({
 
                     <div className="pf-variants-generated-actions-right">
                       <S7FormField
-                        label="Raiz do SKU"
-                        required
-                        tooltip="Define a base do SKU usada para gerar automaticamente os SKUs das variações combinando os atributos (ex: camisa_preta_P)."
+                        label={
+                          <PvLabelWithTooltip
+                            required
+                            tooltipText="Define a base do SKU usada para gerar automaticamente os SKUs das variações combinando os atributos (ex: camisa_preta_P)."
+                          >
+                            Raiz do SKU
+                          </PvLabelWithTooltip>
+                        }
+                        required={false}
                       >
                         <div className="s7-field pf-sku-base-field-block">
                           <div
@@ -491,17 +530,11 @@ export default function ProductVariationsTab({
                               onFocus={() => {
                                 skuAtFocusRef.current[row.id] = row.sku;
                               }}
-                              onChange={(e) => {
-                                handleVariantRowChange(row.id, "sku", e.target.value);
-                                if (skuErrorsById?.[row.id]) {
-                                  setSkuErrorsById((prev) => {
-                                    const next = { ...(prev || {}) };
-                                    delete next[row.id];
-                                    return next;
-                                  });
-                                }
-                              }}
+                              onChange={(e) =>
+                                handleVariantRowChange(row.id, "sku", e.target.value)
+                              }
                               onBlur={() => {
+                                onVariantSkuBlur?.(row.id);
                                 const atFocus = skuAtFocusRef.current[row.id];
                                 const currentValue = row.sku;
                                 if (
@@ -516,12 +549,19 @@ export default function ProductVariationsTab({
                                 }
                                 delete skuAtFocusRef.current[row.id];
                               }}
-                              className={skuErrorsById?.[row.id] ? "s7-input--error" : ""}
+                              error={
+                                (variationsSubmitAttempted ||
+                                  !!variationsTouchedFields[`sku:${row.id}`]) &&
+                                skuErrorsById?.[row.id]
+                                  ? skuErrorsById[row.id]
+                                  : false
+                              }
                             />
 
                             <button
                               type="button"
                               className="s7-btn s7-btn--secondary pv-card-field__generate-btn s7-tip s7-tip-bottom s7-tip-left"
+                              data-pf-variation-sku-generate
                               style={{
                                 padding: "4px 10px",
                                 minWidth: "auto",
@@ -539,10 +579,6 @@ export default function ProductVariationsTab({
                             </button>
                           </div>
                         </div>
-
-                        {skuErrorsById?.[row.id] && (
-                          <div className="s7-error">{skuErrorsById[row.id]}</div>
-                        )}
                       </div>
                     </div>
 

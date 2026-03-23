@@ -13,8 +13,8 @@
 //   aqui (UI) mantemos strings onde o usuário digita.
 // ======================================================================
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useBlocker } from "react-router-dom";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useBlocker, useNavigate } from "react-router-dom";
 import { useBeforeUnload } from "../hooks/useBeforeUnload";
 import { useCopyFeedback } from "../hooks/useCopyFeedback";
 import { createPortal } from "react-dom";
@@ -24,7 +24,7 @@ import {
   dispatchStockBelowMin,
   dispatchStockRealZero,
 } from "../services/stockNotificationDispatch";
-import { relinkDraftToProduct } from "../services/images/imageRepository";
+import { listLinks, relinkDraftToProduct } from "../services/images/imageRepository";
 import { updateVariantsSortOrder } from "../services/variants/variantRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
 import "./FieldLabel.css";
@@ -41,8 +41,25 @@ import ProductVariationsTab from "./ProductVariationsTab";
 import { S7Button, S7Input } from "./ui";
 import { useFormValidation } from "../hooks/useFormValidation";
 import "./ProductForm.css";
-import { Repeat } from "lucide-react";
 import { useFormProgress } from "../hooks/useFormProgress";
+import {
+  buildImageProgressSnapshot,
+  normalizeImageProgress,
+  variantProgressRowId,
+} from "../utils/formProgress";
+import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
+import { computeVariantSkuErrors } from "../utils/variantSkuValidation";
+import {
+  PRODUCT_CM_FIELDS,
+  PRODUCT_DECIMAL_MEASURE_FIELDS,
+  formatCmInput,
+  formatKgInput,
+  measureDecimalOnKeyDown,
+  parseDecimalBR,
+  toCmInputValue,
+  toKgInputValue,
+  validateProductMeasureFields,
+} from "../utils/numberFormat";
 
 // ======================================================================
 // SUSE7 — HELPERS: Currency BRL (UI)
@@ -119,8 +136,10 @@ export default function ProductForm({
   initialTab = null, // ex: "stock" para deep link ?tab=stock
   onCancel = null,
   onSubmit = null,
-  onSuccess = null, // chamado após submit ok e relink (se create)
+  onSuccess = null, // opcional: após salvar + toast + redirect (ex.: analytics)
 }) {
+  const navigate = useNavigate();
+
   const draftIdRef = useRef(
     typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()
@@ -210,6 +229,13 @@ export default function ProductForm({
   const [activeTab, setActiveTab] = useState(initialTab || "data");
   const hasVariations = product?.format === "variants";
 
+  // ======================================================
+  // CONTROLE DE ABAS DESBLOQUEADAS (Suse7)
+  // Índice máximo alcançado em availableTabIds; abas com index <= max podem ser abertas pelo painel.
+  // ======================================================
+  const [maxReachedIndex, setMaxReachedIndex] = useState(0);
+  const prevAvailableTabIdsRef = useRef(null);
+
   const availableTabs = useMemo(() => {
     const base = [
       { id: "data", label: "Dados" },
@@ -231,6 +257,17 @@ export default function ProductForm({
   const safeTabIndex = Math.max(0, availableTabIds.indexOf(safeTab));
   const isFirstStep = safeTabIndex === 0;
   const isLastStep = safeTabIndex === availableTabIds.length - 1;
+
+  /** Navegação programática: garante que a aba de destino fique acessível no painel (validação, modais, SEO). */
+  const navigateToTabWithUnlock = useCallback(
+    (tabId) => {
+      const idx = availableTabIds.indexOf(tabId);
+      if (idx < 0) return;
+      setMaxReachedIndex((prev) => Math.max(prev, idx));
+      setActiveTab(tabId);
+    },
+    [availableTabIds]
+  );
   const hasVisitedVariationsTabRef = useRef(false);
   const [collapseVariationsConfigOnEnter, setCollapseVariationsConfigOnEnter] = useState(false);
   const prevSafeTabRef = useRef(safeTab);
@@ -248,23 +285,40 @@ export default function ProductForm({
     }
   }, [activeTab, availableTabIds, hasVariations]);
 
-  // Deep link: ?tab=stock (sincroniza quando initialTab muda)
-  useEffect(() => {
+  // Deep link ?tab=… — abre a aba e desbloqueia o percurso até ela (antes da pintura, evita passo ativo “travado”)
+  useLayoutEffect(() => {
     if (initialTab && availableTabIds.includes(initialTab)) {
       setActiveTab(initialTab);
+      const idx = availableTabIds.indexOf(initialTab);
+      setMaxReachedIndex((prev) => Math.max(prev, idx));
     }
   }, [initialTab, availableTabIds]);
+
+  // Formato simples ↔ variações: realinha índice máximo ao mudar a lista de abas
+  useEffect(() => {
+    const oldIds = prevAvailableTabIdsRef.current;
+    const newIds = availableTabIds;
+    if (oldIds != null && oldIds.join() === newIds.join()) return;
+
+    if (oldIds == null) {
+      prevAvailableTabIdsRef.current = newIds;
+      return;
+    }
+
+    setMaxReachedIndex((prev) => {
+      const idAtMax = oldIds[prev];
+      if (idAtMax == null) return Math.min(prev, newIds.length - 1);
+      const newIdx = newIds.indexOf(idAtMax);
+      if (newIdx >= 0) return newIdx;
+      return Math.min(prev, newIds.length - 1);
+    });
+    prevAvailableTabIdsRef.current = newIds;
+  }, [availableTabIds]);
 
   const goToPreviousStep = () => {
     if (isFirstStep) return;
     const prevId = availableTabIds[safeTabIndex - 1];
     if (prevId) setActiveTab(prevId);
-  };
-
-  const goToNextStep = () => {
-    if (isLastStep) return;
-    const nextId = availableTabIds[safeTabIndex + 1];
-    if (nextId) setActiveTab(nextId);
   };
 
   const focusFirstInvalidField = (tabId) => {
@@ -319,12 +373,20 @@ export default function ProductForm({
   };
 
   const handleNextStep = () => {
+    if (safeTab === "variations") {
+      setVariationsSubmitAttempted(true);
+    }
     const isStepValid = validateCurrentStep();
     if (!isStepValid) {
       focusFirstInvalidField(safeTab);
       return;
     }
-    goToNextStep();
+    if (isLastStep) return;
+    const nextIdx = safeTabIndex + 1;
+    const nextId = availableTabIds[nextIdx];
+    if (!nextId) return;
+    setMaxReachedIndex((prev) => Math.max(prev, nextIdx));
+    setActiveTab(nextId);
   };
 
   // ------------------------------------------------------
@@ -337,6 +399,10 @@ export default function ProductForm({
 // Regra: no formato variants, SKU é obrigatório em cada variação
 // ======================================================================
 const [skuErrorsById, setSkuErrorsById] = useState({});
+
+  // Variações: SKU — erro visível só após blur no campo ou Avançar/Salvar/painel (não ao gerar linhas)
+  const [variationsTouchedFields, setVariationsTouchedFields] = useState({});
+  const [variationsSubmitAttempted, setVariationsSubmitAttempted] = useState(false);
 
   // ------------------------------------------------------
   // STATE: Erros da aba Estoque (apenas Estoque real obrigatório)
@@ -413,11 +479,16 @@ const [draftAttrChips, setDraftAttrChips] = useState([]);
   const [variantRows, setVariantRows] = useState([]);
 
   useEffect(() => {
+    const prevTab = prevSafeTabRef.current;
+    if (prevTab === "variations" && safeTab !== "variations") {
+      setVariationsTouchedFields({});
+      setVariationsSubmitAttempted(false);
+    }
+
     if (safeTab === "variations") {
       hasVisitedVariationsTabRef.current = true;
     }
 
-    const prevTab = prevSafeTabRef.current;
     if (
       prevTab === "variations" &&
       safeTab !== "variations" &&
@@ -435,6 +506,17 @@ const [draftAttrChips, setDraftAttrChips] = useState([]);
 
     prevSafeTabRef.current = safeTab;
   }, [safeTab, product.format, variantRows]);
+
+  // SKU por variação: obrigatório + duplicidade em tempo real (sincroniza com variantRows)
+  useEffect(() => {
+    if (product.format !== "variants") {
+      setSkuErrorsById({});
+      setVariationsTouchedFields({});
+      setVariationsSubmitAttempted(false);
+      return;
+    }
+    setSkuErrorsById(computeVariantSkuErrors(variantRows));
+  }, [product.format, variantRows]);
 
   // ======================================================================
 // SUSE7 — VARIAÇÕES: Modal de confirmação ao excluir variação
@@ -465,6 +547,8 @@ const [skuBaseChips, setSkuBaseChips] = useState([]);
 const [skuBaseInput, setSkuBaseInput] = useState("");
 const [skuBaseError, setSkuBaseError] = useState("");
 const skuBaseInputRef = useRef(null);
+/** ProductVariationsTab registra aqui função para expandir o card "Configuração de variações" (Raiz do SKU). */
+const expandVariationsConfigRef = useRef(null);
 
 // ------------------------------------------------------
 // Adicionar chip (opção) em atributo existente
@@ -489,6 +573,17 @@ const [simpleCostDigits, setSimpleCostDigits] = useState("");   // custo simples
 
 // Custos por variação (id => dígitos)
 const [variantCostDigitsById, setVariantCostDigitsById] = useState({});
+
+/** Imagens no progresso: 1 flag produto (simples) ou 1 flag por chave de variação */
+const [imageProgress, setImageProgress] = useState(() => ({
+  productHasImage: false,
+  variantHasImageByKey: {},
+}));
+
+const buildVariantKey = useCallback((attrsObj) => {
+  const entries = Object.entries(attrsObj || {}).sort(([a], [b]) => a.localeCompare(b));
+  return entries.map(([k, v]) => `${k}=${String(v)}`).join("|");
+}, []);
 
 // ------------------------------------------------------
 // SUSE7 — VARIAÇÕES
@@ -545,6 +640,19 @@ useEffect(() => {
         id: t.id || createId(),
         value: t.title !== undefined ? t.title : (t.value ?? ""),
       }));
+    }
+    // Pesos & medidas: string mascarada (nunca number no state vindo da API)
+    for (const k of PRODUCT_DECIMAL_MEASURE_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(toMerge, k)) {
+        const v = toMerge[k];
+        if (v == null || String(v).trim() === "") {
+          toMerge[k] = "";
+        } else {
+          toMerge[k] = PRODUCT_CM_FIELDS.includes(k)
+            ? toCmInputValue(v)
+            : toKgInputValue(v);
+        }
+      }
     }
     setProduct((prev) => ({ ...prev, ...toMerge }));
 
@@ -632,7 +740,6 @@ useEffect(() => {
     if (reconstructed.length > 0) {
       setVariationAttributes(reconstructed);
       setProduct((prev) => ({ ...prev, format: "variants" }));
-      setShowVariationsBuilder(false); // ✅ se está editando com variações, já cai no modo gerenciamento
     }
   }
 
@@ -674,13 +781,16 @@ useEffect(() => {
 
   // ------------------------------------------------------
   // GUARD: Sair sem salvar (dirty state + preferências)
+  // formGuardEpoch: incrementa após salvar com sucesso para forçar recálculo de isDirty
+  // (lastSavedSnapshotRef muda sem alterar product/rows — o useMemo precisaria disso).
   // ------------------------------------------------------
+  const [formGuardEpoch, setFormGuardEpoch] = useState(0);
   const isDirty = useMemo(() => {
     const last = lastSavedSnapshotRef.current;
     if (last == null) return false;
     const current = getFormSnapshotForGuard(product, variantRows, variationAttributes);
     return current !== last;
-  }, [product, variantRows, variationAttributes]);
+  }, [product, variantRows, variationAttributes, formGuardEpoch]);
 
   // Carregar preferência "modal.exit_without_saving" no mount
   useEffect(() => {
@@ -860,14 +970,16 @@ useEffect(() => {
   const formatLocked = mode === "edit" && product?.id && product.format === "variants";
 
   const applyFormatToSimple = () => {
+    // Fechar o modal primeiro: evita overlay preso se algo abaixo lançar erro
+    setFormatToSimpleModalOpen(false);
     setProduct((prev) => ({ ...prev, format: "simple" }));
     setVariationAttributes([]);
+    setDraftAttrChips([]);
     setDraftAttrInput("");
     setDraftOptionInput("");
     setDraftOptions([]);
     setVariantRows([]);
-    setShowVariationsBuilder(true);
-    setFormatToSimpleModalOpen(false);
+    setSkuErrorsById({});
     productDataForm.setValues({ sku: "" });
   };
 
@@ -925,13 +1037,29 @@ useEffect(() => {
     }));
   };
 
+  const handleImageProgressChange = useCallback((snapshot) => {
+    setImageProgress(normalizeImageProgress(snapshot));
+  }, []);
+
+  // Ao trocar de produto, zera até recarregar links
+  useEffect(() => {
+    setImageProgress({ productHasImage: false, variantHasImageByKey: {} });
+  }, [product?.id]);
+
   // ------------------------------------------------------
   // PROGRESSO GLOBAL DO FORM (todas as abas, simple/variants)
   // ------------------------------------------------------
   const { percent: globalProgressPercent } = useFormProgress({
     product,
-    variationAttributes,
     variantRows,
+    variationAttributes,
+    simpleCostDigits,
+    variantCostDigitsById,
+    packagingDigits,
+    operationalDigits,
+    skuBaseChips,
+    imageProgress,
+    buildVariantKey,
   });
 
 // ======================================================
@@ -1293,14 +1421,62 @@ const removeOptionFromAttribute = (attrId, optToRemove) => {
 };
 
 
-  // ------------------------------------------------------
-  // GERAR COMBINAÇÕES (cartesiano) e preservar dados digitados
-  // ------------------------------------------------------
-  const buildVariantKey = (attrsObj) => {
-    // chave estável por atributos: "Cor=Azul|Tamanho=M"
-    const entries = Object.entries(attrsObj || {}).sort(([a], [b]) => a.localeCompare(b));
-    return entries.map(([k, v]) => `${k}=${String(v)}`).join("|");
-  };
+  // Progresso: pré-carrega slots de imagem quando a aba Imagens não está aberta
+  useEffect(() => {
+    if (safeTab === "images") return;
+
+    let cancelled = false;
+    const pid = product?.id;
+    const hasProductId = pid && typeof pid === "string" && !String(pid).startsWith("draft:");
+    const dk = draftKeyRef.current;
+    const canOperate = hasProductId || (dk && typeof dk === "string");
+
+    if (!canOperate) {
+      setImageProgress({ productHasImage: false, variantHasImageByKey: {} });
+      return undefined;
+    }
+
+    const opts = hasProductId ? { productId: pid } : { draftKey: dk };
+
+    (async () => {
+      try {
+        const general = await listLinks({ ...opts, variantKey: null });
+        const variantLinksMap = {};
+        if (product.format === "variants" && Array.isArray(variantRows) && variantRows.length > 0) {
+          const uniqueKeys = [
+            ...new Set(variantRows.map((r) => buildVariantKey(r.attributes)).filter(Boolean)),
+          ];
+          await Promise.all(
+            uniqueKeys.map(async (vk) => {
+              variantLinksMap[vk] = await listLinks({ ...opts, variantKey: vk });
+            })
+          );
+        }
+        const variantLinksByRowId = {};
+        if (Array.isArray(variantRows)) {
+          variantRows.forEach((r, idx) => {
+            const rowId = String(variantProgressRowId(r, idx));
+            const vk = buildVariantKey(r.attributes);
+            variantLinksByRowId[rowId] = (vk && variantLinksMap[vk]) || [];
+          });
+        }
+        const snap = buildImageProgressSnapshot({
+          format: product.format,
+          variantRows,
+          productLinks: general,
+          variantLinksByRowId,
+          buildVariantKey,
+        });
+        if (!cancelled) setImageProgress(snap);
+      } catch {
+        /* mantém último snapshot da aba, se houver */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [safeTab, product?.id, product?.format, variantRows, buildVariantKey]);
 
   const cartesian = (arrays) => {
     // arrays = [[{name,val}...], [{name,val}...]]
@@ -1692,16 +1868,50 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     }
   };
 
-  /** Valida se há pelo menos uma chave na raiz; se não, destaca campo, mostra erro e foca. Retorna true se válido. */
-  const validateSkuBase = () => {
-    if (skuBaseChips.length > 0) {
-      setSkuBaseError("");
-      return true;
-    }
-    setSkuBaseError("Informe pelo menos uma chave. Você pode usar até duas palavras curtas.");
-    skuBaseInputRef.current?.focus();
-    return false;
-  };
+  /** Após expandir o card da Raiz do SKU, scroll suave + foco (DOM precisa renderizar). */
+  const focusSkuRootAfterExpand = useCallback(() => {
+    const run = () => {
+      skuBaseInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      skuBaseInputRef.current?.focus({ preventScroll: true });
+    };
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(run, 120);
+      });
+    });
+  }, []);
+
+  /**
+   * Raiz do SKU obrigatória para geração automática.
+   * Expande o card se estiver recolhido, aplica erro no campo, scroll+foco.
+   * @param {{ showToast?: boolean }} options — toast apenas no fluxo "gerar SKU desta variação"
+   * @returns {boolean} true se há pelo menos uma chave na raiz
+   */
+  const ensureSkuRootChipsOrGuide = useCallback(
+    (options = {}) => {
+      const { showToast = false } = options;
+      if (skuBaseChips.length > 0) {
+        setSkuBaseError("");
+        return true;
+      }
+      setSkuBaseError("Informe pelo menos uma chave. Você pode usar até duas palavras curtas.");
+      expandVariationsConfigRef.current?.();
+      if (showToast) {
+        addNotification({
+          event_type: "GENERIC",
+          title: "Raiz do SKU",
+          message: "Preencha a Raiz do SKU para gerar automaticamente.",
+          severity: NOTIFICATION_SEVERITY.INFO,
+        });
+      }
+      focusSkuRootAfterExpand();
+      return false;
+    },
+    [skuBaseChips, addNotification, focusSkuRootAfterExpand]
+  );
+
+  /** Valida se há pelo menos uma chave na raiz; se não, destaca campo, expande card, scroll e foco. */
+  const validateSkuBase = () => ensureSkuRootChipsOrGuide({ showToast: false });
 
   /**
    * Gera o SKU para uma linha (não aplica no state). Formato: base_attr1_attr2; sanitizado; anti-colisão com _2, _3...
@@ -1794,7 +2004,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
    * Geração individual por linha. Valida raiz; se SKU vazio → aplica direto. Se preenchido → abre modal.
    */
   const handleGenerateSkuForRow = (row) => {
-    if (!validateSkuBase()) return;
+    if (!ensureSkuRootChipsOrGuide({ showToast: true })) return;
     const newSku = generateSkuForRow(row);
     const hasSku = row.sku != null && String(row.sku).trim() !== "";
     if (!hasSku) {
@@ -1897,7 +2107,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
 // VALIDAR: Variações (UX)
 // Regras:
 // - Somente quando format === "variants"
-// - SKU obrigatório por variação
+// - SKU obrigatório por variação; SKU único entre variações (não vazios, trim)
 // ======================================================================
 const validateVariantsTab = () => {
   // Se não está em variações, nada a validar aqui
@@ -1917,12 +2127,7 @@ const validateVariantsTab = () => {
     return false;
   }
 
-  const nextSkuErrors = {};
-
-  (variantRows || []).forEach((r) => {
-    const sku = String(r?.sku || "").trim();
-    if (!sku) nextSkuErrors[r.id] = "SKU é obrigatório.";
-  });
+  const nextSkuErrors = computeVariantSkuErrors(variantRows || []);
 
   setSkuErrorsById(nextSkuErrors);
   setErrors((prev) => ({ ...prev, variants: undefined }));
@@ -1930,6 +2135,29 @@ const validateVariantsTab = () => {
   // Se tem erro, falha
   return Object.keys(nextSkuErrors).length === 0;
 };
+
+  /** Painel lateral: ao ir para aba após Variações, exige variações válidas (SKU único, etc.) */
+  const handlePanelStepChange = (id) => {
+    if (id === safeTab) return;
+    const toIdx = availableTabIds.indexOf(id);
+    if (toIdx < 0) return;
+
+    const variationsIdx = availableTabIds.indexOf("variations");
+    if (product.format === "variants" && variationsIdx >= 0 && toIdx > variationsIdx) {
+      setVariationsSubmitAttempted(true);
+      if (!validateVariantsTab()) {
+        if (safeTab !== "variations") {
+          setActiveTab("variations");
+          setMaxReachedIndex((prev) => Math.max(prev, variationsIdx));
+        }
+        requestAnimationFrame(() => focusFirstInvalidField("variations"));
+        return;
+      }
+    }
+
+    setActiveTab(id);
+    setMaxReachedIndex((prev) => Math.max(prev, toIdx));
+  };
 
 
 
@@ -2036,7 +2264,7 @@ const validatePricingTab = () => {
   //   product_variants: variantRows (quando format=variants)
   // ------------------------------------------------------
   const goToSeoKeywords = () => {
-    setActiveTab("data");
+    navigateToTabWithUnlock("data");
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const el = document.getElementById("pf-seo-keywords-input");
@@ -2054,17 +2282,21 @@ const validatePricingTab = () => {
   // ------------------------------------------------------
   const okData = validateDataTab();
   if (!okData) {
-    setActiveTab("data");
+    navigateToTabWithUnlock("data");
     return;
   }
 
   // ------------------------------------------------------
   // 2) VARIAÇÕES (SKU se format === variants)
   // ------------------------------------------------------
+  if (product.format === "variants") {
+    setVariationsSubmitAttempted(true);
+  }
   const okVariants = validateVariantsTab();
   if (!okVariants) {
-    if (hasVariations) setActiveTab("variations");
-    else setActiveTab("data");
+    if (hasVariations) navigateToTabWithUnlock("variations");
+    else navigateToTabWithUnlock("data");
+    focusFirstInvalidField("variations");
     return;
   }
 
@@ -2073,7 +2305,7 @@ const validatePricingTab = () => {
   // ------------------------------------------------------
   const okPricing = validatePricingTab();
   if (!okPricing) {
-    setActiveTab("pricing");
+    navigateToTabWithUnlock("pricing");
     return;
   }
 
@@ -2082,7 +2314,18 @@ const validatePricingTab = () => {
   // ------------------------------------------------------
   const okStock = validateStockTab();
   if (!okStock) {
-    setActiveTab("stock");
+    navigateToTabWithUnlock("stock");
+    return;
+  }
+
+  const measureErr = validateProductMeasureFields(product);
+  if (measureErr) {
+    addNotification({
+      type: "error",
+      title: "Pesos & medidas",
+      message: measureErr,
+    });
+    navigateToTabWithUnlock("measures");
     return;
   }
 
@@ -2122,16 +2365,30 @@ const validatePricingTab = () => {
 };
 
   const executeSubmit = async () => {
+    const measureErrSubmit = validateProductMeasureFields(product);
+    if (measureErrSubmit) {
+      addNotification({
+        type: "error",
+        title: "Pesos & medidas",
+        message: measureErrSubmit,
+      });
+      return;
+    }
+
     const toInt = (v) => {
       const parsed = parseInt(String(v || "0"), 10);
       return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
     };
+    const measureOverrides = Object.fromEntries(
+      PRODUCT_DECIMAL_MEASURE_FIELDS.map((key) => [key, parseDecimalBR(product[key])])
+    );
     const payload = {
       mode,
       draftKey: draftKeyRef.current,
       product: {
         ...product,
         ...(product.format === "variants" ? { sku: "", gtin: "" } : {}),
+        ...measureOverrides,
       },
       variants:
         product.format === "variants"
@@ -2203,7 +2460,25 @@ const validatePricingTab = () => {
         } else if (result?.productId || product?.id) {
           fetchHealth(result?.productId ?? product?.id);
         }
-        lastSavedSnapshotRef.current = getFormSnapshotForGuard(product, variantRows, variationAttributes);
+
+        // 1) snapshot alinhado ao que acabou de ser salvo
+        lastSavedSnapshotRef.current = getFormSnapshotForGuard(
+          product,
+          variantRows,
+          variationAttributes
+        );
+        // 2) força isDirty === false (useMemo depende de formGuardEpoch)
+        setFormGuardEpoch((n) => n + 1);
+        // 3) feedback Suse7 (toast info / laranja)
+        addNotification({
+          title: "Cadastro realizado com sucesso",
+          message: "Produto salvo e pronto para uso.",
+          severity: NOTIFICATION_SEVERITY.INFO,
+        });
+        // 4) não abrir “Sair sem salvar” durante o redirect
+        skipExitGuardRef.current = true;
+        suppressNextBlockerModalRef.current = true;
+        navigate("/produtos");
         if (typeof onSuccess === "function") onSuccess();
       } catch (err) {
         // 409 (variants→simple) ou outro erro: exibe mensagem do backend
@@ -2296,7 +2571,12 @@ const validatePricingTab = () => {
             title={mode === "edit" ? "Editar produto" : "Novo produto"}
             steps={availableTabs}
             activeId={safeTab}
-            stepsClickable={false}
+            stepsClickable={true}
+            isStepUnlocked={(stepId) => {
+              const i = availableTabIds.indexOf(stepId);
+              return i >= 0 && i <= maxReachedIndex;
+            }}
+            onStepChange={handlePanelStepChange}
             progressPercent={globalProgressPercent}
           />
 
@@ -2321,6 +2601,7 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "data" && (
           <div className="pf-container">
+            <h2 className="pf-tab-title">Dados</h2>
             <div className="pf-product-name-fixed pf-product-name-fixed--in-data">
               <div className="pf-product-name-line">
                 {mode === "edit" && (
@@ -2341,10 +2622,6 @@ const validatePricingTab = () => {
                   <FieldLabel
                     text="Nome do produto"
                     required
-                    infoText="Esse nome aparece no cadastro e em listagens internas."
-                    tipBottom={true}
-                    wrap={true}
-                    side="left"
                     copyKey="product_name"
                     copiedKey={copiedKey}
                     onCopy={() => handleCopy(product.product_name, "product_name")}
@@ -2407,7 +2684,7 @@ const validatePricingTab = () => {
                   <FieldLabel
                     text="SKU"
                     required
-                    infoText="Use letras, números e underscore; sem espaços no início ou fim."
+                    infoText="O SKU é o identificador do produto e faz a ligação com seus anúncios nos marketplaces. Use um padrão consistente para manter controle e evitar erros."
                     tipBottom={true}
                     wrap={true}
                     side="left"
@@ -2517,7 +2794,7 @@ const validatePricingTab = () => {
               <div className="pf-group pf-group--full pf-group--seo">
                 <FieldLabel
                   text="Palavras-chave SEO"
-                  infoText="Separe por vírgulas. Isso ajuda no SEO de busca dos anuncios."
+                  infoText="Palavras-chave são a ponte entre o comprador e seu produto. Use termos precisos para renomear suas imagens e otimizar o título: isso ajuda o algoritmo do Mercado Livre e o Google a darem prioridade e relevância ao seu anúncio."
                   tipBottom={true}
                   wrap={true}
                   side="left"
@@ -2547,6 +2824,7 @@ const validatePricingTab = () => {
         ================================================================== */}
         {safeTab === "pricing" && (
           <div className="pf-container">
+            <h2 className="pf-tab-title">Custos & precificação</h2>
             {/* SIMPLE: campos em coluna */}
             {product.format === "simple" && (
               <div className="pf-pricing-simple-column">
@@ -2556,7 +2834,7 @@ const validatePricingTab = () => {
                     <FieldLabel
                       text="Custo do produto"
                       required
-                      infoText="Custo do item (sem taxas). Isso alimenta os cálculos de margem/lucro no backend."
+                      infoText="Este é o principal custo da sua operação. Ele impacta diretamente sua margem de lucro e a precificação ideal do produto."
                       tipBottom={true}
                       wrap={true}
                       side="left"
@@ -2595,7 +2873,7 @@ const validatePricingTab = () => {
                   <div className="pf-group pf-pricing-global-group">
                     <FieldLabel
                       text="Custo Embalagem"
-                      infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
+                      infoText="Inclua caixa, saco, plástico bolha e outros materiais. Esses custos somados influenciam o lucro final de cada venda."
                       tipBottom={true}
                       wrap={true}
                     />
@@ -2619,7 +2897,7 @@ const validatePricingTab = () => {
                   <div className="pf-group pf-pricing-global-group">
                     <FieldLabel
                       text="Custo Operacional"
-                      infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
+                      infoText="Inclui etiquetas, insumos, mão de obra e tempo operacional. Pequenos valores acumulados podem reduzir seu lucro no final do mês."
                       tipBottom={true}
                       wrap={true}
                     />
@@ -2649,7 +2927,7 @@ const validatePricingTab = () => {
                   <div className="pf-group pf-pricing-global-group">
                     <FieldLabel
                       text="Custo Embalagem"
-                      infoText="Embalagem do pedido: caixa/saco e materiais de proteção (ex: plástico bolha, papel kraft). Ajuda a calcular o custo real por venda."
+                      infoText="Inclua caixa, saco, plástico bolha e outros materiais. Esses custos somados influenciam o lucro final de cada venda."
                       tipBottom={true}
                       wrap={true}
                     />
@@ -2671,7 +2949,7 @@ const validatePricingTab = () => {
                   <div className="pf-group pf-pricing-global-group">
                     <FieldLabel
                       text="Custo Operacional"
-                      infoText="Custo operacional por pedido: etiquetas, insumos diretos e tempo operacional (separação/embalo). Pequenos custos somados mudam o lucro no fim do mês."
+                      infoText="Inclui etiquetas, insumos, mão de obra e tempo operacional. Pequenos valores acumulados podem reduzir seu lucro no final do mês."
                       tipBottom={true}
                       wrap={true}
                     />
@@ -2691,15 +2969,7 @@ const validatePricingTab = () => {
                 </div>
 
                 {/* VARIANTS: custo por variação (cards como “Combinações geradas”) */}
-                <div
-                  style={{
-                    marginTop: 12,
-                    overflowX: "auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
-                  }}
-                >
+                <div className="pf-pricing-variants-outer">
                   {variantRows.length === 0 ? (
                     <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
                       Gere as variações na aba <strong>Variações</strong> para preencher os custos por combinação.
@@ -2726,13 +2996,19 @@ const validatePricingTab = () => {
                               <FieldLabel
                                 text="Custo do produto"
                                 required
-                                infoText="Custo do item para esta variação"
+                                infoText="Este é o principal custo da sua operação. Ele impacta diretamente sua margem de lucro e a precificação ideal do produto."
                                 side="left"
                                 tipBottom={true}
                                 wrap={true}
                               />
 
-                              <div className="pf-variant-cost-row">
+                              <div
+                                className={
+                                  idx === 0 && variantRows.length > 1
+                                    ? "pf-variant-cost-row pf-variant-cost-row--with-apply"
+                                    : "pf-variant-cost-row"
+                                }
+                              >
                                 <S7Input
                                   inputClassName="pf-variant-cost-input"
                                   type="text"
@@ -2765,7 +3041,14 @@ const validatePricingTab = () => {
                                 {idx === 0 && variantRows.length > 1 && (
                                   <button
                                     type="button"
-                                    className="pf-apply-all-btn"
+                                    className="s7-btn s7-btn--secondary pf-pricing-apply-all-btn s7-tip s7-tip-bottom s7-tip-left"
+                                    style={{
+                                      padding: "4px 10px",
+                                      minWidth: "auto",
+                                      fontSize: 12,
+                                    }}
+                                    data-tip="Aplicar este valor para todas as variações"
+                                    aria-label="Aplicar este valor para todas as variações"
                                     onClick={() => {
                                       const baseDigits = variantCostDigitsById[row.id] || "";
 
@@ -2785,8 +3068,8 @@ const validatePricingTab = () => {
                                       setCostErrors((prev) => ({ ...prev, variantsMissingIds: [] }));
                                     }}
                                   >
-                                    <Repeat size={14} />
-                                    Aplicar a todas
+                                    {/* Mesmo padrão visual do botão do SKU (Variações): emoji, não Lucide */}
+                                    {variantCostDigitsById[row.id] ? "🔄" : "⚡"}
                                   </button>
                                 )}
                               </div>
@@ -2813,6 +3096,7 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "images" && (
           <div className="pf-container">
+            <h2 className="pf-tab-title">Imagens</h2>
             {product.format === "variants" && variantRows.length === 0 ? (
               <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
                 Gere as variações na aba <strong>Variações</strong> para adicionar imagens por combinação.
@@ -2827,8 +3111,9 @@ const validatePricingTab = () => {
                 onVariantReorder={handleVariantReorder}
                 seoKeywords={product?.seo_keywords ?? ""}
                 productName={product?.product_name ?? ""}
-                onSwitchToDataTab={() => setActiveTab("data")}
+                onSwitchToDataTab={() => navigateToTabWithUnlock("data")}
                 onGoToSeo={goToSeoKeywords}
+                onImageProgressChange={handleImageProgressChange}
               />
             )}
           </div>
@@ -2861,6 +3146,14 @@ const validatePricingTab = () => {
             variantAttrColumns={variantAttrColumns}
             copiedKey={copiedKey}
             skuErrorsById={skuErrorsById}
+            variationsSubmitAttempted={variationsSubmitAttempted}
+            variationsTouchedFields={variationsTouchedFields}
+            onVariantSkuBlur={(rowId) => {
+              setVariationsTouchedFields((prev) => ({
+                ...prev,
+                [`sku:${rowId}`]: true,
+              }));
+            }}
             skuAtFocusRef={skuAtFocusRef}
             removeDraftAttrChip={removeDraftAttrChip}
             handleDraftAttrKeyDown={handleDraftAttrKeyDown}
@@ -2883,6 +3176,7 @@ const validatePricingTab = () => {
             handleGenerateSkuForRow={handleGenerateSkuForRow}
             setDeleteVariantRowId={setDeleteVariantRowId}
             initialConfigCollapsed={collapseVariationsConfigOnEnter}
+            expandVariationsConfigRef={expandVariationsConfigRef}
           />
         )}
 
@@ -2892,6 +3186,7 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "description" && (
           <div className="pf-container pf-container--description">
+            <h2 className="pf-tab-title">Descrição</h2>
             <div className="pf-description-section">
               <div className="pf-label-row">
                 <div className="pf-label-left">
@@ -2936,6 +3231,7 @@ const validatePricingTab = () => {
           ======================= */}
         {safeTab === "stock" && (
           <div className="pf-container">
+            <h2 className="pf-tab-title">Estoque</h2>
             {/* ===============================
                 ESTOQUE — FORMATO SIMPLES
                =============================== */}
@@ -2960,7 +3256,7 @@ const validatePricingTab = () => {
                             <FieldLabel
                               text="Estoque"
                               required
-                              infoText="Informe a quantidade disponível para venda. Se você não controla estoque, pode usar o Estoque virtual."
+                              infoText="Quantidade disponível para venda. Manter o estoque atualizado evita cancelamentos e melhora a reputação nos marketplaces."
                               tipBottom={true}
                               wrap={true}
                               side="left"
@@ -2997,7 +3293,7 @@ const validatePricingTab = () => {
                           <div className="pf-group">
                             <FieldLabel
                               text="Estoque mínimo"
-                              infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
+                              infoText="Quando o estoque atinge esse valor, você pode ser alertado para reabastecer e evitar perder vendas por ruptura."
                               tipBottom={true}
                               wrap={true}
                               side="right"
@@ -3032,7 +3328,7 @@ const validatePricingTab = () => {
                               </label>
                               <FieldLabel
                                 text="Estoque virtual"
-                                infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
+                                infoText="Este estoque será sincronizado com os marketplaces. O estoque real do produto será controlado automaticamente para evitar vendas acima do disponível."
                                 tipBottom={true}
                                 wrap={true}
                                 side="right"
@@ -3072,7 +3368,7 @@ const validatePricingTab = () => {
                             <FieldLabel
                               text="Estoque"
                               required
-                              infoText="Informe a quantidade disponível para venda. Se você não controla estoque, pode usar o Estoque virtual."
+                              infoText="Quantidade disponível para venda. Manter o estoque atualizado evita cancelamentos e melhora a reputação nos marketplaces."
                               tipBottom={true}
                               wrap={true}
                               side="left"
@@ -3107,7 +3403,7 @@ const validatePricingTab = () => {
                           <div className="pf-group">
                             <FieldLabel
                               text="Estoque mínimo"
-                              infoText="Limite de segurança: quando o estoque ficar igual ou abaixo desse valor, o Suse7 pode sinalizar risco de ruptura e ajudar você a evitar perder vendas."
+                              infoText="Quando o estoque atinge esse valor, você pode ser alertado para reabastecer e evitar perder vendas por ruptura."
                               tipBottom={true}
                               wrap={true}
                               side="right"
@@ -3140,7 +3436,7 @@ const validatePricingTab = () => {
                               </label>
                               <FieldLabel
                                 text="Estoque virtual"
-                                infoText="Quando ativado, o estoque virtual será usado para sincronização nos marketplaces. As regras finais ficam no backend."
+                                infoText="Este estoque será sincronizado com os marketplaces. O estoque real do produto será controlado automaticamente para evitar vendas acima do disponível."
                                 tipBottom={true}
                                 wrap={true}
                                 side="right"
@@ -3177,6 +3473,7 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "measures" && (
           <div className="pf-container">
+            <h2 className="pf-tab-title">Pesos & medidas</h2>
             <div className="s7-card pf-dimensions-card">
               <div className="s7-card__header">
                 <h3 className="s7-card__title">Medidas de envio</h3>
@@ -3187,68 +3484,68 @@ const validatePricingTab = () => {
                 <div className="pf-group">
                   <label className="s7-label">Largura (cm)</label>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     className="s7-input pf-dimension-input"
-                    placeholder="Ex: 30"
-                    value={product.width}
-                    onChange={(e) => handleChange("width", e.target.value)}
+                    placeholder="Ex: 10,00"
+                    value={toCmInputValue(product.width) || ""}
+                    onChange={(e) =>
+                      handleChange("width", formatCmInput(e.target.value))
+                    }
+                    onKeyDown={measureDecimalOnKeyDown}
                     onWheel={(e) => e.target.blur()}
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
                   />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Altura (cm)</label>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     className="s7-input pf-dimension-input"
-                    placeholder="Ex: 15"
-                    value={product.height}
-                    onChange={(e) => handleChange("height", e.target.value)}
+                    placeholder="Ex: 10,00"
+                    value={toCmInputValue(product.height) || ""}
+                    onChange={(e) =>
+                      handleChange("height", formatCmInput(e.target.value))
+                    }
+                    onKeyDown={measureDecimalOnKeyDown}
                     onWheel={(e) => e.target.blur()}
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
                   />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Comprimento (cm)</label>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     className="s7-input pf-dimension-input"
-                    placeholder="Ex: 45"
-                    value={product.length}
-                    onChange={(e) => handleChange("length", e.target.value)}
+                    placeholder="Ex: 10,00"
+                    value={toCmInputValue(product.length) || ""}
+                    onChange={(e) =>
+                      handleChange("length", formatCmInput(e.target.value))
+                    }
+                    onKeyDown={measureDecimalOnKeyDown}
                     onWheel={(e) => e.target.blur()}
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
                   />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Peso (kg)</label>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     className="s7-input pf-dimension-input"
-                    placeholder="Ex: 2.350"
-                    value={product.weight}
-                    onChange={(e) => handleChange("weight", e.target.value)}
+                    placeholder="Ex: 8,450"
+                    value={toKgInputValue(product.weight) || ""}
+                    onChange={(e) =>
+                      handleChange("weight", formatKgInput(e.target.value))
+                    }
+                    onKeyDown={measureDecimalOnKeyDown}
                     onWheel={(e) => e.target.blur()}
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
                   />
                 </div>
               </div>
@@ -3264,68 +3561,68 @@ const validatePricingTab = () => {
                 <div className="pf-group">
                   <label className="s7-label">Largura (cm)</label>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     className="s7-input pf-dimension-input"
-                    placeholder="Ex: 32"
-                    value={product.assembled_width}
-                    onChange={(e) => handleChange("assembled_width", e.target.value)}
+                    placeholder="Ex: 10,00"
+                    value={toCmInputValue(product.assembled_width) || ""}
+                    onChange={(e) =>
+                      handleChange("assembled_width", formatCmInput(e.target.value))
+                    }
+                    onKeyDown={measureDecimalOnKeyDown}
                     onWheel={(e) => e.target.blur()}
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
                   />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Altura (cm)</label>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     className="s7-input pf-dimension-input"
-                    placeholder="Ex: 80"
-                    value={product.assembled_height}
-                    onChange={(e) => handleChange("assembled_height", e.target.value)}
+                    placeholder="Ex: 10,00"
+                    value={toCmInputValue(product.assembled_height) || ""}
+                    onChange={(e) =>
+                      handleChange("assembled_height", formatCmInput(e.target.value))
+                    }
+                    onKeyDown={measureDecimalOnKeyDown}
                     onWheel={(e) => e.target.blur()}
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
                   />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Comprimento (cm)</label>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     className="s7-input pf-dimension-input"
-                    placeholder="Ex: 42"
-                    value={product.assembled_length}
-                    onChange={(e) => handleChange("assembled_length", e.target.value)}
+                    placeholder="Ex: 10,00"
+                    value={toCmInputValue(product.assembled_length) || ""}
+                    onChange={(e) =>
+                      handleChange("assembled_length", formatCmInput(e.target.value))
+                    }
+                    onKeyDown={measureDecimalOnKeyDown}
                     onWheel={(e) => e.target.blur()}
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
                   />
                 </div>
 
                 <div className="pf-group">
                   <label className="s7-label">Peso (kg)</label>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     className="s7-input pf-dimension-input"
-                    placeholder="Ex: 8.500"
-                    value={product.assembled_weight}
-                    onChange={(e) => handleChange("assembled_weight", e.target.value)}
+                    placeholder="Ex: 8,450"
+                    value={toKgInputValue(product.assembled_weight) || ""}
+                    onChange={(e) =>
+                      handleChange("assembled_weight", formatKgInput(e.target.value))
+                    }
+                    onKeyDown={measureDecimalOnKeyDown}
                     onWheel={(e) => e.target.blur()}
-                    onKeyDown={(e) => {
-                      if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
                   />
                 </div>
               </div>
@@ -3343,6 +3640,7 @@ const validatePricingTab = () => {
               ======================= */}
               {safeTab === "ad_titles" && (
                 <div className="pf-container">
+                  <h2 className="pf-tab-title">Título do anúncio</h2>
                   <div className="s7-local-section-header">
                     <div className="s7-local-section-header-left">
                       <span className="s7-local-section-title">
@@ -3638,6 +3936,7 @@ const validatePricingTab = () => {
               ======================= */}
               {safeTab === "ads" && (
               <div className="pf-container">
+             <h2 className="pf-tab-title">Anúncios</h2>
              {!hasAnyVariation && (
              <div className="section">
               <div className="section-header">
@@ -3660,6 +3959,7 @@ const validatePricingTab = () => {
              ======================= */}
              {safeTab === "performance" && (
              <div className="pf-container">
+              <h2 className="pf-tab-title">Vendas & desempenho</h2>
               <div className="section">
               <div className="section-header">
                 <h3>Vendas & desempenho</h3>
@@ -3825,7 +4125,7 @@ const validatePricingTab = () => {
                 });
                 setZeroStockAttention(Object.keys(variants).length > 0 ? { simple: false, variants } : null);
               }
-              setActiveTab("stock");
+              navigateToTabWithUnlock("stock");
             }}
           >
             Voltar e ajustar
@@ -3896,7 +4196,7 @@ const validatePricingTab = () => {
   health={productHealth}
   bannerMessage={healthModalBannerMessage}
   onGoToTab={(tabId) => {
-    setActiveTab(tabId);
+    navigateToTabWithUnlock(tabId);
     setHealthModalOpen(false);
     setHealthModalBannerMessage(null);
   }}

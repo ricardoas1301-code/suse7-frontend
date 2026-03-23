@@ -7,7 +7,8 @@
   display: grid;
   grid-template-columns: 1.2fr 1.4fr auto;
   gap: 16px;
-  align-items: flex-end;
+  /* Alinha labels + tooltips no topo; botão "Adicionar variação" permanece na base da linha */
+  align-items: flex-start;
 }
 
 @media (max-width: 960px) {
@@ -25,10 +26,104 @@
   margin-bottom: 0;
 }
 
+/* ======================================================================
+   Variações — tooltip 100% local (.pv-tooltip-*) — sem S7Tooltip / .s7-tip
+   ====================================================================== */
+
+/* Mesmo ritmo da aba Dados (.pf-label-left: gap 8px entre texto+* e ícone) */
+.pv-label-with-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pv-label-with-tooltip__text {
+  min-width: 0;
+}
+
+/* Label S7 + asterisco na mesma linha quando há PvLabelWithTooltip */
+.pf-variations-config-card .s7-form-field__label:has(.pv-label-with-tooltip),
+.pf-sku-base-card .s7-form-field__label:has(.pv-label-with-tooltip) {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  line-height: 1.25;
+}
+
+.pf-variations-config-card .s7-form-field__header,
+.pf-sku-base-card .s7-form-field__header {
+  align-items: center;
+}
+
+/* Wrapper: alinhado ao .pf-info-btn 18×18 da aba Dados */
+.pv-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  z-index: 12;
+}
+
+/* Ponte invisível entre trigger e balão — reduz flicker no hover */
+.pv-tooltip-wrapper::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 8px;
+  z-index: 11;
+}
+
+/* Ícone (i): estilo global .pf-info-btn — igual à aba Dados */
+.pv-tooltip-wrapper .pf-info-btn.pv-tooltip-trigger:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.28);
+  outline-offset: 1px;
+}
+
+.pv-tooltip-content {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 260px;
+  max-width: min(400px, calc(100vw - 32px));
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 20;
+  box-shadow: var(--s7-shadow-float, 0 4px 12px rgba(15, 23, 42, 0.15));
+}
+
+.pv-tooltip-wrapper:hover .pv-tooltip-content,
+.pv-tooltip-wrapper:focus-within .pv-tooltip-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 .pvt-builder-col--action {
   display: flex;
+  flex-direction: column;
   align-items: flex-end;
   justify-content: flex-end;
+  /* Estica na altura da linha para o botão “Adicionar variação” ficar na base */
+  align-self: stretch;
+  padding-bottom: 2px;
 }
 
 /* Chipbox de variações: base para botão limpar */
@@ -489,12 +584,6 @@
   color: #111827;
 }
 
-/* Garantir que tooltips dentro do card de variações sempre fiquem acima dos inputs */
-.pf-variations-config-card .s7-tip {
-  position: relative;
-  z-index: 9999;
-}
-
 /* Wrapper local do input "Nome do atributo" (gerado) com altura fixa */
 .pf-variation-create-row .s7-input__wrapper.pf-variation-input {
   height: 38px;
@@ -543,9 +632,10 @@
   align-items: center; /* centraliza verticalmente o conteúdo dentro do card */
 }
 
-/* Ajuste fino: desce levemente o label "Raiz do SKU" dentro do card */
+/* Label + (i) alinhados ao centro vertical do cabeçalho do campo */
 .pf-sku-base-card .s7-form-field__header {
-  margin-top: 8px;
+  margin-top: 0;
+  align-items: center;
 }
 
 /* Aproxima label "Raiz do SKU" do chipbox dentro do card */

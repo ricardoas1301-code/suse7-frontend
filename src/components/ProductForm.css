@@ -281,6 +281,17 @@
   box-sizing: border-box;
 }
 
+/* Headline da aba — hierarquia visual (cadastro de produtos) */
+.pf-tab-title {
+  font-family: var(--s7-font, inherit);
+  font-size: 1.375rem; /* ~22px — destaque sem “título de página inteira” */
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--s7-text, #111827);
+  margin: 0 0 1.125rem;
+  letter-spacing: -0.02em;
+}
+
 /* Aba Descrição: preenche altura útil do corpo scrollável (textarea expansível) */
 .pf-body[data-active-tab="description"]{
   display: flex;
@@ -1288,15 +1299,39 @@
 .pf-variant-cost-row{
   display: flex;
   align-items: center;
-  gap: 8px; /* ✅ define o quão "junto" fica */
+  gap: 8px;
+  position: relative;
+  width: 169px;
+  max-width: 100%;
 }
 
-/* S7Input no custo por variação — mesma largura fixa do input anterior */
+/* S7Input — mesma largura fixa */
 .pf-variant-cost-row > .s7-input__wrapper{
   flex: 0 0 auto;
   width: 169px;
   max-width: 169px;
   box-sizing: border-box;
+}
+
+/* Espaço para o botão “aplicar a todas” sobre a borda direita (igual Gerar SKU em Variações) */
+.pf-variant-cost-row--with-apply > .s7-input__wrapper {
+  padding-right: 40px;
+}
+
+/* Botão alinhado ao Gerar SKU da aba Variações (ícone à direita do input) */
+.pf-variant-cost-row .pf-pricing-apply-all-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  flex: 0 0 auto;
+}
+
+.pf-pricing-variant-card .pf-pricing-apply-all-btn.s7-btn--secondary:hover:not(:disabled) {
+  box-shadow: none;
+  /* Mantém centralização vertical (secondary usa transform no hover) */
+  transform: translateY(-50%) scale(1.02);
 }
 
 /* Se quiser ainda mais junto, use 4px */
@@ -1549,6 +1584,7 @@
 /* Custo do produto (simples) — S7Input igual largura do .s7-input cru na aba Dados */
 .pf-pricing-global-group .s7-input__wrapper{
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -1577,13 +1613,44 @@
   gap: 24px;
 }
 
-/* Modo simples: coluna com todos os inputs do mesmo tamanho */
+/* Mesma largura útil nos dois campos (como inputs do Estoque em linha) */
+.pf-pricing-costs-row .pf-pricing-global-group{
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 220px;
+}
+
+.pf-pricing-costs-row .pf-pricing-global-group input.s7-input{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Modo simples: coluna com todos os inputs do mesmo tamanho (espelha .pf-stock-simple-column) */
 .pf-pricing-simple-column{
   margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
   max-width: 220px;
+}
+
+.pf-pricing-simple-column .pf-row{
+  width: 100%;
+}
+
+.pf-pricing-simple-column .pf-group.pf-pricing-global-group{
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.pf-pricing-simple-column .pf-pricing-global-group input.s7-input{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Lista de cards das variações no Pricing */
@@ -1594,12 +1661,30 @@
   gap: 10px;
 }
 
+/* Container da lista: sem overflow horizontal (evita barra de rolagem) */
+.pf-pricing-variants-outer {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  overflow-x: visible;
+}
+
+.pf-pricing-variants-outer .pf-pricing-variants-list {
+  margin-top: 0;
+}
+
 .pf-pricing-variant-card{
   display: grid;
-  grid-template-columns: 1fr minmax(260px, 340px);
+  /* Atributos encolhem; custo + input ficam à direita, largura só do conteúdo */
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
-  align-items: flex-start; /* igual ao card de Estoque (mesmo assentamento vertical) */
+  align-items: flex-start;
   padding: 12px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 
   overflow: visible; /* ✅ permite tooltip aparecer */
 }
@@ -1641,9 +1726,32 @@
   color:#111827;                  /* cor de texto da aba Custos & precificação */
 }
 
-/* Área do custo */
+/* Área do custo — coluna alinhada à direita do card; largura = input (169px) */
 .pf-pricing-cost{
   min-width: 0;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 169px;
+  max-width: 100%;
+  box-sizing: border-box;
+  /* Respiro entre label e input (refino UX) */
+  gap: 6px;
+}
+
+.pf-pricing-cost .pf-label-row {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Mais espaço entre o texto+* e o ícone (i) — além do gap padrão 8px do .pf-label-left */
+.pf-pricing-cost .pf-label-left {
+  gap: 18px;
+}
+
+.pf-pricing-cost .pf-label-left .pf-info-btn {
+  margin-left: 4px;
 }
 
 
@@ -1652,29 +1760,6 @@
   width: 169px;          /* ✅ mesmo tamanho em todos os cards */
   max-width: 169px;
   flex: 0 0 auto;
-}
-
-/* Botão premium "Aplicar a todas" */
-.pf-apply-all-btn{
-  background:#f8fafc;
-  border:1px solid #e5e7eb;
-  border-radius:8px;
-  padding:6px 12px;
-  font-size:13px;
-  font-weight:500;
-  color:#374151;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  cursor:pointer;
-  transition:all .15s ease;
-  white-space:nowrap;
-}
-
-.pf-apply-all-btn:hover{
-  background:#eef2ff;
-  border-color:#c7d2fe;
-  color:#1d4ed8;
 }
 
 /* ======================================================================
@@ -1693,6 +1778,19 @@
 /* opcional: evita cortar em telas menores */
 .pf-pricing-variant-card .pf-info-btn::after{
   max-width: 260px;
+  white-space: normal;
+}
+
+/* Tooltip do botão "aplicar a todas" (mesmo recuo do ícone info no card) */
+.pf-pricing-variant-card .pf-pricing-apply-all-btn.s7-tip-left::after,
+.pf-pricing-variant-card .pf-pricing-apply-all-btn.s7-tip-left::before {
+  left: auto !important;
+  right: 100% !important;
+  margin-right: 10px !important;
+}
+
+.pf-pricing-variant-card .pf-pricing-apply-all-btn::after {
+  max-width: 280px;
   white-space: normal;
 }
 
@@ -1847,6 +1945,14 @@
   overflow: visible;
 }
 
+.pf-images-container > .s7-local-section-header .s7-local-section-title.pf-images-heading-with-tip {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  overflow: visible;
+}
+
 .pf-images-container > .s7-local-section-header .pf-info-btn {
   position: relative;
   z-index: 31;
@@ -1888,21 +1994,20 @@
 }
 
 /* ======================================================
-   TOOLTIP — ABA ESTOQUE
-   Objetivo:
-   - nascer no pé do ícone
-   - não ficar à esquerda
+   TOOLTIP — SEÇÃO "IMAGENS POR VARIAÇÃO" (label fora da grid)
    ====================================================== */
-.pf-stock-simple-column .pf-info-btn,
-.pf-stock-variant-card .pf-info-btn,
-.pf-label-row .pf-info-btn {
+.pf-images-container .pf-images-section--variants > .pf-images-section-heading--variants {
   position: relative;
-  z-index: 20;
+  z-index: 30;
+  overflow: visible;
 }
 
-.pf-stock-simple-column .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after,
-.pf-stock-variant-card .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after,
-.pf-label-row .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
+.pf-images-container .pf-images-section--variants .pf-images-section-heading--variants .pf-info-btn {
+  position: relative;
+  z-index: 31;
+}
+
+.pf-images-container .pf-images-section--variants .pf-images-section-heading--variants .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
   top: calc(100% + 6px);
   left: 0;
   right: auto;
@@ -1912,15 +2017,55 @@
   z-index: 100000;
 }
 
-.pf-stock-simple-column .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before,
-.pf-stock-variant-card .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before,
-.pf-label-row .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before {
+.pf-images-container .pf-images-section--variants .pf-images-section-heading--variants .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before {
   top: calc(100% + 2px);
   left: 6px;
   right: auto;
   bottom: auto;
   margin-left: 0;
   transform: none;
+}
+
+.pf-images-container .pf-images-variants-list {
+  position: relative;
+  z-index: 1;
+}
+
+/* ======================================================
+   TOOLTIP — ABA ESTOQUE (Estoque mínimo, Estoque virtual: side="right")
+   Objetivo:
+   - abaixo do ícone
+   - âncora à direita do botão → balão cresce para a esquerda (evita corte na borda direita do card)
+   ====================================================== */
+.pf-stock-simple-column .pf-info-btn,
+.pf-stock-variant-card .pf-info-btn,
+.pf-label-row .pf-info-btn {
+  position: relative;
+  z-index: 20;
+}
+
+/* Só os (i) com s7-tip-right na aba Estoque: escopo por ancestral do card/lista de estoque */
+.pf-stock-simple-column .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after,
+.pf-stock-variant-card .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::after {
+  top: calc(100% + 6px);
+  left: auto;
+  right: 0;
+  bottom: auto;
+  margin-left: 0;
+  transform: translateX(0);
+  z-index: 100000;
+}
+
+.pf-stock-simple-column .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before,
+.pf-stock-variant-card .pf-info-btn.s7-tip-bottom.s7-tip-right[data-tip]::before {
+  top: calc(100% + 2px);
+  left: auto;
+  right: 10px;
+  bottom: auto;
+  margin-left: 0;
+  transform: none;
+  border-top-color: transparent;
+  border-bottom-color: #0f172a;
 }
 
 

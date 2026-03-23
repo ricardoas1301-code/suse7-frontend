@@ -15,6 +15,7 @@ import ProductHealthProgress from "./ProductHealthProgress";
  *   steps: { id: string, label: string }[];
  *   activeId: string;
  *   onStepChange?: (id: string) => void;
+ *   isStepUnlocked?: (stepId: string) => boolean;
  *   onSave?: () => void;
  *   onClose?: () => void;
  *   saveLabel?: string;
@@ -29,6 +30,7 @@ export default function ProductFormRightPanel({
   steps = [],
   activeId,
   onStepChange,
+  isStepUnlocked,
   onSave,
   onClose,
   saveLabel = "Salvar produto",
@@ -44,8 +46,14 @@ export default function ProductFormRightPanel({
   const rawIndex = steps.findIndex((s) => s.id === activeId);
   const activeIndex = rawIndex >= 0 ? rawIndex : 0;
 
+  const checkUnlocked = (stepId) => {
+    if (typeof isStepUnlocked === "function") return isStepUnlocked(stepId);
+    return true;
+  };
+
   const handleStepClick = (id) => {
     if (!stepsClickable) return;
+    if (!checkUnlocked(id)) return;
     if (typeof onStepChange === "function") {
       onStepChange(id);
     }
@@ -91,17 +99,20 @@ export default function ProductFormRightPanel({
           {steps.map((step, index) => {
             const isActive = step.id === activeId;
             const status = isActive ? "active" : "pending";
+            const unlocked = checkUnlocked(step.id);
+            const locked = stepsClickable && !unlocked && !isActive;
             return (
               <li
                 key={step.id}
-                className={`pf-right-step pf-right-step--${status}`}
+                className={`pf-right-step pf-right-step--${status}${locked ? " pf-right-step--locked" : ""}`}
               >
                 <button
                   type="button"
                   className={`pf-right-step-button ${!stepsClickable ? "pf-right-step-button--static" : ""}`}
                   onClick={() => handleStepClick(step.id)}
-                  aria-disabled={!stepsClickable}
-                  tabIndex={stepsClickable ? 0 : -1}
+                  aria-disabled={!stepsClickable || locked}
+                  disabled={!stepsClickable || locked}
+                  tabIndex={!stepsClickable || locked ? -1 : 0}
                 >
                   <span className="pf-right-step-icon">
                     {index + 1}

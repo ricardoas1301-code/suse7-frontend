@@ -101,7 +101,6 @@ export default function ProductEdit() {
         initialTab={initialTab}
         onCancel={handleCancel}
         onSubmit={handleSubmit}
-        onSuccess={() => navigate("/produtos")}
       />
     </div>
   );
