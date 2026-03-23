@@ -13,6 +13,12 @@ Centralizar cores principais do Suse7
   /* BACKGROUNDS */
   --s7-bg-soft: #f9fafb;
   --s7-bg-card: #ffffff;
+  /**
+   * PADRÃO SUSE7 — fundo da página / área principal de conteúdo
+   * (ex.: .page-content, .pf-page). Azul clarinho; cards e sidebar seguem brancos.
+   * Não usar para superfície de card interno.
+   */
+  --s7-bg-page: #f2f7ff;
 
   /* BORDER */
   --s7-border-default: #d1d5db;
@@ -24,5 +30,19 @@ Centralizar cores principais do Suse7
 
   /* ERROR */
   --s7-color-error: #dc2626;
+
+  /**
+   * LARANJA OFICIAL SUSE7 — #d97706 (âmbar elegante, atenção sem tom de erro)
+   * Regra: não repetir este hex em telas; usar var(--s7-orange) ou alias abaixo.
+   * Uso típico: avisos contextuais não bloqueantes, barras/toasts, ícones de aviso,
+   * progresso (% semi), stat cards --warning, destaques amigáveis, botões âmbar.
+   */
+  --s7-orange: #d97706;
+  /* Hover / pressed em superfícies âmbar (botões, chips) */
+  --s7-orange-hover: #b45309;
+  /**
+   * Alias semântico = mesmo valor que --s7-orange (toasts, faixas discretas, barra lateral).
+   */
+  --s7-contextual-accent: var(--s7-orange);
 
 }

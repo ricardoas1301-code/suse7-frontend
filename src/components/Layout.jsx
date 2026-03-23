@@ -135,7 +135,9 @@ className={`nav-item ${
       </nav>
 
       {/* ===================== CONTEÚDO ===================== */}
-      <main className={`page-content ${isProductForm ? "page-content--pf-bleed" : ""}`}>
+      <main
+        className={`page-content s7-page ${isProductForm ? "page-content--pf-bleed" : ""}`}
+      >
         <Outlet />
       </main>
     </div>

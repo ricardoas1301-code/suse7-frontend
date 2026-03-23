@@ -11,8 +11,8 @@
 .pf-page{
   width: 100%;
   min-height: calc(100vh - 72px);
-  /* Padrão Suse7 para páginas de cadastro (mesmo da tela Alterar Senha) */
-  background: var(--s7-page-bg, #f5f7fb);
+  /* Alinhado ao fundo global (--s7-bg-page); cards permanecem brancos */
+  background: var(--s7-bg-page, #f2f7ff);
   padding: 0; /* deixa o padding vertical a cargo do layout (page-content) */
   box-sizing: border-box;
 }
@@ -183,14 +183,14 @@
   font-weight: 900;
 }
 
-/* Bloco do label+input ocupa o resto */
+/* Bloco do label+input ocupa o resto (gap igual ao .pf-group da aba Dados) */
 .pf-product-name-fields{
   flex: 1;
   min-width: 0;
 
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
 
 .pf-product-health-wrap{
@@ -213,6 +213,7 @@
 }
 
 .pf-product-name-fixed .pf-product-name-fields .s7-input,
+.pf-product-name-fixed .pf-product-name-fields .s7-input__wrapper,
 .pf-product-name-fixed .pf-product-name-fields .pf-label-row{
   max-width: 50%;
 }
@@ -280,6 +281,25 @@
   box-sizing: border-box;
 }
 
+/* Aba Descrição: preenche altura útil do corpo scrollável (textarea expansível) */
+.pf-body[data-active-tab="description"]{
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pf-body[data-active-tab="description"] .pf-body-inner{
+  display: none;
+}
+
+.pf-container--description{
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 16px; /* respiro antes da barra inferior (fora do scroll colado) */
+}
+
 .pf-page--bleed{
   width: 100%;
   margin: 0;
@@ -335,6 +355,8 @@
 
 /* ======================================================
    LAYOUT DO FORM
+   Obs.: nas primeiras linhas da aba Dados, preferir S7FormRow (DS);
+   .pf-row permanece para demais abas / blocos até migração gradual.
 ====================================================== */
 .pf-row{
   display: flex;
@@ -409,7 +431,7 @@
 }
 
 /* ======================================================
-   GROUP WIDTH HELPERS — ABA DADOS
+   GROUP WIDTH HELPERS — ABA DADOS / outras abas
 ====================================================== */
 .pf-group--xs{
   flex: 0 0 220px;
@@ -427,11 +449,15 @@
   max-width: 220px;
 }
 
-/* Garante que selects e inputs usem exatamente a mesma largura e altura dentro da coluna */
+/* Garante que selects e inputs usem a mesma largura e altura dentro da coluna */
 .pf-data-col .s7-select,
-.pf-data-col .s7-input{
+.pf-data-col .s7-input,
+.pf-data-col .s7-input__wrapper{
   width: 100%;
   box-sizing: border-box;
+}
+.pf-data-col .s7-input,
+.pf-data-col .s7-input__field{
   height: 32px;
   min-height: 32px;
 }
@@ -538,22 +564,26 @@
 .pf-description-section {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1 1 auto;
   min-height: 0;
+}
+
+.pf-description-section > .pf-label-row {
+  flex-shrink: 0;
 }
 
 .pf-description-wrapper {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
+  flex-direction: column;
   margin-top: 8px;   /* respiro entre label e textarea */
 }
 
 .pf-description-textarea {
+  flex: 1 1 auto;
   width: 100%;
-  height: 100%;
-  min-height: 240px;
-  max-height: 100%;
+  min-height: 280px;
   resize: none;
   overflow-y: auto;
   box-sizing: border-box;
@@ -561,7 +591,7 @@
 
 .pf-description-count {
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 12px;
   color: #6b7280;
   text-align: right;
@@ -1200,6 +1230,7 @@
   .pf-tabs button{ min-width: 130px; }
 
   .pf-product-name-fixed .pf-product-name-fields .s7-input,
+  .pf-product-name-fixed .pf-product-name-fields .s7-input__wrapper,
   .pf-product-name-fixed .pf-product-name-fields .pf-label-row{
     max-width: 50%;
   }
@@ -1258,6 +1289,14 @@
   display: flex;
   align-items: center;
   gap: 8px; /* ✅ define o quão "junto" fica */
+}
+
+/* S7Input no custo por variação — mesma largura fixa do input anterior */
+.pf-variant-cost-row > .s7-input__wrapper{
+  flex: 0 0 auto;
+  width: 169px;
+  max-width: 169px;
+  box-sizing: border-box;
 }
 
 /* Se quiser ainda mais junto, use 4px */
@@ -1507,6 +1546,12 @@
   max-width: 220px; /* ✅ bem menor (aprox “-79% visual” em telas largas) */
 }
 
+/* Custo do produto (simples) — S7Input igual largura do .s7-input cru na aba Dados */
+.pf-pricing-global-group .s7-input__wrapper{
+  width: 100%;
+  box-sizing: border-box;
+}
+
 @media (max-width: 720px){
   .pf-pricing-global-row{
     flex-direction: column;
@@ -1676,7 +1721,20 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
   max-width: 220px;
+}
+
+/* Todos os grupos/inputs da coluna simples com a mesma largura útil */
+.pf-stock-simple-column .pf-row{
+  width: 100%;
+}
+
+.pf-stock-simple-column .pf-group{
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
 .pf-stock-variant-card{
@@ -1699,7 +1757,7 @@
 
 .pf-stock-controls{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   min-width: 0;
   align-items: flex-end;
@@ -1709,10 +1767,16 @@
   min-height: 0;
 }
 
-/* Inputs numéricos do estoque por variação — mesma largura em todas as colunas */
-.pf-stock-controls .s7-input{
-  width: 130px;
-  max-width: 130px;
+/* Estoque por variação: S7Input + inputs nativos ocupam 100% da célula (mesma largura) */
+.pf-stock-controls .pf-group{
+  min-width: 0;
+}
+
+.pf-stock-controls .pf-group .s7-input__wrapper,
+.pf-stock-controls .pf-group input.s7-input{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .pf-stock-virtual-header{
@@ -1887,14 +1951,32 @@
 
 /* Input Estoque virtual desabilitado — cor apagada + cursor proibido */
 .pf-stock-controls .s7-input:disabled,
-.pf-stock-simple-column .s7-input:disabled{
+.pf-stock-simple-column .s7-input:disabled,
+.pf-stock-controls .s7-input__field:disabled,
+.pf-stock-simple-column .s7-input__field:disabled{
   background-color: #f3f4f6;
   color: #9ca3af;
   cursor: not-allowed;
 }
 
-.pf-stock-simple-column .s7-input:disabled::placeholder{
+.pf-stock-simple-column .s7-input:disabled::placeholder,
+.pf-stock-simple-column .s7-input__field:disabled::placeholder{
   color: #cbd5e1;
+}
+
+/* S7Input ocupa toda a largura do .pf-group (aba Estoque) */
+.pf-stock-simple-column .pf-group .s7-input__wrapper,
+.pf-stock-controls .pf-group .s7-input__wrapper{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Inputs nativos na coluna simples — mesmo stretch que o S7Input */
+.pf-stock-simple-column .pf-group input.s7-input{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ======================================================
@@ -1957,8 +2039,8 @@
 }
 
 .s7-modal-icon--warning{
-  background: rgba(245, 158, 11, 0.2);
-  color: #d97706;
+  background: color-mix(in srgb, var(--s7-orange, #d97706) 22%, transparent);
+  color: var(--s7-orange, #d97706);
 }
 
 .s7-modal-icon--success{

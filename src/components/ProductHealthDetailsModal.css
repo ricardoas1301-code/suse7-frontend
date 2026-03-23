@@ -118,7 +118,7 @@
 }
 
 .phdm-section-title--warning {
-  color: var(--s7-warning, #d97706);
+  color: var(--s7-orange, #d97706);
 }
 
 .phdm-meta {
@@ -163,7 +163,7 @@
 
 .phdm-list-item--warning {
   background: rgba(217, 119, 6, 0.06);
-  border-left: 3px solid var(--s7-warning, #d97706);
+  border-left: 3px solid var(--s7-orange, #d97706);
 }
 
 .phdm-message {

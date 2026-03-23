@@ -2,12 +2,11 @@
 // COMPONENTE GLOBAL: S7Select
 // Objetivo:
 // - Padronizar selects do Suse7
-// - Reutilizar padrões visuais do S7Input
-// - Facilitar manutenção e evolução do design system
+// - Estados visuais alinhados ao S7Input (erro / sucesso / helper)
 //
 // Observações:
 // - Sem lógica de negócio
-// - Componente visual e reutilizável
+// - Compatível com uso legado: error como string
 // ======================================================
 
 import "./S7Select.css";
@@ -22,16 +21,30 @@ export default function S7Select({
   placeholder = "",
   required = false,
   disabled = false,
-  error = "",
+  error = false,
+  message = "",
+  success = false,
+  successMessage = "",
+  helperText = "",
   hint = "",
   options = [],
   className = "",
   selectClassName = "",
   ...rest
 }) {
+  const legacyErrorString = typeof error === "string" ? error : "";
+  const isErrorFlag = error === true || Boolean(legacyErrorString);
+  const errorDisplayText = legacyErrorString || (error === true ? String(message || "") : "");
+
+  const showSuccess =
+    Boolean(success) && !isErrorFlag && !errorDisplayText;
+
+  const helper = helperText || hint;
+
   const wrapperClasses = [
     "s7-select",
-    error ? "s7-select--error" : "",
+    isErrorFlag ? "s7-select--error" : "",
+    showSuccess ? "s7-select--success" : "",
     disabled ? "s7-select--disabled" : "",
     className,
   ]
@@ -44,6 +57,23 @@ export default function S7Select({
   ]
     .filter(Boolean)
     .join(" ");
+
+  let messageBlock = null;
+  if (errorDisplayText) {
+    messageBlock = (
+      <div className="s7-select__message s7-select__message--error" role="alert">
+        {errorDisplayText}
+      </div>
+    );
+  } else if (showSuccess && successMessage) {
+    messageBlock = (
+      <div className="s7-select__message s7-select__message--success">{successMessage}</div>
+    );
+  } else if (helper) {
+    messageBlock = (
+      <div className="s7-select__message s7-select__message--helper">{helper}</div>
+    );
+  }
 
   return (
     <div className={wrapperClasses}>
@@ -64,6 +94,7 @@ export default function S7Select({
           onFocus={onFocus}
           disabled={disabled}
           className={fieldClasses}
+          aria-invalid={isErrorFlag || undefined}
           {...rest}
         >
           {placeholder ? (
@@ -77,15 +108,7 @@ export default function S7Select({
         </select>
       </div>
 
-      {error ? (
-        <div className="s7-select__message s7-select__message--error">
-          {error}
-        </div>
-      ) : hint ? (
-        <div className="s7-select__message s7-select__message--hint">
-          {hint}
-        </div>
-      ) : null}
+      {messageBlock}
     </div>
   );
 }

@@ -8,6 +8,7 @@
   box-sizing: border-box;
 }
 
+/* Toast inline da aba Imagens — mesmo idioma visual do toast global (não bloqueante) */
 .pf-toast {
   position: sticky;
   top: 12px;
@@ -17,6 +18,7 @@
   border-radius: 10px;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 4px solid var(--s7-contextual-accent, var(--s7-orange, #d97706));
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
   font-size: 14px;
 }
@@ -249,7 +251,7 @@
 }
 
 .pf-dirty-dot {
-  color: var(--s7-warning, #f59e0b);
+  color: var(--s7-orange, #d97706);
   font-size: 16px;
   line-height: 1;
 }
@@ -448,8 +450,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #f59e0b;
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
+  background: var(--s7-orange, #d97706);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--s7-orange, #d97706) 35%, transparent);
   flex-shrink: 0;
   animation: pf-images-saved-badge-in 0.2s ease-out;
 }

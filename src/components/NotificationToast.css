@@ -1,6 +1,9 @@
 /* ======================================================================
    SUSE7 — NOTIFICATION TOAST
    Toast não bloqueante, canto inferior direito
+
+   Padrão UX: barra = --s7-contextual-accent / --s7-orange (tokens em colors.css).
+   --info / --warning: mesmo tom “atenção amigável”. --critical: erro grave.
 ====================================================================== */
 
 .s7-notification-toast-container{
@@ -27,7 +30,7 @@
   border-radius: 12px;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
   background: #fff;
-  border-left: 4px solid var(--s7-primary, #2563eb);
+  border-left: 4px solid var(--s7-contextual-accent, var(--s7-orange, #d97706));
   animation: s7-toast-in 0.25s ease-out;
 }
 
@@ -43,11 +46,11 @@
 }
 
 .s7-notification-toast--info{
-  border-left-color: var(--s7-primary, #2563eb);
+  border-left-color: var(--s7-contextual-accent, var(--s7-orange, #d97706));
 }
 
 .s7-notification-toast--warning{
-  border-left-color: #d97706;
+  border-left-color: var(--s7-contextual-accent, var(--s7-orange, #d97706));
 }
 
 .s7-notification-toast--critical{

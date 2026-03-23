@@ -96,6 +96,17 @@ ERROR
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
 
+.s7-textarea--success .s7-textarea__field {
+  border-color: #86efac;
+  background: #f7fdf9;
+}
+
+.s7-textarea--success .s7-textarea__field:focus {
+  border-color: #4ade80;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+  background: #ffffff;
+}
+
 .s7-textarea__message {
   font-size: 12px;
   line-height: 1.4;
@@ -103,10 +114,18 @@ ERROR
 
 .s7-textarea__message--error {
   color: #dc2626;
+  font-weight: 700;
 }
 
-.s7-textarea__message--hint {
+.s7-textarea__message--success {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.s7-textarea__message--hint,
+.s7-textarea__message--helper {
   color: #6b7280;
+  font-weight: 500;
 }
 
 /* ======================================================

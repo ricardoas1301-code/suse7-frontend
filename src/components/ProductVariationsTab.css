@@ -20,6 +20,11 @@
   min-width: 0;
 }
 
+/* Campos do builder ficam em grid com gap; sem margem extra do wrapper */
+.pvt-builder-col > .s7-form-field {
+  margin-bottom: 0;
+}
+
 .pvt-builder-col--action {
   display: flex;
   align-items: flex-end;
@@ -141,7 +146,7 @@
 }
 
 /* Aproxima ao máximo o texto "SKU" do grupo de ações (gerar + copiar) */
-.pf-variant-sku-field .s7-form-field__label-row {
+.pf-variant-sku-field .s7-form-field__header {
   gap: 0; /* padrão global é 8px */
 }
 
@@ -539,13 +544,14 @@
 }
 
 /* Ajuste fino: desce levemente o label "Raiz do SKU" dentro do card */
-.pf-sku-base-card .s7-form-field__label-row {
+.pf-sku-base-card .s7-form-field__header {
   margin-top: 8px;
 }
 
 /* Aproxima label "Raiz do SKU" do chipbox dentro do card */
 .pf-sku-base-card .s7-form-field {
   gap: 4px; /* padrão global é 6px */
+  margin-bottom: 0;
 }
 
 /* ======================================================================

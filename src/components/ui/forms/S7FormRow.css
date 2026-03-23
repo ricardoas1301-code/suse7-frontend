@@ -1,0 +1,35 @@
+/* ======================================================
+   COMPONENTE: S7FormRow
+   Grid responsivo para linhas de formulário.
+   Variáveis:
+   - --s7-form-row-columns (definida inline pelo JSX)
+   - --s7-form-row-gap
+   - --s7-form-row-align
+====================================================== */
+
+.s7-form-row {
+  display: grid;
+  grid-template-columns: var(--s7-form-row-columns);
+  gap: var(--s7-form-row-gap, 16px);
+  align-items: var(--s7-form-row-align, start);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+}
+
+.s7-form-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Evita estouro horizontal com conteúdo largo nos tracks */
+.s7-form-row > * {
+  min-width: 0;
+}
+
+/* Tablet/mobile: uma coluna (pode desligar com stackOnMobile={false}) */
+@media (max-width: 768px) {
+  .s7-form-row.s7-form-row--stack-mobile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

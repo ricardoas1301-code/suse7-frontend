@@ -296,3 +296,21 @@ Antes de considerar um tooltip como pronto, validar:
 Este checklist é obrigatório para qualquer implementação ou refino de tooltip no Suse7.
 O tooltip do campo Formato (aba Dados) é a fonte única de verdade.
 
+---
+
+## Laranja oficial Suse7
+
+- **Cor canônica:** `styles/tokens/colors.css` → **`--s7-orange`** (`#d97706`). Não copiar o hex em componentes novos.
+- **Hover em superfícies âmbar:** **`--s7-orange-hover`** (`#b45309`).
+- **Alias semântico (avisos discretos, toasts):** **`--s7-contextual-accent`** (igual a `--s7-orange`).
+- O Design System aponta para esses tokens; valores numéricos vivem só em `colors.css`.
+
+## Avisos contextuais não bloqueantes (padrão oficial)
+
+Quando a mensagem é **importante**, mas **não** exige modal nem bloquear a tela:
+
+- Preferir **toast** (`.s7-notification-toast`) ou faixa com a mesma linguagem visual.
+- Barra lateral: **`var(--s7-contextual-accent)`** ou **`var(--s7-orange)`**.
+- Erro crítico / interrupção: manter **`.s7-notification-toast--critical`** (vermelho).
+- Referência: `NotificationToast.css` + tokens em `styles/tokens/colors.css`.
+

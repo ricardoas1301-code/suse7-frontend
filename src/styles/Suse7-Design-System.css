@@ -38,6 +38,7 @@
 
   --s7-bg: #ffffff;
   --s7-bg-soft: #f9fafb;
+  /* Fundo da página / conteúdo principal: token canônico --s7-bg-page em styles/tokens/colors.css */
 
   --s7-border: #dcdfe4;
   --s7-divider: #eef0f3;
@@ -47,6 +48,8 @@
   --s7-warning-bg: #fff7ed;
   --s7-warning-border: #fed7aa;
   --s7-warning-text: #9a3412;
+
+  /* Laranja / aviso amigável: tokens canônicos --s7-orange, --s7-orange-hover, --s7-contextual-accent em styles/tokens/colors.css */
 
   --s7-tooltip-bg: #111827;
 

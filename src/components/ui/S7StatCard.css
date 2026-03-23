@@ -132,7 +132,7 @@ VARIANTS
 }
 
 .s7-stat-card--warning::before {
-  background: #d97706;
+  background: var(--s7-orange, #d97706);
 }
 
 .s7-stat-card--danger::before {
@@ -148,7 +148,7 @@ VARIANTS
 }
 
 .s7-stat-card--warning .s7-stat-card__icon {
-  color: #d97706;
+  color: var(--s7-orange, #d97706);
 }
 
 .s7-stat-card--danger .s7-stat-card__icon {

@@ -2,13 +2,12 @@
 // COMPONENTE GLOBAL: S7Input
 // Objetivo:
 // - Padronizar os campos de input do Suse7
-// - Centralizar estados visuais de foco, erro e disabled
-// - Facilitar manutenção e evolução do design system
+// - Centralizar estados visuais: default, focus, erro, sucesso, disabled
+// - Mensagens: erro (prioridade), sucesso opcional, texto auxiliar
 //
 // Observações:
 // - Sem lógica de negócio
-// - Sem validação sensível
-// - Componente visual e reutilizável
+// - Compatível com uso legado: error como string
 // ======================================================
 
 import "./S7Input.css";
@@ -24,20 +23,39 @@ export default function S7Input({
   placeholder = "",
   required = false,
   disabled = false,
-  error = "",
+  /** @type {boolean|string} */
+  error = false,
+  /** Texto de erro quando `error === true` OU mensagem legada quando `error` é string não vazia */
+  message = "",
+  /** Destaque de sucesso (borda verde discreta); use com moderação */
+  success = false,
+  successMessage = "",
+  /** Alias de texto auxiliar neutro (equivalente a `hint`) */
+  helperText = "",
   hint = "",
   className = "",
   inputClassName = "",
   rightElement = null,
   ...rest
 }) {
-  const stateClassTokens = ["s7-input", "s7-input--error", "s7-input--disabled"];
+  const stateClassTokens = [
+    "s7-input",
+    "s7-input--error",
+    "s7-input--success",
+    "s7-input--disabled",
+  ];
   const incomingTokens = String(className || "")
     .split(/\s+/)
     .filter(Boolean);
 
-  const hasErrorToken = incomingTokens.includes("s7-input--error") || !!error;
+  const legacyErrorString = typeof error === "string" ? error : "";
+  const isErrorFlag = error === true || Boolean(legacyErrorString);
+  const errorDisplayText = legacyErrorString || (error === true ? String(message || "") : "");
+
   const hasDisabledToken = incomingTokens.includes("s7-input--disabled") || !!disabled;
+
+  const showSuccess =
+    Boolean(success) && !isErrorFlag && !errorDisplayText;
 
   const safeWrapperTokens = incomingTokens.filter((t) => !stateClassTokens.includes(t));
 
@@ -46,7 +64,8 @@ export default function S7Input({
   const fieldClasses = [
     "s7-input__field",
     inputClassName,
-    hasErrorToken ? "s7-input--error" : "",
+    isErrorFlag ? "s7-input--error" : "",
+    showSuccess ? "s7-input--success" : "",
     hasDisabledToken ? "s7-input--disabled" : "",
   ]
     .filter(Boolean)
@@ -58,6 +77,25 @@ export default function S7Input({
   ]
     .filter(Boolean)
     .join(" ");
+
+  const helper = helperText || hint;
+
+  let messageBlock = null;
+  if (errorDisplayText) {
+    messageBlock = (
+      <div className="s7-input__message s7-input__message--error" role="alert">
+        {errorDisplayText}
+      </div>
+    );
+  } else if (showSuccess && successMessage) {
+    messageBlock = (
+      <div className="s7-input__message s7-input__message--success">{successMessage}</div>
+    );
+  } else if (helper) {
+    messageBlock = (
+      <div className="s7-input__message s7-input__message--helper">{helper}</div>
+    );
+  }
 
   return (
     <div className={wrapperClasses}>
@@ -80,6 +118,7 @@ export default function S7Input({
           placeholder={placeholder}
           disabled={disabled}
           className={fieldClasses}
+          aria-invalid={isErrorFlag || undefined}
           {...rest}
         />
 
@@ -90,15 +129,7 @@ export default function S7Input({
         ) : null}
       </div>
 
-      {error ? (
-        <div className="s7-input__message s7-input__message--error">
-          {error}
-        </div>
-      ) : hint ? (
-        <div className="s7-input__message s7-input__message--hint">
-          {hint}
-        </div>
-      ) : null}
+      {messageBlock}
     </div>
   );
 }

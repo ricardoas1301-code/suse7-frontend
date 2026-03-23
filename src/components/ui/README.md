@@ -11,6 +11,7 @@ de UX que se aplicam ao sistema inteiro.
 - **S7Select**: select padrão (combobox).
 - **S7Textarea**: campo de texto multilinha.
 - **S7FormField**: rótulo + ajuda + erro + layout do campo.
+- **S7FormRow**: linha de formulário em grid (1–4 colunas ou tracks custom, gap, stack mobile).
 - **S7Tooltip**: tooltip padrão (`placement="bottom-start"`, `offset={6}`).
 - **S7Card**: bloco/card de conteúdo.
 - **S7Grid**: grid responsivo simples.

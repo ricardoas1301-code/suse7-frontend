@@ -38,7 +38,8 @@ import { getPreferences, setPreference } from "../services/userPreferencesServic
 import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
 import ProductFormRightPanel from "./ProductFormRightPanel";
 import ProductVariationsTab from "./ProductVariationsTab";
-import { S7Button } from "./ui";
+import { S7Button, S7Input } from "./ui";
+import { useFormValidation } from "../hooks/useFormValidation";
 import "./ProductForm.css";
 import { Repeat } from "lucide-react";
 import { useFormProgress } from "../hooks/useFormProgress";
@@ -867,11 +868,13 @@ useEffect(() => {
     setVariantRows([]);
     setShowVariationsBuilder(true);
     setFormatToSimpleModalOpen(false);
+    productDataForm.setValues({ sku: "" });
   };
 
   const handleFormatChange = (nextFormat) => {
     if (nextFormat === "variants") {
       setProduct((prev) => ({ ...prev, format: nextFormat, sku: "", gtin: "" }));
+      productDataForm.setValues({ sku: "" });
       return;
     }
     if (nextFormat === "simple") {
@@ -1823,21 +1826,54 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   };
 
   // ------------------------------------------------------
+  // UX: Nome + SKU — validação leve centralizada (useFormValidation)
+  // Backend continua sendo a autoridade nas regras definitivas.
+  // ------------------------------------------------------
+  const productDataFieldsInitial = useMemo(
+    () => ({ product_name: "", sku: "" }),
+    []
+  );
+
+  const productDataValidators = useMemo(
+    () => ({
+      product_name: (value) =>
+        !String(value ?? "").trim() ? "Nome do produto é obrigatório." : "",
+      ...(product.format === "simple"
+        ? {
+            sku: (value) =>
+              !String(value ?? "").trim()
+                ? "SKU é obrigatório no formato Simples."
+                : "",
+          }
+        : {}),
+    }),
+    [product.format]
+  );
+
+  const productDataForm = useFormValidation({
+    initialValues: productDataFieldsInitial,
+    validators: productDataValidators,
+  });
+
+  useEffect(() => {
+    if (!initialProduct?.id) return;
+    productDataForm.resetForm({
+      product_name: initialProduct.product_name ?? "",
+      sku: initialProduct.sku ?? "",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync só ao carregar produto para edição
+  }, [initialProduct?.id]);
+
+  // ------------------------------------------------------
   // VALIDAR (UX)
   // ------------------------------------------------------
   const validateDataTab = () => {
+    const { isValid: nameSkuOk, errors: fvMap } = productDataForm.validateAll();
     const nextErrors = {};
 
-    if (!String(product.product_name || "").trim()) {
-      nextErrors.product_name = "Nome do produto é obrigatório.";
-    }
-
-    // SKU obrigatório apenas no formato simples
-    if (product.format === "simple") {
-      if (!String(product.sku || "").trim()) {
-        nextErrors.sku = "SKU é obrigatório no formato Simples.";
-      }
-    }
+    Object.entries(fvMap).forEach(([key, msg]) => {
+      if (msg) nextErrors[key] = msg;
+    });
 
     // GTIN (se preenchido): números e até 13
     const gtin = String(product.gtin || "").trim();
@@ -1853,7 +1889,8 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     }
 
     setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    const extrasOk = !nextErrors.gtin && !nextErrors.ncm;
+    return nameSkuOk && extrasOk;
   };
 
 // ======================================================================
@@ -1955,6 +1992,41 @@ const validatePricingTab = () => {
     }
     setStockErrors(nextStock);
     return Object.keys(nextStock).length === 0;
+  };
+
+  // ------------------------------------------------------
+  // BLUR — Custos / Estoque: igual à aba Dados (erro ao sair do campo)
+  // ------------------------------------------------------
+  const handleSimpleCostBlur = () => {
+    const digits = String(simpleCostDigits || "").replace(/\D/g, "");
+    const cents = Number(digits || "0");
+    setCostErrors((prev) => ({ ...prev, simpleCost: cents <= 0 }));
+  };
+
+  const handleVariantCostBlur = (rowId) => {
+    const digits = String(variantCostDigitsById?.[rowId] || "").replace(/\D/g, "");
+    const cents = Number(digits || "0");
+    setCostErrors((prev) => {
+      const missing = new Set(prev.variantsMissingIds || []);
+      if (cents <= 0) missing.add(rowId);
+      else missing.delete(rowId);
+      return { ...prev, variantsMissingIds: Array.from(missing) };
+    });
+  };
+
+  const handleStockRealBlur = (row) => {
+    const key = row.id === SIMPLE_STOCK_KEY ? SIMPLE_STOCK_KEY : row.id;
+    const raw =
+      row.id === SIMPLE_STOCK_KEY
+        ? product.stock_quantity
+        : (variantRows || []).find((r) => r.id === row.id)?.stock_real;
+    const empty = String(raw ?? "") === "";
+    setStockErrors((prev) => {
+      const next = { ...prev };
+      if (empty) next[key] = true;
+      else delete next[key];
+      return next;
+    });
   };
 
   // ------------------------------------------------------
@@ -2269,20 +2341,35 @@ const validatePricingTab = () => {
                   <FieldLabel
                     text="Nome do produto"
                     required
+                    infoText="Esse nome aparece no cadastro e em listagens internas."
+                    tipBottom={true}
+                    wrap={true}
+                    side="left"
                     copyKey="product_name"
                     copiedKey={copiedKey}
                     onCopy={() => handleCopy(product.product_name, "product_name")}
                   />
-
-                  <input
-                    className={`s7-input ${errors.product_name ? "s7-input--error" : ""}`}
-                    type="text"
+                  <S7Input
+                    name="product_name"
                     placeholder="Ex: Armário de cozinha 3 portas"
-                    value={product.product_name}
-                    onChange={(e) => handleChange("product_name", e.target.value)}
+                    value={productDataForm.values.product_name}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      productDataForm.setValue("product_name", v);
+                      setProduct((p) => ({ ...p, product_name: v }));
+                    }}
+                    onBlur={() => productDataForm.handleBlur("product_name")}
+                    error={productDataForm.getFieldState("product_name").hasError}
+                    success={false}
+                    message=""
+                    helperText=""
+                    hint=""
                   />
-
-                  {errors.product_name && <div className="s7-error">{errors.product_name}</div>}
+                  {productDataForm.getFieldState("product_name").hasError && (
+                    <div className="s7-error">
+                      {productDataForm.getFieldState("product_name").message}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2320,19 +2407,35 @@ const validatePricingTab = () => {
                   <FieldLabel
                     text="SKU"
                     required
+                    infoText="Use letras, números e underscore; sem espaços no início ou fim."
+                    tipBottom={true}
+                    wrap={true}
+                    side="left"
                     copyKey="sku"
                     copiedKey={copiedKey}
                     onCopy={() => handleCopy(product.sku, "sku")}
                   />
-                  <input
-                    className={`s7-input ${errors.sku ? "s7-input--error" : ""}`}
+                  <S7Input
+                    name="sku"
                     placeholder="SKU interno"
-                    value={product.sku}
-                    onChange={(e) =>
-                      handleChange("sku", e.target.value.replace(/\s+/g, " ").trimStart())
-                    }
+                    value={productDataForm.values.sku}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\s+/g, " ").trimStart();
+                      productDataForm.setValue("sku", v);
+                      setProduct((p) => ({ ...p, sku: v }));
+                    }}
+                    onBlur={() => productDataForm.handleBlur("sku")}
+                    error={productDataForm.getFieldState("sku").hasError}
+                    success={false}
+                    message=""
+                    helperText=""
+                    hint=""
                   />
-                  {errors.sku && <div className="s7-error">{errors.sku}</div>}
+                  {productDataForm.getFieldState("sku").hasError && (
+                    <div className="s7-error">
+                      {productDataForm.getFieldState("sku").message}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2388,7 +2491,7 @@ const validatePricingTab = () => {
               </div>
             </div>
 
-            {/* Linha 3: Marca + Modelo (mais compactos e alinhados com os de cima) */}
+            {/* Linha 3: Marca + Modelo */}
             <div className="pf-row">
               <div className="pf-group pf-data-col">
                 <label className="s7-label">Marca</label>
@@ -2409,7 +2512,7 @@ const validatePricingTab = () => {
               </div>
             </div>
 
-            {/* Linha 4: Palavras-chave SEO (mais estreito) */}
+            {/* Linha 4: Palavras-chave SEO */}
             <div className="pf-row">
               <div className="pf-group pf-group--full pf-group--seo">
                 <FieldLabel
@@ -2456,9 +2559,9 @@ const validatePricingTab = () => {
                       infoText="Custo do item (sem taxas). Isso alimenta os cálculos de margem/lucro no backend."
                       tipBottom={true}
                       wrap={true}
+                      side="left"
                     />
-                    <input
-                      className={`s7-input ${costErrors.simpleCost ? "s7-input--error" : ""}`}
+                    <S7Input
                       type="text"
                       inputMode="numeric"
                       placeholder="R$ 0,00"
@@ -2472,9 +2575,15 @@ const validatePricingTab = () => {
                           setCostErrors((prev) => ({ ...prev, simpleCost: false }));
                         }
                       }}
+                      onBlur={handleSimpleCostBlur}
+                      error={costErrors.simpleCost}
+                      success={false}
+                      message=""
+                      helperText=""
+                      hint=""
                     />
                     {costErrors.simpleCost && (
-                      <div className="s7-error" style={{ marginTop: 6 }}>
+                      <div className="s7-error">
                         Custo do produto é obrigatório.
                       </div>
                     )}
@@ -2624,10 +2733,8 @@ const validatePricingTab = () => {
                               />
 
                               <div className="pf-variant-cost-row">
-                                <input
-                                  className={`s7-input pf-variant-cost-input ${
-                                    hasCostError ? "s7-input--error" : ""
-                                  }`}
+                                <S7Input
+                                  inputClassName="pf-variant-cost-input"
                                   type="text"
                                   inputMode="numeric"
                                   placeholder="R$ 0,00"
@@ -2647,6 +2754,12 @@ const validatePricingTab = () => {
                                       }));
                                     }
                                   }}
+                                  onBlur={() => handleVariantCostBlur(row.id)}
+                                  error={hasCostError}
+                                  success={false}
+                                  message=""
+                                  helperText=""
+                                  hint=""
                                 />
 
                                 {idx === 0 && variantRows.length > 1 && (
@@ -2679,7 +2792,7 @@ const validatePricingTab = () => {
                               </div>
 
                               {hasCostError && (
-                                <div className="s7-error" style={{ marginTop: 6 }}>
+                                <div className="s7-error">
                                   Custo do produto é obrigatório.
                                 </div>
                               )}
@@ -2778,12 +2891,32 @@ const validatePricingTab = () => {
             ABA: DESCRIÇÃO (mantém)
         ======================= */}
         {safeTab === "description" && (
-          <div className="pf-container">
+          <div className="pf-container pf-container--description">
             <div className="pf-description-section">
-              <label className="s7-label">Descrição do produto</label>
+              <div className="pf-label-row">
+                <div className="pf-label-left">
+                  <label className="s7-label" htmlFor="pf-description-textarea">
+                    Descrição do produto
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  className="pf-copy-btn s7-tip s7-tip-bottom s7-tip-right"
+                  data-tip={copiedKey === "description" ? "Copiado!" : "Copiar"}
+                  aria-label="Copiar descrição"
+                  onClick={() => {
+                    const raw = product?.description ?? "";
+                    if (!String(raw).trim()) return;
+                    handleCopy(raw, "description");
+                  }}
+                >
+                  {copiedKey === "description" ? "✓" : "⧉"}
+                </button>
+              </div>
 
               <div className="pf-description-wrapper">
                 <textarea
+                  id="pf-description-textarea"
                   className="s7-input pf-description-textarea"
                   placeholder="Descreva o produto destacando benefícios, materiais, dimensões, diferenciais e informações importantes para o cliente."
                   value={product.description || ""}
@@ -2830,16 +2963,27 @@ const validatePricingTab = () => {
                               infoText="Informe a quantidade disponível para venda. Se você não controla estoque, pode usar o Estoque virtual."
                               tipBottom={true}
                               wrap={true}
-                              side="right"
+                              side="left"
                             />
-                            <input
-                              className={`s7-input ${((row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) || (zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || (zeroStockAttention?.variants?.[row.id])) ? "s7-input--error" : ""}`}
+                            <S7Input
                               inputMode="numeric"
                               maxLength={10}
                               value={row.stock_real ?? ""}
                               onChange={(e) =>
                                 handleStockRowChange(row.id, "stock_real", e.target.value.replace(/\D/g, ""))
                               }
+                              onBlur={() => handleStockRealBlur(row)}
+                              error={Boolean(
+                                (row.id === SIMPLE_STOCK_KEY
+                                  ? stockErrors[SIMPLE_STOCK_KEY]
+                                  : stockErrors[row.id]) ||
+                                  (zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) ||
+                                  zeroStockAttention?.variants?.[row.id]
+                              )}
+                              success={false}
+                              message=""
+                              helperText=""
+                              hint=""
                             />
                             {(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) && (
                               <div className="s7-error">Estoque é obrigatório.</div>
@@ -2870,7 +3014,7 @@ const validatePricingTab = () => {
                           </div>
                         </div>
                         <div className="pf-row">
-                          <div className="pf-group" style={{ minWidth: 220 }}>
+                          <div className="pf-group">
                             <div className="pf-stock-virtual-header">
                               <label className="pf-switch pf-stock-virtual-switch">
                                 <input
@@ -2931,16 +3075,27 @@ const validatePricingTab = () => {
                               infoText="Informe a quantidade disponível para venda. Se você não controla estoque, pode usar o Estoque virtual."
                               tipBottom={true}
                               wrap={true}
-                              side="right"
+                              side="left"
                             />
-                            <input
-                              className={`s7-input ${((row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) || (zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) || (zeroStockAttention?.variants?.[row.id])) ? "s7-input--error" : ""}`}
+                            <S7Input
                               inputMode="numeric"
                               maxLength={10}
                               value={row.stock_real ?? ""}
                               onChange={(e) =>
                                 handleStockRowChange(row.id, "stock_real", e.target.value.replace(/\D/g, ""))
                               }
+                              onBlur={() => handleStockRealBlur(row)}
+                              error={Boolean(
+                                (row.id === SIMPLE_STOCK_KEY
+                                  ? stockErrors[SIMPLE_STOCK_KEY]
+                                  : stockErrors[row.id]) ||
+                                  (zeroStockAttention?.simple && row.id === SIMPLE_STOCK_KEY) ||
+                                  zeroStockAttention?.variants?.[row.id]
+                              )}
+                              success={false}
+                              message=""
+                              helperText=""
+                              hint=""
                             />
                             {(row.id === SIMPLE_STOCK_KEY ? stockErrors[SIMPLE_STOCK_KEY] : stockErrors[row.id]) && (
                               <div className="s7-error">Estoque é obrigatório.</div>
@@ -2967,7 +3122,7 @@ const validatePricingTab = () => {
                               }
                             />
                           </div>
-                          <div className="pf-group" style={{ minWidth: 220 }}>
+                          <div className="pf-group">
                             <div className="pf-stock-virtual-header">
                               <label className="pf-switch pf-stock-virtual-switch">
                                 <input

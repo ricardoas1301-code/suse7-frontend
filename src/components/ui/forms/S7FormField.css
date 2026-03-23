@@ -1,41 +1,44 @@
 /* ======================================================
-COMPONENTE: S7FormField
-Objetivo:
-- Agrupar label + tooltip + campo + mensagem (erro/hint)
-- Padrão visual alinhado ao S7Input (label e mensagens)
+   COMPONENTE: S7FormField
+   Agrupa label, tooltip, controle e mensagem (erro/sucesso/helper).
+   Margem inferior: espaçamento entre campos no formulário.
 ====================================================== */
 
-/* ======================================================
-WRAPPER
-====================================================== */
 .s7-form-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 100%;
+  margin-bottom: 16px;
+}
+
+.s7-form-field:last-child {
+  margin-bottom: 0;
 }
 
 /* ======================================================
-LABEL + TOOLTIP
+   Cabeçalho: label + tooltip | ações (ex.: copiar)
 ====================================================== */
-.s7-form-field__label-row {
+.s7-form-field__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.s7-form-field__label-left {
+.s7-form-field__label-wrap {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
+  flex: 1;
 }
 
-.s7-form-field__label-right {
+.s7-form-field__actions {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .s7-form-field__label {
@@ -49,8 +52,23 @@ LABEL + TOOLTIP
   color: #dc2626;
 }
 
-/* Ícone (i) ao lado do label quando há tooltip — copia padrão pf-info-btn (aba Dados > Formato) */
-.s7-form-field__info-icon {
+/* Container do tooltip — alinhamento ao lado do label */
+.s7-form-field__tooltip {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Alvo do .s7-tip + data-tip (filho recebe as classes do S7Tooltip) */
+.s7-form-field__tooltip-anchor {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 0;
+}
+
+/* Botão (i) — alinhado ao padrão pf-info-btn + DS */
+.s7-form-field__tooltip-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -64,24 +82,24 @@ LABEL + TOOLTIP
   font-weight: 900;
   line-height: 1;
   cursor: help;
-  flex-shrink: 0;
+  padding: 0;
   transition: transform 160ms ease, border-color 160ms ease;
 }
 
-.s7-form-field__info-icon:hover {
+.s7-form-field__tooltip-btn:hover {
   transform: scale(1.08);
   border-color: rgba(37, 99, 235, 0.45);
 }
 
 /* ======================================================
-CONTROL (campo filho)
+   Controle (children)
 ====================================================== */
 .s7-form-field__control {
   width: 100%;
 }
 
 /* ======================================================
-MENSAGENS (erro / hint)
+   Rodapé — mensagens
 ====================================================== */
 .s7-form-field__message {
   font-size: 12px;
@@ -92,6 +110,10 @@ MENSAGENS (erro / hint)
   color: #dc2626;
 }
 
-.s7-form-field__message--hint {
-  color: #6b7280;
+.s7-form-field__message--success {
+  color: #15803d;
+}
+
+.s7-form-field__message--helper {
+  color: #64748b;
 }

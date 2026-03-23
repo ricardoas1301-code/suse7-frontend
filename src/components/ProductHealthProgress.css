@@ -50,7 +50,8 @@
   line-height: 1;
   width: 100%;
   text-align: center;
-  color: #f59e0b;
+  /* Alinhado ao token de avisos contextuais / barra lateral do toast */
+  color: var(--s7-orange, #d97706);
 }
 
 .php-wrap--disabled {

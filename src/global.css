@@ -3,6 +3,12 @@
 ===================================================== */
 @import "./styles/tokens/index.css";
 
+/* Utilitário de página — cor em: styles/tokens/colors.css (--s7-bg-page) */
+.s7-page {
+  background-color: var(--s7-bg-page);
+  min-height: 100vh;
+}
+
 img{
   max-width: 100%;
   height: auto;

@@ -1,0 +1,15 @@
+/* ======================================================
+   COMPONENTE: S7Tooltip
+   Ajusta distância do balão em relação ao trigger quando
+   usado com as classes .s7-tip-bottom (padrão DS + offset).
+====================================================== */
+
+.s7-tooltip.s7-tip.s7-tooltip--bottom-start[data-tip]::after {
+  top: calc(100% + var(--s7-tooltip-offset, 6px));
+  bottom: auto;
+}
+
+.s7-tooltip.s7-tip.s7-tooltip--bottom-start[data-tip]::before {
+  top: calc(100% + 2px);
+  bottom: auto;
+}

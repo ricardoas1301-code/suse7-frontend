@@ -169,7 +169,7 @@
   overflow-x: hidden;
   padding: 8px 24px 24px;
 
-  background: #ffffff; /* ✅ remove o fundo azul */
+  background: var(--s7-bg-page, #f2f7ff);
 }
 
 
