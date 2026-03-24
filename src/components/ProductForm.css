@@ -238,6 +238,11 @@
   overflow-x: hidden;
 }
 
+/* Área do formulário com overlay de salvamento (position para S7FormSavingOverlay) */
+.pf-body--saving {
+  position: relative;
+}
+
 .pf-body-footer{
   display: flex;
   justify-content: space-between;

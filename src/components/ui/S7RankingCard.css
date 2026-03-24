@@ -1,0 +1,407 @@
+/* ======================================================
+   S7RankingCard — dashboard executivo / SaaS premium
+   Variantes: sales (azul), revenue (violeta/ciano), profit (teal)
+====================================================== */
+
+.s7-ranking-card {
+  --s7-ranking-accent: #2563eb;
+  --s7-ranking-accent-mid: #3b82f6;
+  --s7-ranking-accent-soft: rgba(37, 99, 235, 0.1);
+  --s7-ranking-accent-faint: rgba(37, 99, 235, 0.06);
+  --s7-ranking-accent-border: rgba(37, 99, 235, 0.22);
+  --s7-ranking-glow: rgba(37, 99, 235, 0.12);
+
+  position: relative;
+  background: linear-gradient(165deg, #ffffff 0%, #f8fafc 48%, #f1f5f9 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 12px rgba(15, 23, 42, 0.05),
+    0 16px 40px rgba(15, 23, 42, 0.07);
+  padding: 0;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.s7-ranking-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--s7-ranking-accent), var(--s7-ranking-accent-mid));
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+/* Identidade por tipo */
+.s7-ranking-card--sales {
+  --s7-ranking-accent: #1d4ed8;
+  --s7-ranking-accent-mid: #3b82f6;
+  --s7-ranking-accent-soft: rgba(37, 99, 235, 0.12);
+  --s7-ranking-accent-faint: rgba(37, 99, 235, 0.06);
+  --s7-ranking-accent-border: rgba(37, 99, 235, 0.25);
+  --s7-ranking-glow: rgba(59, 130, 246, 0.18);
+}
+
+.s7-ranking-card--revenue {
+  --s7-ranking-accent: #6d28d9;
+  --s7-ranking-accent-mid: #0891b2;
+  --s7-ranking-accent-soft: rgba(109, 40, 217, 0.11);
+  --s7-ranking-accent-faint: rgba(8, 145, 178, 0.06);
+  --s7-ranking-accent-border: rgba(109, 40, 217, 0.22);
+  --s7-ranking-glow: rgba(8, 145, 178, 0.14);
+}
+
+.s7-ranking-card--profit {
+  --s7-ranking-accent: #0f766e;
+  --s7-ranking-accent-mid: #14b8a6;
+  --s7-ranking-accent-soft: rgba(15, 118, 110, 0.12);
+  --s7-ranking-accent-faint: rgba(20, 184, 166, 0.07);
+  --s7-ranking-accent-border: rgba(15, 118, 110, 0.24);
+  --s7-ranking-glow: rgba(20, 184, 166, 0.16);
+}
+
+.s7-ranking-card__head {
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, transparent 100%);
+}
+
+.s7-ranking-card__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--s7-text, #0f172a);
+  line-height: 1.35;
+  padding-bottom: 2px;
+  border-bottom: 2px solid var(--s7-ranking-accent-soft);
+  display: inline-block;
+  max-width: 100%;
+}
+
+.s7-ranking-card__list {
+  list-style: none;
+  margin: 0;
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.s7-ranking-card__list--podium {
+  gap: 10px;
+}
+
+.s7-ranking-card__list--rest {
+  padding-top: 0;
+  gap: 4px;
+}
+
+.s7-ranking-card__row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 14px;
+  padding: 11px 14px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--s7-text, #0f172a);
+  transition:
+    background 0.18s ease,
+    box-shadow 0.2s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.s7-ranking-card__row:hover {
+  background: var(--s7-ranking-accent-faint);
+  box-shadow: 0 4px 14px var(--s7-ranking-glow);
+  transform: translateY(-1px);
+}
+
+.s7-ranking-card__row:active {
+  transform: translateY(0);
+}
+
+.s7-ranking-card__row:focus {
+  outline: none;
+}
+
+.s7-ranking-card__row:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--s7-ranking-accent);
+}
+
+/* TOP 1 — destaque máximo */
+.s7-ranking-card__row--place-1 {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(105deg, var(--s7-ranking-accent-soft) 0%, rgba(255, 255, 255, 0.55) 55%);
+  border: 1px solid var(--s7-ranking-accent-border);
+  box-shadow:
+    0 2px 6px rgba(15, 23, 42, 0.05),
+    0 8px 24px var(--s7-ranking-glow);
+}
+
+.s7-ranking-card__row--place-1 .s7-ranking-card__medal {
+  font-size: 26px;
+  width: 34px;
+}
+
+.s7-ranking-card__row--place-1 .s7-ranking-card__name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.s7-ranking-card__row--place-1 .s7-ranking-card__value {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.s7-ranking-card__row--place-1:hover {
+  background: linear-gradient(105deg, var(--s7-ranking-accent-soft) 0%, rgba(255, 255, 255, 0.75) 55%);
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.07),
+    0 12px 32px var(--s7-ranking-glow);
+}
+
+/* TOP 2 e 3 — fortes, abaixo do 1º */
+.s7-ranking-card__row--place-2,
+.s7-ranking-card__row--place-3 {
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(95deg, rgba(248, 250, 252, 0.95) 0%, rgba(255, 255, 255, 0.5) 100%);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.s7-ranking-card__row--place-2 .s7-ranking-card__name,
+.s7-ranking-card__row--place-3 .s7-ranking-card__name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.s7-ranking-card__row--place-2 .s7-ranking-card__value,
+.s7-ranking-card__row--place-3 .s7-ranking-card__value {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.s7-ranking-card__row--place-2:hover,
+.s7-ranking-card__row--place-3:hover {
+  border-color: var(--s7-ranking-accent-border);
+}
+
+.s7-ranking-card__medal {
+  font-size: 22px;
+  line-height: 1;
+  width: 30px;
+  text-align: center;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06));
+}
+
+.s7-ranking-card__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.s7-ranking-card__name {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--s7-text, #0f172a);
+  line-height: 1.25;
+}
+
+.s7-ranking-card__sku {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--s7-muted, #64748b);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s7-ranking-card__row--compact .s7-ranking-card__name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.s7-ranking-card__row--compact .s7-ranking-card__sku {
+  font-size: 10px;
+}
+
+.s7-ranking-card__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--s7-ranking-accent);
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+
+.s7-ranking-card__row--compact .s7-ranking-card__value {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.s7-ranking-card__rank-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--s7-muted, #64748b);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.s7-ranking-card__row--compact {
+  padding: 7px 10px 8px;
+  border-radius: 10px;
+  margin: 0 2px;
+  border: 1px solid transparent;
+}
+
+.s7-ranking-card__row--compact:hover {
+  border-color: rgba(15, 23, 42, 0.07);
+}
+
+.s7-ranking-card__divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--s7-ranking-accent-soft), transparent);
+  margin: 4px 18px 12px;
+}
+
+/* Empty */
+.s7-ranking-card__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 28px 20px 32px;
+  text-align: center;
+}
+
+.s7-ranking-card__empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: var(--s7-ranking-accent-faint);
+  color: var(--s7-ranking-accent);
+  border: 1px solid var(--s7-ranking-accent-border);
+  opacity: 0.9;
+}
+
+.s7-ranking-card__empty-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--s7-text, #334155);
+  letter-spacing: -0.01em;
+}
+
+.s7-ranking-card__empty-desc {
+  margin: 0;
+  max-width: 220px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--s7-muted, #94a3b8);
+}
+
+/* Loading skeleton */
+.s7-ranking-card--loading {
+  pointer-events: none;
+}
+
+.s7-ranking-card--loading .s7-ranking-card__head {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.s7-ranking-card__skeleton {
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--s7-bg-soft, #f1f5f9) 25%,
+    #e2e8f0 50%,
+    var(--s7-bg-soft, #f1f5f9) 75%
+  );
+  background-size: 200% 100%;
+  animation: s7-ranking-shimmer 1.2s ease-in-out infinite;
+}
+
+.s7-ranking-card__skeleton--title {
+  height: 16px;
+  width: 72%;
+  margin-bottom: 0;
+}
+
+.s7-ranking-card__row--skeleton {
+  grid-template-columns: 1fr auto;
+  pointer-events: none;
+  cursor: default;
+}
+
+.s7-ranking-card__skeleton--line {
+  height: 12px;
+  width: 100%;
+}
+
+.s7-ranking-card__skeleton--short {
+  height: 12px;
+  width: 56px;
+}
+
+@keyframes s7-ranking-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .s7-ranking-card {
+    min-height: 0;
+  }
+
+  .s7-ranking-card__list {
+    padding: 14px 14px 16px;
+  }
+
+  .s7-ranking-card__head {
+    padding: 16px 16px 12px;
+  }
+}

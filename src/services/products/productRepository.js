@@ -1,10 +1,12 @@
 // ======================================================================
 // SUSE7 — Product Repository
 // Chamadas à API de produtos (upsert). Validação SKU no backend.
+// Leitura para edição: Supabase (RLS) + variantes ordenadas.
 // ======================================================================
 
 import { supabase } from "../../supabaseClient";
 import { API_BASE_URL } from "../../config/api";
+import { listVariants } from "../variants/variantRepository";
 
 /**
  * Cria ou atualiza produto via API.
@@ -56,4 +58,40 @@ export async function upsertProduct({ product, mode, draftKey, variants }) {
   }
 
   return { productId: data?.productId ?? product?.id ?? null };
+}
+
+/**
+ * Carrega produto + variações para a tela de edição (fonte: Supabase).
+ *
+ * @param {string} productId
+ * @returns {Promise<{ error: string | null; product: object | null; variants: object[] }>}
+ */
+export async function fetchProductForEdit(productId) {
+  if (!productId || String(productId).trim() === "") {
+    return { error: "ID do produto inválido.", product: null, variants: [] };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Sessão expirada. Faça login novamente.", product: null, variants: [] };
+  }
+
+  const { data: product, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    return { error: error.message || "Erro ao carregar produto.", product: null, variants: [] };
+  }
+  if (!product) {
+    return { error: "Produto não encontrado ou sem permissão.", product: null, variants: [] };
+  }
+
+  const variants = await listVariants(productId);
+  return { error: null, product, variants };
 }

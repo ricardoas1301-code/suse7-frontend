@@ -84,6 +84,7 @@ useEffect(() => {
   // -----------------------------------------------------
   const isProductForm =
     location.pathname.startsWith("/produtos/novo") ||
+    /^\/produtos\/[^/]+\/editar$/.test(location.pathname) ||
     /^\/produtos\/[^/]+$/.test(location.pathname);
 
   return (

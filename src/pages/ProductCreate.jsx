@@ -37,6 +37,7 @@ export default function ProductCreate() {
       <ProductForm
         title="Novo produto"
         mode="create"
+        navigationMode="guided"
         onCancel={handleCancel}
         onSubmit={handleSubmit}
       />

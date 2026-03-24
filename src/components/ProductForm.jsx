@@ -38,7 +38,7 @@ import { getPreferences, setPreference } from "../services/userPreferencesServic
 import ExitWithoutSavingModal from "./ExitWithoutSavingModal";
 import ProductFormRightPanel from "./ProductFormRightPanel";
 import ProductVariationsTab from "./ProductVariationsTab";
-import { S7Button, S7Input } from "./ui";
+import { S7Button, S7FormSavingOverlay, S7Input } from "./ui";
 import { useFormValidation } from "../hooks/useFormValidation";
 import "./ProductForm.css";
 import { useFormProgress } from "../hooks/useFormProgress";
@@ -48,6 +48,12 @@ import {
   variantProgressRowId,
 } from "../utils/formProgress";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
+import { useProductMainImageSrc } from "../utils/productImageDisplayUrl";
+import {
+  normalizeProductImagesForPayload,
+  persistProductImagesAfterCreate,
+  resolvePrimaryImageFromLinks,
+} from "../utils/productImagesPersistence";
 import { computeVariantSkuErrors } from "../utils/variantSkuValidation";
 import {
   PRODUCT_CM_FIELDS,
@@ -130,6 +136,8 @@ function calcPercentFromHealth(health) {
 export default function ProductForm({
   title = "Novo produto",
   mode = "create", // "create" | "edit"
+  /** "guided" = cadastro com validação por etapa e desbloqueio progressivo; "free" = edição, qualquer aba */
+  navigationMode = "guided",
   initialProduct = null,
   initialVariants = null, // lista de product_variants (quando edit, ordenada por sort_order)
   initialVariations = null, // alias para initialVariants
@@ -253,10 +261,14 @@ export default function ProductForm({
   }, [hasVariations]);
 
   const availableTabIds = useMemo(() => availableTabs.map((t) => t.id), [availableTabs]);
+  const allStepsUnlocked = navigationMode === "free";
   const safeTab = availableTabIds.includes(activeTab) ? activeTab : availableTabIds[0];
   const safeTabIndex = Math.max(0, availableTabIds.indexOf(safeTab));
   const isFirstStep = safeTabIndex === 0;
   const isLastStep = safeTabIndex === availableTabIds.length - 1;
+
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const productSubmitInFlightRef = useRef(false);
 
   /** Navegação programática: garante que a aba de destino fique acessível no painel (validação, modais, SEO). */
   const navigateToTabWithUnlock = useCallback(
@@ -294,10 +306,23 @@ export default function ProductForm({
     }
   }, [initialTab, availableTabIds]);
 
+  // Edição: todas as abas acessíveis no painel (sem progressão)
+  useLayoutEffect(() => {
+    if (!allStepsUnlocked) return;
+    const last = availableTabIds.length - 1;
+    if (last >= 0) setMaxReachedIndex(last);
+  }, [allStepsUnlocked, availableTabIds]);
+
   // Formato simples ↔ variações: realinha índice máximo ao mudar a lista de abas
   useEffect(() => {
     const oldIds = prevAvailableTabIdsRef.current;
     const newIds = availableTabIds;
+
+    if (allStepsUnlocked) {
+      prevAvailableTabIdsRef.current = newIds;
+      return;
+    }
+
     if (oldIds != null && oldIds.join() === newIds.join()) return;
 
     if (oldIds == null) {
@@ -313,9 +338,10 @@ export default function ProductForm({
       return Math.min(prev, newIds.length - 1);
     });
     prevAvailableTabIdsRef.current = newIds;
-  }, [availableTabIds]);
+  }, [availableTabIds, allStepsUnlocked]);
 
   const goToPreviousStep = () => {
+    if (isSavingProduct) return;
     if (isFirstStep) return;
     const prevId = availableTabIds[safeTabIndex - 1];
     if (prevId) setActiveTab(prevId);
@@ -373,13 +399,16 @@ export default function ProductForm({
   };
 
   const handleNextStep = () => {
-    if (safeTab === "variations") {
-      setVariationsSubmitAttempted(true);
-    }
-    const isStepValid = validateCurrentStep();
-    if (!isStepValid) {
-      focusFirstInvalidField(safeTab);
-      return;
+    if (isSavingProduct) return;
+    if (!allStepsUnlocked) {
+      if (safeTab === "variations") {
+        setVariationsSubmitAttempted(true);
+      }
+      const isStepValid = validateCurrentStep();
+      if (!isStepValid) {
+        focusFirstInvalidField(safeTab);
+        return;
+      }
     }
     if (isLastStep) return;
     const nextIdx = safeTabIndex + 1;
@@ -835,6 +864,7 @@ useEffect(() => {
   }, [blocker.state, showExitModal]);
 
   const handleClose = () => {
+    if (isSavingProduct) return;
     if (isDirty && !exitWithoutSavingHidden) {
       exitModalSourceRef.current = "close";
       suppressNextBlockerModalRef.current = true;
@@ -1759,9 +1789,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   // Formato: sku_base + "_" + atributos; apenas letras, números e "_"; máx. 24 caracteres.
   // Anti-colisão: sufixo incremental _2, _3... quando SKU já existir no produto ou no lote.
   // ------------------------------------------------------
-  /** Normalização para SKU: remove acentos, espaços; mantém apenas letras, números e "_".
-   *  OBS: não força minúsculo aqui para não impactar outros fluxos; minúsculo é garantido na montagem final.
-   */
+  /** Normalização para SKU gerado: remove acentos; mantém letras, números e "_"; preserva maiúsc./minúsc. */
   const sanitizeSku = (str) => {
     let t = String(str)
       .normalize("NFD")
@@ -1787,20 +1815,18 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   };
 
   const abbreviateOptionForSku = (str) => {
-    const s = String(str).trim().toUpperCase().replace(/\s+/g, "");
+    const s = String(str).trim().replace(/\s+/g, "");
     const raw = s.length > 3 ? s.substring(0, 3) : s || "";
-    const sanitized = sanitizeSku(raw) || raw;
-    return sanitized.toLowerCase();
+    return sanitizeSku(raw) || raw;
   };
 
-  /** Normaliza uma chave da raiz do SKU: remove acentos, espaços, lowercase, máx. 6 caracteres */
+  /** Chave da raiz do SKU: remove acentos; máx. 6 caracteres; preserva capitalização. */
   const normalizeSkuBaseKey = (str) => {
     const s = String(str)
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, "")
-      .toLowerCase();
-    return s.replace(/[^a-z0-9]/g, "").slice(0, 6);
+      .replace(/\s+/g, "");
+    return s.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6);
   };
 
   /** Converte product.sku_base (string com "_") em chips da UI. Aceita também "." para compatibilidade. */
@@ -1825,7 +1851,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       return buildSkuBaseFromChips(skuBaseChips);
     }
     const fallback = String(product.sku || product.product_name || "PROD").trim();
-    return sanitizeSku(fallback) || fallback.toUpperCase().replace(/\s+/g, "_");
+    return sanitizeSku(fallback) || fallback.replace(/\s+/g, "_");
   };
 
   // Leitura ao abrir formulário: product.sku_base → chips da UI (formato persistido: chave1_chave2)
@@ -2138,9 +2164,16 @@ const validateVariantsTab = () => {
 
   /** Painel lateral: ao ir para aba após Variações, exige variações válidas (SKU único, etc.) */
   const handlePanelStepChange = (id) => {
+    if (isSavingProduct) return;
     if (id === safeTab) return;
     const toIdx = availableTabIds.indexOf(id);
     if (toIdx < 0) return;
+
+    if (allStepsUnlocked) {
+      setActiveTab(id);
+      setMaxReachedIndex((prev) => Math.max(prev, toIdx));
+      return;
+    }
 
     const variationsIdx = availableTabIds.indexOf("variations");
     if (product.format === "variants" && variationsIdx >= 0 && toIdx > variationsIdx) {
@@ -2277,6 +2310,8 @@ const validatePricingTab = () => {
   };
 
   const handleSubmit = async () => {
+  if (productSubmitInFlightRef.current) return;
+
   // ------------------------------------------------------
   // 1) DADOS (Nome do produto, SKU se simple, etc.)
   // ------------------------------------------------------
@@ -2365,6 +2400,8 @@ const validatePricingTab = () => {
 };
 
   const executeSubmit = async () => {
+    if (productSubmitInFlightRef.current) return;
+
     const measureErrSubmit = validateProductMeasureFields(product);
     if (measureErrSubmit) {
       addNotification({
@@ -2375,147 +2412,150 @@ const validatePricingTab = () => {
       return;
     }
 
-    const toInt = (v) => {
-      const parsed = parseInt(String(v || "0"), 10);
-      return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
-    };
-    const measureOverrides = Object.fromEntries(
-      PRODUCT_DECIMAL_MEASURE_FIELDS.map((key) => [key, parseDecimalBR(product[key])])
-    );
-    const payload = {
-      mode,
-      draftKey: draftKeyRef.current,
-      product: {
-        ...product,
-        ...(product.format === "variants" ? { sku: "", gtin: "" } : {}),
-        ...measureOverrides,
-      },
-      variants:
-        product.format === "variants"
-          ? (variantRows || []).map((r) => ({
-              sku: r.sku,
-              gtin: r.gtin || null,
-              cost_price: r.cost_price === "" ? null : r.cost_price,
-              stock_quantity: toInt(r.stock_real),
-              stock_minimum: toInt(r.stock_min),
-              use_virtual_stock: !!r.use_virtual_stock,
-              virtual_stock_quantity: r.use_virtual_stock ? toInt(r.stock_virtual) : 0,
-              active: !!r.active,
-              attributes: r.attributes || {},
-            }))
-          : [],
-    };
-    const productId = product?.id ?? `draft:${draftIdRef.current}`;
-    if (product.format === "variants" && Array.isArray(payload.variants)) {
-      const zeroStock = payload.variants
-        .map((v, idx) => ({ v, row: variantRows[idx] }))
-        .filter(({ v }) => v.stock_quantity === 0)
-        .map(({ row }) => ({
-          label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
-        }));
-      const belowMin = payload.variants
-        .map((v, idx) => ({ v, row: variantRows[idx] }))
-        .filter(({ v }) => v.stock_quantity > 0 && v.stock_quantity < v.stock_minimum)
-        .map(({ row }) => ({
-          label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
-        }));
-      const atLimit = payload.variants
-        .map((v, idx) => ({ v, row: variantRows[idx] }))
-        .filter(({ v }) => v.stock_quantity > 0 && v.stock_quantity === v.stock_minimum)
-        .map(({ row }) => ({
-          label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
-        }));
-      if (zeroStock.length > 0) {
-        dispatchStockRealZero(addNotification, { variants: zeroStock, productId });
-      }
-      if (belowMin.length > 0) {
-        dispatchStockBelowMin(addNotification, { variants: belowMin, severity: "warning", productId });
-      }
-      if (atLimit.length > 0) {
-        dispatchStockBelowMin(addNotification, { variants: atLimit, severity: "info", productId });
-      }
-    } else if (product.format === "simple") {
-      const sq = toInt(product.stock_quantity);
-      const sm = toInt(product.stock_minimum);
-      const simpleLabel = { label: "Produto" };
-      if (sq === 0) {
-        dispatchStockRealZero(addNotification, { variants: [simpleLabel], productId });
-      } else if (sq > 0 && sq < sm) {
-        dispatchStockBelowMin(addNotification, { variants: [simpleLabel], severity: "warning", productId });
-      } else if (sq > 0 && sq === sm) {
-        dispatchStockBelowMin(addNotification, { variants: [simpleLabel], severity: "info", productId });
-      }
-    }
-    if (typeof onSubmit === "function") {
-      try {
-        const result = await Promise.resolve(onSubmit(payload));
-        if (result?.error) {
-          addNotification({ type: "error", title: "Erro ao salvar", message: result.error });
-          return;
-        }
-        if (mode === "create" && result?.productId && draftKeyRef.current) {
-          await relinkDraftToProduct(draftKeyRef.current, result.productId);
-          setHealthProductId(result.productId);
-          fetchHealth(result.productId);
-        } else if (result?.productId || product?.id) {
-          fetchHealth(result?.productId ?? product?.id);
-        }
+    productSubmitInFlightRef.current = true;
+    setIsSavingProduct(true);
 
-        // 1) snapshot alinhado ao que acabou de ser salvo
-        lastSavedSnapshotRef.current = getFormSnapshotForGuard(
-          product,
-          variantRows,
-          variationAttributes
-        );
-        // 2) força isDirty === false (useMemo depende de formGuardEpoch)
-        setFormGuardEpoch((n) => n + 1);
-        // 3) feedback Suse7 (toast info / laranja)
-        addNotification({
-          title: "Cadastro realizado com sucesso",
-          message: "Produto salvo e pronto para uso.",
-          severity: NOTIFICATION_SEVERITY.INFO,
+    try {
+      let resolvedImages = normalizeProductImagesForPayload(product.product_images);
+      if (!resolvedImages?.length) {
+        resolvedImages = await resolvePrimaryImageFromLinks({
+          productId: product.id,
+          draftKey: draftKeyRef.current,
         });
-        // 4) não abrir “Sair sem salvar” durante o redirect
-        skipExitGuardRef.current = true;
-        suppressNextBlockerModalRef.current = true;
-        navigate("/produtos");
-        if (typeof onSuccess === "function") onSuccess();
-      } catch (err) {
-        // 409 (variants→simple) ou outro erro: exibe mensagem do backend
-        const msg = err?.message ?? err?.error ?? "Erro ao salvar produto.";
-        addNotification({ type: "error", title: "Erro ao salvar", message: msg });
       }
-      return;
+      const productWithImages = {
+        ...product,
+        product_images: resolvedImages ?? null,
+      };
+
+      const toInt = (v) => {
+        const parsed = parseInt(String(v || "0"), 10);
+        return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+      };
+      const measureOverrides = Object.fromEntries(
+        PRODUCT_DECIMAL_MEASURE_FIELDS.map((key) => [key, parseDecimalBR(productWithImages[key])])
+      );
+      const payload = {
+        mode,
+        draftKey: draftKeyRef.current,
+        product: {
+          ...productWithImages,
+          // Variações: products.sku = SKU pai (mesmo valor que sku_base), literal; gtin só nas linhas.
+          ...(product.format === "variants"
+            ? {
+                sku:
+                  String(product.sku_base ?? "").trim() ||
+                  String(product.sku ?? "").trim(),
+                gtin: "",
+              }
+            : {}),
+          ...measureOverrides,
+        },
+        variants:
+          product.format === "variants"
+            ? (variantRows || []).map((r) => ({
+                sku: r.sku,
+                gtin: r.gtin || null,
+                cost_price: r.cost_price === "" ? null : r.cost_price,
+                stock_quantity: toInt(r.stock_real),
+                stock_minimum: toInt(r.stock_min),
+                use_virtual_stock: !!r.use_virtual_stock,
+                virtual_stock_quantity: r.use_virtual_stock ? toInt(r.stock_virtual) : 0,
+                active: !!r.active,
+                attributes: r.attributes || {},
+              }))
+            : [],
+      };
+      const productId = product?.id ?? `draft:${draftIdRef.current}`;
+      if (product.format === "variants" && Array.isArray(payload.variants)) {
+        const zeroStock = payload.variants
+          .map((v, idx) => ({ v, row: variantRows[idx] }))
+          .filter(({ v }) => v.stock_quantity === 0)
+          .map(({ row }) => ({
+            label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
+          }));
+        const belowMin = payload.variants
+          .map((v, idx) => ({ v, row: variantRows[idx] }))
+          .filter(({ v }) => v.stock_quantity > 0 && v.stock_quantity < v.stock_minimum)
+          .map(({ row }) => ({
+            label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
+          }));
+        const atLimit = payload.variants
+          .map((v, idx) => ({ v, row: variantRows[idx] }))
+          .filter(({ v }) => v.stock_quantity > 0 && v.stock_quantity === v.stock_minimum)
+          .map(({ row }) => ({
+            label: row?.attributes ? Object.values(row.attributes).join(" / ") : row?.sku ?? "Variação",
+          }));
+        if (zeroStock.length > 0) {
+          dispatchStockRealZero(addNotification, { variants: zeroStock, productId });
+        }
+        if (belowMin.length > 0) {
+          dispatchStockBelowMin(addNotification, { variants: belowMin, severity: "warning", productId });
+        }
+        if (atLimit.length > 0) {
+          dispatchStockBelowMin(addNotification, { variants: atLimit, severity: "info", productId });
+        }
+      } else if (product.format === "simple") {
+        const sq = toInt(product.stock_quantity);
+        const sm = toInt(product.stock_minimum);
+        const simpleLabel = { label: "Produto" };
+        if (sq === 0) {
+          dispatchStockRealZero(addNotification, { variants: [simpleLabel], productId });
+        } else if (sq > 0 && sq < sm) {
+          dispatchStockBelowMin(addNotification, { variants: [simpleLabel], severity: "warning", productId });
+        } else if (sq > 0 && sq === sm) {
+          dispatchStockBelowMin(addNotification, { variants: [simpleLabel], severity: "info", productId });
+        }
+      }
+      if (typeof onSubmit === "function") {
+        try {
+          const result = await Promise.resolve(onSubmit(payload));
+          if (result?.error) {
+            addNotification({ type: "error", title: "Erro ao salvar", message: result.error });
+            return;
+          }
+          if (mode === "create" && result?.productId && draftKeyRef.current) {
+            await relinkDraftToProduct(draftKeyRef.current, result.productId);
+            await persistProductImagesAfterCreate(result.productId);
+            setHealthProductId(result.productId);
+            fetchHealth(result.productId);
+          } else if (result?.productId || product?.id) {
+            fetchHealth(result?.productId ?? product?.id);
+          }
+
+          lastSavedSnapshotRef.current = getFormSnapshotForGuard(
+            product,
+            variantRows,
+            variationAttributes
+          );
+          setFormGuardEpoch((n) => n + 1);
+          addNotification({
+            title: "Cadastro realizado com sucesso",
+            message: "Produto salvo e pronto para uso.",
+            severity: NOTIFICATION_SEVERITY.INFO,
+          });
+          skipExitGuardRef.current = true;
+          suppressNextBlockerModalRef.current = true;
+          navigate("/produtos");
+          if (typeof onSuccess === "function") onSuccess();
+        } catch (err) {
+          const msg = err?.message ?? err?.error ?? "Erro ao salvar produto.";
+          addNotification({ type: "error", title: "Erro ao salvar", message: msg });
+        }
+        return;
+      }
+      console.log("Payload a salvar (UI):", payload);
+    } finally {
+      productSubmitInFlightRef.current = false;
+      setIsSavingProduct(false);
     }
-    console.log("Payload a salvar (UI):", payload);
   };
 
 
   // ------------------------------------------------------
-  // Img1 Produto (preview) — best effort
-  // - Se product_images vier como URL única, mostra.
-  // - Se vier como JSON string, tenta parsear e pegar primeira.
+  // Img1 Produto (preview) — mesma resolução assíncrona que listagem (storage_path → URL assinada)
   // ------------------------------------------------------
-  const mainImageUrl = useMemo(() => {
-    const v = product.product_images;
-    if (!v) return "";
-
-    // URL direta
-    if (typeof v === "string" && v.startsWith("http")) return v;
-
-    // JSON string de lista
-    if (typeof v === "string") {
-      try {
-        const parsed = JSON.parse(v);
-        if (Array.isArray(parsed) && parsed[0]) return String(parsed[0]);
-        if (parsed?.[0]) return String(parsed[0]);
-        } catch {
-          return "";
-        }
-    }
-
-    return "";
-  }, [product.product_images]);
+  const mainImageUrl = useProductMainImageSrc(product);
 
   // ------------------------------------------------------
   // Layout: helper para exibir atributos do variant row
@@ -2571,8 +2611,9 @@ const validatePricingTab = () => {
             title={mode === "edit" ? "Editar produto" : "Novo produto"}
             steps={availableTabs}
             activeId={safeTab}
-            stepsClickable={true}
+            stepsClickable={!isSavingProduct}
             isStepUnlocked={(stepId) => {
+              if (allStepsUnlocked) return true;
               const i = availableTabIds.indexOf(stepId);
               return i >= 0 && i <= maxReachedIndex;
             }}
@@ -2593,7 +2634,11 @@ const validatePricingTab = () => {
       </div>
 
         <div className="pf-form-area">
-      <div className="pf-body" data-active-tab={safeTab}>
+      <div
+        className={`pf-body${isSavingProduct ? " pf-body--saving" : ""}`}
+        data-active-tab={safeTab}
+      >
+        <S7FormSavingOverlay show={isSavingProduct} message="Salvando produto..." />
         <div className="pf-body-inner"></div>
         
         {/* =======================
@@ -3985,6 +4030,7 @@ const validatePricingTab = () => {
                 type="button"
                 className="s7-btn s7-btn--secondary pf-body-footer-btn"
                 onClick={goToPreviousStep}
+                disabled={isSavingProduct}
               >
                 Voltar
               </button>
@@ -3992,18 +4038,22 @@ const validatePricingTab = () => {
           </div>
           <div>
             {isLastStep ? (
-              <button
+              <S7Button
                 type="button"
-                className="s7-btn s7-btn--primary pf-body-footer-btn"
+                variant="primary"
+                className="pf-body-footer-btn"
+                loading={isSavingProduct}
+                loadingLabel="Salvando..."
                 onClick={handleSubmit}
               >
                 {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
-              </button>
+              </S7Button>
             ) : (
               <button
                 type="button"
                 className="s7-btn s7-btn--primary pf-body-footer-btn"
                 onClick={handleNextStep}
+                disabled={isSavingProduct}
               >
                 Avançar
               </button>

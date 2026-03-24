@@ -33,7 +33,8 @@ import {
   updateLinksSortOrder,
 } from "../services/images/imageRepository";
 import { normalizeSortOrder } from "../services/images/imageRules";
-import { deleteAsset, downloadAsBlob, getSignedUrl, uploadAssets } from "../services/images/imageStorageService";
+import { deleteAsset, downloadAsBlob, uploadAssets } from "../services/images/imageStorageService";
+import { resolveProductImageSrc } from "../utils/productImageDisplayUrl";
 import { API_BASE_URL } from "../config/api";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import { buildImageProgressSnapshot, variantProgressRowId } from "../utils/formProgress";
@@ -420,6 +421,10 @@ export default function ProductFormImagesTab({
   const hasDraftKey = !!draftKey && typeof draftKey === "string";
   const canOperate = hasProductId || hasDraftKey;
 
+  /** createImageRecord / uploadAssets exigem productId OU draftKey, nunca os dois. No edit existe productId e o form ainda tem draftKey — prioriza productId. */
+  const recordProductId = hasProductId ? productId : undefined;
+  const recordDraftKey = hasProductId ? undefined : hasDraftKey ? draftKey : undefined;
+
   const seoKeywordsArray = useMemo(() => {
     if (Array.isArray(seoKeywords)) return seoKeywords.filter(Boolean);
     return (seoKeywords || "").split(/[,;]+/).map((s) => s.trim()).filter(Boolean);
@@ -557,8 +562,8 @@ export default function ProductFormImagesTab({
 
       const metas = await uploadAssets(fileList, {
         userId,
-        productId: hasProductId ? productId : undefined,
-        draftKey: hasDraftKey ? draftKey : undefined,
+        productId: recordProductId,
+        draftKey: recordDraftKey,
       });
 
       if (!metas?.length) {
@@ -584,8 +589,8 @@ export default function ProductFormImagesTab({
         const sortOrder = (currentLinks.length + i) || 0;
         const isPrimary = currentLinks.length === 0 && i === 0;
         await createImageRecord({
-          productId: hasProductId ? productId : undefined,
-          draftKey: hasDraftKey ? draftKey : undefined,
+          productId: recordProductId,
+          draftKey: recordDraftKey,
           variantKey: variantKey ?? null,
           storage_path: storagePath,
           file_name: meta.file_name,
@@ -747,7 +752,8 @@ export default function ProductFormImagesTab({
   const getPreviewUrl = useCallback(async (link) => {
     const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
     if (!path) return null;
-    return getSignedUrl(path);
+    const url = await resolveProductImageSrc(link);
+    return url || null;
   }, []);
 
   const previewRefetchCountRef = useRef(new Map());
@@ -803,7 +809,7 @@ export default function ProductFormImagesTab({
 
     const runBatch = async (batch) => {
       const results = await Promise.all(
-        batch.map((link) => getPreviewUrl(link).then((url) => ({ link, url })))
+        batch.map(async (link) => ({ link, url: await getPreviewUrl(link) }))
       );
       if (cancelled) return;
       setPreviewUrls((prev) => {
@@ -851,7 +857,7 @@ export default function ProductFormImagesTab({
   const handleOpenPreview = async (link) => {
     try {
       const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
-      const url = path ? await getSignedUrl(path, 60) : null;
+      const url = path ? await resolveProductImageSrc(link) : "";
       if (!url) {
         addNotification({
           event_type: "IMAGE_UNAVAILABLE",
@@ -871,7 +877,7 @@ export default function ProductFormImagesTab({
   const handleOpenInNewTab = async (link) => {
     try {
       const path = sanitizeStoragePath(link?.storage_path ?? link?.storagePath);
-      const url = path ? await getSignedUrl(path, 60) : null;
+      const url = path ? await resolveProductImageSrc(link) : "";
       if (!url) {
         addNotification({
           event_type: "IMAGE_UNAVAILABLE",

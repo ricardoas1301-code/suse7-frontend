@@ -45,4 +45,17 @@ Centralizar cores principais do Suse7
    */
   --s7-contextual-accent: var(--s7-orange);
 
+  /**
+   * BARRA DE TÍTULOS (tabelas / listagens com header de colunas, ex. catálogo de produtos)
+   * Tom laranja oficial para faixa de títulos — usar estes tokens em novas telas, sem repetir hex solto.
+   * Gradiente: orange-300 → orange-400 (Tailwind); texto branco em negrito (contraste com nomes em laranja na lista).
+   */
+  --s7-title-bar-bg-from: #fdba74;
+  --s7-title-bar-bg-to: #fb923c;
+  --s7-title-bar-border-bottom: rgba(154, 52, 18, 0.35);
+  --s7-title-bar-shadow: rgba(154, 52, 18, 0.12);
+  --s7-title-bar-inset-highlight: rgba(255, 255, 255, 0.35);
+  --s7-title-bar-text: #ffffff;
+  --s7-title-bar-font-weight: 700;
+
 }

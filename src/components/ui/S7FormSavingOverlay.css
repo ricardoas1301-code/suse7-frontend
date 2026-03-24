@@ -1,0 +1,51 @@
+/* Overlay leve só sobre o container (position: relative no pai) */
+.s7-form-saving-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: auto;
+  border-radius: inherit;
+}
+
+.s7-form-saving-overlay__panel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: #ffffff;
+  /* Borda laranja leve — equiv. a --s7-orange (#d97706) com baixa opacidade */
+  border: 1px solid rgba(217, 119, 6, 0.38);
+  border-radius: var(--s7-radius-sm, 8px);
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(217, 119, 6, 0.12);
+}
+
+.s7-form-saving-overlay__spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: var(--s7-primary, #2563eb);
+  border-radius: 50%;
+  animation: s7-form-saving-spin 0.7s linear infinite;
+}
+
+.s7-form-saving-overlay__text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--s7-text, #374151);
+  text-align: center;
+}
+
+@keyframes s7-form-saving-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

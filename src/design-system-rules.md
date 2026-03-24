@@ -296,6 +296,36 @@ Antes de considerar um tooltip como pronto, validar:
 Este checklist é obrigatório para qualquer implementação ou refino de tooltip no Suse7.
 O tooltip do campo Formato (aba Dados) é a fonte única de verdade.
 
+## Regra 14 — Feedback de carregamento em cadastros e fluxos assíncronos
+
+Operações de **salvar / enviar** que podem demorar (API, várias etapas) **não podem** deixar a tela estática sem feedback. O padrão oficial do Suse7 é **local ao formulário** (não bloquear a página inteira).
+
+### Componentes obrigatórios (Design System)
+
+1. **Botão de ação principal** — usar **`S7Button`** (`src/components/ui/S7Button.jsx`):
+   - `loading={true}` durante a requisição,
+   - `loadingLabel` padrão ou contextual (ex.: `"Salvando..."`),
+   - o componente já aplica `disabled`, spinner no botão e `aria-busy`.
+
+2. **Área do formulário** — usar **`S7FormSavingOverlay`** (`src/components/ui/S7FormSavingOverlay.jsx`):
+   - renderizar com `show={estadoDeLoading}` dentro do container da área principal do cadastro,
+   - o pai da overlay deve ter **`position: relative`** (ex.: classe utilitária no wrapper do form),
+   - mensagem curta via prop `message` (ex.: `"Salvando produto..."` ou equivalente por fluxo).
+
+### Comportamento obrigatório
+
+- **Impedir double submit**: `useRef` (ex.: `submitInFlightRef`) com early return no handler + **`try` / `finally`** na função que chama a API, sempre limpando ref e estado no `finally` (sucesso, erro ou retorno antecipado após já ter ligado o loading).
+- **Bloquear ações conflitantes** enquanto `loading` estiver ativo: outros botões de navegação no mesmo fluxo, fechar modal/página, troca de aba quando fizer sentido.
+- **Não** usar overlay ou spinner **full-page** para esse caso; reservado a situações excepcionais explícitas no produto.
+
+### Operações rápidas em segundo plano (complementar)
+
+Para ações **curtas** e **não bloqueantes** (ex.: reordenar lista, pequeno PATCH), pode-se usar **`useSaveStatus`** + **`SaveStatusIndicator`** (`src/contexts/SaveStatusContext.jsx`), sem substituir o padrão acima nos **submits principais** de cadastro.
+
+### Referência de implementação
+
+- **Cadastro de produto**: `ProductForm.jsx` (`isSavingProduct`, `productSubmitInFlightRef`, `executeSubmit`, `S7FormSavingOverlay`, `S7Button` no último passo).
+
 ---
 
 ## Laranja oficial Suse7

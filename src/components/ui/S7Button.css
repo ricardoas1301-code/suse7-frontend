@@ -137,3 +137,29 @@
   align-items: center;
   line-height: 1;
 }
+
+/* Loading (padrão Suse7 — ações assíncronas locais) */
+.s7-btn--loading {
+  pointer-events: none;
+}
+
+.s7-btn__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: s7-btn-spin 0.65s linear infinite;
+}
+
+.s7-btn--secondary .s7-btn__spinner {
+  border-color: rgba(37, 99, 235, 0.25);
+  border-top-color: var(--s7-primary, #2563eb);
+}
+
+@keyframes s7-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

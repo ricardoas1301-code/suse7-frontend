@@ -1,8 +1,14 @@
 -- ======================================================================
 -- Storage: bucket product-images — políticas para upload/download
 -- Execute este script APÓS criar o bucket "product-images" no Supabase Dashboard
--- (Storage > New bucket > nome: product-images > Public: false)
 -- Path esperado: userId/draftKey/filename ou userId/productId/filename
+--
+-- LEITURA PÚBLICA (listagem / getPublicUrl) — recomendado para Suse7:
+-- - No Dashboard: Storage > product-images > marcar bucket como público (Public bucket),
+--   OU manter privado e usar apenas URLs assinadas (não é o fluxo atual do app).
+-- - Com bucket público: qualquer um com a URL completa do objeto pode GET (paths incluem
+--   userId UUID + segmentos opacos; não há listagem anônima do bucket).
+-- - Escrita continua restrita às políticas INSERT/UPDATE/DELETE abaixo (path sob auth.uid()).
 -- ======================================================================
 
 -- Políticas em storage.objects (bucket product-images)

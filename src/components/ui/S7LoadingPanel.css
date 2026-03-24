@@ -1,0 +1,10 @@
+/* Container do painel de loading (full width do pai; centraliza o painel branco) */
+.s7-loading-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 200px;
+  padding: 32px 20px;
+  box-sizing: border-box;
+}

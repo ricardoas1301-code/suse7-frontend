@@ -1,0 +1,17 @@
+---
+description: Padrão oficial Suse7 — loading em salvamentos e fluxos assíncronos de cadastro
+globs: suse7-frontend/src/**/*.{jsx,js}
+alwaysApply: false
+---
+
+# Suse7 — Loading em cadastros e submits assíncronos
+
+Ao implementar **salvar**, **enviar** ou fluxo equivalente em telas de cadastro:
+
+1. **Botão primário**: `S7Button` com `loading` + `loadingLabel` (ex. `"Salvando..."`). Não duplicar spinner/label manualmente em `<button>` cru.
+2. **Área do form**: `S7FormSavingOverlay` com `show={...}`; container do formulário com `position: relative`.
+3. **Concorrência**: `useRef` anti double-submit + estado React para UI; limpar **sempre** em `finally` após `setLoading(true)`.
+4. **Escopo**: feedback **local** ao card/form — evitar loading global da página salvo exceção documentada.
+5. **Complemento**: operações curtas em background podem usar `useSaveStatus` / `SaveStatusIndicator`; não substituem o padrão do item 1–2 no submit principal.
+
+Documentação humana: `src/design-system-rules.md` → **Regra 14**. Referência de código: `ProductForm.jsx`.
