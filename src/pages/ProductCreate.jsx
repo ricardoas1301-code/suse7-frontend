@@ -28,7 +28,10 @@ export default function ProductCreate() {
   // ------------------------------------------------------
   const handleSubmit = async ({ product, mode, draftKey, variants }) => {
     const result = await upsertProduct({ product, mode, draftKey, variants });
-    if (result?.error) return { error: result.error };
+    if (result?.error) {
+      // Repassar `code` (ex.: SKU_DUPLICATE) — o toast no ProductForm depende disso
+      return { error: result.error, code: result.code ?? null };
+    }
     return { productId: result?.productId ?? null };
   };
 

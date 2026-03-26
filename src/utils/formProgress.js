@@ -7,6 +7,8 @@
 // - Numerador só incrementa com filled === true (sem “auto-preenchido” por opcional)
 // ======================================================================
 
+import { apiMoneyValueToDigits } from "./currencyDigits.js";
+
 /** Limite de slots na UI da aba Imagens (referência; progresso não conta slot a slot) */
 export const MAX_IMAGE_SLOTS = 7;
 
@@ -97,11 +99,7 @@ function getVariantCostDigitsMerged(rowId, variantCostDigitsById, row) {
   const mapRaw = variantCostDigitsById?.[rowId] ?? variantCostDigitsById?.[String(rowId)];
   const fromMap = String(mapRaw ?? "").replace(/\D/g, "");
   if (fromMap.length > 0) return fromMap;
-  const fromRow = String(row?.cost_price ?? "")
-    .replace(",", ".")
-    .replace(/[^\d.]/g, "")
-    .replace(".", "");
-  return fromRow;
+  return apiMoneyValueToDigits(row?.cost_price);
 }
 
 /** Pelo menos uma imagem com storage válido no escopo */
@@ -179,7 +177,7 @@ export function normalizeImageProgress(raw) {
  * @property {Record<string, string>} [variantCostDigitsById]
  * @property {string} [packagingDigits]
  * @property {string} [operationalDigits]
- * @property {string[]} [skuBaseChips] reservado (UI); não entra no % até `products.sku_base` existir no banco
+ * @property {string[]} [skuBaseChips] espelho UI da raiz do SKU (variants); estado canônico em `product.sku_base`
  * @property {{ productHasImage?: boolean; variantHasImageByKey?: Record<string, boolean> }} [imageProgress]
  * @property {(attrs: object) => string} [buildVariantKey] só para leitura de imagem por variação (fallback vk)
  */
@@ -223,9 +221,6 @@ export function getVisibleInputs(ctx) {
 
   // --- Variações: configuração (só formato com variações) ---
   if (format === "variants") {
-    // Raiz do SKU (chips / product.sku_base): não entra no % enquanto não houver coluna oficial
-    // em `products` persistida e hidratada no edit (hoje `sku_base` não vai no insert/update do backend).
-
     // Só atributos já cadastrados (nome + ≥1 opção válida). O rascunho “Nome do atributo / Opções”
     // do builder fica em draftAttrChips/draftOptions e NÃO entra em variationAttributes — mas linhas
     // incompletas ou opções vazias no array não devem gerar slots que travam o progresso.

@@ -70,6 +70,10 @@ import {
   toKgInputValue,
   validateProductMeasureFields,
 } from "../utils/numberFormat";
+import { apiMoneyValueToDigits } from "../utils/currencyDigits";
+
+const PF_MEASURES_TAB_TOOLTIP =
+  "O comprimento mede a dimensão mais longa de um objeto (geralmente da frente para trás), enquanto a largura mede a dimensão mais curta, perpendicular ao comprimento (geralmente de um lado a outro). Ambas são medidas horizontais, enquanto a altura é a vertical.";
 
 // ======================================================================
 // SUSE7 — HELPERS: Currency BRL (UI)
@@ -111,6 +115,13 @@ function s7DigitsToDecimalStr(digitsOnly) {
   if (!digits) return "";
   const cents = parseInt(digits, 10);
   return (cents / 100).toFixed(2);
+}
+
+/** Custo vindo da API (reais) → string decimal do form ("89.90"), alinhado à máscara por dígitos */
+function normalizeCostPriceFromApi(cp) {
+  if (cp == null || cp === "") return "";
+  const d = apiMoneyValueToDigits(cp);
+  return d === "" ? "" : s7DigitsToDecimalStr(d);
 }
 
 
@@ -175,6 +186,7 @@ export default function ProductForm({
     product_name: "",
     format: "simple", // "simple" | "variants"
     sku: "",
+    sku_base: "", // raiz persistida (variants); mesma base para novas variações no edit
     gtin: "",
     ncm: "",
     brand: "",
@@ -708,22 +720,40 @@ useLayoutEffect(() => {
         }
       }
     }
+    // Custos: normalizar para string decimal (igual ao fluxo do cadastro) — API pode mandar number 89.9
+    for (const key of ["cost_price", "packaging_cost", "operational_cost"]) {
+      if (!Object.prototype.hasOwnProperty.call(toMerge, key)) continue;
+      const raw = toMerge[key];
+      if (raw == null || raw === "") {
+        toMerge[key] = "";
+      } else {
+        const d = apiMoneyValueToDigits(raw);
+        toMerge[key] = d === "" ? "" : s7DigitsToDecimalStr(d);
+      }
+    }
+
+    // Variantes: raiz persistida em products.sku_base; legado sem coluna usa SKU pai
+    const fmtMerge = String(toMerge.format || "").toLowerCase();
+    if (fmtMerge === "variants") {
+      const sb =
+        toMerge.sku_base != null && String(toMerge.sku_base).trim() !== ""
+          ? String(toMerge.sku_base).trim()
+          : "";
+      const parentSku = toMerge.sku != null ? String(toMerge.sku).trim() : "";
+      if (!sb && parentSku) {
+        toMerge.sku_base = parentSku;
+      }
+    }
+
     snapshotProductMerge = toMerge;
     setProduct((prev) => ({ ...prev, ...toMerge }));
 
     // ------------------------------------------------------
-    // HIDRATAR: custos globais (best effort)
-    // - Se vier "4.50" ou "4,50", transforma em dígitos "450"
+    // HIDRATAR: dígitos da máscara BRL (mesma regra que apiMoneyValueToDigits)
     // ------------------------------------------------------
-    const toDigits = (v) =>
-      String(v ?? "")
-        .replace(",", ".")
-        .replace(/[^\d.]/g, "")
-        .replace(".", "");
-
-    setPackagingDigits(toDigits(initialProduct.packaging_cost));
-    setOperationalDigits(toDigits(initialProduct.operational_cost));
-    setSimpleCostDigits(toDigits(initialProduct.cost_price));
+    setPackagingDigits(apiMoneyValueToDigits(initialProduct.packaging_cost));
+    setOperationalDigits(apiMoneyValueToDigits(initialProduct.operational_cost));
+    setSimpleCostDigits(apiMoneyValueToDigits(initialProduct.cost_price));
   }
 
   // ------------------------------------------------------
@@ -736,12 +766,7 @@ useLayoutEffect(() => {
       const id = v?.id || null;
       if (!id) return;
 
-      const digits = String(v?.cost_price ?? "")
-        .replace(",", ".")
-        .replace(/[^\d.]/g, "")
-        .replace(".", "");
-
-      map[id] = digits;
+      map[id] = apiMoneyValueToDigits(v?.cost_price);
     });
 
     return map;
@@ -761,8 +786,7 @@ useLayoutEffect(() => {
         sku: v.sku || "",
         gtin: v.gtin || "",
 
-        // custo por variação
-        cost_price: v.cost_price ?? "",
+        cost_price: normalizeCostPriceFromApi(v.cost_price),
 
         // estoque por variação (strings para inputs)
         stock_real: String(v.stock_quantity ?? ""),
@@ -817,7 +841,7 @@ useLayoutEffect(() => {
             id: v.id || createId(),
             sku: v.sku || "",
             gtin: v.gtin || "",
-            cost_price: v.cost_price ?? "",
+            cost_price: normalizeCostPriceFromApi(v.cost_price),
             stock_real: String(v.stock_quantity ?? ""),
             stock_min: String(v.stock_minimum ?? ""),
             use_virtual_stock: !!v.use_virtual_stock,
@@ -875,37 +899,44 @@ useLayoutEffect(() => {
 
   // Bloqueio de navegação interna (menu, links, rota): exibe modal "Sair sem salvar?"
   const skipExitGuardRef = useRef(false); // bypass quando usuário confirmou saída
-  const suppressNextBlockerModalRef = useRef(false); // evita reabrir modal logo após saída confirmada
+  /** Só após submit com redirect: evita race onde o blocker reabre o modal no mesmo tick */
+  const suppressNextBlockerModalRef = useRef(false);
   const shouldBlockNav = isDirty && !exitWithoutSavingHidden && !skipExitGuardRef.current;
   const blocker = useBlocker(shouldBlockNav);
 
   // Modal "Sair sem salvar" (Fechar ou navegação interna bloqueada)
   const [showExitModal, setShowExitModal] = useState(false);
+  /** Ref espelha o modal imediatamente (evita reabrir ao cancelar: effect não pode depender de showExitModal). */
+  const exitModalOpenRef = useRef(false);
   const exitModalSourceRef = useRef("close"); // "close" = botão Fechar | "blocker" = navegação bloqueada
 
   // Quando o blocker intercepta uma navegação, abrir o modal (guardado)
+  // Depende só de blocker.state: se showExitModal estivesse nas deps, ao Cancelar o effect rodaria com
+  // blocked ainda true + showExitModal false e chamaria setShowExitModal(true) de novo (modal duplicado).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- blocker + deps: só blocker.state (não showExitModal)
   useEffect(() => {
     if (blocker.state !== "blocked") return;
 
-    // Se já confirmamos saída e queremos apenas prosseguir, não reabrir modal
+    // Sair confirmado ou redirect pós-save: seguir sem reabrir modal
     if (skipExitGuardRef.current || suppressNextBlockerModalRef.current) {
       suppressNextBlockerModalRef.current = false;
       blocker.proceed();
       return;
     }
 
-    // Evita abrir novamente se o modal já está visível
-    if (showExitModal) return;
+    // Modal já aberto (Fechar ou clique no menu com aviso visível): não duplicar
+    if (exitModalOpenRef.current) return;
 
     exitModalSourceRef.current = "blocker";
+    exitModalOpenRef.current = true;
     setShowExitModal(true);
-  }, [blocker.state, showExitModal]);
+  }, [blocker.state]);
 
   const handleClose = () => {
     if (isSavingProduct) return;
     if (isDirty && !exitWithoutSavingHidden) {
       exitModalSourceRef.current = "close";
-      suppressNextBlockerModalRef.current = true;
+      exitModalOpenRef.current = true;
       setShowExitModal(true);
     } else {
       onCancel?.();
@@ -913,34 +944,30 @@ useLayoutEffect(() => {
   };
 
   const handleExitModalCancel = () => {
+    suppressNextBlockerModalRef.current = false;
+    skipExitGuardRef.current = false;
+    exitModalOpenRef.current = false;
     setShowExitModal(false);
     if (blocker.state === "blocked") blocker.reset();
   };
 
   const handleExitModalConfirm = () => {
-    console.log("ProductForm.handleExitModalConfirm", {
-      blockerState: blocker?.state,
-      skipExitGuard: skipExitGuardRef.current,
-      isDirty,
-      showExitModal,
-    });
-
+    exitModalOpenRef.current = false;
     setShowExitModal(false);
+    suppressNextBlockerModalRef.current = false;
 
-    // Garante que o guard não bloqueie novamente após a confirmação
     skipExitGuardRef.current = true;
-
     const source = exitModalSourceRef.current;
 
-    // Navegação interna interceptada pelo useBlocker
     if (source === "blocker" && blocker?.state === "blocked") {
-      console.log("ProductForm.handleExitModalConfirm: exit path = blocker.proceed()");
       blocker.proceed();
       return;
     }
 
-    console.log("ProductForm.handleExitModalConfirm: exit path = onCancel()");
-    // Fluxo "close" (botão Fechar do formulário)
+    // Fechar: descarta destino pendente do menu (modal já estava aberto) e volta à lista
+    if (blocker?.state === "blocked") {
+      blocker.reset();
+    }
     onCancel?.();
   };
 
@@ -1040,7 +1067,8 @@ useLayoutEffect(() => {
   const applyFormatToSimple = () => {
     // Fechar o modal primeiro: evita overlay preso se algo abaixo lançar erro
     setFormatToSimpleModalOpen(false);
-    setProduct((prev) => ({ ...prev, format: "simple" }));
+    setSkuBaseChips([]);
+    setProduct((prev) => ({ ...prev, format: "simple", sku_base: "" }));
     setVariationAttributes([]);
     setDraftAttrChips([]);
     setDraftAttrInput("");
@@ -1053,7 +1081,8 @@ useLayoutEffect(() => {
 
   const handleFormatChange = (nextFormat) => {
     if (nextFormat === "variants") {
-      setProduct((prev) => ({ ...prev, format: nextFormat, sku: "", gtin: "" }));
+      setSkuBaseChips([]);
+      setProduct((prev) => ({ ...prev, format: nextFormat, sku: "", gtin: "", sku_base: "" }));
       productDataForm.setValues({ sku: "" });
       return;
     }
@@ -1890,8 +1919,13 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     return chips.join("_");
   };
 
-  /** Base do SKU: raiz dos chips (product.sku_base); usado na geração. Formato persistido: chave1_chave2 com "_". */
+  /**
+   * Base para geração: 1º sku_base persistido no produto (edit/API), 2º chips da UI,
+   * 3º fallback SKU pai/nome. Prioriza a raiz salva para consistência ao incluir novas variações.
+   */
   const getSkuBase = () => {
+    const fromPersisted = String(product.sku_base ?? "").trim();
+    if (fromPersisted) return fromPersisted;
     if (skuBaseChips.length > 0) {
       return buildSkuBaseFromChips(skuBaseChips);
     }
@@ -1899,12 +1933,10 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
     return sanitizeSku(fallback) || fallback.replace(/\s+/g, "_");
   };
 
-  // Leitura ao abrir formulário: product.sku_base → chips da UI (formato persistido: chave1_chave2)
+  // Sincroniza chips com product.sku_base (inclui hidratação do edit e limpeza)
   useEffect(() => {
     const chips = parseSkuBaseToChips(product.sku_base);
-    if (chips.length > 0) {
-      setSkuBaseChips(chips);
-    }
+    setSkuBaseChips(chips);
   }, [product.sku_base]);
 
   /** Adiciona uma chave à raiz do SKU (máx. 2 chaves, 6 caracteres cada); persiste em product.sku_base com "_" */
@@ -1961,6 +1993,10 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   const ensureSkuRootChipsOrGuide = useCallback(
     (options = {}) => {
       const { showToast = false } = options;
+      if (String(product.sku_base ?? "").trim() !== "") {
+        setSkuBaseError("");
+        return true;
+      }
       if (skuBaseChips.length > 0) {
         setSkuBaseError("");
         return true;
@@ -1978,7 +2014,7 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
       focusSkuRootAfterExpand();
       return false;
     },
-    [skuBaseChips, addNotification, focusSkuRootAfterExpand]
+    [skuBaseChips, product.sku_base, addNotification, focusSkuRootAfterExpand]
   );
 
   /** Valida se há pelo menos uma chave na raiz; se não, destaca campo, expande card, scroll e foco. */
@@ -2502,15 +2538,18 @@ const validatePricingTab = () => {
         draftKey: draftKeyRef.current,
         product: {
           ...productWithImages,
-          // Variações: products.sku = SKU pai (mesmo valor que sku_base), literal; gtin só nas linhas.
+          // Variações: sku_base explícito no payload; products.sku = raiz (alinhado à base persistida).
           ...(product.format === "variants"
             ? {
                 sku:
                   String(product.sku_base ?? "").trim() ||
                   String(product.sku ?? "").trim(),
+                sku_base: String(product.sku_base ?? "").trim() || null,
                 gtin: "",
               }
-            : {}),
+            : {
+                sku_base: null,
+              }),
           ...measureOverrides,
         },
         variants:
@@ -2574,7 +2613,16 @@ const validatePricingTab = () => {
         try {
           const result = await Promise.resolve(onSubmit(payload));
           if (result?.error) {
-            addNotification({ type: "error", title: "Erro ao salvar", message: result.error });
+            const errText = String(result.error);
+            const skuDup =
+              result.code === "SKU_DUPLICATE" ||
+              errText.includes("SKU já existe") ||
+              errText.includes("este seller");
+            addNotification({
+              type: "error",
+              title: skuDup ? "Não foi possível salvar" : "Erro ao salvar",
+              message: skuDup ? "Já existe um produto com este SKU" : result.error,
+            });
             return;
           }
           if (mode === "create" && result?.productId && draftKeyRef.current) {
@@ -3633,7 +3681,17 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "measures" && (
           <div className="pf-container">
-            <h2 className="pf-tab-title">Pesos & medidas</h2>
+            <div className="pf-tab-title-row pf-tab-title-row--measures-tip">
+              <h2 className="pf-tab-title">Pesos & medidas</h2>
+              <button
+                type="button"
+                className="pf-info-btn pf-measures-tab-tip-trigger s7-tip s7-tip-wrap"
+                data-tip={PF_MEASURES_TAB_TOOLTIP}
+                aria-label="Informações sobre largura, comprimento e altura"
+              >
+                i
+              </button>
+            </div>
             <div className="s7-card pf-dimensions-card">
               <div className="s7-card__header">
                 <h3 className="s7-card__title">Medidas de envio</h3>

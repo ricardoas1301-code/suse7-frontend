@@ -258,7 +258,7 @@
 }
 
 .pf-dirty-dot {
-  color: var(--s7-orange, #d97706);
+  color: var(--s7-orange, #ff8533);
   font-size: 16px;
   line-height: 1;
 }
@@ -457,8 +457,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--s7-orange, #d97706);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--s7-orange, #d97706) 35%, transparent);
+  background: var(--s7-orange, #ff8533);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--s7-orange, #ff8533) 35%, transparent);
   flex-shrink: 0;
   animation: pf-images-saved-badge-in 0.2s ease-out;
 }

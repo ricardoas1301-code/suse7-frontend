@@ -26,23 +26,37 @@ export async function fetchCatalogRankings() {
     return { ...EMPTY_RANKINGS, meta: { source: "no_api_url" } };
   }
 
-  const res = await apiFetch(url, {
-    method: "GET",
-    unauthorizedFallback: { ...EMPTY_RANKINGS },
-  });
+  try {
+    const res = await apiFetch(url, {
+      method: "GET",
+      unauthorizedFallback: { ...EMPTY_RANKINGS },
+    });
 
-  if (!res.ok) {
+    if (!res.ok) {
+      return {
+        ...EMPTY_RANKINGS,
+        meta: {
+          source: "error",
+          error: res.error,
+          httpStatus: res.status,
+        },
+      };
+    }
+
+    const d = res.data && typeof res.data === "object" ? res.data : {};
+    return {
+      top_sales_quantity: Array.isArray(d.top_sales_quantity) ? d.top_sales_quantity : [],
+      top_revenue: Array.isArray(d.top_revenue) ? d.top_revenue : [],
+      top_profit: Array.isArray(d.top_profit) ? d.top_profit : [],
+      meta: d.meta && typeof d.meta === "object" ? d.meta : {},
+    };
+  } catch (e) {
     return {
       ...EMPTY_RANKINGS,
-      meta: { source: "error", error: res.error },
+      meta: {
+        source: "network_or_parse",
+        error: e?.message ?? String(e),
+      },
     };
   }
-
-  const d = res.data && typeof res.data === "object" ? res.data : {};
-  return {
-    top_sales_quantity: Array.isArray(d.top_sales_quantity) ? d.top_sales_quantity : [],
-    top_revenue: Array.isArray(d.top_revenue) ? d.top_revenue : [],
-    top_profit: Array.isArray(d.top_profit) ? d.top_profit : [],
-    meta: d.meta && typeof d.meta === "object" ? d.meta : {},
-  };
 }

@@ -46,6 +46,7 @@ import Notificacoes from "./components/Profile/Notificacoes";
 
 // Produtos (REAL)
 import Products from "./components/Products";
+import Anuncios from "./components/Anuncios";
 import ProductCreate from "./pages/ProductCreate";
 import ProductEdit from "./pages/ProductEdit";
 
@@ -56,7 +57,6 @@ import { SaveStatusProvider } from "./contexts/SaveStatusContext";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
 
 // Temporários
-const AnunciosTable = () => <h1>Anúncios</h1>;
 const Clientes = () => <h1>Clientes</h1>;
 const Faturas = () => <h1>Faturas</h1>;
 const Relatorios = () => <h1>Relatórios</h1>;
@@ -150,7 +150,7 @@ const router = createBrowserRouter([
           },
         ],
       },
-      { path: "anuncios", element: <AnunciosTable /> },
+      { path: "anuncios", element: <Anuncios /> },
       { path: "produtos", element: <Products /> },
       { path: "clientes", element: <Clientes /> },
       { path: "faturas", element: <Faturas /> },

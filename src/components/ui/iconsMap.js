@@ -39,6 +39,7 @@ import {
   RotateCcw,
   Search,
   X,
+  Eye,
 } from "lucide-react";
 
 export const iconsMap = {
@@ -76,6 +77,8 @@ export const iconsMap = {
   catalog_filter_opportunity: Sparkles,
   catalog_filter_declining: LineChart,
   catalog_filter_new: Clock,
+  /** Anúncios — filtro por volume de visitas */
+  ads_filter_visits: Eye,
   filter_clear: RotateCcw,
   search: Search,
   close: X,

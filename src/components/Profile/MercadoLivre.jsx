@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../config/api";
+import { buildApiUrl } from "../../config/api";
 import "./MercadoLivre.css";
 
 import suse7Logo from "../../assets/suse7-logo-redonda.png";
@@ -27,8 +27,7 @@ export default function MercadoLivre() {
   const [iconPosition, setIconPosition] = useState({ x: 0, y: 0 });
   const [activeReadonlyField, setActiveReadonlyField] = useState(null); // "username" | "status" | null
   const [user, setUser] = useState(null);
-
-
+  const [bannerError, setBannerError] = useState(null);
 
   const navigate = useNavigate();
 
@@ -38,21 +37,38 @@ export default function MercadoLivre() {
   useEffect(() => {
     const loadMLStatus = async () => {
       try {
-const {
-  data: { user },
-} = await supabase.auth.getUser();
+        const errParam = new URLSearchParams(window.location.search).get("ml_error");
+        if (errParam === "token") {
+          setBannerError(
+            "Não foi possível trocar o código pelo token no Mercado Livre. Verifique ML_REDIRECT_URI e as credenciais da app DEV."
+          );
+        } else if (errParam === "save") {
+          setBannerError(
+            "A autorização funcionou, mas não foi possível salvar os tokens. Tente conectar novamente ou verifique o Supabase."
+          );
+        }
 
-setUser(user);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        setUser(user);
 
         if (!user) {
           setLoading(false);
           return;
         }
 
-        const response = await fetch(
-          `${API_BASE_URL}/ml/status?user_id=${user.id}`
+        const statusUrl = buildApiUrl(
+          `/api/ml/status?user_id=${encodeURIComponent(user.id)}`
         );
+        if (!statusUrl) {
+          console.error("[ML] Defina VITE_API_BASE_URL");
+          setLoading(false);
+          return;
+        }
 
+        const response = await fetch(statusUrl);
         const data = await response.json();
 
         if (data.connected) {
@@ -62,6 +78,21 @@ setUser(user);
         } else {
           setIsConnected(false);
         }
+
+        const sp = new URLSearchParams(window.location.search);
+        let cleaned = false;
+        if (sp.get("ml") === "connected") {
+          sp.delete("ml");
+          cleaned = true;
+        }
+        if (sp.has("ml_error")) {
+          sp.delete("ml_error");
+          cleaned = true;
+        }
+        if (cleaned) {
+          const q = sp.toString();
+          navigate(`${window.location.pathname}${q ? `?${q}` : ""}`, { replace: true });
+        }
       } catch (err) {
         console.error("Erro ao carregar status ML:", err);
       } finally {
@@ -70,16 +101,22 @@ setUser(user);
     };
 
     loadMLStatus();
-  }, []);
+  }, [navigate]);
 
   // ------------------------------------------------------------------
   // HANDLER
   // ------------------------------------------------------------------
-const handleConnectML = () => {
-  if (!user) return;
-
-  window.location.href = `${API_BASE_URL}/ml/connect?user_id=${user.id}`;
-};
+  const handleConnectML = () => {
+    if (!user) return;
+    const connectUrl = buildApiUrl(
+      `/api/ml/connect?user_id=${encodeURIComponent(user.id)}`
+    );
+    if (!connectUrl) {
+      console.error("[ML] Defina VITE_API_BASE_URL");
+      return;
+    }
+    window.location.href = connectUrl;
+  };
 
 
   // ------------------------------------------------------------------
@@ -101,6 +138,22 @@ const handleConnectML = () => {
   return (
     <div className="ml-container">
       <div className="ml-card">
+        {bannerError && (
+          <div
+            className="ml-banner-error"
+            style={{
+              marginBottom: 16,
+              padding: "12px 14px",
+              borderRadius: 8,
+              background: "rgba(220, 53, 69, 0.12)",
+              color: "#842029",
+              fontSize: 14,
+            }}
+            role="alert"
+          >
+            {bannerError}
+          </div>
+        )}
         {/* ==========================================================
            HEADER COM LOGOS (ÍCONES +100%)
         ========================================================== */}

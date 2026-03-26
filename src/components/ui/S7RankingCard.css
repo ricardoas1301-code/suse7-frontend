@@ -1,18 +1,18 @@
 /* ======================================================
    S7RankingCard — dashboard executivo / SaaS premium
-   Variantes: sales (azul), revenue (violeta/ciano), profit (teal)
+   Faixas de título: cores sólidas (azul, laranja token, verde).
 ====================================================== */
 
 .s7-ranking-card {
   --s7-ranking-accent: #2563eb;
-  --s7-ranking-accent-mid: #3b82f6;
-  --s7-ranking-accent-soft: rgba(37, 99, 235, 0.1);
-  --s7-ranking-accent-faint: rgba(37, 99, 235, 0.06);
-  --s7-ranking-accent-border: rgba(37, 99, 235, 0.22);
-  --s7-ranking-glow: rgba(37, 99, 235, 0.12);
+  --s7-ranking-accent-mid: #2563eb;
+  --s7-ranking-accent-soft: rgba(37, 99, 235, 0.12);
+  --s7-ranking-accent-faint: rgba(37, 99, 235, 0.07);
+  --s7-ranking-accent-border: rgba(37, 99, 235, 0.28);
+  --s7-ranking-glow: rgba(37, 99, 235, 0.14);
 
   position: relative;
-  background: linear-gradient(165deg, #ffffff 0%, #f8fafc 48%, #f1f5f9 100%);
+  background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 18px;
   box-shadow:
@@ -27,64 +27,58 @@
   overflow: hidden;
 }
 
-.s7-ranking-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--s7-ranking-accent), var(--s7-ranking-accent-mid));
-  opacity: 0.92;
-  pointer-events: none;
-}
+/* Faixa superior integrada ao cabeçalho (.s7-ranking-card__head); linha fina removida */
 
-/* Identidade por tipo */
 .s7-ranking-card--sales {
-  --s7-ranking-accent: #1d4ed8;
-  --s7-ranking-accent-mid: #3b82f6;
-  --s7-ranking-accent-soft: rgba(37, 99, 235, 0.12);
-  --s7-ranking-accent-faint: rgba(37, 99, 235, 0.06);
-  --s7-ranking-accent-border: rgba(37, 99, 235, 0.25);
-  --s7-ranking-glow: rgba(59, 130, 246, 0.18);
+  --s7-ranking-accent: #2563eb;
+  --s7-ranking-accent-mid: #2563eb;
+  --s7-ranking-accent-soft: rgba(37, 99, 235, 0.14);
+  --s7-ranking-accent-faint: rgba(37, 99, 235, 0.07);
+  --s7-ranking-accent-border: rgba(37, 99, 235, 0.3);
+  --s7-ranking-glow: rgba(37, 99, 235, 0.16);
 }
 
+/* Faturamento — var(--s7-orange) */
 .s7-ranking-card--revenue {
-  --s7-ranking-accent: #6d28d9;
-  --s7-ranking-accent-mid: #0891b2;
-  --s7-ranking-accent-soft: rgba(109, 40, 217, 0.11);
-  --s7-ranking-accent-faint: rgba(8, 145, 178, 0.06);
-  --s7-ranking-accent-border: rgba(109, 40, 217, 0.22);
-  --s7-ranking-glow: rgba(8, 145, 178, 0.14);
+  --s7-ranking-accent: var(--s7-orange);
+  --s7-ranking-accent-mid: var(--s7-orange);
+  --s7-ranking-accent-soft: color-mix(in srgb, var(--s7-orange) 20%, transparent);
+  --s7-ranking-accent-faint: color-mix(in srgb, var(--s7-orange) 10%, transparent);
+  --s7-ranking-accent-border: color-mix(in srgb, var(--s7-orange) 38%, transparent);
+  --s7-ranking-glow: color-mix(in srgb, var(--s7-orange) 16%, transparent);
 }
 
 .s7-ranking-card--profit {
-  --s7-ranking-accent: #0f766e;
-  --s7-ranking-accent-mid: #14b8a6;
-  --s7-ranking-accent-soft: rgba(15, 118, 110, 0.12);
-  --s7-ranking-accent-faint: rgba(20, 184, 166, 0.07);
-  --s7-ranking-accent-border: rgba(15, 118, 110, 0.24);
-  --s7-ranking-glow: rgba(20, 184, 166, 0.16);
+  --s7-ranking-accent: #22c55e;
+  --s7-ranking-accent-mid: #22c55e;
+  --s7-ranking-accent-soft: rgba(34, 197, 94, 0.16);
+  --s7-ranking-accent-faint: rgba(34, 197, 94, 0.08);
+  --s7-ranking-accent-border: rgba(22, 163, 74, 0.32);
+  --s7-ranking-glow: rgba(34, 197, 94, 0.16);
 }
 
 .s7-ranking-card__head {
-  padding: 20px 20px 14px;
+  position: relative;
+  z-index: 1;
+  padding: 14px 20px 16px;
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, transparent 100%);
+  background: var(--s7-ranking-accent);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .s7-ranking-card__title {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--s7-text, #0f172a);
-  line-height: 1.35;
-  padding-bottom: 2px;
-  border-bottom: 2px solid var(--s7-ranking-accent-soft);
-  display: inline-block;
+  color: #ffffff;
+  line-height: 1.4;
+  padding-bottom: 0;
+  border-bottom: none;
+  display: block;
   max-width: 100%;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.28);
 }
 
 .s7-ranking-card__list {
@@ -346,7 +340,19 @@
 }
 
 .s7-ranking-card--loading .s7-ranking-card__head {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.s7-ranking-card--loading .s7-ranking-card__skeleton--title {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.22) 25%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.22) 75%
+  );
+  background-size: 200% 100%;
+  animation: s7-ranking-shimmer 1.2s ease-in-out infinite;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .s7-ranking-card__skeleton {

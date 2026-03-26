@@ -59,6 +59,13 @@
   color: #4b5563;
 }
 
+.pf-right-required-hint .s7-required{
+  color: var(--s7-danger, #ef4444);
+  font-weight: 700;
+  margin-right: 2px;
+  margin-left: 0;
+}
+
 /* Miniatura (edição) à esquerda do medidor semi-circular */
 .pf-right-progress-row{
   margin: 6px 0 24px;

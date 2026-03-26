@@ -79,7 +79,9 @@ export default function ProductEditForm() {
   const handleSubmit = useCallback(
     async ({ product, mode, draftKey, variants }) => {
       const result = await upsertProduct({ product, mode, draftKey, variants });
-      if (result?.error) return { error: result.error };
+      if (result?.error) {
+        return { error: result.error, code: result.code ?? null };
+      }
       return { productId: result?.productId ?? product?.id ?? null };
     },
     []

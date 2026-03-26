@@ -606,7 +606,12 @@ export default function Products() {
         </div>
       ) : !productsLoading ? (
         <div className="products-catalog__toolbar">
-          <S7Button variant="primary" iconName="plus" onClick={() => navigate("/produtos/novo")}>
+          <S7Button
+            variant="primary"
+            iconName="plus"
+            className="products-catalog__new-product-btn"
+            onClick={() => navigate("/produtos/novo")}
+          >
             Novo produto
           </S7Button>
         </div>

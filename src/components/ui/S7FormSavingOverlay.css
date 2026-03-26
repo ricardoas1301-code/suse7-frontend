@@ -1,14 +1,16 @@
-/* Overlay leve só sobre o container (position: relative no pai) */
+/* Overlay sobre o container (position: relative no pai).
+   z-index alto: no ProductForm, .pf-label-row e .pf-copy-btn usam 40/50 e ficavam
+   por cima do overlay antigo (40), deixando copiar/info “vivos” durante o save. */
 .s7-form-saving-overlay {
   position: absolute;
   inset: 0;
-  z-index: 40;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   pointer-events: auto;
   border-radius: inherit;
 }
@@ -20,12 +22,12 @@
   gap: 10px;
   padding: 16px 20px;
   background: #ffffff;
-  /* Borda laranja leve — equiv. a --s7-orange (#d97706) com baixa opacidade */
-  border: 1px solid rgba(217, 119, 6, 0.38);
+  /* Borda laranja leve — var(--s7-orange) com baixa opacidade */
+  border: 1px solid color-mix(in srgb, var(--s7-orange) 38%, transparent);
   border-radius: var(--s7-radius-sm, 8px);
   box-shadow:
     0 8px 24px rgba(15, 23, 42, 0.08),
-    0 0 0 1px rgba(217, 119, 6, 0.12);
+    0 0 0 1px color-mix(in srgb, var(--s7-orange) 12%, transparent);
 }
 
 .s7-form-saving-overlay__spinner {

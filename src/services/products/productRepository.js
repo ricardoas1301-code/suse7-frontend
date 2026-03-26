@@ -13,7 +13,7 @@ import { listVariants } from "../variants/variantRepository";
  * Em 409 (SKU duplicado, formato bloqueado): retorna { error } para o ProductForm exibir.
  *
  * @param {{ product: object; mode: "create"|"edit"; draftKey?: string; variants?: object[] }} payload
- * @returns {Promise<{ productId?: string; error?: string }>}
+ * @returns {Promise<{ productId?: string; error?: string; code?: string | null }>}
  */
 export async function upsertProduct({ product, mode, draftKey, variants }) {
   if (!API_BASE_URL) {
@@ -54,7 +54,7 @@ export async function upsertProduct({ product, mode, draftKey, variants }) {
     if (data?.details && typeof data.details === "string") {
       msg += ` — ${data.details}`;
     }
-    return { error: msg };
+    return { error: msg, code: data?.code ?? null };
   }
 
   if (data && Object.prototype.hasOwnProperty.call(data, "ok") && data.ok !== true) {

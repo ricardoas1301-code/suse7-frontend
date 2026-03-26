@@ -5,7 +5,7 @@
 
 import { useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import { API_BASE_URL } from "../config/api";
+import { buildApiUrl } from "../config/api";
 
 export default function MLConnect() {
   useEffect(() => {
@@ -31,10 +31,17 @@ export default function MLConnect() {
       const userId = data.user.id;
 
       // --------------------------------------------------------
-      // 3. Redirecionar para o backend (OAuth ML)
+      // 3. Redirecionar para o backend (OAuth ML) — path /api/ml/connect
       // --------------------------------------------------------
-      window.location.href =
-        `${API_BASE_URL}/ml/connect?user_id=${userId}`;
+      const connectUrl = buildApiUrl(
+        `/api/ml/connect?user_id=${encodeURIComponent(userId)}`
+      );
+      if (!connectUrl) {
+        console.error("[ML] Defina VITE_API_BASE_URL (ex.: https://suse7-backend-dev.vercel.app)");
+        window.location.href = "/perfil/integracoes/mercado-livre";
+        return;
+      }
+      window.location.href = connectUrl;
     };
 
     iniciarOAuthML();

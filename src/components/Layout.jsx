@@ -112,6 +112,10 @@ className={`nav-item ${
     ? location.pathname.startsWith("/produtos")
       ? "active"
       : ""
+    : item.path === "/anuncios"
+      ? location.pathname.startsWith("/anuncios")
+        ? "active"
+        : ""
     : location.pathname === item.path
       ? "active"
       : ""

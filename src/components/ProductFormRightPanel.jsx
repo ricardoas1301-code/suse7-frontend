@@ -81,7 +81,12 @@ export default function ProductFormRightPanel({
             </button>
           )}
         </div>
-        <span className="pf-right-required-hint">* Campos obrigatórios</span>
+        <span className="pf-right-required-hint">
+          <span className="s7-required" aria-hidden="true">
+            *
+          </span>{" "}
+          Campos obrigatórios
+        </span>
       </div>
 
       {panelProductThumb ? (

@@ -198,7 +198,7 @@ h1, h2, h3 {
 .ml-card-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--s7-orange, #d97706);
+  color: var(--s7-orange, #ff8533);
 }
 
 .ml-status {
@@ -211,7 +211,7 @@ h1, h2, h3 {
 
 /* BOTÃO ML */
 .btn-ml {
-  background: var(--s7-orange, #d97706);
+  background: var(--s7-orange, #ff8533);
   color: white;
   border-radius: 10px;
   padding: 12px 22px;
@@ -221,7 +221,7 @@ h1, h2, h3 {
 }
 
 .btn-ml:hover {
-  background: var(--s7-orange-hover, #b45309);
+  background: var(--s7-orange-hover, #e86812);
 }
 
 /* ------------------------------------------------------------- */
@@ -430,7 +430,7 @@ h1, h2, h3 {
 
 /* Botão ML */
 .dash-btn-ml {
-  background: var(--s7-orange, #d97706);
+  background: var(--s7-orange, #ff8533);
   color: white;
   padding: 10px 20px;
   font-weight: 600;
@@ -440,7 +440,7 @@ h1, h2, h3 {
 }
 
 .dash-btn-ml:hover {
-  background: var(--s7-orange-hover, #b45309);
+  background: var(--s7-orange-hover, #e86812);
 }
 
 /* Grades */

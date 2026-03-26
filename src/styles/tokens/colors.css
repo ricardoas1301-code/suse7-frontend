@@ -32,28 +32,26 @@ Centralizar cores principais do Suse7
   --s7-color-error: #dc2626;
 
   /**
-   * LARANJA OFICIAL SUSE7 — #d97706 (âmbar elegante, atenção sem tom de erro)
-   * Regra: não repetir este hex em telas; usar var(--s7-orange) ou alias abaixo.
-   * Uso típico: avisos contextuais não bloqueantes, barras/toasts, ícones de aviso,
-   * progresso (% semi), stat cards --warning, destaques amigáveis, botões âmbar.
+   * LARANJA SUSE7 — tom de referência da faixa de tabelas (vivo, saturado).
+   * Faixa em gradiente: #ff914d (topo) → #ff7a21 (base); sólido médio #ff8533.
+   * Regra: não repetir hex em telas; usar var(--s7-orange) ou alias abaixo.
    */
-  --s7-orange: #d97706;
-  /* Hover / pressed em superfícies âmbar (botões, chips) */
-  --s7-orange-hover: #b45309;
+  --s7-orange: #ff8533;
+  /* Hover / pressed — ligeiramente mais fechado que o sólido base */
+  --s7-orange-hover: #e86812;
   /**
    * Alias semântico = mesmo valor que --s7-orange (toasts, faixas discretas, barra lateral).
    */
   --s7-contextual-accent: var(--s7-orange);
 
   /**
-   * BARRA DE TÍTULOS (tabelas / listagens com header de colunas, ex. catálogo de produtos)
-   * Tom laranja oficial para faixa de títulos — usar estes tokens em novas telas, sem repetir hex solto.
-   * Gradiente: orange-300 → orange-400 (Tailwind); texto branco em negrito (contraste com nomes em laranja na lista).
+   * BARRA DE TÍTULOS (tabelas / listagens com header de colunas, ex. catálogo / anúncios)
+   * Gradiente vertical suave alinhado ao mock de referência (topo mais claro → base mais quente).
    */
-  --s7-title-bar-bg-from: #fdba74;
-  --s7-title-bar-bg-to: #fb923c;
-  --s7-title-bar-border-bottom: rgba(154, 52, 18, 0.35);
-  --s7-title-bar-shadow: rgba(154, 52, 18, 0.12);
+  --s7-title-bar-bg-from: #ff914d;
+  --s7-title-bar-bg-to: #ff7a21;
+  --s7-title-bar-border-bottom: rgba(185, 62, 8, 0.38);
+  --s7-title-bar-shadow: rgba(200, 72, 18, 0.14);
   --s7-title-bar-inset-highlight: rgba(255, 255, 255, 0.35);
   --s7-title-bar-text: #ffffff;
   --s7-title-bar-font-weight: 700;

@@ -49,7 +49,7 @@
 }
 
 .s7-form-field__required {
-  color: #dc2626;
+  color: var(--s7-danger, #ef4444);
 }
 
 /* Container do tooltip — alinhamento ao lado do label */
