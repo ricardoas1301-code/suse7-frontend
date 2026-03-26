@@ -138,7 +138,7 @@
   color: var(--s7-muted, #6b7280);
 }
 
-/* Linha com IMG + campos */
+/* Linha com campos + miniatura (aba Dados: nome à esquerda, IMG à direita) */
 .pf-product-name-line{
   display: flex;
   align-items: center;
@@ -181,6 +181,18 @@
   font-size: 12px;
   color: var(--s7-muted, #6b7280);
   font-weight: 900;
+}
+
+/* Miniatura do produto (contexto cadastro/edição): interatividade + acabamento */
+.pf-product-thumb--data-inline{
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transform-origin: center center;
+}
+
+.pf-product-thumb--data-inline:hover{
+  transform: scale(1.03);
 }
 
 /* Bloco do label+input ocupa o resto (gap igual ao .pf-group da aba Dados) */
@@ -255,6 +267,11 @@
   background: #ffffff;
   box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.04);
   border-radius: 10px 10px 0 0;
+}
+
+/* Edição (navegação livre): só “Salvar alterações”, alinhado à direita */
+.pf-body-footer.pf-body-footer--save-only {
+  justify-content: flex-end;
 }
 
 .pf-body-footer > div{

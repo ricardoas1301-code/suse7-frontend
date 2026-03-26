@@ -116,6 +116,32 @@ export function pickFirstGeneralLinkStoragePath(links) {
 }
 
 /**
+ * Primeira imagem por sort_order em lista já filtrada (ex.: links de uma única variação).
+ * Diferente de {@link pickFirstGeneralLinkStoragePath}: não exige variant_key vazio.
+ */
+export function pickFirstImageLinkStoragePath(links) {
+  if (!Array.isArray(links) || links.length === 0) return "";
+  const sorted = [...links].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  return extractStoragePathFromImageEntry(sorted[0] ?? {});
+}
+
+/** Mesma chave que a aba Imagens / ProductForm (`Cor=Azul|Tamanho=M`). */
+export function buildVariantKeyFromAttributes(attrsObj) {
+  let attrs = attrsObj;
+  if (typeof attrs === "string") {
+    try {
+      const p = JSON.parse(attrs);
+      attrs = p && typeof p === "object" && !Array.isArray(p) ? p : {};
+    } catch {
+      attrs = {};
+    }
+  }
+  if (!attrs || typeof attrs !== "object" || Array.isArray(attrs)) attrs = {};
+  const entries = Object.entries(attrs).sort(([a], [b]) => a.localeCompare(b));
+  return entries.map(([k, v]) => `${k}=${String(v)}`).join("|");
+}
+
+/**
  * URL usável em <img>: preview local → https → storage_path (assinada + fallback público).
  * @param {unknown} entry
  * @returns {Promise<string>}
@@ -136,11 +162,36 @@ export async function resolveProductImageSrc(entry) {
 
 /**
  * Miniatura = primeira imagem geral por `sort_order` (badge Principal na UI).
- * Prioriza `product_image_links`; `product_images` só como fallback.
- * @param {{ product_images?: unknown; product_image_links?: unknown } | null | undefined} product
+ * Com `format === "variants"`: tenta primeiro a imagem da 1ª variação (sort_order em product_variants),
+ * alinhado ao formulário; depois links gerais e `product_images`.
+ * @param {{
+ *   format?: unknown;
+ *   product_variants?: unknown;
+ *   product_images?: unknown;
+ *   product_image_links?: unknown;
+ * } | null | undefined} product
  * @returns {Promise<string>}
  */
 export async function resolveProductImageSrcFromProduct(product) {
+  const fmt = String(product?.format || "").toLowerCase();
+  if (fmt === "variants" && Array.isArray(product?.product_variants) && product.product_variants.length > 0) {
+    const sorted = [...product.product_variants].sort(
+      (a, b) => (a?.sort_order ?? 0) - (b?.sort_order ?? 0)
+    );
+    const first = sorted[0];
+    const vk = buildVariantKeyFromAttributes(first?.attributes);
+    if (vk && Array.isArray(product?.product_image_links)) {
+      const scoped = product.product_image_links.filter(
+        (l) => l && String(l.variant_key ?? "").trim() === String(vk).trim()
+      );
+      const path = pickFirstImageLinkStoragePath(scoped);
+      if (path) {
+        const u = await resolveProductImageSrc({ storage_path: path });
+        if (u) return u;
+      }
+    }
+  }
+
   const fromLinksPath = pickFirstGeneralLinkStoragePath(product?.product_image_links);
   if (fromLinksPath) {
     const u = await resolveProductImageSrc({ storage_path: fromLinksPath });
@@ -181,8 +232,14 @@ export async function resolveProductImageSrcFromProduct(product) {
 }
 
 /**
- * Hook: miniatura = sort_order 0 nos links gerais; fallback `product_images`.
- * @param {{ product_images?: unknown; product_image_links?: unknown; id?: string } | null | undefined} product
+ * Hook: miniatura = 1ª variação (se houver link) → links gerais → `product_images`.
+ * @param {{
+ *   product_images?: unknown;
+ *   product_image_links?: unknown;
+ *   product_variants?: unknown;
+ *   format?: unknown;
+ *   id?: string;
+ * } | null | undefined} product
  * @returns {string}
  */
 export function useProductMainImageSrc(product) {
@@ -191,13 +248,17 @@ export function useProductMainImageSrc(product) {
       JSON.stringify({
         pi: product?.product_images ?? null,
         pil: product?.product_image_links ?? null,
+        fmt: product?.format ?? null,
+        pv: product?.product_variants ?? null,
       }),
-    [product?.product_images, product?.product_image_links]
+    [product?.product_images, product?.product_image_links, product?.format, product?.product_variants]
   );
   const snapshot = useMemo(
     () => ({
       product_images: product?.product_images,
       product_image_links: product?.product_image_links,
+      product_variants: product?.product_variants,
+      format: product?.format,
       id: product?.id,
     }),
     [product?.id, imagesKey]

@@ -48,7 +48,11 @@ import {
   variantProgressRowId,
 } from "../utils/formProgress";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
-import { useProductMainImageSrc } from "../utils/productImageDisplayUrl";
+import {
+  pickFirstImageLinkStoragePath,
+  resolveProductImageSrc,
+  useProductMainImageSrc,
+} from "../utils/productImageDisplayUrl";
 import {
   normalizeProductImagesForPayload,
   persistProductImagesAfterCreate,
@@ -651,10 +655,31 @@ function getFormSnapshotForGuard(p, rows, attrs) {
   return stableStringify({ product: prod, variantRows: sortedRows, variationAttributes: sortedAttrs });
 }
 
+/** JSONB/API pode devolver objeto, string JSON ou formato inesperado — grid espera objeto plano. */
+function normalizeVariantAttributesFromApi(raw) {
+  if (raw == null) return {};
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (!t) return {};
+    try {
+      const p = JSON.parse(t);
+      return p && typeof p === "object" && !Array.isArray(p) ? { ...p } : {};
+    } catch {
+      return {};
+    }
+  }
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    return { ...raw };
+  }
+  return {};
+}
+
 // ------------------------------------------------------
 // HIDRATAR FORM (modo edição)
 // ------------------------------------------------------
-useEffect(() => {
+useLayoutEffect(() => {
+  let snapshotProductMerge = null;
+
   // ------------------------------------------------------
   // Produto base
   // ------------------------------------------------------
@@ -683,6 +708,7 @@ useEffect(() => {
         }
       }
     }
+    snapshotProductMerge = toMerge;
     setProduct((prev) => ({ ...prev, ...toMerge }));
 
     // ------------------------------------------------------
@@ -726,9 +752,11 @@ useEffect(() => {
   // Usar listVariants(productId) para carregar ordenado por sort_order
   // ------------------------------------------------------
   const variants = initialVariants ?? initialVariations;
-  if (Array.isArray(variants) && variants.length > 0) {
+  const variantList = Array.isArray(variants) ? variants : [];
+
+  if (variantList.length > 0) {
     setVariantRows(
-      variants.map((v) => ({
+      variantList.map((v) => ({
         id: v.id || createId(),
         sku: v.sku || "",
         gtin: v.gtin || "",
@@ -743,7 +771,7 @@ useEffect(() => {
         stock_virtual: String(v.virtual_stock_quantity ?? 0),
 
         active: typeof v.active === "boolean" ? v.active : true,
-        attributes: v.attributes || {},
+        attributes: normalizeVariantAttributesFromApi(v.attributes),
       }))
     );
 
@@ -752,8 +780,8 @@ useEffect(() => {
     // ------------------------------------------------------
     const attrMap = new Map();
 
-    variants.forEach((v) => {
-      const attrs = v.attributes || {};
+    variantList.forEach((v) => {
+      const attrs = normalizeVariantAttributesFromApi(v.attributes);
       Object.entries(attrs).forEach(([k, val]) => {
         if (!attrMap.has(k)) attrMap.set(k, new Set());
         attrMap.get(k).add(String(val));
@@ -770,29 +798,38 @@ useEffect(() => {
       setVariationAttributes(reconstructed);
       setProduct((prev) => ({ ...prev, format: "variants" }));
     }
+  } else if (
+    mode === "edit" &&
+    snapshotProductMerge &&
+    String(snapshotProductMerge.format || "").toLowerCase() === "variants"
+  ) {
+    setVariantRows([]);
+    setVariationAttributes([]);
   }
 
   // Snapshot inicial para dirty check (após hidratação)
   if (initialProduct) {
-    const prod = { ...product, ...initialProduct };
-    const vs = initialVariants ?? initialVariations;
-    const rows = Array.isArray(vs) && vs.length > 0
-      ? vs.map((v) => ({
-          id: v.id || createId(),
-          sku: v.sku || "",
-          gtin: v.gtin || "",
-          cost_price: v.cost_price ?? "",
-          stock_real: String(v.stock_quantity ?? ""),
-          stock_min: String(v.stock_minimum ?? ""),
-          use_virtual_stock: !!v.use_virtual_stock,
-          stock_virtual: String(v.virtual_stock_quantity ?? 0),
-          active: typeof v.active === "boolean" ? v.active : true,
-          attributes: v.attributes || {},
-        }))
-      : [];
+    const prod = snapshotProductMerge ? { ...product, ...snapshotProductMerge } : { ...product, ...initialProduct };
+    const vs = variantList;
+    const rows =
+      vs.length > 0
+        ? vs.map((v) => ({
+            id: v.id || createId(),
+            sku: v.sku || "",
+            gtin: v.gtin || "",
+            cost_price: v.cost_price ?? "",
+            stock_real: String(v.stock_quantity ?? ""),
+            stock_min: String(v.stock_minimum ?? ""),
+            use_virtual_stock: !!v.use_virtual_stock,
+            stock_virtual: String(v.virtual_stock_quantity ?? 0),
+            active: typeof v.active === "boolean" ? v.active : true,
+            attributes: normalizeVariantAttributesFromApi(v.attributes),
+          }))
+        : [];
     const attrMap = new Map();
-    (Array.isArray(vs) ? vs : []).forEach((v) => {
-      Object.entries(v?.attributes || {}).forEach(([k, val]) => {
+    vs.forEach((v) => {
+      const attrsNorm = normalizeVariantAttributesFromApi(v.attributes);
+      Object.entries(attrsNorm).forEach(([k, val]) => {
         if (!attrMap.has(k)) attrMap.set(k, new Set());
         attrMap.get(k).add(String(val));
       });
@@ -806,7 +843,8 @@ useEffect(() => {
   } else {
     lastSavedSnapshotRef.current = getFormSnapshotForGuard(product, variantRows, variationAttributes);
   }
-}, [initialProduct, initialVariants, initialVariations]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- hidrata só a partir das props iniciais; `product` no snapshot usa closure do 1º paint (estado default + merge)
+}, [initialProduct, initialVariants, initialVariations, mode]);
 
   // ------------------------------------------------------
   // GUARD: Sair sem salvar (dirty state + preferências)
@@ -1069,6 +1107,13 @@ useEffect(() => {
 
   const handleImageProgressChange = useCallback((snapshot) => {
     setImageProgress(normalizeImageProgress(snapshot));
+  }, []);
+
+  const handleProductImageLinksSnapshot = useCallback((links) => {
+    setProduct((prev) => ({
+      ...prev,
+      product_image_links: Array.isArray(links) ? links : [],
+    }));
   }, []);
 
   // Ao trocar de produto, zera até recarregar links
@@ -2412,19 +2457,36 @@ const validatePricingTab = () => {
       return;
     }
 
+    if (mode === "edit" && !product?.id) {
+      addNotification({
+        type: "error",
+        title: "Erro ao salvar",
+        message: "Produto sem identificador. Recarregue a página e tente novamente.",
+      });
+      return;
+    }
+
     productSubmitInFlightRef.current = true;
     setIsSavingProduct(true);
 
     try {
-      let resolvedImages = normalizeProductImagesForPayload(product.product_images);
+      const nameFromForm = productDataForm.values?.product_name;
+      const skuFromForm = productDataForm.values?.sku;
+      const productBase = {
+        ...product,
+        ...(nameFromForm !== undefined ? { product_name: nameFromForm } : {}),
+        ...(product.format === "simple" && skuFromForm !== undefined ? { sku: skuFromForm } : {}),
+      };
+
+      let resolvedImages = normalizeProductImagesForPayload(productBase.product_images);
       if (!resolvedImages?.length) {
         resolvedImages = await resolvePrimaryImageFromLinks({
-          productId: product.id,
+          productId: productBase.id,
           draftKey: draftKeyRef.current,
         });
       }
       const productWithImages = {
-        ...product,
+        ...productBase,
         product_images: resolvedImages ?? null,
       };
 
@@ -2454,6 +2516,7 @@ const validatePricingTab = () => {
         variants:
           product.format === "variants"
             ? (variantRows || []).map((r) => ({
+                id: r.id,
                 sku: r.sku,
                 gtin: r.gtin || null,
                 cost_price: r.cost_price === "" ? null : r.cost_price,
@@ -2530,8 +2593,14 @@ const validatePricingTab = () => {
           );
           setFormGuardEpoch((n) => n + 1);
           addNotification({
-            title: "Cadastro realizado com sucesso",
-            message: "Produto salvo e pronto para uso.",
+            title:
+              mode === "edit"
+                ? "Alteração realizada com sucesso"
+                : "Cadastro realizado com sucesso",
+            message:
+              mode === "edit"
+                ? "Produto atualizado e salvo com sucesso."
+                : "Produto salvo e pronto para uso.",
             severity: NOTIFICATION_SEVERITY.INFO,
           });
           skipExitGuardRef.current = true;
@@ -2554,8 +2623,68 @@ const validatePricingTab = () => {
 
   // ------------------------------------------------------
   // Img1 Produto (preview) — mesma resolução assíncrona que listagem (storage_path → URL assinada)
+  // Com variações: miniatura na aba Dados = imagem principal da 1ª linha (sort_order nos links da variante)
   // ------------------------------------------------------
   const mainImageUrl = useProductMainImageSrc(product);
+  const [firstVariantThumbUrl, setFirstVariantThumbUrl] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    if (product.format !== "variants" || !Array.isArray(variantRows) || variantRows.length === 0) {
+      setFirstVariantThumbUrl("");
+      return undefined;
+    }
+    const row0 = variantRows[0];
+    const vk = buildVariantKey(row0?.attributes || {});
+    if (!vk) {
+      setFirstVariantThumbUrl("");
+      return undefined;
+    }
+    const pid = product?.id;
+    const hasProductId = pid && typeof pid === "string" && !String(pid).startsWith("draft:");
+    const dk = draftKeyRef.current;
+    const canOperate = hasProductId || (dk && typeof dk === "string");
+    if (!canOperate) {
+      setFirstVariantThumbUrl("");
+      return undefined;
+    }
+    const opts = hasProductId ? { productId: pid } : { draftKey: dk };
+    (async () => {
+      try {
+        const links = await listLinks({ ...opts, variantKey: vk });
+        const path = pickFirstImageLinkStoragePath(links);
+        const u = path ? await resolveProductImageSrc({ storage_path: path }) : "";
+        if (!cancelled) setFirstVariantThumbUrl(u);
+      } catch {
+        if (!cancelled) setFirstVariantThumbUrl("");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [product.format, product?.id, variantRows, buildVariantKey]);
+
+  const dataTabThumbUrl =
+    product.format === "variants" ? firstVariantThumbUrl || mainImageUrl : mainImageUrl;
+
+  const panelProductThumb = useMemo(() => {
+    if (mode !== "edit") return null;
+    const variantThumb = product.format === "variants" && firstVariantThumbUrl;
+    return {
+      src: dataTabThumbUrl || "",
+      title: dataTabThumbUrl
+        ? variantThumb
+          ? "Imagem principal da primeira variação"
+          : "Imagem principal do produto"
+        : "Sem imagem",
+      ariaLabel: variantThumb
+        ? "Imagem principal da primeira variação"
+        : "Imagem principal do produto",
+      alt: variantThumb
+        ? "Imagem principal da primeira variação"
+        : "Imagem principal do produto",
+    };
+  }, [mode, dataTabThumbUrl, product.format, firstVariantThumbUrl]);
 
   // ------------------------------------------------------
   // Layout: helper para exibir atributos do variant row
@@ -2619,6 +2748,7 @@ const validatePricingTab = () => {
             }}
             onStepChange={handlePanelStepChange}
             progressPercent={globalProgressPercent}
+            panelProductThumb={panelProductThumb}
           />
 
           <div className="pf-card pf-card--primary">
@@ -2648,51 +2778,35 @@ const validatePricingTab = () => {
           <div className="pf-container">
             <h2 className="pf-tab-title">Dados</h2>
             <div className="pf-product-name-fixed pf-product-name-fixed--in-data">
-              <div className="pf-product-name-line">
-                {mode === "edit" && (
-                  <div
-                    className="pf-product-thumb"
-                    title={mainImageUrl ? "Imagem principal do produto" : "Sem imagem"}
-                    aria-label="Imagem principal do produto"
-                  >
-                    {mainImageUrl ? (
-                      <img src={mainImageUrl} alt="Imagem principal do produto" />
-                    ) : (
-                      <span className="pf-product-thumb__placeholder">IMG</span>
-                    )}
+              <div className="pf-product-name-fields">
+                <FieldLabel
+                  text="Nome do produto"
+                  required
+                  copyKey="product_name"
+                  copiedKey={copiedKey}
+                  onCopy={() => handleCopy(product.product_name, "product_name")}
+                />
+                <S7Input
+                  name="product_name"
+                  placeholder="Ex: Armário de cozinha 3 portas"
+                  value={productDataForm.values.product_name}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    productDataForm.setValue("product_name", v);
+                    setProduct((p) => ({ ...p, product_name: v }));
+                  }}
+                  onBlur={() => productDataForm.handleBlur("product_name")}
+                  error={productDataForm.getFieldState("product_name").hasError}
+                  success={false}
+                  message=""
+                  helperText=""
+                  hint=""
+                />
+                {productDataForm.getFieldState("product_name").hasError && (
+                  <div className="s7-error">
+                    {productDataForm.getFieldState("product_name").message}
                   </div>
                 )}
-
-                <div className="pf-product-name-fields">
-                  <FieldLabel
-                    text="Nome do produto"
-                    required
-                    copyKey="product_name"
-                    copiedKey={copiedKey}
-                    onCopy={() => handleCopy(product.product_name, "product_name")}
-                  />
-                  <S7Input
-                    name="product_name"
-                    placeholder="Ex: Armário de cozinha 3 portas"
-                    value={productDataForm.values.product_name}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      productDataForm.setValue("product_name", v);
-                      setProduct((p) => ({ ...p, product_name: v }));
-                    }}
-                    onBlur={() => productDataForm.handleBlur("product_name")}
-                    error={productDataForm.getFieldState("product_name").hasError}
-                    success={false}
-                    message=""
-                    helperText=""
-                    hint=""
-                  />
-                  {productDataForm.getFieldState("product_name").hasError && (
-                    <div className="s7-error">
-                      {productDataForm.getFieldState("product_name").message}
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -3159,6 +3273,7 @@ const validatePricingTab = () => {
                 onSwitchToDataTab={() => navigateToTabWithUnlock("data")}
                 onGoToSeo={goToSeoKeywords}
                 onImageProgressChange={handleImageProgressChange}
+                onProductImageLinksSnapshot={handleProductImageLinksSnapshot}
               />
             )}
           </div>
@@ -4023,42 +4138,63 @@ const validatePricingTab = () => {
              </div>
       
         </div>
-        <div className="pf-body-footer">
-          <div>
-            {!isFirstStep && (
-              <button
-                type="button"
-                className="s7-btn s7-btn--secondary pf-body-footer-btn"
-                onClick={goToPreviousStep}
-                disabled={isSavingProduct}
-              >
-                Voltar
-              </button>
-            )}
-          </div>
-          <div>
-            {isLastStep ? (
-              <S7Button
-                type="button"
-                variant="primary"
-                className="pf-body-footer-btn"
-                loading={isSavingProduct}
-                loadingLabel="Salvando..."
-                onClick={handleSubmit}
-              >
-                {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
-              </S7Button>
-            ) : (
-              <button
-                type="button"
-                className="s7-btn s7-btn--primary pf-body-footer-btn"
-                onClick={handleNextStep}
-                disabled={isSavingProduct}
-              >
-                Avançar
-              </button>
-            )}
-          </div>
+        <div
+          className={
+            allStepsUnlocked ? "pf-body-footer pf-body-footer--save-only" : "pf-body-footer"
+          }
+        >
+          {allStepsUnlocked ? (
+            <S7Button
+              type="button"
+              variant="primary"
+              className="pf-body-footer-btn"
+              loading={isSavingProduct}
+              loadingLabel="Salvando..."
+              disabled={isSavingProduct}
+              onClick={handleSubmit}
+            >
+              {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+            </S7Button>
+          ) : (
+            <>
+              <div>
+                {!isFirstStep && (
+                  <button
+                    type="button"
+                    className="s7-btn s7-btn--secondary pf-body-footer-btn"
+                    onClick={goToPreviousStep}
+                    disabled={isSavingProduct}
+                  >
+                    Voltar
+                  </button>
+                )}
+              </div>
+              <div>
+                {isLastStep ? (
+                  <S7Button
+                    type="button"
+                    variant="primary"
+                    className="pf-body-footer-btn"
+                    loading={isSavingProduct}
+                    loadingLabel="Salvando..."
+                    disabled={isSavingProduct}
+                    onClick={handleSubmit}
+                  >
+                    {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+                  </S7Button>
+                ) : (
+                  <button
+                    type="button"
+                    className="s7-btn s7-btn--primary pf-body-footer-btn"
+                    onClick={handleNextStep}
+                    disabled={isSavingProduct}
+                  >
+                    Avançar
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

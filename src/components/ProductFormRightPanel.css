@@ -59,6 +59,39 @@
   color: #4b5563;
 }
 
+/* Miniatura (edição) à esquerda do medidor semi-circular */
+.pf-right-progress-row{
+  margin: 6px 0 24px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 14px;
+}
+
+.pf-right-progress-row .pf-right-progress-semi{
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* +33% sobre 52px — especificidade dupla para vencer .pf-product-thumb em ProductForm.css (importado depois) */
+.pf-product-thumb.pf-right-panel-product-thumb{
+  --pf-panel-thumb: calc(52px * 1.33);
+  flex: 0 0 var(--pf-panel-thumb);
+  width: var(--pf-panel-thumb);
+  height: var(--pf-panel-thumb);
+  min-width: var(--pf-panel-thumb);
+  min-height: var(--pf-panel-thumb);
+  box-sizing: border-box;
+}
+
+.pf-product-thumb.pf-right-panel-product-thumb .pf-product-thumb__placeholder{
+  font-size: calc(12px * 1.33);
+}
+
 .pf-right-progress-semi{
   margin: 6px 0 24px;
   display: flex;

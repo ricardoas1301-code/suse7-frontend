@@ -26,10 +26,10 @@ export async function updateVariantsSortOrder(productId, updates) {
 /**
  * Lista variações do produto ordenadas por sort_order asc.
  * @param {string} productId - UUID do produto
- * @returns {Promise<Array>}
+ * @returns {Promise<{ data: Array; error: import("@supabase/supabase-js").PostgrestError | null }>}
  */
 export async function listVariants(productId) {
-  if (!productId) return [];
+  if (!productId) return { data: [], error: null };
   const { data, error } = await supabase
     .from(TABLE)
     .select("*")
@@ -37,7 +37,7 @@ export async function listVariants(productId) {
     .order("sort_order", { ascending: true });
   if (error) {
     console.error("[variantRepository] listVariants error:", error);
-    return [];
+    return { data: [], error };
   }
-  return data || [];
+  return { data: data || [], error: null };
 }

@@ -97,6 +97,27 @@ function storagePathKey(link) {
   return sanitizeStoragePath(link?.storage_path ?? link?.storagePath) || "";
 }
 
+/** Formato alinhado ao join do catálogo / for-edit — para thumbnail principal no ProductForm */
+function flattenLinksForProductSnapshot(productLinks, variantLinksMap) {
+  const push = (out, l) => {
+    const p = sanitizeStoragePath(l?.storage_path ?? l?.storagePath);
+    if (!p) return;
+    const vk = l.variant_key ?? l.variantKey;
+    out.push({
+      storage_path: p,
+      variant_key: vk == null || vk === "" ? null : vk,
+      sort_order: l.sort_order ?? l.sortOrder ?? 0,
+      is_primary: !!l.is_primary,
+    });
+  };
+  const out = [];
+  for (const l of productLinks || []) push(out, l);
+  for (const arr of Object.values(variantLinksMap || {})) {
+    for (const l of arr || []) push(out, l);
+  }
+  return out;
+}
+
 /**
  * IDs de links cujo storage mudou (ou entrou/saiu da lista) — só estes precisam refetch de preview.
  * Evita limpar toda a grade e reduz piscar após renomeação SEO.
@@ -365,11 +386,15 @@ export default function ProductFormImagesTab({
   onGoToSeo = null,
   /** @type {((snapshot: { productHasImage: boolean; variantHasImageByKey: Record<string, boolean> }) => void) | null} */
   onImageProgressChange = null,
+  /** Atualiza `product.product_image_links` no pai (miniatura painel / useProductMainImageSrc) */
+  onProductImageLinksSnapshot = null,
 }) {
   const variantKeyFn = buildVariantKey || buildVariantKeyFromAttrs;
 
   const [productLinks, setProductLinks] = useState([]);
   const [variantLinksMap, setVariantLinksMap] = useState({});
+  /** Evita sobrescrever links vindos do for-edit com [] antes do primeiro listLinks */
+  const [didLoadLinksOnce, setDidLoadLinksOnce] = useState(false);
   const [selectedForDownloadByScope, setSelectedForDownloadByScope] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -470,6 +495,7 @@ export default function ProductFormImagesTab({
       return null;
     } finally {
       if (!silent) setLoading(false);
+      setDidLoadLinksOnce(true);
     }
     return { productLinks: mappedGeneral, variantLinksMap: variantMapResult };
   }, [canOperate, hasProductId, productId, draftKey, format, variantRows, variantKeyFn]);
@@ -477,6 +503,11 @@ export default function ProductFormImagesTab({
   useEffect(() => {
     loadLinks();
   }, [loadLinks]);
+
+  useEffect(() => {
+    if (!didLoadLinksOnce || typeof onProductImageLinksSnapshot !== "function") return;
+    onProductImageLinksSnapshot(flattenLinksForProductSnapshot(productLinks, variantLinksMap));
+  }, [didLoadLinksOnce, productLinks, variantLinksMap, onProductImageLinksSnapshot]);
 
   useEffect(() => {
     if (typeof onImageProgressChange !== "function") return;

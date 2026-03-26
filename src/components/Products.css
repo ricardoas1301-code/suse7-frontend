@@ -5,13 +5,13 @@
 /* Reduz gutter lateral do Layout só nesta rota (mais área útil, estilo wide)
    padding-top: 0 — evita faixa entre navbar e cabeçalho sticky da grade (conteúdo “vazando”) */
 .page-content:has(.products-catalog) {
-  padding-left: max(8px, 0.9vw);
-  padding-right: max(8px, 0.9vw);
+  padding-left: 4px;
+  padding-right: 4px;
   padding-top: 0;
 }
 
 .products-catalog {
-  padding: 10px clamp(10px, 1.5vw, 24px) 44px;
+  padding: 10px clamp(4px, 0.65vw, 10px) 44px;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -434,13 +434,16 @@
     0 8px 28px rgba(15, 23, 42, 0.07);
 }
 
-/* Corte horizontal sem virar scroll container no eixo Y (hidden+visible força overflow-y: auto na spec) */
+/*
+ * Rolagem horizontal: não usar overflow-x: clip/hidden/auto com overflow-y: visible na mesma caixa —
+ * na prática o navegador computa overflow-y como auto e recorta position:absolute dos .s7-tip (::after),
+ * sumindo com os tooltips do cabeçalho. Visível aqui; page-content já limita overflow-x.
+ */
 .products-catalog__table-hscroll {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: visible;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -470,8 +473,9 @@
     minmax(0, 0.8fr)
     minmax(0, 0.8fr)
     minmax(0, 0.8fr)
-    minmax(0, 1fr)
-    minmax(0, 0.54fr)
+    minmax(0, 0.46fr)
+    minmax(0, 0.94fr)
+    minmax(0, 0.52fr)
     44px;
   column-gap: 14px;
   align-items: center;
@@ -486,7 +490,8 @@
     minmax(0, 0.75fr)
     minmax(0, 0.75fr)
     minmax(0, 0.75fr)
-    minmax(0, 0.82fr)
+    minmax(0, 0.42fr)
+    minmax(0, 0.76fr)
     minmax(0, 0.5fr)
     minmax(0, 0.85fr)
     44px;
@@ -500,6 +505,7 @@
   position: sticky;
   top: 0;
   z-index: 6;
+  overflow: visible;
   padding: 10px clamp(14px, 2vw, 22px);
   background: linear-gradient(
     180deg,
@@ -524,6 +530,118 @@
   letter-spacing: 0.055em;
   color: var(--s7-title-bar-text);
   line-height: 1.35;
+}
+
+/* Tooltip do cabeçalho: só nesta tela; attr(data-tooltip) + pseudo-elementos (sem S7Tooltip / DS) */
+.products-catalog__grid--head .products-catalog__head-tooltip {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  line-height: inherit;
+  cursor: help;
+  outline: none;
+}
+
+.products-catalog__grid--head .products-catalog__head-tooltip:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.products-catalog__grid--head .products-catalog__head-tooltip--stacked {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1.15;
+  gap: 0;
+}
+
+.products-catalog__grid--head .products-catalog__col-head-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.products-catalog__grid--head .products-catalog__head-tooltip[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  transform: translateX(-50%);
+  z-index: 100020;
+
+  box-sizing: border-box;
+  min-width: 56px;
+  max-width: 240px;
+  width: max-content;
+  padding: 6px 10px;
+  border-radius: 12px;
+
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  word-wrap: break-word;
+
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  /* Sai rápido; sem delay ao remover o hover */
+  transition:
+    opacity 0.15s ease 0s,
+    visibility 0s linear 0.15s;
+}
+
+.products-catalog__grid--head .products-catalog__head-tooltip--wide[data-tooltip]::after {
+  max-width: 320px;
+}
+
+.products-catalog__grid--head .products-catalog__head-tooltip[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  transform: translateX(-50%);
+  z-index: 100021;
+
+  border: 5px solid transparent;
+  border-top-color: transparent;
+  border-bottom-color: #0f172a;
+
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease 0s,
+    visibility 0s linear 0.15s;
+}
+
+/* Aparece só depois de ~400ms no hover/focus (menos “pisca” ao cruzar o header) */
+.products-catalog__grid--head .products-catalog__head-tooltip:hover::after,
+.products-catalog__grid--head .products-catalog__head-tooltip:focus::after,
+.products-catalog__grid--head .products-catalog__head-tooltip:hover::before,
+.products-catalog__grid--head .products-catalog__head-tooltip:focus::before {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.18s ease 0.4s,
+    visibility 0s linear 0.4s;
 }
 
 .products-catalog__grid--head .products-catalog__cell--product.products-catalog__col-head {
@@ -553,8 +671,9 @@
     minmax(0, 0.8fr)
     minmax(0, 0.8fr)
     minmax(0, 0.8fr)
-    minmax(0, 1fr)
-    minmax(0, 0.54fr)
+    minmax(0, 0.46fr)
+    minmax(0, 0.94fr)
+    minmax(0, 0.52fr)
     44px;
   column-gap: 14px;
   align-items: center;
@@ -576,7 +695,8 @@
     minmax(0, 0.75fr)
     minmax(0, 0.75fr)
     minmax(0, 0.75fr)
-    minmax(0, 0.82fr)
+    minmax(0, 0.42fr)
+    minmax(0, 0.76fr)
     minmax(0, 0.5fr)
     minmax(0, 0.85fr)
     44px;
@@ -804,7 +924,8 @@
 
 /* Ocupa a largura da coluna + texto centralizado = título alinhado ao dado */
 .products-catalog__cell--num,
-.products-catalog__cell--money {
+.products-catalog__cell--money,
+.products-catalog__cell--pct {
   font-variant-numeric: tabular-nums;
   justify-self: stretch;
   text-align: center;
@@ -814,25 +935,36 @@
   font-weight: 500;
 }
 
+.products-catalog__cell--pct {
+  font-weight: 600;
+  font-size: 13px;
+}
+
 .products-catalog__cell--profit {
   font-weight: 700;
   font-size: 14px;
   letter-spacing: -0.02em;
 }
 
-.products-catalog__cell--profit-positive {
-  color: #0f766e;
+/* Tom semântico financeiro (Lucro bruto + Lucro %): saudável / atenção / prejuízo / sem histórico */
+.products-catalog__cell--fin-healthy {
+  color: #047857;
   font-weight: 700;
 }
 
-.products-catalog__cell--profit-neutral {
+.products-catalog__cell--fin-warn {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.products-catalog__cell--fin-loss {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.products-catalog__cell--fin-none {
   color: var(--s7-muted, #64748b);
   font-weight: 600;
-}
-
-.products-catalog__cell--profit-negative {
-  color: var(--s7-danger, #b91c1c);
-  font-weight: 700;
 }
 
 .products-catalog__cell--health {
@@ -876,9 +1008,14 @@
 }
 
 .products-catalog__health-badge-text {
-  white-space: nowrap;
+  max-width: 11.5em;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .products-catalog__health-badge--healthy {

@@ -17,6 +17,11 @@ export function pickProductFieldsForForm(row) {
   const out = {};
   for (const [k, v] of Object.entries(rest)) {
     if (v === null || v === undefined) continue;
+    if (k === "format") {
+      const f = String(v).trim().toLowerCase();
+      out[k] = f === "variants" ? "variants" : "simple";
+      continue;
+    }
     out[k] = v;
   }
   return out;

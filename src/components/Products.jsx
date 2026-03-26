@@ -20,8 +20,11 @@ import { applyCatalogFilter, getCatalogFilterChipsForToolbar } from "../utils/ca
 import { filterProductsByCatalogSearch } from "../utils/catalogSearch";
 import {
   formatCatalogBRL,
+  formatCatalogProfitPercentLabel,
+  getCatalogFinancialToneClass,
+  getCatalogHealthPresentation,
+  getCatalogProfitSemanticBand,
   getContributionMarginPercent,
-  getMarginHealthPresentation,
   getProductCatalogMetrics,
   getProductStockDisplay,
   marketplaceChipLabel,
@@ -35,11 +38,52 @@ const SHOW_CATALOG_MARKETPLACES_COLUMN = false;
 /** Itens por página na listagem paginada. */
 const CATALOG_PAGE_SIZE = 33;
 
-function profitToneClass(gross) {
-  const n = typeof gross === "number" && Number.isFinite(gross) ? gross : Number(gross) || 0;
-  if (n < 0) return "products-catalog__cell--profit-negative";
-  if (n > 0) return "products-catalog__cell--profit-positive";
-  return "products-catalog__cell--profit-neutral";
+/** Textos dos tooltips dos cabeçalhos financeiros / métricas (catálogo). */
+const CATALOG_COLUMN_TOOLTIPS = {
+  ads: "Quantidade de anúncios vinculados ao produto.",
+  sales: "Quantidade total de vendas deste produto.",
+  revenue: "Valor total vendido deste produto.",
+  cost: "Custo total das vendas deste produto, incluindo custo do produto, taxas, impostos e outros custos da venda.",
+  grossProfit:
+    "Lucro bruto ou margem de contribuição total deste produto, calculado pelo valor total vendido menos o custo das vendas.",
+  profitPct: "Percentual total de lucro deste produto.",
+};
+
+/**
+ * Cabeçalho de coluna: célula com layout original; tooltip só no rótulo (CSS local, sem S7Tooltip).
+ * `lines` = duas linhas como “Saúde do produto” (ex.: Valor / vendido).
+ * @param {{ columnClass: string; tip?: string; tipWrap?: boolean; lines?: [string, string]; children?: import("react").ReactNode }} props
+ */
+function CatalogHeadCell({ columnClass, tip, tipWrap = false, lines, children = null }) {
+  const triggerClass = [
+    "products-catalog__head-tooltip",
+    lines && lines.length === 2 ? "products-catalog__head-tooltip--stacked" : "",
+    tipWrap ? "products-catalog__head-tooltip--wide" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const label =
+    lines && lines.length === 2 ? (
+      <>
+        <span className="products-catalog__col-head-line">{lines[0]}</span>
+        <span className="products-catalog__col-head-line">{lines[1]}</span>
+      </>
+    ) : (
+      children
+    );
+
+  return (
+    <div className={`products-catalog__cell ${columnClass} products-catalog__col-head`} role="columnheader">
+      {tip ? (
+        <span className={triggerClass} data-tooltip={tip} tabIndex={0}>
+          {label}
+        </span>
+      ) : (
+        label
+      )}
+    </div>
+  );
 }
 
 /**
@@ -80,7 +124,9 @@ function ProductCatalogRow({
   const metrics = getProductCatalogMetrics(product);
   const stock = getProductStockDisplay(product);
   const marginPct = getContributionMarginPercent(product, metrics);
-  const health = getMarginHealthPresentation(marginPct);
+  const profitBand = getCatalogProfitSemanticBand(product, metrics);
+  const financialToneClass = getCatalogFinancialToneClass(profitBand);
+  const health = getCatalogHealthPresentation(product, metrics);
 
   const handleRowActivate = useCallback(() => {
     if (id) onOpenEdit(id);
@@ -175,29 +221,26 @@ function ProductCatalogRow({
         </div>
       </div>
 
-      <div className="products-catalog__cell products-catalog__cell--num" title="Anúncios vinculados (evoluirá com modal)">
-        {metrics.adsCount}
-      </div>
+      <div className="products-catalog__cell products-catalog__cell--num">{metrics.adsCount}</div>
       <div className="products-catalog__cell products-catalog__cell--num">{metrics.salesCount}</div>
       <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(metrics.revenue)}</div>
       <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(metrics.costTotal)}</div>
       <div
-        className={`products-catalog__cell products-catalog__cell--money products-catalog__cell--profit ${profitToneClass(metrics.grossProfit)}`}
-        title="Lucro bruto / margem de contribuição (consolidado)"
+        className={`products-catalog__cell products-catalog__cell--money products-catalog__cell--profit ${financialToneClass}`}
       >
         {formatCatalogBRL(metrics.grossProfit)}
       </div>
       <div
-        className="products-catalog__cell products-catalog__cell--health"
-        title="Margem de contribuição (API ou lucro ÷ valor vendido quando houver receita)"
+        className={`products-catalog__cell products-catalog__cell--pct products-catalog__cell--profit ${financialToneClass}`}
       >
+        {formatCatalogProfitPercentLabel(marginPct)}
+      </div>
+      <div className="products-catalog__cell products-catalog__cell--health">
         <span className={`products-catalog__health-badge ${health.badgeClass}`} data-health-band={health.band}>
           {health.band !== "unknown" ? <span className="products-catalog__health-badge-dot" aria-hidden /> : null}
-          {health.displayPercent == null ? (
-            <span className="products-catalog__health-badge-text">—</span>
-          ) : (
-            <span className="products-catalog__health-badge-text">{health.displayPercent} margem</span>
-          )}
+          <span className="products-catalog__health-badge-text">
+            {health.displayPercent ? `${health.label} · ${health.displayPercent}` : health.label}
+          </span>
         </span>
       </div>
       <div className="products-catalog__cell products-catalog__cell--num">{stock}</div>
@@ -403,7 +446,7 @@ export default function Products() {
         .select(
           `
           *,
-          product_variants ( id, stock_quantity ),
+          product_variants ( id, stock_quantity, attributes, sort_order ),
           product_image_links ( storage_path, variant_key, sort_order, is_primary )
         `
         )
@@ -413,7 +456,7 @@ export default function Products() {
       if (error) {
         const fallback = await supabase
           .from("products")
-          .select("*, product_variants ( id, stock_quantity )")
+          .select("*, product_variants ( id, stock_quantity, attributes, sort_order )")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
         data = fallback.data;
@@ -613,45 +656,47 @@ export default function Products() {
           <div className="products-catalog__table-card">
             <div className="products-catalog__table-hscroll">
               <div className={`products-catalog__grid products-catalog__grid--head${gridMod}`}>
-              <div className="products-catalog__cell products-catalog__cell--thumb" aria-hidden />
-              <div className="products-catalog__cell products-catalog__cell--product products-catalog__col-head">Produto</div>
-              <div
-                className="products-catalog__cell products-catalog__cell--num products-catalog__col-head"
-                title="Quantidade de anúncios vinculados"
-              >
-                Anúncios
-              </div>
-              <div className="products-catalog__cell products-catalog__cell--num products-catalog__col-head" title="Total de vendas do produto">
-                Vendas
-              </div>
-              <div className="products-catalog__cell products-catalog__cell--money products-catalog__col-head" title="Valor total vendido (BRL)">
-                Valor vendido
-              </div>
-              <div
-                className="products-catalog__cell products-catalog__cell--money products-catalog__col-head"
-                title="Custo total por venda (consolidado: produto, frete, imposto, comissões, etc.)"
-              >
-                Custo / venda
-              </div>
-              <div
-                className="products-catalog__cell products-catalog__cell--money products-catalog__col-head"
-                title="Lucro bruto / margem de contribuição"
-              >
-                Lucro bruto
-              </div>
-              <div
-                className="products-catalog__cell products-catalog__cell--health products-catalog__col-head"
-                title="Margem de contribuição e faixa de saúde"
-              >
-                Saúde do produto
-              </div>
-              <div className="products-catalog__cell products-catalog__cell--num products-catalog__col-head">Estoque</div>
-              {SHOW_CATALOG_MARKETPLACES_COLUMN ? (
-                <div className="products-catalog__cell products-catalog__cell--mkts products-catalog__col-head">Marketplaces</div>
-              ) : null}
-              <div className="products-catalog__cell products-catalog__cell--actions products-catalog__cell--actions-head products-catalog__col-head">
-                <span className="products-catalog__sr-only">Ações</span>
-              </div>
+                <div className="products-catalog__cell products-catalog__cell--thumb" aria-hidden />
+                <div className="products-catalog__cell products-catalog__cell--product products-catalog__col-head">Produto</div>
+                <CatalogHeadCell columnClass="products-catalog__cell--num" tip={CATALOG_COLUMN_TOOLTIPS.ads}>
+                  Anúncios
+                </CatalogHeadCell>
+                <CatalogHeadCell columnClass="products-catalog__cell--num" tip={CATALOG_COLUMN_TOOLTIPS.sales}>
+                  Vendas
+                </CatalogHeadCell>
+                <CatalogHeadCell
+                  columnClass="products-catalog__cell--money"
+                  tip={CATALOG_COLUMN_TOOLTIPS.revenue}
+                  lines={["Valor", "vendido"]}
+                />
+                <CatalogHeadCell
+                  columnClass="products-catalog__cell--money"
+                  tip={CATALOG_COLUMN_TOOLTIPS.cost}
+                  tipWrap
+                  lines={["Custo", "vendas"]}
+                />
+                <CatalogHeadCell
+                  columnClass="products-catalog__cell--money"
+                  tip={CATALOG_COLUMN_TOOLTIPS.grossProfit}
+                  tipWrap
+                  lines={["Lucro", "bruto"]}
+                />
+                <CatalogHeadCell columnClass="products-catalog__cell--pct" tip={CATALOG_COLUMN_TOOLTIPS.profitPct}>
+                  Lucro %
+                </CatalogHeadCell>
+                <div
+                  className="products-catalog__cell products-catalog__cell--health products-catalog__col-head"
+                  title="Margem de contribuição e faixa de saúde"
+                >
+                  Saúde do produto
+                </div>
+                <div className="products-catalog__cell products-catalog__cell--num products-catalog__col-head">Estoque</div>
+                {SHOW_CATALOG_MARKETPLACES_COLUMN ? (
+                  <div className="products-catalog__cell products-catalog__cell--mkts products-catalog__col-head">Marketplaces</div>
+                ) : null}
+                <div className="products-catalog__cell products-catalog__cell--actions products-catalog__cell--actions-head products-catalog__col-head">
+                  <span className="products-catalog__sr-only">Ações</span>
+                </div>
               </div>
 
               <div className="products-catalog__body">

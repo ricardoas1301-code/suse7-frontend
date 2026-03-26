@@ -179,7 +179,7 @@ export function normalizeImageProgress(raw) {
  * @property {Record<string, string>} [variantCostDigitsById]
  * @property {string} [packagingDigits]
  * @property {string} [operationalDigits]
- * @property {string[]} [skuBaseChips]
+ * @property {string[]} [skuBaseChips] reservado (UI); não entra no % até `products.sku_base` existir no banco
  * @property {{ productHasImage?: boolean; variantHasImageByKey?: Record<string, boolean> }} [imageProgress]
  * @property {(attrs: object) => string} [buildVariantKey] só para leitura de imagem por variação (fallback vk)
  */
@@ -198,7 +198,6 @@ export function getVisibleInputs(ctx) {
     variantCostDigitsById = {},
     packagingDigits = "",
     operationalDigits = "",
-    skuBaseChips = [],
     imageProgress: rawImageProgress,
   } = ctx;
 
@@ -224,9 +223,8 @@ export function getVisibleInputs(ctx) {
 
   // --- Variações: configuração (só formato com variações) ---
   if (format === "variants") {
-    const baseFromChips = Array.isArray(skuBaseChips) && skuBaseChips.length > 0;
-    const baseFromProduct = strFilled(product?.sku_base);
-    add("var:sku_base", baseFromChips || baseFromProduct);
+    // Raiz do SKU (chips / product.sku_base): não entra no % enquanto não houver coluna oficial
+    // em `products` persistida e hidratada no edit (hoje `sku_base` não vai no insert/update do backend).
 
     // Só atributos já cadastrados (nome + ≥1 opção válida). O rascunho “Nome do atributo / Opções”
     // do builder fica em draftAttrChips/draftOptions e NÃO entra em variationAttributes — mas linhas

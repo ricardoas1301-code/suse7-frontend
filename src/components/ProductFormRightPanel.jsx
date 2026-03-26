@@ -23,6 +23,7 @@ import ProductHealthProgress from "./ProductHealthProgress";
  *   statusText?: string;
  *   progressPercent?: number;
  *   stepsClickable?: boolean;
+ *   panelProductThumb?: null | { src: string; title: string; ariaLabel: string; alt: string };
  * }} props
  */
 export default function ProductFormRightPanel({
@@ -38,6 +39,7 @@ export default function ProductFormRightPanel({
   statusText = "",
   progressPercent = 0,
   stepsClickable = true,
+  panelProductThumb = null,
 }) {
   if (!Array.isArray(steps) || steps.length === 0) {
     return null;
@@ -82,17 +84,44 @@ export default function ProductFormRightPanel({
         <span className="pf-right-required-hint">* Campos obrigatórios</span>
       </div>
 
-      <div className="pf-right-progress-semi">
-        <ProductHealthProgress
-          percent={progressPercent}
-          status=""
-          blockingCount={0}
-          warningsCount={0}
-          hint={null}
-          showLabel={false}
-          variant="semi"
-        />
-      </div>
+      {panelProductThumb ? (
+        <div className="pf-right-progress-row pf-right-progress-row--with-thumb">
+          <div
+            className="pf-product-thumb pf-right-panel-product-thumb pf-product-thumb--data-inline"
+            title={panelProductThumb.title}
+            aria-label={panelProductThumb.ariaLabel}
+          >
+            {panelProductThumb.src ? (
+              <img src={panelProductThumb.src} alt={panelProductThumb.alt} />
+            ) : (
+              <span className="pf-product-thumb__placeholder">IMG</span>
+            )}
+          </div>
+          <div className="pf-right-progress-semi">
+            <ProductHealthProgress
+              percent={progressPercent}
+              status=""
+              blockingCount={0}
+              warningsCount={0}
+              hint={null}
+              showLabel={false}
+              variant="semi"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="pf-right-progress-semi">
+          <ProductHealthProgress
+            percent={progressPercent}
+            status=""
+            blockingCount={0}
+            warningsCount={0}
+            hint={null}
+            showLabel={false}
+            variant="semi"
+          />
+        </div>
+      )}
 
       <div className="pf-right-steps">
         <ol className="pf-right-steps-list">

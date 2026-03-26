@@ -20,6 +20,8 @@ export default function ProductEditForm() {
   const [loadError, setLoadError] = useState(null);
   const [initialProduct, setInitialProduct] = useState(null);
   const [initialVariations, setInitialVariations] = useState(null);
+  /** Aviso após carregar: erro em listVariants (fallback) ou produto variants sem linhas no banco */
+  const [editLoadNotice, setEditLoadNotice] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,8 +31,9 @@ export default function ProductEditForm() {
       setLoadError(null);
       setInitialProduct(null);
       setInitialVariations(null);
+      setEditLoadNotice(null);
 
-      const { error, product, variants } = await fetchProductForEdit(productId);
+      const { error, product, variants, variantsLoadError } = await fetchProductForEdit(productId);
 
       if (cancelled) return;
 
@@ -40,8 +43,26 @@ export default function ProductEditForm() {
         return;
       }
 
+      const variantList = Array.isArray(variants) ? variants : [];
+      const fmt = String(product.format || "").toLowerCase();
+
+      let notice = null;
+      if (variantsLoadError) {
+        notice = {
+          type: "error",
+          message: `Erro ao listar product_variants no Supabase (fallback): ${variantsLoadError}. Confira o console (F12) e se VITE_API_BASE_URL aponta para o backend com GET /api/products/for-edit.`,
+        };
+      } else if (fmt === "variants" && variantList.length === 0) {
+        notice = {
+          type: "warn",
+          message:
+            'Formato "Com variações", mas não há linhas em product_variants para este produto. Confira no Supabase (tabela product_variants, filtro product_id) ou salve de novo com a aba Variações preenchida. No console (F12) procure [fetchProductForEdit] para variantCount.',
+        };
+      }
+
+      setEditLoadNotice(notice);
       setInitialProduct(pickProductFieldsForForm(product));
-      setInitialVariations(Array.isArray(variants) ? variants : []);
+      setInitialVariations(variantList);
       setLoading(false);
     };
 
@@ -89,6 +110,19 @@ export default function ProductEditForm() {
 
   return (
     <div className="product-page">
+      {editLoadNotice && (
+        <div
+          className={
+            editLoadNotice.type === "error"
+              ? "s7-alert s7-alert--error"
+              : "s7-alert s7-alert--warning"
+          }
+          style={{ margin: "0 0 16px", maxWidth: 960, marginLeft: "auto", marginRight: "auto" }}
+          role="status"
+        >
+          {editLoadNotice.message}
+        </div>
+      )}
       <ProductForm
         title="Editar produto"
         mode="edit"
