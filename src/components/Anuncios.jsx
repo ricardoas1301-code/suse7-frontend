@@ -1,9 +1,10 @@
 // ======================================================================
 // PÁGINA: Anúncios — listagem operacional (Suse7), espelhando Produtos.
-// Dados mock até API; KPIs e tabela prontos para evolução.
+// Fonte: GET /api/ml/listings | Sincronização: POST /api/ml/sync-listings
 // ======================================================================
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { buildApiUrl, apiFetch } from "../config/api";
 import S7Button from "./ui/S7Button";
 import S7EmptyState from "./ui/S7EmptyState";
 import S7Icon from "./ui/S7Icon";
@@ -21,7 +22,7 @@ import "./Anuncios.css";
 const ADS_PAGE_SIZE = 25;
 
 const ADS_COLUMN_TOOLTIPS = {
-  adCount: "Quantidade de anúncios neste agrupamento (placeholder até agregação na API).",
+  adCount: "Estoque disponível no marketplace (unidades à venda).",
   adTitle: "Título público do anúncio no marketplace.",
   product: "Produto interno vinculado ao anúncio.",
   marketplace: "Canal de venda onde o anúncio está publicado.",
@@ -103,135 +104,60 @@ const HEALTH_BADGE_CLASS = {
   unknown: "products-catalog__health-badge--unknown",
 };
 
-/** Dados de demonstração — substituir por fetch quando a API existir. */
-const MOCK_ADS_ROWS = [
-  {
-    id: "a1",
-    adCount: 1,
-    adTitle: "Furadeira 12V com bateria e maleta — entrega full",
-    productName: "Furadeira Profissional 12V",
-    marketplaceSlug: "mercadolivre",
-    productCost: 189.9,
-    price: 349.9,
-    salesCount: 42,
-    revenue: 14695.8,
-    profit: 4120.5,
-    marginPct: 28.0,
-    statusKey: "active",
-    statusLabel: "Ativo",
-    healthBand: "healthy",
-    healthLabel: "Saudável",
-    healthPercent: 88,
-    externalId: "MLB1234567890",
-    visitCount: 1850,
-    uiFlags: {},
-  },
-  {
-    id: "a2",
-    adCount: 1,
-    adTitle: "Kit parafusadeira + 2 baterias — últimas unidades",
-    productName: "Parafusadeira 18V Kit",
-    marketplaceSlug: "mercadolivre",
-    productCost: 312.0,
-    price: 529.0,
-    salesCount: 18,
-    revenue: 9522.0,
-    profit: 2106.0,
-    marginPct: 7.5,
-    statusKey: "active",
-    statusLabel: "Ativo",
-    healthBand: "warn",
-    healthLabel: "Atenção",
-    healthPercent: 62,
-    externalId: "MLB9988776655",
-    visitCount: 920,
-    uiFlags: { needs_attention: true },
-  },
-  {
-    id: "a3",
-    adCount: 2,
-    adTitle: "Luminária LED tubular 120cm industrial",
-    productName: "Luminária LED 120cm",
-    marketplaceSlug: "mercadolivre",
-    productCost: 45.0,
-    price: 89.9,
-    salesCount: 120,
-    revenue: 10788.0,
-    profit: 5388.0,
-    marginPct: 49.9,
-    statusKey: "paused",
-    statusLabel: "Pausado",
-    healthBand: "unknown",
-    healthLabel: "Sem histórico",
-    healthPercent: null,
-    externalId: "MLB4455667788",
-    visitCount: 210,
-    uiFlags: {},
-  },
-  {
-    id: "a4",
-    adCount: 1,
-    adTitle: "Organizador modular 5 gavetas — frete grátis",
-    productName: "Organizador modular",
-    marketplaceSlug: "shopee",
-    productCost: 78.5,
-    price: 159.0,
-    salesCount: 7,
-    revenue: 1113.0,
-    profit: -42.0,
-    marginPct: -3.8,
-    statusKey: "active",
-    statusLabel: "Ativo",
-    healthBand: "loss",
-    healthLabel: "Crítico",
-    healthPercent: 34,
-    externalId: "SHP-882910",
-    visitCount: 4100,
-    uiFlags: { declining: true, needs_attention: true },
-  },
-  {
-    id: "a5",
-    adCount: 1,
-    adTitle: "Caixa de ferramentas 40 peças com trava metálica",
-    productName: "Kit ferramentas 40 peças",
-    marketplaceSlug: "mercadolivre",
-    productCost: 120.0,
-    price: 199.9,
-    salesCount: 55,
-    revenue: 10994.5,
-    profit: 2394.5,
-    marginPct: 21.8,
-    statusKey: "active",
-    statusLabel: "Ativo",
-    healthBand: "healthy",
-    healthLabel: "Saudável",
-    healthPercent: 91,
-    externalId: "MLB3344556677",
-    visitCount: 780,
-    uiFlags: {},
-  },
-  {
-    id: "a6",
-    adCount: 1,
-    adTitle: "Suporte articulado para TV 32–55 polegadas — novo",
-    productName: "Suporte TV articulado",
-    marketplaceSlug: "mercadolivre",
-    productCost: 55.0,
-    price: 119.9,
-    salesCount: 0,
+// ----------------------------------------------------------------------
+// Mapa API GET /api/ml/listings → linhas do catálogo (UI existente)
+// ----------------------------------------------------------------------
+/** @param {string | null | undefined} status */
+function mlStatusToUi(status) {
+  const s = String(status || "").toLowerCase();
+  if (s === "active") return { statusKey: "active", statusLabel: "Ativo" };
+  if (s === "paused") return { statusKey: "paused", statusLabel: "Pausado" };
+  if (s === "closed") return { statusKey: "paused", statusLabel: "Encerrado" };
+  if (s === "not_yet_active" || s === "inactive") return { statusKey: "paused", statusLabel: "Inativo" };
+  return { statusKey: "active", statusLabel: status ? String(status) : "—" };
+}
+
+/** @param {Record<string, unknown>} listing */
+function mapListingToCatalogRow(listing) {
+  const { statusKey, statusLabel } = mlStatusToUi(/** @type {string} */ (listing.status));
+  const price = Number(listing.price) || 0;
+  const sold = Number(listing.sold_quantity) || 0;
+  const stock = listing.available_quantity != null ? Number(listing.available_quantity) || 0 : 0;
+  const healthNum = listing.health != null ? Number(listing.health) : null;
+  const m = String(listing.marketplace || "");
+  const marketplaceSlug = m === "mercado_livre" ? "mercadolivre" : m || "mercadolivre";
+
+  let healthBand = "unknown";
+  let healthLabel = "Sem histórico";
+  if (healthNum != null && Number.isFinite(healthNum)) {
+    healthLabel = "Saúde ML";
+    if (healthNum >= 70) healthBand = "healthy";
+    else if (healthNum >= 40) healthBand = "warn";
+    else healthBand = "loss";
+  }
+
+  return {
+    id: String(listing.id),
+    adCount: stock,
+    adTitle: listing.title ? String(listing.title) : "—",
+    productName: "—",
+    marketplaceSlug,
+    productCost: 0,
+    price,
+    salesCount: sold,
     revenue: 0,
     profit: 0,
     marginPct: 0,
-    statusKey: "active",
-    statusLabel: "Ativo",
-    healthBand: "unknown",
-    healthLabel: "Sem histórico",
-    healthPercent: null,
-    externalId: "MLB7788990011",
-    visitCount: 120,
+    statusKey,
+    statusLabel,
+    healthBand,
+    healthLabel,
+    healthPercent: healthNum != null && Number.isFinite(healthNum) ? Math.round(healthNum) : null,
+    externalId: listing.external_listing_id ? String(listing.external_listing_id) : "",
+    visitCount: 0,
     uiFlags: {},
-  },
-];
+  };
+}
 
 function AdsCatalogRow({ row }) {
   const mktLabel = marketplaceChipLabel(row.marketplaceSlug);
@@ -290,15 +216,72 @@ export default function Anuncios() {
   const [adsSearchQuery, setAdsSearchQuery] = useState("");
   const [adsPage, setAdsPage] = useState(1);
 
+  const [catalogRows, setCatalogRows] = useState([]);
+  const [listLoading, setListLoading] = useState(true);
+  const [listError, setListError] = useState(null);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncError, setSyncError] = useState(null);
+
   const filterChips = useMemo(() => getAdsFilterChipsForToolbar(), []);
+
+  const fetchListings = useCallback(async () => {
+    const url = buildApiUrl("/api/ml/listings");
+    if (!url) {
+      setListError("Defina VITE_API_BASE_URL apontando para o backend.");
+      setCatalogRows([]);
+      setListLoading(false);
+      return;
+    }
+    setListLoading(true);
+    setListError(null);
+    const res = await apiFetch(url);
+    setListLoading(false);
+    if (!res.ok) {
+      setListError(res.error || res.data?.error || "Não foi possível carregar os anúncios.");
+      setCatalogRows([]);
+      return;
+    }
+    const listings = Array.isArray(res.data?.listings) ? res.data.listings : [];
+    setCatalogRows(listings.map(mapListingToCatalogRow));
+  }, []);
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
+
+  const handleSyncListings = useCallback(async () => {
+    const url = buildApiUrl("/api/ml/sync-listings");
+    if (!url) {
+      setSyncError("Defina VITE_API_BASE_URL.");
+      return;
+    }
+    setSyncLoading(true);
+    setSyncError(null);
+    const res = await apiFetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: {},
+    });
+    setSyncLoading(false);
+    if (!res.ok) {
+      setSyncError(res.data?.error || res.error || "Falha ao sincronizar.");
+      return;
+    }
+    await fetchListings();
+  }, [fetchListings]);
+
+  const activeCount = useMemo(
+    () => catalogRows.filter((r) => r.statusKey === "active").length,
+    [catalogRows]
+  );
 
   const rowsWithLabels = useMemo(
     () =>
-      MOCK_ADS_ROWS.map((r) => ({
+      catalogRows.map((r) => ({
         ...r,
         marketplaceLabel: marketplaceChipLabel(r.marketplaceSlug),
       })),
-    []
+    [catalogRows]
   );
 
   const searchFiltered = useMemo(
@@ -338,10 +321,8 @@ export default function Anuncios() {
             <h2 className="anuncios-catalog__kpi-title">Anúncios ativos</h2>
           </header>
           <div className="anuncios-catalog__kpi-body">
-            <p className="anuncios-catalog__kpi-value" aria-hidden>
-              —
-            </p>
-            <p className="anuncios-catalog__kpi-hint">Total consolidado quando a integração estiver ativa.</p>
+            <p className="anuncios-catalog__kpi-value">{listLoading ? "…" : activeCount}</p>
+            <p className="anuncios-catalog__kpi-hint">Anúncios com status ativo na última importação do ML.</p>
           </div>
         </article>
 
@@ -419,10 +400,11 @@ export default function Anuncios() {
               variant="primary"
               iconName="download"
               className="products-catalog__new-product-btn"
-              disabled
-              title="Em breve: sincronizar anúncios com os marketplaces."
+              disabled={syncLoading || listLoading}
+              title="Importa anúncios do Mercado Livre (conta conectada)."
+              onClick={handleSyncListings}
             >
-              Sincronizar anúncios
+              {syncLoading ? "Sincronizando…" : "Sincronizar anúncios"}
             </S7Button>
           </div>
         </div>
@@ -467,13 +449,37 @@ export default function Anuncios() {
         </div>
       </div>
 
-      {displayRows.length === 0 ? (
+      {syncError ? (
+        <div className="products-catalog__filter-empty-card" role="alert">
+          <p style={{ color: "#b91c1c", marginBottom: 8 }}>{syncError}</p>
+          <button type="button" className="products-catalog__filter-empty-btn" onClick={() => setSyncError(null)}>
+            Fechar aviso
+          </button>
+        </div>
+      ) : null}
+
+      {listError ? (
+        <div className="products-catalog__filter-empty-card" role="alert">
+          <S7EmptyState title="Erro ao carregar anúncios" description={listError} />
+          <button type="button" className="products-catalog__filter-empty-btn" onClick={() => fetchListings()}>
+            Tentar novamente
+          </button>
+        </div>
+      ) : listLoading ? (
+        <div className="products-catalog__filter-empty-card" role="status">
+          <p>Carregando anúncios…</p>
+        </div>
+      ) : displayRows.length === 0 ? (
         <div className="products-catalog__filter-empty-card" role="status">
           {(() => {
             const hasSearch = adsSearchQuery.trim().length > 0;
             let title = "Nenhum anúncio neste filtro";
             let description = "Ajuste os filtros ou limpe para ver a listagem completa.";
-            if (hasSearch && searchFiltered.length === 0) {
+            if (catalogRows.length === 0 && !hasSearch && adsFilterId === "all") {
+              title = "Nenhum anúncio importado";
+              description =
+                "Conecte o Mercado Livre em Perfil → Integrações e clique em Sincronizar anúncios para importar sua vitrine.";
+            } else if (hasSearch && searchFiltered.length === 0) {
               title = "Nenhum anúncio encontrado";
               description = "Nenhum item corresponde à busca. Tente outro termo ou limpe o campo.";
             } else if (hasSearch && searchFiltered.length > 0) {
@@ -502,7 +508,7 @@ export default function Anuncios() {
             <div className="products-catalog__table-hscroll">
               <div className="anuncios-catalog__grid anuncios-catalog__grid--head">
                 <AdsCatalogHeadCell columnClass="products-catalog__cell--num" tip={ADS_COLUMN_TOOLTIPS.adCount}>
-                  Nº de anúncios
+                  Estoque
                 </AdsCatalogHeadCell>
                 <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--title" tip={ADS_COLUMN_TOOLTIPS.adTitle}>
                   Anúncio
