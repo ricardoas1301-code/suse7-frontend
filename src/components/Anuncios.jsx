@@ -139,6 +139,16 @@ function mapListingToCatalogRow(listing) {
   const picN = listing.pictures_count != null ? Number(listing.pictures_count) : null;
   const varN = listing.variations_count != null ? Number(listing.variations_count) : null;
 
+  const mQtyRaw = listing.metrics_qty_sold;
+  const mGrossRaw = listing.metrics_gross_revenue;
+  const hasQtyMetric = mQtyRaw != null && Number.isFinite(Number(mQtyRaw));
+  const hasGrossMetric = mGrossRaw != null && Number.isFinite(Number(mGrossRaw));
+
+  const salesCount = hasQtyMetric ? Math.trunc(Number(mQtyRaw)) : sold;
+  const revenue = hasGrossMetric ? Number(mGrossRaw) : 0;
+  const profit = 0;
+  const marginPct = 0;
+
   return {
     id: String(listing.id),
     adCount: stock,
@@ -149,10 +159,10 @@ function mapListingToCatalogRow(listing) {
     marketplaceSlug,
     productCost: 0,
     price,
-    salesCount: sold,
-    revenue: 0,
-    profit: 0,
-    marginPct: 0,
+    salesCount,
+    revenue,
+    profit,
+    marginPct,
     statusKey,
     statusLabel,
     healthBand,
@@ -290,6 +300,11 @@ export default function Anuncios() {
     [catalogRows]
   );
 
+  const totalAdsRevenue = useMemo(
+    () => catalogRows.reduce((sum, r) => sum + (Number(r.revenue) || 0), 0),
+    [catalogRows]
+  );
+
   const rowsWithLabels = useMemo(
     () =>
       catalogRows.map((r) => ({
@@ -346,10 +361,12 @@ export default function Anuncios() {
             <h2 className="anuncios-catalog__kpi-title">Faturamento dos anúncios</h2>
           </header>
           <div className="anuncios-catalog__kpi-body">
-            <p className="anuncios-catalog__kpi-value" aria-hidden>
-              —
+            <p className="anuncios-catalog__kpi-value">
+              {listLoading ? "…" : formatCatalogBRL(totalAdsRevenue)}
             </p>
-            <p className="anuncios-catalog__kpi-hint">Soma de vendas por anúncio — dados em breve.</p>
+            <p className="anuncios-catalog__kpi-hint">
+              Soma do faturamento bruto importado (sync de vendas ML). Lucro e margem dependem de custo interno.
+            </p>
           </div>
         </article>
 
