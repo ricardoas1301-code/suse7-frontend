@@ -1,6 +1,8 @@
 // ======================================================================
 // PÁGINA: Anúncios — listagem operacional (Suse7), espelhando Produtos.
-// Fonte: GET /api/ml/listings | Sincronização: POST /api/ml/sync-listings
+// Fonte: GET /api/ml/listings
+// Sincronização completa (um clique): POST /api/ml/sync-listings → POST /api/ml/sync-sales
+//   → GET /api/ml/listings → GET /api/ml/sales-summary (resumo agregado no servidor)
 // ======================================================================
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -11,29 +13,32 @@ import S7Icon from "./ui/S7Icon";
 import S7Input from "./ui/S7Input";
 import { applyAdsCatalogFilter, getAdsFilterChipsForToolbar } from "../utils/adsFilterRegistry";
 import { filterAdsByCatalogSearch } from "../utils/adsCatalogSearch";
-import {
-  formatCatalogBRL,
-  formatCatalogProfitPercentLabel,
-  marketplaceChipLabel,
-} from "../utils/productCatalogRow";
+import { formatCatalogBRL, marketplaceChipLabel } from "../utils/productCatalogRow";
+import AnunciosSyncModal from "./AnunciosSyncModal.jsx";
 import "./Products.css";
 import "./Anuncios.css";
 
 const ADS_PAGE_SIZE = 25;
 
 const ADS_COLUMN_TOOLTIPS = {
-  adCount: "Estoque disponível no marketplace (unidades à venda).",
+  cover: "Imagem principal do anúncio importada do marketplace.",
+  listingNo: "Identificador público do anúncio no marketplace (MLB…).",
   adTitle: "Título público do anúncio no marketplace.",
   product: "Produto interno vinculado ao anúncio.",
   marketplace: "Canal de venda onde o anúncio está publicado.",
-  productCost: "Custo do produto usado na composição do anúncio.",
   price: "Preço de venda exibido no anúncio.",
-  sales: "Unidades vendidas via este anúncio.",
+  sales: "Unidades vendidas via este anúncio (métricas importadas).",
   revenue: "Faturamento bruto associado ao anúncio.",
-  profit: "Lucro estimado (faturamento − custos).",
-  marginPct: "Margem percentual sobre o faturamento.",
+  netReceive:
+    "Valor líquido por venda quando o marketplace expõe no item (sale_fee_details). Caso vazio, ainda não há dado de health.",
+  commission: "Comissão / taxa de venda quando informada na importação (percentual ou valor fixo).",
+  shipping: "Custo de frete explícito no anúncio, quando a API retornar.",
+  promotion: "Preço promocional efetivo quando há original_price acima do preço atual.",
+  visits: "Total de visitas ao anúncio (API de visitas do ML, quando disponível).",
+  listingQuality: "Nível ou score de qualidade da publicação (endpoint performance/health do ML).",
+  buyingExperience: "Indicador de experiência de compra quando retornado pelo ML.",
   status: "Status operacional no marketplace.",
-  adHealth: "Indicador de saúde do anúncio (performance e riscos).",
+  adHealth: "Indicador de saúde numérica do anúncio no payload do item (ML).",
 };
 
 /**
@@ -89,20 +94,66 @@ function buildPaginationItems(current, total) {
   return out;
 }
 
-/** @param {number | null | undefined} pct */
-function marginFinancialToneClass(pct) {
-  if (pct == null || !Number.isFinite(pct)) return "products-catalog__cell--fin-none";
-  if (pct < 0) return "products-catalog__cell--fin-loss";
-  if (pct < 10) return "products-catalog__cell--fin-warn";
-  return "products-catalog__cell--fin-healthy";
-}
-
 const HEALTH_BADGE_CLASS = {
   healthy: "products-catalog__health-badge--healthy",
   warn: "products-catalog__health-badge--warn",
   loss: "products-catalog__health-badge--loss",
   unknown: "products-catalog__health-badge--unknown",
 };
+
+const DASH = "—";
+
+/** @param {number | null | undefined} v */
+function formatMoneyOrDash(v) {
+  if (v == null || !Number.isFinite(Number(v))) return DASH;
+  return formatCatalogBRL(Number(v));
+}
+
+/**
+ * @param {number | null | undefined} pct
+ * @param {number | null | undefined} amt
+ */
+function formatCommissionDisplay(pct, amt) {
+  if (pct != null && Number.isFinite(Number(pct))) return `${Number(pct).toFixed(1).replace(/\.0$/, "")}%`;
+  if (amt != null && Number.isFinite(Number(amt))) return formatCatalogBRL(Number(amt));
+  return DASH;
+}
+
+/** @param {number | null | undefined} v */
+function formatVisitsDisplay(v) {
+  if (v == null || v === "" || !Number.isFinite(Number(v))) return DASH;
+  return String(Math.trunc(Number(v)));
+}
+
+/**
+ * @param {string | null | undefined} status
+ * @param {number | null | undefined} score
+ */
+function qualityBadgeClass(status, score) {
+  const s = String(status || "").toLowerCase();
+  if (s.includes("prof") || s.includes("good") || s.includes("alto")) return "anuncios-catalog__metric-badge--good";
+  if (s.includes("stand") || s.includes("med")) return "anuncios-catalog__metric-badge--mid";
+  if (s.includes("basic") || s.includes("bajo") || s.includes("baix")) return "anuncios-catalog__metric-badge--low";
+  if (score != null && Number.isFinite(Number(score))) {
+    const n = Number(score) <= 1 ? Number(score) * 100 : Number(score);
+    if (n >= 70) return "anuncios-catalog__metric-badge--good";
+    if (n >= 40) return "anuncios-catalog__metric-badge--mid";
+    return "anuncios-catalog__metric-badge--low";
+  }
+  return "anuncios-catalog__metric-badge--neutral";
+}
+
+/**
+ * @param {string | null | undefined} status
+ */
+function experienceBadgeClass(status) {
+  const s = String(status || "").toLowerCase();
+  if (s.includes("green") || s.includes("good") || s.includes("ok") || s.includes("ótim") || s.includes("excel"))
+    return "anuncios-catalog__metric-badge--good";
+  if (s.includes("yellow") || s.includes("warn") || s.includes("med")) return "anuncios-catalog__metric-badge--mid";
+  if (s.includes("red") || s.includes("bad") || s.includes("poor")) return "anuncios-catalog__metric-badge--low";
+  return "anuncios-catalog__metric-badge--neutral";
+}
 
 // ----------------------------------------------------------------------
 // Mapa API GET /api/ml/listings → linhas do catálogo (UI existente)
@@ -149,13 +200,30 @@ function mapListingToCatalogRow(listing) {
   const profit = 0;
   const marginPct = 0;
 
+  const coverRaw = listing.cover_thumbnail_url;
+  const coverThumbnailUrl =
+    coverRaw != null && String(coverRaw).trim() !== "" ? String(coverRaw).trim() : null;
+
+  const visitsRaw = listing.health_visits;
+  const visitsNum = visitsRaw != null && Number.isFinite(Number(visitsRaw)) ? Math.trunc(Number(visitsRaw)) : null;
+
+  const qScore = listing.health_listing_quality_score;
+  const qScoreNum = qScore != null && Number.isFinite(Number(qScore)) ? Number(qScore) : null;
+  const qStatus = listing.health_listing_quality_status != null ? String(listing.health_listing_quality_status) : null;
+  const expStatus = listing.health_experience_status != null ? String(listing.health_experience_status) : null;
+
+  const uiFlags = {};
+  if ((healthNum != null && healthNum < 40) || /basic|bajo|baix/i.test(qStatus || "")) {
+    uiFlags.needs_attention = true;
+  }
+
   return {
     id: String(listing.id),
     adCount: stock,
-    adTitle: listing.title ? String(listing.title) : "—",
+    adTitle: listing.title ? String(listing.title) : DASH,
     picturesCount: picN != null && Number.isFinite(picN) ? picN : null,
     variationsCount: varN != null && Number.isFinite(varN) ? varN : null,
-    productName: "—",
+    productName: DASH,
     marketplaceSlug,
     productCost: 0,
     price,
@@ -169,19 +237,64 @@ function mapListingToCatalogRow(listing) {
     healthLabel,
     healthPercent: healthNum != null && Number.isFinite(healthNum) ? Math.round(healthNum) : null,
     externalId: listing.external_listing_id ? String(listing.external_listing_id) : "",
-    visitCount: 0,
-    uiFlags: {},
+    listingNumber: listing.external_listing_id ? String(listing.external_listing_id) : DASH,
+    coverThumbnailUrl,
+    visitCount: visitsNum,
+    netReceivable: listing.health_net_receivable,
+    saleFeePercent: listing.health_sale_fee_percent,
+    saleFeeAmount: listing.health_sale_fee_amount,
+    shippingCost: listing.health_shipping_cost,
+    promotionPrice: listing.health_promotion_price,
+    shippingLogisticType: listing.health_shipping_logistic_type,
+    listingQualityScore: qScoreNum,
+    listingQualityStatus: qStatus,
+    experienceStatus: expStatus,
+    uiFlags,
   };
 }
 
 function AdsCatalogRow({ row }) {
   const mktLabel = marketplaceChipLabel(row.marketplaceSlug);
-  const finClass = marginFinancialToneClass(row.marginPct);
   const healthClass = HEALTH_BADGE_CLASS[row.healthBand] || HEALTH_BADGE_CLASS.unknown;
 
+  const freightTitle = [formatMoneyOrDash(row.shippingCost), row.shippingLogisticType ? String(row.shippingLogisticType) : ""]
+    .filter(Boolean)
+    .join(" · ");
+
+  const hasQualityData =
+    (row.listingQualityStatus != null && row.listingQualityStatus !== "") ||
+    (row.listingQualityScore != null && Number.isFinite(Number(row.listingQualityScore)));
+  const hasExperienceData = row.experienceStatus != null && String(row.experienceStatus).trim() !== "";
+
+  const qualityLabel =
+    row.listingQualityStatus ||
+    (row.listingQualityScore != null && Number.isFinite(Number(row.listingQualityScore))
+      ? `${Math.round(Number(row.listingQualityScore) <= 1 ? Number(row.listingQualityScore) * 100 : Number(row.listingQualityScore))}%`
+      : null);
+
   return (
-    <div className="anuncios-catalog__row" role="row">
-      <div className="products-catalog__cell products-catalog__cell--num">{row.adCount}</div>
+    <div className="anuncios-catalog__row anuncios-catalog--dense" role="row">
+      <div className="products-catalog__cell anuncios-catalog__cell--thumb" title={row.adTitle}>
+        <div className="anuncios-catalog__thumb-wrap">
+          {row.coverThumbnailUrl ? (
+            <img
+              src={row.coverThumbnailUrl}
+              alt=""
+              className="anuncios-catalog__thumb-img"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span className="anuncios-catalog__thumb-placeholder" aria-hidden />
+          )}
+        </div>
+      </div>
+      <div
+        className="products-catalog__cell anuncios-catalog__cell--listing-no"
+        title={row.listingNumber !== DASH ? row.listingNumber : undefined}
+      >
+        {row.listingNumber}
+      </div>
       <div className="products-catalog__cell anuncios-catalog__cell--title">
         <span className="anuncios-catalog__ad-title" title={row.adTitle}>
           {row.adTitle}
@@ -207,15 +320,49 @@ function AdsCatalogRow({ row }) {
           {mktLabel}
         </span>
       </div>
-      <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(row.productCost)}</div>
       <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(row.price)}</div>
       <div className="products-catalog__cell products-catalog__cell--num">{row.salesCount}</div>
       <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(row.revenue)}</div>
-      <div className={`products-catalog__cell products-catalog__cell--money products-catalog__cell--profit ${finClass}`}>
-        {formatCatalogBRL(row.profit)}
+      <div className="products-catalog__cell products-catalog__cell--money">
+        {formatMoneyOrDash(row.netReceivable != null ? Number(row.netReceivable) : null)}
       </div>
-      <div className={`products-catalog__cell products-catalog__cell--pct products-catalog__cell--profit ${finClass}`}>
-        {formatCatalogProfitPercentLabel(row.marginPct)}
+      <div className="products-catalog__cell products-catalog__cell--pct anuncios-catalog__cell--compact-num">
+        {formatCommissionDisplay(
+          row.saleFeePercent != null ? Number(row.saleFeePercent) : null,
+          row.saleFeeAmount != null ? Number(row.saleFeeAmount) : null
+        )}
+      </div>
+      <div
+        className="products-catalog__cell products-catalog__cell--money anuncios-catalog__cell--compact-num"
+        title={freightTitle || undefined}
+      >
+        {formatMoneyOrDash(row.shippingCost != null ? Number(row.shippingCost) : null)}
+      </div>
+      <div className="products-catalog__cell products-catalog__cell--money anuncios-catalog__cell--promo">
+        {formatMoneyOrDash(row.promotionPrice != null ? Number(row.promotionPrice) : null)}
+      </div>
+      <div className="products-catalog__cell products-catalog__cell--num anuncios-catalog__cell--compact-num">
+        {formatVisitsDisplay(row.visitCount)}
+      </div>
+      <div className="products-catalog__cell anuncios-catalog__cell--metric">
+        {hasQualityData ? (
+          <span
+            className={`anuncios-catalog__metric-badge ${qualityBadgeClass(row.listingQualityStatus, row.listingQualityScore)}`}
+          >
+            {qualityLabel}
+          </span>
+        ) : (
+          <span className="anuncios-catalog__metric-muted">Sem dado</span>
+        )}
+      </div>
+      <div className="products-catalog__cell anuncios-catalog__cell--metric">
+        {hasExperienceData ? (
+          <span className={`anuncios-catalog__metric-badge ${experienceBadgeClass(row.experienceStatus)}`}>
+            {row.experienceStatus}
+          </span>
+        ) : (
+          <span className="anuncios-catalog__metric-muted">Sem dado</span>
+        )}
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--status">
         <span
@@ -245,7 +392,17 @@ export default function Anuncios() {
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState(null);
   const [syncLoading, setSyncLoading] = useState(false);
+  /** @type {"idle" | "listings" | "sales" | "reload"} */
+  const [syncPhase, setSyncPhase] = useState("idle");
+  /** Modal bloqueante durante POST + reload (evita cliques repetidos). */
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
   const [syncError, setSyncError] = useState(null);
+  /** Aviso pós-sync (ex.: vendas falharam, anúncios ok). */
+  const [syncWarningMessage, setSyncWarningMessage] = useState(null);
+  /** Mensagem de sucesso com resumo vindo dos endpoints (sem recalcular no front). */
+  const [syncSuccessMessage, setSyncSuccessMessage] = useState(null);
+  /** Resposta GET /api/ml/sales-summary após sync (totais oficiais do backend). */
+  const [salesSummary, setSalesSummary] = useState(null);
 
   const filterChips = useMemo(() => getAdsFilterChipsForToolbar(), []);
 
@@ -255,55 +412,172 @@ export default function Anuncios() {
       setListError("Defina VITE_API_BASE_URL apontando para o backend.");
       setCatalogRows([]);
       setListLoading(false);
-      return;
+      return false;
     }
     setListLoading(true);
     setListError(null);
     const res = await apiFetch(url);
     setListLoading(false);
     if (!res.ok) {
-      setListError(res.error || res.data?.error || "Não foi possível carregar os anúncios.");
+      const msg = res.error || res.data?.error || "Não foi possível carregar os anúncios.";
+      setListError(msg);
       setCatalogRows([]);
-      return;
+      return false;
     }
     const listings = Array.isArray(res.data?.listings) ? res.data.listings : [];
     setCatalogRows(listings.map(mapListingToCatalogRow));
+    return true;
   }, []);
 
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
 
-  const handleSyncListings = useCallback(async () => {
-    const url = buildApiUrl("/api/ml/sync-listings");
-    if (!url) {
-      setSyncError("Defina VITE_API_BASE_URL.");
+  // ------------------------------
+  // Resumo de vendas (servidor) — opcional para KPI / consistência pós-sync
+  // ------------------------------
+  const fetchSalesSummary = useCallback(async () => {
+    const url = buildApiUrl("/api/ml/sales-summary");
+    if (!url) return { ok: false, skipped: true };
+    const res = await apiFetch(url);
+    if (res.ok && res.data?.ok) {
+      setSalesSummary(res.data);
+      return { ok: true };
+    }
+    setSalesSummary(null);
+    return {
+      ok: false,
+      message: res.data?.error || res.error || "Não foi possível carregar o resumo de vendas.",
+    };
+  }, []);
+
+  // ------------------------------
+  // Orquestração: anúncios → vendas → listagem → resumo (só chamadas HTTP + UI)
+  // Modal abre no clique e fecha no finally; feedback final por estado (erro / aviso / sucesso).
+  // ------------------------------
+  const handleFullSync = useCallback(async () => {
+    const baseUrl = buildApiUrl("/api/ml/sync-listings");
+    if (!baseUrl) {
+      setSyncError("Defina VITE_API_BASE_URL apontando para o backend.");
       return;
     }
+
+    setSyncModalOpen(true);
     setSyncLoading(true);
+    setSyncPhase("listings");
     setSyncError(null);
-    const res = await apiFetch(url, {
+    setSyncWarningMessage(null);
+    setSyncSuccessMessage(null);
+
+    const postOpts = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: {},
-    });
-    setSyncLoading(false);
-    if (!res.ok) {
-      setSyncError(res.data?.error || res.error || "Falha ao sincronizar.");
-      return;
+    };
+
+    let finalError = null;
+    let finalWarning = null;
+    let finalSuccess = null;
+    /** @type {number | null} */
+    let listingsImported = null;
+    /** @type {number | null} */
+    let ordersProcessed = null;
+    let salesHttpOk = false;
+
+    try {
+      const resListings = await apiFetch(buildApiUrl("/api/ml/sync-listings"), postOpts);
+      if (!resListings.ok) {
+        finalError =
+          resListings.data?.error ||
+          resListings.error ||
+          "Não foi possível sincronizar anúncios.";
+        return;
+      }
+
+      const ls = resListings.data?.summary;
+      if (ls && typeof ls.imported === "number") listingsImported = ls.imported;
+      else if (ls && typeof ls.processed === "number") listingsImported = ls.processed;
+
+      setSyncPhase("sales");
+      const resSales = await apiFetch(buildApiUrl("/api/ml/sync-sales"), postOpts);
+      salesHttpOk = !!resSales.ok;
+      if (!resSales.ok) {
+        finalWarning =
+          "Os anúncios foram sincronizados, mas as vendas não puderam ser atualizadas agora.";
+      } else {
+        const ss = resSales.data?.summary;
+        if (ss && typeof ss.processed === "number") ordersProcessed = ss.processed;
+        else if (ss && typeof ss.scanned === "number") ordersProcessed = ss.scanned;
+      }
+
+      setSyncPhase("reload");
+      const listingsReloadOk = await fetchListings();
+      if (!listingsReloadOk) {
+        if (finalWarning) {
+          finalError = `${finalWarning} Além disso, não foi possível recarregar a listagem agora.`;
+          finalWarning = null;
+        } else {
+          finalError = "Sincronização gravada no servidor, mas houve erro ao recarregar a listagem.";
+        }
+        return;
+      }
+
+      const summaryResult = await fetchSalesSummary();
+      if (!summaryResult.ok && !summaryResult.skipped && summaryResult.message) {
+        finalWarning = finalWarning
+          ? `${finalWarning} (${summaryResult.message})`
+          : `Sincronização concluída, mas o resumo de vendas não pôde ser atualizado: ${summaryResult.message}`;
+      }
+
+      if (!finalError && !finalWarning) {
+        const parts = [];
+        if (typeof listingsImported === "number" && Number.isFinite(listingsImported)) {
+          parts.push(
+            `${listingsImported} ${listingsImported === 1 ? "anúncio atualizado" : "anúncios atualizados"}`
+          );
+        }
+        if (salesHttpOk && typeof ordersProcessed === "number" && Number.isFinite(ordersProcessed)) {
+          parts.push(
+            `${ordersProcessed} ${ordersProcessed === 1 ? "pedido processado" : "pedidos processados"}`
+          );
+        }
+        finalSuccess =
+          parts.length > 0
+            ? `Sincronização concluída com sucesso. ${parts.join(" e ")}.`
+            : "Sincronização concluída com sucesso.";
+      }
+    } catch (e) {
+      finalError = e?.message || "Não foi possível concluir a sincronização.";
+    } finally {
+      setSyncModalOpen(false);
+      setSyncLoading(false);
+      setSyncPhase("idle");
+      setSyncError(finalError);
+      setSyncWarningMessage(finalWarning);
+      setSyncSuccessMessage(finalSuccess);
     }
-    await fetchListings();
-  }, [fetchListings]);
+  }, [fetchListings, fetchSalesSummary]);
+
+  const syncButtonLabel = useMemo(() => {
+    if (!syncLoading) return "Sincronizar anúncios";
+    return "Sincronizando…";
+  }, [syncLoading]);
 
   const activeCount = useMemo(
     () => catalogRows.filter((r) => r.statusKey === "active").length,
     [catalogRows]
   );
 
-  const totalAdsRevenue = useMemo(
+  const totalAdsRevenueFromRows = useMemo(
     () => catalogRows.reduce((sum, r) => sum + (Number(r.revenue) || 0), 0),
     [catalogRows]
   );
+
+  const totalAdsRevenueKpi = useMemo(() => {
+    const g = salesSummary?.gross_revenue_total;
+    if (g != null && Number.isFinite(Number(g))) return Number(g);
+    return totalAdsRevenueFromRows;
+  }, [salesSummary, totalAdsRevenueFromRows]);
 
   const rowsWithLabels = useMemo(
     () =>
@@ -343,6 +617,8 @@ export default function Anuncios() {
 
   return (
     <div className="anuncios-catalog">
+      <AnunciosSyncModal open={syncModalOpen} phase={syncPhase} />
+
       <h1 className="products-catalog__sr-title">Anúncios</h1>
 
       <section className="anuncios-catalog__kpis" aria-label="Resumo de anúncios">
@@ -362,10 +638,11 @@ export default function Anuncios() {
           </header>
           <div className="anuncios-catalog__kpi-body">
             <p className="anuncios-catalog__kpi-value">
-              {listLoading ? "…" : formatCatalogBRL(totalAdsRevenue)}
+              {listLoading ? "…" : formatCatalogBRL(totalAdsRevenueKpi)}
             </p>
             <p className="anuncios-catalog__kpi-hint">
-              Soma do faturamento bruto importado (sync de vendas ML). Lucro e margem dependem de custo interno.
+              Faturamento bruto importado das vendas (resumo do servidor após sincronizar). Lucro e margem dependem
+              de custo interno.
             </p>
           </div>
         </article>
@@ -433,10 +710,10 @@ export default function Anuncios() {
               iconName="download"
               className="products-catalog__new-product-btn"
               disabled={syncLoading || listLoading}
-              title="Importa anúncios do Mercado Livre (conta conectada)."
-              onClick={handleSyncListings}
+              title="Atualiza anúncios e vendas no Mercado Livre (conta conectada): importa vitrine, importa pedidos e recarrega a tela."
+              onClick={handleFullSync}
             >
-              {syncLoading ? "Sincronizando…" : "Sincronizar anúncios"}
+              {syncButtonLabel}
             </S7Button>
           </div>
         </div>
@@ -481,6 +758,35 @@ export default function Anuncios() {
         </div>
       </div>
 
+      {syncSuccessMessage ? (
+        <div
+          className="products-catalog__filter-empty-card anuncios-catalog__sync-feedback--success"
+          role="status"
+        >
+          <p>{syncSuccessMessage}</p>
+          <button
+            type="button"
+            className="products-catalog__filter-empty-btn"
+            onClick={() => setSyncSuccessMessage(null)}
+          >
+            Fechar
+          </button>
+        </div>
+      ) : null}
+
+      {syncWarningMessage ? (
+        <div className="products-catalog__filter-empty-card anuncios-catalog__sync-feedback--warn" role="alert">
+          <p>{syncWarningMessage}</p>
+          <button
+            type="button"
+            className="products-catalog__filter-empty-btn"
+            onClick={() => setSyncWarningMessage(null)}
+          >
+            Entendi
+          </button>
+        </div>
+      ) : null}
+
       {syncError ? (
         <div className="products-catalog__filter-empty-card" role="alert">
           <p style={{ color: "#b91c1c", marginBottom: 8 }}>{syncError}</p>
@@ -510,7 +816,7 @@ export default function Anuncios() {
             if (catalogRows.length === 0 && !hasSearch && adsFilterId === "all") {
               title = "Nenhum anúncio importado";
               description =
-                "Conecte o Mercado Livre em Perfil → Integrações e clique em Sincronizar anúncios para importar sua vitrine.";
+                "Conecte o Mercado Livre em Perfil → Integrações e use Sincronizar anúncios para importar vitrine e vendas.";
             } else if (hasSearch && searchFiltered.length === 0) {
               title = "Nenhum anúncio encontrado";
               description = "Nenhum item corresponde à busca. Tente outro termo ou limpe o campo.";
@@ -538,9 +844,12 @@ export default function Anuncios() {
         <div className="products-catalog__table-block">
           <div className="products-catalog__table-card">
             <div className="products-catalog__table-hscroll">
-              <div className="anuncios-catalog__grid anuncios-catalog__grid--head">
-                <AdsCatalogHeadCell columnClass="products-catalog__cell--num" tip={ADS_COLUMN_TOOLTIPS.adCount}>
-                  Estoque
+              <div className="anuncios-catalog__grid anuncios-catalog__grid--head anuncios-catalog--dense">
+                <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--thumb" tip={ADS_COLUMN_TOOLTIPS.cover}>
+                  Capa
+                </AdsCatalogHeadCell>
+                <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--listing-no" tip={ADS_COLUMN_TOOLTIPS.listingNo}>
+                  Nº
                 </AdsCatalogHeadCell>
                 <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--title" tip={ADS_COLUMN_TOOLTIPS.adTitle}>
                   Anúncio
@@ -549,14 +858,8 @@ export default function Anuncios() {
                   Produto
                 </AdsCatalogHeadCell>
                 <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--mkt" tip={ADS_COLUMN_TOOLTIPS.marketplace}>
-                  Marketplace
+                  Mkt
                 </AdsCatalogHeadCell>
-                <AdsCatalogHeadCell
-                  columnClass="products-catalog__cell--money"
-                  tip={ADS_COLUMN_TOOLTIPS.productCost}
-                  tipWrap
-                  lines={["Custo do", "produto"]}
-                />
                 <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.price}>
                   Preço
                 </AdsCatalogHeadCell>
@@ -568,17 +871,41 @@ export default function Anuncios() {
                   tip={ADS_COLUMN_TOOLTIPS.revenue}
                   lines={["Fatura-", "mento"]}
                 />
-                <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.profit}>
-                  Lucro
+                <AdsCatalogHeadCell
+                  columnClass="products-catalog__cell--money"
+                  tip={ADS_COLUMN_TOOLTIPS.netReceive}
+                  lines={["Você", "recebe"]}
+                />
+                <AdsCatalogHeadCell
+                  columnClass="products-catalog__cell--pct"
+                  tip={ADS_COLUMN_TOOLTIPS.commission}
+                  lines={["Comi-", "ssão"]}
+                />
+                <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.shipping}>
+                  Frete
                 </AdsCatalogHeadCell>
-                <AdsCatalogHeadCell columnClass="products-catalog__cell--pct" tip={ADS_COLUMN_TOOLTIPS.marginPct}>
-                  Margem %
+                <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.promotion}>
+                  Promoção
                 </AdsCatalogHeadCell>
+                <AdsCatalogHeadCell columnClass="products-catalog__cell--num" tip={ADS_COLUMN_TOOLTIPS.visits}>
+                  Visitas
+                </AdsCatalogHeadCell>
+                <AdsCatalogHeadCell
+                  columnClass="anuncios-catalog__cell--metric"
+                  tip={ADS_COLUMN_TOOLTIPS.listingQuality}
+                >
+                  Qualidade
+                </AdsCatalogHeadCell>
+                <AdsCatalogHeadCell
+                  columnClass="anuncios-catalog__cell--metric"
+                  tip={ADS_COLUMN_TOOLTIPS.buyingExperience}
+                  lines={["Experi-", "ência"]}
+                />
                 <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--status" tip={ADS_COLUMN_TOOLTIPS.status}>
                   Status
                 </AdsCatalogHeadCell>
                 <AdsCatalogHeadCell columnClass="products-catalog__cell--health" tip={ADS_COLUMN_TOOLTIPS.adHealth}>
-                  Saúde do anúncio
+                  Saúde
                 </AdsCatalogHeadCell>
               </div>
 
