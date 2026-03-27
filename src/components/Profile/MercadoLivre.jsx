@@ -3,17 +3,26 @@
 // Objetivo: Gerenciar conexão com o Mercado Livre (OAuth)
 // UX:
 // - NÃO conectado → tela de autenticação (padrão SaaS Suse7)
-// - CONECTADO → status + dados
+// - CONECTADO → status + dados (fonte de verdade: /api/ml/status)
+// - Retorno OAuth (?ml=connected) → toast Suse7 + limpeza da URL (sem reload)
 // ======================================================================
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { buildApiUrl } from "../../config/api";
+import { useNotifications } from "../../contexts/NotificationContext";
+import { NOTIFICATION_SEVERITY } from "../../services/notificationTypes";
 import "./MercadoLivre.css";
 
 import suse7Logo from "../../assets/suse7-logo-redonda.png";
 import mercadoLivreLogo from "../../assets/mercado-livre.png";
+
+// ----------------------------------------------------------------------
+// Anti-duplicata do toast em DEV (React Strict Mode dispara efeitos 2x em sequência)
+// ----------------------------------------------------------------------
+const ML_OAUTH_SUCCESS_TOAST_GAP_MS = 3500;
+let _mlOAuthSuccessToastLastAt = 0;
 
 export default function MercadoLivre() {
   // ------------------------------------------------------------------
@@ -30,14 +39,17 @@ export default function MercadoLivre() {
   const [bannerError, setBannerError] = useState(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { addNotification } = useNotifications();
 
   // ------------------------------------------------------------------
-  // EFFECT: CARREGAR STATUS DA CONEXÃO ML
+  // EFFECT: status real da integração + banner de erro OAuth + toast de sucesso + URL limpa
   // ------------------------------------------------------------------
   useEffect(() => {
     const loadMLStatus = async () => {
       try {
-        const errParam = new URLSearchParams(window.location.search).get("ml_error");
+        const sp = new URLSearchParams(location.search);
+        const errParam = sp.get("ml_error");
         if (errParam === "token") {
           setBannerError(
             "Não foi possível trocar o código pelo token no Mercado Livre. Verifique ML_REDIRECT_URI e as credenciais da app DEV."
@@ -47,6 +59,8 @@ export default function MercadoLivre() {
             "A autorização funcionou, mas não foi possível salvar os tokens. Tente conectar novamente ou verifique o Supabase."
           );
         }
+
+        const mlConnectedFromOAuth = sp.get("ml") === "connected";
 
         const {
           data: { user },
@@ -79,19 +93,41 @@ export default function MercadoLivre() {
           setIsConnected(false);
         }
 
-        const sp = new URLSearchParams(window.location.search);
-        let cleaned = false;
-        if (sp.get("ml") === "connected") {
-          sp.delete("ml");
-          cleaned = true;
+        // ------------------------------
+        // Toast de sucesso (só gatilho visual; estado conectado veio do fetch acima)
+        // ------------------------------
+        if (mlConnectedFromOAuth) {
+          const now = Date.now();
+          if (now - _mlOAuthSuccessToastLastAt >= ML_OAUTH_SUCCESS_TOAST_GAP_MS) {
+            _mlOAuthSuccessToastLastAt = now;
+            addNotification({
+              event_type: "ML_INTEGRATION_OAUTH_SUCCESS",
+              entity_type: "marketplace_integration",
+              entity_id: null,
+              title: "Integração concluída",
+              message: "Conta Mercado Livre conectada com sucesso.",
+              severity: NOTIFICATION_SEVERITY.INFO,
+              dedupeKey: "ml-oauth-return-success",
+            });
+          }
         }
-        if (sp.has("ml_error")) {
-          sp.delete("ml_error");
-          cleaned = true;
+
+        // ------------------------------
+        // Remover ml=connected / ml_error da barra de endereço (replace, sem reload)
+        // ------------------------------
+        const nextSp = new URLSearchParams(location.search);
+        let urlNeedsClean = false;
+        if (nextSp.has("ml")) {
+          nextSp.delete("ml");
+          urlNeedsClean = true;
         }
-        if (cleaned) {
-          const q = sp.toString();
-          navigate(`${window.location.pathname}${q ? `?${q}` : ""}`, { replace: true });
+        if (nextSp.has("ml_error")) {
+          nextSp.delete("ml_error");
+          urlNeedsClean = true;
+        }
+        if (urlNeedsClean) {
+          const q = nextSp.toString();
+          navigate(`${location.pathname}${q ? `?${q}` : ""}`, { replace: true });
         }
       } catch (err) {
         console.error("Erro ao carregar status ML:", err);
@@ -101,7 +137,10 @@ export default function MercadoLivre() {
     };
 
     loadMLStatus();
-  }, [navigate]);
+    // addNotification é estável o suficiente; incluir no array dispara fetch extra quando o
+    // NotificationProvider resolve userId (recria o callback).
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- evita loop / refetch desnecessário
+  }, [location.pathname, location.search, navigate]);
 
   // ------------------------------------------------------------------
   // HANDLER

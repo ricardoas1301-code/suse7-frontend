@@ -86,7 +86,8 @@ const AuthWrapper = ({ children }) => {
 };
 
 // ======================================================================
-// REDIRECT ML (?ml=connected) ok
+// REDIRECT ML (?ml=connected) — legado para rotas que não tratam o retorno OAuth
+// A página /perfil/integracoes/mercado-livre trata toast + limpeza da URL localmente.
 // ======================================================================
 function MLRedirectHandler({ children }) {
   const location = useLocation();
@@ -94,10 +95,10 @@ function MLRedirectHandler({ children }) {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get("ml") === "connected") {
-      navigate("/", { replace: true });
-    }
-  }, [location, navigate]);
+    if (params.get("ml") !== "connected") return;
+    if (location.pathname.includes("/integracoes/mercado-livre")) return;
+    navigate("/", { replace: true });
+  }, [location.pathname, location.search, navigate]);
 
   return children;
 }
