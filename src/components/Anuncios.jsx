@@ -136,10 +136,15 @@ function mapListingToCatalogRow(listing) {
     else healthBand = "loss";
   }
 
+  const picN = listing.pictures_count != null ? Number(listing.pictures_count) : null;
+  const varN = listing.variations_count != null ? Number(listing.variations_count) : null;
+
   return {
     id: String(listing.id),
     adCount: stock,
     adTitle: listing.title ? String(listing.title) : "—",
+    picturesCount: picN != null && Number.isFinite(picN) ? picN : null,
+    variationsCount: varN != null && Number.isFinite(varN) ? varN : null,
     productName: "—",
     marketplaceSlug,
     productCost: 0,
@@ -171,6 +176,16 @@ function AdsCatalogRow({ row }) {
         <span className="anuncios-catalog__ad-title" title={row.adTitle}>
           {row.adTitle}
         </span>
+        {row.picturesCount != null || row.variationsCount != null ? (
+          <span className="anuncios-catalog__ad-meta">
+            {[
+              row.picturesCount != null ? `${row.picturesCount} foto(s)` : null,
+              row.variationsCount != null ? `${row.variationsCount} var.` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+        ) : null}
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--product">
         <span className="anuncios-catalog__product-link" title={row.productName}>

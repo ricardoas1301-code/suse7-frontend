@@ -9,6 +9,15 @@
   box-sizing: border-box;
 }
 
+/* Metadados discretos sob o título (Fase 2: fotos / variações importadas) */
+.anuncios-catalog__ad-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: rgba(15, 23, 42, 0.52);
+}
+
 /* —— KPIs: 2 grandes + bloco 2×2 —— */
 .anuncios-catalog__kpis {
   display: grid;
