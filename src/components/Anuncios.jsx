@@ -14,6 +14,7 @@ import S7Input from "./ui/S7Input";
 import { applyAdsCatalogFilter, getAdsFilterChipsForToolbar } from "../utils/adsFilterRegistry";
 import { filterAdsByCatalogSearch } from "../utils/adsCatalogSearch";
 import { formatCatalogBRL, marketplaceChipLabel } from "../utils/productCatalogRow";
+import MarketplaceBadge from "./MarketplaceBadge.jsx";
 import AnunciosSyncModal from "./AnunciosSyncModal.jsx";
 import "./Products.css";
 import "./Anuncios.css";
@@ -31,7 +32,9 @@ const ADS_COLUMN_TOOLTIPS = {
   revenue: "Faturamento bruto associado ao anúncio.",
   netReceive:
     "Valor líquido por venda quando o marketplace expõe no item (sale_fee_details). Caso vazio, ainda não há dado de health.",
-  commission: "Comissão / taxa de venda quando informada na importação (percentual ou valor fixo).",
+  commissionPct:
+    "Percentual de comissão do marketplace (sale_fee_details no sync). Passe o mouse para ver o tipo do anúncio (Clássico/Premium).",
+  commissionBrl: "Valor monetário estimado da comissão (sale_fee_details), quando informado pelo marketplace.",
   shipping: "Custo de frete explícito no anúncio, quando a API retornar.",
   promotion: "Preço promocional efetivo quando há original_price acima do preço atual.",
   visits: "Total de visitas ao anúncio (API de visitas do ML, quando disponível).",
@@ -102,6 +105,15 @@ const HEALTH_BADGE_CLASS = {
 };
 
 const DASH = "—";
+const SEM_DADO = "Sem dado";
+
+/** Valores decimais serializados como string pela API — só formatação local. */
+function formatBrlFromApiString(s) {
+  if (s == null || s === "") return DASH;
+  const n = Number(s);
+  if (!Number.isFinite(n)) return DASH;
+  return formatCatalogBRL(n);
+}
 
 /** @param {number | null | undefined} v */
 function formatMoneyOrDash(v) {
@@ -109,20 +121,12 @@ function formatMoneyOrDash(v) {
   return formatCatalogBRL(Number(v));
 }
 
-/**
- * @param {number | null | undefined} pct
- * @param {number | null | undefined} amt
- */
-function formatCommissionDisplay(pct, amt) {
-  if (pct != null && Number.isFinite(Number(pct))) return `${Number(pct).toFixed(1).replace(/\.0$/, "")}%`;
-  if (amt != null && Number.isFinite(Number(amt))) return formatCatalogBRL(Number(amt));
-  return DASH;
-}
-
-/** @param {number | null | undefined} v */
-function formatVisitsDisplay(v) {
-  if (v == null || v === "" || !Number.isFinite(Number(v))) return DASH;
-  return String(Math.trunc(Number(v)));
+/** @param {string | null | undefined} pct */
+function formatPercentFromApiString(pct) {
+  if (pct == null || pct === "") return DASH;
+  const n = Number(String(pct).replace(",", "."));
+  if (!Number.isFinite(n)) return DASH;
+  return `${n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
 }
 
 /**
@@ -168,15 +172,11 @@ function mlStatusToUi(status) {
   return { statusKey: "active", statusLabel: status ? String(status) : "—" };
 }
 
-/** @param {Record<string, unknown>} listing */
-function mapListingToCatalogRow(listing) {
-  const { statusKey, statusLabel } = mlStatusToUi(/** @type {string} */ (listing.status));
-  const price = Number(listing.price) || 0;
-  const sold = Number(listing.sold_quantity) || 0;
-  const stock = listing.available_quantity != null ? Number(listing.available_quantity) || 0 : 0;
-  const healthNum = listing.health != null ? Number(listing.health) : null;
-  const m = String(listing.marketplace || "");
-  const marketplaceSlug = m === "mercado_livre" ? "mercadolivre" : m || "mercadolivre";
+/** Payload consolidado GET /api/ml/listings (grid). */
+/** @param {Record<string, unknown>} g */
+function mapGridApiToCatalogRow(g) {
+  const { statusKey, statusLabel } = mlStatusToUi(/** @type {string} */ (g.status));
+  const healthNum = g.health_percent != null ? Number(g.health_percent) : null;
 
   let healthBand = "unknown";
   let healthLabel = "Sem histórico";
@@ -187,65 +187,77 @@ function mapListingToCatalogRow(listing) {
     else healthBand = "loss";
   }
 
-  const picN = listing.pictures_count != null ? Number(listing.pictures_count) : null;
-  const varN = listing.variations_count != null ? Number(listing.variations_count) : null;
+  const picN = g.pictures_count != null ? Number(g.pictures_count) : null;
+  const varN = g.variations_count != null ? Number(g.variations_count) : null;
 
-  const mQtyRaw = listing.metrics_qty_sold;
-  const mGrossRaw = listing.metrics_gross_revenue;
-  const hasQtyMetric = mQtyRaw != null && Number.isFinite(Number(mQtyRaw));
-  const hasGrossMetric = mGrossRaw != null && Number.isFinite(Number(mGrossRaw));
+  const salesCount = g.sold_quantity != null ? Math.trunc(Number(g.sold_quantity)) || 0 : 0;
+  const soldQtyMl =
+    g.sold_quantity_ml_listing != null && Number.isFinite(Number(g.sold_quantity_ml_listing))
+      ? Math.trunc(Number(g.sold_quantity_ml_listing))
+      : null;
+  const grossMissing = Boolean(g.gross_revenue_missing);
+  const revenueNumeric =
+    !grossMissing && g.gross_revenue_brl != null ? Number(g.gross_revenue_brl) : grossMissing ? 0 : Number(g.gross_revenue_brl) || 0;
 
-  const salesCount = hasQtyMetric ? Math.trunc(Number(mQtyRaw)) : sold;
-  const revenue = hasGrossMetric ? Number(mGrossRaw) : 0;
-  const profit = 0;
-  const marginPct = 0;
-
-  const coverRaw = listing.cover_thumbnail_url;
-  const coverThumbnailUrl =
-    coverRaw != null && String(coverRaw).trim() !== "" ? String(coverRaw).trim() : null;
-
-  const visitsRaw = listing.health_visits;
-  const visitsNum = visitsRaw != null && Number.isFinite(Number(visitsRaw)) ? Math.trunc(Number(visitsRaw)) : null;
-
-  const qScore = listing.health_listing_quality_score;
+  const qScore = g.health_listing_quality_score;
   const qScoreNum = qScore != null && Number.isFinite(Number(qScore)) ? Number(qScore) : null;
-  const qStatus = listing.health_listing_quality_status != null ? String(listing.health_listing_quality_status) : null;
-  const expStatus = listing.health_experience_status != null ? String(listing.health_experience_status) : null;
+  const qStatus = g.health_listing_quality_status != null ? String(g.health_listing_quality_status) : null;
+  const expStatus = g.health_experience_status != null ? String(g.health_experience_status) : null;
 
   const uiFlags = {};
   if ((healthNum != null && healthNum < 40) || /basic|bajo|baix/i.test(qStatus || "")) {
     uiFlags.needs_attention = true;
   }
 
+  const visitsAbsent = Boolean(g.visits_absent);
+  const visitCountForFilter = visitsAbsent || g.visits == null ? 0 : Number(g.visits) || 0;
+
+  const m = String(g.marketplace || "");
+  const marketplaceSlug = m === "mercado_livre" ? "mercadolivre" : m || "mercadolivre";
+
   return {
-    id: String(listing.id),
-    adCount: stock,
-    adTitle: listing.title ? String(listing.title) : DASH,
+    id: String(g.id),
+    sku: g.sku != null && String(g.sku).trim() !== "" ? String(g.sku).trim() : null,
+    adCount: 0,
+    adTitle: g.title ? String(g.title) : DASH,
     picturesCount: picN != null && Number.isFinite(picN) ? picN : null,
     variationsCount: varN != null && Number.isFinite(varN) ? varN : null,
     productName: DASH,
     marketplaceSlug,
+    marketplaceRaw: m,
     productCost: 0,
-    price,
+    price:
+      g.price_brl != null && String(g.price_brl).trim() !== ""
+        ? Number(g.price_brl)
+        : null,
     salesCount,
-    revenue,
-    profit,
-    marginPct,
+    soldQuantityMlListing: soldQtyMl,
+    revenue: revenueNumeric,
+    grossRevenueMissing: grossMissing,
+    grossRevenueBrl: g.gross_revenue_brl != null ? String(g.gross_revenue_brl) : null,
+    profit: 0,
+    marginPct: 0,
     statusKey,
     statusLabel,
     healthBand,
     healthLabel,
     healthPercent: healthNum != null && Number.isFinite(healthNum) ? Math.round(healthNum) : null,
-    externalId: listing.external_listing_id ? String(listing.external_listing_id) : "",
-    listingNumber: listing.external_listing_id ? String(listing.external_listing_id) : DASH,
-    coverThumbnailUrl,
-    visitCount: visitsNum,
-    netReceivable: listing.health_net_receivable,
-    saleFeePercent: listing.health_sale_fee_percent,
-    saleFeeAmount: listing.health_sale_fee_amount,
-    shippingCost: listing.health_shipping_cost,
-    promotionPrice: listing.health_promotion_price,
-    shippingLogisticType: listing.health_shipping_logistic_type,
+    externalId: g.external_listing_id ? String(g.external_listing_id) : "",
+    listingNumber: g.external_listing_id ? String(g.external_listing_id) : DASH,
+    coverThumbnailUrl:
+      g.cover_thumbnail_url != null && String(g.cover_thumbnail_url).trim() !== ""
+        ? String(g.cover_thumbnail_url).trim()
+        : null,
+    visitCount: visitCountForFilter,
+    visitsAbsent,
+    visitsText: g.visits != null ? String(g.visits) : null,
+    netReceiveBrl: g.net_receive_brl != null ? String(g.net_receive_brl) : null,
+    commissionPercent: g.commission_percent != null ? String(g.commission_percent) : null,
+    commissionAmountBrl: g.commission_amount_brl != null ? String(g.commission_amount_brl) : null,
+    shippingCostBrl: g.shipping_cost_brl != null ? String(g.shipping_cost_brl) : null,
+    promotionPriceBrl: g.promotional_price_brl != null ? String(g.promotional_price_brl) : null,
+    shippingLogisticType: g.health_shipping_logistic_type != null ? String(g.health_shipping_logistic_type) : null,
+    listingTypeTooltip: g.listing_type_tooltip != null ? String(g.listing_type_tooltip) : null,
     listingQualityScore: qScoreNum,
     listingQualityStatus: qStatus,
     experienceStatus: expStatus,
@@ -254,10 +266,12 @@ function mapListingToCatalogRow(listing) {
 }
 
 function AdsCatalogRow({ row }) {
-  const mktLabel = marketplaceChipLabel(row.marketplaceSlug);
   const healthClass = HEALTH_BADGE_CLASS[row.healthBand] || HEALTH_BADGE_CLASS.unknown;
 
-  const freightTitle = [formatMoneyOrDash(row.shippingCost), row.shippingLogisticType ? String(row.shippingLogisticType) : ""]
+  const freightTitle = [
+    row.shippingCostBrl ? formatBrlFromApiString(row.shippingCostBrl) : null,
+    row.shippingLogisticType ? String(row.shippingLogisticType) : null,
+  ]
     .filter(Boolean)
     .join(" · ");
 
@@ -271,6 +285,17 @@ function AdsCatalogRow({ row }) {
     (row.listingQualityScore != null && Number.isFinite(Number(row.listingQualityScore))
       ? `${Math.round(Number(row.listingQualityScore) <= 1 ? Number(row.listingQualityScore) * 100 : Number(row.listingQualityScore))}%`
       : null);
+
+  const metaParts = [
+    row.sku ? `SKU: ${row.sku}` : null,
+    row.picturesCount != null ? `${row.picturesCount} foto(s)` : null,
+    row.variationsCount != null ? `${row.variationsCount} var.` : null,
+  ].filter(Boolean);
+
+  const visitsCell =
+    row.visitsAbsent ? DASH : row.visitsText == null ? SEM_DADO : row.visitsText;
+
+  const revenueCell = row.grossRevenueMissing ? DASH : formatBrlFromApiString(row.grossRevenueBrl);
 
   return (
     <div className="anuncios-catalog__row anuncios-catalog--dense" role="row">
@@ -299,16 +324,7 @@ function AdsCatalogRow({ row }) {
         <span className="anuncios-catalog__ad-title" title={row.adTitle}>
           {row.adTitle}
         </span>
-        {row.picturesCount != null || row.variationsCount != null ? (
-          <span className="anuncios-catalog__ad-meta">
-            {[
-              row.picturesCount != null ? `${row.picturesCount} foto(s)` : null,
-              row.variationsCount != null ? `${row.variationsCount} var.` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
-        ) : null}
+        {metaParts.length > 0 ? <span className="anuncios-catalog__ad-meta">{metaParts.join(" · ")}</span> : null}
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--product">
         <span className="anuncios-catalog__product-link" title={row.productName}>
@@ -316,33 +332,55 @@ function AdsCatalogRow({ row }) {
         </span>
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--mkt">
-        <span className="anuncios-catalog__mkt-chip" title={row.marketplaceSlug}>
-          {mktLabel}
-        </span>
+        <MarketplaceBadge marketplace={row.marketplaceRaw || row.marketplaceSlug} />
       </div>
-      <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(row.price)}</div>
-      <div className="products-catalog__cell products-catalog__cell--num">{row.salesCount}</div>
-      <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(row.revenue)}</div>
       <div className="products-catalog__cell products-catalog__cell--money">
-        {formatMoneyOrDash(row.netReceivable != null ? Number(row.netReceivable) : null)}
+        {row.price != null && Number.isFinite(row.price) ? formatCatalogBRL(row.price) : DASH}
       </div>
+      <div
+        className="products-catalog__cell products-catalog__cell--num"
+        title={
+          row.soldQuantityMlListing != null && row.soldQuantityMlListing !== row.salesCount
+            ? `No ML o anúncio acumula ${row.soldQuantityMlListing} vendas; aqui mostra-se ${row.salesCount} unidade(s) já consolidada(s) nos pedidos importados (Suse7).`
+            : undefined
+        }
+      >
+        {row.salesCount}
+      </div>
+      <div
+        className="products-catalog__cell products-catalog__cell--money"
+        title={row.grossRevenueMissing ? "Faturamento ainda não consolidado nas vendas importadas para este anúncio." : undefined}
+      >
+        {revenueCell}
+      </div>
+      <div className="products-catalog__cell products-catalog__cell--money">{formatBrlFromApiString(row.netReceiveBrl)}</div>
       <div className="products-catalog__cell products-catalog__cell--pct anuncios-catalog__cell--compact-num">
-        {formatCommissionDisplay(
-          row.saleFeePercent != null ? Number(row.saleFeePercent) : null,
-          row.saleFeeAmount != null ? Number(row.saleFeeAmount) : null
+        {row.commissionPercent != null && row.commissionPercent !== "" ? (
+          <span
+            className={row.listingTypeTooltip ? "anuncios-catalog__cell-tooltip" : undefined}
+            data-tooltip={row.listingTypeTooltip || undefined}
+            tabIndex={row.listingTypeTooltip ? 0 : undefined}
+          >
+            {formatPercentFromApiString(row.commissionPercent)}
+          </span>
+        ) : (
+          DASH
         )}
+      </div>
+      <div className="products-catalog__cell products-catalog__cell--money anuncios-catalog__cell--compact-num">
+        {formatBrlFromApiString(row.commissionAmountBrl)}
       </div>
       <div
         className="products-catalog__cell products-catalog__cell--money anuncios-catalog__cell--compact-num"
         title={freightTitle || undefined}
       >
-        {formatMoneyOrDash(row.shippingCost != null ? Number(row.shippingCost) : null)}
+        {formatBrlFromApiString(row.shippingCostBrl)}
       </div>
       <div className="products-catalog__cell products-catalog__cell--money anuncios-catalog__cell--promo">
-        {formatMoneyOrDash(row.promotionPrice != null ? Number(row.promotionPrice) : null)}
+        {formatBrlFromApiString(row.promotionPriceBrl)}
       </div>
       <div className="products-catalog__cell products-catalog__cell--num anuncios-catalog__cell--compact-num">
-        {formatVisitsDisplay(row.visitCount)}
+        {visitsCell}
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--metric">
         {hasQualityData ? (
@@ -425,7 +463,7 @@ export default function Anuncios() {
       return false;
     }
     const listings = Array.isArray(res.data?.listings) ? res.data.listings : [];
-    setCatalogRows(listings.map(mapListingToCatalogRow));
+    setCatalogRows(listings.map(mapGridApiToCatalogRow));
     return true;
   }, []);
 
@@ -569,7 +607,11 @@ export default function Anuncios() {
   );
 
   const totalAdsRevenueFromRows = useMemo(
-    () => catalogRows.reduce((sum, r) => sum + (Number(r.revenue) || 0), 0),
+    () =>
+      catalogRows.reduce((sum, r) => {
+        if (r.grossRevenueMissing) return sum;
+        return sum + (Number(r.revenue) || 0);
+      }, 0),
     [catalogRows]
   );
 
@@ -878,8 +920,13 @@ export default function Anuncios() {
                 />
                 <AdsCatalogHeadCell
                   columnClass="products-catalog__cell--pct"
-                  tip={ADS_COLUMN_TOOLTIPS.commission}
-                  lines={["Comi-", "ssão"]}
+                  tip={ADS_COLUMN_TOOLTIPS.commissionPct}
+                  lines={["Com.", "%"]}
+                />
+                <AdsCatalogHeadCell
+                  columnClass="products-catalog__cell--money"
+                  tip={ADS_COLUMN_TOOLTIPS.commissionBrl}
+                  lines={["Com.", "R$"]}
                 />
                 <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.shipping}>
                   Frete

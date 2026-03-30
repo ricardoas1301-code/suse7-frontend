@@ -210,19 +210,20 @@
   display: grid;
   box-sizing: border-box;
   width: 100%;
-  min-width: min(1580px, 100%);
+  min-width: min(1720px, 100%);
   grid-template-columns:
     44px
     minmax(78px, 0.42fr)
     minmax(0, 1.12fr)
     minmax(0, 0.82fr)
-    minmax(0, 0.48fr)
+    minmax(0, 0.44fr)
     minmax(0, 0.55fr)
     minmax(0, 0.38fr)
     minmax(0, 0.58fr)
     minmax(0, 0.58fr)
     minmax(0, 0.58fr)
-    minmax(0, 0.42fr)
+    minmax(0, 0.36fr)
+    minmax(0, 0.48fr)
     minmax(0, 0.5fr)
     minmax(0, 0.48fr)
     minmax(0, 0.38fr)
@@ -379,19 +380,20 @@
   display: grid;
   box-sizing: border-box;
   width: 100%;
-  min-width: min(1580px, 100%);
+  min-width: min(1720px, 100%);
   grid-template-columns:
     44px
     minmax(78px, 0.42fr)
     minmax(0, 1.12fr)
     minmax(0, 0.82fr)
-    minmax(0, 0.48fr)
+    minmax(0, 0.44fr)
     minmax(0, 0.55fr)
     minmax(0, 0.38fr)
     minmax(0, 0.58fr)
     minmax(0, 0.58fr)
     minmax(0, 0.58fr)
-    minmax(0, 0.42fr)
+    minmax(0, 0.36fr)
+    minmax(0, 0.48fr)
     minmax(0, 0.5fr)
     minmax(0, 0.48fr)
     minmax(0, 0.38fr)
@@ -550,7 +552,85 @@
 }
 
 .anuncios-catalog__cell--mkt {
-  justify-self: start;
+  justify-self: center;
+}
+
+.anuncios-catalog__mkt-badge-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.anuncios-catalog__mkt-logo {
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.anuncios-catalog__mkt-fallback {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--s7-text-secondary, #64748b);
+}
+
+/* Tooltip em célula (comissão %) — mesmo padrão visual do cabeçalho, fundo escuro */
+.anuncios-catalog__row .anuncios-catalog__cell-tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  max-width: 100%;
+  outline: none;
+}
+
+.anuncios-catalog__row .anuncios-catalog__cell-tooltip:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.anuncios-catalog__row .anuncios-catalog__cell-tooltip[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 100020;
+  box-sizing: border-box;
+  min-width: 120px;
+  max-width: 280px;
+  width: max-content;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  word-wrap: break-word;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease 0s,
+    visibility 0s linear 0.15s;
+}
+
+.anuncios-catalog__row .anuncios-catalog__cell-tooltip[data-tooltip]:hover::after,
+.anuncios-catalog__row .anuncios-catalog__cell-tooltip[data-tooltip]:focus::after {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.18s ease 0.35s,
+    visibility 0s linear 0.35s;
 }
 
 .anuncios-catalog__mkt-chip {

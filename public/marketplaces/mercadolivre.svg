@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="Mercado Livre">
+  <rect width="40" height="40" rx="8" fill="#fff159"/>
+  <path fill="#3483fa" d="M8 28c0-7 6-12 12-12s12 5 12 12H8z"/>
+  <ellipse cx="20" cy="14" rx="6" ry="5" fill="#3483fa"/>
+</svg>

@@ -16,6 +16,13 @@ export function filterAdsByCatalogSearch(rows, query) {
     const product = String(row.productName || "").toLowerCase();
     const mkt = String(row.marketplaceLabel || "").toLowerCase();
     const id = String(row.externalId || "").toLowerCase();
-    return title.includes(q) || product.includes(q) || mkt.includes(q) || id.includes(q);
+    const sku = String(row.sku || "").toLowerCase();
+    return (
+      title.includes(q) ||
+      product.includes(q) ||
+      mkt.includes(q) ||
+      id.includes(q) ||
+      sku.includes(q)
+    );
   });
 }
