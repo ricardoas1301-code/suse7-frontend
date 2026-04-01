@@ -169,9 +169,11 @@ function ProductCatalogRow({
     [product, onRequestDelete]
   );
 
+  const catalogIncomplete = product?.catalog_completeness != null && product.catalog_completeness !== "complete";
+
   return (
     <div
-      className={`products-catalog__row${showMarketplacesColumn ? " products-catalog__row--with-marketplaces" : ""}`}
+      className={`products-catalog__row${showMarketplacesColumn ? " products-catalog__row--with-marketplaces" : ""}${catalogIncomplete ? " products-catalog__row--incomplete-catalog" : ""}`}
       role="button"
       tabIndex={0}
       onClick={handleRowActivate}
@@ -193,7 +195,11 @@ function ProductCatalogRow({
 
       <div className="products-catalog__cell products-catalog__cell--product">
         <div className="products-catalog__name-row">
-          <span className="products-catalog__product-name">{name}</span>
+          <span
+            className={`products-catalog__product-name${catalogIncomplete ? " products-catalog__product-name--incomplete" : ""}`}
+          >
+            {name}
+          </span>
           <button
             type="button"
             className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left ${showNameCopyCheck ? "products-catalog__copy-btn--ok" : ""}`}

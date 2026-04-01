@@ -3,6 +3,7 @@
 // Filtros aplicam-se aos dados da listagem (mock até a API existir).
 // ======================================================================
 
+import { ATTENTION_REASON_SKU_PENDING_ML } from "../constants/listingAttention";
 import { CATALOG_FILTER_LOW_MARGIN_MAX_PCT } from "./applyCatalogFilters.js";
 
 /**
@@ -102,6 +103,14 @@ export const ADS_FILTER_DEFINITIONS = [
     description: "Anúncios com alertas ou métricas fora do esperado.",
   },
   {
+    id: "sku_pending_ml",
+    label: "SKU pendente",
+    icon: "catalog_filter_attention",
+    iconTone: "warning",
+    enabled: true,
+    description: "Anúncios sem SKU no ML (sku_pending_ml). Informe o SKU para vincular ao produto.",
+  },
+  {
     id: "declining",
     label: "Em queda",
     icon: "catalog_filter_declining",
@@ -180,6 +189,8 @@ export function applyAdsCatalogFilter(rows, filterId) {
         return mkt === "mercadolivre";
       case "needs_attention":
         return Boolean(flags.needs_attention);
+      case "sku_pending_ml":
+        return String(row.attentionReason || "") === ATTENTION_REASON_SKU_PENDING_ML;
       case "declining":
         return Boolean(flags.declining);
       default:

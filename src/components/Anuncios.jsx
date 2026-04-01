@@ -1,16 +1,22 @@
 // ======================================================================
 // PÁGINA: Anúncios — listagem operacional (Suse7), espelhando Produtos.
 // Fonte: GET /api/ml/listings
-// Sincronização completa (um clique): POST /api/ml/sync-listings → POST /api/ml/sync-sales
+// Um clique: POST /api/ml/sync-listings (importa só anúncios novos no Suse7) → POST /api/ml/sync-sales
 //   → GET /api/ml/listings → GET /api/ml/sales-summary (resumo agregado no servidor)
 // ======================================================================
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildApiUrl, apiFetch } from "../config/api";
+import { ATTENTION_REASON_SKU_PENDING_ML } from "../constants/listingAttention";
+import { useNotifications } from "../contexts/NotificationContext";
+import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
+import SkuInputModal from "./SkuInputModal";
 import S7Button from "./ui/S7Button";
 import S7EmptyState from "./ui/S7EmptyState";
 import S7Icon from "./ui/S7Icon";
 import S7Input from "./ui/S7Input";
+import S7StatCard from "./ui/S7StatCard";
+import S7Tooltip from "./ui/S7Tooltip";
 import { applyAdsCatalogFilter, getAdsFilterChipsForToolbar } from "../utils/adsFilterRegistry";
 import { filterAdsByCatalogSearch } from "../utils/adsCatalogSearch";
 import { formatCatalogBRL, marketplaceChipLabel } from "../utils/productCatalogRow";
@@ -23,7 +29,8 @@ const ADS_PAGE_SIZE = 25;
 
 const ADS_COLUMN_TOOLTIPS = {
   cover: "Imagem principal do anúncio importada do marketplace.",
-  listingNo: "Identificador público do anúncio no marketplace (MLB…).",
+  listingNo:
+    "Identificador público do anúncio no marketplace (MLB…). Passe o mouse na célula: clique no número para copiar.",
   adTitle: "Título público do anúncio no marketplace.",
   product: "Produto interno vinculado ao anúncio.",
   marketplace: "Canal de venda onde o anúncio está publicado.",
@@ -208,6 +215,10 @@ function mapGridApiToCatalogRow(g) {
   if ((healthNum != null && healthNum < 40) || /basic|bajo|baix/i.test(qStatus || "")) {
     uiFlags.needs_attention = true;
   }
+  if (Boolean(g.needs_attention)) uiFlags.needs_attention = true;
+  if (Boolean(g.sku_pending)) uiFlags.needs_attention = true;
+
+  const attentionReason = g.attention_reason != null ? String(g.attention_reason) : null;
 
   const visitsAbsent = Boolean(g.visits_absent);
   const visitCountForFilter = visitsAbsent || g.visits == null ? 0 : Number(g.visits) || 0;
@@ -262,10 +273,47 @@ function mapGridApiToCatalogRow(g) {
     listingQualityStatus: qStatus,
     experienceStatus: expStatus,
     uiFlags,
+    financialAnalysisBlocked: Boolean(g.financial_analysis_blocked),
+    productCatalogCompleteness:
+      g.product_catalog_completeness != null ? String(g.product_catalog_completeness) : null,
+    financialAnalysisHint:
+      g.financial_analysis_hint != null && String(g.financial_analysis_hint).trim() !== ""
+        ? String(g.financial_analysis_hint).trim()
+        : null,
+    attentionReason,
+    skuPending:
+      attentionReason === ATTENTION_REASON_SKU_PENDING_ML || Boolean(g.sku_pending),
   };
 }
 
-function AdsCatalogRow({ row }) {
+function AdsCatalogRow({ row, onInformSku }) {
+  const { addNotification } = useNotifications();
+
+  const handleCopyListingNo = useCallback(async () => {
+    if (row.listingNumber === DASH) return;
+    const text = String(row.listingNumber).trim();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      addNotification({
+        event_type: "LISTING_ID_COPIED",
+        entity_type: "marketplace_listing",
+        title: "Número copiado",
+        message: `${text} foi copiado para a área de transferência.`,
+        severity: NOTIFICATION_SEVERITY.INFO,
+      });
+    } catch {
+      addNotification({
+        event_type: "LISTING_ID_COPY_FAILED",
+        entity_type: "marketplace_listing",
+        title: "Não foi possível copiar",
+        message: "Verifique permissões do navegador ou use HTTPS.",
+        severity: NOTIFICATION_SEVERITY.WARNING,
+      });
+    }
+  }, [row.listingNumber, addNotification]);
+
+  const isSkuPendingMl = row.attentionReason === ATTENTION_REASON_SKU_PENDING_ML;
   const healthClass = HEALTH_BADGE_CLASS[row.healthBand] || HEALTH_BADGE_CLASS.unknown;
 
   const freightTitle = [
@@ -298,7 +346,12 @@ function AdsCatalogRow({ row }) {
   const revenueCell = row.grossRevenueMissing ? DASH : formatBrlFromApiString(row.grossRevenueBrl);
 
   return (
-    <div className="anuncios-catalog__row anuncios-catalog--dense" role="row">
+    <div
+      className={`anuncios-catalog__row anuncios-catalog--dense${
+        isSkuPendingMl ? " anuncios-catalog__row--sku-pending" : ""
+      }`}
+      role="row"
+    >
       <div className="products-catalog__cell anuncios-catalog__cell--thumb" title={row.adTitle}>
         <div className="anuncios-catalog__thumb-wrap">
           {row.coverThumbnailUrl ? (
@@ -314,22 +367,60 @@ function AdsCatalogRow({ row }) {
           )}
         </div>
       </div>
-      <div
-        className="products-catalog__cell anuncios-catalog__cell--listing-no"
-        title={row.listingNumber !== DASH ? row.listingNumber : undefined}
-      >
-        {row.listingNumber}
+      <div className="products-catalog__cell anuncios-catalog__cell--listing-no">
+        {row.listingNumber === DASH ? (
+          row.listingNumber
+        ) : (
+          <S7Tooltip
+            content="Clique para copiar o número do anúncio (MLB) para a área de transferência."
+            wrap
+          >
+            <button
+              type="button"
+              className="anuncios-catalog__listing-no-btn"
+              onClick={handleCopyListingNo}
+              aria-label={`Copiar número do anúncio ${row.listingNumber}`}
+            >
+              {row.listingNumber}
+            </button>
+          </S7Tooltip>
+        )}
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--title">
         <span className="anuncios-catalog__ad-title" title={row.adTitle}>
           {row.adTitle}
         </span>
         {metaParts.length > 0 ? <span className="anuncios-catalog__ad-meta">{metaParts.join(" · ")}</span> : null}
+        {row.financialAnalysisHint ? (
+          <span className="anuncios-catalog__financial-hint" role="note">
+            {row.financialAnalysisHint}
+          </span>
+        ) : null}
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--product">
-        <span className="anuncios-catalog__product-link" title={row.productName}>
-          {row.productName}
-        </span>
+        {isSkuPendingMl ? (
+          <div className="anuncios-catalog__sku-pending-container">
+            <S7Tooltip
+              content="Este anúncio não possui SKU no Mercado Livre. Sem SKU não é possível calcular lucro nem vincular ao produto."
+              wrap
+            >
+              <span className="anuncios-catalog__sku-pending-badge">⚠ SKU pendente</span>
+            </S7Tooltip>
+            <S7Button
+              type="button"
+              variant="warning"
+              size="sm"
+              className="anuncios-catalog__sku-pending-btn-s7"
+              onClick={() => onInformSku?.(row)}
+            >
+              Informar SKU
+            </S7Button>
+          </div>
+        ) : (
+          <span className="anuncios-catalog__product-link" title={row.productName}>
+            {row.productName}
+          </span>
+        )}
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--mkt">
         <MarketplaceBadge marketplace={row.marketplaceRaw || row.marketplaceSlug} />
@@ -422,14 +513,19 @@ function AdsCatalogRow({ row }) {
 }
 
 export default function Anuncios() {
+  const { addNotification } = useNotifications();
   const [adsFilterId, setAdsFilterId] = useState("all");
   const [adsSearchQuery, setAdsSearchQuery] = useState("");
   const [adsPage, setAdsPage] = useState(1);
+
+  /** Modal: informar SKU (anúncio sem SKU no ML). */
+  const [skuModalListing, setSkuModalListing] = useState(null);
 
   const [catalogRows, setCatalogRows] = useState([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState(null);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [healthBackfillLoading, setHealthBackfillLoading] = useState(false);
   /** @type {"idle" | "listings" | "sales" | "reload"} */
   const [syncPhase, setSyncPhase] = useState("idle");
   /** Modal bloqueante durante POST + reload (evita cliques repetidos). */
@@ -443,6 +539,17 @@ export default function Anuncios() {
   const [salesSummary, setSalesSummary] = useState(null);
 
   const filterChips = useMemo(() => getAdsFilterChipsForToolbar(), []);
+
+  const openSkuModal = useCallback((row) => {
+    setSkuModalListing({
+      id: String(row.id),
+      title: row.adTitle && row.adTitle !== DASH ? String(row.adTitle) : "",
+    });
+  }, []);
+
+  const closeSkuModal = useCallback(() => {
+    setSkuModalListing(null);
+  }, []);
 
   const fetchListings = useCallback(async () => {
     const url = buildApiUrl("/api/ml/listings");
@@ -467,6 +574,17 @@ export default function Anuncios() {
     return true;
   }, []);
 
+  const handleSkuSaved = useCallback(async () => {
+    addNotification({
+      event_type: "LISTING_SKU_SAVED",
+      entity_type: "marketplace_listing",
+      title: "SKU vinculado com sucesso",
+      message: "O anúncio foi associado ao produto e a lista foi atualizada.",
+      severity: NOTIFICATION_SEVERITY.INFO,
+    });
+    await fetchListings();
+  }, [addNotification, fetchListings]);
+
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
@@ -490,8 +608,8 @@ export default function Anuncios() {
   }, []);
 
   // ------------------------------
-  // Orquestração: anúncios → vendas → listagem → resumo (só chamadas HTTP + UI)
-  // Modal abre no clique e fecha no finally; feedback final por estado (erro / aviso / sucesso).
+  // Orquestração: importar anúncios novos → vendas → listagem → resumo (só HTTP + UI)
+  // Modal abre no clique e fecha no finally; mensagem principal vem de `data.message` do backend.
   // ------------------------------
   const handleFullSync = useCallback(async () => {
     const baseUrl = buildApiUrl("/api/ml/sync-listings");
@@ -517,8 +635,6 @@ export default function Anuncios() {
     let finalWarning = null;
     let finalSuccess = null;
     /** @type {number | null} */
-    let listingsImported = null;
-    /** @type {number | null} */
     let ordersProcessed = null;
     let salesHttpOk = false;
 
@@ -528,20 +644,25 @@ export default function Anuncios() {
         finalError =
           resListings.data?.error ||
           resListings.error ||
-          "Não foi possível sincronizar anúncios.";
+          "Não foi possível importar anúncios.";
         return;
       }
 
       const ls = resListings.data?.summary;
-      if (ls && typeof ls.imported === "number") listingsImported = ls.imported;
-      else if (ls && typeof ls.processed === "number") listingsImported = ls.processed;
+      let listingsUserMessage =
+        typeof resListings.data?.message === "string" && resListings.data.message.trim() !== ""
+          ? resListings.data.message.trim()
+          : null;
+      if (!listingsUserMessage && ls && typeof ls.new_count === "number" && ls.new_count === 0) {
+        listingsUserMessage = "Não há anúncios para importar.";
+      }
 
       setSyncPhase("sales");
       const resSales = await apiFetch(buildApiUrl("/api/ml/sync-sales"), postOpts);
       salesHttpOk = !!resSales.ok;
       if (!resSales.ok) {
         finalWarning =
-          "Os anúncios foram sincronizados, mas as vendas não puderam ser atualizadas agora.";
+          "A importação de anúncios foi concluída, mas as vendas não puderam ser atualizadas agora.";
       } else {
         const ss = resSales.data?.summary;
         if (ss && typeof ss.processed === "number") ordersProcessed = ss.processed;
@@ -555,7 +676,7 @@ export default function Anuncios() {
           finalError = `${finalWarning} Além disso, não foi possível recarregar a listagem agora.`;
           finalWarning = null;
         } else {
-          finalError = "Sincronização gravada no servidor, mas houve erro ao recarregar a listagem.";
+          finalError = "Operação gravada no servidor, mas houve erro ao recarregar a listagem.";
         }
         return;
       }
@@ -564,28 +685,21 @@ export default function Anuncios() {
       if (!summaryResult.ok && !summaryResult.skipped && summaryResult.message) {
         finalWarning = finalWarning
           ? `${finalWarning} (${summaryResult.message})`
-          : `Sincronização concluída, mas o resumo de vendas não pôde ser atualizado: ${summaryResult.message}`;
+          : `Operação concluída, mas o resumo de vendas não pôde ser atualizado: ${summaryResult.message}`;
       }
 
       if (!finalError && !finalWarning) {
         const parts = [];
-        if (typeof listingsImported === "number" && Number.isFinite(listingsImported)) {
-          parts.push(
-            `${listingsImported} ${listingsImported === 1 ? "anúncio atualizado" : "anúncios atualizados"}`
-          );
-        }
+        if (listingsUserMessage) parts.push(listingsUserMessage);
         if (salesHttpOk && typeof ordersProcessed === "number" && Number.isFinite(ordersProcessed)) {
           parts.push(
             `${ordersProcessed} ${ordersProcessed === 1 ? "pedido processado" : "pedidos processados"}`
           );
         }
-        finalSuccess =
-          parts.length > 0
-            ? `Sincronização concluída com sucesso. ${parts.join(" e ")}.`
-            : "Sincronização concluída com sucesso.";
+        finalSuccess = parts.length > 0 ? parts.join(" ") : "Operação concluída com sucesso.";
       }
     } catch (e) {
-      finalError = e?.message || "Não foi possível concluir a sincronização.";
+      finalError = e?.message || "Não foi possível concluir a operação.";
     } finally {
       setSyncModalOpen(false);
       setSyncLoading(false);
@@ -596,15 +710,75 @@ export default function Anuncios() {
     }
   }, [fetchListings, fetchSalesSummary]);
 
+  const handleHealthFeesBackfill = useCallback(async () => {
+    const url = buildApiUrl("/api/ml/backfill-listing-health");
+    if (!url) {
+      setListError("Defina VITE_API_BASE_URL apontando para o backend.");
+      return;
+    }
+    setHealthBackfillLoading(true);
+    setListError(null);
+    try {
+      const res = await apiFetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: {},
+      });
+      if (!res.ok) {
+        const msg = res.data?.error || res.error || "Não foi possível atualizar taxas do Mercado Livre.";
+        setListError(msg);
+        addNotification({
+          event_type: "LISTING_HEALTH_BACKFILL_FAILED",
+          entity_type: "marketplace_listing",
+          title: "Atualização de taxas",
+          message: msg,
+          severity: NOTIFICATION_SEVERITY.WARNING,
+        });
+        return;
+      }
+      const msg =
+        typeof res.data?.message === "string" && res.data.message.trim() !== ""
+          ? res.data.message.trim()
+          : "Colunas de comissão, frete e promoção foram atualizadas.";
+      await fetchListings();
+      addNotification({
+        event_type: "LISTING_HEALTH_BACKFILL_OK",
+        entity_type: "marketplace_listing",
+        title: "Taxas do ML atualizadas",
+        message: msg,
+        severity: NOTIFICATION_SEVERITY.INFO,
+      });
+    } catch (e) {
+      const msg = e?.message || "Erro ao atualizar taxas.";
+      setListError(msg);
+      addNotification({
+        event_type: "LISTING_HEALTH_BACKFILL_FAILED",
+        entity_type: "marketplace_listing",
+        title: "Atualização de taxas",
+        message: msg,
+        severity: NOTIFICATION_SEVERITY.WARNING,
+      });
+    } finally {
+      setHealthBackfillLoading(false);
+    }
+  }, [addNotification, fetchListings]);
+
   const syncButtonLabel = useMemo(() => {
-    if (!syncLoading) return "Sincronizar anúncios";
-    return "Sincronizando…";
+    if (!syncLoading) return "Importar anúncios";
+    return "Importando anúncios…";
   }, [syncLoading]);
 
   const activeCount = useMemo(
     () => catalogRows.filter((r) => r.statusKey === "active").length,
     [catalogRows]
   );
+
+  const skuPendingCount = useMemo(
+    () => catalogRows.filter((r) => r.attentionReason === ATTENTION_REASON_SKU_PENDING_ML).length,
+    [catalogRows]
+  );
+
+  const totalAdsCount = catalogRows.length;
 
   const totalAdsRevenueFromRows = useMemo(
     () =>
@@ -661,6 +835,14 @@ export default function Anuncios() {
     <div className="anuncios-catalog">
       <AnunciosSyncModal open={syncModalOpen} phase={syncPhase} />
 
+      <SkuInputModal
+        open={!!skuModalListing}
+        listingId={skuModalListing?.id ?? null}
+        listingTitle={skuModalListing?.title ?? ""}
+        onClose={closeSkuModal}
+        onSaved={handleSkuSaved}
+      />
+
       <h1 className="products-catalog__sr-title">Anúncios</h1>
 
       <section className="anuncios-catalog__kpis" aria-label="Resumo de anúncios">
@@ -683,17 +865,28 @@ export default function Anuncios() {
               {listLoading ? "…" : formatCatalogBRL(totalAdsRevenueKpi)}
             </p>
             <p className="anuncios-catalog__kpi-hint">
-              Faturamento bruto importado das vendas (resumo do servidor após sincronizar). Lucro e margem dependem
-              de custo interno.
+              Faturamento bruto importado das vendas (resumo do servidor após importar e atualizar pedidos). Lucro e
+              margem dependem de custo interno.
             </p>
           </div>
         </article>
 
         <div className="anuncios-catalog__kpi-minis" aria-label="Indicadores rápidos">
+          <div className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--stat">
+            <S7StatCard
+              title="SKU pendente"
+              value={listLoading ? "…" : String(skuPendingCount)}
+              subtitle={
+                listLoading ? "Carregando catálogo…" : "Anúncios sem SKU (bloqueando análise)"
+              }
+              variant="warning"
+              iconName="AlertTriangle"
+              className="anuncios-catalog__sku-stat-card"
+            />
+          </div>
           {[
             { key: "sales", label: "Vendas", variant: "sales" },
             { key: "profit", label: "Lucro", variant: "profit" },
-            { key: "attention", label: "Precisam atenção", variant: "warn" },
             { key: "decline", label: "Em queda", variant: "decline" },
           ].map(({ key, label, variant }) => (
             <article
@@ -746,13 +939,25 @@ export default function Anuncios() {
               />
             </div>
           </div>
-          <div className="products-catalog__controls-actions">
+          <div className="products-catalog__controls-actions anuncios-catalog__sync-actions">
+            <S7Button
+              variant="secondary"
+              iconName="pricing"
+              className="products-catalog__new-product-btn"
+              disabled={syncLoading || listLoading || healthBackfillLoading}
+              loading={healthBackfillLoading}
+              loadingLabel="Atualizando taxas…"
+              title="Busca no Mercado Livre as taxas de venda (listing_prices), frete do snapshot do anúncio e preço promocional quando existir. Não cria anúncios novos."
+              onClick={handleHealthFeesBackfill}
+            >
+              Atualizar taxas ML
+            </S7Button>
             <S7Button
               variant="primary"
               iconName="download"
               className="products-catalog__new-product-btn"
-              disabled={syncLoading || listLoading}
-              title="Atualiza anúncios e vendas no Mercado Livre (conta conectada): importa vitrine, importa pedidos e recarrega a tela."
+              disabled={syncLoading || listLoading || healthBackfillLoading}
+              title="Importa no Suse7 apenas anúncios que ainda não existem; em seguida atualiza vendas no servidor e recarrega a tela."
               onClick={handleFullSync}
             >
               {syncButtonLabel}
@@ -858,7 +1063,7 @@ export default function Anuncios() {
             if (catalogRows.length === 0 && !hasSearch && adsFilterId === "all") {
               title = "Nenhum anúncio importado";
               description =
-                "Conecte o Mercado Livre em Perfil → Integrações e use Sincronizar anúncios para importar vitrine e vendas.";
+                "Conecte o Mercado Livre em Perfil → Integrações e use Importar anúncios para trazer a vitrine e, em seguida, atualizar vendas.";
             } else if (hasSearch && searchFiltered.length === 0) {
               title = "Nenhum anúncio encontrado";
               description = "Nenhum item corresponde à busca. Tente outro termo ou limpe o campo.";
@@ -958,7 +1163,7 @@ export default function Anuncios() {
 
               <div className="products-catalog__body">
                 {paginatedRows.map((row) => (
-                  <AdsCatalogRow key={row.id} row={row} />
+                  <AdsCatalogRow key={row.id} row={row} onInformSku={(r) => openSkuModal(r)} />
                 ))}
               </div>
             </div>

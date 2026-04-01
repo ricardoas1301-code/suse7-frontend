@@ -71,6 +71,23 @@
   border-color: var(--s7-primary-hover, #1d4ed8);
 }
 
+/* Variante aviso (catálogo / SKU pendente) */
+.s7-btn--warning {
+  background: #ea580c;
+  border-color: #ea580c;
+  color: #ffffff;
+}
+
+.s7-btn--warning:hover:not(:disabled) {
+  background: #c2410c;
+  border-color: #c2410c;
+}
+
+.s7-btn--warning .s7-btn__spinner {
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+}
+
 /* ======================================================
    VARIANTE: SECONDARY
    Baseado no botão "+ Adicionar título" (transparente + hover azul)

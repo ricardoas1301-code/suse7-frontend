@@ -47,6 +47,7 @@ import Notificacoes from "./components/Profile/Notificacoes";
 // Produtos (REAL)
 import Products from "./components/Products";
 import Anuncios from "./components/Anuncios";
+import MlListingImportDebug from "./pages/debug/MlListingImportDebug.jsx";
 import ProductCreate from "./pages/ProductCreate";
 import ProductEdit from "./pages/ProductEdit";
 
@@ -152,6 +153,7 @@ const router = createBrowserRouter([
         ],
       },
       { path: "anuncios", element: <Anuncios /> },
+      { path: "anuncios/debug-importacao", element: <MlListingImportDebug /> },
       { path: "produtos", element: <Products /> },
       { path: "clientes", element: <Clientes /> },
       { path: "faturas", element: <Faturas /> },

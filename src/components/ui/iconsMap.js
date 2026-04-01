@@ -74,6 +74,8 @@ export const iconsMap = {
   catalog_filter_with_ads: Megaphone,
   catalog_filter_with_sales: Receipt,
   catalog_filter_attention: TriangleAlert,
+  /** Alias pedido pelo DS / prompts (lucide: TriangleAlert) */
+  AlertTriangle: TriangleAlert,
   catalog_filter_opportunity: Sparkles,
   catalog_filter_declining: LineChart,
   catalog_filter_new: Clock,

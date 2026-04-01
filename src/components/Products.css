@@ -700,6 +700,11 @@
     border-color 0.2s ease;
 }
 
+.products-catalog__row--incomplete-catalog {
+  background: rgba(254, 202, 202, 0.28);
+  border-left: 3px solid rgba(220, 38, 38, 0.35);
+}
+
 .products-catalog__row--with-marketplaces {
   grid-template-columns:
     56px minmax(0, 1.6fr)
@@ -1116,6 +1121,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.products-catalog__product-name--incomplete {
+  font-weight: 700;
+  color: #b91c1c;
 }
 
 .products-catalog__sku-row {

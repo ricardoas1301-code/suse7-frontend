@@ -1,6 +1,6 @@
 // ======================================================================
-// Modal bloqueante — sincronização completa Anúncios (ML)
-// Spinner + mensagens amigáveis; texto da etapa atual (anúncios / vendas / tela).
+// Modal bloqueante — importação de anúncios novos + vendas (ML)
+// Spinner + mensagens amigáveis; texto da etapa atual (importação / vendas / tela).
 // Visual alinhado ao S7FormSavingOverlay (borda laranja suave, card branco).
 // ======================================================================
 
@@ -15,7 +15,7 @@ export default function AnunciosSyncModal({ open, phase }) {
       ? "Sincronizando vendas…"
       : phase === "reload"
         ? "Atualizando dados da tela…"
-        : "Sincronizando anúncios…";
+        : "Importando anúncios…";
 
   const node = (
     <div
@@ -28,12 +28,12 @@ export default function AnunciosSyncModal({ open, phase }) {
       <div className="anuncios-sync-modal__backdrop" aria-hidden />
       <div className="anuncios-sync-modal__card">
         <h2 id="anuncios-sync-modal-title" className="anuncios-sync-modal__title">
-          Sincronizando dados
+          Importando e atualizando
         </h2>
         <div className="anuncios-sync-modal__spinner" aria-hidden />
         <p className="anuncios-sync-modal__lead">Aguarde, este processo pode demorar um pouco.</p>
         <p className="anuncios-sync-modal__secondary">
-          Estamos atualizando anúncios, vendas e métricas da sua conta.
+          Importamos apenas anúncios novos no Suse7 e, em seguida, atualizamos vendas e a tela.
         </p>
         <p className="anuncios-sync-modal__step" role="status">
           {stepLabel}
