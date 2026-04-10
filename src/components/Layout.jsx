@@ -18,6 +18,7 @@ import {
   Activity,
   BarChart3,
   FileText,
+  Code2,
 } from "lucide-react";
 
 // ---------------- Assets ----------------
@@ -26,6 +27,7 @@ import suse7Logo from "../assets/suse7-logo-redonda.png";
 // ---------------- Componentes ----------------
 import NotificationBell from "./NotificationBell";
 import AvatarMenu from "./AvatarMenu";
+import { devCenterBootstrap } from "../services/devCenterApi";
 
 export default function Layout() {
   // -----------------------------------------------------
@@ -33,6 +35,7 @@ export default function Layout() {
   // -----------------------------------------------------
   const [empresaNome, setEmpresaNome] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [showDevCenterNav, setShowDevCenterNav] = useState(false);
 
   const location = useLocation();
 
@@ -60,6 +63,10 @@ useEffect(() => {
 
   const handleLogoUpdate = () => loadProfile();
   window.addEventListener("logoUpdated", handleLogoUpdate);
+
+  devCenterBootstrap().then((r) => {
+    setShowDevCenterNav(Boolean(r.ok && r.data?.allowed));
+  });
 
   return () => {
     window.removeEventListener("logoUpdated", handleLogoUpdate);
@@ -127,6 +134,15 @@ className={`nav-item ${
               </Link>
             );
           })}
+          {showDevCenterNav && (
+            <Link
+              to="/admin/dev-center"
+              className={`nav-item ${location.pathname.startsWith("/admin/dev-center") ? "active" : ""}`}
+            >
+              <Code2 className="nav-icon" />
+              <span>Dev Center</span>
+            </Link>
+          )}
         </div>
 
         {/* Menu da empresa (sino + logo + dropdown) */}

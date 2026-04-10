@@ -32,6 +32,8 @@ import "./ProductAdTitlesTab.css";
 import { Trash2 } from "lucide-react";
 import { SeoKeywordsInput } from "./SeoKeywordsInput";
 import ProductHealthDetailsModal from "./ProductHealthDetailsModal";
+import { fetchProductMarketplaceListings } from "../services/productListingsService";
+import { fetchProductPerformance } from "../services/productPerformanceService";
 import { getProductHealth } from "../services/productHealthService";
 import { changeStatus } from "../services/productStatusService";
 import { getPreferences, setPreference } from "../services/userPreferencesService";
@@ -58,6 +60,8 @@ import {
   persistProductImagesAfterCreate,
   resolvePrimaryImageFromLinks,
 } from "../utils/productImagesPersistence";
+import { formatMarketplaceListingDisplayId } from "../utils/marketplaceListingId";
+import { formatCatalogBRL, marketplaceChipLabel } from "../utils/productCatalogRow";
 import { computeVariantSkuErrors } from "../utils/variantSkuValidation";
 import {
   PRODUCT_CM_FIELDS,
@@ -636,6 +640,13 @@ const buildVariantKey = useCallback((attrsObj) => {
 // ------------------------------------------------------
 const hasAnyVariation = variationAttributes.length > 0;
 
+const [productAdsListings, setProductAdsListings] = useState(/** @type {unknown[]} */ ([]));
+const [productAdsListingsLoading, setProductAdsListingsLoading] = useState(false);
+const [productAdsListingsError, setProductAdsListingsError] = useState(/** @type {string | null} */ (null));
+const [productPerformance, setProductPerformance] = useState(null);
+const [productPerformanceLoading, setProductPerformanceLoading] = useState(false);
+const [productPerformanceError, setProductPerformanceError] = useState(/** @type {string | null} */ (null));
+
 // ----------------------------------------------------------------------
 // Guard: snapshot determinístico (evitar falso dirty)
 // stableStringify ordena chaves recursivamente para serialização estável
@@ -1001,6 +1012,62 @@ useLayoutEffect(() => {
     if (Date.now() - healthLastFetchRef.current < 10000) return;
     fetchHealth(productIdForHealth);
   }, [safeTab]);
+
+  useEffect(() => {
+    if (safeTab !== "ads") return;
+    const pid = product?.id != null ? String(product.id).trim() : "";
+    if (!pid) {
+      setProductAdsListings([]);
+      setProductAdsListingsError(null);
+      setProductAdsListingsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setProductAdsListingsLoading(true);
+    setProductAdsListingsError(null);
+    void (async () => {
+      const res = await fetchProductMarketplaceListings(pid);
+      if (cancelled) return;
+      setProductAdsListingsLoading(false);
+      if (!res.ok) {
+        setProductAdsListings([]);
+        setProductAdsListingsError(res.error ?? "Erro ao carregar anúncios");
+        return;
+      }
+      setProductAdsListings(Array.isArray(res.listings) ? res.listings : []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [safeTab, product?.id]);
+
+  useEffect(() => {
+    if (safeTab !== "performance") return;
+    const pid = product?.id != null ? String(product.id).trim() : "";
+    if (!pid) {
+      setProductPerformance(null);
+      setProductPerformanceError(null);
+      setProductPerformanceLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setProductPerformanceLoading(true);
+    setProductPerformanceError(null);
+    void (async () => {
+      const res = await fetchProductPerformance(pid);
+      if (cancelled) return;
+      setProductPerformanceLoading(false);
+      if (!res.ok) {
+        setProductPerformance(null);
+        setProductPerformanceError(res.error ?? "Erro ao carregar desempenho");
+        return;
+      }
+      setProductPerformance(res.data ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [safeTab, product?.id]);
 
   // ------------------------------------------------------
   // MARCAR COMO PRONTO (Ready)
@@ -4153,24 +4220,85 @@ const validatePricingTab = () => {
               ABA: ANÚNCIOS (placeholder)
               ======================= */}
               {safeTab === "ads" && (
-              <div className="pf-container">
-             <h2 className="pf-tab-title">Anúncios</h2>
-             {!hasAnyVariation && (
-             <div className="section">
-              <div className="section-header">
-                <h3>Anúncios do produto</h3>
-                <p className="section-subtitle">Aqui vamos listar os anúncios vinculados a este produto em cada marketplace (ML primeiro).</p>
-              </div>
-
-              <p className="hint">Em breve: tabela com Marketplace, ID do anúncio, Status, Preço, Estoque e Ações.</p>
-
-              <button className="s7-btn s7-btn--secondary" type="button">
-                Importar anúncios (em breve)
-              </button>
-             </div>
-             )}
-             </div>
-             )}
+                <div className="pf-container">
+                  <h2 className="pf-tab-title">Anúncios</h2>
+                  <div className="section">
+                    <div className="section-header">
+                      <h3>Anúncios vinculados</h3>
+                      <p className="section-subtitle">
+                        Dados consolidados no servidor para cada anúncio associado a este produto (multi-marketplace).
+                      </p>
+                    </div>
+                    {!product?.id ? (
+                      <p className="hint">Salve o produto para listar os anúncios vinculados.</p>
+                    ) : productAdsListingsLoading ? (
+                      <p className="hint">Carregando anúncios…</p>
+                    ) : productAdsListingsError ? (
+                      <p className="hint" role="alert">
+                        {productAdsListingsError}
+                      </p>
+                    ) : productAdsListings.length === 0 ? (
+                      <p className="hint">Nenhum anúncio vinculado a este produto ainda.</p>
+                    ) : (
+                      <div className="pf-product-ads-table-wrap">
+                        <table className="pf-product-ads-table">
+                          <thead>
+                            <tr>
+                              <th scope="col">Marketplace</th>
+                              <th scope="col">Anúncio</th>
+                              <th scope="col">Título</th>
+                              <th scope="col">SKU</th>
+                              <th scope="col">Status</th>
+                              <th scope="col">Preço</th>
+                              <th scope="col">Promoção</th>
+                              <th scope="col">Última sync</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {productAdsListings.map((raw) => {
+                              const L = raw && typeof raw === "object" ? /** @type {Record<string, unknown>} */ (raw) : {};
+                              const m = L.marketplace != null ? String(L.marketplace) : "";
+                              const extRaw = L.external_listing_id != null ? String(L.external_listing_id) : "";
+                              const adNo = formatMarketplaceListingDisplayId(m, extRaw) || extRaw || "—";
+                              const title = L.title != null && String(L.title).trim() !== "" ? String(L.title) : "—";
+                              const sku = L.sku != null && String(L.sku).trim() !== "" ? String(L.sku) : "—";
+                              const status = L.status != null && String(L.status).trim() !== "" ? String(L.status) : "—";
+                              const priceBrl = L.price_brl != null ? String(L.price_brl).trim() : "";
+                              const priceNum = priceBrl !== "" ? Number(priceBrl.replace(",", ".")) : NaN;
+                              const priceDisplay = Number.isFinite(priceNum) ? formatCatalogBRL(priceNum) : "—";
+                              const onPromo = Boolean(L.is_on_promotion);
+                              const syncRaw = L.last_sync_at != null ? String(L.last_sync_at) : "";
+                              let syncDisplay = "—";
+                              if (syncRaw) {
+                                const d = new Date(syncRaw);
+                                syncDisplay = Number.isNaN(d.getTime()) ? syncRaw : d.toLocaleString("pt-BR");
+                              }
+                              const rowKey =
+                                L.id != null && String(L.id).trim() !== ""
+                                  ? String(L.id)
+                                  : `${m || "mkt"}-${extRaw || "ad"}`;
+                              return (
+                                <tr key={rowKey}>
+                                  <td>{marketplaceChipLabel(m || "—")}</td>
+                                  <td>{adNo}</td>
+                                  <td className="pf-product-ads-table__title" title={title}>
+                                    {title}
+                                  </td>
+                                  <td>{sku}</td>
+                                  <td>{status}</td>
+                                  <td>{priceDisplay}</td>
+                                  <td>{onPromo ? "Sim" : "Não"}</td>
+                                  <td>{syncDisplay}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
              {/* =======================
              ABA: VENDAS & DESEMPENHO (placeholder)
@@ -4183,12 +4311,82 @@ const validatePricingTab = () => {
                 <h3>Vendas & desempenho</h3>
                 <p className="section-subtitle">Painel do produto: histórico de vendas, desempenho por canal e indicadores.</p>
               </div>
+              {productPerformanceLoading ? (
+                <p className="hint">Carregando desempenho…</p>
+              ) : productPerformanceError ? (
+                <p className="hint pf-performance-error">{productPerformanceError}</p>
+              ) : (
+                <>
+                  <div className="pf-performance-cards">
+                    <div className="pf-performance-card">
+                      <span>Vendas</span>
+                      <strong>{productPerformance?.total_orders ?? 0}</strong>
+                    </div>
+                    <div className="pf-performance-card">
+                      <span>Receita</span>
+                      <strong>{formatCatalogBRL(Number(productPerformance?.total_revenue ?? 0))}</strong>
+                    </div>
+                    <div className="pf-performance-card">
+                      <span>Ticket médio</span>
+                      <strong>{formatCatalogBRL(Number(productPerformance?.avg_ticket ?? 0))}</strong>
+                    </div>
+                  </div>
 
-              <p className="hint">Em breve: cards com Vendas, Receita, Lucro, Ticket médio, Conversão e Curva ABC.</p>
-
-              <button className="s7-btn s7-btn--secondary" type="button">
-                Ver relatório (em breve)
-              </button>
+                  <div className="pf-performance-timeseries">
+                    <h4>Vendas no tempo</h4>
+                    {Array.isArray(productPerformance?.sales_over_time) &&
+                    productPerformance.sales_over_time.length > 0 ? (
+                      <div className="pf-performance-table-wrap">
+                        {(() => {
+                          const series = productPerformance.sales_over_time;
+                          const maxY = Math.max(1, ...series.map((p) => Number(p.value || 0)));
+                          const w = 640;
+                          const h = 180;
+                          const stepX = series.length > 1 ? (w - 24) / (series.length - 1) : 0;
+                          const points = series
+                            .map((p, idx) => {
+                              const x = 12 + idx * stepX;
+                              const y = h - 12 - (Math.max(0, Number(p.value || 0)) / maxY) * (h - 24);
+                              return `${x},${y}`;
+                            })
+                            .join(" ");
+                          return (
+                            <svg className="pf-performance-chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label="Linha temporal de vendas">
+                              <line x1="12" y1={h - 12} x2={w - 12} y2={h - 12} className="pf-performance-chart-axis" />
+                              <polyline points={points} className="pf-performance-chart-line" />
+                            </svg>
+                          );
+                        })()}
+                        <table className="pf-performance-table" aria-label="Série temporal de desempenho">
+                          <thead>
+                            <tr>
+                              <th>Data</th>
+                              <th>Vendas</th>
+                              <th>Receita</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {productPerformance.sales_over_time.map((pt, idx) => {
+                              const rev = Array.isArray(productPerformance?.revenue_over_time)
+                                ? productPerformance.revenue_over_time[idx]
+                                : null;
+                              return (
+                                <tr key={`${pt.date}-${idx}`}>
+                                  <td>{pt.date}</td>
+                                  <td>{pt.value ?? 0}</td>
+                                  <td>{formatCatalogBRL(Number(rev?.value ?? 0))}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="hint">Sem snapshots suficientes para exibir série temporal.</p>
+                    )}
+                  </div>
+                </>
+              )}
              </div>
              </div>
              )}

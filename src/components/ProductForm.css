@@ -2414,3 +2414,130 @@
 .s7-local-info-icon {
   flex-shrink: 0;
 }
+
+/* Aba Anúncios — lista vinda do backend (GET /api/products/listings) */
+.pf-product-ads-table-wrap {
+  overflow-x: auto;
+  margin-top: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.pf-product-ads-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.pf-product-ads-table th,
+.pf-product-ads-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  vertical-align: top;
+}
+
+.pf-product-ads-table th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--s7-text-secondary, #64748b);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.pf-product-ads-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pf-product-ads-table__title {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Aba Vendas & desempenho */
+.pf-performance-error {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.pf-performance-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pf-performance-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-performance-card span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.pf-performance-card strong {
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.pf-performance-timeseries {
+  margin-top: 14px;
+}
+
+.pf-performance-table-wrap {
+  overflow-x: auto;
+}
+
+.pf-performance-chart {
+  width: 100%;
+  min-width: 520px;
+  height: 180px;
+  margin-bottom: 8px;
+  display: block;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.pf-performance-chart-axis {
+  stroke: #cbd5e1;
+  stroke-width: 1.25;
+}
+
+.pf-performance-chart-line {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pf-performance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.pf-performance-table th,
+.pf-performance-table td {
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pf-performance-table th {
+  font-weight: 800;
+  color: #334155;
+}

@@ -7,6 +7,7 @@
 //
 // Observações:
 // - Padrão oficial: placement="bottom-start", offset={6}
+// - placement="top-start": balão acima do gatilho (ex.: última linha de um painel com overflow)
 // - Sem lógica de negócio; apenas composição visual
 // ======================================================
 
@@ -19,7 +20,7 @@ export default function S7Tooltip({
   /** Texto exibido no tooltip */
   content = "",
   children,
-  /** @type {"bottom-start"} */
+  /** @type {"bottom-start" | "top-start"} */
   placement = "bottom-start",
   offset = 6,
   /** Permite quebra de linha em textos longos (.s7-tip-wrap) */
@@ -30,14 +31,15 @@ export default function S7Tooltip({
     return children ?? null;
   }
 
-  const placementClass =
-    placement === "bottom-start" ? "s7-tooltip--bottom-start" : "";
+  const isBottomStart = placement === "bottom-start";
+  const placementClass = isBottomStart ? "s7-tooltip--bottom-start" : "s7-tooltip--top-start";
 
   const mergedClass = [
     "s7-tooltip",
     "s7-tip",
-    "s7-tip-bottom",
-    "s7-tip-left",
+    isBottomStart ? "s7-tip-bottom" : "",
+    /* Em top-start o gatilho costuma ficar à direita; alinhar o balão à direita evita estourar a viewport. */
+    isBottomStart ? "s7-tip-left" : "s7-tip-right",
     wrap ? "s7-tip-wrap" : "",
     placementClass,
     className,

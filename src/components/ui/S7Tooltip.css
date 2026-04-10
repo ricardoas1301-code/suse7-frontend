@@ -13,3 +13,9 @@
   top: calc(100% + 2px);
   bottom: auto;
 }
+
+/* Balão acima do gatilho (offset espelha bottom-start via --s7-tooltip-offset). */
+.s7-tooltip.s7-tip.s7-tooltip--top-start[data-tip]::after {
+  top: auto;
+  bottom: calc(100% + var(--s7-tooltip-offset, 6px));
+}

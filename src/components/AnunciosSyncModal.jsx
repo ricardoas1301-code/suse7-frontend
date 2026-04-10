@@ -6,7 +6,7 @@
 
 import { createPortal } from "react-dom";
 
-/** @param {{ open: boolean; phase: "idle" | "listings" | "sales" | "reload" }} props */
+/** @param {{ open: boolean; phase: "idle" | "listings" | "health" | "sales" | "reload" }} props */
 export default function AnunciosSyncModal({ open, phase }) {
   if (!open || typeof document === "undefined") return null;
 
@@ -15,7 +15,9 @@ export default function AnunciosSyncModal({ open, phase }) {
       ? "Sincronizando vendas…"
       : phase === "reload"
         ? "Atualizando dados da tela…"
-        : "Importando anúncios…";
+        : phase === "health"
+          ? "Atualizando taxas e repasse (health) no banco…"
+          : "Importando anúncios…";
 
   const node = (
     <div
@@ -33,7 +35,8 @@ export default function AnunciosSyncModal({ open, phase }) {
         <div className="anuncios-sync-modal__spinner" aria-hidden />
         <p className="anuncios-sync-modal__lead">Aguarde, este processo pode demorar um pouco.</p>
         <p className="anuncios-sync-modal__secondary">
-          Importamos apenas anúncios novos no Suse7 e, em seguida, atualizamos vendas e a tela.
+          Importamos anúncios novos (se houver), regravamos taxas/repasse dos anúncios já salvos,
+          sincronizamos vendas e recarregamos a tela.
         </p>
         <p className="anuncios-sync-modal__step" role="status">
           {stepLabel}

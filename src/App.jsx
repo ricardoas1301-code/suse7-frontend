@@ -47,9 +47,12 @@ import Notificacoes from "./components/Profile/Notificacoes";
 // Produtos (REAL)
 import Products from "./components/Products";
 import Anuncios from "./components/Anuncios";
+import AnunciosTeste from "./pages/AnunciosTeste";
 import MlListingImportDebug from "./pages/debug/MlListingImportDebug.jsx";
 import ProductCreate from "./pages/ProductCreate";
 import ProductEdit from "./pages/ProductEdit";
+import DevCenter from "./pages/admin/DevCenter";
+import DevCenterRoute from "./pages/admin/DevCenterRoute";
 
 // Notificações (in-app toast)
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -153,6 +156,7 @@ const router = createBrowserRouter([
         ],
       },
       { path: "anuncios", element: <Anuncios /> },
+      { path: "anuncios-2", element: <AnunciosTeste /> },
       { path: "anuncios/debug-importacao", element: <MlListingImportDebug /> },
       { path: "produtos", element: <Products /> },
       { path: "clientes", element: <Clientes /> },
@@ -164,6 +168,14 @@ const router = createBrowserRouter([
       { path: "precificacoes", element: <Precificacoes /> },
       { path: "produtos/novo", element: <ProductCreate /> },
       { path: "produtos/:id/editar", element: <ProductEdit /> },
+      {
+        path: "admin/dev-center",
+        element: (
+          <DevCenterRoute>
+            <DevCenter />
+          </DevCenterRoute>
+        ),
+      },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },

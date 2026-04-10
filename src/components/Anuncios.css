@@ -39,6 +39,27 @@
   background: rgba(255, 165, 0, 0.08);
 }
 
+/* Pendência de produto / estrutura — alinhado ao alerta do catálogo de produtos */
+.anuncios-catalog__row--pending-product {
+  background: rgba(254, 202, 202, 0.28);
+  border-left: 3px solid rgba(220, 38, 38, 0.35);
+}
+
+.anuncios-catalog__row--pending-product:hover {
+  background: rgba(254, 202, 202, 0.4);
+}
+
+.anuncios-sell-minimal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.anuncios-sell-minimal__action-btn {
+  flex: 0 0 auto;
+}
+
 .anuncios-catalog__sku-pending-container {
   display: flex;
   flex-direction: column;
@@ -361,13 +382,20 @@
 }
 
 /* —— Grade de anúncios (capa + operação + health) —— */
+/* Vista minimal: lista mais estreita no desktop (menos “vácuo” à direita) */
+.products-catalog__table-hscroll:has(.anuncios-catalog__grid--minimal) {
+  max-width: min(1100px, 100%);
+  margin-inline: auto;
+}
+
 .anuncios-catalog__grid {
   display: grid;
   box-sizing: border-box;
   width: 100%;
-  min-width: min(1720px, 100%);
+  min-width: min(1820px, 100%);
   grid-template-columns:
-    44px
+    96px
+    56px
     minmax(0, 0.82fr)
     minmax(0, 1.12fr)
     minmax(0, 0.82fr)
@@ -390,6 +418,1092 @@
   padding: 0 clamp(12px, 1.6vw, 18px);
 }
 
+/* Vista simples: coluna de texto (hierarquia ID → título → meta) */
+.anuncios-catalog__minimal-title-toolbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px 10px;
+  margin-top: 6px;
+  min-width: 0;
+}
+
+.anuncios-catalog__minimal-title-grow {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+.anuncios-ad-title-link--toolbar {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.anuncios-catalog__minimal-title-placeholder {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--s7-text-secondary, #94a3b8);
+  font-style: italic;
+}
+
+.anuncios-catalog__minimal-title-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+
+.anuncios-catalog__minimal-title-mkt {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 1px;
+}
+
+.anuncios-ad-line-action-btn.s7-btn--sm {
+  padding-inline: 8px;
+  min-height: 28px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.anuncios-catalog__title-heading-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px 10px;
+  min-width: 0;
+}
+
+.anuncios-catalog__ad-title--inline {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.anuncios-catalog__title-heading-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.anuncios-catalog__product-cell-muted {
+  font-size: 13px;
+  color: rgba(15, 23, 42, 0.35);
+  font-weight: 600;
+}
+
+.anuncios-catalog__cell--minimal-listing {
+  min-width: 0;
+  text-align: left;
+  align-self: center;
+}
+
+.anuncios-catalog__cell--minimal-mkt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  min-width: 44px;
+}
+
+.anuncios-catalog__cell--minimal-mkt .anuncios-catalog__mkt-badge-wrap,
+.anuncios-catalog__cell--minimal-mkt .anuncios-catalog__mkt-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.anuncios-catalog__cell--minimal-sell {
+  min-width: 0;
+  text-align: left;
+  align-self: center;
+  justify-self: stretch;
+  overflow: visible;
+}
+
+/* —— “Você vende por” (vista minimal) —— */
+.anuncios-sell-minimal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.anuncios-sell-minimal__main-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.anuncios-sell-minimal__primary-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.anuncios-sell-minimal__primary-caption {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--s7-text-secondary, #64748b);
+  line-height: 1.2;
+}
+
+.anuncios-sell-minimal__main {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--s7-text, #0f172a);
+  letter-spacing: -0.02em;
+}
+
+.anuncios-sell-popover--inline {
+  flex: 0 0 auto;
+}
+
+.anuncios-sell-minimal__promo {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--s7-text-secondary, #64748b);
+}
+
+.anuncios-sell-minimal__promo em {
+  font-style: italic;
+  font-weight: 700;
+  color: var(--s7-text-secondary, #475569);
+}
+
+.anuncios-sell-minimal__wholesale {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--s7-text-secondary, #64748b);
+}
+
+.anuncios-sell-minimal__wholesale-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--s7-primary, #2563eb);
+}
+
+.anuncios-sell-minimal__net {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.anuncios-sell-minimal__net-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--s7-text-secondary, #64748b);
+}
+
+.anuncios-sell-minimal__net-value {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--s7-text, #0f172a);
+}
+
+.anuncios-sell-popover {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  z-index: 1;
+}
+
+.anuncios-sell-popover__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 2px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--s7-primary, #2563eb);
+  cursor: help;
+  line-height: 0;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.anuncios-sell-popover__trigger:hover {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.anuncios-sell-popover__trigger:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.anuncios-sell-popover__title {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--s7-text, #0f172a);
+}
+
+.anuncios-sell-popover__subtitle {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--s7-text-secondary, #64748b);
+  line-height: 1.35;
+}
+
+.anuncios-sell-popover__badge-estimate {
+  margin: 0 0 12px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.anuncios-sell-popover__section {
+  margin-bottom: 14px;
+}
+
+.anuncios-sell-popover__section:last-child {
+  margin-bottom: 0;
+}
+
+.anuncios-sell-popover__section-title {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--s7-text-secondary, #64748b);
+}
+
+.anuncios-sell-popover__section--future {
+  padding-top: 10px;
+  border-top: 1px dashed rgba(15, 23, 42, 0.12);
+}
+
+.anuncios-sell-popover__future-placeholder {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--s7-text-secondary, #94a3b8);
+  font-style: italic;
+}
+
+.anuncios-sell-popover__value--empty {
+  font-weight: 600;
+  color: var(--s7-text-secondary, #94a3b8);
+}
+
+.anuncios-sell-popover__result-placeholder {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--s7-text-secondary, #94a3b8);
+  font-style: italic;
+}
+
+.anuncios-sell-popover__raiox-alert {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--s7-text, #0f172a);
+}
+
+.anuncios-sell-popover__raiox-warn {
+  margin: 10px 0 0;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #b45309;
+}
+
+.anuncios-sell-popover__link-product-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.anuncios-sell-popover__kicker {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--s7-text-secondary, #64748b);
+}
+
+.anuncios-sell-popover__estimate-note {
+  margin: 0 0 10px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.anuncios-sell-popover__insufficient {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--s7-text-secondary, #475569);
+}
+
+.anuncios-sell-popover__insufficient p {
+  margin: 0 0 8px;
+}
+
+.anuncios-sell-popover__insufficient p:last-child {
+  margin-bottom: 0;
+}
+
+/*
+ * Shell Raio-x (multi-marketplace): fixed + theme CSS vars — card branco dentro (.panel--in-shell).
+ * Cores em --marketplace-* vêm de getMarketplaceTheme() (src/theme/marketplaceTheme.js).
+ */
+.anuncios-raiox-shell {
+  position: fixed;
+  z-index: 100025;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.14s ease,
+    visibility 0s linear 0.14s;
+}
+
+.anuncios-raiox-shell--portal {
+  z-index: 200100;
+  padding: 6px 4px 10px;
+  overflow: visible;
+  overscroll-behavior: auto;
+  touch-action: auto;
+  scrollbar-gutter: auto;
+}
+
+/*
+ * Mercado Livre — camadas: backplate amarelo (laterais + “prateleira” inferior) + card branco + pílula com logo.
+ * Conteúdo financeiro permanece só no painel branco (.panel--in-shell).
+ */
+.anuncios-raiox-shell--mercado_livre.anuncios-raiox-shell--portal {
+  padding: 18px 0 12px;
+  isolation: isolate;
+}
+
+/*
+ * Backplate (camada 1): ~89,7% da faixa sob 18px; X centralizado. Y = meio da faixa + 63px (desce o amarelo).
+ */
+.anuncios-raiox-shell--mercado_livre .anuncios-raiox-shell__frame {
+  position: absolute;
+  left: 50%;
+  top: calc(18px + (100% - 18px) / 2 + 63px);
+  right: auto;
+  bottom: auto;
+  width: calc(100% - 8px);
+  max-width: calc(100% - 8px);
+  height: calc((100% - 18px) * 0.69 * 1.3);
+  transform: translate(-50%, -50%);
+  border-radius: 20px;
+  background: var(--marketplace-primary);
+  background-image: none;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  box-shadow:
+    0 3px 10px rgba(45, 50, 119, 0.07),
+    0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.anuncios-raiox-shell--mercado_livre .anuncios-raiox-shell__frame::after {
+  display: none;
+}
+
+/*
+ * Pílula ML: centro vertical na borda do card; altura vertical = 45px × (1 − 16%).
+ * top = shell pad (18) + margem do painel (24) − metade da altura da pílula.
+ */
+.anuncios-raiox-shell--mercado_livre .anuncios-raiox-shell__badge {
+  position: absolute;
+  left: 50%;
+  top: calc(18px + 24px - (45px * 0.84) / 2);
+  transform: translateX(-50%);
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: calc(45px * 0.84);
+  min-height: 0;
+  padding: 0 28px;
+  background: var(--marketplace-primary);
+  border-radius: 12px;
+  border: 1px solid rgba(45, 50, 119, 0.14);
+  box-shadow:
+    0 3px 12px rgba(15, 23, 42, 0.1),
+    0 1px 2px rgba(45, 50, 119, 0.08);
+  z-index: 3;
+}
+
+.anuncios-raiox-shell--mercado_livre .anuncios-raiox-shell__badge-img {
+  display: block;
+  height: auto;
+  width: auto;
+  max-height: calc(38px * 0.84);
+  max-width: 240px;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Card frontal (camada 2): moldura ML — posição vertical do conjunto = shell (commitRaioxPanelGeom), todas as camadas sobem juntas. */
+.anuncios-raiox-shell--mercado_livre .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  margin: 24px 22px 22px;
+  width: calc(100% - 44px);
+  max-width: none;
+  flex: 0 1 auto;
+  min-height: min-content;
+  max-height: min(800px, calc(100dvh - 40px));
+  padding: 22px 14px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--marketplace-primary);
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.06),
+    0 10px 26px rgba(15, 23, 42, 0.1);
+}
+
+.anuncios-raiox-shell--open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 0.16s ease 0.05s,
+    visibility 0s linear 0.05s;
+}
+
+/* Moldura decorativa (canais sem tema “sanduíche” próprio — ex.: fallback Suse7). */
+.anuncios-raiox-shell:not(.anuncios-raiox-shell--mercado_livre) .anuncios-raiox-shell__frame {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 40px;
+  bottom: 5px;
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(138deg, var(--marketplace-soft) 0%, transparent 56%);
+  opacity: 0.92;
+}
+
+.anuncios-raiox-shell__badge {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 30px;
+  margin-bottom: 4px;
+}
+
+.anuncios-raiox-shell__badge-img {
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.1);
+}
+
+.anuncios-raiox-shell__badge--text {
+  min-height: 28px;
+}
+
+.anuncios-raiox-shell__badge-fallback {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--s7-text-secondary, #64748b);
+}
+
+.anuncios-raiox-shell__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Card branco legível — herda tipografia do bloco antigo “panel”. */
+.anuncios-sell-popover__panel {
+  box-sizing: border-box;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--s7-text, #1e293b);
+  text-align: left;
+  line-height: 1.35;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--marketplace-accent) 28%, rgba(15, 23, 42, 0.08));
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 14px 32px rgba(15, 23, 42, 0.12),
+    0 0 0 1px color-mix(in srgb, var(--marketplace-accent) 14%, transparent);
+  max-height: min(800px, calc(100dvh - 40px));
+  overflow: visible;
+  overscroll-behavior: auto;
+  touch-action: auto;
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+@supports not (background: color-mix(in srgb, #000 50%, #fff)) {
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell {
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    box-shadow:
+      0 4px 6px rgba(15, 23, 42, 0.06),
+      0 14px 32px rgba(15, 23, 42, 0.12),
+      0 0 0 1px rgba(37, 99, 235, 0.1);
+  }
+}
+
+.anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell::after {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: var(--raiox-caret-top, 50%);
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 7px solid #ffffff;
+  filter: drop-shadow(-1px 0 0 rgba(15, 23, 42, 0.1));
+  pointer-events: none;
+}
+
+/* Painel à esquerda do ícone: seta no bordo direito, apontando para o gatilho. */
+.anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--caret-trailing::after {
+  left: auto;
+  right: -7px;
+  border-right: none;
+  border-left: 7px solid #ffffff;
+  filter: drop-shadow(1px 0 0 rgba(15, 23, 42, 0.1));
+}
+
+.anuncios-sell-popover__hover-bridge {
+  position: fixed;
+  z-index: 100024;
+  pointer-events: none;
+  background: transparent;
+}
+
+.anuncios-sell-popover__hover-bridge--open {
+  z-index: 200099;
+  pointer-events: auto;
+}
+
+.anuncios-sell-popover__block + .anuncios-sell-popover__block {
+  margin-top: 10px;
+}
+
+.anuncios-sell-popover__line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.anuncios-sell-popover__line > span:first-child {
+  flex: 1;
+  min-width: 0;
+  padding-right: 4px;
+}
+
+.anuncios-sell-popover__line > strong {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Cores semânticas do status da oferta (payload backend — offer_status_semantic). */
+.anuncios-sell-popover__offer-sem--critical,
+.anuncios-sell-popover__offer-sem--danger {
+  color: #dc2626;
+}
+
+.anuncios-sell-popover__offer-sem--acceptable {
+  color: #d97706;
+}
+
+.anuncios-sell-popover__offer-sem--great {
+  color: #16a34a;
+}
+
+.anuncios-sell-popover__offer-sem--excellent {
+  color: #15803d;
+}
+
+/* Ícone “i” junto ao rótulo; valor do status permanece no <strong> à direita (space-between). */
+.anuncios-sell-popover__status-line-head {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.anuncios-sell-popover__status-line-label {
+  color: inherit;
+}
+
+.anuncios-sell-popover__status-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 2px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--s7-primary, #2563eb);
+  cursor: help;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.anuncios-sell-popover__status-tip:hover {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.anuncios-sell-popover__status-tip:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.anuncios-sell-popover__status-tip[aria-expanded="true"] {
+  background: rgba(37, 99, 235, 0.14);
+}
+
+/* Mini popover do status (portal; hover no ícone i + ponte até o card). */
+.anuncios-raiox-status-explain-bridge {
+  pointer-events: auto;
+  background: transparent;
+}
+
+/* Mini card contextual (não toast): fundo sólido por status + hierarquia tipográfica. */
+.anuncios-raiox-status-explain {
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-top-width: 3px;
+  border-top-color: rgba(37, 99, 235, 0.5);
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+  text-align: left;
+  max-width: min(280px, calc(100vw - 24px));
+}
+
+.anuncios-raiox-status-explain__title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.anuncios-raiox-status-explain__subtitle {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.anuncios-raiox-status-explain__message {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.anuncios-raiox-status-explain--critical,
+.anuncios-raiox-status-explain--danger {
+  border-top-color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(220, 38, 38, 0.08);
+}
+
+.anuncios-raiox-status-explain--critical .anuncios-raiox-status-explain__title,
+.anuncios-raiox-status-explain--critical .anuncios-raiox-status-explain__subtitle,
+.anuncios-raiox-status-explain--danger .anuncios-raiox-status-explain__title,
+.anuncios-raiox-status-explain--danger .anuncios-raiox-status-explain__subtitle {
+  color: #dc2626;
+}
+
+.anuncios-raiox-status-explain--critical .anuncios-raiox-status-explain__message,
+.anuncios-raiox-status-explain--danger .anuncios-raiox-status-explain__message {
+  color: #7f1d1d;
+}
+
+.anuncios-raiox-status-explain--acceptable {
+  border-top-color: #d97706;
+  border-color: #fde68a;
+  background: #fffbeb;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(217, 119, 6, 0.08);
+}
+
+.anuncios-raiox-status-explain--acceptable .anuncios-raiox-status-explain__title,
+.anuncios-raiox-status-explain--acceptable .anuncios-raiox-status-explain__subtitle {
+  color: #d97706;
+}
+
+.anuncios-raiox-status-explain--acceptable .anuncios-raiox-status-explain__message {
+  color: #9a3412;
+}
+
+.anuncios-raiox-status-explain--great {
+  border-top-color: #16a34a;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(22, 163, 74, 0.08);
+}
+
+.anuncios-raiox-status-explain--great .anuncios-raiox-status-explain__title,
+.anuncios-raiox-status-explain--great .anuncios-raiox-status-explain__subtitle {
+  color: #16a34a;
+}
+
+.anuncios-raiox-status-explain--great .anuncios-raiox-status-explain__message {
+  color: #166534;
+}
+
+.anuncios-raiox-status-explain--excellent {
+  border-top-color: #15803d;
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(21, 128, 61, 0.09);
+}
+
+.anuncios-raiox-status-explain--excellent .anuncios-raiox-status-explain__title,
+.anuncios-raiox-status-explain--excellent .anuncios-raiox-status-explain__subtitle {
+  color: #15803d;
+}
+
+.anuncios-raiox-status-explain--excellent .anuncios-raiox-status-explain__message {
+  color: #14532d;
+}
+
+/* Valor-base da comissão e repasse final — laranja Suse7; peso/tamanho iguais às outras linhas do painel (evita quebra em 2 linhas). */
+.anuncios-sell-popover__line--key {
+  gap: 8px;
+}
+
+.anuncios-sell-popover__line--key > span:first-child,
+.anuncios-sell-popover__line--key > strong {
+  color: var(--s7-orange, #ff8533);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.anuncios-sell-popover__line--total {
+  margin-top: 0;
+  font-size: 12px;
+}
+
+.anuncios-sell-popover__line--total > strong {
+  font-weight: 800;
+}
+
+/* Total destacado: mesmo corpo 11px do painel (antes do destaque laranja o rótulo herdava 11px e não quebrava). */
+.anuncios-sell-popover__line--total.anuncios-sell-popover__line--key,
+.anuncios-sell-popover__line--total.anuncios-sell-popover__line--key > span:first-child,
+.anuncios-sell-popover__line--total.anuncios-sell-popover__line--key > strong {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.anuncios-sell-popover__muted {
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--s7-text-secondary, #64748b);
+}
+
+/* Bruto + subsídio ML na mesma seção da tarifa (Raio-x) */
+.anuncios-sell-popover__muted--tariff-subsidy {
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.anuncios-sell-popover__divider {
+  height: 1px;
+  margin: 10px 0;
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.anuncios-sell-popover__note {
+  margin: 10px 0 0;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--s7-text-secondary, #64748b);
+  line-height: 1.4;
+}
+
+.anuncios-sell-popover__asterisk {
+  font-size: 0.75em;
+  font-weight: 700;
+  vertical-align: super;
+  margin-left: 1px;
+}
+
+/* —— Capa padronizada (lista minimal + grade completa) —— */
+.anuncios-ad-thumb {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.anuncios-catalog__row:hover .anuncios-ad-thumb {
+  border-color: #d1d5db;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.anuncios-ad-thumb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.anuncios-ad-thumb__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #f9fafb;
+}
+
+.anuncios-ad-thumb__fallback-icon {
+  color: #9ca3af;
+}
+
+/* —— Bloco texto (minimal): ID → título → SKU → fotos —— */
+.anuncios-ad-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Mesmo alinhamento que Produtos: número e ⧉ colados, sem empurrar o ícone para a direita */
+.anuncios-ad-id-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.anuncios-ad-id-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: #6b7280;
+  line-height: 1.35;
+}
+
+/* título = link ML (sem azul “padrão browser”) */
+.anuncios-ad-title-link {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--s7-orange);
+  text-decoration: none;
+  max-width: 100%;
+  transition: color 0.15s ease;
+}
+
+.anuncios-ad-title-link:hover {
+  color: #c2410c;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.anuncios-ad-title-link--static {
+  cursor: default;
+  color: var(--s7-orange);
+}
+
+.anuncios-ad-title-link--static:hover {
+  text-decoration: none;
+  color: var(--s7-orange);
+}
+
+.anuncios-ad-sku-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+  width: 100%;
+  line-height: 1.35;
+}
+
+.anuncios-ad-sku-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.anuncios-ad-sku-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.anuncios-ad-sku-value--empty {
+  font-weight: 500;
+  font-style: italic;
+  color: #94a3b8;
+}
+
+.anuncios-ad-sku-sep {
+  color: #d1d5db;
+  font-weight: 500;
+  user-select: none;
+}
+
+.anuncios-ad-meta-inline {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Copiar: mesmo padrão “some até hover na linha” que em Produtos (.products-catalog__copy-btn) */
+@media (hover: hover) and (pointer: fine) {
+  .anuncios-ad-id-row .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .anuncios-ad-sku-row .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .anuncios-ad-id-row:hover .products-catalog__copy-btn,
+  .anuncios-ad-id-row:focus-within .products-catalog__copy-btn,
+  .anuncios-ad-sku-row:hover .products-catalog__copy-btn,
+  .anuncios-ad-sku-row:focus-within .products-catalog__copy-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .anuncios-catalog--dense .products-catalog__cell {
   font-size: 11px;
   line-height: 1.3;
@@ -403,9 +1517,10 @@
 .anuncios-catalog__grid--head {
   position: sticky;
   top: 0;
-  z-index: 6;
+  z-index: 8;
+  isolation: isolate;
   overflow: visible;
-  padding: 8px clamp(12px, 1.6vw, 18px);
+  padding: 10px clamp(12px, 1.6vw, 18px);
   background: linear-gradient(180deg, var(--s7-title-bar-bg-from) 0%, var(--s7-title-bar-bg-to) 100%);
   background-clip: padding-box;
   border-bottom: 1px solid var(--s7-title-bar-border-bottom);
@@ -415,10 +1530,25 @@
     0 4px 14px var(--s7-title-bar-shadow);
 }
 
-/* Mesmo critério da página Produtos: cabeçalho da grade usa --s7-title-bar-text (branco no token). */
+/* Cabeçalho legível + cor do token (Products.css usa clamp min ~4px nesta combinação) */
 .anuncios-catalog__grid--head .products-catalog__cell.products-catalog__col-head {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
   color: var(--s7-title-bar-text, #ffffff);
-  font-weight: var(--s7-title-bar-font-weight, 700);
+}
+
+.anuncios-catalog__grid--head.anuncios-catalog__grid--minimal {
+  align-items: center;
+  min-height: 52px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.anuncios-catalog__grid--head.anuncios-catalog__grid--minimal .anuncios-catalog__cell--minimal-mkt {
+  text-align: center;
+  justify-self: center;
 }
 
 /* Tooltips do cabeçalho (mesmo padrão da grade de produtos) */
@@ -535,9 +1665,10 @@
   display: grid;
   box-sizing: border-box;
   width: 100%;
-  min-width: min(1720px, 100%);
+  min-width: min(1820px, 100%);
   grid-template-columns:
-    44px
+    96px
+    56px
     minmax(0, 0.82fr)
     minmax(0, 1.12fr)
     minmax(0, 0.82fr)
@@ -559,14 +1690,32 @@
   align-items: center;
   padding: 8px clamp(12px, 1.6vw, 18px);
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  transition:
-    background 0.2s ease,
-    box-shadow 0.22s ease;
+  transition: background 0.18s ease;
 }
 
-.anuncios-catalog__row:hover {
-  background: linear-gradient(92deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.04) 40%, rgba(248, 250, 252, 1) 100%);
-  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.06);
+.anuncios-catalog__grid.anuncios-catalog__grid--minimal {
+  min-width: 0;
+  grid-template-columns: 96px 56px minmax(0, 1fr) minmax(168px, 228px);
+  column-gap: 14px;
+}
+
+.anuncios-catalog__row.anuncios-catalog__row--minimal {
+  min-width: 0;
+  grid-template-columns: 96px 56px minmax(0, 1fr) minmax(168px, 228px);
+  column-gap: 14px;
+  align-items: start;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  scroll-margin-top: 56px;
+  overflow: visible;
+}
+
+.anuncios-catalog__row.anuncios-catalog__row--minimal .anuncios-catalog__cell--thumb {
+  align-self: center;
+}
+
+.anuncios-catalog__row:hover:not(.anuncios-catalog__row--pending-product) {
+  background: #f9fafb;
 }
 
 .products-catalog__body .anuncios-catalog__row:last-child {
@@ -606,34 +1755,6 @@
   justify-self: center;
   padding-left: 0;
   padding-right: 0;
-}
-
-.anuncios-catalog__thumb-wrap {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: rgba(15, 23, 42, 0.06);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.anuncios-catalog__thumb-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.anuncios-catalog__thumb-placeholder {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.12) 0%, rgba(15, 23, 42, 0.05) 100%);
-  border: 1px dashed rgba(15, 23, 42, 0.12);
 }
 
 .anuncios-catalog__cell--listing-no {
@@ -754,8 +1875,6 @@
   height: 22px;
   display: block;
   object-fit: contain;
-  border-radius: 6px;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 .anuncios-catalog__mkt-fallback {
@@ -964,4 +2083,209 @@
 .anuncios-catalog__sync-feedback--warn p {
   color: #92400e;
   margin-bottom: 8px;
+}
+
+/* ---------------------------------------------------------------------
+   Precificação inteligente (S7) — coluna + modal
+   --------------------------------------------------------------------- */
+
+.anuncios-catalog__cell--precifica-s7 {
+  justify-self: center;
+  align-self: center;
+  padding-inline: 4px;
+}
+
+.anuncios-catalog__grid--head .anuncios-catalog__cell--precifica-s7.products-catalog__col-head {
+  text-align: center;
+}
+
+.anuncios-precifica-s7-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  background: transparent;
+  box-shadow: none;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.anuncios-precifica-s7-btn__icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  display: block;
+}
+
+.anuncios-precifica-s7-btn:hover {
+  filter: brightness(1.06);
+}
+
+.anuncios-precifica-s7-btn:focus-visible {
+  outline: 2px solid var(--s7-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+.anuncios-precifica-s7-btn:active {
+  transform: scale(0.98);
+}
+
+.anuncios-pricing-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+.anuncios-pricing-modal__shell {
+  pointer-events: auto;
+}
+
+.anuncios-pricing-modal__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: auto;
+  max-height: inherit;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anuncios-pricing-modal__hero {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.anuncios-pricing-modal__thumb.anuncios-ad-thumb {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+}
+
+.anuncios-pricing-modal__hero-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.anuncios-pricing-modal__hero-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--s7-text, #1e293b);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.anuncios-pricing-modal__hero-meta {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(15, 23, 42, 0.55);
+  line-height: 1.35;
+}
+
+.anuncios-pricing-modal__hero-mkt {
+  margin-top: 2px;
+}
+
+.anuncios-pricing-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.anuncios-pricing-modal__field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.72);
+  letter-spacing: 0.02em;
+}
+
+.anuncios-pricing-modal__field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 400px) {
+  .anuncios-pricing-modal__field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.anuncios-pricing-modal__actions-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.anuncios-pricing-modal__error {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #991b1b;
+  background: rgba(254, 226, 226, 0.65);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.anuncios-pricing-modal__loading {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(37, 99, 235, 0.95);
+}
+
+.anuncios-pricing-modal__delta {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(15, 23, 42, 0.75);
+}
+
+.anuncios-pricing-modal__warnings {
+  margin: 0 0 10px 16px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9a3412;
+  line-height: 1.4;
+}
+
+.anuncios-pricing-modal__warnings li {
+  margin-bottom: 4px;
+}
+
+.anuncios-pricing-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
 }

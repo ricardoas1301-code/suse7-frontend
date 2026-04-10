@@ -11,8 +11,16 @@ import { supabase } from "../supabaseClient";
 
 // ----------------------------------------------------------------------
 // URL base (VITE_API_BASE_URL; sem barra final)
+// Ordem Vite em `vite` (dev; cada arquivo sobrescreve o anterior): .env → .env.local → .env.development → .env.development.local
 // ----------------------------------------------------------------------
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
+if (import.meta.env.DEV && API_BASE_URL && /vercel\.app/i.test(API_BASE_URL)) {
+  console.warn(
+    "[Suse7] VITE_API_BASE_URL aponta para a Vercel em DEV. Para o backend local use http://localhost:3001, salve o .env e reinicie o Vite. " +
+      "Arquivo com prioridade máxima: .env.development.local (gitignore)."
+  );
+}
 
 /**
  * Constrói URL absoluta para um path da API.

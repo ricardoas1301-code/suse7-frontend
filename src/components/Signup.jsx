@@ -4,7 +4,7 @@
 // Regra primeiro_login: formulário = false, social = true.
 // ======================================================================
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate, Link } from "react-router-dom";
 import GoogleIcon from "../assets/google.png";
@@ -66,6 +66,78 @@ function validarCNPJ(cnpj) {
   return resultado == digitos.charAt(1);
 }
 
+/**
+ * Mensagens para Suse7Alert a partir de AuthError / GoTrue.
+ * Ordem: rate limit antes de “já existe”, pois 429 pode vir com texto genérico.
+ */
+function mapAuthSignupError(error) {
+  const status = error?.status;
+  const code = error?.code;
+  const msg = String(error?.message || "").toLowerCase();
+
+  if (
+    status === 429 ||
+    code === "over_request_rate_limit" ||
+    code === "over_email_send_rate_limit" ||
+    msg.includes("rate limit") ||
+    msg.includes("email rate limit") ||
+    msg.includes("too many requests") ||
+    msg.includes("too many")
+  ) {
+    return {
+      title: "Muitas tentativas",
+      message:
+        "O servidor limitou novas tentativas de cadastro neste momento (proteção anti-abuso).\n" +
+        "Aguarde alguns minutos e tente novamente. Confira também se não há outra aba tentando cadastrar.",
+    };
+  }
+
+  const duplicateCodes = new Set([
+    "email_exists",
+    "user_already_exists",
+    "identity_already_exists",
+    "phone_exists",
+  ]);
+  if (
+    duplicateCodes.has(code) ||
+    msg.includes("already registered") ||
+    msg.includes("already been registered") ||
+    msg.includes("user already exists") ||
+    (msg.includes("email") && msg.includes("already"))
+  ) {
+    return {
+      title: "Conta já existente",
+      message:
+        "O e-mail informado já está cadastrado no Suse7.\n" +
+        "Se você já possui uma conta, faça login para continuar.\n" +
+        "Caso precise recuperar o acesso, use “Esqueci minha senha” na tela de login.",
+    };
+  }
+
+  if (code === "signup_disabled" || code === "email_provider_disabled") {
+    return {
+      title: "Cadastro indisponível",
+      message:
+        "O cadastro por e-mail está temporariamente indisponível. Tente mais tarde ou use outro método de acesso.",
+    };
+  }
+
+  if (code === "weak_password") {
+    return {
+      title: "Senha fraca",
+      message:
+        error.message?.trim() || "Escolha uma senha mais forte, conforme as regras do sistema.",
+    };
+  }
+
+  return {
+    title: "Erro ao criar conta",
+    message: error.message?.trim()
+      ? `${error.message.trim()}\n\nSe o problema persistir, tente novamente em alguns instantes.`
+      : "Não foi possível concluir o cadastro. Tente novamente.",
+  };
+}
+
 export default function Signup() {
   const navigate = useNavigate();
 
@@ -98,7 +170,11 @@ export default function Signup() {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [alertData, setAlertData] = useState(null);
+  /** Evita duplo submit antes do React aplicar `loading` (setState é assíncrono). */
+  const signupInFlightRef = useRef(false);
+  const oauthInFlightRef = useRef(false);
 
 
   // ----------------------------------------
@@ -215,144 +291,163 @@ export default function Signup() {
     return Object.keys(e).length === 0;
   };
 
-// ----------------------------------------
-// Google Login (cadastro/entrada via OAuth)
-// - Cria profile com primeiro_login = true (usuário ainda completa cadastro depois).
-// - redirectTo baseado em env (VITE_FRONTEND_URL) para PROD/DEV.
-// ----------------------------------------
-const handleGoogleLogin = async () => {
-  const redirectTo =
-    import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+  // ----------------------------------------
+  // Google Login (cadastro/entrada via OAuth)
+  // - Cria profile com primeiro_login = true (usuário ainda completa cadastro depois).
+  // - redirectTo baseado em env (VITE_FRONTEND_URL) para PROD/DEV.
+  // ----------------------------------------
+  const handleGoogleLogin = async () => {
+    if (oauthInFlightRef.current || oauthLoading || loading) return;
+    oauthInFlightRef.current = true;
+    setOauthLoading(true);
+    const redirectTo = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo,
-    },
-  });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
 
-  if (error) {
-    console.error(error);
-    setAlertData({
-    type: "error",
-     message: "Não foi possível conectar ao Google.\nPor favor, tente novamente."
-  });
-    return;
-  }
+      if (error) {
+        console.error(error);
+        setAlertData({
+          title: "Não foi possível usar o Google",
+          message: "Não foi possível conectar ao Google.\nPor favor, tente novamente.",
+        });
+        return;
+      }
 
-  // Após retorno do OAuth: se profile não existir, cria com primeiro_login = true
-  // (compatibilidade login social — modal de completar cadastro no Dashboard)
-  setTimeout(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+      setTimeout(async () => {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
 
-    if (!user) return;
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
 
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
+        if (existingProfile) return;
 
-    if (existingProfile) return;
-
-    await supabase.from("profiles").insert({
-      id: user.id,
-      email: user.email,
-      primeiro_login: true,
-      created_at: new Date(),
-      last_login: new Date(),
-    });
-  }, 800);
-};
+        await supabase.from("profiles").insert({
+          id: user.id,
+          email: user.email,
+          primeiro_login: true,
+          created_at: new Date(),
+          last_login: new Date(),
+        });
+      }, 800);
+    } finally {
+      oauthInFlightRef.current = false;
+      setOauthLoading(false);
+    }
+  };
 
 
   // ----------------------------------------
   // Enviar cadastro para Supabase
   // Fluxo: 1) Auth signUp  2) Profile upsert com primeiro_login = false
   // ----------------------------------------
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (signupInFlightRef.current || loading) return;
 
-  if (!validarCampos()) {
-    const btn = document.querySelector(".signup-btn");
-    btn.classList.add("shake");
-    setTimeout(() => btn.classList.remove("shake"), 500);
-    return;
-  }
+    if (!validarCampos()) {
+      const btn = document.querySelector(".signup-btn");
+      if (btn) {
+        btn.classList.add("shake");
+        setTimeout(() => btn.classList.remove("shake"), 500);
+      }
+      return;
+    }
 
-  setLoading(true);
+    signupInFlightRef.current = true;
+    setLoading(true);
+    const emailTrimmed = form.email.trim();
 
-  // 1) Criar conta na AUTH
-  const { data, error } = await supabase.auth.signUp({
-    email: form.email,
-    password: form.senha,
-  });
+    try {
+      if (import.meta.env.DEV) {
+        console.log("SIGNUP START", { email: emailTrimmed, timestamp: Date.now() });
+      }
 
-  if (error) {
-   setAlertData({
-  title: "Conta já existente",
-  message:
-    "O e-mail informado já está cadastrado no Suse7.\n" +
-    "Se você já possui uma conta, faça login para continuar.\n" +
-    "Caso precise recuperar o acesso, clique em “Esqueci minha senha”."
-});
+      const { data, error } = await supabase.auth.signUp({
+        email: emailTrimmed,
+        password: form.senha,
+      });
 
-    setLoading(false);
-    return;
-  }
+      if (error) {
+        console.error("Signup error:", error);
+        setAlertData(mapAuthSignupError(error));
+        return;
+      }
 
-  const user = data.user;
+      const user = data?.user;
+      /**
+       * Sem erro mas sem user.id: confirmação por e-mail ou resposta vazia do servidor.
+       * Não tratar como “e-mail já cadastrado” — antes isso mascarava 429 e outros erros.
+       */
+      if (!user?.id) {
+        setAlertData({
+          title: "Confirme seu e-mail",
+          message:
+            "Se este endereço estiver disponível, você receberá um e-mail com o link de confirmação.\n" +
+            "Confira também a pasta de spam. Após confirmar, faça login com sua senha.",
+        });
+        navigate("/login");
+        return;
+      }
 
-  if (!user) {
-    setAlertData({
-  title: "Conta já existente",
-  message:
-    "O e-mail informado já está cadastrado no Suse7.\n" +
-    "Se você já possui uma conta, faça login para continuar.\n" +
-    "Caso precise recuperar o acesso, clique em “Esqueci minha senha”."
-});
-    setLoading(false);
-    return;
-  }
+      const profilePayload = {
+        id: user.id,
+        nome: form.nome,
+        nome_loja: form.nome_loja,
+        email: emailTrimmed,
+        whatsapp: form.whatsapp.replace(/\D/g, ""),
+        telefone: form.telefone.replace(/\D/g, ""),
+        cpf_cnpj: form.cpf_cnpj.replace(/\D/g, ""),
+        cep: form.cep.replace(/\D/g, ""),
+        endereco: form.endereco,
+        numero: form.numero.replace(/\D/g, ""),
+        complemento: form.complemento,
+        bairro: form.bairro,
+        cidade: form.cidade,
+        estado: form.estado,
+        imposto_percentual: Number(form.imposto_percentual.replace("%", "")),
+        primeiro_login: false,
+        created_at: new Date(),
+        last_login: new Date(),
+        photo_url: "",
+      };
 
-  // ----------------------------------------
-  // 2) Criar ou atualizar profile (formulário = cadastro completo)
-  //    - UPSERT garante primeiro_login = false mesmo se um trigger já criou a linha.
-  //    - Signup via formulário → primeiro_login = false (popup de completar não aparece).
-  // ----------------------------------------
-  const profilePayload = {
-    id: user.id,
-    nome: form.nome,
-    nome_loja: form.nome_loja,
-    email: form.email,
-    whatsapp: form.whatsapp.replace(/\D/g, ''),
-    telefone: form.telefone.replace(/\D/g, ''),
-    cpf_cnpj: form.cpf_cnpj.replace(/\D/g, ''),
-    cep: form.cep.replace(/\D/g, ''),
-    endereco: form.endereco,
-    numero: form.numero.replace(/\D/g, ''),
-    complemento: form.complemento,
-    bairro: form.bairro,
-    cidade: form.cidade,
-    estado: form.estado,
-    imposto_percentual: Number(form.imposto_percentual.replace("%", "")),
-    primeiro_login: false,
-    created_at: new Date(),
-    last_login: new Date(),
-    photo_url: "",
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert(profilePayload, { onConflict: "id" });
+
+      if (profileError) {
+        console.error("Erro ao criar perfil:", profileError);
+        setAlertData({
+          title: "Conta criada",
+          message:
+            "Sua conta foi criada, mas houve um problema ao salvar os dados complementares.\n" +
+            "Faça login e complete seus dados se necessário.",
+        });
+      }
+
+      navigate("/login");
+    } catch (err) {
+      console.error("Signup error:", err);
+      setAlertData({
+        title: "Erro ao criar conta",
+        message:
+          "Ocorreu um erro inesperado. Tente novamente em alguns instantes.",
+      });
+    } finally {
+      signupInFlightRef.current = false;
+      setLoading(false);
+    }
   };
-
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .upsert(profilePayload, { onConflict: "id" });
-
-  if (profileError) {
-    console.error("Erro ao criar perfil:", profileError);
-  }
-
-  // 3) Redirecionar
-  navigate("/login");
-};
 
   return (
     <div className="signup-container">
@@ -403,9 +498,15 @@ const handleGoogleLogin = async () => {
       <div className="signup-right">
         
         {/* Google Login */}
-        <button className="google-btn" onClick={handleGoogleLogin}>
+        <button
+          type="button"
+          className="google-btn"
+          disabled={oauthLoading || loading}
+          aria-busy={oauthLoading}
+          onClick={handleGoogleLogin}
+        >
           <img src={GoogleIcon} alt="Google" />
-          <span>Entrar com Google</span>
+          <span>{oauthLoading ? "Abrindo Google…" : "Entrar com Google"}</span>
         </button>
 
         <div className="divider">ou preencha seus dados abaixo</div>
@@ -485,14 +586,6 @@ const handleGoogleLogin = async () => {
               />
             </div>
           </div>
-
-{() => {
-  if (!validarCNPJ(cnpj)) {
-    setErroCNPJ("CNPJ inválido");
-  } else {
-    setErroCNPJ("");
-  }
-}}
 
           {/* CEP / ENDEREÇO */}
           <div className="row">
@@ -648,8 +741,14 @@ const handleGoogleLogin = async () => {
           {errors.termos && <p className="err">{errors.termos}</p>}
 
           {/* BOTÃO CRIAR CONTA */}
-          <button type="submit" className="signup-btn" disabled={loading}>
-            {loading ? "Criando..." : "Criar conta"}
+          <button
+            type="submit"
+            className="signup-btn"
+            disabled={loading}
+            aria-busy={loading}
+            aria-label={loading ? "Criando conta, aguarde" : "Criar conta"}
+          >
+            {loading ? "Criando conta…" : "Criar conta"}
           </button>
 
         </form>

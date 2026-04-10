@@ -4,10 +4,15 @@
 // ======================================================================
 
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { buildApiUrl } from "../config/api";
 
+const ML_OAUTH_CONFIG_ERR_KEY = "ml_oauth_config_errors";
+
 export default function MLConnect() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     let mounted = true;
 
@@ -37,10 +42,32 @@ export default function MLConnect() {
         `/api/ml/connect?user_id=${encodeURIComponent(userId)}`
       );
       if (!connectUrl) {
-        console.error("[ML] Defina VITE_API_BASE_URL (ex.: https://suse7-backend-dev.vercel.app)");
-        window.location.href = "/perfil/integracoes/mercado-livre";
+        console.error(
+          "[ML] Defina VITE_API_BASE_URL (dev local: http://localhost:3001; produção: URL do backend deployado)"
+        );
+        navigate("/perfil/integracoes/mercado-livre");
         return;
       }
+
+      const probeUrl = buildApiUrl("/api/ml/oauth-config");
+      if (probeUrl) {
+        try {
+          const pr = await fetch(probeUrl);
+          const probe = await pr.json().catch(() => ({}));
+          if (probe && probe.ok === false && Array.isArray(probe.errors) && probe.errors.length) {
+            try {
+              sessionStorage.setItem(ML_OAUTH_CONFIG_ERR_KEY, JSON.stringify(probe.errors));
+            } catch {
+              /* ignore */
+            }
+            navigate("/perfil/integracoes/mercado-livre");
+            return;
+          }
+        } catch {
+          /* segue para o connect */
+        }
+      }
+
       window.location.href = connectUrl;
     };
 
@@ -49,7 +76,7 @@ export default function MLConnect() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [navigate]);
 
   // --------------------------------------------------------------
   // Tela de transição

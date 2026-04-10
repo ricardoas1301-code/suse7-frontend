@@ -24,6 +24,8 @@ import mercadoLivreLogo from "../../assets/mercado-livre.png";
 const ML_OAUTH_SUCCESS_TOAST_GAP_MS = 3500;
 let _mlOAuthSuccessToastLastAt = 0;
 
+const ML_OAUTH_CONFIG_ERR_KEY = "ml_oauth_config_errors";
+
 export default function MercadoLivre() {
   // ------------------------------------------------------------------
   // STATES
@@ -60,6 +62,41 @@ export default function MercadoLivre() {
           );
         }
 
+        try {
+          const rawStored = sessionStorage.getItem(ML_OAUTH_CONFIG_ERR_KEY);
+          if (rawStored) {
+            const arr = JSON.parse(rawStored);
+            if (Array.isArray(arr) && arr.length) {
+              setBannerError(arr.filter(Boolean).join(" "));
+            }
+            sessionStorage.removeItem(ML_OAUTH_CONFIG_ERR_KEY);
+          }
+        } catch {
+          /* ignore */
+        }
+
+        const probeUrl = buildApiUrl("/api/ml/oauth-config");
+        if (probeUrl) {
+          try {
+            const pr = await fetch(probeUrl);
+            const probe = await pr.json().catch(() => ({}));
+            if (probe && probe.ok === false && Array.isArray(probe.errors) && probe.errors.length) {
+              setBannerError(
+                (prev) =>
+                  prev ||
+                  [
+                    "Configuração OAuth no backend (DEV):",
+                    ...probe.errors,
+                    `redirectUri lido: ${probe.redirectUri || "—"}`,
+                    `Confira o terminal do backend (npm run dev) — deve mostrar ML_CLIENT_ID length > 0 e ML_REDIRECT_URI com localhost:3001.`,
+                  ].join(" ")
+              );
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
         const mlConnectedFromOAuth = sp.get("ml") === "connected";
 
         const {
@@ -83,7 +120,23 @@ export default function MercadoLivre() {
         }
 
         const response = await fetch(statusUrl);
-        const data = await response.json();
+        const rawText = await response.text();
+        let data = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          console.error("[ML] /api/ml/status resposta não é JSON", rawText?.slice?.(0, 200));
+          setBannerError(
+            (prev) =>
+              prev ||
+              `O backend retornou status ${response.status} com corpo inválido. Confira se npm run dev está rodando na pasta suse7-backend (porta 3001).`
+          );
+          setIsConnected(false);
+        }
+
+        if (data.error && typeof data.error === "string") {
+          setBannerError((prev) => prev || data.error);
+        }
 
         if (data.connected) {
           setIsConnected(true);
@@ -145,7 +198,7 @@ export default function MercadoLivre() {
   // ------------------------------------------------------------------
   // HANDLER
   // ------------------------------------------------------------------
-  const handleConnectML = () => {
+  const handleConnectML = async () => {
     if (!user) return;
     const connectUrl = buildApiUrl(
       `/api/ml/connect?user_id=${encodeURIComponent(user.id)}`
@@ -153,6 +206,24 @@ export default function MercadoLivre() {
     if (!connectUrl) {
       console.error("[ML] Defina VITE_API_BASE_URL");
       return;
+    }
+    const probeUrl = buildApiUrl("/api/ml/oauth-config");
+    if (probeUrl) {
+      try {
+        const pr = await fetch(probeUrl);
+        const probe = await pr.json().catch(() => ({}));
+        if (probe && probe.ok === false && Array.isArray(probe.errors) && probe.errors.length) {
+          try {
+            sessionStorage.setItem(ML_OAUTH_CONFIG_ERR_KEY, JSON.stringify(probe.errors));
+          } catch {
+            /* ignore */
+          }
+          setBannerError(probe.errors.filter(Boolean).join(" "));
+          return;
+        }
+      } catch {
+        /* segue */
+      }
     }
     window.location.href = connectUrl;
   };

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 176 36" role="img" aria-hidden="true">
+  <!-- Lockup compacto: �cone oval + tipografia  tons pr�ximos da identidade ML (#fff159 + #2d3277). -->
+  <g transform="translate(2,3)">
+    <ellipse cx="15" cy="15" rx="14" ry="13" fill="#ffffff" stroke="#2d3277" stroke-width="1.6"/>
+    <ellipse cx="15" cy="15" rx="12" ry="11" fill="#fff159"/>
+    <path fill="#ffffff" stroke="#2d3277" stroke-width="1.1" stroke-linejoin="round" d="M7 20c2.5-5 5.5-7.5 8-7.5s5.5 2.5 8 7.5c-2 2.2-4.2 3.4-8 3.4S9 22.2 7 20z"/>
+    <ellipse cx="15" cy="9.5" rx="4" ry="3.3" fill="none" stroke="#2d3277" stroke-width="1.1"/>
+  </g>
+  <text
+    x="40"
+    y="24"
+    font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+    font-size="14"
+    font-weight="800"
+    fill="#2d3277"
+    letter-spacing="-0.03em"
+  >mercado livre</text>
+</svg>

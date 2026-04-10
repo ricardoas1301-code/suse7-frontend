@@ -9,6 +9,7 @@ import MarketplaceCard from "./MarketplaceCard";
 import CompleteProfileModal from "./CompleteProfileModal";
 // CORREÇÃO AQUI: Mudamos de "../components/" para "./" 
 import { useNavigate } from "react-router-dom";
+import { MERCADO_LIVRE_BRAND_YELLOW_HEX } from "../theme/marketplaceTheme";
 
 
 export default function Dashboard() {
@@ -136,7 +137,7 @@ useEffect(() => {
           name="Mercado Livre"
           count={0}
           buttonText={loading ? "Carregando..." : isConnected ? "Conectado ✔" : "Conectar"}
-          color="#ffe600"
+          color={MERCADO_LIVRE_BRAND_YELLOW_HEX}
           icon="🛒"
           onClick={(!loading && !isConnected) ? handleConnectML : null}
         />

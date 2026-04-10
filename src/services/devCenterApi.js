@@ -1,0 +1,130 @@
+// ======================================================
+// Dev Center — chamadas à API interna
+// ======================================================
+
+import { buildApiUrl, apiFetch } from "../config/api";
+
+/**
+ * @returns {Promise<{ ok: boolean; data?: any; error?: string; status: number }>}
+ */
+export async function devCenterBootstrap() {
+  const url = buildApiUrl("/api/dev-center/bootstrap");
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+/**
+ * @returns {Promise<{ ok: boolean; data?: any; error?: string; status: number }>}
+ */
+export async function devCenterListMissions() {
+  const url = buildApiUrl("/api/dev-center/missions");
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+/**
+ * @param {string} id
+ */
+export async function devCenterGetMission(id) {
+  const url = buildApiUrl(`/api/dev-center/missions/${encodeURIComponent(id)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+/**
+ * @param {object} payload
+ */
+export async function devCenterCreateMission(payload) {
+  const url = buildApiUrl("/api/dev-center/missions");
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "POST", body: payload });
+}
+
+/**
+ * @param {string} id
+ * @param {object} payload
+ */
+export async function devCenterPatchMission(id, payload) {
+  const url = buildApiUrl(`/api/dev-center/missions/${encodeURIComponent(id)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "PATCH", body: payload });
+}
+
+/**
+ * @param {string} missionId
+ * @param {object} payload
+ */
+export async function devCenterPatchContext(missionId, payload) {
+  const url = buildApiUrl(`/api/dev-center/missions/${encodeURIComponent(missionId)}/context`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "PATCH", body: payload });
+}
+
+/**
+ * @param {string} missionId
+ * @param {object} payload
+ */
+export async function devCenterPostDecision(missionId, payload) {
+  const url = buildApiUrl(`/api/dev-center/missions/${encodeURIComponent(missionId)}/decisions`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "POST", body: payload });
+}
+
+/**
+ * @param {string} decisionId
+ * @param {object} payload
+ */
+export async function devCenterPatchDecision(decisionId, payload) {
+  const url = buildApiUrl(`/api/dev-center/decisions/${encodeURIComponent(decisionId)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "PATCH", body: payload });
+}
+
+/**
+ * @param {string} decisionId
+ */
+export async function devCenterDeleteDecision(decisionId) {
+  const url = buildApiUrl(`/api/dev-center/decisions/${encodeURIComponent(decisionId)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "DELETE" });
+}
+
+/**
+ * Salva missão + handoff + checklist em uma operação (histórico `save_all`).
+ * @param {string} missionId
+ * @param {object} body — { mission, context, next_steps }
+ */
+export async function devCenterSaveAll(missionId, body) {
+  const url = buildApiUrl(`/api/dev-center/missions/${encodeURIComponent(missionId)}/save-all`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "POST", body });
+}
+
+/**
+ * @param {string} missionId
+ * @param {{ text: string }} payload
+ */
+export async function devCenterPostNextStep(missionId, payload) {
+  const url = buildApiUrl(`/api/dev-center/missions/${encodeURIComponent(missionId)}/next-steps`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "POST", body: payload });
+}
+
+/**
+ * @param {string} stepId
+ * @param {object} payload
+ */
+export async function devCenterPatchNextStep(stepId, payload) {
+  const url = buildApiUrl(`/api/dev-center/next-steps/${encodeURIComponent(stepId)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "PATCH", body: payload });
+}
+
+/**
+ * @param {string} stepId
+ */
+export async function devCenterDeleteNextStep(stepId) {
+  const url = buildApiUrl(`/api/dev-center/next-steps/${encodeURIComponent(stepId)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "DELETE" });
+}
