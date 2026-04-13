@@ -6,6 +6,7 @@
  */
 
 import { supabase } from "../../supabaseClient";
+import { isUnsafeToSignAsProductImageStoragePath } from "../../utils/imageUrlGuards";
 
 const BUCKET_NAME = "product-images";
 
@@ -61,11 +62,34 @@ export async function uploadAssets(files, { userId, productId, draftKey }) {
  * @returns {Promise<string|null>} URL assinada ou null se objeto não existir (ex: após rename)
  */
 export async function getSignedUrl(storagePath, expiresIn = 3600) {
-  if (!storagePath || typeof storagePath !== "string") return null;
+  if (storagePath == null || typeof storagePath !== "string") return null;
   let path = String(storagePath).trim();
-  if (path.includes(",")) path = path.split(",")[0].trim();
-  if (path.includes(" ")) return null;
   if (!path || path === "undefined" || path === "null") return null;
+
+  for (let u = 0; u < 4; u += 1) {
+    try {
+      const dec = decodeURIComponent(path);
+      if (dec === path) break;
+      path = dec;
+    } catch {
+      break;
+    }
+  }
+  if (path.includes(",")) path = path.split(",")[0].trim();
+  if (!path) return null;
+
+  if (isUnsafeToSignAsProductImageStoragePath(path)) {
+    if (import.meta.env?.DEV && typeof console.debug === "function") {
+      const raw = String(storagePath).trim();
+      console.debug(
+        "[imageStorageService] getSignedUrl: bloqueado (legado / URL externa). Preview:",
+        raw.length > 180 ? `${raw.slice(0, 180)}…` : raw
+      );
+    }
+    return null;
+  }
+
+  if (path.includes(" ")) return null;
   const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(path, expiresIn);
   if (error) {
     const msg = String(error?.message ?? "").toLowerCase();
@@ -90,7 +114,19 @@ export async function getSignedUrl(storagePath, expiresIn = 3600) {
  */
 export async function downloadAsBlob(storagePath, fileName = "imagem") {
   if (!storagePath || typeof storagePath !== "string") throw new Error("storage_path não pode ser vazio");
-  const path = String(storagePath).trim().split(",")[0].trim();
+  let path = String(storagePath).trim().split(",")[0].trim();
+  for (let u = 0; u < 4; u += 1) {
+    try {
+      const dec = decodeURIComponent(path);
+      if (dec === path) break;
+      path = dec;
+    } catch {
+      break;
+    }
+  }
+  if (isUnsafeToSignAsProductImageStoragePath(path)) {
+    throw new Error("Valor legado/URL externa não é storage_path do Supabase");
+  }
   if (!path || path.includes(" ")) throw new Error("storage_path inválido");
   const { data, error } = await supabase.storage.from(BUCKET_NAME).download(path);
   if (error) throw new Error(error.message || "Falha ao baixar");
@@ -114,7 +150,17 @@ export async function downloadAsBlob(storagePath, fileName = "imagem") {
  */
 export async function deleteAsset(storagePath) {
   if (!storagePath || typeof storagePath !== "string") return;
-  const path = String(storagePath).trim().split(",")[0].trim();
+  let path = String(storagePath).trim().split(",")[0].trim();
+  for (let u = 0; u < 4; u += 1) {
+    try {
+      const dec = decodeURIComponent(path);
+      if (dec === path) break;
+      path = dec;
+    } catch {
+      break;
+    }
+  }
+  if (isUnsafeToSignAsProductImageStoragePath(path)) return;
   if (!path || path.includes(" ")) return;
   const { error } = await supabase.storage.from(BUCKET_NAME).remove([path]);
   if (error) throw new Error(error.message || "Falha ao remover do storage");

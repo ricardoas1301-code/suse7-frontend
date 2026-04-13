@@ -49,6 +49,12 @@ import {
   normalizeImageProgress,
   variantProgressRowId,
 } from "../utils/formProgress";
+import {
+  PRODUCT_FORM_MSG,
+  isCostPositiveFromBrlDigits,
+  isCostPositive,
+  isVariantLineCostPositive,
+} from "../utils/productReadiness";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import {
   pickFirstImageLinkStoragePath,
@@ -78,6 +84,25 @@ import { apiMoneyValueToDigits } from "../utils/currencyDigits";
 
 const PF_MEASURES_TAB_TOOLTIP =
   "O comprimento mede a dimensão mais longa de um objeto (geralmente da frente para trás), enquanto a largura mede a dimensão mais curta, perpendicular ao comprimento (geralmente de um lado a outro). Ambas são medidas horizontais, enquanto a altura é a vertical.";
+
+/** Campos derivados da API (GET for-edit) — não enviar no upsert. */
+const READ_ONLY_PRODUCT_API_FIELDS = /** @type {const} */ ([
+  "is_product_ready",
+  "missing_fields",
+  "product_completeness_score",
+]);
+
+/**
+ * @param {Record<string, unknown> | null | undefined} obj
+ */
+function omitReadOnlyProductFields(obj) {
+  if (!obj || typeof obj !== "object") return {};
+  const out = { ...obj };
+  for (const k of READ_ONLY_PRODUCT_API_FIELDS) {
+    delete out[k];
+  }
+  return out;
+}
 
 // ======================================================================
 // SUSE7 — HELPERS: Currency BRL (UI)
@@ -406,7 +431,7 @@ export default function ProductForm({
   const validateCurrentStep = () => {
     switch (safeTab) {
       case "data":
-        return validateDataTab();
+        return validateDataTabEssentials();
       case "variations":
         return validateVariantsTab();
       case "pricing":
@@ -454,7 +479,7 @@ const [skuErrorsById, setSkuErrorsById] = useState({});
   const [variationsSubmitAttempted, setVariationsSubmitAttempted] = useState(false);
 
   // ------------------------------------------------------
-  // STATE: Erros da aba Estoque (apenas Estoque real obrigatório)
+  // STATE: Erros da aba Estoque (feedback opcional em blur — não bloqueia wizard)
   // ------------------------------------------------------
   const [stockErrors, setStockErrors] = useState({});
 
@@ -1220,7 +1245,7 @@ useLayoutEffect(() => {
   // ------------------------------------------------------
   // PROGRESSO GLOBAL DO FORM (todas as abas, simple/variants)
   // ------------------------------------------------------
-  const { percent: globalProgressPercent } = useFormProgress({
+  const { percent: formProgressDetailPercent } = useFormProgress({
     product,
     variantRows,
     variationAttributes,
@@ -1232,6 +1257,9 @@ useLayoutEffect(() => {
     imageProgress,
     buildVariantKey,
   });
+
+  /** Medidor lateral: só o progresso detalhado do formulário (abas/campos); independente do trio mínimo de readiness. */
+  const sidePanelProgressPercent = Math.max(0, Math.min(100, formProgressDetailPercent));
 
 // ======================================================
 // COMPONENTE: FieldLabel (label + info + copiar)
@@ -2221,13 +2249,10 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   const productDataValidators = useMemo(
     () => ({
       product_name: (value) =>
-        !String(value ?? "").trim() ? "Nome do produto é obrigatório." : "",
+        !String(value ?? "").trim() ? PRODUCT_FORM_MSG.PRODUCT_NAME_REQUIRED : "",
       ...(product.format === "simple"
         ? {
-            sku: (value) =>
-              !String(value ?? "").trim()
-                ? "SKU é obrigatório no formato Simples."
-                : "",
+            sku: (value) => (!String(value ?? "").trim() ? PRODUCT_FORM_MSG.SKU_REQUIRED : ""),
           }
         : {}),
     }),
@@ -2249,32 +2274,38 @@ const regenerateVariantRowsFromAttributes = (attrsList) => {
   }, [initialProduct?.id]);
 
   // ------------------------------------------------------
-  // VALIDAR (UX)
+  // VALIDAR (UX) — essenciais = nome + SKU (simples); opcionais = formato EAN/NCM se preenchidos
   // ------------------------------------------------------
-  const validateDataTab = () => {
-    const { isValid: nameSkuOk, errors: fvMap } = productDataForm.validateAll();
-    const nextErrors = {};
+  const validateDataTabEssentials = () => {
+    const { isValid: nameSkuOk } = productDataForm.validateAll();
+    return nameSkuOk;
+  };
 
-    Object.entries(fvMap).forEach(([key, msg]) => {
-      if (msg) nextErrors[key] = msg;
-    });
-
-    // GTIN (se preenchido): números e até 13
+  const validateDataTabOptionalFormats = () => {
+    let gtinErr = "";
     const gtin = String(product.gtin || "").trim();
     if (gtin) {
-      if (!isDigitsOnly(gtin)) nextErrors.gtin = "EAN/GTIN deve conter apenas números.";
-      else if (gtin.length > 13) nextErrors.gtin = "EAN/GTIN deve ter no máximo 13 dígitos.";
+      if (!isDigitsOnly(gtin)) gtinErr = "EAN/GTIN deve conter apenas números.";
+      else if (gtin.length > 13) gtinErr = "EAN/GTIN deve ter no máximo 13 dígitos.";
     }
-
-    // NCM (se preenchido): 8 dígitos
+    let ncmErr = "";
     const ncmDigits = String(product.ncm || "").replace(/\D/g, "");
-    if (ncmDigits) {
-      if (ncmDigits.length !== 8) nextErrors.ncm = "NCM deve ter 8 dígitos.";
-    }
+    if (ncmDigits && ncmDigits.length !== 8) ncmErr = "NCM deve ter 8 dígitos.";
 
-    setErrors(nextErrors);
-    const extrasOk = !nextErrors.gtin && !nextErrors.ncm;
-    return nameSkuOk && extrasOk;
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (gtinErr) next.gtin = gtinErr;
+      else delete next.gtin;
+      if (ncmErr) next.ncm = ncmErr;
+      else delete next.ncm;
+      return next;
+    });
+    return !gtinErr && !ncmErr;
+  };
+
+  const validateDataTab = () => {
+    if (!validateDataTabEssentials()) return false;
+    return validateDataTabOptionalFormats();
   };
 
 // ======================================================================
@@ -2352,27 +2383,25 @@ const validatePricingTab = () => {
   const next = { simpleCost: false, variantsMissingIds: [] };
 
   // ------------------------------------------------------
-  // SIMPLE: custo obrigatório (zero não é válido)
-  // - "R$ 0,00" gera digits "000" => 0
+  // SIMPLE: custo > 0 (mesma regra que computeProductReadiness + máscara BRL)
   // ------------------------------------------------------
   if (product.format === "simple") {
-    const digits = String(simpleCostDigits || "").replace(/\D/g, "");
-    const cents = Number(digits || "0");
-
-    if (cents <= 0) {
+    const fromMask = isCostPositiveFromBrlDigits(simpleCostDigits);
+    const fromField = !fromMask && isCostPositive(product.cost_price);
+    if (!fromMask && !fromField) {
       next.simpleCost = true;
     }
   }
 
   // ------------------------------------------------------
-  // VARIANTS: todos obrigatórios (zero não é válido)
+  // VARIANTS: cada linha com custo > 0 (readiness do formulário)
   // ------------------------------------------------------
   if (product.format === "variants") {
     const missing = (variantRows || [])
       .filter((r) => {
-        const digits = String(variantCostDigitsById?.[r.id] || "").replace(/\D/g, "");
-        const cents = Number(digits || "0");
-        return cents <= 0;
+        const id = r?.id != null ? String(r.id) : "";
+        const digits = id ? variantCostDigitsById?.[r.id] ?? variantCostDigitsById?.[String(r.id)] : "";
+        return !isVariantLineCostPositive(digits, r?.cost_price);
       })
       .map((r) => r.id);
 
@@ -2386,38 +2415,30 @@ const validatePricingTab = () => {
 };
 
   // ------------------------------------------------------
-  // VALIDAR: Estoque (apenas Estoque real obrigatório; Estoque mínimo opcional)
-  // Vazio ("") inválido; zero ("0") válido
+  // VALIDAR: Estoque — não bloqueia Avançar (estoque opcional no fluxo mínimo)
   // ------------------------------------------------------
   const SIMPLE_STOCK_KEY = "simple";
   const validateStockTab = () => {
-    const nextStock = {};
-    if (product.format === "simple") {
-      if (String(product.stock_quantity ?? "") === "") nextStock[SIMPLE_STOCK_KEY] = true;
-    } else if (product.format === "variants" && Array.isArray(variantRows)) {
-      variantRows.forEach((r) => {
-        if (String(r.stock_real ?? "") === "") nextStock[r.id] = true;
-      });
-    }
-    setStockErrors(nextStock);
-    return Object.keys(nextStock).length === 0;
+    setStockErrors({});
+    return true;
   };
 
   // ------------------------------------------------------
   // BLUR — Custos / Estoque: igual à aba Dados (erro ao sair do campo)
   // ------------------------------------------------------
   const handleSimpleCostBlur = () => {
-    const digits = String(simpleCostDigits || "").replace(/\D/g, "");
-    const cents = Number(digits || "0");
-    setCostErrors((prev) => ({ ...prev, simpleCost: cents <= 0 }));
+    const ok =
+      isCostPositiveFromBrlDigits(simpleCostDigits) || isCostPositive(product.cost_price);
+    setCostErrors((prev) => ({ ...prev, simpleCost: !ok }));
   };
 
   const handleVariantCostBlur = (rowId) => {
-    const digits = String(variantCostDigitsById?.[rowId] || "").replace(/\D/g, "");
-    const cents = Number(digits || "0");
+    const row = (variantRows || []).find((r) => r.id === rowId);
+    const digits = variantCostDigitsById?.[rowId] ?? variantCostDigitsById?.[String(rowId)];
+    const ok = row ? isVariantLineCostPositive(digits, row.cost_price) : false;
     setCostErrors((prev) => {
       const missing = new Set(prev.variantsMissingIds || []);
-      if (cents <= 0) missing.add(rowId);
+      if (!ok) missing.add(rowId);
       else missing.delete(rowId);
       return { ...prev, variantsMissingIds: Array.from(missing) };
     });
@@ -2492,15 +2513,6 @@ const validatePricingTab = () => {
     return;
   }
 
-  // ------------------------------------------------------
-  // 4) ESTOQUE (Estoque real obrigatório)
-  // ------------------------------------------------------
-  const okStock = validateStockTab();
-  if (!okStock) {
-    navigateToTabWithUnlock("stock");
-    return;
-  }
-
   const measureErr = validateProductMeasureFields(product);
   if (measureErr) {
     addNotification({
@@ -2509,38 +2521,6 @@ const validatePricingTab = () => {
       message: measureErr,
     });
     navigateToTabWithUnlock("measures");
-    return;
-  }
-
-  const toInt = (v) => {
-    const parsed = parseInt(String(v || "0"), 10);
-    return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
-  };
-
-  const hasZeroStock = product.format === "simple"
-    ? toInt(product.stock_quantity) === 0
-    : (variantRows || []).some((r) => toInt(r.stock_real) === 0);
-
-  if (hasZeroStock) {
-    if (product.format === "variants" && Array.isArray(variantRows)) {
-      const buildVariantLabel = (row) => {
-        if (row?.attributes && Object.keys(row.attributes).length > 0) {
-          return Object.entries(row.attributes)
-            .map(([k, v]) => `${k} ${v}`)
-            .join(" / ");
-        }
-        return row?.sku || "Variação";
-      };
-      const zeroStockVariants = variantRows.filter((r) => toInt(r.stock_real) === 0);
-      const examples = zeroStockVariants
-        .slice(0, 3)
-        .map(buildVariantLabel)
-        .join("; ");
-      setZeroStockModalData({ count: zeroStockVariants.length, examples });
-    } else {
-      setZeroStockModalData(null);
-    }
-    setZeroStockModalOpen(true);
     return;
   }
 
@@ -2576,7 +2556,7 @@ const validatePricingTab = () => {
       const nameFromForm = productDataForm.values?.product_name;
       const skuFromForm = productDataForm.values?.sku;
       const productBase = {
-        ...product,
+        ...omitReadOnlyProductFields(product),
         ...(nameFromForm !== undefined ? { product_name: nameFromForm } : {}),
         ...(product.format === "simple" && skuFromForm !== undefined ? { sku: skuFromForm } : {}),
       };
@@ -2862,7 +2842,7 @@ const validatePricingTab = () => {
               return i >= 0 && i <= maxReachedIndex;
             }}
             onStepChange={handlePanelStepChange}
-            progressPercent={globalProgressPercent}
+            progressPercent={sidePanelProgressPercent}
             panelProductThumb={panelProductThumb}
           />
 
@@ -3135,9 +3115,7 @@ const validatePricingTab = () => {
                       hint=""
                     />
                     {costErrors.simpleCost && (
-                      <div className="s7-error">
-                        Custo do produto é obrigatório.
-                      </div>
+                      <div className="s7-error">{PRODUCT_FORM_MSG.COST_MUST_BE_POSITIVE}</div>
                     )}
                   </div>
                 </div>
@@ -3349,9 +3327,7 @@ const validatePricingTab = () => {
                               </div>
 
                               {hasCostError && (
-                                <div className="s7-error">
-                                  Custo do produto é obrigatório.
-                                </div>
+                                <div className="s7-error">{PRODUCT_FORM_MSG.COST_MUST_BE_POSITIVE}</div>
                               )}
                             </div>
                           </div>

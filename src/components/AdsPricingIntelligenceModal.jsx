@@ -3,7 +3,7 @@
 // Simulação e aplicação: somente via POST /api/pricing/* (sem lógica de dinheiro no JSX).
 // ======================================================
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { apiFetch, buildApiUrl } from "../config/api";
 import { useNotifications } from "../contexts/NotificationContext";
@@ -13,6 +13,8 @@ import MarketplaceBadge from "./MarketplaceBadge.jsx";
 import S7Button from "./ui/S7Button";
 import S7Icon from "./ui/S7Icon";
 import S7Input from "./ui/S7Input";
+import { MercadoLivrePricingScenarioCompareChart } from "./MercadoLivrePricingScenarioCompareChart.jsx";
+import { MercadoLivrePricingScenarioCompareGrid } from "./MercadoLivrePricingScenarioCompareGrid.jsx";
 
 /** Evita import circular com Anuncios.jsx (export de ListingCoverThumb). */
 function PricingCoverThumb({ url }) {
@@ -43,8 +45,13 @@ function PricingCoverThumb({ url }) {
   );
 }
 
-const ADS_PRICING_MODAL_W = 360;
-const ADS_PRICING_MODAL_MAX_H = 780;
+/** Largura alvo ~2× o popover estreito original; ainda limitada ao viewport em commitPosition. */
+const ADS_PRICING_MODAL_W = 720;
+/** Com comparativo ML + gráfico: mais largura, sempre limitada ao viewport em commitPosition. */
+const ADS_PRICING_MODAL_W_ML_COMPARE = 960;
+const ADS_PRICING_MODAL_MAX_H = 820;
+/** Margem do modal comparativo em relação à viewport (quase full-screen). */
+const ADS_PRICING_MODAL_COMPARE_MARGIN_PX = 20;
 const ADS_PRICING_Z = 200110;
 const ADS_PRICING_DEBOUNCE_MS = 420;
 const DASH = "—";
@@ -82,6 +89,114 @@ function formatBrlLoose(n) {
   return Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+/** Decimal serializado pela API — só formatação (mesmo critério do Raio-x). */
+function formatBrlFromApiString(s) {
+  if (s == null || s === "") return DASH;
+  const n = Number(String(s).replace(",", "."));
+  if (!Number.isFinite(n)) return DASH;
+  return formatBrlLoose(n);
+}
+
+function formatNegativeBrlFromApiString(s) {
+  if (s == null || s === "") return null;
+  const n = Number(String(s).replace(",", "."));
+  if (!Number.isFinite(n) || n === 0) return null;
+  return `-${formatBrlLoose(Math.abs(n))}`;
+}
+
+/** @param {string | null | undefined} pct */
+function formatCommissionPctForModal(pct) {
+  if (pct == null || pct === "") return null;
+  const n = Number(String(pct).trim().replace(",", "."));
+  if (!Number.isFinite(n)) return null;
+  return `${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+}
+
+/**
+ * Subtítulo da tarifa: `sale_fee_label` do repasse simulado, senão tipo do anúncio + % (grid / np).
+ * @param {Record<string, unknown>} row
+ * @param {Record<string, unknown> | null} np
+ */
+function buildFeeSubtitleForPricing(row, np) {
+  if (np?.sale_fee_label != null && String(np.sale_fee_label).trim() !== "") {
+    return String(np.sale_fee_label).trim();
+  }
+  const label =
+    row?.listingTypeLabel != null && String(row.listingTypeLabel).trim() !== ""
+      ? String(row.listingTypeLabel).trim()
+      : null;
+  const pctRaw = np?.sale_fee_percent ?? row?.commissionPercent ?? null;
+  const pct = formatCommissionPctForModal(pctRaw);
+  if (label && pct) return `${label} ${pct}`;
+  if (label) return `${label} ${DASH}`;
+  if (pct) return pct;
+  return null;
+}
+
+/** @param {Record<string, unknown> | null} np — `simulated.net_proceeds` */
+function pickModalSaleFeeFromNp(np) {
+  if (!np || typeof np !== "object") return DASH;
+  if (np.sale_fee_amount != null && String(np.sale_fee_amount).trim() !== "") {
+    return formatNegativeBrlFromApiString(np.sale_fee_amount) ?? DASH;
+  }
+  return DASH;
+}
+
+/** @param {Record<string, unknown> | null} np @param {Record<string, unknown> | null} row */
+function pickSimulatedShippingLine(np, row) {
+  const defaultTitle = "Custo de envio";
+  const src =
+    row != null &&
+    row.shippingCostSource != null &&
+    String(row.shippingCostSource).trim() !== ""
+      ? String(row.shippingCostSource).trim().toLowerCase()
+      : "";
+  if (src === "unresolved") {
+    const ctx =
+      row.shippingCostContext === "free_for_buyer" || row.shippingCostContext === "buyer_pays"
+        ? row.shippingCostContext
+        : null;
+    const sub =
+      ctx === "free_for_buyer"
+        ? "Grátis para o comprador"
+        : ctx === "buyer_pays"
+          ? "Por conta do comprador"
+          : null;
+    return { title: defaultTitle, value: DASH, sub };
+  }
+  if (!np || typeof np !== "object") {
+    return { title: defaultTitle, value: DASH, sub: null };
+  }
+  const ctx = np.shipping_cost_context ?? np.ml_shipping_cost_context ?? null;
+  const sub =
+    ctx === "free_for_buyer"
+      ? "Grátis para o comprador"
+      : ctx === "buyer_pays"
+        ? "Por conta do comprador"
+        : null;
+  const rawAmt = np.shipping_cost_amount_brl ?? np.shipping_cost_amount ?? np.ml_shipping_cost_amount_brl;
+  let value = DASH;
+  if (rawAmt != null && String(rawAmt).trim() !== "") {
+    value = formatNegativeBrlFromApiString(rawAmt) ?? DASH;
+  }
+  const title =
+    np.shipping_cost_label != null && String(np.shipping_cost_label).trim() !== ""
+      ? String(np.shipping_cost_label).trim()
+      : np.ml_shipping_cost_label != null && String(np.ml_shipping_cost_label).trim() !== ""
+        ? String(np.ml_shipping_cost_label).trim()
+        : defaultTitle;
+  return { title, value, sub };
+}
+
+/** @param {Record<string, unknown> | null} np */
+function formatSimulatedNetReceive(np) {
+  if (!np || typeof np !== "object") return DASH;
+  const raw =
+    np.marketplace_payout_amount_brl ?? np.marketplace_payout_amount ?? np.net_proceeds_amount ?? null;
+  if (raw != null && String(raw).trim() !== "") return formatBrlFromApiString(String(raw));
+  return DASH;
+}
+
 /** Normaliza string pt-BR / en para envio à API (ex.: "1.234,56" → "1234.56"). */
 function toApiDecimalString(raw) {
   const s = String(raw ?? "").trim();
@@ -100,6 +215,7 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
   const shellRef = useRef(null);
   const panelRef = useRef(null);
   const debounceRef = useRef(null);
+  const mlCompareLayoutWideRef = useRef(false);
 
   const [geom, setGeom] = useState({
     left: 0,
@@ -107,6 +223,7 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
     maxW: ADS_PRICING_MODAL_W,
     maxH: ADS_PRICING_MODAL_MAX_H,
     arrowTopPx: 24,
+    centeredFill: false,
   });
   const [caretTrailing, setCaretTrailing] = useState(false);
 
@@ -122,16 +239,34 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
   const theme = getMarketplaceTheme(row.marketplaceRaw || row.marketplaceSlug);
 
   const commitPosition = useCallback(() => {
-    const trig = anchorRef.current;
-    if (!trig) return;
-    const r = trig.getBoundingClientRect();
-    const margin = 12;
-    const gap = 10;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const { top: topInset, bottom: bottomInset } = getRaioxPopoverViewportInsets();
     const bottomPad = bottomInset + 96;
-    const maxW = Math.min(ADS_PRICING_MODAL_W, vw - 2 * margin);
+    const margin = 12;
+
+    if (mlCompareLayoutWideRef.current) {
+      const m = ADS_PRICING_MODAL_COMPARE_MARGIN_PX;
+      const maxW = Math.max(ADS_PRICING_MODAL_W_ML_COMPARE, vw - 2 * m);
+      const maxH = vh - topInset - bottomPad;
+      setCaretTrailing(false);
+      setGeom({
+        left: 0,
+        top: 0,
+        maxW,
+        maxH,
+        arrowTopPx: 24,
+        centeredFill: true,
+      });
+      return;
+    }
+
+    const trig = anchorRef.current;
+    if (!trig) return;
+    const r = trig.getBoundingClientRect();
+    const gap = 10;
+    const capW = ADS_PRICING_MODAL_W;
+    const maxW = Math.min(capW, vw - 2 * margin);
     const panelEl = panelRef.current;
     const estW = panelEl && panelEl.getBoundingClientRect().width > 40 ? panelEl.getBoundingClientRect().width : maxW;
 
@@ -161,7 +296,7 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
     top = Math.min(Math.max(top, topInset), vh - bottomPad - bottomReserve);
     const arrowTopPx = Math.max(14, Math.min(panelH - 14, iconCy - top));
     setCaretTrailing(trailing);
-    setGeom({ left, top, maxW, maxH, arrowTopPx });
+    setGeom({ left, top, maxW, maxH, arrowTopPx, centeredFill: false });
   }, [anchorRef]);
 
   useEffect(() => {
@@ -199,6 +334,10 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  const [mlScenariosPayload, setMlScenariosPayload] = useState(/** @type {Record<string, unknown> | null} */ (null));
+  const [mlScenariosLoading, setMlScenariosLoading] = useState(false);
+  const [mlScenariosError, setMlScenariosError] = useState(/** @type {string | null} */ (null));
+
   useEffect(() => {
     if (!open) return;
     const p = row.price != null && Number.isFinite(Number(row.price)) ? Number(row.price) : null;
@@ -206,6 +345,78 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
     setSim(null);
     setSimError(null);
   }, [open, row.id, row.price]);
+
+  useEffect(() => {
+    if (!open) {
+      setMlScenariosPayload(null);
+      setMlScenariosError(null);
+      setMlScenariosLoading(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (row.marketplaceRaw !== "mercado_livre" || !row.externalId || String(row.externalId).trim() === "") {
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setMlScenariosLoading(true);
+      setMlScenariosError(null);
+      try {
+        const url = buildApiUrl("/api/ml/listings/pricing-scenarios");
+        if (!url) {
+          if (!cancelled) {
+            setMlScenariosError("API não configurada (VITE_API_BASE_URL).");
+            setMlScenariosPayload(null);
+          }
+          return;
+        }
+        const result = await apiFetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listingExternalId: row.externalId }),
+        });
+        const data = /** @type {Record<string, unknown> | undefined} */ (result.data);
+        if (!result.ok) {
+          if (!cancelled) {
+            setMlScenariosError(
+              result.error != null ? String(result.error) : "Não foi possível carregar os cenários.",
+            );
+            setMlScenariosPayload(null);
+          }
+          return;
+        }
+        if (!data || data.ok !== true) {
+          if (!cancelled) {
+            setMlScenariosError(
+              data?.error != null ? String(data.error) : "Não foi possível carregar os cenários.",
+            );
+            setMlScenariosPayload(null);
+          }
+          return;
+        }
+        if (!cancelled) {
+          setMlScenariosPayload(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setMlScenariosError("Não foi possível carregar os cenários.");
+          setMlScenariosPayload(null);
+        }
+      } finally {
+        if (!cancelled) setMlScenariosLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, row.externalId, row.marketplaceRaw]);
+
+  useEffect(() => {
+    if (!open) return;
+    requestAnimationFrame(() => requestAnimationFrame(commitPosition));
+  }, [open, commitPosition, mlScenariosPayload]);
 
   const runSimulate = useCallback(async () => {
     const url = buildApiUrl("/api/pricing/simulate");
@@ -315,17 +526,352 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
     onClose();
   };
 
+  const scenarioMode =
+    row.marketplaceRaw === "mercado_livre" &&
+    mlScenariosPayload != null &&
+    mlScenariosError == null &&
+    !mlScenariosLoading;
+
+  /** Lista exibida no comparativo: `scenarios` da API ou só `baseline` quando não houver array. */
+  const mlScenariosForCompare = useMemo(() => {
+    if (!scenarioMode || !mlScenariosPayload || typeof mlScenariosPayload !== "object") return [];
+    const all = Array.isArray(mlScenariosPayload.scenarios) ? mlScenariosPayload.scenarios : [];
+    if (all.length > 0) return all;
+    const b = mlScenariosPayload.baseline;
+    return b != null && typeof b === "object" ? [b] : [];
+  }, [scenarioMode, mlScenariosPayload]);
+
+  /** Cenários ML já trazem “Receita do marketplace”; não duplicar com o raio-x da simulação (`sim`). */
+  const hideSimulatedMarketplaceRevenue = scenarioMode && mlScenariosForCompare.length > 0;
+
+  const hasMlScenarioCompare = mlScenariosForCompare.length > 0;
+  mlCompareLayoutWideRef.current = hasMlScenarioCompare;
+
   if (!open || typeof document === "undefined") return null;
 
   const simCtx = sim?.simulated?.pricing_context;
   const simRes = simCtx?.result != null && typeof simCtx.result === "object" ? simCtx.result : null;
   const simIc = simCtx?.internal_costs != null && typeof simCtx.internal_costs === "object" ? simCtx.internal_costs : null;
+  const simUi =
+    simCtx != null && typeof simCtx === "object" && simCtx.ui != null && typeof simCtx.ui === "object"
+      ? /** @type {Record<string, unknown>} */ (simCtx.ui)
+      : null;
+  const block2Mode = simUi?.block2_mode != null ? String(simUi.block2_mode) : "no_product";
+  const block3Mode = simUi?.block3_mode != null ? String(simUi.block3_mode) : "blocked";
+
+  const np =
+    sim?.simulated?.net_proceeds != null && typeof sim.simulated.net_proceeds === "object"
+      ? /** @type {Record<string, unknown>} */ (sim.simulated.net_proceeds)
+      : null;
+
+  const feeSubTitle = buildFeeSubtitleForPricing(row, np);
+  const modalSaleFeeDisplay = pickModalSaleFeeFromNp(np);
+  const modalMlShippingLine = pickSimulatedShippingLine(np, row);
+  const modalNetReceiveDisplay = formatSimulatedNetReceive(np);
+
+  const showModalProductValue =
+    (row.listOrOriginalPriceBrl != null && String(row.listOrOriginalPriceBrl).trim() !== "") ||
+    (row.promotionActive !== true && row.price != null && Number.isFinite(Number(row.price)));
+  const showModalPromoPrice =
+    row.promotionActive === true &&
+    row.promotionPriceBrl != null &&
+    String(row.promotionPriceBrl).trim() !== "";
+  const raioxPriceLinesPromoFirst = row.promotionActive === true && showModalPromoPrice && showModalProductValue;
+  const modalBaseCommissionHighlightKey = showModalPromoPrice
+    ? "promo"
+    : showModalProductValue
+      ? "product"
+      : null;
+
+  const simulatedSaleDisplay = (() => {
+    if (np?.sale_price_effective != null && String(np.sale_price_effective).trim() !== "")
+      return formatBrlFromApiString(String(np.sale_price_effective));
+    if (np?.sale_price != null && String(np.sale_price).trim() !== "")
+      return formatBrlFromApiString(String(np.sale_price));
+    if (sim?.sale_price_candidate_brl != null && String(sim.sale_price_candidate_brl).trim() !== "")
+      return formatBrlFromApiString(String(sim.sale_price_candidate_brl));
+    return DASH;
+  })();
+
+  const taxPercentLabel =
+    simIc?.tax_percent_label != null && String(simIc.tax_percent_label).trim() !== ""
+      ? String(simIc.tax_percent_label)
+      : null;
+
   const semRaw =
     simRes?.offer_status_semantic != null ? String(simRes.offer_status_semantic).trim() : "";
   const offerSemClass =
     ["critical", "danger", "acceptable", "great", "excellent"].includes(semRaw)
       ? `anuncios-sell-popover__offer-sem--${semRaw}`
       : "";
+
+  /** Com grid ML, “Resultado” da simulação só exibe Δ lucro / avisos (custos e lucro por cenário vêm dos cards). */
+  const showSimResultadoSection =
+    !hasMlScenarioCompare ||
+    (block3Mode === "ok" &&
+      simRes != null &&
+      (sim?.comparison?.profit_delta_brl != null ||
+        (Array.isArray(sim?.warnings) && sim.warnings.length > 0)));
+
+  const pricingModalResultsStack = (
+    <>
+      {hasMlScenarioCompare ? (
+        <div className="anuncios-pricing-modal__current-scenarios">
+          <MercadoLivrePricingScenarioCompareGrid scenarios={mlScenariosForCompare} />
+        </div>
+      ) : null}
+      {loading ? <p className="anuncios-pricing-modal__loading">Calculando…</p> : null}
+      {!loading && !sim ? (
+        <p className="anuncios-sell-popover__result-placeholder">
+          Ajuste o preço à esquerda para ver o raio-x simulado.
+        </p>
+      ) : null}
+      {!loading && sim ? (
+        <>
+          {!hideSimulatedMarketplaceRevenue ? (
+            <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block">
+              <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
+              {showModalProductValue || showModalPromoPrice ? (
+                <div className="anuncios-sell-popover__block">
+                  {raioxPriceLinesPromoFirst ? (
+                    <>
+                      {showModalPromoPrice ? (
+                        <div
+                          className={
+                            modalBaseCommissionHighlightKey === "promo"
+                              ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
+                              : "anuncios-sell-popover__line"
+                          }
+                        >
+                          <span>Você vende na promoção</span>
+                          <strong>{simulatedSaleDisplay}</strong>
+                        </div>
+                      ) : null}
+                      {showModalProductValue ? (
+                        <div
+                          className={
+                            modalBaseCommissionHighlightKey === "product"
+                              ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
+                              : "anuncios-sell-popover__line"
+                          }
+                        >
+                          <span>Valor de venda</span>
+                          <strong>{simulatedSaleDisplay}</strong>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      {showModalProductValue ? (
+                        <div
+                          className={
+                            modalBaseCommissionHighlightKey === "product"
+                              ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
+                              : "anuncios-sell-popover__line"
+                          }
+                        >
+                          <span>Valor de venda</span>
+                          <strong>{simulatedSaleDisplay}</strong>
+                        </div>
+                      ) : null}
+                      {showModalPromoPrice ? (
+                        <div
+                          className={
+                            modalBaseCommissionHighlightKey === "promo"
+                              ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
+                              : "anuncios-sell-popover__line"
+                          }
+                        >
+                          <span>Você vende na promoção</span>
+                          <strong>{simulatedSaleDisplay}</strong>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              ) : null}
+              <div className="anuncios-sell-popover__block">
+                <div className="anuncios-sell-popover__line">
+                  <span>Tarifa de venda</span>
+                  <strong>{modalSaleFeeDisplay}</strong>
+                </div>
+                {feeSubTitle != null ? (
+                  <div className="anuncios-sell-popover__muted">{feeSubTitle}</div>
+                ) : null}
+              </div>
+              <div className="anuncios-sell-popover__block">
+                <div className="anuncios-sell-popover__line">
+                  <span>{modalMlShippingLine.title}</span>
+                  <strong>{modalMlShippingLine.value}</strong>
+                </div>
+                {modalMlShippingLine.sub != null && String(modalMlShippingLine.sub).trim() !== "" ? (
+                  <div className="anuncios-sell-popover__muted">{modalMlShippingLine.sub}</div>
+                ) : null}
+              </div>
+              <div className="anuncios-sell-popover__block">
+                <div className="anuncios-sell-popover__line anuncios-sell-popover__line--total anuncios-sell-popover__line--key">
+                  <span>Você recebe</span>
+                  <strong>{modalNetReceiveDisplay}</strong>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {!hasMlScenarioCompare ? (
+          <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future anuncios-pricing-modal__raiox-block">
+            <h4 className="anuncios-sell-popover__section-title">Custos internos</h4>
+            {block2Mode === "no_product" ? (
+              <p className="anuncios-sell-popover__raiox-alert">
+                Este anúncio não está vinculado a um produto.
+              </p>
+            ) : (
+              <>
+                <div className="anuncios-sell-popover__block">
+                  <div className="anuncios-sell-popover__line">
+                    <span>Custo do produto</span>
+                    <strong
+                      className={
+                        simIc?.product_cost_brl != null && String(simIc.product_cost_brl).trim() !== ""
+                          ? undefined
+                          : "anuncios-sell-popover__value--empty"
+                      }
+                    >
+                      {simIc?.product_cost_brl != null && String(simIc.product_cost_brl).trim() !== ""
+                        ? formatBrlFromApiString(simIc.product_cost_brl)
+                        : DASH}
+                    </strong>
+                  </div>
+                </div>
+                <div className="anuncios-sell-popover__block">
+                  <div className="anuncios-sell-popover__line">
+                    <span>Impostos</span>
+                    <strong
+                      className={
+                        simIc?.tax_amount_brl != null && String(simIc.tax_amount_brl).trim() !== ""
+                          ? undefined
+                          : "anuncios-sell-popover__value--empty"
+                      }
+                    >
+                      {simIc?.tax_amount_brl != null && String(simIc.tax_amount_brl).trim() !== ""
+                        ? formatBrlFromApiString(simIc.tax_amount_brl)
+                        : DASH}
+                    </strong>
+                  </div>
+                  {taxPercentLabel != null ? (
+                    <div className="anuncios-sell-popover__muted">{taxPercentLabel}</div>
+                  ) : null}
+                </div>
+                <div className="anuncios-sell-popover__block">
+                  <div className="anuncios-sell-popover__line">
+                    <span>Operação + Embalagem</span>
+                    <strong
+                      className={
+                        simIc?.operational_packaging_total_brl != null &&
+                        String(simIc.operational_packaging_total_brl).trim() !== ""
+                          ? undefined
+                          : "anuncios-sell-popover__value--empty"
+                      }
+                    >
+                      {simIc?.operational_packaging_total_brl != null &&
+                      String(simIc.operational_packaging_total_brl).trim() !== ""
+                        ? formatBrlFromApiString(simIc.operational_packaging_total_brl)
+                        : DASH}
+                    </strong>
+                  </div>
+                </div>
+                {block2Mode === "incomplete" && simUi?.block2_message != null ? (
+                  <p className="anuncios-sell-popover__raiox-warn">
+                    ⚠ {String(simUi.block2_message)}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </div>
+          ) : null}
+
+          {showSimResultadoSection ? (
+          <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future anuncios-pricing-modal__raiox-block">
+            <h4 className="anuncios-sell-popover__section-title">Resultado</h4>
+            {block3Mode === "ok" && simRes != null ? (
+              <>
+                {sim.comparison?.profit_delta_brl != null ? (
+                  <p className="anuncios-pricing-modal__delta">
+                    Δ Lucro: {formatBrlLoose(sim.comparison.profit_delta_brl)} (
+                    {sim.comparison.profit_delta_pct != null
+                      ? `${sim.comparison.profit_delta_pct}%`
+                      : DASH}{" "}
+                    vs atual) · Δ Margem:{" "}
+                    {sim.comparison.margin_delta_pct != null
+                      ? `${sim.comparison.margin_delta_pct} pp`
+                      : DASH}
+                  </p>
+                ) : null}
+                {Array.isArray(sim.warnings) && sim.warnings.length > 0 ? (
+                  <ul className="anuncios-pricing-modal__warnings">
+                    {sim.warnings.map((w) => (
+                      <li key={w.code}>{w.message}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {!hasMlScenarioCompare ? (
+                  <>
+                    <div className="anuncios-sell-popover__block">
+                      <div className="anuncios-sell-popover__line">
+                        <span>Lucro líquido</span>
+                        <strong className={offerSemClass || undefined}>
+                          {simRes?.profit_brl != null ? formatBrlFromApiString(simRes.profit_brl) : DASH}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="anuncios-sell-popover__block">
+                      <div className="anuncios-sell-popover__line">
+                        <span>Margem</span>
+                        <strong className={offerSemClass || undefined}>
+                          {simRes?.margin_pct != null && String(simRes.margin_pct).trim() !== ""
+                            ? `${String(simRes.margin_pct).replace(".", ",")} %`
+                            : DASH}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="anuncios-sell-popover__block">
+                      <div className="anuncios-sell-popover__line">
+                        <span>Preço mínimo saudável</span>
+                        <strong>
+                          {simRes?.break_even_price_brl != null &&
+                          String(simRes.break_even_price_brl).trim() !== ""
+                            ? formatBrlFromApiString(simRes.break_even_price_brl)
+                            : DASH}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="anuncios-sell-popover__block">
+                      <div className="anuncios-sell-popover__line anuncios-sell-popover__line--status-offer">
+                        <span>Status da oferta</span>
+                        <strong className={offerSemClass || undefined}>
+                          {simRes?.offer_status_label != null
+                            ? String(simRes.offer_status_label)
+                            : simRes?.offer_status != null
+                              ? String(simRes.offer_status)
+                              : DASH}
+                        </strong>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+              </>
+            ) : !hasMlScenarioCompare ? (
+              <p className="anuncios-sell-popover__result-placeholder">
+                {simUi?.block3_message != null && String(simUi.block3_message).trim() !== ""
+                  ? String(simUi.block3_message)
+                  : DASH}
+              </p>
+            ) : null}
+          </div>
+          ) : null}
+        </>
+      ) : null}
+    </>
+  );
 
   return createPortal(
     <>
@@ -342,16 +888,29 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
           "anuncios-raiox-shell--portal",
           "anuncios-raiox-shell--open",
           "anuncios-pricing-modal__shell",
+          geom.centeredFill ? "anuncios-pricing-modal__shell--compare-fill" : "",
           theme.shellModifierClass,
         ]
           .filter(Boolean)
           .join(" ")}
         style={{
-          left: geom.left,
-          top: geom.top,
-          width: geom.maxW,
-          maxWidth: geom.maxW,
-          maxHeight: geom.maxH,
+          ...(geom.centeredFill
+            ? {
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                width: geom.maxW,
+                maxWidth: geom.maxW,
+                height: geom.maxH,
+                maxHeight: geom.maxH,
+              }
+            : {
+                left: geom.left,
+                top: geom.top,
+                width: geom.maxW,
+                maxWidth: geom.maxW,
+                maxHeight: geom.maxH,
+              }),
           zIndex: ADS_PRICING_Z,
           ...getMarketplaceThemeCssVars(theme),
         }}
@@ -379,172 +938,122 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
             "anuncios-sell-popover__panel--in-shell",
             caretTrailing ? "anuncios-sell-popover__panel--caret-trailing" : "",
             "anuncios-pricing-modal__panel",
+            hasMlScenarioCompare ? "anuncios-pricing-modal__panel--ml-scenario-compare" : "",
+            hasMlScenarioCompare ? "anuncios-pricing-modal__panel--compare-near-full" : "",
           ]
             .filter(Boolean)
             .join(" ")}
           role="dialog"
           aria-labelledby="ads-pricing-modal-title"
-          style={{ ["--raiox-caret-top"]: `${geom.arrowTopPx}px`, maxHeight: geom.maxH }}
+          style={{
+            ["--raiox-caret-top"]: `${geom.arrowTopPx}px`,
+            maxHeight: geom.maxH,
+            ...(geom.centeredFill ? { height: "100%", overflow: "hidden" } : {}),
+          }}
           onClick={(e) => e.stopPropagation()}
         >
-          <h3 id="ads-pricing-modal-title" className="anuncios-sell-popover__title">
-            Precificação inteligente
-          </h3>
+          {hasMlScenarioCompare ? (
+            <div className="anuncios-pricing-modal__head-row">
+              <h3 id="ads-pricing-modal-title" className="anuncios-sell-popover__title">
+                Precificação inteligente
+              </h3>
+              <button type="button" className="anuncios-compare-modal__close" onClick={onClose} aria-label="Fechar">
+                <S7Icon name="close" size={18} strokeWidth={2} />
+              </button>
+            </div>
+          ) : (
+            <h3 id="ads-pricing-modal-title" className="anuncios-sell-popover__title">
+              Precificação inteligente
+            </h3>
+          )}
           <p className="anuncios-sell-popover__subtitle">Simule o cenário e publique no marketplace</p>
 
-          <div className="anuncios-pricing-modal__hero">
-            <PricingCoverThumb url={row.coverThumbnailUrl} />
-            <div className="anuncios-pricing-modal__hero-text">
-              <span className="anuncios-pricing-modal__hero-title" title={row.adTitle}>
-                {row.adTitle}
-              </span>
-              <span className="anuncios-pricing-modal__hero-meta">
-                SKU {row.sku && String(row.sku).trim() !== "" ? row.sku : "—"} · Preço atual{" "}
-                {formatBrlLoose(row.price)}
-              </span>
-              <div className="anuncios-pricing-modal__hero-mkt">
-                <MarketplaceBadge marketplace={row.marketplaceRaw || row.marketplaceSlug} />
+          <div className="anuncios-pricing-modal__main-grid">
+            <div className="anuncios-pricing-modal__col anuncios-pricing-modal__col--inputs">
+              <div className="anuncios-pricing-modal__hero">
+                <PricingCoverThumb url={row.coverThumbnailUrl} />
+                <div className="anuncios-pricing-modal__hero-text">
+                  <span className="anuncios-pricing-modal__hero-title" title={row.adTitle}>
+                    {row.adTitle}
+                  </span>
+                  <span className="anuncios-pricing-modal__hero-meta">
+                    SKU {row.sku && String(row.sku).trim() !== "" ? row.sku : "—"} · Preço atual{" "}
+                    {formatBrlLoose(row.price)}
+                  </span>
+                  <div className="anuncios-pricing-modal__hero-mkt">
+                    <MarketplaceBadge marketplace={row.marketplaceRaw || row.marketplaceSlug} />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="anuncios-sell-popover__section">
-            <h4 className="anuncios-sell-popover__section-title">Simulação</h4>
-            <div className="anuncios-pricing-modal__field">
-              <label htmlFor="ads-pricing-sale">Novo valor de venda (R$)</label>
-              <S7Input
-                id="ads-pricing-sale"
-                value={saleInput}
-                onChange={(e) => setSaleInput(e.target.value)}
-                placeholder="0,00"
-                autoComplete="off"
-              />
-            </div>
-            <div className="anuncios-pricing-modal__field-row">
-              <div className="anuncios-pricing-modal__field">
-                <label htmlFor="ads-pricing-min-margin">Margem mínima desejada (%)</label>
-                <S7Input
-                  id="ads-pricing-min-margin"
-                  value={minMarginInput}
-                  onChange={(e) => setMinMarginInput(e.target.value)}
-                  placeholder="ex.: 7"
-                />
+              <div className="anuncios-sell-popover__section">
+                <h4 className="anuncios-sell-popover__section-title">Simulação</h4>
+                <div className="anuncios-pricing-modal__field">
+                  <label htmlFor="ads-pricing-sale">Novo valor de venda (R$)</label>
+                  <S7Input
+                    id="ads-pricing-sale"
+                    value={saleInput}
+                    onChange={(e) => setSaleInput(e.target.value)}
+                    placeholder="0,00"
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="anuncios-pricing-modal__field-row">
+                  <div className="anuncios-pricing-modal__field">
+                    <label htmlFor="ads-pricing-min-margin">Margem mínima desejada (%)</label>
+                    <S7Input
+                      id="ads-pricing-min-margin"
+                      value={minMarginInput}
+                      onChange={(e) => setMinMarginInput(e.target.value)}
+                      placeholder="ex.: 7"
+                    />
+                  </div>
+                  <div className="anuncios-pricing-modal__field">
+                    <label htmlFor="ads-pricing-min-profit">Lucro mínimo (R$) — opcional</label>
+                    <S7Input
+                      id="ads-pricing-min-profit"
+                      value={minProfitInput}
+                      onChange={(e) => setMinProfitInput(e.target.value)}
+                      placeholder="opcional"
+                    />
+                  </div>
+                </div>
+                <div className="anuncios-pricing-modal__actions-inline">
+                  <S7Button type="button" variant="secondary" size="sm" onClick={handleSuggestHealthy}>
+                    Sugerir preço saudável
+                  </S7Button>
+                  <S7Button type="button" variant="secondary" size="sm" onClick={handleResetCurrent}>
+                    Usar preço atual
+                  </S7Button>
+                </div>
               </div>
-              <div className="anuncios-pricing-modal__field">
-                <label htmlFor="ads-pricing-min-profit">Lucro mínimo (R$) — opcional</label>
-                <S7Input
-                  id="ads-pricing-min-profit"
-                  value={minProfitInput}
-                  onChange={(e) => setMinProfitInput(e.target.value)}
-                  placeholder="opcional"
-                />
-              </div>
-            </div>
-            <div className="anuncios-pricing-modal__actions-inline">
-              <S7Button type="button" variant="secondary" size="sm" onClick={handleSuggestHealthy}>
-                Sugerir preço saudável
-              </S7Button>
-              <S7Button type="button" variant="secondary" size="sm" onClick={handleResetCurrent}>
-                Usar preço atual
-              </S7Button>
-            </div>
-          </div>
 
-          {simError ? (
-            <p className="anuncios-pricing-modal__error" role="alert">
-              {simError}
-            </p>
-          ) : null}
+              {hasMlScenarioCompare ? (
+                <div className="anuncios-pricing-modal__ml-chart-slot">
+                  <MercadoLivrePricingScenarioCompareChart scenarios={mlScenariosForCompare} />
+                </div>
+              ) : null}
 
-          <div className="anuncios-sell-popover__section">
-            <h4 className="anuncios-sell-popover__section-title">Resultado simulado</h4>
-            {loading ? <p className="anuncios-pricing-modal__loading">Calculando…</p> : null}
-            {!loading && sim ? (
-              <>
-                {sim.comparison?.profit_delta_brl != null ? (
-                  <p className="anuncios-pricing-modal__delta">
-                    Δ Lucro: {formatBrlLoose(sim.comparison.profit_delta_brl)} (
-                    {sim.comparison.profit_delta_pct != null ? `${sim.comparison.profit_delta_pct}%` : "—"} vs atual) ·
-                    Δ Margem:{" "}
-                    {sim.comparison.margin_delta_pct != null ? `${sim.comparison.margin_delta_pct} pp` : "—"}
-                  </p>
-                ) : null}
-                {Array.isArray(sim.warnings) && sim.warnings.length > 0 ? (
-                  <ul className="anuncios-pricing-modal__warnings">
-                    {sim.warnings.map((w) => (
-                      <li key={w.code}>{w.message}</li>
-                    ))}
-                  </ul>
-                ) : null}
-                <div className="anuncios-sell-popover__block">
-                  <div className="anuncios-sell-popover__line">
-                    <span>Preço mínimo saudável</span>
-                    <strong>
-                      {simRes?.break_even_price_brl != null && String(simRes.break_even_price_brl).trim() !== ""
-                        ? formatBrlLoose(simRes.break_even_price_brl)
-                        : DASH}
-                    </strong>
-                  </div>
-                </div>
-                <div className="anuncios-sell-popover__block">
-                  <div className="anuncios-sell-popover__line">
-                    <span>Lucro líquido</span>
-                    <strong className={offerSemClass || undefined}>
-                      {simRes?.profit_brl != null ? formatBrlLoose(simRes?.profit_brl) : DASH}
-                    </strong>
-                  </div>
-                </div>
-                <div className="anuncios-sell-popover__block">
-                  <div className="anuncios-sell-popover__line">
-                    <span>Margem</span>
-                    <strong className={offerSemClass || undefined}>
-                      {simRes?.margin_pct != null && String(simRes.margin_pct).trim() !== ""
-                        ? `${String(simRes.margin_pct).replace(".", ",")} %`
-                        : DASH}
-                    </strong>
-                  </div>
-                </div>
-                <div className="anuncios-sell-popover__block">
-                  <div className="anuncios-sell-popover__line">
-                    <span>Custo do produto</span>
-                    <strong>
-                      {simIc?.product_cost_brl != null && String(simIc.product_cost_brl).trim() !== ""
-                        ? formatBrlLoose(simIc.product_cost_brl)
-                        : DASH}
-                    </strong>
-                  </div>
-                </div>
-                <div className="anuncios-sell-popover__block">
-                  <div className="anuncios-sell-popover__line">
-                    <span>Impostos</span>
-                    <strong>
-                      {simIc?.tax_amount_brl != null && String(simIc.tax_amount_brl).trim() !== ""
-                        ? formatBrlLoose(simIc.tax_amount_brl)
-                        : DASH}
-                    </strong>
-                  </div>
-                </div>
-                <div className="anuncios-sell-popover__block">
-                  <div className="anuncios-sell-popover__line">
-                    <span>Operação + Embalagem</span>
-                    <strong>
-                      {simIc?.operational_packaging_total_brl != null &&
-                      String(simIc.operational_packaging_total_brl).trim() !== ""
-                        ? formatBrlLoose(simIc.operational_packaging_total_brl)
-                        : DASH}
-                    </strong>
-                  </div>
-                </div>
-                <div className="anuncios-sell-popover__block">
-                  <div className="anuncios-sell-popover__line">
-                    <span>Status da oferta</span>
-                    <strong className={offerSemClass || undefined}>
-                      {simRes?.offer_status_label != null ? String(simRes.offer_status_label) : DASH}
-                    </strong>
-                  </div>
-                </div>
-              </>
-            ) : null}
+              {simError ? (
+                <p className="anuncios-pricing-modal__error" role="alert">
+                  {simError}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="anuncios-pricing-modal__col anuncios-pricing-modal__col--results">
+              {mlScenariosLoading ? (
+                <p className="anuncios-pricing-modal__loading" role="status">
+                  Carregando cenários atuais (ML)…
+                </p>
+              ) : null}
+              {mlScenariosError != null && String(mlScenariosError).trim() !== "" ? (
+                <p className="anuncios-pricing-modal__error" role="alert">
+                  {String(mlScenariosError)}
+                </p>
+              ) : null}
+              <div className="anuncios-pricing-modal__results-panel">{pricingModalResultsStack}</div>
+            </div>
           </div>
 
           <div className="anuncios-pricing-modal__footer">

@@ -1,3 +1,5 @@
+import { PRODUCT_FORM_MSG } from "./productReadiness.js";
+
 /**
  * SKU por variação: obrigatório + único entre não vazios (trim).
  * Usado no ProductForm (UX) e no cálculo de progresso.
@@ -17,7 +19,7 @@ export function computeVariantSkuErrors(variantRows) {
   for (const r of variantRows) {
     if (!r?.id) continue;
     const t = String(r?.sku ?? "").trim();
-    if (!t) out[r.id] = "SKU é obrigatório.";
+    if (!t) out[r.id] = PRODUCT_FORM_MSG.SKU_REQUIRED;
     else if (countBySku.get(t) > 1) out[r.id] = "SKU duplicado.";
   }
   return out;

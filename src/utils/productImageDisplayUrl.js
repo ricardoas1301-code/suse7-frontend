@@ -6,6 +6,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getSignedUrl } from "../services/images/imageStorageService";
+import {
+  isExternalAbsoluteImageUrl,
+  isUnsafeToSignAsProductImageStoragePath,
+  tryExtractLegacyExternalImageUrl,
+} from "./imageUrlGuards";
 
 export const PRODUCT_IMAGES_BUCKET = "product-images";
 
@@ -23,6 +28,12 @@ export function resolveProductImageSrcSync(entry) {
 
   if (typeof entry === "object" && entry !== null) {
     const o = /** @type {Record<string, unknown>} */ (entry);
+    for (const k of ["storage_path", "storagePath"]) {
+      const sp = o[k];
+      const legacy = tryExtractLegacyExternalImageUrl(sp);
+      if (legacy) return legacy;
+      if (isExternalAbsoluteImageUrl(sp)) return String(sp).trim();
+    }
     for (const k of ["previewLocalUrl", "localPreviewUrl", "localUrl", "blobUrl"]) {
       if (typeof o[k] === "string" && o[k].trim()) {
         const v = o[k].trim();
@@ -35,6 +46,8 @@ export function resolveProductImageSrcSync(entry) {
     }
     if ("url" in o) {
       const u = String(o.url ?? "").trim();
+      const uLeg = tryExtractLegacyExternalImageUrl(u);
+      if (uLeg) return uLeg;
       if (u.startsWith("http")) return u;
     }
   }
@@ -42,6 +55,8 @@ export function resolveProductImageSrcSync(entry) {
   if (typeof entry === "string") {
     const s = entry.trim();
     if (!s) return "";
+    const leg = tryExtractLegacyExternalImageUrl(s);
+    if (leg) return leg;
     if (s.startsWith("blob:") || s.startsWith("data:") || s.startsWith("http")) return s;
   }
 
@@ -57,10 +72,11 @@ export function extractStoragePathFromImageEntry(entry) {
   if (entry == null) return "";
   if (typeof entry === "string") {
     const s = entry.trim();
+    if (!s) return "";
+    if (isUnsafeToSignAsProductImageStoragePath(s)) return "";
     if (
       s.includes("/") &&
       !s.includes(" ") &&
-      !s.startsWith("http") &&
       !s.startsWith("blob:") &&
       !s.startsWith("data:") &&
       !s.startsWith("{") &&
@@ -73,6 +89,8 @@ export function extractStoragePathFromImageEntry(entry) {
   if (typeof entry === "object" && entry !== null) {
     const raw = /** @type {{ storage_path?: unknown; storagePath?: unknown }} */ (entry);
     const sp = String(raw.storage_path ?? raw.storagePath ?? "").trim();
+    if (!sp) return "";
+    if (isUnsafeToSignAsProductImageStoragePath(sp)) return "";
     if (sp && !sp.includes(" ")) return sp;
   }
   return "";
@@ -125,6 +143,40 @@ export function pickFirstImageLinkStoragePath(links) {
   return extractStoragePathFromImageEntry(sorted[0] ?? {});
 }
 
+/**
+ * Primeira URL http(s) em links ordenados por sort_order (campo url ou storage_path “externo”).
+ * Não confundir com chave do bucket Supabase.
+ *
+ * @param {unknown[]} links
+ * @param {string | null | undefined} variantKeyFilter — `undefined`: só links gerais (sem variant_key).
+ *   `null`: não filtra (lista já restrita pelo chamador). string não vazia: filtra por variant_key.
+ * @returns {string}
+ */
+export function pickFirstExternalImageUrlFromLinks(links, variantKeyFilter) {
+  if (!Array.isArray(links) || links.length === 0) return "";
+  let list;
+  if (variantKeyFilter === null) {
+    list = links;
+  } else if (variantKeyFilter !== undefined && String(variantKeyFilter).trim() !== "") {
+    const vk = String(variantKeyFilter).trim();
+    list = links.filter((l) => l && String(l.variant_key ?? "").trim() === vk);
+  } else {
+    list = links.filter((l) => l && (l.variant_key == null || l.variant_key === ""));
+  }
+  const sorted = [...list].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  for (const l of sorted) {
+    const urlField = l?.url != null ? String(l.url).trim() : "";
+    const urlLeg = tryExtractLegacyExternalImageUrl(urlField);
+    if (urlLeg) return urlLeg;
+    if (isExternalAbsoluteImageUrl(urlField)) return urlField;
+    const sp = String(l?.storage_path ?? l?.storagePath ?? "").trim();
+    const spLeg = tryExtractLegacyExternalImageUrl(sp);
+    if (spLeg) return spLeg;
+    if (isExternalAbsoluteImageUrl(sp)) return sp;
+  }
+  return "";
+}
+
 /** Mesma chave que a aba Imagens / ProductForm (`Cor=Azul|Tamanho=M`). */
 export function buildVariantKeyFromAttributes(attrsObj) {
   let attrs = attrsObj;
@@ -149,6 +201,14 @@ export function buildVariantKeyFromAttributes(attrsObj) {
 export async function resolveProductImageSrc(entry) {
   const sync = resolveProductImageSrcSync(entry);
   if (sync) return sync;
+
+  if (entry && typeof entry === "object") {
+    const o = /** @type {Record<string, unknown>} */ (entry);
+    const sp = String(o.storage_path ?? o.storagePath ?? "").trim();
+    const spLeg = tryExtractLegacyExternalImageUrl(sp);
+    if (spLeg) return spLeg;
+    if (isExternalAbsoluteImageUrl(sp)) return sp;
+  }
 
   const path = extractStoragePathFromImageEntry(entry);
   if (!path) return "";
@@ -184,6 +244,8 @@ export async function resolveProductImageSrcFromProduct(product) {
       const scoped = product.product_image_links.filter(
         (l) => l && String(l.variant_key ?? "").trim() === String(vk).trim()
       );
+      const extScoped = pickFirstExternalImageUrlFromLinks(scoped, null);
+      if (extScoped) return extScoped;
       const path = pickFirstImageLinkStoragePath(scoped);
       if (path) {
         const u = await resolveProductImageSrc({ storage_path: path });
@@ -191,6 +253,9 @@ export async function resolveProductImageSrcFromProduct(product) {
       }
     }
   }
+
+  const extGeneral = pickFirstExternalImageUrlFromLinks(product?.product_image_links ?? [], null);
+  if (extGeneral) return extGeneral;
 
   const fromLinksPath = pickFirstGeneralLinkStoragePath(product?.product_image_links);
   if (fromLinksPath) {

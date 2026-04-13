@@ -30,6 +30,7 @@ import {
   marketplaceChipLabel,
 } from "../utils/productCatalogRow";
 import { useProductMainImageSrc } from "../utils/productImageDisplayUrl";
+import { computeCatalogProductReadiness } from "../utils/productReadiness";
 import "./Products.css";
 
 /** Coluna Marketplaces: dados seguem em `getProductCatalogMetrics`; UI oculta até a visão MKP amadurecer. */
@@ -169,7 +170,10 @@ function ProductCatalogRow({
     [product, onRequestDelete]
   );
 
-  const catalogIncomplete = product?.catalog_completeness != null && product.catalog_completeness !== "complete";
+  const catalogIncomplete =
+    typeof product?.is_product_ready === "boolean"
+      ? !product.is_product_ready
+      : product?.catalog_completeness != null && product.catalog_completeness !== "complete";
 
   return (
     <div
@@ -452,7 +456,7 @@ export default function Products() {
         .select(
           `
           *,
-          product_variants ( id, stock_quantity, attributes, sort_order ),
+          product_variants ( id, stock_quantity, attributes, sort_order, cost_price ),
           product_image_links ( storage_path, variant_key, sort_order, is_primary )
         `
         )
@@ -462,7 +466,7 @@ export default function Products() {
       if (error) {
         const fallback = await supabase
           .from("products")
-          .select("*, product_variants ( id, stock_quantity, attributes, sort_order )")
+          .select("*, product_variants ( id, stock_quantity, attributes, sort_order, cost_price )")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
         data = fallback.data;
@@ -479,7 +483,18 @@ export default function Products() {
         error = fallback2.error;
       }
 
-      if (!error) setProducts(data || []);
+      if (!error) {
+        const rows = (data || []).map((row) => {
+          const r = computeCatalogProductReadiness(row);
+          return {
+            ...row,
+            is_product_ready: r.is_product_ready,
+            missing_fields: r.missing_fields,
+            product_completeness_score: r.product_completeness_score,
+          };
+        });
+        setProducts(rows);
+      }
       setProductsLoading(false);
     };
 

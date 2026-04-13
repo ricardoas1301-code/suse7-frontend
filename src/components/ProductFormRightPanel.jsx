@@ -10,21 +10,22 @@ import "./ProductFormRightPanel.css";
 import ProductHealthProgress from "./ProductHealthProgress";
 
 /**
- * @param {{
- *   title: string;
- *   steps: { id: string, label: string }[];
- *   activeId: string;
- *   onStepChange?: (id: string) => void;
- *   isStepUnlocked?: (stepId: string) => boolean;
- *   onSave?: () => void;
- *   onClose?: () => void;
- *   saveLabel?: string;
- *   saving?: boolean;
- *   statusText?: string;
- *   progressPercent?: number;
- *   stepsClickable?: boolean;
- *   panelProductThumb?: null | { src: string; title: string; ariaLabel: string; alt: string };
- * }} props
+ * Painel lateral: etapas, progresso e ações.
+ *
+ * @param {Object} props
+ * @param {string} [props.title]
+ * @param {{ id: string, label: string }[]} [props.steps]
+ * @param {string} [props.activeId]
+ * @param {(id: string) => void} [props.onStepChange]
+ * @param {(stepId: string) => boolean} [props.isStepUnlocked]
+ * @param {() => void} [props.onSave]
+ * @param {() => void} [props.onClose]
+ * @param {string} [props.saveLabel]
+ * @param {boolean} [props.saving]
+ * @param {string} [props.statusText]
+ * @param {number} [props.progressPercent] — progresso detalhado do formulário (abas/campos)
+ * @param {boolean} [props.stepsClickable]
+ * @param {null | { src: string, title: string, ariaLabel: string, alt: string }} [props.panelProductThumb]
  */
 export default function ProductFormRightPanel({
   title = "Novo produto",

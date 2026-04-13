@@ -1,0 +1,17 @@
+/* ======================================================================
+   Modal — vínculo em massa por SKU (Anúncios)
+====================================================================== */
+
+.anuncios-bulk-sku-modal__intro {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--s7-text, #0f172a);
+}
+
+.anuncios-bulk-sku-modal__hint {
+  margin: 0 0 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--s7-text-secondary, #64748b);
+}

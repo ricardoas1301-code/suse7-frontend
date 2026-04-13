@@ -388,12 +388,89 @@
   margin-inline: auto;
 }
 
+.anuncios-catalog__bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+
+.anuncios-catalog__bulk-bar-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--s7-text, #0f172a);
+}
+
+.anuncios-catalog__bulk-bar-count strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.anuncios-catalog__bulk-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.anuncios-catalog__bulk-bar-clear {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--s7-text-secondary, #64748b);
+  background: transparent;
+  border: none;
+  padding: 6px 4px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.anuncios-catalog__bulk-bar-clear:hover:not(:disabled) {
+  color: var(--s7-text, #0f172a);
+}
+
+.anuncios-catalog__bulk-bar-clear:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.anuncios-catalog__cell--select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  align-self: center;
+}
+
+.anuncios-catalog__grid--head .anuncios-catalog__cell--select.products-catalog__col-head {
+  justify-content: center;
+}
+
+.anuncios-catalog__select-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.anuncios-catalog__select-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .anuncios-catalog__grid {
   display: grid;
   box-sizing: border-box;
   width: 100%;
   min-width: min(1820px, 100%);
   grid-template-columns:
+    44px
     96px
     56px
     minmax(0, 0.82fr)
@@ -471,6 +548,37 @@
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.anuncios-completar-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.anuncios-completar-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--s7-text-secondary, #64748b);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  cursor: help;
+}
+
+.anuncios-completar-info-btn:hover {
+  background: rgba(15, 23, 42, 0.12);
+  color: var(--s7-text-primary, #0f172a);
 }
 
 .anuncios-catalog__title-heading-row {
@@ -658,6 +766,14 @@
 .anuncios-sell-popover__trigger:focus-visible {
   outline: 2px solid rgba(37, 99, 235, 0.45);
   outline-offset: 2px;
+}
+
+.anuncios-sell-popover__trigger-icon-image {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+  border-radius: 6px;
 }
 
 .anuncios-sell-popover__title {
@@ -891,7 +1007,8 @@
 }
 
 /* Card frontal (camada 2): moldura ML — posição vertical do conjunto = shell (commitRaioxPanelGeom), todas as camadas sobem juntas. */
-.anuncios-raiox-shell--mercado_livre .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell {
+.anuncios-raiox-shell--mercado_livre
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell:not(.anuncios-sell-popover__panel--with-external-rail) {
   position: relative;
   z-index: 2;
   align-self: center;
@@ -909,6 +1026,57 @@
     0 10px 26px rgba(15, 23, 42, 0.1);
 }
 
+/* Rail externo + card: margens no invólucro; card branco só em .s7-scenario-rail-shell__card */
+.anuncios-raiox-shell--mercado_livre .s7-scenario-rail-shell {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  margin: 24px 14px 22px 8px;
+  width: calc(100% - 22px);
+  max-width: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  box-sizing: border-box;
+}
+
+.anuncios-raiox-shell--mercado_livre .s7-scenario-rail-shell__rail {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  padding-top: 2px;
+  overflow: visible;
+}
+
+.anuncios-raiox-shell--mercado_livre .s7-scenario-rail-shell__card {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.anuncios-raiox-shell--mercado_livre
+  .s7-scenario-rail-shell__card
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--with-external-rail {
+  margin: 0;
+  width: 100%;
+  align-self: stretch;
+  flex: 1 1 auto;
+  min-height: min-content;
+  max-height: min(800px, calc(100dvh - 40px));
+  padding: 22px 14px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--marketplace-primary);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.06),
+    0 10px 26px rgba(15, 23, 42, 0.1);
+}
+
 .anuncios-raiox-shell--open {
   opacity: 1;
   visibility: visible;
@@ -916,6 +1084,85 @@
   transition:
     opacity 0.16s ease 0.05s,
     visibility 0s linear 0.05s;
+}
+
+/* Raio-x comparativo ML: quase full-screen, sem scale(); conteúdo rola dentro do card */
+.anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--portal {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* Comparativo ML: padding vertical simétrico — faixa amarela acima/abaixo do card branco com a mesma proporção. */
+.anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre.anuncios-raiox-shell--portal {
+  --raiox-ml-shell-pad-y: 8px;
+  /**
+   * Deslocamento do centro da moldura amarela (antes +63px no Raio-x “alto”).
+   * Valor menor = faixa sobe; não altera o painel branco (outro elemento no fluxo).
+   */
+  --raiox-ml-frame-center-offset: 5px;
+  padding: var(--raiox-ml-shell-pad-y) 0 var(--raiox-ml-shell-pad-y);
+}
+
+/* Backplate amarelo: só posicionamento/tamanho da camada 1 — card branco inalterado. */
+.anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre .anuncios-raiox-shell__frame {
+  /* Comparativo: faixa um pouco mais larga que o shell; +32px no total (~16px por lado). */
+  width: calc(100% + 32px);
+  max-width: none;
+  top: calc(
+    var(--raiox-ml-shell-pad-y) + (100% - 2 * var(--raiox-ml-shell-pad-y)) / 2 +
+      var(--raiox-ml-frame-center-offset, 20px)
+  );
+  /* Altura um pouco menor no comparativo = menos “prateleira” grossa embaixo do card. */
+  height: calc((100% - 2 * var(--raiox-ml-shell-pad-y)) * 0.62 * 1.22);
+}
+
+.anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre .anuncios-raiox-shell__badge {
+  pointer-events: none;
+  /* padding shell + margin-top do painel (6px). */
+  top: calc(var(--raiox-ml-shell-pad-y) + 6px - (45px * 0.84) / 2);
+}
+
+.anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--compare-near-full {
+  /* Sobrescreve align-self:center da regra ML in-shell; flex-basis 0 + grow preenche a altura do shell. */
+  align-self: stretch;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: none !important;
+  margin: 6px 8px 0;
+  width: calc(100% - 16px);
+  overflow: hidden;
+  padding: 10px 10px 8px;
+}
+
+/* Um único card (sem fileira de promoções): mais espaço entre a pílula do ML e o título “Raio-x da venda”. */
+.anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--compare-near-full.anuncios-sell-popover__panel--raiox-ml-baseline-only {
+  padding-top: 22px;
+}
+
+.anuncios-raiox-shell--ml-compare-fill:not(.anuncios-raiox-shell--mercado_livre)
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--compare-near-full {
+  align-self: stretch;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: none !important;
+  margin: 14px;
+  width: calc(100% - 28px);
+  overflow: hidden;
+}
+
+.anuncios-sell-popover__panel--compare-near-full > .anuncios-sell-popover__subtitle,
+.anuncios-sell-popover__panel--compare-near-full > .anuncios-sell-popover__muted,
+.anuncios-sell-popover__panel--compare-near-full > .anuncios-sell-popover__raiox-warn {
+  flex-shrink: 0;
 }
 
 /* Moldura decorativa (canais sem tema “sanduíche” próprio — ex.: fallback Suse7). */
@@ -1040,6 +1287,11 @@
   border-right: none;
   border-left: 7px solid #ffffff;
   filter: drop-shadow(1px 0 0 rgba(15, 23, 42, 0.1));
+}
+
+/* Raio-x centralizado na tela: sem seta para o gatilho */
+.anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--raiox-centered::after {
+  display: none;
 }
 
 .anuncios-sell-popover__hover-bridge {
@@ -1667,6 +1919,7 @@
   width: 100%;
   min-width: min(1820px, 100%);
   grid-template-columns:
+    44px
     96px
     56px
     minmax(0, 0.82fr)
@@ -1695,13 +1948,13 @@
 
 .anuncios-catalog__grid.anuncios-catalog__grid--minimal {
   min-width: 0;
-  grid-template-columns: 96px 56px minmax(0, 1fr) minmax(168px, 228px);
+  grid-template-columns: 44px 96px 56px minmax(0, 1fr) minmax(168px, 228px);
   column-gap: 14px;
 }
 
 .anuncios-catalog__row.anuncios-catalog__row--minimal {
   min-width: 0;
-  grid-template-columns: 96px 56px minmax(0, 1fr) minmax(168px, 228px);
+  grid-template-columns: 44px 96px 56px minmax(0, 1fr) minmax(168px, 228px);
   column-gap: 14px;
   align-items: start;
   padding-top: 10px;
@@ -2150,6 +2403,116 @@
   pointer-events: auto;
 }
 
+.anuncios-pricing-modal__shell.anuncios-pricing-modal__shell--compare-fill {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.anuncios-pricing-modal__head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.anuncios-pricing-modal__head-row .anuncios-sell-popover__title {
+  margin: 0 0 4px;
+}
+
+.anuncios-compare-modal__head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.anuncios-compare-modal__head-row .anuncios-sell-popover__title {
+  margin: 0;
+  padding-right: 4px;
+}
+
+.anuncios-compare-modal__close {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  margin: -4px -6px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--s7-muted, #64748b);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.anuncios-compare-modal__close:hover {
+  color: var(--s7-text, #1e293b);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.anuncios-compare-modal__close:focus-visible {
+  outline: 2px solid var(--s7-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+/* Raio-x da venda: “Fechar” texto — mesmo padrão do modal Fale Conosco (ContactModal .close-btn) */
+.anuncios-compare-modal__close--text-fechar {
+  width: auto;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #666;
+  background: transparent;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.anuncios-compare-modal__close--text-fechar:hover {
+  color: #000;
+  background: transparent;
+  transform: scale(1.05);
+}
+
+.anuncios-compare-modal__body-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Raio-x comparativo: corpo ocupa o que sobra sob título/subtítulo no card (.anuncios-sell-popover__panel). */
+.anuncios-sell-popover__panel--compare-near-full > .anuncios-compare-modal__body-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* Vários cards lado a lado: não cortar horizontalmente; rolar se a viewport limitar o shell. */
+/* Flex + align-items: centro estável; both-edges equilibra o gutter da barra vertical (evita “mais branco” à direita). */
+.anuncios-sell-popover__panel--compare-near-full.anuncios-sell-popover__panel--ml-scenario-compare
+  .anuncios-compare-modal__body-scroll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  -webkit-overflow-scrolling: touch;
+}
+
 .anuncios-pricing-modal__panel {
   display: flex;
   flex-direction: column;
@@ -2157,6 +2520,729 @@
   overflow: auto;
   max-height: inherit;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Precificação + rail ML: painel não pode ser overflow:auto senão recorta ::after do .s7-tip (tooltip some). */
+.anuncios-pricing-modal__panel.anuncios-pricing-modal__panel--ml-scenario-rail {
+  overflow: visible;
+}
+
+.anuncios-pricing-modal__panel.anuncios-pricing-modal__panel--ml-scenario-rail .anuncios-pricing-modal__main-grid {
+  overflow: visible;
+}
+
+.anuncios-pricing-modal__panel.anuncios-pricing-modal__panel--ml-scenario-rail .anuncios-pricing-modal__col--inputs {
+  overflow-y: auto;
+  max-height: min(58vh, 560px);
+  min-height: 0;
+  padding-right: 4px;
+}
+
+/* Comparativo horizontal de cenários ML (mesmo cuidado com overflow do painel que o rail) */
+.anuncios-pricing-modal__panel.anuncios-pricing-modal__panel--ml-scenario-compare {
+  overflow: visible;
+}
+
+.anuncios-pricing-modal__panel.anuncios-pricing-modal__panel--ml-scenario-compare .anuncios-pricing-modal__main-grid {
+  overflow: visible;
+  /* Coluna direita maior = cards lado a lado com mais conforto */
+  grid-template-columns: minmax(260px, 0.4fr) minmax(0, 1fr);
+}
+
+.anuncios-pricing-modal__panel.anuncios-pricing-modal__panel--ml-scenario-compare .anuncios-pricing-modal__col--inputs {
+  overflow-y: auto;
+  max-height: min(58vh, 560px);
+  min-height: 0;
+  padding-right: 4px;
+}
+
+/* Comparativo ML em modo quase full-screen: uma área rolável, sem comprimir colunas */
+.anuncios-pricing-modal__panel.anuncios-pricing-modal__panel--compare-near-full.anuncios-pricing-modal__panel--ml-scenario-compare {
+  overflow: hidden;
+}
+
+.anuncios-pricing-modal__panel--compare-near-full .anuncios-pricing-modal__main-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anuncios-pricing-modal__panel--compare-near-full.anuncios-pricing-modal__panel--ml-scenario-compare .anuncios-pricing-modal__col--inputs,
+.anuncios-pricing-modal__panel--compare-near-full.anuncios-pricing-modal__panel--ml-scenario-compare .anuncios-pricing-modal__col--results {
+  max-height: none;
+  overflow: visible;
+}
+
+.anuncios-pricing-modal__panel--compare-near-full .anuncios-pricing-modal__footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.anuncios-pricing-modal__ml-chart-slot {
+  margin-top: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.anuncios-pricing-modal__ml-chart-slot .s7-ml-scenario-chart {
+  max-width: 100%;
+}
+
+/* Comparativo ML — shell Raio-x: gráfico à esquerda, cards à direita */
+.s7-ml-scenario-compare-shell {
+  display: grid;
+  gap: 16px 20px;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.s7-ml-scenario-compare-shell--raiox {
+  grid-template-columns: minmax(220px, 292px) minmax(0, 1fr);
+}
+
+/* Raio-x: só cards (gráfico em mini modal) */
+.s7-ml-scenario-compare-shell--raiox-cards-only {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.s7-ml-scenario-compare-shell--raiox-cards-only .s7-ml-scenario-compare-shell__cards {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Toolbar + grade de cenários na mesma coluna (largura = faixa dos cards). */
+.anuncios-raiox-compare__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  min-width: min-content;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__stack {
+  max-width: none;
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare-shell--raiox-cards-only {
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* Fator único para o bloco de cálculo (Anuncios.jsx: ADS_RAIOX_ML_COMPARE_BLOCK_SCALE). */
+.anuncios-raiox-compare--spacious {
+  --raiox-ml-calc-scale: 0.87;
+  /* Largura = soma dos cards (não esticar a 100% e forçar quebra). */
+  width: max-content;
+  box-sizing: border-box;
+}
+
+/*
+ * Raio-x ML: largura fixa por card (não comprimir); modal cresce com n blocos (largura do shell via JS).
+ * Uma linha: nowrap + overflow-x no shell estreito (viewport); JS soma largura dos cards + gaps + chrome.
+ */
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__grid--comfortable {
+  --s7-ml-card-gap: calc(20px * var(--raiox-ml-calc-scale));
+  --s7-ml-card-fixed: calc(280px * var(--raiox-ml-calc-scale));
+  flex-wrap: nowrap;
+  align-content: flex-start;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__grid--comfortable .s7-ml-scenario-compare__card {
+  flex: 0 0 var(--s7-ml-card-fixed);
+  width: var(--s7-ml-card-fixed);
+  min-width: var(--s7-ml-card-fixed);
+  max-width: var(--s7-ml-card-fixed);
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card {
+  font-size: calc(12px * var(--raiox-ml-calc-scale));
+  border-radius: calc(12px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-head {
+  padding: calc(12px * var(--raiox-ml-calc-scale)) calc(14px * var(--raiox-ml-calc-scale))
+    calc(10px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-head-line {
+  gap: calc(8px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-title {
+  font-size: calc(13px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-title-stack {
+  gap: calc(3px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-vigencia {
+  font-size: calc(11px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__badge {
+  font-size: calc(11px * var(--raiox-ml-calc-scale));
+  padding: calc(2px * var(--raiox-ml-calc-scale)) calc(8px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__badge--participating {
+  font-size: calc(11px * 0.81 * var(--raiox-ml-calc-scale));
+  padding: calc(3px * var(--raiox-ml-calc-scale)) calc(8px * var(--raiox-ml-calc-scale));
+  border-radius: calc(6px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body {
+  padding: 0 calc(12px * var(--raiox-ml-calc-scale)) calc(12px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__section {
+  margin-top: calc(6px * var(--raiox-ml-calc-scale));
+  margin-bottom: calc(12px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__section:first-child {
+  margin-top: 0;
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__section:last-child {
+  margin-bottom: 0;
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__section-title {
+  margin: 0 0 calc(6px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious
+  .s7-ml-scenario-compare__card-body
+  .anuncios-pricing-modal__raiox-block
+  .anuncios-sell-popover__section-title {
+  margin-bottom: calc(6px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__section--future {
+  padding-top: calc(8px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__block + .anuncios-sell-popover__block {
+  margin-top: calc(8px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__line {
+  line-height: 1.32;
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__muted {
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__grid {
+  padding: calc(2px * var(--raiox-ml-calc-scale)) 0 calc(4px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar {
+  display: flex;
+  justify-content: flex-start;
+  align-self: stretch;
+  width: 100%;
+  margin-bottom: calc(12px * var(--raiox-ml-calc-scale));
+  flex-shrink: 0;
+}
+
+/* Botão “Ver comparativo”: um passo menor que o texto dos cards (só este controle). */
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(6px * var(--raiox-ml-calc-scale));
+  padding: calc(5px * var(--raiox-ml-calc-scale)) calc(10px * var(--raiox-ml-calc-scale));
+  border-radius: calc(8px * var(--raiox-ml-calc-scale));
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+  font-size: calc(11px * var(--raiox-ml-calc-scale));
+  font-weight: 600;
+  color: var(--s7-text, #1e293b);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.06);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn:focus-visible {
+  outline: 2px solid var(--s7-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+/* Mini modal: só gráfico (menor que o Raio-x principal) */
+.anuncios-raiox-chart-mini-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200105;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.anuncios-raiox-chart-mini__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.32);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+.anuncios-raiox-chart-mini__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(580px, 86vh);
+  overflow: auto;
+  padding: 16px 18px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+  box-shadow:
+    0 4px 16px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+  pointer-events: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anuncios-raiox-chart-mini__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--s7-text, #1e293b);
+  letter-spacing: -0.02em;
+}
+
+.anuncios-raiox-chart-mini__body {
+  margin-top: 0;
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart {
+  margin-top: 4px;
+}
+
+/* Fallback: cards à esquerda, gráfico à direita */
+.s7-ml-scenario-compare-shell--chart-right {
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 272px);
+}
+
+.s7-ml-scenario-compare-shell__cards {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.s7-ml-scenario-compare-shell__chart {
+  min-width: 0;
+}
+
+@media (max-width: 840px) {
+  .s7-ml-scenario-compare-shell--raiox,
+  .s7-ml-scenario-compare-shell--chart-right {
+    grid-template-columns: 1fr;
+  }
+}
+
+.s7-ml-scenario-compare {
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.s7-ml-scenario-compare__grid {
+  width: 100%;
+  min-width: 0;
+  padding: 2px 0 4px;
+}
+
+/*
+ * Cards: largura mínima confortável; até 6 por linha só enquanto o “slot” ≥ min;
+ * o 7º quebra (max-width = 1/6 da linha). Sem scroll horizontal.
+ */
+.s7-ml-scenario-compare__grid--comfortable {
+  --s7-ml-card-gap: 12px;
+  --s7-ml-card-min: 240px;
+  --s7-ml-card-max-cols: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: stretch;
+  gap: var(--s7-ml-card-gap);
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.s7-ml-scenario-compare__grid--comfortable .s7-ml-scenario-compare__card {
+  flex: 1 1 var(--s7-ml-card-min);
+  min-width: min(100%, var(--s7-ml-card-min));
+  max-width: calc(
+    (100% - (var(--s7-ml-card-max-cols) - 1) * var(--s7-ml-card-gap)) / var(--s7-ml-card-max-cols)
+  );
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-compare__card {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.s7-ml-scenario-compare__card--baseline {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.s7-ml-scenario-compare__card--participating {
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.14);
+}
+
+.s7-ml-scenario-compare__card--available {
+  border-color: rgba(234, 88, 12, 0.38);
+  background: linear-gradient(180deg, rgba(255, 247, 237, 0.65) 0%, rgba(255, 255, 255, 0.92) 100%);
+  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.1);
+}
+
+.s7-ml-scenario-compare__card-head {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.s7-ml-scenario-compare__card-head-line {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.s7-ml-scenario-compare__card-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.s7-ml-scenario-compare__card-title {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.92);
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s7-ml-scenario-compare__card-vigencia {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.52);
+  width: 100%;
+  min-width: 0;
+}
+
+.s7-ml-scenario-compare__badge {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.s7-ml-scenario-compare__badge--participating {
+  flex-shrink: 0;
+  color: #fff;
+  font-weight: 700;
+  font-size: calc(11px * 0.81);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #3483fa;
+  border: none;
+  border-radius: 6px;
+  padding: 3px 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.s7-ml-scenario-compare__badge--available {
+  flex-shrink: 0;
+  color: rgb(194, 65, 12);
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(234, 88, 12, 0.28);
+}
+
+.s7-ml-scenario-compare__card-body {
+  padding: 0 10px 10px;
+}
+
+.s7-ml-scenario-compare__card-body .anuncios-sell-popover__section {
+  margin-top: 8px;
+}
+
+.s7-ml-scenario-compare__card-body .anuncios-pricing-modal__raiox-block:first-of-type {
+  margin-top: 0;
+}
+
+/* Gráfico comparativo (lucro / margem) — valores exibidos = mesmos campos da API dos cards */
+.s7-ml-scenario-chart {
+  padding: 10px 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.04) 0%, rgba(255, 255, 255, 0.88) 100%);
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-chart__title {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.92);
+}
+
+.s7-ml-scenario-chart__subtitle {
+  margin: 0 0 12px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: rgba(15, 23, 42, 0.52);
+}
+
+.s7-ml-scenario-chart__block {
+  margin-bottom: 14px;
+}
+
+.s7-ml-scenario-chart__block:last-of-type {
+  margin-bottom: 10px;
+}
+
+.s7-ml-scenario-chart__block-head {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.55);
+  margin-bottom: 8px;
+}
+
+.s7-ml-scenario-chart__bars {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 6px;
+  min-height: 132px;
+}
+
+.s7-ml-scenario-chart__cell {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.s7-ml-scenario-chart__bar-track {
+  width: 100%;
+  max-width: 36px;
+  height: 88px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  border-radius: 6px 6px 2px 2px;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.s7-ml-scenario-chart__bar-fill {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 6px 6px 2px 2px;
+  transition: height 0.2s ease;
+}
+
+.s7-ml-scenario-chart__bar-fill--baseline {
+  background: linear-gradient(180deg, rgba(100, 116, 139, 0.85) 0%, rgba(71, 85, 105, 0.95) 100%);
+}
+
+.s7-ml-scenario-chart__bar-fill--participating {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.92) 0%, rgba(37, 99, 235, 1) 100%);
+}
+
+.s7-ml-scenario-chart__bar-fill--available {
+  background: linear-gradient(180deg, rgba(251, 146, 60, 0.95) 0%, rgba(234, 88, 12, 1) 100%);
+}
+
+.s7-ml-scenario-chart__value {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgba(15, 23, 42, 0.82);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s7-ml-scenario-chart__tick {
+  font-size: 9px;
+  line-height: 1.2;
+  color: rgba(15, 23, 42, 0.45);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.s7-ml-scenario-chart__legend {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 10px;
+  color: rgba(15, 23, 42, 0.55);
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.s7-ml-scenario-chart__legend li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.s7-ml-scenario-chart__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.s7-ml-scenario-chart__swatch--baseline {
+  background: rgba(71, 85, 105, 0.9);
+}
+
+.s7-ml-scenario-chart__swatch--participating {
+  background: rgb(37, 99, 235);
+}
+
+.s7-ml-scenario-chart__swatch--available {
+  background: rgb(234, 88, 12);
+}
+
+/* Raio-x portal: comparativo ML — modo full usa scroll interno no corpo (.anuncios-compare-modal__body-scroll) */
+.anuncios-sell-popover__panel--ml-scenario-compare.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--raiox-centered {
+  max-height: none;
+  overflow: visible;
+}
+
+.anuncios-sell-popover__panel--ml-scenario-compare.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--raiox-centered.anuncios-sell-popover__panel--compare-near-full {
+  overflow: hidden;
+}
+
+/* Fallback se algum painel ML in-shell não for raio-x centrado */
+.anuncios-sell-popover__panel--ml-scenario-compare.anuncios-sell-popover__panel--in-shell:not(.anuncios-sell-popover__panel--raiox-centered) {
+  max-height: min(78vh, 720px);
+  overflow-y: auto;
+  overflow-x: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anuncios-pricing-modal__panel--ml-scenario-compare:not(.anuncios-pricing-modal__panel--compare-near-full)
+  .anuncios-pricing-modal__col--results {
+  max-height: min(72vh, 640px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding-right: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anuncios-pricing-modal__panel--ml-scenario-compare.anuncios-pricing-modal__panel--compare-near-full .anuncios-pricing-modal__col--results {
+  max-height: none;
+}
+
+/* Corpo em 2 colunas: entradas (esq.) vs resultado simulado (dir.); empilha em viewport estreita */
+.anuncios-pricing-modal__main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px 28px;
+  align-items: start;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 2px;
+}
+
+.anuncios-pricing-modal__col {
+  min-width: 0;
+}
+
+.anuncios-pricing-modal__col--inputs .anuncios-pricing-modal__hero {
+  margin-top: 0;
+}
+
+.anuncios-pricing-modal__results-panel {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.05) 0%, rgba(255, 255, 255, 0.72) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px 14px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.anuncios-pricing-modal__results-section {
+  margin-bottom: 0;
+}
+
+/* Blocos alinhados ao Raio-x (Precificação inteligente — coluna direita) */
+.anuncios-pricing-modal__raiox-block {
+  margin-bottom: 0;
+}
+
+.anuncios-pricing-modal__raiox-block .anuncios-sell-popover__section-title {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .anuncios-pricing-modal__main-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 
 .anuncios-pricing-modal__hero {
@@ -2288,4 +3374,179 @@
   margin-top: auto;
   padding-top: 14px;
   border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.anuncios-pricing-modal__current-scenarios {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.s7-scenario-rail-shell .anuncios-pricing-modal__current-scenarios {
+  margin-bottom: 10px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Rail externo ao card — Precificação inteligente (coluna direita) e genérico */
+.s7-scenario-rail-shell {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.anuncios-pricing-modal__col--results .s7-scenario-rail-shell {
+  margin-top: 2px;
+}
+
+.s7-scenario-rail-shell__rail {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  overflow: visible;
+}
+
+.s7-scenario-rail-shell__card {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: visible;
+}
+
+.anuncios-pricing-modal__results-panel--with-external-rail {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+}
+
+/* Trilho vertical: só as abas (sem placa de fundo); tooltip via S7Tooltip no .tip-anchor */
+.anuncios-ml-scenarios-tabs.anuncios-ml-scenarios-tabs--vertical {
+  flex: 0 0 44px;
+  width: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  align-self: flex-start;
+  position: relative;
+  z-index: 4;
+}
+
+.anuncios-ml-scenarios-tabs__slot {
+  position: relative;
+  width: 100%;
+}
+
+.anuncios-ml-scenarios-tabs__slot:hover,
+.anuncios-ml-scenarios-tabs__slot:focus-within {
+  z-index: 5;
+}
+
+.anuncios-ml-scenarios-tabs__btn--vertical {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 4px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.72);
+  cursor: pointer;
+  line-height: 1.15;
+  text-align: center;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.anuncios-ml-scenarios-tabs__btn--vertical:hover {
+  border-color: rgba(15, 23, 42, 0.22);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.anuncios-ml-scenarios-tabs__label {
+  display: block;
+  max-height: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* S7Tooltip aplica .s7-tip no span âncora (hover no botão filho aciona :hover do ancestral) */
+.anuncios-ml-scenarios-tabs__tip-anchor.s7-tooltip.s7-tip {
+  display: block;
+  width: 100%;
+}
+
+.anuncios-ml-scenarios-tabs__slot .anuncios-ml-scenarios-tabs__tip-anchor.s7-tooltip.s7-tip[data-tip]::after {
+  max-width: min(420px, 92vw);
+  z-index: 200150;
+}
+
+.anuncios-ml-scenarios-tabs__slot .anuncios-ml-scenarios-tabs__tip-anchor.s7-tooltip.s7-tip[data-tip]::before {
+  z-index: 200150;
+}
+
+.anuncios-ml-scenarios-tabs__btn--vertical.anuncios-ml-scenarios-tabs__btn--active {
+  border-color: rgba(37, 99, 235, 0.5);
+  background: rgba(239, 246, 255, 0.98);
+  color: rgba(30, 64, 175, 0.98);
+  box-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.88);
+}
+
+/* Sem placa/fundo no rail — só botões encostados ao card */
+.anuncios-ml-scenarios-tabs--external.anuncios-ml-scenarios-tabs--vertical {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.anuncios-ml-scenarios-subsidy {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(15, 23, 42, 0.1);
+}
+
+.anuncios-ml-scenarios-subsidy__toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.55);
+  cursor: pointer;
+}
+
+.anuncios-ml-scenarios-subsidy__panel {
+  margin-top: 6px;
+  padding-left: 2px;
+}
+
+/* data_quality.partial — aviso leve (cenário incompleto, sem inventar número) */
+.anuncios-ml-scenarios-dq-partial {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(113, 63, 18, 0.92);
+  background: rgba(254, 243, 199, 0.65);
+  border: 1px solid rgba(251, 191, 36, 0.35);
 }

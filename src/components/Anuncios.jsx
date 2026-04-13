@@ -16,6 +16,7 @@ import { ATTENTION_REASON_SKU_PENDING_ML } from "../constants/listingAttention";
 import { useNotifications } from "../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import SkuInputModal from "./SkuInputModal";
+import AnunciosBulkSkuModal from "./AnunciosBulkSkuModal";
 import S7Button from "./ui/S7Button";
 import S7EmptyState from "./ui/S7EmptyState";
 import S7Icon from "./ui/S7Icon";
@@ -30,27 +31,82 @@ import { getMarketplaceTheme, getMarketplaceThemeCssVars } from "../theme/market
 import MarketplaceBadge from "./MarketplaceBadge.jsx";
 import AnunciosSyncModal from "./AnunciosSyncModal.jsx";
 import AdsPricingIntelligenceModal from "./AdsPricingIntelligenceModal.jsx";
+import { MercadoLivrePricingScenarioCompareChart } from "./MercadoLivrePricingScenarioCompareChart.jsx";
+import { MercadoLivrePricingScenarioComparePanel } from "./MercadoLivrePricingScenarioComparePanel.jsx";
+import { filterScenariosForRaioxDisplay } from "./mercadoLivrePricingScenarioCompareShared.js";
 import precificaS7Icon from "../assets/precifica-s7-icon.png";
+import raioxTriggerIcon from "../assets/raiox-trigger-icon.png";
 import "./Products.css";
 import "./Anuncios.css";
 
 const ADS_PAGE_SIZE = 25;
 
+/** Rótulos amigáveis para `missing_fields` (GET /api/ml/listings). */
+const MISSING_PRODUCT_FIELD_LABELS = /** @type {const} */ ({
+  name: "Nome do produto",
+  sku: "SKU",
+  cost_price: "Custo do produto",
+});
+
+/**
+ * @param {unknown} fields
+ */
+function formatMissingProductFieldsTooltip(fields) {
+  if (!Array.isArray(fields) || fields.length === 0) return "";
+  const lines = fields.map((f) => {
+    const k = String(f);
+    return `- ${MISSING_PRODUCT_FIELD_LABELS[k] ?? k}`;
+  });
+  return `Faltando:\n${lines.join("\n")}`;
+}
+
 /** Largura fixa do modal Raio-x (referência visual: estado sem produto vinculado). */
 const ADS_RAIOX_POPOVER_WIDTH_PX = 300;
+/** Piso de largura mínima do shell Raio-x ML comparativo (ex.: estado vazio / fallback). */
+const ADS_RAIOX_POPOVER_WIDTH_ML_COMPARE_FLOOR_PX = 640;
+/** Escala do bloco de cenários/cálculo no Raio-x comparativo (1 = tamanho base). Alinhado a `--raiox-ml-calc-scale` no CSS. */
+const ADS_RAIOX_ML_COMPARE_BLOCK_SCALE = 0.87;
+/** Largura fixa dos cards de cenário no Raio-x (alinhada ao CSS `--s7-ml-card-fixed`). */
+const ADS_RAIOX_ML_CARD_FIXED_W_PX = Math.round(280 * ADS_RAIOX_ML_COMPARE_BLOCK_SCALE);
+/** Gap entre cards no Raio-x (alinhado ao CSS `--s7-ml-card-gap` em `.anuncios-raiox-compare--spacious`). */
+const ADS_RAIOX_ML_CARD_GAP_PX = Math.round(20 * ADS_RAIOX_ML_COMPARE_BLOCK_SCALE);
+/**
+ * Soma horizontal: margens do painel + padding + borda até a faixa do grid (≈60px em escala 1).
+ * Extra fixo: barra de rolagem vertical + subpixels do calc() CSS — evita quebra dos cards para baixo.
+ */
+const ADS_RAIOX_ML_COMPARE_LAYOUT_H_SCROLLBAR_PAD_PX = 18;
+const ADS_RAIOX_ML_COMPARE_LAYOUT_H_CHROME_PX =
+  Math.round(60 * ADS_RAIOX_ML_COMPARE_BLOCK_SCALE) + ADS_RAIOX_ML_COMPARE_LAYOUT_H_SCROLLBAR_PAD_PX;
+/** Teto de largura do shell em fração da viewport (96vw). */
+const ADS_RAIOX_ML_COMPARE_MAX_SHELL_W_VW = 0.96;
+/**
+ * Respiro extra abaixo do modal Raio-x ML comparativo (além do safe-area / edge).
+ * Valores menores = modal mais alto na tela.
+ */
+const ADS_RAIOX_ML_COMPARE_VIEWPORT_BOTTOM_GUTTER_PX = 0;
+/**
+ * Pixels extras na altura máxima do shell comparativo ML (fórmula vh − top − bottom).
+ * Modal centralizado: parte do ganho sobe em direção à navbar — manter moderado.
+ */
+const ADS_RAIOX_ML_COMPARE_VIEWPORT_HEIGHT_BOOST_PX = 48;
+/** Margem do modal comparativo ML em relação à viewport (quase full-screen; menor = mais largura útil). */
+const ADS_RAIOX_ML_COMPARE_VIEWPORT_MARGIN_PX = 14;
+
+/**
+ * Largura ideal do shell (px) para uma única linha de cards com largura fixa, sem comprimir blocos.
+ * @param {number} cardCount
+ */
+function computeIdealRaioxMlCompareShellWidthPx(cardCount) {
+  const n = Math.max(0, Math.floor(cardCount));
+  if (n <= 0) return ADS_RAIOX_POPOVER_WIDTH_ML_COMPARE_FLOOR_PX;
+  const track =
+    n * ADS_RAIOX_ML_CARD_FIXED_W_PX + Math.max(0, n - 1) * ADS_RAIOX_ML_CARD_GAP_PX;
+  return ADS_RAIOX_ML_COMPARE_LAYOUT_H_CHROME_PX + track;
+}
 /** Altura máxima do shell Raio-x (card + moldura; conteúdo longo como “Status da oferta” precisa caber antes do clamp). */
 const ADS_RAIOX_POPOVER_MAX_H_PX = 800;
 /** Margem extra acima do fim da viewport no clamp — mantém a base das 3 camadas visível. */
 const ADS_RAIOX_POPOVER_VIEWPORT_BOTTOM_GUTTER_PX = 104;
-/**
- * Sobe o shell inteiro (camada 1 backplate + camada 3 logo + camada 2 dados) em relação ao centro do ícone.
- */
-const ADS_RAIOX_POPOVER_VERTICAL_BIAS_UP_PX = 152;
-/**
- * Folga extra no clamp inferior: altura medida do shell pode ser menor que o desenho real (overflow / subpixel).
- */
-const ADS_RAIOX_SHELL_BOTTOM_CLAMP_SLACK_PX = 64;
-
 /** Mini card do status (largura confortável para título + subtítulo + mensagem). */
 const ADS_RAIOX_STATUS_EXPLAIN_W_PX = 280;
 /** Acima do painel Raio-x portal (z-index 200100). */
@@ -305,9 +361,13 @@ const ML_MODAL_SHIPPING_TITLE = "Custo de envio";
 
 /**
  * Raio-x — frete: colunas consolidadas da grid (health); sem net_proceeds.
- * @param {{ shippingCostBrl?: string | null; shippingCostAmountBrl?: string | null; shippingCostContext?: string | null }} row
+ * @param {{ shippingCostBrl?: string | null; shippingCostAmountBrl?: string | null; shippingCostContext?: string | null; shippingCostSource?: string | null }} row
  */
 function pickModalMercadoLivreShippingLine(row) {
+  const src =
+    row.shippingCostSource != null && String(row.shippingCostSource).trim() !== ""
+      ? String(row.shippingCostSource).trim().toLowerCase()
+      : "";
   const fmtNeg = (raw) => {
     if (raw == null || String(raw).trim() === "") return null;
     return formatNegativeBrlFromApiString(raw) ?? DASH;
@@ -319,6 +379,14 @@ function pickModalMercadoLivreShippingLine(row) {
       : ctx === "buyer_pays"
         ? "Por conta do comprador"
         : null;
+
+  if (src === "unresolved") {
+    return {
+      title: ML_MODAL_SHIPPING_TITLE,
+      value: DASH,
+      sub,
+    };
+  }
 
   const rawAmt = row.shippingCostAmountBrl ?? row.shippingCostBrl;
 
@@ -360,7 +428,7 @@ function getRaioxPopoverViewportInsets() {
 
 /**
  * Linha do catálogo de anúncios exige ação (vínculo/custos) — só espelha dados já expostos na grid.
- * @param {{ pricingContext?: Record<string, unknown> | null; skuPending?: boolean; productId?: string | null; productCatalogCompleteness?: string | null }} row
+ * @param {{ pricingContext?: Record<string, unknown> | null; skuPending?: boolean; productId?: string | null; isProductReady?: boolean | null }} row
  */
 export function isAnunciosCatalogRowPending(row) {
   const ph =
@@ -368,17 +436,18 @@ export function isAnunciosCatalogRowPending(row) {
       ? /** @type {{ product_health?: { product_health_status?: string } }} */ (row.pricingContext).product_health
       : null;
   const st = ph?.product_health_status != null ? String(ph.product_health_status) : null;
-  if (st === "MISSING_PRODUCT" || st === "INCOMPLETE_PRODUCT") return true;
+  if (st === "MISSING_PRODUCT") return true;
   if (row.skuPending) return true;
   if (!row.productId) return true;
-  const c = row.productCatalogCompleteness || "";
-  if (c === "draft_imported_from_marketplace" || c === "incomplete_required_costs") return true;
+  if (row.isProductReady === true) return false;
+  if (row.isProductReady === false) return true;
+  if (row.isProductReady == null && st === "INCOMPLETE_PRODUCT") return true;
   return false;
 }
 
 /**
  * Ações de vínculo na linha (espelha health + campos já expostos na grid).
- * @param {{ attentionReason?: string | null; pricingContext?: Record<string, unknown> | null; productId?: string | null }} row
+ * @param {{ attentionReason?: string | null; pricingContext?: Record<string, unknown> | null; productId?: string | null; isProductReady?: boolean | null }} row
  * @param {(r: typeof row) => void} [onInformSku]
  */
 export function getListingProductLinkActions(row, onInformSku) {
@@ -391,6 +460,12 @@ export function getListingProductLinkActions(row, onInformSku) {
   const healthSt = phSt != null ? String(phSt) : null;
   const hasInform = typeof onInformSku === "function";
   const pid = row.productId != null && String(row.productId).trim() !== "" ? String(row.productId).trim() : "";
+  const incompletoCadastroMinimo =
+    row.isProductReady === true
+      ? false
+      : typeof row.isProductReady === "boolean"
+        ? row.isProductReady === false
+        : healthSt === "INCOMPLETE_PRODUCT";
   return {
     isSkuPendingMl,
     healthSt,
@@ -400,7 +475,7 @@ export function getListingProductLinkActions(row, onInformSku) {
       !isSkuPendingMl &&
       (healthSt === "MISSING_PRODUCT" || !pid) &&
       healthSt !== "INCOMPLETE_PRODUCT",
-    showCompletar: Boolean(pid) && healthSt === "INCOMPLETE_PRODUCT",
+    showCompletar: Boolean(pid) && incompletoCadastroMinimo,
   };
 }
 
@@ -543,6 +618,10 @@ export function mapGridApiToCatalogRow(g) {
       g.shipping_cost_label != null && String(g.shipping_cost_label).trim() !== ""
         ? String(g.shipping_cost_label).trim()
         : null,
+    shippingCostSource:
+      g.shipping_cost_source != null && String(g.shipping_cost_source).trim() !== ""
+        ? String(g.shipping_cost_source).trim()
+        : null,
     promotionActive: g.promotion_active === true,
     promotionPriceBrl:
       g.promotion_active === true
@@ -634,6 +713,14 @@ export function mapGridApiToCatalogRow(g) {
         : null,
     productId:
       g.product_id != null && String(g.product_id).trim() !== "" ? String(g.product_id).trim() : null,
+    isProductReady: typeof g.is_product_ready === "boolean" ? g.is_product_ready : null,
+    missingProductFields: Array.isArray(g.missing_fields)
+      ? g.missing_fields.map((x) => String(x))
+      : [],
+    productCompletenessScore:
+      g.product_completeness_score != null && Number.isFinite(Number(g.product_completeness_score))
+        ? Math.round(Number(g.product_completeness_score))
+        : null,
   };
 }
 
@@ -676,6 +763,7 @@ export function ListingCoverThumb({ url }) {
  */
 function AdsMinimalSellColumn({ row, onInformSku }) {
   const raioxTriggerRef = useRef(null);
+  const raioxShellRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const raioxPanelRef = useRef(null);
   /** Gatilho do mini popover “Sobre este status” (linha Resultado). */
   const statusExplainTriggerRef = useRef(null);
@@ -683,25 +771,23 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
   const statusExplainPopoverId = useId();
   /** Evita stale closure em listeners de scroll/resize enquanto o painel está aberto. */
   const raioxOpenRef = useRef(false);
-  const raioxCloseTimerRef = useRef(null);
+  const raioxMlCompareWideRef = useRef(false);
+  const raioxMlScenarioCountRef = useRef(0);
 
   const [raioxOpen, setRaioxOpen] = useState(false);
-  /** true = painel à esquerda do ícone; seta no bordo direito do card (aponta para o gatilho). */
-  const [raioxCaretTrailing, setRaioxCaretTrailing] = useState(false);
+  /** Mini modal só com o gráfico comparativo (Raio-x ML). */
+  const [raioxChartOpen, setRaioxChartOpen] = useState(false);
+  const raioxChartMiniRef = useRef(/** @type {HTMLDivElement | null} */ (null));
 
-  /** Posição do painel Raio-x (fixed + clamp na viewport); caret alinhado ao centro do ícone. */
+  /** Posição do shell Raio-x (fixed): centralizado na viewport. */
   const [raioxPanelGeom, setRaioxPanelGeom] = useState({
-    left: -9999,
-    top: 0,
     maxW: ADS_RAIOX_POPOVER_WIDTH_PX,
-    /** Mantém consistência com ADS_RAIOX_POPOVER_MAX_H_PX + insets da viewport. */
+    /** Mantém consistência com ADS_RAIOX_POPOVER_MAX_H_PX + insets da viewport (shell estreito). */
     maxH: ADS_RAIOX_POPOVER_MAX_H_PX,
     arrowTopPx: 24,
+    /** Escala para caber o shell inteiro na viewport (Raio-x ML largo). */
+    fitScale: 1,
   });
-  const [raioxHoverBridge, setRaioxHoverBridge] = useState(
-    /** @type {{ left: number; top: number; width: number; height: number } | null} */ (null),
-  );
-
   /** Explicação do status: mini card por hover/foco (payload: título / subtítulo / mensagem do backend). */
   const [statusExplainOpen, setStatusExplainOpen] = useState(false);
   const [statusExplainGeom, setStatusExplainGeom] = useState({
@@ -713,6 +799,10 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
     /** @type {{ left: number; top: number; width: number; height: number } | null} */ (null),
   );
   const statusExplainCloseTimerRef = useRef(null);
+
+  const [mlScenariosPayload, setMlScenariosPayload] = useState(/** @type {Record<string, unknown> | null} */ (null));
+  const [mlScenariosLoading, setMlScenariosLoading] = useState(false);
+  const [mlScenariosError, setMlScenariosError] = useState(/** @type {string | null} */ (null));
 
   const clearStatusExplainCloseTimer = useCallback(() => {
     if (statusExplainCloseTimerRef.current != null) {
@@ -754,11 +844,101 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
   }, [row.externalId, row.listingNumber, clearStatusExplainCloseTimer]);
 
   useEffect(() => {
-    return () => {
-      if (raioxCloseTimerRef.current != null) {
-        window.clearTimeout(raioxCloseTimerRef.current);
-        raioxCloseTimerRef.current = null;
+    if (!raioxOpen) {
+      setMlScenariosPayload(null);
+      setMlScenariosError(null);
+      setMlScenariosLoading(false);
+    }
+  }, [raioxOpen]);
+
+  useEffect(() => {
+    if (!raioxOpen) return;
+    if (row.marketplaceRaw !== "mercado_livre" || !row.externalId || String(row.externalId).trim() === "") {
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setMlScenariosLoading(true);
+      setMlScenariosError(null);
+      try {
+        const url = buildApiUrl("/api/ml/listings/pricing-scenarios");
+        if (!url) {
+          if (!cancelled) {
+            setMlScenariosError("API não configurada (VITE_API_BASE_URL).");
+            setMlScenariosPayload(null);
+          }
+          return;
+        }
+        const result = await apiFetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listingExternalId: row.externalId }),
+        });
+        const data = /** @type {Record<string, unknown> | undefined} */ (result.data);
+        if (!result.ok) {
+          if (!cancelled) {
+            setMlScenariosError(
+              result.error != null ? String(result.error) : "Não foi possível carregar os cenários de precificação.",
+            );
+            setMlScenariosPayload(null);
+          }
+          return;
+        }
+        if (!data || data.ok !== true) {
+          if (!cancelled) {
+            setMlScenariosError(
+              data?.error != null ? String(data.error) : "Não foi possível carregar os cenários de precificação.",
+            );
+            setMlScenariosPayload(null);
+          }
+          return;
+        }
+        if (!cancelled) {
+          setMlScenariosPayload(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setMlScenariosError("Não foi possível carregar os cenários de precificação.");
+          setMlScenariosPayload(null);
+        }
+      } finally {
+        if (!cancelled) setMlScenariosLoading(false);
       }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [raioxOpen, row.externalId, row.marketplaceRaw]);
+
+  const scenarioMode =
+    row.marketplaceRaw === "mercado_livre" &&
+    mlScenariosPayload != null &&
+    mlScenariosError == null &&
+    !mlScenariosLoading;
+
+  const mlScenariosForCompare = useMemo(() => {
+    if (!scenarioMode || !mlScenariosPayload || typeof mlScenariosPayload !== "object") return [];
+    const all = Array.isArray(mlScenariosPayload.scenarios) ? mlScenariosPayload.scenarios : [];
+    if (all.length > 0) return all;
+    const b = mlScenariosPayload.baseline;
+    return b != null && typeof b === "object" ? [b] : [];
+  }, [scenarioMode, mlScenariosPayload]);
+
+  const hasMlScenarioCompare = mlScenariosForCompare.length > 0;
+
+  const mlScenariosForRaioxDisplay = useMemo(
+    () => filterScenariosForRaioxDisplay(mlScenariosForCompare),
+    [mlScenariosForCompare],
+  );
+
+  /** Só um bloco (ex.: só “Preço normal”) — mais respiro abaixo da pílula ML no shell. */
+  const raioxMlBaselineOnlyLayout = hasMlScenarioCompare && mlScenariosForRaioxDisplay.length === 1;
+
+  raioxMlCompareWideRef.current = hasMlScenarioCompare;
+  raioxMlScenarioCountRef.current = hasMlScenarioCompare ? mlScenariosForRaioxDisplay.length : 0;
+
+  useEffect(() => {
+    return () => {
       if (statusExplainCloseTimerRef.current != null) {
         window.clearTimeout(statusExplainCloseTimerRef.current);
         statusExplainCloseTimerRef.current = null;
@@ -768,66 +948,52 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
 
   const commitRaioxPanelPosition = useCallback(() => {
     if (!raioxOpenRef.current) return;
-    const trig = raioxTriggerRef.current;
-    if (!trig) return;
-    const r = trig.getBoundingClientRect();
-    const margin = 12;
-    const gap = 10;
+    const marginTight = 12;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const { top: topInset, bottom: bottomInset } = getRaioxPopoverViewportInsets();
-    const bottomPad = bottomInset + ADS_RAIOX_POPOVER_VIEWPORT_BOTTOM_GUTTER_PX;
-    const maxW = Math.min(ADS_RAIOX_POPOVER_WIDTH_PX, vw - 2 * margin);
-    const panelEl = raioxPanelRef.current;
-    const estW = panelEl && panelEl.getBoundingClientRect().width > 40 ? panelEl.getBoundingClientRect().width : maxW;
+    const isMlWide = raioxMlCompareWideRef.current;
+    const bottomPad = bottomInset + (isMlWide ? ADS_RAIOX_ML_COMPARE_VIEWPORT_BOTTOM_GUTTER_PX : ADS_RAIOX_POPOVER_VIEWPORT_BOTTOM_GUTTER_PX);
 
-    let left;
-    let caretTrailing = false;
-    const leftPreferred = r.left - gap - estW;
-    if (leftPreferred >= margin) {
-      left = leftPreferred;
-      caretTrailing = true;
-    } else {
-      left = r.right + gap;
-      if (left + estW > vw - margin) {
-        left = Math.max(margin, vw - margin - estW);
-      }
-      caretTrailing = false;
+    if (isMlWide) {
+      const n = raioxMlScenarioCountRef.current;
+      const idealW = computeIdealRaioxMlCompareShellWidthPx(n);
+      const capW = vw * ADS_RAIOX_ML_COMPARE_MAX_SHELL_W_VW;
+      const maxW = Math.min(idealW, capW);
+      /** Altura útil da viewport + boost para o comparativo quase full-screen. */
+      const maxH = vh - topInset - bottomPad + ADS_RAIOX_ML_COMPARE_VIEWPORT_HEIGHT_BOOST_PX;
+      setRaioxPanelGeom({
+        maxW,
+        maxH,
+        arrowTopPx: 24,
+        fitScale: 1,
+      });
+      return;
     }
+
+    const capW = ADS_RAIOX_POPOVER_WIDTH_PX;
+    const maxW = Math.min(capW, vw - 2 * marginTight);
+    const panelEl = raioxPanelRef.current;
+    const estW =
+      panelEl && panelEl.getBoundingClientRect().width > 40 ? panelEl.getBoundingClientRect().width : maxW;
 
     const maxH = Math.min(ADS_RAIOX_POPOVER_MAX_H_PX, vh - topInset - bottomPad);
-    let panelH = maxH;
-    if (panelEl) {
-      const rect = panelEl.getBoundingClientRect();
-      const hLayout = rect.height;
-      const hScroll = panelEl.scrollHeight;
-      const h = Number.isFinite(hScroll) && hScroll > 0 ? Math.max(hLayout, hScroll) : hLayout;
-      if (Number.isFinite(h) && h > 32) {
-        panelH = Math.min(h, maxH);
-      }
-    }
-    const iconCy = r.top + r.height / 2;
-    let top = iconCy - panelH / 2 - ADS_RAIOX_POPOVER_VERTICAL_BIAS_UP_PX;
-    const bottomReserve = panelH + ADS_RAIOX_SHELL_BOTTOM_CLAMP_SLACK_PX;
-    top = Math.min(Math.max(top, topInset), vh - bottomPad - bottomReserve);
-    const arrowTopPx = Math.max(14, Math.min(panelH - 14, iconCy - top));
-    setRaioxPanelGeom({ left, top, maxW, maxH, arrowTopPx });
-    setRaioxCaretTrailing(caretTrailing);
+    const availW = vw - 2 * marginTight;
+    const availH = vh - topInset - bottomPad;
 
-    const panelW = panelEl && panelEl.getBoundingClientRect().width > 40 ? panelEl.getBoundingClientRect().width : estW;
-    const bridgeTop = Math.min(r.top, top);
-    const bridgeBottom = Math.max(r.bottom, top + panelH);
-    const bridgeHeight = Math.max(8, bridgeBottom - bridgeTop);
-    let bridge = null;
-    if (caretTrailing) {
-      const panelRight = left + panelW;
-      const w = r.left - panelRight;
-      if (w >= 2) bridge = { left: panelRight, top: bridgeTop, width: w, height: bridgeHeight };
-    } else {
-      const w = left - r.right;
-      if (w >= 2) bridge = { left: r.right, top: bridgeTop, width: w, height: bridgeHeight };
+    let natW = estW;
+    let natH = 120;
+    if (panelEl) {
+      natW = Math.max(panelEl.offsetWidth, panelEl.scrollWidth, 40);
+      natH = Math.max(panelEl.offsetHeight, panelEl.scrollHeight, 40);
     }
-    setRaioxHoverBridge(bridge);
+
+    /** Popover estreito: escala só o necessário para caber (sem comparativo ML). */
+    const rawScale = Math.min(1, (availW / natW) * 0.94, (availH / natH) * 0.94);
+    const fitScale = Math.min(1, rawScale);
+
+    const arrowTopPx = 24;
+    setRaioxPanelGeom({ maxW, maxH, arrowTopPx, fitScale });
   }, []);
 
   const scheduleRaioxPanelPosition = useCallback(() => {
@@ -836,27 +1002,44 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
     });
   }, [commitRaioxPanelPosition]);
 
-  const openRaioxPanel = useCallback(() => {
-    if (raioxCloseTimerRef.current != null) {
-      window.clearTimeout(raioxCloseTimerRef.current);
-      raioxCloseTimerRef.current = null;
-    }
-    setRaioxOpen(true);
-    scheduleRaioxPanelPosition();
-  }, [scheduleRaioxPanelPosition]);
-
-  const scheduleCloseRaioxPanel = useCallback(() => {
-    if (raioxCloseTimerRef.current != null) window.clearTimeout(raioxCloseTimerRef.current);
-    raioxCloseTimerRef.current = window.setTimeout(() => {
-      raioxCloseTimerRef.current = null;
+  /** Fecha ao clicar fora do painel ou do gatilho; não usa hover (comportamento estável). */
+  useEffect(() => {
+    if (!raioxOpen) return;
+    const onDocMouseDown = (e) => {
+      const t = e.target;
+      if (!(t instanceof Node)) return;
+      if (raioxChartOpen) {
+        if (raioxChartMiniRef.current?.contains(t)) return;
+        setRaioxChartOpen(false);
+        return;
+      }
+      if (raioxShellRef.current?.contains(t)) return;
+      if (raioxTriggerRef.current?.contains(t)) return;
       setRaioxOpen(false);
-    }, 140);
-  }, []);
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [raioxOpen, raioxChartOpen]);
+
+  useEffect(() => {
+    if (!raioxOpen) setRaioxChartOpen(false);
+  }, [raioxOpen]);
+
+  useEffect(() => {
+    if (!raioxOpen) return;
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      if (raioxChartOpen) setRaioxChartOpen(false);
+      else setRaioxOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [raioxOpen, raioxChartOpen]);
 
   useEffect(() => {
     if (!raioxOpen) return;
     scheduleRaioxPanelPosition();
-  }, [raioxOpen, row.externalId, row.listingNumber, scheduleRaioxPanelPosition]);
+  }, [raioxOpen, row.externalId, row.listingNumber, mlScenariosPayload, mlScenariosForRaioxDisplay.length, scheduleRaioxPanelPosition]);
 
   useEffect(() => {
     const onWinChange = () => commitRaioxPanelPosition();
@@ -1012,6 +1195,12 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
     row.wholesalePriceBrl != null &&
     String(row.wholesalePriceBrl).trim() !== "";
 
+  /** ML com external id: evita flash legado → API enquanto pricing-scenarios carrega. */
+  const useMlScenarioRaiox =
+    row.marketplaceRaw === "mercado_livre" &&
+    row.externalId != null &&
+    String(row.externalId).trim() !== "";
+
   /** Subtítulo da tarifa: tipo de anúncio + % (campos consolidados da grid / health — só formatação). */
   const feeSubTitle = buildListingTypeAndTariffSubtitle(row);
   const receiveDisplay = formatListingUnitNetBrl(row);
@@ -1114,209 +1303,143 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
   )}
   */
 
-  return (
-    <div className="anuncios-sell-minimal">
-      <div className="anuncios-sell-minimal__main-row">
-        {promoDifferent && promoN != null ? (
-          <div className="anuncios-sell-minimal__primary-stack">
-            <span className="anuncios-sell-minimal__primary-caption">Você vende na promoção</span>
-            <span className="anuncios-sell-minimal__main">{formatMoneyOrDash(promoN)}</span>
-          </div>
-        ) : (
-          <span className="anuncios-sell-minimal__main">{formatMoneyOrDash(mainPriceNum)}</span>
-        )}
-        <span
-          className="anuncios-sell-popover anuncios-sell-popover--inline"
-          onMouseEnter={openRaioxPanel}
-          onMouseLeave={scheduleCloseRaioxPanel}
-          onFocusCapture={openRaioxPanel}
-        >
-          <button
-            ref={raioxTriggerRef}
-            type="button"
-            className="anuncios-sell-popover__trigger"
-            aria-label="Ver raio-x da venda no marketplace"
-            onBlur={scheduleCloseRaioxPanel}
-          >
-            <S7Icon name="info" size={15} strokeWidth={1.65} />
-          </button>
-        </span>
-        {raioxOpen && typeof document !== "undefined"
-          ? createPortal(
-              <>
-                {raioxHoverBridge ? (
-                  <div
-                    className="anuncios-sell-popover__hover-bridge anuncios-sell-popover__hover-bridge--open"
-                    aria-hidden
-                    style={{
-                      left: raioxHoverBridge.left,
-                      top: raioxHoverBridge.top,
-                      width: raioxHoverBridge.width,
-                      height: raioxHoverBridge.height,
-                    }}
-                    onMouseEnter={openRaioxPanel}
-                    onMouseLeave={scheduleCloseRaioxPanel}
-                  />
+  const raioxMainColumn = (
+    <>
+            {hasMlScenarioCompare ? (
+              <div className="anuncios-raiox-compare--spacious">
+                {mlScenariosForRaioxDisplay.length > 0 ? (
+                  <div className="anuncios-raiox-compare__stack">
+                    <div className="anuncios-raiox-compare__toolbar">
+                      <button
+                        type="button"
+                        className="anuncios-raiox-compare__chart-btn"
+                        onClick={() => setRaioxChartOpen(true)}
+                      >
+                        <S7Icon name="reports" size={15} strokeWidth={1.75} />
+                        <span>Ver comparativo</span>
+                      </button>
+                    </div>
+                    <MercadoLivrePricingScenarioComparePanel
+                      layout="raiox"
+                      showInlineChart={false}
+                      scenarios={mlScenariosForRaioxDisplay}
+                    />
+                  </div>
+                ) : (
+                  <p className="anuncios-sell-popover__muted" role="status">
+                    Nenhum cenário ativo no momento. Preço normal e promoções em que você participa aparecem aqui
+                    quando aplicável.
+                  </p>
+                )}
+              </div>
+            ) : useMlScenarioRaiox && mlScenariosLoading ? null : (
+              <div className="anuncios-sell-popover__section">
+                <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
+                {showModalProductValue || showModalPromoPrice ? (
+                  <div className="anuncios-sell-popover__block">
+                    {raioxPriceLinesPromoFirst ? (
+                      <>
+                        {showModalPromoPrice ? (
+                          <div
+                            className={
+                              modalBaseCommissionHighlightKey === "promo"
+                                ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
+                                : "anuncios-sell-popover__line"
+                            }
+                          >
+                            <span>Você vende na promoção</span>
+                            <strong>{formatBrlFromApiString(row.promotionPriceBrl)}</strong>
+                          </div>
+                        ) : null}
+                        {showModalProductValue ? (
+                          <div
+                            className={
+                              modalBaseCommissionHighlightKey === "product"
+                                ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
+                                : "anuncios-sell-popover__line"
+                            }
+                          >
+                            <span>Valor de venda</span>
+                            <strong>
+                              {formatBrlFromApiString(
+                                row.promotionActive && row.listingPriceBrl != null
+                                  ? row.listingPriceBrl
+                                  : row.effectiveSalePriceBrl ??
+                                      row.listingPriceBrl ??
+                                      row.listOrOriginalPriceBrl ??
+                                      (row.price != null ? String(row.price) : null),
+                              )}
+                            </strong>
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <>
+                        {showModalProductValue ? (
+                          <div
+                            className={
+                              modalBaseCommissionHighlightKey === "product"
+                                ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
+                                : "anuncios-sell-popover__line"
+                            }
+                          >
+                            <span>Valor de venda</span>
+                            <strong>
+                              {formatBrlFromApiString(
+                                row.promotionActive && row.listingPriceBrl != null
+                                  ? row.listingPriceBrl
+                                  : row.effectiveSalePriceBrl ??
+                                      row.listingPriceBrl ??
+                                      row.listOrOriginalPriceBrl ??
+                                      (row.price != null ? String(row.price) : null),
+                              )}
+                            </strong>
+                          </div>
+                        ) : null}
+                        {showModalPromoPrice ? (
+                          <div
+                            className={
+                              modalBaseCommissionHighlightKey === "promo"
+                                ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
+                                : "anuncios-sell-popover__line"
+                            }
+                          >
+                            <span>Você vende na promoção</span>
+                            <strong>{formatBrlFromApiString(row.promotionPriceBrl)}</strong>
+                          </div>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
                 ) : null}
-                <div
-                  ref={raioxPanelRef}
-                  className={[
-                    "anuncios-raiox-shell",
-                    "anuncios-raiox-shell--portal",
-                    "anuncios-raiox-shell--open",
-                    raioxMarketplaceTheme.shellModifierClass,
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  style={{
-                    left: raioxPanelGeom.left,
-                    top: raioxPanelGeom.top,
-                    width: raioxPanelGeom.maxW,
-                    maxWidth: raioxPanelGeom.maxW,
-                    maxHeight: raioxPanelGeom.maxH,
-                    ...getMarketplaceThemeCssVars(raioxMarketplaceTheme),
-                  }}
-                  onMouseEnter={openRaioxPanel}
-                  onMouseLeave={scheduleCloseRaioxPanel}
-                >
-                  <div className="anuncios-raiox-shell__frame" aria-hidden />
-                  {/** Logo vem do theme; fallback sem imagem só moldura neutra. */}
-                  {raioxMarketplaceTheme.logoSrc ? (
-                    <div className="anuncios-raiox-shell__badge">
-                      <img
-                        src={raioxMarketplaceTheme.logoSrc}
-                        alt={raioxMarketplaceTheme.logoAlt ?? ""}
-                        loading="lazy"
-                        decoding="async"
-                        className="anuncios-raiox-shell__badge-img"
-                      />
-                    </div>
-                  ) : (
-                    <div className="anuncios-raiox-shell__badge anuncios-raiox-shell__badge--text">
-                      <span className="anuncios-raiox-shell__badge-fallback">{raioxMarketplaceTheme.displayName}</span>
-                    </div>
-                  )}
-                  <div
-                    className={[
-                      "anuncios-sell-popover__panel",
-                      "anuncios-sell-popover__panel--in-shell",
-                      raioxCaretTrailing ? "anuncios-sell-popover__panel--caret-trailing" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    role="tooltip"
-                    style={{
-                      ["--raiox-caret-top"]: `${raioxPanelGeom.arrowTopPx}px`,
-                    }}
-                  >
-            <h3 className="anuncios-sell-popover__title">Raio-x da venda</h3>
-            <p className="anuncios-sell-popover__subtitle">Valores unitários por venda neste anúncio</p>
-
-            <div className="anuncios-sell-popover__section">
-              <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
-              {showModalProductValue || showModalPromoPrice ? (
                 <div className="anuncios-sell-popover__block">
-                  {raioxPriceLinesPromoFirst ? (
-                    <>
-                      {showModalPromoPrice ? (
-                        <div
-                          className={
-                            modalBaseCommissionHighlightKey === "promo"
-                              ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
-                              : "anuncios-sell-popover__line"
-                          }
-                        >
-                          <span>Você vende na promoção</span>
-                          <strong>{formatBrlFromApiString(row.promotionPriceBrl)}</strong>
-                        </div>
-                      ) : null}
-                      {showModalProductValue ? (
-                        <div
-                          className={
-                            modalBaseCommissionHighlightKey === "product"
-                              ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
-                              : "anuncios-sell-popover__line"
-                          }
-                        >
-                          <span>Valor de venda</span>
-                          <strong>
-                            {formatBrlFromApiString(
-                              row.promotionActive && row.listingPriceBrl != null
-                                ? row.listingPriceBrl
-                                : row.effectiveSalePriceBrl ??
-                                    row.listingPriceBrl ??
-                                    row.listOrOriginalPriceBrl ??
-                                    (row.price != null ? String(row.price) : null),
-                            )}
-                          </strong>
-                        </div>
-                      ) : null}
-                    </>
-                  ) : (
-                    <>
-                      {showModalProductValue ? (
-                        <div
-                          className={
-                            modalBaseCommissionHighlightKey === "product"
-                              ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
-                              : "anuncios-sell-popover__line"
-                          }
-                        >
-                          <span>Valor de venda</span>
-                          <strong>
-                            {formatBrlFromApiString(
-                              row.promotionActive && row.listingPriceBrl != null
-                                ? row.listingPriceBrl
-                                : row.effectiveSalePriceBrl ??
-                                    row.listingPriceBrl ??
-                                    row.listOrOriginalPriceBrl ??
-                                    (row.price != null ? String(row.price) : null),
-                            )}
-                          </strong>
-                        </div>
-                      ) : null}
-                      {showModalPromoPrice ? (
-                        <div
-                          className={
-                            modalBaseCommissionHighlightKey === "promo"
-                              ? "anuncios-sell-popover__line anuncios-sell-popover__line--key"
-                              : "anuncios-sell-popover__line"
-                          }
-                        >
-                          <span>Você vende na promoção</span>
-                          <strong>{formatBrlFromApiString(row.promotionPriceBrl)}</strong>
-                        </div>
-                      ) : null}
-                    </>
-                  )}
+                  <div className="anuncios-sell-popover__line">
+                    <span>Tarifa de venda</span>
+                    <strong>{modalSaleFeeDisplay}</strong>
+                  </div>
+                  {feeSubTitle != null ? (
+                    <div className="anuncios-sell-popover__muted">{feeSubTitle}</div>
+                  ) : null}
                 </div>
-              ) : null}
-              <div className="anuncios-sell-popover__block">
-                <div className="anuncios-sell-popover__line">
-                  <span>Tarifa de venda</span>
-                  <strong>{modalSaleFeeDisplay}</strong>
+                <div className="anuncios-sell-popover__block">
+                  <div className="anuncios-sell-popover__line">
+                    <span>{modalMlShippingLine.title}</span>
+                    <strong>{modalMlShippingLine.value}</strong>
+                  </div>
+                  {modalMlShippingLine.sub != null && String(modalMlShippingLine.sub).trim() !== "" ? (
+                    <div className="anuncios-sell-popover__muted">{modalMlShippingLine.sub}</div>
+                  ) : null}
                 </div>
-                {feeSubTitle != null ? (
-                  <div className="anuncios-sell-popover__muted">{feeSubTitle}</div>
-                ) : null}
-              </div>
-              <div className="anuncios-sell-popover__block">
-                <div className="anuncios-sell-popover__line">
-                  <span>{modalMlShippingLine.title}</span>
-                  <strong>{modalMlShippingLine.value}</strong>
-                </div>
-                {modalMlShippingLine.sub != null && String(modalMlShippingLine.sub).trim() !== "" ? (
-                  <div className="anuncios-sell-popover__muted">{modalMlShippingLine.sub}</div>
-                ) : null}
-              </div>
-              <div className="anuncios-sell-popover__block">
-                <div className="anuncios-sell-popover__line anuncios-sell-popover__line--total anuncios-sell-popover__line--key">
-                  <span>Você recebe do Mercado Livre</span>
-                  <strong>{modalNetReceiveDisplay}</strong>
+                <div className="anuncios-sell-popover__block">
+                  <div className="anuncios-sell-popover__line anuncios-sell-popover__line--total anuncios-sell-popover__line--key">
+                    <span>Você recebe</span>
+                    <strong>{modalNetReceiveDisplay}</strong>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
+            {!hasMlScenarioCompare ? (
             <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future">
               <h4 className="anuncios-sell-popover__section-title">Custos internos</h4>
               {block2Mode === "no_product" ? (
@@ -1397,7 +1520,9 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
                 </>
               )}
             </div>
+            ) : null}
 
+            {!hasMlScenarioCompare ? (
             <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future">
               <h4 className="anuncios-sell-popover__section-title">Resultado</h4>
               {block3Mode === "ok" && res != null ? (
@@ -1522,9 +1647,186 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
                 </p>
               )}
             </div>
+            ) : null}
+    </>
+  );
+
+  const raioxCardBody = (
+    <>
+      <h3 className="anuncios-sell-popover__title">Raio-x da venda</h3>
+      <p className="anuncios-sell-popover__subtitle">Valores unitários por venda neste anúncio</p>
+      {mlScenariosLoading ? (
+        <p className="anuncios-sell-popover__muted" role="status">
+          Carregando cenários de precificação…
+        </p>
+      ) : null}
+      {mlScenariosError != null && String(mlScenariosError).trim() !== "" ? (
+        <p className="anuncios-sell-popover__raiox-warn" role="alert">
+          {String(mlScenariosError)}
+        </p>
+      ) : null}
+      {hasMlScenarioCompare ? (
+        <div className="anuncios-compare-modal__body-scroll">{raioxMainColumn}</div>
+      ) : (
+        raioxMainColumn
+      )}
+    </>
+  );
+
+  return (
+    <div className="anuncios-sell-minimal">
+      <div className="anuncios-sell-minimal__main-row">
+        {promoDifferent && promoN != null ? (
+          <div className="anuncios-sell-minimal__primary-stack">
+            <span className="anuncios-sell-minimal__primary-caption">Você vende na promoção</span>
+            <span className="anuncios-sell-minimal__main">{formatMoneyOrDash(promoN)}</span>
+          </div>
+        ) : (
+          <span className="anuncios-sell-minimal__main">{formatMoneyOrDash(mainPriceNum)}</span>
+        )}
+        <span className="anuncios-sell-popover anuncios-sell-popover--inline">
+          <button
+            ref={raioxTriggerRef}
+            type="button"
+            className="anuncios-sell-popover__trigger"
+            aria-label="Ver raio-x da venda no marketplace"
+            aria-expanded={raioxOpen}
+            aria-haspopup="dialog"
+            onClick={(e) => {
+              e.stopPropagation();
+              setRaioxOpen((v) => !v);
+            }}
+          >
+            <img
+              src={raioxTriggerIcon}
+              alt=""
+              aria-hidden
+              className="anuncios-sell-popover__trigger-icon-image"
+              loading="lazy"
+              decoding="async"
+            />
+          </button>
+        </span>
+        {raioxOpen && typeof document !== "undefined"
+          ? createPortal(
+              <>
+                {hasMlScenarioCompare ? (
+                  <div
+                    className="anuncios-pricing-modal__backdrop anuncios-raiox-compare-backdrop"
+                    style={{ zIndex: 200099 }}
+                    aria-hidden
+                    onClick={() => setRaioxOpen(false)}
+                  />
+                ) : null}
+                <div
+                  ref={raioxShellRef}
+                  className={[
+                    "anuncios-raiox-shell",
+                    "anuncios-raiox-shell--portal",
+                    "anuncios-raiox-shell--open",
+                    hasMlScenarioCompare ? "anuncios-raiox-shell--ml-compare-fill" : "",
+                    raioxMarketplaceTheme.shellModifierClass,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  style={{
+                    left: "50%",
+                    top: "50%",
+                    width: raioxPanelGeom.maxW,
+                    maxWidth: raioxPanelGeom.maxW,
+                    ...(hasMlScenarioCompare
+                      ? {
+                          height: raioxPanelGeom.maxH,
+                          maxHeight: raioxPanelGeom.maxH,
+                          transform: "translate(-50%, -50%)",
+                        }
+                      : {
+                          maxHeight: raioxPanelGeom.maxH,
+                          transform: `translate(-50%, -50%) scale(${raioxPanelGeom.fitScale})`,
+                        }),
+                    transformOrigin: "center center",
+                    ...getMarketplaceThemeCssVars(raioxMarketplaceTheme),
+                  }}
+                >
+                  <div className="anuncios-raiox-shell__frame" aria-hidden />
+                  {/** Logo vem do theme; fallback sem imagem só moldura neutra. */}
+                  {raioxMarketplaceTheme.logoSrc ? (
+                    <div className="anuncios-raiox-shell__badge">
+                      <img
+                        src={raioxMarketplaceTheme.logoSrc}
+                        alt={raioxMarketplaceTheme.logoAlt ?? ""}
+                        loading="lazy"
+                        decoding="async"
+                        className="anuncios-raiox-shell__badge-img"
+                      />
+                    </div>
+                  ) : (
+                    <div className="anuncios-raiox-shell__badge anuncios-raiox-shell__badge--text">
+                      <span className="anuncios-raiox-shell__badge-fallback">{raioxMarketplaceTheme.displayName}</span>
+                    </div>
+                  )}
+                  <div
+                    ref={raioxPanelRef}
+                    className={[
+                      "anuncios-sell-popover__panel",
+                      "anuncios-sell-popover__panel--in-shell",
+                      "anuncios-sell-popover__panel--raiox-centered",
+                      hasMlScenarioCompare ? "anuncios-sell-popover__panel--ml-scenario-compare" : "",
+                      hasMlScenarioCompare ? "anuncios-sell-popover__panel--compare-near-full" : "",
+                      raioxMlBaselineOnlyLayout ? "anuncios-sell-popover__panel--raiox-ml-baseline-only" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    role="dialog"
+                    aria-label="Raio-x da venda"
+                    style={{
+                      ["--raiox-caret-top"]: `${raioxPanelGeom.arrowTopPx}px`,
+                    }}
+                  >
+                    {raioxCardBody}
                   </div>
                 </div>
               </>,
+              document.body,
+            )
+          : null}
+        {raioxOpen &&
+        raioxChartOpen &&
+        hasMlScenarioCompare &&
+        mlScenariosForRaioxDisplay.length > 0 &&
+        typeof document !== "undefined"
+          ? createPortal(
+              <div
+                ref={raioxChartMiniRef}
+                className="anuncios-raiox-chart-mini-layer"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="anuncios-raiox-chart-mini-title"
+              >
+                <div
+                  className="anuncios-raiox-chart-mini__backdrop"
+                  aria-hidden
+                  onClick={() => setRaioxChartOpen(false)}
+                />
+                <div className="anuncios-raiox-chart-mini__dialog">
+                  <div className="anuncios-compare-modal__head-row">
+                    <h4 id="anuncios-raiox-chart-mini-title" className="anuncios-raiox-chart-mini__title">
+                      Comparativo rápido
+                    </h4>
+                    <button
+                      type="button"
+                      className="anuncios-compare-modal__close"
+                      onClick={() => setRaioxChartOpen(false)}
+                      aria-label="Fechar"
+                    >
+                      <S7Icon name="close" size={18} strokeWidth={2} />
+                    </button>
+                  </div>
+                  <div className="anuncios-raiox-chart-mini__body">
+                    <MercadoLivrePricingScenarioCompareChart scenarios={mlScenariosForRaioxDisplay} />
+                  </div>
+                </div>
+              </div>,
               document.body,
             )
           : null}
@@ -1562,9 +1864,20 @@ const PRECIFICA_S7_ICON_SRC = precificaS7Icon;
  *   onInformSku?: (r: ReturnType<typeof mapGridApiToCatalogRow>) => void;
  *   onListingsRefresh?: () => void | Promise<void>;
  *   minimal?: boolean;
+ *   selected?: boolean;
+ *   onToggleSelected?: (listingId: string) => void;
+ *   selectionDisabled?: boolean;
  * }} props
  */
-function AdsCatalogRow({ row, onInformSku, onListingsRefresh, minimal = false }) {
+function AdsCatalogRow({
+  row,
+  onInformSku,
+  onListingsRefresh,
+  minimal = false,
+  selected = false,
+  onToggleSelected,
+  selectionDisabled = false,
+}) {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const [copyFlashKey, setCopyFlashKey] = useState(null);
@@ -1676,6 +1989,21 @@ function AdsCatalogRow({ row, onInformSku, onListingsRefresh, minimal = false })
           }`}
           role="row"
         >
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--select"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <input
+              type="checkbox"
+              className="anuncios-catalog__select-checkbox"
+              checked={selected}
+              disabled={selectionDisabled}
+              onChange={() => onToggleSelected?.(row.id)}
+              aria-label={`Selecionar anúncio ${row.listingNumberDisplay !== DASH ? row.listingNumberDisplay : row.id}`}
+            />
+          </div>
           <div className="products-catalog__cell anuncios-catalog__cell--precifica-s7">
             <button
               ref={precificaRef}
@@ -1770,15 +2098,33 @@ function AdsCatalogRow({ row, onInformSku, onListingsRefresh, minimal = false })
                   </S7Button>
                 ) : null}
                 {linkAct.showCompletar && row.productId ? (
-                  <S7Button
-                    type="button"
-                    variant="warning"
-                    size="sm"
-                    className="anuncios-ad-line-action-btn"
-                    onClick={() => navigate(`/produtos/${row.productId}/editar`)}
-                  >
-                    Completar cadastro do produto
-                  </S7Button>
+                  <span className="anuncios-completar-inline">
+                    <S7Button
+                      type="button"
+                      variant="warning"
+                      size="sm"
+                      className="anuncios-ad-line-action-btn"
+                      onClick={() => navigate(`/produtos/${row.productId}/editar`)}
+                    >
+                      Completar cadastro do produto
+                    </S7Button>
+                    {row.missingProductFields != null && row.missingProductFields.length > 0 ? (
+                      <S7Tooltip
+                        content={formatMissingProductFieldsTooltip(row.missingProductFields)}
+                        placement="bottom-start"
+                        offset={6}
+                        wrap
+                      >
+                        <button
+                          type="button"
+                          className="anuncios-completar-info-btn"
+                          aria-label="Campos faltando no cadastro do produto"
+                        >
+                          i
+                        </button>
+                      </S7Tooltip>
+                    ) : null}
+                  </span>
                 ) : null}
               </div>
               <div className="anuncios-catalog__minimal-title-mkt">
@@ -1859,6 +2205,21 @@ function AdsCatalogRow({ row, onInformSku, onListingsRefresh, minimal = false })
       }`}
       role="row"
     >
+      <div
+        className="products-catalog__cell anuncios-catalog__cell--select"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        role="presentation"
+      >
+        <input
+          type="checkbox"
+          className="anuncios-catalog__select-checkbox"
+          checked={selected}
+          disabled={selectionDisabled}
+          onChange={() => onToggleSelected?.(row.id)}
+          aria-label={`Selecionar anúncio ${row.listingNumberDisplay !== DASH ? row.listingNumberDisplay : row.id}`}
+        />
+      </div>
       <div className="products-catalog__cell anuncios-catalog__cell--precifica-s7">
         <button
           ref={precificaRef}
@@ -1935,15 +2296,33 @@ function AdsCatalogRow({ row, onInformSku, onListingsRefresh, minimal = false })
               </S7Button>
             ) : null}
             {linkAct.showCompletar && row.productId ? (
-              <S7Button
-                type="button"
-                variant="warning"
-                size="sm"
-                className="anuncios-ad-line-action-btn"
-                onClick={() => navigate(`/produtos/${row.productId}/editar`)}
-              >
-                Completar cadastro do produto
-              </S7Button>
+              <span className="anuncios-completar-inline">
+                <S7Button
+                  type="button"
+                  variant="warning"
+                  size="sm"
+                  className="anuncios-ad-line-action-btn"
+                  onClick={() => navigate(`/produtos/${row.productId}/editar`)}
+                >
+                  Completar cadastro do produto
+                </S7Button>
+                {row.missingProductFields != null && row.missingProductFields.length > 0 ? (
+                  <S7Tooltip
+                    content={formatMissingProductFieldsTooltip(row.missingProductFields)}
+                    placement="bottom-start"
+                    offset={6}
+                    wrap
+                  >
+                    <button
+                      type="button"
+                      className="anuncios-completar-info-btn"
+                      aria-label="Campos faltando no cadastro do produto"
+                    >
+                      i
+                    </button>
+                  </S7Tooltip>
+                ) : null}
+              </span>
             ) : null}
           </div>
         </div>
@@ -2080,6 +2459,10 @@ export default function Anuncios() {
 
   /** Modal: informar SKU (anúncio sem SKU no ML). */
   const [skuModalListing, setSkuModalListing] = useState(null);
+  /** Seleção na página atual (UUID `marketplace_listings.id`). */
+  const [selectedListingIds, setSelectedListingIds] = useState(() => new Set());
+  const [bulkSkuModalOpen, setBulkSkuModalOpen] = useState(false);
+  const bulkSelectAllRef = useRef(null);
 
   const [catalogRows, setCatalogRows] = useState([]);
   const [listLoading, setListLoading] = useState(true);
@@ -2150,6 +2533,7 @@ export default function Anuncios() {
     const listings = Array.isArray(res.data?.listings) ? res.data.listings : [];
     debugLogMlListingsCoverFromApi(listings);
     setCatalogRows(listings.map(mapGridApiToCatalogRow));
+    setSelectedListingIds(new Set());
     return true;
   }, []);
 
@@ -2167,6 +2551,10 @@ export default function Anuncios() {
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
+
+  useEffect(() => {
+    setSelectedListingIds(new Set());
+  }, [adsSearchQuery, adsFilterId, adsPage]);
 
   // ------------------------------
   // Resumo de vendas (servidor) — opcional para KPI / consistência pós-sync
@@ -2455,6 +2843,80 @@ export default function Anuncios() {
     return displayRows.slice(start, start + ADS_PAGE_SIZE);
   }, [displayRows, adsPage]);
 
+  const toggleRowSelected = useCallback((listingId) => {
+    setSelectedListingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(listingId)) next.delete(listingId);
+      else next.add(listingId);
+      return next;
+    });
+  }, []);
+
+  const allPageSelected = useMemo(
+    () => paginatedRows.length > 0 && paginatedRows.every((r) => selectedListingIds.has(r.id)),
+    [paginatedRows, selectedListingIds],
+  );
+
+  useEffect(() => {
+    const el = bulkSelectAllRef.current;
+    if (!el) return;
+    const some = paginatedRows.some((r) => selectedListingIds.has(r.id));
+    el.indeterminate = some && !allPageSelected;
+  }, [paginatedRows, selectedListingIds, allPageSelected]);
+
+  const toggleAllPageSelected = useCallback(() => {
+    setSelectedListingIds((prev) => {
+      const next = new Set(prev);
+      const ids = paginatedRows.map((r) => r.id);
+      const allSel = ids.length > 0 && ids.every((id) => next.has(id));
+      if (allSel) {
+        ids.forEach((id) => next.delete(id));
+      } else {
+        ids.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }, [paginatedRows]);
+
+  const selectedCount = selectedListingIds.size;
+
+  /** SKU visível idêntico em todos os anúncios selecionados (na página atual) — hint do modal bulk. */
+  const bulkSkuInitialHint = useMemo(() => {
+    const rows = displayRows.filter((r) => selectedListingIds.has(r.id));
+    const skus = rows
+      .map((r) => (r.sku != null && String(r.sku).trim() !== "" ? String(r.sku).trim() : null))
+      .filter((s) => s != null);
+    if (skus.length === 0) return null;
+    const first = skus[0];
+    if (skus.every((s) => s === first)) return first;
+    return null;
+  }, [displayRows, selectedListingIds]);
+
+  const getBulkListingIds = useCallback(() => [...selectedListingIds], [selectedListingIds]);
+
+  const handleBulkSkuCompleted = useCallback(
+    async (result) => {
+      const sev =
+        result.kind === "success"
+          ? NOTIFICATION_SEVERITY.INFO
+          : result.kind === "warning"
+            ? NOTIFICATION_SEVERITY.WARNING
+            : NOTIFICATION_SEVERITY.CRITICAL;
+      addNotification({
+        event_type: "LISTING_BULK_SKU",
+        entity_type: "marketplace_listing",
+        title: result.title,
+        message: result.message,
+        severity: sev,
+      });
+      setSelectedListingIds(new Set());
+      if (result.kind !== "error") {
+        await fetchListings();
+      }
+    },
+    [addNotification, fetchListings],
+  );
+
   const paginationItems = useMemo(() => buildPaginationItems(adsPage, totalPages), [adsPage, totalPages]);
   const rangeStart = totalFiltered === 0 ? 0 : (adsPage - 1) * ADS_PAGE_SIZE + 1;
   const rangeEnd = Math.min(adsPage * ADS_PAGE_SIZE, totalFiltered);
@@ -2470,6 +2932,16 @@ export default function Anuncios() {
         knownSku={skuModalListing?.knownSku ?? null}
         onClose={closeSkuModal}
         onSaved={handleSkuSaved}
+      />
+
+      <AnunciosBulkSkuModal
+        open={bulkSkuModalOpen}
+        selectedCount={selectedCount}
+        marketplace="mercado_livre"
+        getListingIds={getBulkListingIds}
+        initialSkuHint={bulkSkuInitialHint}
+        onClose={() => setBulkSkuModalOpen(false)}
+        onCompleted={handleBulkSkuCompleted}
       />
 
       <h1 className="products-catalog__sr-title">Anúncios</h1>
@@ -2733,6 +3205,32 @@ export default function Anuncios() {
         </div>
       ) : (
         <div className="products-catalog__table-block">
+          {selectedCount > 0 ? (
+            <div className="anuncios-catalog__bulk-bar" role="region" aria-label="Seleção em massa de anúncios">
+              <span className="anuncios-catalog__bulk-bar-count">
+                <strong>{selectedCount}</strong> {selectedCount === 1 ? "anúncio selecionado" : "anúncios selecionados"}
+              </span>
+              <div className="anuncios-catalog__bulk-bar-actions">
+                <S7Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  disabled={listLoading}
+                  onClick={() => setBulkSkuModalOpen(true)}
+                >
+                  Vincular selecionados
+                </S7Button>
+                <button
+                  type="button"
+                  className="anuncios-catalog__bulk-bar-clear"
+                  disabled={listLoading}
+                  onClick={() => setSelectedListingIds(new Set())}
+                >
+                  Limpar seleção
+                </button>
+              </div>
+            </div>
+          ) : null}
           <div className="products-catalog__table-card">
             <div className="products-catalog__table-hscroll">
               <div
@@ -2740,6 +3238,21 @@ export default function Anuncios() {
                   adsViewMode === "minimal" ? " anuncios-catalog__grid--minimal" : ""
                 }`}
               >
+                <div
+                  className="products-catalog__cell anuncios-catalog__cell--select products-catalog__col-head"
+                  role="columnheader"
+                >
+                  <span className="products-catalog__sr-only">Selecionar</span>
+                  <input
+                    ref={bulkSelectAllRef}
+                    type="checkbox"
+                    className="anuncios-catalog__select-checkbox"
+                    checked={allPageSelected}
+                    disabled={listLoading || paginatedRows.length === 0}
+                    onChange={toggleAllPageSelected}
+                    aria-label="Selecionar todos os anúncios visíveis nesta página"
+                  />
+                </div>
                 <AdsCatalogHeadCell
                   columnClass="anuncios-catalog__cell--precifica-s7"
                   tip="Simular cenário e publicar preço no marketplace (Precificação inteligente S7)."
@@ -2842,6 +3355,9 @@ export default function Anuncios() {
                     minimal={adsViewMode === "minimal"}
                     onInformSku={(r) => openSkuModal(r)}
                     onListingsRefresh={fetchListings}
+                    selected={selectedListingIds.has(row.id)}
+                    onToggleSelected={toggleRowSelected}
+                    selectionDisabled={listLoading}
                   />
                 ))}
               </div>
