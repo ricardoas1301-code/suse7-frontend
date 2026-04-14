@@ -2507,8 +2507,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow-x: auto;
-  overflow-y: auto;
+  /*
+   * Tooltip do botão de precificação: este container não pode recortar pseudo-elementos.
+   * A rolagem horizontal já é tratada no grid de cenários, então aqui deixamos visível.
+   */
+  overflow: visible;
   scrollbar-gutter: stable both-edges;
   -webkit-overflow-scrolling: touch;
 }
@@ -2756,8 +2759,11 @@
   gap: calc(8px * var(--raiox-ml-calc-scale));
   align-self: stretch;
   width: 100%;
+  /* Espaço para o tooltip superior não ser recortado no topo do bloco comparativo. */
+  margin-top: calc(8px * var(--raiox-ml-calc-scale));
   margin-bottom: calc(12px * var(--raiox-ml-calc-scale));
   flex-shrink: 0;
+  overflow: visible;
 }
 
 /* Botão de precificação no toolbar do comparativo (usa o mesmo ícone do catálogo). */
@@ -2776,6 +2782,8 @@
   transition:
     transform 0.15s ease,
     filter 0.15s ease;
+  position: relative;
+  z-index: 100300;
 }
 
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn:hover {
@@ -2797,6 +2805,11 @@
   object-fit: cover;
   border-radius: inherit;
   display: block;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn.s7-tip[data-tip]::before,
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn.s7-tip[data-tip]::after {
+  z-index: 210500;
 }
 
 /* Botão “Ver comparativo”: um passo menor que o texto dos cards (só este controle). */

@@ -1315,12 +1315,14 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
                       <button
                         ref={raioxPricingRef}
                         type="button"
-                        className="anuncios-raiox-compare__pricing-btn s7-tip"
+                        className="anuncios-raiox-compare__pricing-btn s7-tip s7-tip-bottom s7-tip-left"
                         data-tip="Precificação Inteligente S7"
                         aria-label="Abrir Precificação Inteligente S7"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onOpenPricing?.(raioxPricingRef.current);
+                          setRaioxChartOpen(false);
+                          setRaioxOpen(false);
+                          onOpenPricing?.();
                         }}
                       >
                         <img
