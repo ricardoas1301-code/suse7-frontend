@@ -759,12 +759,14 @@ export function ListingCoverThumb({ url }) {
  * @param {{
  *   row: ReturnType<typeof mapGridApiToCatalogRow>;
  *   onInformSku?: (r: ReturnType<typeof mapGridApiToCatalogRow>) => void;
+ *   onOpenPricing?: (anchorEl?: HTMLElement | null) => void;
  * }} props
  */
-function AdsMinimalSellColumn({ row, onInformSku }) {
+function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
   const raioxTriggerRef = useRef(null);
   const raioxShellRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const raioxPanelRef = useRef(null);
+  const raioxPricingRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
   /** Gatilho do mini popover “Sobre este status” (linha Resultado). */
   const statusExplainTriggerRef = useRef(null);
   const statusExplainPopoverRef = useRef(null);
@@ -1310,6 +1312,25 @@ function AdsMinimalSellColumn({ row, onInformSku }) {
                 {mlScenariosForRaioxDisplay.length > 0 ? (
                   <div className="anuncios-raiox-compare__stack">
                     <div className="anuncios-raiox-compare__toolbar">
+                      <button
+                        ref={raioxPricingRef}
+                        type="button"
+                        className="anuncios-raiox-compare__pricing-btn s7-tip"
+                        data-tip="Precificação Inteligente S7"
+                        aria-label="Abrir Precificação Inteligente S7"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenPricing?.(raioxPricingRef.current);
+                        }}
+                      >
+                        <img
+                          src={PRECIFICA_S7_ICON_SRC}
+                          alt=""
+                          className="anuncios-raiox-compare__pricing-btn-icon"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </button>
                       <button
                         type="button"
                         className="anuncios-raiox-compare__chart-btn"
@@ -1882,7 +1903,12 @@ function AdsCatalogRow({
   const { addNotification } = useNotifications();
   const [copyFlashKey, setCopyFlashKey] = useState(null);
   const precificaRef = useRef(null);
+  const pricingAnchorRef = useRef(null);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const openPricingModal = useCallback((anchorEl = null) => {
+    pricingAnchorRef.current = anchorEl ?? precificaRef.current;
+    setPricingOpen(true);
+  }, []);
 
   /** ID técnico completo (ex.: MLB…) — útil para suporte e integrações. */
   const handleCopyListingId = useCallback(async () => {
@@ -2013,7 +2039,7 @@ function AdsCatalogRow({
               aria-label="Abrir Precificação Inteligente S7"
               onClick={(e) => {
                 e.stopPropagation();
-                setPricingOpen(true);
+                openPricingModal(precificaRef.current);
               }}
             >
               <img
@@ -2183,13 +2209,13 @@ function AdsCatalogRow({
           </div>
         </div>
         <div className="products-catalog__cell anuncios-catalog__cell--minimal-sell">
-          <AdsMinimalSellColumn row={row} onInformSku={onInformSku} />
+          <AdsMinimalSellColumn row={row} onInformSku={onInformSku} onOpenPricing={openPricingModal} />
         </div>
       </div>
         <AdsPricingIntelligenceModal
           row={row}
           open={pricingOpen}
-          anchorRef={precificaRef}
+          anchorRef={pricingAnchorRef}
           onClose={() => setPricingOpen(false)}
           onApplied={onListingsRefresh}
         />
@@ -2229,7 +2255,7 @@ function AdsCatalogRow({
           aria-label="Abrir Precificação Inteligente S7"
           onClick={(e) => {
             e.stopPropagation();
-            setPricingOpen(true);
+            openPricingModal(precificaRef.current);
           }}
         >
           <img
@@ -2441,7 +2467,7 @@ function AdsCatalogRow({
     <AdsPricingIntelligenceModal
       row={row}
       open={pricingOpen}
-      anchorRef={precificaRef}
+      anchorRef={pricingAnchorRef}
       onClose={() => setPricingOpen(false)}
       onApplied={onListingsRefresh}
     />

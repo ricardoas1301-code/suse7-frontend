@@ -2752,10 +2752,51 @@
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar {
   display: flex;
   justify-content: flex-start;
+  align-items: center;
+  gap: calc(8px * var(--raiox-ml-calc-scale));
   align-self: stretch;
   width: 100%;
   margin-bottom: calc(12px * var(--raiox-ml-calc-scale));
   flex-shrink: 0;
+}
+
+/* Botão de precificação no toolbar do comparativo (usa o mesmo ícone do catálogo). */
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(27px * var(--raiox-ml-calc-scale));
+  height: calc(27px * var(--raiox-ml-calc-scale));
+  padding: 0;
+  border-radius: calc(8px * var(--raiox-ml-calc-scale));
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn:hover {
+  filter: brightness(1.05);
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn:active {
+  transform: scale(0.98);
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn:focus-visible {
+  outline: 2px solid var(--s7-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
 }
 
 /* Botão “Ver comparativo”: um passo menor que o texto dos cards (só este controle). */
