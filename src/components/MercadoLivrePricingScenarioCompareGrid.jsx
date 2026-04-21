@@ -13,13 +13,36 @@ import {
   buildOrderedScenarioRows,
   cardHeadingLabel,
   formatScenarioVigenciaLine,
+  resolveRaioxListingBadge,
+  resolveSaleXrayArticleKey,
+  shouldSaleXrayDebugTrace,
 } from "./mercadoLivrePricingScenarioCompareShared.js";
 
 /**
  * @param {{ scenarios: unknown[] }} props
  */
 export function MercadoLivrePricingScenarioCompareGrid({ scenarios }) {
-  const rows = useMemo(() => buildOrderedScenarioRows(scenarios), [scenarios]);
+  const rows = useMemo(() => {
+    const built = buildOrderedScenarioRows(scenarios);
+    if (shouldSaleXrayDebugTrace(scenarios)) {
+      console.info("[SALE_XRAY_DEBUG][RENDER_INPUT]", {
+        total_cards: built.length,
+        cards: built.map(({ scenario: card }) => {
+          const c = card && typeof card === "object" ? /** @type {Record<string, unknown>} */ (card) : {};
+          const sx = c.sale_xray_pricing != null && typeof c.sale_xray_pricing === "object" ? /** @type {Record<string, unknown>} */ (c.sale_xray_pricing) : null;
+          const pr = c.pricing != null && typeof c.pricing === "object" ? /** @type {Record<string, unknown>} */ (c.pricing) : null;
+          return {
+            scenario_key: c.scenario_key ?? c.scenario_id ?? null,
+            scenario_type: c.scenario_type ?? null,
+            ux_group: c._sale_xray_ux_group != null ? String(c._sale_xray_ux_group) : null,
+            promotion_name: c.promotion_name ?? null,
+            subsidy_text: sx?.subsidy_text ?? pr?.subsidy_text ?? c._sale_xray_subsidy_text ?? null,
+          };
+        }),
+      });
+    }
+    return built;
+  }, [scenarios]);
 
   return (
     <div
@@ -29,12 +52,9 @@ export function MercadoLivrePricingScenarioCompareGrid({ scenarios }) {
       aria-label="Comparativo de cenários Mercado Livre"
     >
       <div className="s7-ml-scenario-compare__grid s7-ml-scenario-compare__grid--comfortable">
-        {rows.map(({ scenario, group }) => {
-          const key =
-            resolveMlScenarioTabId(scenario) ||
-            `${group}-${cardHeadingLabel(scenario)}-${String(
-              /** @type {Record<string, unknown>} */ (scenario).scenario_id ?? "",
-            )}`;
+        {rows.map(({ scenario, group }, rowIndex) => {
+          const badgeInfo = resolveRaioxListingBadge(scenario);
+          const reactKey = resolveSaleXrayArticleKey(scenario, rowIndex);
           const res =
             /** @type {Record<string, unknown>} */ (scenario).result != null &&
             typeof /** @type {Record<string, unknown>} */ (scenario).result === "object"
@@ -43,7 +63,12 @@ export function MercadoLivrePricingScenarioCompareGrid({ scenarios }) {
                 )
               : null;
           const profitRaw = res?.profit_brl != null ? String(res.profit_brl).trim() : "";
-          const vigenciaLine = formatScenarioVigenciaLine(scenario);
+          const sc = /** @type {Record<string, unknown>} */ (scenario);
+          const vigenciaContract =
+            sc._sale_xray_vigencia_text != null && String(sc._sale_xray_vigencia_text).trim() !== ""
+              ? String(sc._sale_xray_vigencia_text).trim()
+              : null;
+          const vigenciaLine = vigenciaContract ?? formatScenarioVigenciaLine(scenario);
 
           const cardClass = [
             "s7-ml-scenario-compare__card",
@@ -56,7 +81,7 @@ export function MercadoLivrePricingScenarioCompareGrid({ scenarios }) {
 
           return (
             <article
-              key={key}
+              key={reactKey}
               className={cardClass}
               data-scenario-key={resolveMlScenarioTabId(scenario) || "baseline"}
               data-scenario-ux-group={group}
@@ -77,7 +102,9 @@ export function MercadoLivrePricingScenarioCompareGrid({ scenarios }) {
                   ) : null}
                   {group === "available" ? (
                     <span className="s7-ml-scenario-compare__badge s7-ml-scenario-compare__badge--available">
-                      Disponível
+                      {badgeInfo.label != null && String(badgeInfo.label).trim() !== ""
+                        ? badgeInfo.label
+                        : "Disponível"}
                     </span>
                   ) : null}
                 </div>

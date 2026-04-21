@@ -6,6 +6,7 @@
 import { useId, useState } from "react";
 import { formatCatalogBRL } from "../utils/productCatalogRow";
 import S7Tooltip from "./ui/S7Tooltip";
+import { cardHeadingLabel } from "./mercadoLivrePricingScenarioCompareShared.js";
 
 const DASH = "—";
 
@@ -97,16 +98,16 @@ export function MercadoLivreScenarioTabsLayout({ tabs, children }) {
 
 /**
  * Abas verticais à esquerda: baseline + 1 botão por promoção (`scenario_id` = chave React).
- * Texto truncado na aba; nome completo no hover via S7Tooltip (DS, horizontal).
+ * Estado normal: trilho estreito + ellipsis; hover: painel à esquerda com o nome completo.
  * @param {{
- *   scenarios: { scenario_id?: string; promotion_name?: string | null; promotion_id?: string | null; key?: string | null }[];
+ *   scenarios: { scenario_id: string; promotion_name?: string | null }[];
  *   activeId: string;
  *   onChange: (id: string) => void;
  * }} props
  */
 export function MercadoLivrePricingScenarioTabs({ scenarios, activeId, onChange }) {
   if (!Array.isArray(scenarios) || scenarios.length === 0) return null;
-  const baselineLabel = "Preço normal";
+  const baselineLabel = "Sem promoção";
   return (
     <div
       className="anuncios-ml-scenarios-tabs anuncios-ml-scenarios-tabs--vertical anuncios-ml-scenarios-tabs--external"
@@ -114,52 +115,47 @@ export function MercadoLivrePricingScenarioTabs({ scenarios, activeId, onChange 
       aria-label="Cenários de precificação"
     >
       <div className="anuncios-ml-scenarios-tabs__slot">
-        <S7Tooltip content={baselineLabel} placement="bottom-start" offset={6} className="anuncios-ml-scenarios-tabs__tip-host">
-          <span className="anuncios-ml-scenarios-tabs__tip-anchor">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeId === "baseline"}
-              aria-label={baselineLabel}
-              className={
-                activeId === "baseline"
-                  ? "anuncios-ml-scenarios-tabs__btn anuncios-ml-scenarios-tabs__btn--vertical anuncios-ml-scenarios-tabs__btn--active"
-                  : "anuncios-ml-scenarios-tabs__btn anuncios-ml-scenarios-tabs__btn--vertical"
-              }
-              onClick={() => onChange("baseline")}
-            >
-              <span className="anuncios-ml-scenarios-tabs__label">{baselineLabel}</span>
-            </button>
-          </span>
-        </S7Tooltip>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeId === "baseline"}
+          title={baselineLabel}
+          className={
+            activeId === "baseline"
+              ? "anuncios-ml-scenarios-tabs__btn anuncios-ml-scenarios-tabs__btn--vertical anuncios-ml-scenarios-tabs__btn--active"
+              : "anuncios-ml-scenarios-tabs__btn anuncios-ml-scenarios-tabs__btn--vertical"
+          }
+          onClick={() => onChange("baseline")}
+        >
+          <span className="anuncios-ml-scenarios-tabs__label">{baselineLabel}</span>
+        </button>
+        <span className="anuncios-ml-scenarios-tabs__flyout" aria-hidden>
+          {baselineLabel}
+        </span>
       </div>
-      {scenarios.map((s, idx) => {
-        const id = resolveMlScenarioTabId(s) || `promo-${idx}`;
-        const label =
-          s.promotion_name != null && String(s.promotion_name).trim() !== ""
-            ? String(s.promotion_name).trim()
-            : id;
+      {scenarios.map((s) => {
+        const id = String(s.scenario_id);
+        const label = cardHeadingLabel(s) || id;
         const active = activeId === id;
         return (
           <div key={id} className="anuncios-ml-scenarios-tabs__slot">
-            <S7Tooltip content={label} placement="bottom-start" offset={6} className="anuncios-ml-scenarios-tabs__tip-host">
-              <span className="anuncios-ml-scenarios-tabs__tip-anchor">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  aria-label={label}
-                  className={
-                    active
-                      ? "anuncios-ml-scenarios-tabs__btn anuncios-ml-scenarios-tabs__btn--vertical anuncios-ml-scenarios-tabs__btn--active"
-                      : "anuncios-ml-scenarios-tabs__btn anuncios-ml-scenarios-tabs__btn--vertical"
-                  }
-                  onClick={() => onChange(id)}
-                >
-                  <span className="anuncios-ml-scenarios-tabs__label">{label}</span>
-                </button>
-              </span>
-            </S7Tooltip>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={active}
+              title={label}
+              className={
+                active
+                  ? "anuncios-ml-scenarios-tabs__btn anuncios-ml-scenarios-tabs__btn--vertical anuncios-ml-scenarios-tabs__btn--active"
+                  : "anuncios-ml-scenarios-tabs__btn anuncios-ml-scenarios-tabs__btn--vertical"
+              }
+              onClick={() => onChange(id)}
+            >
+              <span className="anuncios-ml-scenarios-tabs__label">{label}</span>
+            </button>
+            <span className="anuncios-ml-scenarios-tabs__flyout" aria-hidden>
+              {label}
+            </span>
           </div>
         );
       })}
@@ -256,14 +252,73 @@ export function MercadoLivrePricingScenarioRevenueSection({
     scenario.marketplace != null && typeof scenario.marketplace === "object"
       ? /** @type {Record<string, unknown>} */ (scenario.marketplace)
       : {};
+  const sx =
+    scenario.sale_xray_pricing != null && typeof scenario.sale_xray_pricing === "object"
+      ? /** @type {Record<string, unknown>} */ (scenario.sale_xray_pricing)
+      : null;
+  const prFlat =
+    scenario.pricing != null && typeof scenario.pricing === "object"
+      ? /** @type {Record<string, unknown>} */ (scenario.pricing)
+      : null;
+  const hasFeeSubsidy =
+    scenario.is_baseline !== true &&
+    (sx?.has_fee_subsidy === true || prFlat?.has_fee_subsidy === true || m.has_fee_subsidy === true);
+
+  /** Contrato backend: tarifa cobrada real (NP API) — habilita bloco teórico × cobrada × redução. */
+  const chargedFeeRaw =
+    m.charged_fee_brl != null && String(m.charged_fee_brl).trim() !== ""
+      ? String(m.charged_fee_brl).trim()
+      : "";
+  const chargedFeeLabel =
+    m.charged_fee_label != null && String(m.charged_fee_label).trim() !== ""
+      ? String(m.charged_fee_label).trim()
+      : "Tarifa cobrada pelo Mercado Livre";
+  const hasChargedFeeFromApi = chargedFeeRaw !== "";
+
   const feeSub = buildTariffSubtitleFromScenarioMarketplace({
     listingTypeLabel: m.listing_type_label != null ? String(m.listing_type_label) : null,
     saleFeePercent: m.sale_fee_percent != null ? String(m.sale_fee_percent) : null,
   });
-  const feeAmt =
-    m.sale_fee_amount_brl != null && String(m.sale_fee_amount_brl).trim() !== ""
-      ? formatNegativeBrlFromApiString(String(m.sale_fee_amount_brl)) ?? DASH
-      : DASH;
+  const feeGrossRaw =
+    sx?.fee_amount_gross_brl != null && String(sx.fee_amount_gross_brl).trim() !== ""
+      ? String(sx.fee_amount_gross_brl).trim()
+      : m.promotion_fee_gross_brl != null && String(m.promotion_fee_gross_brl).trim() !== ""
+        ? String(m.promotion_fee_gross_brl).trim()
+        : "";
+  const feeReductionRaw =
+    sx?.subsidy_ml_brl != null && String(sx.subsidy_ml_brl).trim() !== ""
+      ? String(sx.subsidy_ml_brl).trim()
+      : sx?.subsidy_amount_brl != null && String(sx.subsidy_amount_brl).trim() !== ""
+        ? String(sx.subsidy_amount_brl).trim()
+        : "";
+  const feeNetAfterRaw =
+    sx?.fee_amount_net_display_brl != null && String(sx.fee_amount_net_display_brl).trim() !== ""
+      ? String(sx.fee_amount_net_display_brl).trim()
+      : m.sale_fee_net_display_brl != null && String(m.sale_fee_net_display_brl).trim() !== ""
+        ? String(m.sale_fee_net_display_brl).trim()
+        : "";
+  const feeSinglePromo =
+    sx?.fee_amount_brl != null && String(sx.fee_amount_brl).trim() !== ""
+      ? String(sx.fee_amount_brl).trim()
+      : prFlat?.fee_amount_brl != null && String(prFlat.fee_amount_brl).trim() !== ""
+        ? String(prFlat.fee_amount_brl).trim()
+        : m.sale_fee_amount_brl != null && String(m.sale_fee_amount_brl).trim() !== ""
+          ? String(m.sale_fee_amount_brl).trim()
+          : "";
+  const feeDisplayRaw =
+    m.sale_fee_net_display_brl != null && String(m.sale_fee_net_display_brl).trim() !== ""
+      ? String(m.sale_fee_net_display_brl).trim()
+      : m.promotion_fee_net_brl != null && String(m.promotion_fee_net_brl).trim() !== ""
+        ? String(m.promotion_fee_net_brl).trim()
+        : m.sale_fee_amount_brl != null && String(m.sale_fee_amount_brl).trim() !== ""
+          ? String(m.sale_fee_amount_brl).trim()
+          : "";
+  const feeAmtSingleLine =
+    scenario.is_baseline !== true && !hasFeeSubsidy && feeSinglePromo !== ""
+      ? formatNegativeBrlFromApiString(feeSinglePromo) ?? DASH
+      : feeDisplayRaw !== ""
+        ? formatNegativeBrlFromApiString(feeDisplayRaw) ?? DASH
+        : DASH;
   const shipRaw = m.shipping_cost_amount_brl != null ? String(m.shipping_cost_amount_brl) : "";
   const shipVal = shipRaw !== "" ? formatNegativeBrlFromApiString(shipRaw) ?? DASH : DASH;
   const sale =
@@ -274,6 +329,25 @@ export function MercadoLivrePricingScenarioRevenueSection({
     m.marketplace_payout_amount_brl != null && String(m.marketplace_payout_amount_brl).trim() !== ""
       ? formatBrlFromApiString(String(m.marketplace_payout_amount_brl))
       : DASH;
+
+  const marketplaceParticipationAmt =
+    m.marketplace_participation_amount_brl != null && String(m.marketplace_participation_amount_brl).trim() !== ""
+      ? formatBrlFromApiString(String(m.marketplace_participation_amount_brl))
+      : null;
+  const marketplaceParticipationLabel =
+    m.marketplace_participation_label != null && String(m.marketplace_participation_label).trim() !== ""
+      ? String(m.marketplace_participation_label).trim()
+      : null;
+  const marketplaceBenefitAmt =
+    m.marketplace_benefit_amount_brl != null && String(m.marketplace_benefit_amount_brl).trim() !== ""
+      ? formatBrlFromApiString(String(m.marketplace_benefit_amount_brl))
+      : null;
+  const marketplaceBenefitLabel =
+    m.marketplace_benefit_label != null && String(m.marketplace_benefit_label).trim() !== ""
+      ? String(m.marketplace_benefit_label).trim()
+      : "Subsídio do marketplace";
+  const benefitLineAmt = marketplaceParticipationAmt ?? marketplaceBenefitAmt;
+  const benefitLineLabel = marketplaceParticipationLabel ?? marketplaceBenefitLabel;
 
   const shipCtxLabel =
     m.shipping_context != null ? shippingContextDisplayLabel(String(m.shipping_context)) : null;
@@ -293,6 +367,22 @@ export function MercadoLivrePricingScenarioRevenueSection({
   /** Baseline = preço de tabela; abas promocionais = só o efetivo da oferta (sem repetir “original”). */
   const saleLineLabel = scenario.is_baseline === true ? "Valor de venda" : "Valor de venda na promoção";
 
+  const saleXrayDisc =
+    scenario._sale_xray_discount_text != null && String(scenario._sale_xray_discount_text).trim() !== ""
+      ? String(scenario._sale_xray_discount_text).trim()
+      : null;
+  const tSubsSx =
+    sx?.subsidy_text != null && String(sx.subsidy_text).trim() !== "" ? String(sx.subsidy_text).trim() : null;
+  const tSubsPr =
+    prFlat?.subsidy_text != null && String(prFlat.subsidy_text).trim() !== ""
+      ? String(prFlat.subsidy_text).trim()
+      : null;
+  const tSubsLegacy =
+    scenario._sale_xray_subsidy_text != null && String(scenario._sale_xray_subsidy_text).trim() !== ""
+      ? String(scenario._sale_xray_subsidy_text).trim()
+      : null;
+  const saleXraySubsidyTxt = tSubsSx ?? tSubsPr ?? tSubsLegacy ?? null;
+
   return (
     <div className="anuncios-sell-popover__section">
         <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
@@ -301,12 +391,56 @@ export function MercadoLivrePricingScenarioRevenueSection({
             <span>{saleLineLabel}</span>
             <strong>{sale}</strong>
           </div>
+          {scenario.is_baseline !== true && saleXrayDisc != null ? (
+            <div className="anuncios-sell-popover__line">
+              <span>Desconto na promoção</span>
+              <strong>{saleXrayDisc}</strong>
+            </div>
+          ) : null}
         </div>
         <div className="anuncios-sell-popover__block">
-          <div className="anuncios-sell-popover__line">
-            <span>Tarifa de venda</span>
-            <strong>{feeAmt}</strong>
-          </div>
+          {scenario.is_baseline !== true && hasChargedFeeFromApi && feeGrossRaw !== "" ? (
+            <>
+              <div className="anuncios-sell-popover__line">
+                <span>Tarifa de venda</span>
+                <strong>{formatNegativeBrlFromApiString(feeGrossRaw) ?? DASH}</strong>
+              </div>
+              <div className="anuncios-sell-popover__line">
+                <span>{chargedFeeLabel}</span>
+                <strong>{formatNegativeBrlFromApiString(chargedFeeRaw) ?? DASH}</strong>
+              </div>
+              {hasFeeSubsidy && feeReductionRaw !== "" ? (
+                <div className="anuncios-sell-popover__line">
+                  <span>Redução da tarifa</span>
+                  <strong>+ {formatBrlFromApiString(feeReductionRaw)}</strong>
+                </div>
+              ) : null}
+              {sx?.show_fee_subsidy_breakdown === true &&
+              Array.isArray(sx?.subsidy_ml_breakdown_brl) &&
+              /** @type {unknown[]} */ (sx.subsidy_ml_breakdown_brl).length > 1
+                ? /** @type {unknown[]} */ (sx.subsidy_ml_breakdown_brl).map((part, idx) => (
+                    <div
+                      key={`sx-brk-${idx}`}
+                      className="anuncios-sell-popover__line anuncios-sell-popover__muted"
+                    >
+                      <span>Redução da tarifa (detalhe)</span>
+                      <strong>+ {formatBrlFromApiString(String(part))}</strong>
+                    </div>
+                  ))
+                : null}
+              {hasFeeSubsidy && feeNetAfterRaw !== "" ? (
+                <div className="anuncios-sell-popover__line">
+                  <span>Tarifa atualizada</span>
+                  <strong>{formatNegativeBrlFromApiString(feeNetAfterRaw) ?? DASH}</strong>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="anuncios-sell-popover__line">
+              <span>Tarifa de venda</span>
+              <strong>{feeAmtSingleLine}</strong>
+            </div>
+          )}
           {feeSub != null ? <div className="anuncios-sell-popover__muted">{feeSub}</div> : null}
         </div>
         <div className="anuncios-sell-popover__block">
@@ -324,6 +458,14 @@ export function MercadoLivrePricingScenarioRevenueSection({
             </div>
           ) : null}
         </div>
+        {benefitLineAmt != null && !hasFeeSubsidy ? (
+          <div className="anuncios-sell-popover__block">
+            <div className="anuncios-sell-popover__line">
+              <span>{benefitLineLabel}</span>
+              <strong>+ {benefitLineAmt}</strong>
+            </div>
+          </div>
+        ) : null}
         {promoSubMl != null || sellerDisc != null ? (
           <div className="anuncios-sell-popover__block">
             {promoSubMl != null ? (
@@ -346,6 +488,14 @@ export function MercadoLivrePricingScenarioRevenueSection({
             <strong>{receive}</strong>
           </div>
         </div>
+        {scenario.is_baseline !== true && saleXraySubsidyTxt != null && !hasFeeSubsidy ? (
+          <div className="anuncios-sell-popover__block">
+            <div className="anuncios-sell-popover__line">
+              <span>Subsídio (ML)</span>
+              <strong className="anuncios-sell-popover__muted">{saleXraySubsidyTxt}</strong>
+            </div>
+          </div>
+        ) : null}
         {showSubsidy && scenario.is_baseline !== true ? (
           <MercadoLivrePricingScenarioSubsidyCollapsible scenario={scenario} />
         ) : null}

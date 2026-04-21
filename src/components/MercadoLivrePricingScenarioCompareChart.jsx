@@ -35,7 +35,7 @@ export function MercadoLivrePricingScenarioCompareChart({ scenarios }) {
   const rows = useMemo(() => buildOrderedScenarioRows(scenarios), [scenarios]);
 
   const profitSeries = useMemo(() => {
-    return rows.map(({ scenario, group }) => {
+    return rows.map(({ scenario, group }, idx) => {
       const r = /** @type {Record<string, unknown>} */ (scenario);
       const res =
         r.result != null && typeof r.result === "object"
@@ -43,8 +43,9 @@ export function MercadoLivrePricingScenarioCompareChart({ scenarios }) {
           : null;
       const raw = res?.profit_brl != null ? String(res.profit_brl) : "";
       const n = parseScaleOnly(raw);
+      const st = r.starts_at != null ? String(r.starts_at) : "";
       return {
-        key: String(r.scenario_id ?? r.promotion_id ?? cardHeadingLabel(scenario)),
+        key: `${idx}-${String(r.scenario_id ?? r.promotion_id ?? "")}-${st}-${cardHeadingLabel(scenario)}`,
         shortLabel: cardHeadingLabel(scenario),
         group,
         value: n,
@@ -54,7 +55,7 @@ export function MercadoLivrePricingScenarioCompareChart({ scenarios }) {
   }, [rows]);
 
   const marginSeries = useMemo(() => {
-    return rows.map(({ scenario, group }) => {
+    return rows.map(({ scenario, group }, idx) => {
       const r = /** @type {Record<string, unknown>} */ (scenario);
       const res =
         r.result != null && typeof r.result === "object"
@@ -62,8 +63,9 @@ export function MercadoLivrePricingScenarioCompareChart({ scenarios }) {
           : null;
       const raw = res?.margin_pct != null ? String(res.margin_pct) : "";
       const n = parseScaleOnly(raw);
+      const st = r.starts_at != null ? String(r.starts_at) : "";
       return {
-        key: String(r.scenario_id ?? r.promotion_id ?? cardHeadingLabel(scenario)),
+        key: `${idx}-${String(r.scenario_id ?? r.promotion_id ?? "")}-${st}-${cardHeadingLabel(scenario)}`,
         shortLabel: cardHeadingLabel(scenario),
         group,
         value: n,

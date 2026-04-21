@@ -33,7 +33,12 @@ import AnunciosSyncModal from "./AnunciosSyncModal.jsx";
 import AdsPricingIntelligenceModal from "./AdsPricingIntelligenceModal.jsx";
 import { MercadoLivrePricingScenarioCompareChart } from "./MercadoLivrePricingScenarioCompareChart.jsx";
 import { MercadoLivrePricingScenarioComparePanel } from "./MercadoLivrePricingScenarioComparePanel.jsx";
-import { filterScenariosForRaioxDisplay } from "./mercadoLivrePricingScenarioCompareShared.js";
+import { RaioxVendaTesteModal } from "./RaioxVendaTesteModal.jsx";
+import {
+  buildRaioxScenariosFromSaleXrayModalContract,
+  enrichRaioxScenariosWithListingPromotionMetadata,
+  mergeListingGridRowIntoMlScenarios,
+} from "./mercadoLivrePricingScenarioCompareShared.js";
 import precificaS7Icon from "../assets/precifica-s7-icon.png";
 import raioxTriggerIcon from "../assets/raiox-trigger-icon.png";
 import "./Products.css";
@@ -779,6 +784,8 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
   const [raioxOpen, setRaioxOpen] = useState(false);
   /** Mini modal só com o gráfico comparativo (Raio-x ML). */
   const [raioxChartOpen, setRaioxChartOpen] = useState(false);
+  /** Modal experimental: lista bruta GET /seller-promotions/items (mesma fonte da grid ML). */
+  const [raioxTesteOpen, setRaioxTesteOpen] = useState(false);
   const raioxChartMiniRef = useRef(/** @type {HTMLDivElement | null} */ (null));
 
   /** Posição do shell Raio-x (fixed): centralizado na viewport. */
@@ -855,6 +862,9 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
 
   useEffect(() => {
     if (!raioxOpen) return;
+    // Evita renderizar cenários de outro anúncio enquanto o fetch atual ainda não chegou.
+    setMlScenariosPayload(null);
+    setMlScenariosError(null);
     if (row.marketplaceRaw !== "mercado_livre" || !row.externalId || String(row.externalId).trim() === "") {
       return;
     }
@@ -863,7 +873,11 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
       setMlScenariosLoading(true);
       setMlScenariosError(null);
       try {
-        const url = buildApiUrl("/api/ml/listings/pricing-scenarios");
+        const url = buildApiUrl("/api/ml/listings/sale-xray-modal");
+        console.log("[SALE_XRAY] calling sale-xray-modal", {
+          listingExternalId: row.externalId,
+          url: url ?? null,
+        });
         if (!url) {
           if (!cancelled) {
             setMlScenariosError("API não configurada (VITE_API_BASE_URL).");
@@ -895,6 +909,16 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
           }
           return;
         }
+        if (data.from_sale_xray_modal !== true || data.sale_xray_modal == null || typeof data.sale_xray_modal !== "object") {
+          if (!cancelled) {
+            setMlScenariosError(
+              "Resposta do Raio-x inválida: esperado contrato sale_xray_modal (from_sale_xray_modal). Verifique o backend.",
+            );
+            setMlScenariosPayload(null);
+          }
+          return;
+        }
+        console.log("[SALE_XRAY] response", data);
         if (!cancelled) {
           setMlScenariosPayload(data);
         }
@@ -920,18 +944,20 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
 
   const mlScenariosForCompare = useMemo(() => {
     if (!scenarioMode || !mlScenariosPayload || typeof mlScenariosPayload !== "object") return [];
-    const all = Array.isArray(mlScenariosPayload.scenarios) ? mlScenariosPayload.scenarios : [];
-    if (all.length > 0) return all;
-    const b = mlScenariosPayload.baseline;
-    return b != null && typeof b === "object" ? [b] : [];
-  }, [scenarioMode, mlScenariosPayload]);
+    if (mlScenariosPayload.from_sale_xray_modal !== true) return [];
+    const fromContract = buildRaioxScenariosFromSaleXrayModalContract(mlScenariosPayload);
+    if (fromContract == null || fromContract.length === 0) return [];
+    const merged = mergeListingGridRowIntoMlScenarios(fromContract, row);
+    return enrichRaioxScenariosWithListingPromotionMetadata(merged, mlScenariosPayload, row);
+  }, [scenarioMode, mlScenariosPayload, row]);
 
   const hasMlScenarioCompare = mlScenariosForCompare.length > 0;
 
-  const mlScenariosForRaioxDisplay = useMemo(
-    () => filterScenariosForRaioxDisplay(mlScenariosForCompare),
-    [mlScenariosForCompare],
-  );
+  /** Só contrato `sale-xray-modal` — sem filtro legado nem fallback para `scenarios` canônico. */
+  const mlScenariosForRaioxDisplay = useMemo(() => {
+    if (!scenarioMode || !mlScenariosPayload || typeof mlScenariosPayload !== "object") return [];
+    return mlScenariosForCompare;
+  }, [scenarioMode, mlScenariosPayload, mlScenariosForCompare]);
 
   /** Só um bloco (ex.: só “Preço normal”) — mais respiro abaixo da pílula ML no shell. */
   const raioxMlBaselineOnlyLayout = hasMlScenarioCompare && mlScenariosForRaioxDisplay.length === 1;
@@ -1197,11 +1223,13 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
     row.wholesalePriceBrl != null &&
     String(row.wholesalePriceBrl).trim() !== "";
 
-  /** ML com external id: evita flash legado → API enquanto pricing-scenarios carrega. */
+  /** ML com external id: flash só até o POST /sale-xray-modal concluir. */
   const useMlScenarioRaiox =
     row.marketplaceRaw === "mercado_livre" &&
     row.externalId != null &&
     String(row.externalId).trim() !== "";
+  const mlScenarioContractUnavailable =
+    useMlScenarioRaiox && !mlScenariosLoading && !hasMlScenarioCompare;
 
   /** Subtítulo da tarifa: tipo de anúncio + % (campos consolidados da grid / health — só formatação). */
   const feeSubTitle = buildListingTypeAndTariffSubtitle(row);
@@ -1341,21 +1369,31 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
                         <S7Icon name="reports" size={15} strokeWidth={1.75} />
                         <span>Ver comparativo</span>
                       </button>
+                      <span className="anuncios-raiox-compare__toolbar-meta">
+                        {`#${row.externalId && String(row.externalId).trim() !== "" ? String(row.externalId).trim() : DASH} | SKU ${
+                          row.sku && String(row.sku).trim() !== "" ? String(row.sku).trim() : DASH
+                        }`}
+                      </span>
                     </div>
                     <MercadoLivrePricingScenarioComparePanel
                       layout="raiox"
                       showInlineChart={false}
+                      debugTag="raiox_venda"
                       scenarios={mlScenariosForRaioxDisplay}
                     />
                   </div>
                 ) : (
                   <p className="anuncios-sell-popover__muted" role="status">
-                    Nenhum cenário ativo no momento. Preço normal e promoções em que você participa aparecem aqui
-                    quando aplicável.
+                    Nenhum cenário disponível no momento. Preço normal e promoções ativas/programadas aparecem
+                    aqui quando aplicável.
                   </p>
                 )}
               </div>
-            ) : useMlScenarioRaiox && mlScenariosLoading ? null : (
+            ) : useMlScenarioRaiox ? (
+              <p className="anuncios-sell-popover__muted" role="status">
+                Cenários de precificação indisponíveis para este anúncio. Atualize e tente novamente.
+              </p>
+            ) : (
               <div className="anuncios-sell-popover__section">
                 <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
                 {showModalProductValue || showModalPromoPrice ? (
@@ -1462,7 +1500,7 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
               </div>
             )}
 
-            {!hasMlScenarioCompare ? (
+            {!hasMlScenarioCompare && !useMlScenarioRaiox ? (
             <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future">
               <h4 className="anuncios-sell-popover__section-title">Custos internos</h4>
               {block2Mode === "no_product" ? (
@@ -1545,7 +1583,7 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
             </div>
             ) : null}
 
-            {!hasMlScenarioCompare ? (
+            {!hasMlScenarioCompare && !useMlScenarioRaiox ? (
             <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future">
               <h4 className="anuncios-sell-popover__section-title">Resultado</h4>
               {block3Mode === "ok" && res != null ? (
@@ -1676,8 +1714,7 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
 
   const raioxCardBody = (
     <>
-      <h3 className="anuncios-sell-popover__title">Raio-x da venda</h3>
-      <p className="anuncios-sell-popover__subtitle">Valores unitários por venda neste anúncio</p>
+      <h3 className="anuncios-sell-popover__title">{row.adTitle && String(row.adTitle).trim() !== "" ? row.adTitle : "Raio-x da venda"}</h3>
       {mlScenariosLoading ? (
         <p className="anuncios-sell-popover__muted" role="status">
           Carregando cenários de precificação…
@@ -1686,6 +1723,11 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
       {mlScenariosError != null && String(mlScenariosError).trim() !== "" ? (
         <p className="anuncios-sell-popover__raiox-warn" role="alert">
           {String(mlScenariosError)}
+        </p>
+      ) : null}
+      {mlScenarioContractUnavailable ? (
+        <p className="anuncios-sell-popover__raiox-warn" role="status">
+          Contrato canônico de cenários ausente. O Raio-x ML não exibe fallback local.
         </p>
       ) : null}
       {hasMlScenarioCompare ? (
@@ -1717,7 +1759,17 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
             aria-haspopup="dialog"
             onClick={(e) => {
               e.stopPropagation();
-              setRaioxOpen((v) => !v);
+              setRaioxOpen((v) => {
+                if (!v) {
+                  console.log("DEBUG_TRIGGER", {
+                    scenarioMode: true,
+                    marketplaceRaw: row?.marketplaceRaw,
+                    marketplaceSlug: row?.marketplaceSlug,
+                    externalId: row?.externalId,
+                  });
+                }
+                return !v;
+              });
             }}
           >
             <img
@@ -1729,7 +1781,27 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
               decoding="async"
             />
           </button>
+          {row.marketplaceRaw === "mercado_livre" && row.externalId != null && String(row.externalId).trim() !== "" ? (
+            <button
+              type="button"
+              className="anuncios-raiox-teste-trigger"
+              aria-label="Abrir Raio-x teste (lista seller-promotions/items, mesma fonte da grid ML)"
+              onClick={(e) => {
+                e.stopPropagation();
+                setRaioxTesteOpen(true);
+              }}
+            >
+              Raio-x teste
+            </button>
+          ) : null}
         </span>
+        <RaioxVendaTesteModal
+          open={raioxTesteOpen}
+          onClose={() => setRaioxTesteOpen(false)}
+          listingExternalId={row.externalId}
+          marketplaceRaw={row.marketplaceRaw}
+          productTitle={row.adTitle}
+        />
         {raioxOpen && typeof document !== "undefined"
           ? createPortal(
               <>

@@ -15,6 +15,11 @@ import S7Icon from "./ui/S7Icon";
 import S7Input from "./ui/S7Input";
 import { MercadoLivrePricingScenarioCompareChart } from "./MercadoLivrePricingScenarioCompareChart.jsx";
 import { MercadoLivrePricingScenarioCompareGrid } from "./MercadoLivrePricingScenarioCompareGrid.jsx";
+import {
+  buildRaioxScenariosFromSaleXrayModalContract,
+  enrichRaioxScenariosWithListingPromotionMetadata,
+  mergeListingGridRowIntoMlScenarios,
+} from "./mercadoLivrePricingScenarioCompareShared.js";
 
 /** Evita import circular com Anuncios.jsx (export de ListingCoverThumb). */
 function PricingCoverThumb({ url }) {
@@ -191,6 +196,7 @@ function pickSimulatedShippingLine(np, row) {
 /** @param {Record<string, unknown> | null} np */
 function formatSimulatedNetReceive(np) {
   if (!np || typeof np !== "object") return DASH;
+  /** Canônicos primeiro; não priorizar `marketplace_payout` (legado / pode divergir do repasse oficial). */
   const raw =
     np.marketplace_payout_amount_brl ?? np.marketplace_payout_amount ?? np.net_proceeds_amount ?? null;
   if (raw != null && String(raw).trim() !== "") return formatBrlFromApiString(String(raw));
@@ -356,6 +362,9 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
 
   useEffect(() => {
     if (!open) return;
+    // Evita flash de cenários anteriores ao trocar de anúncio no modal.
+    setMlScenariosPayload(null);
+    setMlScenariosError(null);
     if (row.marketplaceRaw !== "mercado_livre" || !row.externalId || String(row.externalId).trim() === "") {
       return;
     }
@@ -364,7 +373,11 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
       setMlScenariosLoading(true);
       setMlScenariosError(null);
       try {
-        const url = buildApiUrl("/api/ml/listings/pricing-scenarios");
+        const url = buildApiUrl("/api/ml/listings/sale-xray-modal");
+        console.log("[SALE_XRAY] calling sale-xray-modal", {
+          listingExternalId: row.externalId,
+          url: url ?? null,
+        });
         if (!url) {
           if (!cancelled) {
             setMlScenariosError("API não configurada (VITE_API_BASE_URL).");
@@ -396,6 +409,16 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
           }
           return;
         }
+        if (data.from_sale_xray_modal !== true || data.sale_xray_modal == null || typeof data.sale_xray_modal !== "object") {
+          if (!cancelled) {
+            setMlScenariosError(
+              "Resposta do Raio-x inválida: esperado contrato sale_xray_modal (from_sale_xray_modal). Verifique o backend.",
+            );
+            setMlScenariosPayload(null);
+          }
+          return;
+        }
+        console.log("[SALE_XRAY] response", data);
         if (!cancelled) {
           setMlScenariosPayload(data);
         }
@@ -535,16 +558,21 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
   /** Lista exibida no comparativo: `scenarios` da API ou só `baseline` quando não houver array. */
   const mlScenariosForCompare = useMemo(() => {
     if (!scenarioMode || !mlScenariosPayload || typeof mlScenariosPayload !== "object") return [];
-    const all = Array.isArray(mlScenariosPayload.scenarios) ? mlScenariosPayload.scenarios : [];
-    if (all.length > 0) return all;
-    const b = mlScenariosPayload.baseline;
-    return b != null && typeof b === "object" ? [b] : [];
-  }, [scenarioMode, mlScenariosPayload]);
+    if (mlScenariosPayload.from_sale_xray_modal !== true) return [];
+    const fromContract = buildRaioxScenariosFromSaleXrayModalContract(mlScenariosPayload);
+    if (fromContract == null || fromContract.length === 0) return [];
+    const merged = mergeListingGridRowIntoMlScenarios(fromContract, row);
+    return enrichRaioxScenariosWithListingPromotionMetadata(merged, mlScenariosPayload, row);
+  }, [scenarioMode, mlScenariosPayload, row]);
 
   /** Cenários ML já trazem “Receita do marketplace”; não duplicar com o raio-x da simulação (`sim`). */
   const hideSimulatedMarketplaceRevenue = scenarioMode && mlScenariosForCompare.length > 0;
 
   const hasMlScenarioCompare = mlScenariosForCompare.length > 0;
+  const requireMlScenarioContract =
+    row.marketplaceRaw === "mercado_livre" &&
+    row.externalId != null &&
+    String(row.externalId).trim() !== "";
   mlCompareLayoutWideRef.current = hasMlScenarioCompare;
 
   if (!open || typeof document === "undefined") return null;
@@ -607,7 +635,7 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
 
   /** Com grid ML, “Resultado” da simulação só exibe Δ lucro / avisos (custos e lucro por cenário vêm dos cards). */
   const showSimResultadoSection =
-    !hasMlScenarioCompare ||
+    (!hasMlScenarioCompare && !requireMlScenarioContract) ||
     (block3Mode === "ok" &&
       simRes != null &&
       (sim?.comparison?.profit_delta_brl != null ||
@@ -628,7 +656,7 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
       ) : null}
       {!loading && sim ? (
         <>
-          {!hideSimulatedMarketplaceRevenue ? (
+          {!hideSimulatedMarketplaceRevenue && !requireMlScenarioContract ? (
             <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block">
               <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
               {showModalProductValue || showModalPromoPrice ? (
@@ -717,7 +745,7 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
             </div>
           ) : null}
 
-          {!hasMlScenarioCompare ? (
+          {!hasMlScenarioCompare && !requireMlScenarioContract ? (
           <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future anuncios-pricing-modal__raiox-block">
             <h4 className="anuncios-sell-popover__section-title">Custos internos</h4>
             {block2Mode === "no_product" ? (
@@ -813,7 +841,7 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
                     ))}
                   </ul>
                 ) : null}
-                {!hasMlScenarioCompare ? (
+                {!hasMlScenarioCompare && !requireMlScenarioContract ? (
                   <>
                     <div className="anuncios-sell-popover__block">
                       <div className="anuncios-sell-popover__line">
@@ -859,7 +887,7 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
                   </>
                 ) : null}
               </>
-            ) : !hasMlScenarioCompare ? (
+            ) : !hasMlScenarioCompare && !requireMlScenarioContract ? (
               <p className="anuncios-sell-popover__result-placeholder">
                 {simUi?.block3_message != null && String(simUi.block3_message).trim() !== ""
                   ? String(simUi.block3_message)
@@ -1050,6 +1078,11 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
               {mlScenariosError != null && String(mlScenariosError).trim() !== "" ? (
                 <p className="anuncios-pricing-modal__error" role="alert">
                   {String(mlScenariosError)}
+                </p>
+              ) : null}
+              {requireMlScenarioContract && !mlScenariosLoading && !hasMlScenarioCompare ? (
+                <p className="anuncios-pricing-modal__error" role="status">
+                  Contrato canônico de cenários indisponível. O modal ML não aplica fallback local.
                 </p>
               ) : null}
               <div className="anuncios-pricing-modal__results-panel">{pricingModalResultsStack}</div>

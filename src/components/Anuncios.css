@@ -653,14 +653,14 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: 4px 3px;
   min-width: 0;
 }
 
 .anuncios-sell-minimal__primary-stack {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   min-width: 0;
 }
 
@@ -668,7 +668,8 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--s7-text-secondary, #64748b);
-  line-height: 1.2;
+  line-height: 1;
+  margin: 0 0 1px;
 }
 
 .anuncios-sell-minimal__main {
@@ -681,6 +682,10 @@
 
 .anuncios-sell-popover--inline {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .anuncios-sell-minimal__promo {
@@ -2697,7 +2702,8 @@
   padding: calc(2px * var(--raiox-ml-calc-scale)) calc(8px * var(--raiox-ml-calc-scale));
 }
 
-.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__badge--participating {
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__badge--participating,
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__badge--available {
   font-size: calc(11px * 0.81 * var(--raiox-ml-calc-scale));
   padding: calc(3px * var(--raiox-ml-calc-scale)) calc(8px * var(--raiox-ml-calc-scale));
   border-radius: calc(6px * var(--raiox-ml-calc-scale));
@@ -2842,6 +2848,15 @@
   outline-offset: 2px;
 }
 
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta {
+  margin-left: 2px;
+  font-size: calc(11px * var(--raiox-ml-calc-scale));
+  font-weight: 600;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.64);
+  white-space: nowrap;
+}
+
 /* Mini modal: só gráfico (menor que o Raio-x principal) */
 .anuncios-raiox-chart-mini-layer {
   position: fixed;
@@ -2971,14 +2986,14 @@
 }
 
 .s7-ml-scenario-compare__card--participating {
-  border-color: rgba(37, 99, 235, 0.45);
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.14);
+  border-color: rgba(22, 163, 74, 0.45);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.14);
 }
 
 .s7-ml-scenario-compare__card--available {
-  border-color: rgba(234, 88, 12, 0.38);
-  background: linear-gradient(180deg, rgba(255, 247, 237, 0.65) 0%, rgba(255, 255, 255, 0.92) 100%);
-  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.1);
+  border-color: rgba(37, 99, 235, 0.45);
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.65) 0%, rgba(255, 255, 255, 0.92) 100%);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.14);
 }
 
 .s7-ml-scenario-compare__card-head {
@@ -3041,7 +3056,7 @@
   font-size: calc(11px * 0.81);
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  background: #3483fa;
+  background: #16a34a;
   border: none;
   border-radius: 6px;
   padding: 3px 8px;
@@ -3050,9 +3065,16 @@
 
 .s7-ml-scenario-compare__badge--available {
   flex-shrink: 0;
-  color: rgb(194, 65, 12);
-  background: rgba(251, 146, 60, 0.15);
-  border: 1px solid rgba(234, 88, 12, 0.28);
+  color: #fff;
+  background: #2563eb;
+  border: none;
+  font-weight: 700;
+  font-size: calc(11px * 0.81);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  padding: 3px 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
 }
 
 .s7-ml-scenario-compare__card-body {
@@ -3603,4 +3625,219 @@
   color: rgba(113, 63, 18, 0.92);
   background: rgba(254, 243, 199, 0.65);
   border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+/* ---------- Raio-x teste (modal mínimo, isolado do Raio-x legado) ---------- */
+.anuncios-raiox-teste-trigger {
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: rgba(239, 246, 255, 0.9);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(30, 64, 175, 0.95);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.anuncios-raiox-teste-trigger:hover {
+  background: rgba(219, 234, 254, 0.98);
+}
+
+.anuncios-raiox-teste__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200200;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.anuncios-raiox-teste__modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200201;
+  width: min(420px, 92vw);
+  max-height: min(70vh, 520px);
+  overflow: auto;
+  padding: 16px 18px 18px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.22);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.anuncios-raiox-teste__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.anuncios-raiox-teste__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.95);
+}
+
+.anuncios-raiox-teste__close {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: rgba(15, 23, 42, 0.45);
+  padding: 0 4px;
+}
+
+.anuncios-raiox-teste__close:hover {
+  color: rgba(15, 23, 42, 0.75);
+}
+
+.anuncios-raiox-teste__subtitle {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.82);
+  line-height: 1.35;
+}
+
+.anuncios-raiox-teste__hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.anuncios-raiox-teste__body {
+  margin-top: 12px;
+}
+
+.anuncios-raiox-teste__muted {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.55);
+  line-height: 1.45;
+}
+
+.anuncios-raiox-teste__warn {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(185, 28, 28, 0.92);
+  line-height: 1.45;
+}
+
+.anuncios-raiox-teste__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.anuncios-raiox-teste__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.9);
+  margin-bottom: 8px;
+}
+
+.anuncios-raiox-teste__item:last-child {
+  margin-bottom: 0;
+}
+
+.anuncios-raiox-teste__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+.anuncios-raiox-teste__vig {
+  font-size: 11px;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.anuncios-raiox-teste__meta {
+  margin: 6px 0 0;
+  font-size: 10px;
+  line-height: 1.4;
+  color: rgba(15, 23, 42, 0.45);
+  word-break: break-all;
+}
+
+.anuncios-raiox-teste__meta code {
+  font-size: 10px;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.anuncios-raiox-teste__table-wrap {
+  overflow-x: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.anuncios-raiox-teste__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.anuncios-raiox-teste__table th,
+.anuncios-raiox-teste__table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  vertical-align: top;
+}
+
+.anuncios-raiox-teste__table th {
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.65);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.anuncios-raiox-teste__td-name {
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.92);
+  max-width: 200px;
+}
+
+.anuncios-raiox-teste__td-vig {
+  white-space: nowrap;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.anuncios-raiox-teste__status {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.85);
+}
+
+.anuncios-raiox-teste__col-id {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  max-width: 120px;
+  word-break: break-all;
+}
+
+.anuncios-raiox-teste__col-dates {
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  color: rgba(15, 23, 42, 0.55);
+  max-width: 160px;
+  word-break: break-all;
 }
