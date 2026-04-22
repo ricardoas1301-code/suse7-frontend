@@ -1,6 +1,6 @@
 /* ======================================================
    COMPONENTE: S7Tooltip
-   Ajusta distância do balão em relação ao trigger quando
+   Ajusta distância do balão em relação ao gatilho quando
    usado com as classes .s7-tip-bottom (padrão DS + offset).
 ====================================================== */
 
@@ -18,4 +18,82 @@
 .s7-tooltip.s7-tip.s7-tooltip--top-start[data-tip]::after {
   top: auto;
   bottom: calc(100% + var(--s7-tooltip-offset, 6px));
+}
+
+/* ======================================================
+   TOOLTIP RICO (JSX — fundo claro, position: fixed no painel)
+   - Posição/flip: inline style (S7Tooltip.jsx) + clip do modal/viewport
+   - z-index alto para ficar acima de cards vizinhos no Raio-x
+   - Desktop: :hover / :focus-within; touch: classe .s7-tooltip--rich-open
+====================================================== */
+
+.s7-tooltip--rich-panel {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  vertical-align: middle;
+}
+
+/* Painel rico: base (montado via portal em body quando aberto — ver S7Tooltip.jsx) */
+.s7-tooltip-rich__panel {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  box-sizing: border-box;
+  min-width: 188px;
+  max-width: min(282px, calc(100vw - 24px));
+
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--s7-tooltip-bg);
+  color: var(--s7-tooltip-text);
+  border: 1px solid var(--s7-tooltip-border);
+  box-shadow: var(--s7-tooltip-shadow);
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.23;
+  text-align: left;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+}
+
+.s7-tooltip-rich__panel.s7-tooltip-rich__panel--portal.s7-tooltip-rich__panel--open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Gatilho: azul Suse7 (tokens) + hover reforçado; reseta herança do .s7-tooltip legado. */
+.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  color: var(--s7-tooltip-trigger, var(--s7-primary));
+}
+
+.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: var(--s7-tooltip-trigger-hover, var(--s7-primary-hover));
+}
+
+.s7-tooltip--rich-panel.s7-tooltip-trigger {
+  color: var(--s7-tooltip-trigger, var(--s7-primary));
+}
+
+.s7-tooltip--rich-panel.s7-tooltip-trigger:hover,
+.s7-tooltip--rich-panel.s7-tooltip-trigger:focus-within {
+  color: var(--s7-tooltip-trigger-hover, var(--s7-primary-hover));
+}
+
+.s7-tooltip.s7-tip.s7-tooltip-trigger .s7-icon,
+.s7-tooltip--rich-panel.s7-tooltip-trigger .s7-icon {
+  color: inherit;
+  stroke: currentColor;
 }

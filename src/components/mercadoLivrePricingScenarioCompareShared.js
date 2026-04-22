@@ -79,14 +79,14 @@ export function resolveRaioxListingBadge(scenario) {
 
   const eff =
     r._raiox_listing_effective_api_state != null ? String(r._raiox_listing_effective_api_state).trim().toLowerCase() : "";
-  if (eff === "active") return { label: "Participando", uxGroup: "participating" };
+  if (eff === "active") return { label: "Ativa", uxGroup: "participating" };
   if (eff === "scheduled") return { label: "Programada", uxGroup: "available" };
   if (eff === "participate") return { label: "Disponível", uxGroup: "available" };
   if (eff === "expired") return { label: null, uxGroup: "available" };
 
   const g = classifyScenarioUxGroup(scenario);
   const st = String(r.status ?? "").toLowerCase();
-  if (g === "participating") return { label: "Participando", uxGroup: "participating" };
+  if (g === "participating") return { label: "Ativa", uxGroup: "participating" };
   if (g === "available") return { label: st === "scheduled" ? "Programada" : "Disponível", uxGroup: "available" };
   return { label: null, uxGroup: g };
 }
@@ -154,6 +154,148 @@ export function shouldSaleXrayDebugTrace(payloadOrListingHint) {
     if (saleXrayListingHintFromScenarios(payloadOrListingHint).includes("6551978954")) return true;
   }
   return false;
+}
+
+/** @param {...unknown} vals */
+export function firstNonEmptyBrlString(...vals) {
+  for (const v of vals) {
+    if (v == null) continue;
+    const s = String(v).trim();
+    if (s !== "") return s;
+  }
+  return null;
+}
+
+/**
+ * Card comercial oficial (breakdown API ou SSR da página de promoções ML).
+ *
+ * @param {string} src
+ * @returns {boolean}
+ */
+export function isMlCardContractPayoutSource(src) {
+  const s = String(src ?? "").trim();
+  return s === "ml_card_breakdown" || s === "ml_frontend_ssr_promotions";
+}
+
+/**
+ * Prioridade UI “Você recebe” (Raio-x). Com `marketplace_payout_source === "ml_card_breakdown"`, só campos do card ML.
+ *
+ * @param {Record<string, unknown>} m — `scenario.marketplace`
+ * @param {Record<string, unknown> | null} sx — `scenario.sale_xray_pricing`
+ * @param {Record<string, unknown>} scenario — cenário completo (fallbacks)
+ * @returns {{ raw: string | null; source: string }}
+ */
+export function pickSaleXrayYouReceiveRawString(m, sx, scenario) {
+  const payoutSrc = String(m.marketplace_payout_source ?? sx?.marketplace_payout_source ?? "").trim();
+  /** Motor isolado por card (Raio-x): não misturar com card ML / preview. */
+  if (payoutSrc === "suse7_sale_xray_simple") {
+    const mp = firstNonEmptyBrlString(m.marketplace_payout_amount_brl);
+    if (mp != null) return { raw: mp, source: "marketplace_payout_amount_brl" };
+    const netRec = firstNonEmptyBrlString(sx?.net_receivable_brl);
+    if (netRec != null) return { raw: netRec, source: "net_receivable_brl" };
+    const prFlat =
+      scenario.pricing != null && typeof scenario.pricing === "object"
+        ? /** @type {Record<string, unknown>} */ (scenario.pricing)
+        : null;
+    const fromPr = firstNonEmptyBrlString(prFlat?.net_receivable_brl);
+    if (fromPr != null) return { raw: fromPr, source: "pricing.net_receivable_brl" };
+  }
+  const previewYou = firstNonEmptyBrlString(m.preview_you_receive_brl);
+  if (previewYou != null && m.preview_is_estimated === true && !isMlCardContractPayoutSource(payoutSrc)) {
+    return { raw: previewYou, source: "preview_you_receive_brl" };
+  }
+  if (payoutSrc === "ml_card_unavailable") {
+    return { raw: null, source: "ml_card_unavailable" };
+  }
+  const cardAmt = firstNonEmptyBrlString(m.ml_card_payout_amount_brl, sx?.ml_card_payout_amount_brl);
+  const cardLegacy = firstNonEmptyBrlString(m.ml_card_payout_brl, sx?.ml_card_payout_brl);
+  if (isMlCardContractPayoutSource(payoutSrc)) {
+    if (cardAmt != null) return { raw: cardAmt, source: "ml_card_payout_amount_brl" };
+    if (cardLegacy != null) return { raw: cardLegacy, source: "ml_card_payout_brl" };
+    return { raw: null, source: "ml_card_breakdown_no_card_payout" };
+  }
+  const mp = firstNonEmptyBrlString(m.marketplace_payout_amount_brl);
+  if (cardAmt != null) return { raw: cardAmt, source: "ml_card_payout_amount_brl" };
+  if (cardLegacy != null) return { raw: cardLegacy, source: "ml_card_payout_brl" };
+  if (mp != null) return { raw: mp, source: "marketplace_payout_amount_brl" };
+  const netRec = firstNonEmptyBrlString(sx?.net_receivable_brl);
+  if (netRec != null) return { raw: netRec, source: "net_receivable_brl" };
+  const prFlat =
+    scenario.pricing != null && typeof scenario.pricing === "object"
+      ? /** @type {Record<string, unknown>} */ (scenario.pricing)
+      : null;
+  const fromPr = firstNonEmptyBrlString(prFlat?.net_receivable_brl);
+  if (fromPr != null) return { raw: fromPr, source: "pricing.net_receivable_brl" };
+  const res =
+    scenario.result != null && typeof scenario.result === "object"
+      ? /** @type {Record<string, unknown>} */ (scenario.result)
+      : null;
+  const fromRes = firstNonEmptyBrlString(res?.net_receivable_brl, res?.marketplace_payout_amount_brl);
+  if (fromRes != null) return { raw: fromRes, source: "result_fallback" };
+  return { raw: null, source: "none" };
+}
+
+/**
+ * Frete exibido no Raio-x — promoção: card ML antes de health/NP.
+ *
+ * @param {Record<string, unknown>} m
+ * @param {Record<string, unknown> | null} sx
+ * @param {Record<string, unknown>} scenario
+ * @returns {{ raw: string | null; source: string }}
+ */
+export function pickSaleXrayShippingRawString(m, sx, scenario) {
+  const payoutSrcEarly = String(m.marketplace_payout_source ?? sx?.marketplace_payout_source ?? "").trim();
+  if (payoutSrcEarly === "suse7_sale_xray_simple") {
+    const s = firstNonEmptyBrlString(m.shipping_cost_amount_brl, sx?.shipping_cost_amount_brl);
+    return { raw: s, source: s != null ? "shipping_cost_amount_brl" : "none" };
+  }
+  if (scenario.is_baseline === true) {
+    const s = firstNonEmptyBrlString(m.shipping_cost_amount_brl, sx?.shipping_cost_amount_brl);
+    return { raw: s, source: s != null ? "shipping_cost_amount_brl" : "none" };
+  }
+  const payoutSrc = String(m.marketplace_payout_source ?? sx?.marketplace_payout_source ?? "").trim();
+  if (payoutSrc === "ml_card_unavailable") {
+    return { raw: null, source: "ml_card_unavailable" };
+  }
+  const a = firstNonEmptyBrlString(m.ml_card_shipping_amount_brl, sx?.ml_card_shipping_amount_brl);
+  const b = firstNonEmptyBrlString(m.ml_card_shipping_brl, sx?.ml_card_shipping_brl);
+  const c = firstNonEmptyBrlString(m.shipping_cost_amount_brl, sx?.shipping_cost_amount_brl);
+  if (a != null) return { raw: a, source: "ml_card_shipping_amount_brl" };
+  if (b != null) return { raw: b, source: "ml_card_shipping_brl" };
+  if (c != null) return { raw: c, source: "shipping_cost_amount_brl" };
+  return { raw: null, source: "none" };
+}
+
+/**
+ * Log temporário quando o valor final ainda parece repasse health (ex. 68,26) ou trace explícito.
+ *
+ * @param {Record<string, unknown>} scenario
+ * @param {Record<string, unknown>} m
+ * @param {Record<string, unknown> | null} sx
+ * @param {{ raw: string | null; source: string }} picked
+ * @param {boolean} forceTrace
+ */
+export function logSaleXrayPayoutPickInRender(scenario, m, sx, picked, forceTrace) {
+  const n = picked.raw != null ? Number(String(picked.raw).replace(",", ".")) : NaN;
+  const suspicious =
+    Number.isFinite(n) &&
+    (Math.abs(n - 68.26) < 0.03 || Math.abs(n - 71.7) < 0.03 || Math.abs(n - 74.48) < 0.03);
+  const cardRaw = firstNonEmptyBrlString(m.ml_card_payout_amount_brl, sx?.ml_card_payout_amount_brl);
+  const diverge =
+    cardRaw != null &&
+    picked.raw != null &&
+    String(cardRaw).trim() !== String(picked.raw).trim();
+  if (!forceTrace && !suspicious && !diverge) return;
+  const promotionName = scenario.promotion_name != null ? String(scenario.promotion_name) : null;
+  console.warn("[SALE_XRAY_PAYOUT_PICK]", {
+    promotion_name: promotionName,
+    sale_price_brl: m.sale_price_brl ?? sx?.sale_price_brl ?? null,
+    ml_card_payout_amount_brl: m.ml_card_payout_amount_brl ?? sx?.ml_card_payout_amount_brl ?? null,
+    marketplace_payout_amount_brl: m.marketplace_payout_amount_brl ?? null,
+    marketplace_payout_source: m.marketplace_payout_source ?? sx?.marketplace_payout_source ?? null,
+    picked_source: picked.source,
+    you_receive_final_raw: picked.raw,
+  });
 }
 
 /**
@@ -325,10 +467,50 @@ export function buildRaioxScenariosFromSaleXrayModalContract(payload) {
   if (nPricing.fee_amount_brl != null) m0.sale_fee_amount_brl = nPricing.fee_amount_brl;
   if (nPricing.fee_percent != null) m0.sale_fee_percent = nPricing.fee_percent;
   if (nPricing.fee_type_label != null) m0.listing_type_label = nPricing.fee_type_label;
-  if (nPricing.shipping_cost_amount_brl != null) m0.shipping_cost_amount_brl = nPricing.shipping_cost_amount_brl;
+  if (nPricing.ml_card_payout_amount_brl != null && String(nPricing.ml_card_payout_amount_brl).trim() !== "")
+    m0.ml_card_payout_amount_brl = nPricing.ml_card_payout_amount_brl;
+  if (nPricing.ml_card_payout_brl != null && String(nPricing.ml_card_payout_brl).trim() !== "")
+    m0.ml_card_payout_brl = nPricing.ml_card_payout_brl;
+  if (nPricing.ml_card_shipping_amount_brl != null && String(nPricing.ml_card_shipping_amount_brl).trim() !== "")
+    m0.ml_card_shipping_amount_brl = nPricing.ml_card_shipping_amount_brl;
+  if (nPricing.ml_card_shipping_brl != null && String(nPricing.ml_card_shipping_brl).trim() !== "")
+    m0.ml_card_shipping_brl = nPricing.ml_card_shipping_brl;
+  if (nPricing.marketplace_payout_source != null) m0.marketplace_payout_source = nPricing.marketplace_payout_source;
+
+  const shipMerge0 = firstNonEmptyBrlString(
+    nPricing.ml_card_shipping_amount_brl,
+    nPricing.ml_card_shipping_brl,
+    nPricing.shipping_cost_amount_brl
+  );
+  if (shipMerge0 != null) m0.shipping_cost_amount_brl = shipMerge0;
+  else if (nPricing.shipping_cost_amount_brl != null) m0.shipping_cost_amount_brl = nPricing.shipping_cost_amount_brl;
   if (nPricing.shipping_cost_context != null) m0.shipping_context = nPricing.shipping_cost_context;
-  if (nPricing.net_receivable_brl != null && String(nPricing.net_receivable_brl).trim() !== "") {
-    m0.marketplace_payout_amount_brl = nPricing.net_receivable_brl;
+
+  const src0 = nPricing.marketplace_payout_source != null ? String(nPricing.marketplace_payout_source).trim() : "";
+  if (isMlCardContractPayoutSource(src0)) {
+    const p0 = firstNonEmptyBrlString(nPricing.ml_card_payout_amount_brl, nPricing.ml_card_payout_brl);
+    if (p0 != null) m0.marketplace_payout_amount_brl = p0;
+  } else {
+    const p0 = firstNonEmptyBrlString(
+      nPricing.ml_card_payout_amount_brl,
+      nPricing.ml_card_payout_brl,
+      nPricing.net_receivable_brl
+    );
+    if (p0 != null) m0.marketplace_payout_amount_brl = p0;
+  }
+  if (nPricing.charged_fee_gross_brl != null) m0.charged_fee_gross_brl = nPricing.charged_fee_gross_brl;
+  if (nPricing.charged_fee_net_brl != null) m0.charged_fee_net_brl = nPricing.charged_fee_net_brl;
+  if (nPricing.charged_fee_reduction_brl != null) m0.charged_fee_reduction_brl = nPricing.charged_fee_reduction_brl;
+  if (nPricing.charged_fee_rebate_brl != null) m0.charged_fee_rebate_brl = nPricing.charged_fee_rebate_brl;
+  if (nPricing.charged_fee_discount_brl != null) m0.charged_fee_discount_brl = nPricing.charged_fee_discount_brl;
+  if (nPricing.charged_fee_source != null) m0.charged_fee_source = nPricing.charged_fee_source;
+  if (nPricing.charged_fee_is_estimated != null) m0.charged_fee_is_estimated = nPricing.charged_fee_is_estimated;
+  if (nPricing.billing_tariff_applied != null) m0.billing_tariff_applied = nPricing.billing_tariff_applied;
+  if (nPricing.sale_xray_simple_financials === true) {
+    delete m0.ml_card_payout_amount_brl;
+    delete m0.ml_card_payout_brl;
+    delete m0.ml_card_shipping_amount_brl;
+    delete m0.ml_card_shipping_brl;
   }
   baselineRow.marketplace = m0;
   baselineRow.sale_xray_pricing = nPricing;
@@ -379,11 +561,45 @@ export function buildRaioxScenariosFromSaleXrayModalContract(payload) {
     if (pricing.subsidy_ml_breakdown_brl != null) m.subsidy_ml_breakdown_brl = pricing.subsidy_ml_breakdown_brl;
     if (pricing.fee_percent != null) m.sale_fee_percent = pricing.fee_percent;
     if (pricing.fee_type_label != null) m.listing_type_label = pricing.fee_type_label;
-    if (pricing.shipping_cost_amount_brl != null) m.shipping_cost_amount_brl = pricing.shipping_cost_amount_brl;
+    if (pricing.ml_card_payout_amount_brl != null && String(pricing.ml_card_payout_amount_brl).trim() !== "")
+      m.ml_card_payout_amount_brl = pricing.ml_card_payout_amount_brl;
+    if (pricing.ml_card_payout_brl != null && String(pricing.ml_card_payout_brl).trim() !== "")
+      m.ml_card_payout_brl = pricing.ml_card_payout_brl;
+    if (pricing.ml_card_shipping_amount_brl != null && String(pricing.ml_card_shipping_amount_brl).trim() !== "")
+      m.ml_card_shipping_amount_brl = pricing.ml_card_shipping_amount_brl;
+    if (pricing.ml_card_shipping_brl != null && String(pricing.ml_card_shipping_brl).trim() !== "")
+      m.ml_card_shipping_brl = pricing.ml_card_shipping_brl;
+    if (pricing.marketplace_payout_source != null) m.marketplace_payout_source = pricing.marketplace_payout_source;
+
+    const shipMerge = firstNonEmptyBrlString(
+      pricing.ml_card_shipping_amount_brl,
+      pricing.ml_card_shipping_brl,
+      pricing.shipping_cost_amount_brl
+    );
+    if (shipMerge != null) m.shipping_cost_amount_brl = shipMerge;
+    else if (pricing.shipping_cost_amount_brl != null) m.shipping_cost_amount_brl = pricing.shipping_cost_amount_brl;
     if (pricing.shipping_cost_context != null) m.shipping_context = pricing.shipping_cost_context;
-    if (pricing.net_receivable_brl != null && String(pricing.net_receivable_brl).trim() !== "") {
-      m.marketplace_payout_amount_brl = pricing.net_receivable_brl;
+
+    const payoutSrcP = pricing.marketplace_payout_source != null ? String(pricing.marketplace_payout_source).trim() : "";
+    if (isMlCardContractPayoutSource(payoutSrcP)) {
+      const cardP = firstNonEmptyBrlString(pricing.ml_card_payout_amount_brl, pricing.ml_card_payout_brl);
+      if (cardP != null) m.marketplace_payout_amount_brl = cardP;
+    } else {
+      const payM = firstNonEmptyBrlString(
+        pricing.ml_card_payout_amount_brl,
+        pricing.ml_card_payout_brl,
+        pricing.net_receivable_brl
+      );
+      if (payM != null) m.marketplace_payout_amount_brl = payM;
     }
+    if (pricing.charged_fee_gross_brl != null) m.charged_fee_gross_brl = pricing.charged_fee_gross_brl;
+    if (pricing.charged_fee_net_brl != null) m.charged_fee_net_brl = pricing.charged_fee_net_brl;
+    if (pricing.charged_fee_reduction_brl != null) m.charged_fee_reduction_brl = pricing.charged_fee_reduction_brl;
+    if (pricing.charged_fee_rebate_brl != null) m.charged_fee_rebate_brl = pricing.charged_fee_rebate_brl;
+    if (pricing.charged_fee_discount_brl != null) m.charged_fee_discount_brl = pricing.charged_fee_discount_brl;
+    if (pricing.charged_fee_source != null) m.charged_fee_source = pricing.charged_fee_source;
+    if (pricing.charged_fee_is_estimated != null) m.charged_fee_is_estimated = pricing.charged_fee_is_estimated;
+    if (pricing.billing_tariff_applied != null) m.billing_tariff_applied = pricing.billing_tariff_applied;
     if (pricing.marketplace_benefit_amount_brl != null)
       m.marketplace_benefit_amount_brl = pricing.marketplace_benefit_amount_brl;
     if (pricing.marketplace_benefit_label != null) m.marketplace_benefit_label = pricing.marketplace_benefit_label;
@@ -397,6 +613,12 @@ export function buildRaioxScenariosFromSaleXrayModalContract(payload) {
       m.marketplace_participation_source = pricing.marketplace_participation_source;
     if (pricing.marketplace_participation_resolution != null)
       m.marketplace_participation_resolution = pricing.marketplace_participation_resolution;
+    if (pricing.sale_xray_simple_financials === true) {
+      delete m.ml_card_payout_amount_brl;
+      delete m.ml_card_payout_brl;
+      delete m.ml_card_shipping_amount_brl;
+      delete m.ml_card_shipping_brl;
+    }
     row.marketplace = m;
     row.sale_xray_pricing = pricing;
     row.scenario_id = key || row.scenario_id;

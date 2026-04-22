@@ -600,8 +600,9 @@
   padding: 6px 10px;
   border-radius: 12px;
 
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--s7-tooltip-bg);
+  color: var(--s7-tooltip-text);
+  border: 1px solid var(--s7-tooltip-border);
   font-size: 11px;
   font-weight: 500;
   line-height: 1.35;
@@ -611,7 +612,7 @@
   white-space: normal;
   word-wrap: break-word;
 
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--s7-tooltip-shadow);
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -635,7 +636,7 @@
 
   border: 5px solid transparent;
   border-top-color: transparent;
-  border-bottom-color: #0f172a;
+  border-bottom-color: var(--s7-tooltip-bg);
 
   pointer-events: none;
   opacity: 0;
@@ -822,7 +823,7 @@
   transform: translateX(-50%);
 
   border-top-color: transparent;
-  border-bottom-color: #0f172a;
+  border-bottom-color: var(--s7-tooltip-bg);
   border-left-color: transparent;
   border-right-color: transparent;
 }

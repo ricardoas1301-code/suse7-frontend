@@ -38,6 +38,7 @@ import {
   buildRaioxScenariosFromSaleXrayModalContract,
   enrichRaioxScenariosWithListingPromotionMetadata,
   mergeListingGridRowIntoMlScenarios,
+  shouldSaleXrayDebugTrace,
 } from "./mercadoLivrePricingScenarioCompareShared.js";
 import precificaS7Icon from "../assets/precifica-s7-icon.png";
 import raioxTriggerIcon from "../assets/raiox-trigger-icon.png";
@@ -97,15 +98,19 @@ const ADS_RAIOX_ML_COMPARE_VIEWPORT_HEIGHT_BOOST_PX = 48;
 /** Margem do modal comparativo ML em relação à viewport (quase full-screen; menor = mais largura útil). */
 const ADS_RAIOX_ML_COMPARE_VIEWPORT_MARGIN_PX = 14;
 
+/** Máximo de cards por linha no comparativo Raio-x (base + promoções contam juntos). */
+const ADS_RAIOX_ML_COMPARE_MAX_CARDS_PER_ROW = 5;
+
 /**
- * Largura ideal do shell (px) para uma única linha de cards com largura fixa, sem comprimir blocos.
+ * Largura ideal do shell (px): no máximo 5 colunas por linha (largura fixa por card + gaps).
  * @param {number} cardCount
  */
 function computeIdealRaioxMlCompareShellWidthPx(cardCount) {
   const n = Math.max(0, Math.floor(cardCount));
   if (n <= 0) return ADS_RAIOX_POPOVER_WIDTH_ML_COMPARE_FLOOR_PX;
+  const colsOnRow = Math.min(ADS_RAIOX_ML_COMPARE_MAX_CARDS_PER_ROW, n);
   const track =
-    n * ADS_RAIOX_ML_CARD_FIXED_W_PX + Math.max(0, n - 1) * ADS_RAIOX_ML_CARD_GAP_PX;
+    colsOnRow * ADS_RAIOX_ML_CARD_FIXED_W_PX + Math.max(0, colsOnRow - 1) * ADS_RAIOX_ML_CARD_GAP_PX;
   return ADS_RAIOX_ML_COMPARE_LAYOUT_H_CHROME_PX + track;
 }
 /** Altura máxima do shell Raio-x (card + moldura; conteúdo longo como “Status da oferta” precisa caber antes do clamp). */
@@ -874,10 +879,12 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
       setMlScenariosError(null);
       try {
         const url = buildApiUrl("/api/ml/listings/sale-xray-modal");
-        console.log("[SALE_XRAY] calling sale-xray-modal", {
-          listingExternalId: row.externalId,
-          url: url ?? null,
-        });
+        if (shouldSaleXrayDebugTrace(row.externalId)) {
+          console.log("[SALE_XRAY] calling sale-xray-modal", {
+            listingExternalId: row.externalId,
+            url: url ?? null,
+          });
+        }
         if (!url) {
           if (!cancelled) {
             setMlScenariosError("API não configurada (VITE_API_BASE_URL).");
@@ -918,7 +925,9 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
           }
           return;
         }
-        console.log("[SALE_XRAY] response", data);
+        if (shouldSaleXrayDebugTrace(data)) {
+          console.log("[SALE_XRAY] response", data);
+        }
         if (!cancelled) {
           setMlScenariosPayload(data);
         }
@@ -1375,12 +1384,14 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
                         }`}
                       </span>
                     </div>
-                    <MercadoLivrePricingScenarioComparePanel
-                      layout="raiox"
-                      showInlineChart={false}
-                      debugTag="raiox_venda"
-                      scenarios={mlScenariosForRaioxDisplay}
-                    />
+                    <div className="anuncios-raiox-compare__compare-scroll">
+                      <MercadoLivrePricingScenarioComparePanel
+                        layout="raiox"
+                        showInlineChart={false}
+                        debugTag="raiox_venda"
+                        scenarios={mlScenariosForRaioxDisplay}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <p className="anuncios-sell-popover__muted" role="status">
@@ -1759,17 +1770,7 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
             aria-haspopup="dialog"
             onClick={(e) => {
               e.stopPropagation();
-              setRaioxOpen((v) => {
-                if (!v) {
-                  console.log("DEBUG_TRIGGER", {
-                    scenarioMode: true,
-                    marketplaceRaw: row?.marketplaceRaw,
-                    marketplaceSlug: row?.marketplaceSlug,
-                    externalId: row?.externalId,
-                  });
-                }
-                return !v;
-              });
+              setRaioxOpen((v) => !v);
             }}
           >
             <img

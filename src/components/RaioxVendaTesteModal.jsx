@@ -1,6 +1,6 @@
 // ======================================================
 // Raio-x teste — lista espelhada da grid ML: GET /seller-promotions/items (via backend).
-// Campos: nome, status (ATIVA/PROGRAMADA/DISPONÍVEL), vigência. Sem preço/cenário financeiro.
+// Campos: nome, status, taxa de venda (% ou R$) só como vem no JSON ML, vigência. Sem cálculo local de tarifa.
 // ======================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -15,6 +15,8 @@ import { buildApiUrl, apiFetch } from "../config/api";
  *   starts_at: string | null;
  *   ends_at: string | null;
  *   vigencia_text: string;
+ *   ml_api_sale_fee_percent: string | null;
+ *   ml_api_sale_fee_brl: string | null;
  * }} SellerPromoGridRow
  */
 
@@ -36,9 +38,31 @@ function asGridRows(rows) {
       starts_at: o.starts_at != null ? String(o.starts_at) : null,
       ends_at: o.ends_at != null ? String(o.ends_at) : null,
       vigencia_text: o.vigencia_text != null ? String(o.vigencia_text) : "",
+      ml_api_sale_fee_percent: o.ml_api_sale_fee_percent != null ? String(o.ml_api_sale_fee_percent).trim() : null,
+      ml_api_sale_fee_brl: o.ml_api_sale_fee_brl != null ? String(o.ml_api_sale_fee_brl).trim() : null,
     });
   }
   return out;
+}
+
+/**
+ * @param {SellerPromoGridRow} r
+ */
+function formatMlApiSaleFeeCell(r) {
+  if (r.ml_api_sale_fee_percent != null && r.ml_api_sale_fee_percent !== "") {
+    const n = Number(String(r.ml_api_sale_fee_percent).replace(",", "."));
+    if (Number.isFinite(n)) {
+      return `${n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
+    }
+  }
+  if (r.ml_api_sale_fee_brl != null && r.ml_api_sale_fee_brl !== "") {
+    const n = Number(String(r.ml_api_sale_fee_brl).replace(",", "."));
+    if (Number.isFinite(n)) {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
+    }
+    return `R$ ${r.ml_api_sale_fee_brl}`;
+  }
+  return "—";
 }
 
 /**
@@ -143,6 +167,7 @@ export function RaioxVendaTesteModal({ open, onClose, listingExternalId, marketp
             <tr>
               <th>Promoção</th>
               <th>Status</th>
+              <th className="anuncios-raiox-teste__col-fee">Taxa venda (API ML)</th>
               <th>Vigência</th>
               <th className="anuncios-raiox-teste__col-id">promotion_id</th>
               <th className="anuncios-raiox-teste__col-dates">starts_at</th>
@@ -156,6 +181,7 @@ export function RaioxVendaTesteModal({ open, onClose, listingExternalId, marketp
                 <td>
                   <span className="anuncios-raiox-teste__status">{r.status || "—"}</span>
                 </td>
+                <td className="anuncios-raiox-teste__col-fee">{formatMlApiSaleFeeCell(r)}</td>
                 <td className="anuncios-raiox-teste__td-vig">{r.vigencia_text || "—"}</td>
                 <td className="anuncios-raiox-teste__col-id">{r.promotion_id || "—"}</td>
                 <td className="anuncios-raiox-teste__col-dates">{r.starts_at ?? "—"}</td>
@@ -187,7 +213,9 @@ export function RaioxVendaTesteModal({ open, onClose, listingExternalId, marketp
           Fonte: <strong>GET /seller-promotions/items</strong> (app_version=v2). O array bruto inclui ofertas só
           disponíveis (status <em>candidate</em>); aqui mostramos só linhas em
           que você <strong>participa</strong> (como na grid ao gerir o anúncio), com <code>promotion_id</code>{" "}
-          P-MLB…
+          P-MLB…. A coluna <strong>Taxa venda (API ML)</strong> usa só campos de comissão/tarifa presentes nessa
+          resposta (por exemplo <code>sale_fee_details.percentage_fee</code> ou valores monetários de tarifa), sem
+          inferência por preço.
         </p>
         {source || itemId ? (
           <p className="anuncios-raiox-teste__meta">

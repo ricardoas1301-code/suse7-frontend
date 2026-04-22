@@ -99,7 +99,7 @@ export function MercadoLivrePricingScenarioCompareChart({ scenarios }) {
           <span className="s7-ml-scenario-chart__swatch s7-ml-scenario-chart__swatch--baseline" /> Preço normal
         </li>
         <li>
-          <span className="s7-ml-scenario-chart__swatch s7-ml-scenario-chart__swatch--participating" /> Participando
+          <span className="s7-ml-scenario-chart__swatch s7-ml-scenario-chart__swatch--participating" /> Ativa
         </li>
         <li>
           <span className="s7-ml-scenario-chart__swatch s7-ml-scenario-chart__swatch--available" /> Disponível

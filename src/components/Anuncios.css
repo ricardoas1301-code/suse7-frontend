@@ -1142,13 +1142,14 @@
   margin: 6px 8px 0;
   width: calc(100% - 16px);
   overflow: hidden;
-  padding: 10px 10px 8px;
+  /* Respiro sob a pílula ML (overlap): título do anúncio não cola no logo. */
+  padding: 20px 10px 8px;
 }
 
 /* Um único card (sem fileira de promoções): mais espaço entre a pílula do ML e o título “Raio-x da venda”. */
 .anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre
   .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--compare-near-full.anuncios-sell-popover__panel--raiox-ml-baseline-only {
-  padding-top: 22px;
+  padding-top: 32px;
 }
 
 .anuncios-raiox-shell--ml-compare-fill:not(.anuncios-raiox-shell--mercado_livre)
@@ -1534,6 +1535,118 @@
   font-size: 11px;
 }
 
+/* Raio-X ML: título + ícone na mesma linha; valor à direita (tooltip rich = S7Tooltip) */
+.anuncios-sell-popover__line--promo-sale {
+  align-items: center;
+}
+
+.anuncios-sell-popover__line--promo-sale > span:first-child {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.anuncios-sell-popover__promo-sale-label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.anuncios-sell-popover__promo-sale-title-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.anuncios-sell-popover__promo-sale-title-text {
+  white-space: nowrap;
+}
+
+/* Ícone do tooltip: azul DS (vence cor laranja do .line--key no ancestral) */
+.anuncios-sell-popover__line--key .anuncios-sell-popover__promo-sale-label .s7-tooltip--rich-panel.s7-tooltip-trigger {
+  color: var(--s7-tooltip-trigger, var(--s7-primary));
+}
+
+.anuncios-sell-popover__line--key .anuncios-sell-popover__promo-sale-label .s7-tooltip--rich-panel.s7-tooltip-trigger:hover,
+.anuncios-sell-popover__line--key .anuncios-sell-popover__promo-sale-label .s7-tooltip--rich-panel.s7-tooltip-trigger:focus-within {
+  color: var(--s7-tooltip-trigger-hover, var(--s7-primary-hover));
+}
+
+.anuncios-sell-popover__promo-price-tip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: help;
+  color: inherit;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.anuncios-sell-popover__promo-price-tip-btn:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+
+.anuncios-raiox-promo-price-tip {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+
+.anuncios-raiox-promo-price-tip__row {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+  gap: 5px;
+  color: #334155;
+}
+
+.anuncios-raiox-promo-price-tip__label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.anuncios-raiox-promo-price-tip__row--split {
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.anuncios-raiox-promo-price-tip__row--split .anuncios-raiox-promo-price-tip__value {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.anuncios-raiox-promo-price-tip__value {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.anuncios-raiox-promo-price-tip__sep {
+  height: 1px;
+  margin: 1px 0;
+  background: rgba(15, 23, 42, 0.1);
+  border: none;
+}
+
+.anuncios-raiox-promo-price-tip__row--accent,
+.anuncios-raiox-promo-price-tip__row--accent .anuncios-raiox-promo-price-tip__label,
+.anuncios-raiox-promo-price-tip__row--accent .anuncios-raiox-promo-price-tip__value {
+  color: var(--s7-orange, #ff8533);
+  font-weight: 700;
+}
+
 .anuncios-sell-popover__line--total {
   margin-top: 0;
   font-size: 12px;
@@ -1861,8 +1974,9 @@
   width: max-content;
   padding: 6px 10px;
   border-radius: 12px;
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--s7-tooltip-bg);
+  color: var(--s7-tooltip-text);
+  border: 1px solid var(--s7-tooltip-border);
   font-size: 11px;
   font-weight: 500;
   line-height: 1.35;
@@ -1871,7 +1985,7 @@
   text-align: left;
   white-space: normal;
   word-wrap: break-word;
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--s7-tooltip-shadow);
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -1893,7 +2007,7 @@
   z-index: 100021;
   border: 5px solid transparent;
   border-top-color: transparent;
-  border-bottom-color: #0f172a;
+  border-bottom-color: var(--s7-tooltip-bg);
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -2170,8 +2284,9 @@
   width: max-content;
   padding: 6px 10px;
   border-radius: 12px;
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--s7-tooltip-bg);
+  color: var(--s7-tooltip-text);
+  border: 1px solid var(--s7-tooltip-border);
   font-size: 11px;
   font-weight: 500;
   line-height: 1.35;
@@ -2179,7 +2294,7 @@
   text-align: left;
   white-space: normal;
   word-wrap: break-word;
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--s7-tooltip-shadow);
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -2511,13 +2626,10 @@
   .anuncios-compare-modal__body-scroll {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  /*
-   * Tooltip do botão de precificação: este container não pode recortar pseudo-elementos.
-   * A rolagem horizontal já é tratada no grid de cenários, então aqui deixamos visível.
-   */
-  overflow: visible;
-  scrollbar-gutter: stable both-edges;
+  align-items: stretch;
+  /* Rolagem vertical na faixa `.anuncios-raiox-compare__compare-scroll`; aqui só limita altura. */
+  overflow: hidden;
+  scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -2631,44 +2743,69 @@
   width: fit-content;
   max-width: 100%;
   min-width: min-content;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__stack {
   max-width: none;
+  width: fit-content;
+  align-self: center;
+}
+
+/* Rolagem vertical só na faixa dos cards (toolbar fixa; tooltips do topo fora do clip). */
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__compare-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: 100%;
+  /* Vertical: várias linhas de cards; horizontal só se a viewport for mais estreita que 5 colunas. */
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
 }
 
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare-shell--raiox-cards-only {
   width: fit-content;
   max-width: 100%;
+  min-height: 0;
 }
 
 /* Fator único para o bloco de cálculo (Anuncios.jsx: ADS_RAIOX_ML_COMPARE_BLOCK_SCALE). */
 .anuncios-raiox-compare--spacious {
   --raiox-ml-calc-scale: 0.87;
-  /* Largura = soma dos cards (não esticar a 100% e forçar quebra). */
+  align-self: center;
   width: max-content;
+  max-width: 100%;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /*
- * Raio-x ML: largura fixa por card (não comprimir); modal cresce com n blocos (largura do shell via JS).
- * Uma linha: nowrap + overflow-x no shell estreito (viewport); JS soma largura dos cards + gaps + chrome.
+ * Raio-x ML: grid com no máximo 5 colunas (base + promoções); quebra linha no 6º card.
+ * Largura fixa por card; shell limita largura a 5 colunas (Anuncios.jsx).
  */
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__grid--comfortable {
   --s7-ml-card-gap: calc(20px * var(--raiox-ml-calc-scale));
   --s7-ml-card-fixed: calc(280px * var(--raiox-ml-calc-scale));
-  flex-wrap: nowrap;
-  align-content: flex-start;
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(var(--raiox-ml-compare-cols, 5), var(--s7-ml-card-fixed));
+  gap: var(--s7-ml-card-gap);
+  align-content: start;
+  justify-content: start;
+  width: max-content;
+  max-width: none;
+  overflow: visible;
 }
 
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__grid--comfortable .s7-ml-scenario-compare__card {
-  flex: 0 0 var(--s7-ml-card-fixed);
   width: var(--s7-ml-card-fixed);
-  min-width: var(--s7-ml-card-fixed);
+  min-width: 0;
   max-width: var(--s7-ml-card-fixed);
+  box-sizing: border-box;
 }
 
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card {
@@ -2710,7 +2847,9 @@
 }
 
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body {
-  padding: 0 calc(12px * var(--raiox-ml-calc-scale)) calc(12px * var(--raiox-ml-calc-scale));
+  /* Respiro abaixo do cabeçalho do card: “Receita do marketplace” não cola na linha superior. */
+  padding: calc(10px * var(--raiox-ml-calc-scale)) calc(12px * var(--raiox-ml-calc-scale))
+    calc(12px * var(--raiox-ml-calc-scale));
 }
 
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__section {
@@ -2918,6 +3057,7 @@
 
 .s7-ml-scenario-compare-shell__cards {
   min-width: 0;
+  min-height: 0;
   flex: 1 1 auto;
 }
 
@@ -2945,28 +3085,31 @@
 }
 
 /*
- * Cards: largura mínima confortável; até 6 por linha só enquanto o “slot” ≥ min;
- * o 7º quebra (max-width = 1/6 da linha). Sem scroll horizontal.
+ * Comparativo: até 5 colunas por linha (inclui “Preço normal”). `--raiox-ml-compare-cols` vem do JSX (min(5, n)).
+ * Precificação inteligente: colunas fluidas com largura mínima; Raio-x spacious sobrescreve com largura fixa.
  */
 .s7-ml-scenario-compare__grid--comfortable {
   --s7-ml-card-gap: 12px;
   --s7-ml-card-min: 240px;
-  --s7-ml-card-max-cols: 6;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  align-items: stretch;
+  --raiox-ml-compare-cols: 5;
+  display: grid;
+  grid-template-columns: repeat(
+    var(--raiox-ml-compare-cols),
+    minmax(min(100%, var(--s7-ml-card-min)), 1fr)
+  );
   gap: var(--s7-ml-card-gap);
+  align-content: start;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
   overflow-x: hidden;
   overflow-y: visible;
 }
 
 .s7-ml-scenario-compare__grid--comfortable .s7-ml-scenario-compare__card {
-  flex: 1 1 var(--s7-ml-card-min);
-  min-width: min(100%, var(--s7-ml-card-min));
-  max-width: calc(
-    (100% - (var(--s7-ml-card-max-cols) - 1) * var(--s7-ml-card-gap)) / var(--s7-ml-card-max-cols)
-  );
+  width: 100%;
+  min-width: 0;
+  max-width: none;
   box-sizing: border-box;
 }
 
@@ -3078,7 +3221,7 @@
 }
 
 .s7-ml-scenario-compare__card-body {
-  padding: 0 10px 10px;
+  padding: 8px 10px 10px;
 }
 
 .s7-ml-scenario-compare__card-body .anuncios-sell-popover__section {
@@ -3825,6 +3968,12 @@
   border-radius: 6px;
   background: rgba(15, 23, 42, 0.06);
   color: rgba(15, 23, 42, 0.85);
+}
+
+.anuncios-raiox-teste__col-fee {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  max-width: 110px;
 }
 
 .anuncios-raiox-teste__col-id {

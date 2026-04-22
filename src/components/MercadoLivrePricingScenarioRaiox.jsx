@@ -5,8 +5,14 @@
 
 import { useId, useState } from "react";
 import { formatCatalogBRL } from "../utils/productCatalogRow";
+import S7Icon from "./ui/S7Icon";
 import S7Tooltip from "./ui/S7Tooltip";
-import { cardHeadingLabel } from "./mercadoLivrePricingScenarioCompareShared.js";
+import {
+  cardHeadingLabel,
+  logSaleXrayPayoutPickInRender,
+  pickSaleXrayShippingRawString,
+  pickSaleXrayYouReceiveRawString,
+} from "./mercadoLivrePricingScenarioCompareShared.js";
 
 const DASH = "—";
 
@@ -76,6 +82,83 @@ function buildTariffSubtitleFromScenarioMarketplace(m) {
   if (label) return `${label} ${DASH}`;
   if (pct) return pct;
   return null;
+}
+
+/**
+ * Converte string monetária pt-BR da API em número (fallback leve; valores vêm do backend).
+ * @param {string | null | undefined} s
+ */
+function brlApiStringToNumber(s) {
+  if (s == null || String(s).trim() === "") return NaN;
+  const t = String(s)
+    .trim()
+    .replace(/\s/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+  return Number(t);
+}
+
+/**
+ * Descompacta o texto do backend (`buildDiscountBlock`: `R$ X,XX (Y,YY%)`) — só exibição.
+ *
+ * @param {string | null | undefined} discountText
+ * @returns {{
+ *   discountMoneyFormatted: string;
+ *   pctRounded: number | null;
+ *   discountAmountRaw: string;
+ * } | null}
+ */
+function parseSaleXrayDiscountTextForDisplay(discountText) {
+  if (discountText == null || String(discountText).trim() === "") return null;
+  const s = String(discountText).trim();
+  const m = s.match(/^R\$\s*([\d.,]+)\s*\(\s*([\d.,]+)\s*%\)\s*$/);
+  if (!m) return null;
+  const pctNum = Number(String(m[2]).replace(",", "."));
+  const pctRounded = Number.isFinite(pctNum) ? Math.round(pctNum) : null;
+  const discountMoneyFormatted = formatBrlFromApiString(String(m[1]));
+  return {
+    discountMoneyFormatted,
+    pctRounded,
+    discountAmountRaw: String(m[1]),
+    /** Legado / fallback de uma linha só */
+    amountLine: `R$ ${m[1]}`,
+    percentLine: pctRounded != null ? `${pctRounded}%` : `${m[2]}%`,
+  };
+}
+
+/**
+ * Conteúdo do tooltip de preço promocional (strings já vindas da API / formatação local).
+ */
+function MercadoLivrePromoPriceTooltipBody({ originalPriceDisplay, saleXrayDiscountDisplay, saleXrayDisc, sale }) {
+  return (
+    <div className="anuncios-raiox-promo-price-tip">
+      {originalPriceDisplay != null ? (
+        <div className="anuncios-raiox-promo-price-tip__row anuncios-raiox-promo-price-tip__row--split">
+          <span className="anuncios-raiox-promo-price-tip__label">Valor de venda</span>
+          <span className="anuncios-raiox-promo-price-tip__value">{originalPriceDisplay}</span>
+        </div>
+      ) : null}
+      {saleXrayDiscountDisplay != null ? (
+        <div className="anuncios-raiox-promo-price-tip__row anuncios-raiox-promo-price-tip__row--split">
+          <span className="anuncios-raiox-promo-price-tip__label">
+            Desconto na promoção
+            {saleXrayDiscountDisplay.pctRounded != null ? ` (${saleXrayDiscountDisplay.pctRounded}%)` : ""}
+          </span>
+          <span className="anuncios-raiox-promo-price-tip__value">{saleXrayDiscountDisplay.discountMoneyFormatted}</span>
+        </div>
+      ) : saleXrayDisc != null ? (
+        <div className="anuncios-raiox-promo-price-tip__row anuncios-raiox-promo-price-tip__row--split">
+          <span className="anuncios-raiox-promo-price-tip__label">Desconto na promoção</span>
+          <span className="anuncios-raiox-promo-price-tip__value">{saleXrayDisc}</span>
+        </div>
+      ) : null}
+      <div className="anuncios-raiox-promo-price-tip__sep" role="separator" />
+      <div className="anuncios-raiox-promo-price-tip__row anuncios-raiox-promo-price-tip__row--split anuncios-raiox-promo-price-tip__row--accent">
+        <span className="anuncios-raiox-promo-price-tip__label">Valor de venda na promoção</span>
+        <span className="anuncios-raiox-promo-price-tip__value">{sale}</span>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -260,9 +343,41 @@ export function MercadoLivrePricingScenarioRevenueSection({
     scenario.pricing != null && typeof scenario.pricing === "object"
       ? /** @type {Record<string, unknown>} */ (scenario.pricing)
       : null;
+  const saleXraySimple =
+    String(m.marketplace_payout_source ?? "").trim() === "suse7_sale_xray_simple" ||
+    prFlat?.sale_xray_simple_financials === true ||
+    (sx != null && sx.sale_xray_simple_financials === true);
   const hasFeeSubsidy =
     scenario.is_baseline !== true &&
     (sx?.has_fee_subsidy === true || prFlat?.has_fee_subsidy === true || m.has_fee_subsidy === true);
+
+  const hasBillingTariffContract =
+    sx != null &&
+    sx.charged_fee_gross_brl != null &&
+    String(sx.charged_fee_gross_brl).trim() !== "" &&
+    sx.charged_fee_net_brl != null &&
+    String(sx.charged_fee_net_brl).trim() !== "";
+  const hasSuse7PreviewTariff =
+    scenario.is_baseline !== true &&
+    !hasBillingTariffContract &&
+    m.preview_is_estimated === true &&
+    m.preview_fee_gross_brl != null &&
+    String(m.preview_fee_gross_brl).trim() !== "";
+  const suse7ReductionNum = (() => {
+    if (!hasSuse7PreviewTariff || m.preview_fee_reduction_brl == null) return 0;
+    const n = Number(String(m.preview_fee_reduction_brl).replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  })();
+  const showSuse7TariffReduction = suse7ReductionNum > 0.0005;
+  const tariffReductionNum = (() => {
+    if (!hasBillingTariffContract || sx?.charged_fee_reduction_brl == null) return 0;
+    const n = Number(String(sx.charged_fee_reduction_brl).replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  })();
+  const showBillingTariffReduction = tariffReductionNum > 0.0005;
+  const billingTariffApplied =
+    sx?.billing_tariff_applied === true || prFlat?.billing_tariff_applied === true || m.billing_tariff_applied === true;
+  const tariffContractEstimated = sx?.charged_fee_is_estimated === true && billingTariffApplied !== true;
 
   /** Contrato backend: tarifa cobrada real (NP API) — habilita bloco teórico × cobrada × redução. */
   const chargedFeeRaw =
@@ -319,16 +434,27 @@ export function MercadoLivrePricingScenarioRevenueSection({
       : feeDisplayRaw !== ""
         ? formatNegativeBrlFromApiString(feeDisplayRaw) ?? DASH
         : DASH;
-  const shipRaw = m.shipping_cost_amount_brl != null ? String(m.shipping_cost_amount_brl) : "";
+  const shipPick = pickSaleXrayShippingRawString(m, sx, /** @type {Record<string, unknown>} */ (scenario));
+  const shipRaw = shipPick.raw != null ? shipPick.raw : "";
   const shipVal = shipRaw !== "" ? formatNegativeBrlFromApiString(shipRaw) ?? DASH : DASH;
   const sale =
     m.sale_price_brl != null && String(m.sale_price_brl).trim() !== ""
       ? formatBrlFromApiString(String(m.sale_price_brl))
       : DASH;
+  const receivePick = pickSaleXrayYouReceiveRawString(m, sx, /** @type {Record<string, unknown>} */ (scenario));
   const receive =
-    m.marketplace_payout_amount_brl != null && String(m.marketplace_payout_amount_brl).trim() !== ""
-      ? formatBrlFromApiString(String(m.marketplace_payout_amount_brl))
+    receivePick.raw != null && String(receivePick.raw).trim() !== ""
+      ? formatBrlFromApiString(String(receivePick.raw))
       : DASH;
+  const forcePayoutLog =
+    typeof import.meta !== "undefined" && import.meta.env?.VITE_SALE_XRAY_PAYOUT_TRACE === "1";
+  logSaleXrayPayoutPickInRender(
+    /** @type {Record<string, unknown>} */ (scenario),
+    m,
+    sx,
+    receivePick,
+    forcePayoutLog
+  );
 
   const marketplaceParticipationAmt =
     m.marketplace_participation_amount_brl != null && String(m.marketplace_participation_amount_brl).trim() !== ""
@@ -364,13 +490,29 @@ export function MercadoLivrePricingScenarioRevenueSection({
       ? formatBrlFromApiString(String(m.seller_discount_amount_brl))
       : null;
 
-  /** Baseline = preço de tabela; abas promocionais = só o efetivo da oferta (sem repetir “original”). */
-  const saleLineLabel = scenario.is_baseline === true ? "Valor de venda" : "Valor de venda na promoção";
-
   const saleXrayDisc =
     scenario._sale_xray_discount_text != null && String(scenario._sale_xray_discount_text).trim() !== ""
       ? String(scenario._sale_xray_discount_text).trim()
       : null;
+  const saleXrayDiscountDisplay = saleXrayDisc != null ? parseSaleXrayDiscountTextForDisplay(saleXrayDisc) : null;
+
+  const originalPriceRaw = sx?.original_price_brl ?? prFlat?.original_price_brl ?? null;
+  let originalPriceDisplay =
+    originalPriceRaw != null && String(originalPriceRaw).trim() !== ""
+      ? formatBrlFromApiString(String(originalPriceRaw))
+      : null;
+  if (
+    originalPriceDisplay == null &&
+    scenario.is_baseline !== true &&
+    saleXrayDiscountDisplay != null &&
+    m.sale_price_brl != null
+  ) {
+    const sv = brlApiStringToNumber(String(m.sale_price_brl));
+    const dv = brlApiStringToNumber(String(saleXrayDiscountDisplay.discountAmountRaw));
+    if (Number.isFinite(sv) && Number.isFinite(dv) && sv > 0 && dv >= 0) {
+      originalPriceDisplay = formatBrlFromApiString((sv + dv).toFixed(2));
+    }
+  }
   const tSubsSx =
     sx?.subsidy_text != null && String(sx.subsidy_text).trim() !== "" ? String(sx.subsidy_text).trim() : null;
   const tSubsPr =
@@ -383,23 +525,116 @@ export function MercadoLivrePricingScenarioRevenueSection({
       : null;
   const saleXraySubsidyTxt = tSubsSx ?? tSubsPr ?? tSubsLegacy ?? null;
 
+  const feeSimpleRaw =
+    prFlat?.fee_amount_brl != null && String(prFlat.fee_amount_brl).trim() !== ""
+      ? String(prFlat.fee_amount_brl)
+      : m.sale_fee_amount_brl != null && String(m.sale_fee_amount_brl).trim() !== ""
+        ? String(m.sale_fee_amount_brl)
+        : "";
+  const feeSimpleLine = feeSimpleRaw !== "" ? formatNegativeBrlFromApiString(feeSimpleRaw) ?? DASH : DASH;
+
   return (
     <div className="anuncios-sell-popover__section">
         <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
         <div className="anuncios-sell-popover__block">
-          <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key">
-            <span>{saleLineLabel}</span>
-            <strong>{sale}</strong>
-          </div>
-          {scenario.is_baseline !== true && saleXrayDisc != null ? (
-            <div className="anuncios-sell-popover__line">
-              <span>Desconto na promoção</span>
-              <strong>{saleXrayDisc}</strong>
+          {scenario.is_baseline === true ? (
+            <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key anuncios-sell-popover__line--promo-sale">
+              <span className="anuncios-sell-popover__promo-sale-label">
+                <span className="anuncios-sell-popover__promo-sale-title-inline">
+                  <span className="anuncios-sell-popover__promo-sale-title-text">Valor de venda</span>
+                </span>
+              </span>
+              <strong>{sale}</strong>
             </div>
-          ) : null}
+          ) : (
+            <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key anuncios-sell-popover__line--promo-sale">
+              <span className="anuncios-sell-popover__promo-sale-label">
+                <span className="anuncios-sell-popover__promo-sale-title-inline">
+                  <span className="anuncios-sell-popover__promo-sale-title-text">Valor de venda na promoção</span>
+                  {saleXrayDisc != null ? (
+                    <S7Tooltip
+                      richContent={
+                        <MercadoLivrePromoPriceTooltipBody
+                          originalPriceDisplay={originalPriceDisplay}
+                          saleXrayDiscountDisplay={saleXrayDiscountDisplay}
+                          saleXrayDisc={saleXrayDisc}
+                          sale={sale}
+                        />
+                      }
+                      offset={4}
+                    >
+                      <button
+                        type="button"
+                        className="anuncios-sell-popover__promo-price-tip-btn"
+                        aria-label="Detalhes do preço e desconto da promoção"
+                      >
+                        <S7Icon name="info" size={13} strokeWidth={2} />
+                      </button>
+                    </S7Tooltip>
+                  ) : null}
+                </span>
+              </span>
+              <strong>{sale}</strong>
+            </div>
+          )}
         </div>
         <div className="anuncios-sell-popover__block">
-          {scenario.is_baseline !== true && hasChargedFeeFromApi && feeGrossRaw !== "" ? (
+          {saleXraySimple ? (
+            <div className="anuncios-sell-popover__line">
+              <span>Tarifa de venda</span>
+              <strong>{feeSimpleLine}</strong>
+            </div>
+          ) : hasBillingTariffContract ? (
+            <>
+              <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key">
+                <span>
+                  Tarifa de venda
+                  {tariffContractEstimated ? (
+                    <span className="anuncios-sell-popover__muted"> · Estimado</span>
+                  ) : null}
+                </span>
+              </div>
+              {showBillingTariffReduction ? (
+                <>
+                  <div className="anuncios-sell-popover__line">
+                    <span>Tarifa bruta</span>
+                    <strong>{formatNegativeBrlFromApiString(String(sx.charged_fee_gross_brl)) ?? DASH}</strong>
+                  </div>
+                  <div className="anuncios-sell-popover__line">
+                    <span>Redução da tarifa</span>
+                    <strong>{formatNegativeBrlFromApiString(String(sx.charged_fee_reduction_brl)) ?? DASH}</strong>
+                  </div>
+                </>
+              ) : null}
+              <div className="anuncios-sell-popover__line">
+                <span>Tarifa cobrada</span>
+                <strong>{formatNegativeBrlFromApiString(String(sx.charged_fee_net_brl)) ?? DASH}</strong>
+              </div>
+            </>
+          ) : hasSuse7PreviewTariff ? (
+            <>
+              <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key">
+                <span>
+                  Tarifa de venda
+                  <span className="anuncios-sell-popover__muted"> · Estimado pelo Suse7</span>
+                </span>
+              </div>
+              <div className="anuncios-sell-popover__line">
+                <span>Tarifa bruta</span>
+                <strong>{formatNegativeBrlFromApiString(String(m.preview_fee_gross_brl)) ?? DASH}</strong>
+              </div>
+              {showSuse7TariffReduction ? (
+                <div className="anuncios-sell-popover__line">
+                  <span>Redução da tarifa</span>
+                  <strong>+ {formatBrlFromApiString(String(m.preview_fee_reduction_brl))}</strong>
+                </div>
+              ) : null}
+              <div className="anuncios-sell-popover__line">
+                <span>Tarifa cobrada</span>
+                <strong>{formatNegativeBrlFromApiString(String(m.preview_fee_net_brl)) ?? DASH}</strong>
+              </div>
+            </>
+          ) : scenario.is_baseline !== true && hasChargedFeeFromApi && feeGrossRaw !== "" ? (
             <>
               <div className="anuncios-sell-popover__line">
                 <span>Tarifa de venda</span>
@@ -451,14 +686,14 @@ export function MercadoLivrePricingScenarioRevenueSection({
           {shipCtxLabel != null ? (
             <div className="anuncios-sell-popover__muted">{shipCtxLabel}</div>
           ) : null}
-          {showShippingSubsidyMlLine && shipSub != null ? (
+          {showShippingSubsidyMlLine && shipSub != null && !saleXraySimple ? (
             <div className="anuncios-sell-popover__line">
               <span>Subsídio de frete (ML)</span>
               <strong>{shipSub}</strong>
             </div>
           ) : null}
         </div>
-        {benefitLineAmt != null && !hasFeeSubsidy ? (
+        {benefitLineAmt != null && !hasFeeSubsidy && !saleXraySimple ? (
           <div className="anuncios-sell-popover__block">
             <div className="anuncios-sell-popover__line">
               <span>{benefitLineLabel}</span>
@@ -466,9 +701,9 @@ export function MercadoLivrePricingScenarioRevenueSection({
             </div>
           </div>
         ) : null}
-        {promoSubMl != null || sellerDisc != null ? (
+        {(!saleXraySimple && promoSubMl != null) || sellerDisc != null ? (
           <div className="anuncios-sell-popover__block">
-            {promoSubMl != null ? (
+            {!saleXraySimple && promoSubMl != null ? (
               <div className="anuncios-sell-popover__line">
                 <span>Subsídio promocional (ML)</span>
                 <strong>{promoSubMl}</strong>
@@ -488,7 +723,7 @@ export function MercadoLivrePricingScenarioRevenueSection({
             <strong>{receive}</strong>
           </div>
         </div>
-        {scenario.is_baseline !== true && saleXraySubsidyTxt != null && !hasFeeSubsidy ? (
+        {scenario.is_baseline !== true && saleXraySubsidyTxt != null && !hasFeeSubsidy && !saleXraySimple ? (
           <div className="anuncios-sell-popover__block">
             <div className="anuncios-sell-popover__line">
               <span>Subsídio (ML)</span>
@@ -496,7 +731,7 @@ export function MercadoLivrePricingScenarioRevenueSection({
             </div>
           </div>
         ) : null}
-        {showSubsidy && scenario.is_baseline !== true ? (
+        {showSubsidy && scenario.is_baseline !== true && !saleXraySimple ? (
           <MercadoLivrePricingScenarioSubsidyCollapsible scenario={scenario} />
         ) : null}
         {scenario.data_quality != null &&

@@ -19,6 +19,7 @@ import {
   buildRaioxScenariosFromSaleXrayModalContract,
   enrichRaioxScenariosWithListingPromotionMetadata,
   mergeListingGridRowIntoMlScenarios,
+  shouldSaleXrayDebugTrace,
 } from "./mercadoLivrePricingScenarioCompareShared.js";
 
 /** Evita import circular com Anuncios.jsx (export de ListingCoverThumb). */
@@ -374,10 +375,12 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
       setMlScenariosError(null);
       try {
         const url = buildApiUrl("/api/ml/listings/sale-xray-modal");
-        console.log("[SALE_XRAY] calling sale-xray-modal", {
-          listingExternalId: row.externalId,
-          url: url ?? null,
-        });
+        if (shouldSaleXrayDebugTrace(row.externalId)) {
+          console.log("[SALE_XRAY] calling sale-xray-modal", {
+            listingExternalId: row.externalId,
+            url: url ?? null,
+          });
+        }
         if (!url) {
           if (!cancelled) {
             setMlScenariosError("API não configurada (VITE_API_BASE_URL).");
@@ -418,7 +421,9 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
           }
           return;
         }
-        console.log("[SALE_XRAY] response", data);
+        if (shouldSaleXrayDebugTrace(data)) {
+          console.log("[SALE_XRAY] response", data);
+        }
         if (!cancelled) {
           setMlScenariosPayload(data);
         }

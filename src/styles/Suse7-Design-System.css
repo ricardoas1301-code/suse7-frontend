@@ -51,7 +51,14 @@
 
   /* Laranja / aviso amigável: tokens canônicos --s7-orange, --s7-orange-hover, --s7-contextual-accent em styles/tokens/colors.css */
 
-  --s7-tooltip-bg: #111827;
+  /* Tooltip (balão .s7-tip / painéis DS) — fundo claro, texto escuro */
+  --s7-tooltip-bg: #ffffff;
+  --s7-tooltip-border: rgba(15, 23, 42, 0.1);
+  --s7-tooltip-text: var(--s7-text);
+  --s7-tooltip-shadow: 0 4px 6px rgba(15, 23, 42, 0.06), 0 12px 24px rgba(15, 23, 42, 0.1);
+  /* Gatilho (ícone i): azul Suse7 no repouso; hover reforça com primary-hover */
+  --s7-tooltip-trigger: var(--s7-primary);
+  --s7-tooltip-trigger-hover: var(--s7-primary-hover);
 
   /* --------------------------------------------------
      RADIUS
@@ -425,9 +432,10 @@
 
 /* ======================================================
    TOOLTIP (reutilizável)
-   - Para tooltips que seguem mouse ou são posicionadas via JS
+   - Uso legado: só painéis flutuantes SEM .s7-tip / SEM .s7-tooltip--rich-panel
+   - S7Tooltip ancorado usa .s7-tooltip + .s7-tip no MESMO nó — não herdar este bloco
 ====================================================== */
-.s7-tooltip{
+.s7-tooltip:not(.s7-tip):not(.s7-tooltip--rich-panel) {
   position: fixed;
   z-index: 99999;
 
@@ -435,12 +443,13 @@
   border-radius: 8px;
 
   background: var(--s7-tooltip-bg);
-  color: #ffffff;
+  color: var(--s7-tooltip-text);
+  border: 1px solid var(--s7-tooltip-border);
 
   font-size: var(--s7-fs-tooltip);
   font-weight: 600;
 
-  box-shadow: var(--s7-shadow-float);
+  box-shadow: var(--s7-tooltip-shadow);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -474,6 +483,7 @@
 
   /* ✅ -33% menor */
   font-size: 11px;
+  font-weight: 500;
   line-height: 1.2;
   padding: 6px 10px;
 
@@ -486,10 +496,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
 
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--s7-tooltip-bg);
+  color: var(--s7-tooltip-text);
+  border: 1px solid var(--s7-tooltip-border);
   border-radius: 12px;
-  box-shadow: var(--s7-shadow-float);
+  box-shadow: var(--s7-tooltip-shadow);
 
   opacity: 0;
   visibility: hidden;
@@ -509,7 +520,7 @@
   z-index: 99999;
 
   border: 5px solid transparent;
-  border-top-color: #0f172a;
+  border-top-color: var(--s7-tooltip-bg);
 
   opacity: 0;
   visibility: hidden;
@@ -589,7 +600,7 @@
   bottom: auto;
 
   border-top-color: transparent;
-  border-bottom-color: #0f172a;
+  border-bottom-color: var(--s7-tooltip-bg);
 }
 
 

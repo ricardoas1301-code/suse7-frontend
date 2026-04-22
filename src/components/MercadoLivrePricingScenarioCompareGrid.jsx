@@ -44,6 +44,9 @@ export function MercadoLivrePricingScenarioCompareGrid({ scenarios }) {
     return built;
   }, [scenarios]);
 
+  /** Base + promoções: no máximo 5 cards por linha no Raio-x / precificação. */
+  const colsPerRow = Math.min(5, Math.max(1, rows.length));
+
   return (
     <div
       className="s7-ml-scenario-compare"
@@ -51,7 +54,13 @@ export function MercadoLivrePricingScenarioCompareGrid({ scenarios }) {
       role="region"
       aria-label="Comparativo de cenários Mercado Livre"
     >
-      <div className="s7-ml-scenario-compare__grid s7-ml-scenario-compare__grid--comfortable">
+      <div
+        className="s7-ml-scenario-compare__grid s7-ml-scenario-compare__grid--comfortable"
+        style={
+          /** @type {import("react").CSSProperties} */
+          ({ "--raiox-ml-compare-cols": colsPerRow })
+        }
+      >
         {rows.map(({ scenario, group }, rowIndex) => {
           const badgeInfo = resolveRaioxListingBadge(scenario);
           const reactKey = resolveSaleXrayArticleKey(scenario, rowIndex);
@@ -97,7 +106,9 @@ export function MercadoLivrePricingScenarioCompareGrid({ scenarios }) {
                   </div>
                   {group === "participating" ? (
                     <span className="s7-ml-scenario-compare__badge s7-ml-scenario-compare__badge--participating">
-                      Participando
+                      {badgeInfo.label != null && String(badgeInfo.label).trim() !== ""
+                        ? String(badgeInfo.label).trim()
+                        : "Ativa"}
                     </span>
                   ) : null}
                   {group === "available" ? (
