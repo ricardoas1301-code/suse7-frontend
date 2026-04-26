@@ -46,7 +46,9 @@ import Notificacoes from "./components/Profile/Notificacoes";
 
 // Produtos (REAL)
 import Products from "./components/Products";
-import Anuncios from "./components/Anuncios";
+import AnunciosPage from "./pages/AnunciosPage";
+import PrecificacoesPage from "./pages/PrecificacoesPage";
+import PricingIntelligencePage from "./pages/PricingIntelligencePage";
 import AnunciosTeste from "./pages/AnunciosTeste";
 import MlListingImportDebug from "./pages/debug/MlListingImportDebug.jsx";
 import ProductCreate from "./pages/ProductCreate";
@@ -67,8 +69,6 @@ const Relatorios = () => <h1>Relatórios</h1>;
 const Monitoramento = () => <h1>Monitoramento</h1>;
 const Registros = () => <h1>Registros</h1>;
 const Configuracoes = () => <h1>Configurações</h1>;
-const Precificacoes = () => <h1>Precificações</h1>;
-
 // ======================================================================
 // AUTH WRAPPER
 // ======================================================================
@@ -155,7 +155,7 @@ const router = createBrowserRouter([
           },
         ],
       },
-      { path: "anuncios", element: <Anuncios /> },
+      { path: "anuncios", element: <AnunciosPage /> },
       { path: "anuncios-2", element: <AnunciosTeste /> },
       { path: "anuncios/debug-importacao", element: <MlListingImportDebug /> },
       { path: "produtos", element: <Products /> },
@@ -165,7 +165,8 @@ const router = createBrowserRouter([
       { path: "monitoramento", element: <Monitoramento /> },
       { path: "registros", element: <Registros /> },
       { path: "configuracoes", element: <Navigate to="/perfil" replace /> },
-      { path: "precificacoes", element: <Precificacoes /> },
+      { path: "precificacoes", element: <PrecificacoesPage /> },
+      { path: "precificacoes/inteligente/:listingId", element: <PricingIntelligencePage /> },
       { path: "produtos/novo", element: <ProductCreate /> },
       { path: "produtos/:id/editar", element: <ProductEdit /> },
       {

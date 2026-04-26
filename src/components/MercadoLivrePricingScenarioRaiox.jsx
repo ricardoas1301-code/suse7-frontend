@@ -9,9 +9,13 @@ import S7Icon from "./ui/S7Icon";
 import S7Tooltip from "./ui/S7Tooltip";
 import {
   cardHeadingLabel,
+  getOfferStatusFromMargin,
   logSaleXrayPayoutPickInRender,
+  offerSemanticSuffixToCssClass,
+  pickPricingShippingCostContext,
   pickSaleXrayShippingRawString,
   pickSaleXrayYouReceiveRawString,
+  shouldSaleXrayShippingAuditTrace,
 } from "./mercadoLivrePricingScenarioCompareShared.js";
 
 const DASH = "—";
@@ -320,16 +324,20 @@ export function MercadoLivrePricingScenarioSubsidyCollapsible({ scenario }) {
 
 /**
  * Seção Receita do marketplace para um cenário isolado.
+ * `baselineListingSaleDisplayOverride`: só exibição — alinha “Valor de venda” do baseline ao preço do catálogo (página Precificação).
+ *
  * @param {{
  *   scenario: Record<string, unknown>;
  *   showSubsidy?: boolean;
  *   showShippingSubsidyMlLine?: boolean;
+ *   baselineListingSaleDisplayOverride?: string | null;
  * }} props
  */
 export function MercadoLivrePricingScenarioRevenueSection({
   scenario,
   showSubsidy = true,
   showShippingSubsidyMlLine = true,
+  baselineListingSaleDisplayOverride = null,
 }) {
   const m =
     scenario.marketplace != null && typeof scenario.marketplace === "object"
@@ -441,6 +449,12 @@ export function MercadoLivrePricingScenarioRevenueSection({
     m.sale_price_brl != null && String(m.sale_price_brl).trim() !== ""
       ? formatBrlFromApiString(String(m.sale_price_brl))
       : DASH;
+  const saleBaselineDisplay =
+    scenario.is_baseline === true &&
+    baselineListingSaleDisplayOverride != null &&
+    String(baselineListingSaleDisplayOverride).trim() !== ""
+      ? String(baselineListingSaleDisplayOverride).trim()
+      : sale;
   const receivePick = pickSaleXrayYouReceiveRawString(m, sx, /** @type {Record<string, unknown>} */ (scenario));
   const receive =
     receivePick.raw != null && String(receivePick.raw).trim() !== ""
@@ -475,8 +489,29 @@ export function MercadoLivrePricingScenarioRevenueSection({
   const benefitLineAmt = marketplaceParticipationAmt ?? marketplaceBenefitAmt;
   const benefitLineLabel = marketplaceParticipationLabel ?? marketplaceBenefitLabel;
 
-  const shipCtxLabel =
-    m.shipping_context != null ? shippingContextDisplayLabel(String(m.shipping_context)) : null;
+  const shipCtxCanon = pickPricingShippingCostContext(
+    /** @type {Record<string, unknown>} */ ({
+      ml_shipping_cost_context: m.ml_shipping_cost_context ?? sx?.ml_shipping_cost_context,
+      shipping_cost_context: m.shipping_cost_context ?? sx?.shipping_cost_context,
+      shipping_context: m.shipping_context,
+    }),
+  );
+  const lr = scenario._raiox_listing_row;
+  const extForAudit =
+    lr && typeof lr === "object" ? /** @type {Record<string, unknown>} */ (lr).externalId : null;
+  if (shouldSaleXrayShippingAuditTrace(extForAudit)) {
+    console.info("[SALE_XRAY_SHIPPING_AUDIT][card_render]", {
+      listing_external_id: extForAudit ?? null,
+      scenario_key: scenario.scenario_key ?? scenario.scenario_id ?? null,
+      shipCtxCanon,
+      m_shipping_context: m.shipping_context ?? null,
+      sx_shipping_cost_context: sx?.shipping_cost_context ?? null,
+      sx_ml_shipping_cost_context: sx?.ml_shipping_cost_context ?? null,
+      shipPick_source: shipPick.source,
+      shipRaw: shipPick.raw ?? null,
+    });
+  }
+  const shipCtxLabel = shippingContextDisplayLabel(shipCtxCanon);
   const shipSub =
     m.shipping_subsidy_amount_brl != null && String(m.shipping_subsidy_amount_brl).trim() !== ""
       ? formatBrlFromApiString(String(m.shipping_subsidy_amount_brl))
@@ -544,7 +579,7 @@ export function MercadoLivrePricingScenarioRevenueSection({
                   <span className="anuncios-sell-popover__promo-sale-title-text">Valor de venda</span>
                 </span>
               </span>
-              <strong>{sale}</strong>
+              <strong>{saleBaselineDisplay}</strong>
             </div>
           ) : (
             <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key anuncios-sell-popover__line--promo-sale">
@@ -756,9 +791,17 @@ export function MercadoLivrePricingScenarioRevenueSection({
 
 /**
  * Custos internos + resultado para um único cenário ML (dados normalizados da API; sem cálculo no JSX).
- * @param {{ scenario: Record<string, unknown> }} props
+ * @param {{
+ *   scenario: Record<string, unknown>;
+ *   hideBreakEvenRow?: boolean;
+ *   profitLineLabel?: string | null;
+ * }} props
  */
-export function MercadoLivrePricingScenarioInternalAndResultSection({ scenario }) {
+export function MercadoLivrePricingScenarioInternalAndResultSection({
+  scenario,
+  hideBreakEvenRow = false,
+  profitLineLabel = null,
+}) {
   const ic =
     scenario.internal_costs != null && typeof scenario.internal_costs === "object"
       ? /** @type {Record<string, unknown>} */ (scenario.internal_costs)
@@ -777,12 +820,19 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({ scenario }
     ic?.tax_percent_label != null && String(ic.tax_percent_label).trim() !== ""
       ? String(ic.tax_percent_label)
       : null;
-  const semRaw =
+  const offerFromMargin = getOfferStatusFromMargin(simRes?.margin_pct);
+  const semRawBackend =
     simRes?.offer_status_semantic != null ? String(simRes.offer_status_semantic).trim() : "";
-  const offerSemClass =
-    ["critical", "danger", "acceptable", "great", "excellent"].includes(semRaw)
-      ? `anuncios-sell-popover__offer-sem--${semRaw}`
-      : "";
+  const semSuffixForClass = offerFromMargin != null ? offerFromMargin.color : semRawBackend;
+  const offerSemClass = offerSemanticSuffixToCssClass(semSuffixForClass);
+  const offerStatusLineText =
+    offerFromMargin != null
+      ? offerFromMargin.label
+      : simRes?.offer_status_label != null
+        ? String(simRes.offer_status_label)
+        : simRes?.offer_status != null
+          ? String(simRes.offer_status)
+          : DASH;
 
   return (
     <>
@@ -856,21 +906,25 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({ scenario }
         )}
       </div>
 
-      <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future anuncios-pricing-modal__raiox-block">
+      <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future anuncios-pricing-modal__raiox-block anuncios-sell-popover__section--raiox-resultado">
         <h4 className="anuncios-sell-popover__section-title">Resultado</h4>
         {block3Mode === "ok" && simRes != null ? (
           <>
             <div className="anuncios-sell-popover__block">
-              <div className="anuncios-sell-popover__line">
-                <span>Lucro líquido</span>
+              <div className="anuncios-sell-popover__line anuncios-sell-popover__line--raiox-result-metric">
+                <span className={offerSemClass || undefined}>
+                  {profitLineLabel != null && String(profitLineLabel).trim() !== ""
+                    ? String(profitLineLabel).trim()
+                    : "Lucro líquido"}
+                </span>
                 <strong className={offerSemClass || undefined}>
                   {simRes?.profit_brl != null ? formatBrlFromApiString(String(simRes.profit_brl)) : DASH}
                 </strong>
               </div>
             </div>
             <div className="anuncios-sell-popover__block">
-              <div className="anuncios-sell-popover__line">
-                <span>Margem</span>
+              <div className="anuncios-sell-popover__line anuncios-sell-popover__line--raiox-result-metric">
+                <span className={offerSemClass || undefined}>Margem</span>
                 <strong className={offerSemClass || undefined}>
                   {simRes?.margin_pct != null && String(simRes.margin_pct).trim() !== ""
                     ? `${String(simRes.margin_pct).replace(".", ",")} %`
@@ -878,26 +932,22 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({ scenario }
                 </strong>
               </div>
             </div>
-            <div className="anuncios-sell-popover__block">
-              <div className="anuncios-sell-popover__line">
-                <span>Preço mínimo saudável</span>
-                <strong>
-                  {simRes?.break_even_price_brl != null && String(simRes.break_even_price_brl).trim() !== ""
-                    ? formatBrlFromApiString(String(simRes.break_even_price_brl))
-                    : DASH}
-                </strong>
-              </div>
-            </div>
-            <div className="anuncios-sell-popover__block">
-              <div className="anuncios-sell-popover__line anuncios-sell-popover__line--status-offer">
-                <span>Status da oferta</span>
-                <strong className={offerSemClass || undefined}>
-                  {simRes?.offer_status_label != null
-                    ? String(simRes.offer_status_label)
-                    : simRes?.offer_status != null
-                      ? String(simRes.offer_status)
+            {!hideBreakEvenRow ? (
+              <div className="anuncios-sell-popover__block">
+                <div className="anuncios-sell-popover__line">
+                  <span>Preço mínimo saudável</span>
+                  <strong>
+                    {simRes?.break_even_price_brl != null && String(simRes.break_even_price_brl).trim() !== ""
+                      ? formatBrlFromApiString(String(simRes.break_even_price_brl))
                       : DASH}
-                </strong>
+                  </strong>
+                </div>
+              </div>
+            ) : null}
+            <div className="anuncios-sell-popover__block">
+              <div className="anuncios-sell-popover__line anuncios-sell-popover__line--status-offer anuncios-sell-popover__line--raiox-result-metric">
+                <span className={offerSemClass || undefined}>Status da oferta</span>
+                <strong className={offerSemClass || undefined}>{offerStatusLineText}</strong>
               </div>
             </div>
           </>

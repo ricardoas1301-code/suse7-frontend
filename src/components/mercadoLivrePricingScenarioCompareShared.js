@@ -84,11 +84,44 @@ export function resolveRaioxListingBadge(scenario) {
   if (eff === "participate") return { label: "Disponível", uxGroup: "available" };
   if (eff === "expired") return { label: null, uxGroup: "available" };
 
+  const pst = String(r.status ?? "").toLowerCase();
+  if (pst === "candidate" || pst === "eligible" || pst === "available") {
+    return { label: "Disponível", uxGroup: "available" };
+  }
+
   const g = classifyScenarioUxGroup(scenario);
   const st = String(r.status ?? "").toLowerCase();
   if (g === "participating") return { label: "Ativa", uxGroup: "participating" };
   if (g === "available") return { label: st === "scheduled" ? "Programada" : "Disponível", uxGroup: "available" };
   return { label: null, uxGroup: g };
+}
+
+/**
+ * Status do anúncio (grid) para segunda linha do card baseline no Raio-x — só apresentação.
+ *
+ * @param {unknown} scenario
+ * @returns {{ label: string; badgeClass: "participating" | "available" }}
+ */
+export function resolveRaioxBaselineListingStatusBadge(scenario) {
+  const lr =
+    scenario && typeof scenario === "object"
+      ? /** @type {Record<string, unknown>} */ (scenario)._raiox_listing_row
+      : null;
+  if (lr && typeof lr === "object") {
+    const L = /** @type {Record<string, unknown>} */ (lr);
+    const key = L.statusKey != null ? String(L.statusKey).trim().toLowerCase() : "";
+    const labelRaw = L.statusLabel != null ? String(L.statusLabel).trim() : "";
+    if (labelRaw !== "" && labelRaw !== "—") {
+      const badgeClass = key === "paused" ? "available" : "participating";
+      return { label: labelRaw, badgeClass };
+    }
+    const rawSt = L.status != null ? String(L.status).trim().toLowerCase() : "";
+    if (rawSt === "active") return { label: "Ativo", badgeClass: "participating" };
+    if (rawSt === "paused") return { label: "Pausado", badgeClass: "available" };
+    if (rawSt === "closed") return { label: "Encerrado", badgeClass: "available" };
+    if (rawSt === "not_yet_active" || rawSt === "inactive") return { label: "Inativo", badgeClass: "available" };
+  }
+  return { label: "Ativo", badgeClass: "participating" };
 }
 
 /**
@@ -112,6 +145,164 @@ export function formatScenarioVigenciaLine(scenario) {
   return null;
 }
 
+const SALE_XRAY_NO_VIGENCIA = "Sem data informada";
+
+/**
+ * @param {string | null | undefined} iso
+ * @returns {string | null}
+ */
+function formatIsoToRaioxVigenciaPtBr(iso) {
+  if (!iso || String(iso).trim() === "") return null;
+  const t = Date.parse(String(iso));
+  if (!Number.isFinite(t)) return null;
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(t).replace(".", "");
+}
+
+/**
+ * Intervalo curto pt-BR (ex.: "22 de abr a 11 de mai") — alinhado ao contrato do modal no backend.
+ *
+ * @param {string | null | undefined} startIso
+ * @param {string | null | undefined} endIso
+ * @returns {string | null}
+ */
+export function formatRaioxVigenciaPtBrRange(startIso, endIso) {
+  const x = startIso ? formatIsoToRaioxVigenciaPtBr(String(startIso)) : null;
+  const y = endIso ? formatIsoToRaioxVigenciaPtBr(String(endIso)) : null;
+  if (x && y) return `${x} a ${y}`;
+  if (x) return x;
+  if (y) return y;
+  return null;
+}
+
+/**
+ * @param {Record<string, unknown>} r
+ */
+function pickRowVigenciaDateStrings(r) {
+  const pick = (...vals) => {
+    for (const v of vals) {
+      if (v == null) continue;
+      const s = String(v).trim();
+      if (s !== "") return s;
+    }
+    return "";
+  };
+  const startRaw = pick(
+    r.starts_at,
+    r.promotion_start_date,
+    r.promotionStartDate,
+    r.start_date,
+    r.date_from,
+  );
+  const endRaw = pick(r.ends_at, r.promotion_end_date, r.promotionEndDate, r.finish_date, r.end_date, r.date_to);
+  return { startRaw, endRaw };
+}
+
+/**
+ * Linha de vigência obrigatória nos cards de promoção (baseline sem linha).
+ * Ordem: texto literal ML → contrato `_sale_xray_vigencia_text` → datas canônicas/aliases → fallback seguro.
+ *
+ * @param {unknown} scenario
+ * @returns {{ line: string | null; audit: { promotion_id: string | null; starts_at_before: string | null; ends_at_before: string | null; fonte: string | null; fallback_aplicado: boolean } }}
+ */
+export function resolveRaioxCardVigenciaLine(scenario) {
+  const emptyAudit = {
+    promotion_id: null,
+    starts_at_before: null,
+    ends_at_before: null,
+    fonte: null,
+    fallback_aplicado: false,
+  };
+  if (!scenario || typeof scenario !== "object") return { line: null, audit: emptyAudit };
+  const r = /** @type {Record<string, unknown>} */ (scenario);
+  if (r.is_baseline === true) return { line: null, audit: emptyAudit };
+  const kind = String(r.kind ?? "").toLowerCase();
+  if (kind === "base") return { line: null, audit: emptyAudit };
+
+  const beforeS = r.starts_at != null && String(r.starts_at).trim() !== "" ? String(r.starts_at).trim() : null;
+  const beforeE = r.ends_at != null && String(r.ends_at).trim() !== "" ? String(r.ends_at).trim() : null;
+  const pid = r.promotion_id != null ? String(r.promotion_id).trim() : null;
+
+  const litRow = r.promotion_vigencia_text;
+  if (litRow != null && String(litRow).trim() !== "") {
+    const t = String(litRow).trim();
+    return {
+      line: t,
+      audit: {
+        promotion_id: pid,
+        starts_at_before: beforeS,
+        ends_at_before: beforeE,
+        fonte: "promotion_vigencia_text",
+        fallback_aplicado: t === SALE_XRAY_NO_VIGENCIA,
+      },
+    };
+  }
+  const promNested =
+    r.promotion != null && typeof r.promotion === "object" ? /** @type {Record<string, unknown>} */ (r.promotion) : null;
+  const litNested = promNested?.promotion_vigencia_text;
+  if (litNested != null && String(litNested).trim() !== "") {
+    const t = String(litNested).trim();
+    return {
+      line: t,
+      audit: {
+        promotion_id: pid,
+        starts_at_before: beforeS,
+        ends_at_before: beforeE,
+        fonte: "promotion.promotion_vigencia_text",
+        fallback_aplicado: t === SALE_XRAY_NO_VIGENCIA,
+      },
+    };
+  }
+  const sx = r._sale_xray_vigencia_text;
+  if (sx != null && String(sx).trim() !== "") {
+    const t = String(sx).trim();
+    return {
+      line: t,
+      audit: {
+        promotion_id: pid,
+        starts_at_before: beforeS,
+        ends_at_before: beforeE,
+        fonte: "_sale_xray_vigencia_text",
+        fallback_aplicado: t === SALE_XRAY_NO_VIGENCIA,
+      },
+    };
+  }
+  const { startRaw, endRaw } = pickRowVigenciaDateStrings(r);
+  const ranged = formatRaioxVigenciaPtBrRange(startRaw || null, endRaw || null);
+  if (ranged) {
+    return {
+      line: ranged,
+      audit: {
+        promotion_id: pid,
+        starts_at_before: beforeS,
+        ends_at_before: beforeE,
+        fonte: "starts_at_ends_at_aliases",
+        fallback_aplicado: false,
+      },
+    };
+  }
+  return {
+    line: SALE_XRAY_NO_VIGENCIA,
+    audit: {
+      promotion_id: pid,
+      starts_at_before: beforeS,
+      ends_at_before: beforeE,
+      fonte: "fallback_sem_data",
+      fallback_aplicado: true,
+    },
+  };
+}
+
+/**
+ * `VITE_SALE_XRAY_VIGENCIA_AUDIT=1` ou listings de regressão Raio-x (vigência).
+ *
+ * @param {string} listingHint
+ */
+export function shouldSaleXrayVigenciaAuditTrace(listingHint) {
+  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_SALE_XRAY_VIGENCIA_AUDIT === "1") return true;
+  const s = listingHint != null ? String(listingHint) : "";
+  return ["6086562408", "4473597419", "4304663219", "4473596489"].some((id) => s.includes(id));
+}
+
 /**
  * @param {string} iso
  * @returns {string | null}
@@ -129,7 +320,7 @@ function formatIsoDateToDdMm(iso) {
  * @param {unknown[]} scenarios
  * @returns {string}
  */
-function saleXrayListingHintFromScenarios(scenarios) {
+export function saleXrayListingHintFromScenarios(scenarios) {
   const s0 = scenarios && scenarios[0];
   if (!s0 || typeof s0 !== "object") return "";
   const r = /** @type {Record<string, unknown>} */ (s0);
@@ -140,6 +331,16 @@ function saleXrayListingHintFromScenarios(scenarios) {
     if (L.external_listing_id != null) return String(L.external_listing_id);
   }
   return "";
+}
+
+/**
+ * Auditoria de frete Raio-x vs grid (ex.: MLB4304663219 / DCL24).
+ * `VITE_SALE_XRAY_SHIPPING_AUDIT=1` liga para qualquer anúncio.
+ */
+export function shouldSaleXrayShippingAuditTrace(listingHint) {
+  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_SALE_XRAY_SHIPPING_AUDIT === "1") return true;
+  const s = listingHint != null ? String(listingHint) : "";
+  return s.includes("4304663219") || s.includes("4473596489") || s.includes("6046839404");
 }
 
 /** Debug: MLB6551978954 ou VITE_SALE_XRAY_DEBUG=1 */
@@ -162,6 +363,25 @@ export function firstNonEmptyBrlString(...vals) {
     if (v == null) continue;
     const s = String(v).trim();
     if (s !== "") return s;
+  }
+  return null;
+}
+
+/**
+ * Contexto de frete no contrato / `sale_xray_pricing` / `marketplace` (um cenário por vez).
+ * Prioridade: `ml_shipping_cost_context` (canônico ML) → `shipping_cost_context` → `shipping_context`.
+ *
+ * @param {Record<string, unknown> | null | undefined} pricing
+ * @returns {"free_for_buyer" | "buyer_pays" | null}
+ */
+export function pickPricingShippingCostContext(pricing) {
+  if (!pricing || typeof pricing !== "object") return null;
+  const p = /** @type {Record<string, unknown>} */ (pricing);
+  const candidates = [p.ml_shipping_cost_context, p.shipping_cost_context, p.shipping_context];
+  for (const v of candidates) {
+    if (v == null || String(v).trim() === "") continue;
+    const s = String(v).trim().toLowerCase();
+    if (s === "free_for_buyer" || s === "buyer_pays") return /** @type {"free_for_buyer" | "buyer_pays"} */ (s);
   }
   return null;
 }
@@ -315,16 +535,19 @@ export function resolveSaleXrayArticleKey(scenario, index) {
 
 /**
  * @param {unknown[]} scenarios
+ * @param {{ preserveInputOrder?: boolean } | undefined} options — quando `preserveInputOrder`, mantém a ordem do array (só UI / gráfico alinhado ao rail).
  * @returns {{ scenario: unknown; group: ScenarioUxGroup }[]}
  */
-export function buildOrderedScenarioRows(scenarios) {
+export function buildOrderedScenarioRows(scenarios, options = undefined) {
   if (!Array.isArray(scenarios) || scenarios.length === 0) return [];
   const copy = scenarios.filter((s) => s !== null && typeof s === "object");
   const head = copy[0];
+  const preserveInputOrder = options != null && options.preserveInputOrder === true;
   const preserveOrder =
-    head &&
-    typeof head === "object" &&
-    /** @type {Record<string, unknown>} */ (head)._sale_xray_preserve_order === true;
+    preserveInputOrder ||
+    (head &&
+      typeof head === "object" &&
+      /** @type {Record<string, unknown>} */ (head)._sale_xray_preserve_order === true);
   if (preserveOrder) {
     return copy.map((scenario) => ({
       scenario,
@@ -353,7 +576,8 @@ export function buildOrderedScenarioRows(scenarios) {
 
 /**
  * Raio-x da venda: baseline + cenários promocionais quando a API ainda é `pricing-scenarios`.
- * Com `sale-xray-modal` (`from_sale_xray_modal`), a lista já vem filtrada no backend — este filtro não se aplica.
+ * Com `sale-xray-modal` (`from_sale_xray_modal`), a lista vem do backend conforme `scenarioScope` do POST
+ * (`current_active` = Raio-x; `pricing_opportunities` = página Precificação Inteligente).
  * Inclui `status` `candidate` / `eligible` (elegível, botão Participar na grid).
  *
  * @param {unknown[]} scenarios
@@ -484,7 +708,11 @@ export function buildRaioxScenariosFromSaleXrayModalContract(payload) {
   );
   if (shipMerge0 != null) m0.shipping_cost_amount_brl = shipMerge0;
   else if (nPricing.shipping_cost_amount_brl != null) m0.shipping_cost_amount_brl = nPricing.shipping_cost_amount_brl;
-  if (nPricing.shipping_cost_context != null) m0.shipping_context = nPricing.shipping_cost_context;
+  {
+    const shipCtx0 = pickPricingShippingCostContext(nPricing);
+    if (shipCtx0 != null) m0.shipping_context = shipCtx0;
+    else delete m0.shipping_context;
+  }
 
   const src0 = nPricing.marketplace_payout_source != null ? String(nPricing.marketplace_payout_source).trim() : "";
   if (isMlCardContractPayoutSource(src0)) {
@@ -516,6 +744,15 @@ export function buildRaioxScenariosFromSaleXrayModalContract(payload) {
   baselineRow.sale_xray_pricing = nPricing;
   baselineRow.is_baseline = true;
   baselineRow._sale_xray_preserve_order = true;
+  /** Gráfico comparativo lê `result.*` como as promos; mesclar `normal_scenario.result` sem apagar legado com `{}` vazio. */
+  if (normal.result != null && typeof normal.result === "object") {
+    const nr = /** @type {Record<string, unknown>} */ (normal.result);
+    const prev =
+      baselineRow.result != null && typeof baselineRow.result === "object"
+        ? /** @type {Record<string, unknown>} */ (baselineRow.result)
+        : {};
+    baselineRow.result = { ...prev, ...nr };
+  }
 
   /** @type {Record<string, unknown>[]} */
   const out = [baselineRow];
@@ -578,7 +815,11 @@ export function buildRaioxScenariosFromSaleXrayModalContract(payload) {
     );
     if (shipMerge != null) m.shipping_cost_amount_brl = shipMerge;
     else if (pricing.shipping_cost_amount_brl != null) m.shipping_cost_amount_brl = pricing.shipping_cost_amount_brl;
-    if (pricing.shipping_cost_context != null) m.shipping_context = pricing.shipping_cost_context;
+    {
+      const shipCtxPromo = pickPricingShippingCostContext(pricing);
+      if (shipCtxPromo != null) m.shipping_context = shipCtxPromo;
+      else delete m.shipping_context;
+    }
 
     const payoutSrcP = pricing.marketplace_payout_source != null ? String(pricing.marketplace_payout_source).trim() : "";
     if (isMlCardContractPayoutSource(payoutSrcP)) {
@@ -708,6 +949,8 @@ export function mergeListingGridRowIntoMlScenarios(scenarios, row) {
  * @returns {unknown[]}
  */
 export function enrichRaioxScenariosWithListingPromotionMetadata(scenarios, _mlScenariosPayload, _row) {
+  void _mlScenariosPayload;
+  void _row;
   const list = Array.isArray(scenarios) ? scenarios : [];
   return list.map((s) => {
     if (!s || typeof s !== "object") return s;
@@ -731,6 +974,7 @@ export function enrichRaioxScenariosWithListingPromotionMetadata(scenarios, _mlS
         const st = String(r.status ?? "").toLowerCase();
         if (st === "scheduled") eff = "scheduled";
         else if (st === "active") eff = "active";
+        else if (st === "candidate" || st === "eligible" || st === "available") eff = "participate";
       }
     }
 
@@ -742,4 +986,60 @@ export function enrichRaioxScenariosWithListingPromotionMetadata(scenarios, _mlS
     if (!isBaseline && eff !== "") out._raiox_listing_effective_api_state = eff;
     return out;
   });
+}
+
+/** Sufixos com `.anuncios-sell-popover__offer-sem--*` em `Anuncios.css` (backend + faixa “Regular” por margem). */
+export const OFFER_STATUS_SEMANTIC_CLASS_SUFFIXES = new Set([
+  "critical",
+  "danger",
+  "acceptable",
+  "great",
+  "excellent",
+  "regular",
+]);
+
+/**
+ * @param {unknown} suffix
+ * @returns {string} classe completa ou string vazia
+ */
+export function offerSemanticSuffixToCssClass(suffix) {
+  const s = suffix != null ? String(suffix).trim() : "";
+  if (!OFFER_STATUS_SEMANTIC_CLASS_SUFFIXES.has(s)) return "";
+  return `anuncios-sell-popover__offer-sem--${s}`;
+}
+
+/**
+ * Parse de `result.margin_pct` da API (mesma ideia do gráfico comparativo — só leitura).
+ * @param {unknown} marginPctRaw
+ * @returns {number | null}
+ */
+function parseMarginPercentNumberFromScenario(marginPctRaw) {
+  if (marginPctRaw == null || String(marginPctRaw).trim() === "") return null;
+  const n = Number(String(marginPctRaw).trim().replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Status da oferta (rótulo + cor) a partir da margem % já calculada no cenário — sem alterar valores financeiros.
+ *
+ * @param {unknown} marginPctFromScenario — ex.: `scenario.result.margin_pct`
+ * @returns {{ label: string; color: string; level?: string } | null} `null` se margem ausente/ inválida → usar texto/cor do backend.
+ */
+export function getOfferStatusFromMargin(marginPctFromScenario) {
+  const m = parseMarginPercentNumberFromScenario(marginPctFromScenario);
+  if (m == null) return null;
+
+  if (m < 0) {
+    return { label: "Crítico", color: "critical", level: "critical" };
+  }
+  if (m < 5) {
+    return { label: "Regular", color: "regular", level: "regular" };
+  }
+  if (m < 10) {
+    return { label: "Bom", color: "great", level: "good" };
+  }
+  if (m < 20) {
+    return { label: "Ótimo", color: "great", level: "great" };
+  }
+  return { label: "Excelente", color: "excellent", level: "excellent" };
 }

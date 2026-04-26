@@ -125,6 +125,24 @@ export function getAdsFilterChipsForToolbar() {
 }
 
 /**
+ * Chips na ordem do modo (subconjunto permitido). IDs inexistentes são ignorados.
+ * Se nada for resolvido, cai no toolbar completo.
+ * @param {string[]} orderedIds
+ */
+export function getAdsFilterChipsForToolbarOrdered(orderedIds) {
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+    return ADS_FILTER_DEFINITIONS;
+  }
+  const byId = new Map(ADS_FILTER_DEFINITIONS.map((d) => [d.id, d]));
+  const out = [];
+  for (const id of orderedIds) {
+    const def = byId.get(id);
+    if (def) out.push(def);
+  }
+  return out.length > 0 ? out : ADS_FILTER_DEFINITIONS;
+}
+
+/**
  * Limiar do “top” entre os itens já filtrados (ex.: mais vendidos / visitas).
  * @param {Array<Record<string, unknown>>} rows
  * @param {string} key

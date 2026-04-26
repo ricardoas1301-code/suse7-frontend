@@ -7,7 +7,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { buildApiUrl, apiFetch, getSessionToken } from "../config/api";
-import { ListingCoverThumb, mapGridApiToCatalogRow } from "../components/Anuncios";
+import { ListingCoverThumb } from "../features/listings/components/AdsCatalogRow.jsx";
+import { mapGridApiToCatalogRow } from "../features/listings/utils/mlListingsGridMapping.js";
 import "../components/Products.css";
 import "../components/Anuncios.css";
 import "./AnunciosTeste.css";

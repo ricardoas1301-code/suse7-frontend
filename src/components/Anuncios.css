@@ -495,6 +495,64 @@
   padding: 0 clamp(12px, 1.6vw, 18px);
 }
 
+/* Modo Anúncios (S7): sem coluna do atalho Precifica — mesma ordem de células, um trilho a menos. */
+.anuncios-catalog__grid.anuncios-catalog__grid--no-precifica-col,
+.anuncios-catalog__row.anuncios-catalog__row--no-precifica-col {
+  min-width: min(1680px, 100%);
+  grid-template-columns:
+    44px
+    56px
+    minmax(0, 0.82fr)
+    minmax(0, 1.12fr)
+    minmax(0, 0.82fr)
+    minmax(0, 0.44fr)
+    minmax(0, 0.55fr)
+    minmax(0, 0.38fr)
+    minmax(0, 0.58fr)
+    minmax(0, 0.58fr)
+    minmax(0, 0.58fr)
+    minmax(0, 0.36fr)
+    minmax(0, 0.48fr)
+    minmax(0, 0.5fr)
+    minmax(0, 0.48fr)
+    minmax(0, 0.38fr)
+    minmax(0, 0.48fr)
+    minmax(0, 0.48fr)
+    minmax(0, 0.72fr);
+}
+
+.anuncios-catalog__grid.anuncios-catalog__grid--minimal.anuncios-catalog__grid--no-precifica-col,
+.anuncios-catalog__row.anuncios-catalog__row--minimal.anuncios-catalog__row--no-precifica-col {
+  grid-template-columns: 44px 56px minmax(0, 1fr) minmax(168px, 228px);
+}
+
+/* Rota Precificações, vista completa: foco comercial — remove colunas de catálogo/qualidade (dados seguem no backend). */
+.anuncios-catalog__grid.anuncios-catalog__grid--pricing-columns,
+.anuncios-catalog__row.anuncios-catalog__row--pricing-columns {
+  min-width: min(1550px, 100%);
+  grid-template-columns:
+    44px
+    96px
+    56px
+    minmax(0, 0.82fr)
+    minmax(0, 1.12fr)
+    minmax(0, 0.82fr)
+    minmax(0, 0.44fr)
+    minmax(0, 0.55fr)
+    minmax(0, 0.38fr)
+    minmax(0, 0.58fr)
+    minmax(0, 0.58fr)
+    minmax(0, 0.58fr)
+    minmax(0, 0.36fr)
+    minmax(0, 0.48fr)
+    minmax(0, 0.5fr)
+    minmax(0, 0.48fr);
+}
+
+.anuncios-catalog__row--interactive {
+  cursor: pointer;
+}
+
 /* Vista simples: coluna de texto (hierarquia ID → título → meta) */
 .anuncios-catalog__minimal-title-toolbar {
   display: flex;
@@ -1213,6 +1271,47 @@
   color: var(--s7-text-secondary, #64748b);
 }
 
+/* Raio-x venda (modal): spinner enquanto `mlScenariosLoading` — mesmo DNA do S7FormSavingOverlay (neutro / suave). */
+.anuncios-raiox-venda-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  gap: 14px;
+  padding: 12px 8px 16px;
+  box-sizing: border-box;
+}
+
+.anuncios-raiox-venda-loading__text {
+  margin: 0;
+  max-width: 28rem;
+}
+
+.anuncios-raiox-venda-loading__spinner-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.anuncios-raiox-venda-loading__spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: var(--s7-primary, #2563eb);
+  border-radius: 50%;
+  animation: anuncios-raiox-venda-loading-spin 0.75s linear infinite;
+}
+
+@keyframes anuncios-raiox-venda-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .anuncios-raiox-shell__sr-only {
   position: absolute;
   width: 1px;
@@ -1346,12 +1445,25 @@
   color: #d97706;
 }
 
+/* Faixa “Regular” (margem 0–5% no Raio-X): laranja Suse7, alinhado a “Valor de venda” (.line--key). */
+.anuncios-sell-popover__offer-sem--regular {
+  color: var(--s7-orange, #ff8533);
+}
+
 .anuncios-sell-popover__offer-sem--great {
   color: #16a34a;
 }
 
 .anuncios-sell-popover__offer-sem--excellent {
   color: #15803d;
+}
+
+/* Bloco Resultado (cards Raio-x / precificação): label + valor mesma cor semântica + peso alinhado a “Valor de venda” (.line--key). */
+.anuncios-sell-popover__section--raiox-resultado .anuncios-sell-popover__line--raiox-result-metric > span:first-child,
+.anuncios-sell-popover__section--raiox-resultado .anuncios-sell-popover__line--raiox-result-metric > strong {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 /* Ícone “i” junto ao rótulo; valor do status permanece no <strong> à direita (space-between). */
@@ -2633,6 +2745,12 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Só “Preço de venda”: sem gutter estável extra — evita faixa de rolagem “fantasma” quando o conteúdo cabe. */
+.anuncios-sell-popover__panel--compare-near-full.anuncios-sell-popover__panel--ml-scenario-compare.anuncios-sell-popover__panel--raiox-ml-baseline-only
+  > .anuncios-compare-modal__body-scroll {
+  scrollbar-gutter: auto;
+}
+
 .anuncios-pricing-modal__panel {
   display: flex;
   flex-direction: column;
@@ -2640,6 +2758,1322 @@
   overflow: auto;
   max-height: inherit;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Rota `/precificacoes/inteligente/:id` — layout de página (sem card/modal externo). */
+.pricing-intelligence-page {
+  /* Gaps horizontais uniformes (borda ↔ colunas ↔ cards do workspace). */
+  --s7-pricing-page-gap-md: 10px;
+  /* Mini cards da sidebar (promoções + Clássico/Premium): ~15% menores só na página. */
+  --s7-pricing-sidebar-card-scale: 0.85;
+  padding: 10px var(--s7-pricing-page-gap-md) 32px;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: visible;
+  overflow-y: visible;
+}
+
+.pricing-intelligence-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* Conteúdo da precificação em modo página: herda tipografia do popover, sem painel branco externo. */
+.pricing-intelligence-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: min(1320px, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
+  min-height: 0;
+  max-height: none;
+  overflow-x: visible;
+  overflow-y: visible;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pricing-intelligence-page__header {
+  flex-shrink: 0;
+}
+
+.pricing-intelligence-page__header .anuncios-sell-popover__title {
+  margin: 0 0 4px;
+}
+
+/* Página: título só para leitores de tela (layout principal = card identidade). */
+.pricing-intelligence-page__visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pricing-intelligence-page__identity-col {
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+  z-index: 40;
+  overflow: visible;
+  /* Reserva para metade da logo acima do card (evita corte pelo topo da viewport / wrappers). */
+  padding-top: 14px;
+}
+
+/* Coluna esquerda alinhada à largura máxima do rail de cenários (170–208px). */
+.pricing-intelligence-page__content.pricing-intelligence-page__content--ml-scenario-compare
+  .pricing-intelligence-page__main-grid.anuncios-pricing-modal__main-grid {
+  grid-template-columns: minmax(170px, 208px) minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.pricing-intelligence-page__main-grid.anuncios-pricing-modal__main-grid {
+  align-items: stretch;
+  gap: 14px var(--s7-pricing-page-gap-md, 10px);
+}
+
+/*
+ * Shell Raio-x embutido na coluna da página Precificação Inteligente.
+ * Reusa classes globais do modal (.anuncios-raiox-shell*, painel .panel--in-shell); aqui só neutraliza portal/fixed.
+ */
+.pricing-intelligence-page__identity-col .anuncios-raiox-shell--embedded-pricing-page {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 208px;
+  margin: 0 auto;
+  min-height: 0;
+  flex: 1 1 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0 8px;
+  isolation: isolate;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  z-index: 0;
+  overflow: visible;
+}
+
+/* Âncora do painel: logo com centro na borda superior do card (metade fora / metade dentro). */
+.pricing-intelligence-page__identity-col .pricing-product-identity__panel-stack {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 0;
+  width: 100%;
+  overflow: visible;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__badge-overlap.anuncios-raiox-shell__badge {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  z-index: 500;
+  pointer-events: none;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__badge-overlap.anuncios-raiox-shell__badge--text {
+  pointer-events: none;
+}
+
+.pricing-intelligence-page__identity-col
+  .anuncios-raiox-shell--embedded-pricing-page.anuncios-raiox-shell--mercado_livre
+  .anuncios-raiox-shell__frame {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: calc(100% - 10px);
+  max-width: calc(100% - 10px);
+  height: 58%;
+  transform: translate(-50%, -50%);
+  border-radius: 18px;
+  background: var(--marketplace-primary);
+  background-image: none;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  box-shadow:
+    0 3px 10px rgba(45, 50, 119, 0.07),
+    0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.pricing-intelligence-page__identity-col
+  .anuncios-raiox-shell--embedded-pricing-page.anuncios-raiox-shell--mercado_livre
+  .pricing-product-identity__badge-overlap.anuncios-raiox-shell__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: calc(42px * 0.84);
+  min-height: 0;
+  padding: 0 22px;
+  background: var(--marketplace-primary);
+  border-radius: 12px;
+  border: 1px solid rgba(45, 50, 119, 0.14);
+  box-shadow:
+    0 3px 12px rgba(15, 23, 42, 0.1),
+    0 1px 2px rgba(45, 50, 119, 0.08);
+}
+
+.pricing-intelligence-page__identity-col
+  .anuncios-raiox-shell--embedded-pricing-page.anuncios-raiox-shell--mercado_livre
+  .pricing-product-identity__badge-overlap
+  .anuncios-raiox-shell__badge-img {
+  display: block;
+  height: auto;
+  width: auto;
+  max-height: calc(34px * 0.84);
+  max-width: 200px;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pricing-intelligence-page__identity-col
+  .anuncios-raiox-shell--embedded-pricing-page.anuncios-raiox-shell--mercado_livre
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--pricing-page-product {
+  position: relative;
+  z-index: 2;
+  align-self: stretch;
+  width: 100%;
+  max-width: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none !important;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  /* Respiro sob a metade da logo + alinhamento visual aos cards do rail (~10px radius). */
+  padding: 26px 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(45, 50, 119, 0.22);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  overflow: visible;
+}
+
+/* Página: sem “bico” do painel in-shell (borda reta, padrão SaaS). */
+.pricing-intelligence-page__identity-col
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--pricing-page-product::before,
+.pricing-intelligence-page__identity-col
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--pricing-page-product::after {
+  content: none !important;
+  display: none !important;
+  border: none !important;
+}
+
+.pricing-intelligence-page__identity-col
+  .anuncios-raiox-shell--embedded-pricing-page:not(.anuncios-raiox-shell--mercado_livre)
+  .anuncios-raiox-shell__frame {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 36px;
+  bottom: 8px;
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(138deg, var(--marketplace-soft) 0%, transparent 56%);
+  opacity: 0.92;
+}
+
+.pricing-intelligence-page__identity-col
+  .anuncios-raiox-shell--embedded-pricing-page:not(.anuncios-raiox-shell--mercado_livre)
+  .pricing-product-identity__badge-overlap.anuncios-raiox-shell__badge--text {
+  min-height: 28px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.pricing-intelligence-page__identity-col
+  .anuncios-raiox-shell--embedded-pricing-page:not(.anuncios-raiox-shell--mercado_livre)
+  .anuncios-sell-popover__panel.anuncios-sell-popover__panel--in-shell.anuncios-sell-popover__panel--pricing-page-product {
+  position: relative;
+  z-index: 2;
+  align-self: stretch;
+  width: 100%;
+  max-height: none !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 22px 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  overflow: visible;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__context {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 2px;
+}
+
+/* Capa no topo: fluxo natural (sem centralizar verticalmente o bloco inteiro). */
+.pricing-intelligence-page__identity-col .pricing-product-identity__hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin: 0 0 6px;
+  padding: 4px 0 2px;
+  background: #fff;
+  border: none;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__hero-img {
+  max-width: 100%;
+  max-height: 172px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__hero-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 96px;
+  color: rgba(15, 23, 42, 0.18);
+}
+
+/* Nome: listagem ML — mais leve que o mini padrão (600/14px). */
+.pricing-intelligence-page__identity-col .pricing-product-identity__name-row {
+  margin-bottom: 6px;
+  align-items: flex-start;
+}
+
+.pricing-intelligence-page__identity-col
+  .pricing-product-identity__name-row
+  .anuncios-raiox-chart-mini__context-name--plain
+  .anuncios-raiox-chart-mini__context-name-text {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.42;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mesma tipografia do toolbar Raio-X ML (--raiox-ml-calc-scale 0.87 no comparativo “spacious”). */
+.pricing-intelligence-page__identity-col .pricing-product-identity__raiox-meta {
+  --raiox-ml-calc-scale: 0.87;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 6px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: calc(11px * var(--raiox-ml-calc-scale));
+  font-weight: 600;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.64);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__raiox-meta .anuncios-raiox-compare__toolbar-meta-text {
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__raiox-meta .anuncios-raiox-compare__toolbar-meta-sep {
+  color: rgba(15, 23, 42, 0.32);
+  padding: 0 2px;
+  user-select: none;
+  line-height: 1;
+  align-self: center;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__raiox-meta .anuncios-raiox-compare__toolbar-meta-sku-prefix {
+  font-size: calc(11px * var(--raiox-ml-calc-scale));
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.5);
+  margin-right: 3px;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__copy-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__raiox-meta .products-catalog__copy-btn {
+  font-size: calc(13px * var(--raiox-ml-calc-scale));
+  min-width: 1.35em;
+  min-height: 22px;
+  width: auto;
+  padding: 0 1px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity 0.2s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__price-block {
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(15, 23, 42, 0.07);
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__price-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.4);
+  margin-bottom: 3px;
+}
+
+.pricing-intelligence-page__identity-col .pricing-product-identity__price-value {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+.pricing-intelligence-page__identity-col .anuncios-raiox-compare__toolbar-copy.s7-tip[data-tip]::after,
+.pricing-intelligence-page__identity-col .anuncios-raiox-compare__toolbar-copy.s7-tip[data-tip]::before {
+  z-index: 600;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pricing-intelligence-page__identity-col
+    .pricing-product-identity__copy-target
+    .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target:hover .products-catalog__copy-btn,
+  .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target:focus-within .products-catalog__copy-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target:hover .anuncios-raiox-compare__toolbar-meta-text,
+  .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target:focus-within .anuncios-raiox-compare__toolbar-meta-text {
+    opacity: 0.92;
+  }
+}
+
+@media (min-width: 1100px) {
+  .pricing-intelligence-page__identity-col {
+    position: sticky;
+    top: 12px;
+  }
+
+  /* Com cenários ML, a coluna acompanha a altura do grid — sem sticky que “descola” o card. */
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--ml-scenario-compare .pricing-intelligence-page__identity-col {
+    position: static;
+    align-self: stretch;
+  }
+}
+
+.pricing-intelligence-page__body {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* Coluna de resultados: fundo branco (página S7). */
+.pricing-intelligence-page__content .anuncios-pricing-modal__results-panel {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  padding: 10px var(--s7-pricing-page-gap-md, 10px) 12px;
+}
+
+.pricing-intelligence-page__content .anuncios-pricing-modal__footer {
+  flex-shrink: 0;
+  margin-top: 14px;
+}
+
+/* Mesmas regras de grid/overflow do painel modal — escopadas ao wrapper de página. */
+.pricing-intelligence-page__content.pricing-intelligence-page__content--ml-scenario-compare {
+  overflow: visible;
+}
+
+.pricing-intelligence-page__content.pricing-intelligence-page__content--ml-scenario-compare .anuncios-pricing-modal__main-grid {
+  overflow: visible;
+}
+
+.pricing-intelligence-page__content.pricing-intelligence-page__content--ml-scenario-compare .anuncios-pricing-modal__col--inputs {
+  overflow-y: auto;
+  max-height: min(58vh, 560px);
+  min-height: 0;
+  padding-right: var(--s7-pricing-page-gap-md, 10px);
+}
+
+/* Página: rolagem principal na viewport (evita “caixa” com scroll interno como no modal). */
+.pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare {
+  overflow: visible;
+}
+
+.pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full .anuncios-pricing-modal__main-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: visible;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare .anuncios-pricing-modal__col--inputs,
+.pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare .anuncios-pricing-modal__col--results {
+  max-height: none;
+  overflow: visible;
+}
+
+.pricing-intelligence-page__content--scenario-rail .anuncios-pricing-modal__current-scenarios {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Bloco simulador "Preço de venda" (Premium / Clássico) — fora da lista de promoções ML. */
+.pricing-intelligence-page__sale-price-simulator {
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: var(--s7-pricing-page-gap-md, 10px);
+  padding: 12px 14px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.24);
+  background: linear-gradient(165deg, rgba(239, 246, 255, 0.72) 0%, rgba(255, 255, 255, 0.98) 52%);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.pricing-intelligence-page__sale-price-simulator__head {
+  margin-bottom: 10px;
+}
+
+.pricing-intelligence-page__sale-price-simulator__kicker {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(37, 99, 235, 0.85);
+  margin-bottom: 4px;
+}
+
+.pricing-intelligence-page__sale-price-simulator__lede {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: rgba(15, 23, 42, 0.62);
+}
+
+.pricing-intelligence-page__promotions-empty {
+  padding: 10px 4px 4px;
+}
+
+/* Stub: Premium vs Clássico — mesma pele do gráfico de promoções, sem valores simulados. */
+.s7-ml-scenario-chart--listing-type-stub {
+  padding: 8px 10px 10px;
+}
+
+.s7-ml-scenario-chart--listing-type-stub .s7-ml-scenario-chart__block {
+  margin-bottom: 0;
+}
+
+.s7-ml-scenario-chart--listing-type-stub .s7-ml-scenario-chart__bars-wrap {
+  padding-bottom: 28px;
+}
+
+.s7-ml-scenario-chart--listing-type-stub .s7-ml-scenario-chart__bars-plot-area {
+  height: 96px;
+}
+
+.s7-ml-scenario-chart__bars-columns--listing-type-stub {
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.s7-ml-scenario-chart__column-hit--listing-type-stub {
+  width: 52px;
+  height: 96px;
+}
+
+.s7-ml-scenario-chart__column-hit--listing-type-stub .s7-ml-scenario-chart__bar-track {
+  border-radius: 0 0 6px 6px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.s7-ml-scenario-chart__column-hit--listing-type-stub-selected .s7-ml-scenario-chart__bar-track {
+  outline: 2px solid rgba(37, 99, 235, 0.38);
+  outline-offset: 1px;
+}
+
+.s7-ml-scenario-chart--listing-type-stub__hint {
+  margin: 8px 0 0;
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(15, 23, 42, 0.48);
+}
+
+/* Página: KPI + workspace (sidebar cenários + card detalhado) */
+.pricing-intelligence-page__scenario-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.pricing-intelligence-page__scenario-detail-col {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Página: coluna principal = card detalhado + painel S7 (desktop em linha). */
+.pricing-intelligence-page__scenario-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.pricing-intelligence-page__scenario-workspace .pricing-scenario-rail__viewport {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.pricing-intelligence-page__scenario-right-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.pricing-intelligence-page__chart-slot.anuncios-pricing-modal__ml-chart-slot {
+  margin-top: 0;
+}
+
+.pricing-intelligence-page__scenario-main:not(:has(.pricing-intelligence-page__scenario-detail-col))
+  .pricing-intelligence-page__scenario-right-stack {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+
+@media (min-width: 1100px) {
+  .pricing-intelligence-page__scenario-workspace {
+    display: grid;
+    grid-template-columns: minmax(calc(176px * var(--s7-pricing-sidebar-card-scale)), calc(208px * var(--s7-pricing-sidebar-card-scale)))
+      minmax(0, 1fr);
+    gap: var(--s7-pricing-page-gap-md, 10px);
+    align-items: start;
+  }
+
+  .pricing-intelligence-page__scenario-workspace.pricing-intelligence-page__scenario-workspace--no-promotions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pricing-intelligence-page__scenario-workspace > .pricing-scenario-sidebar {
+    margin: 0;
+    width: 100%;
+    max-width: calc(208px * var(--s7-pricing-sidebar-card-scale));
+  }
+
+  .pricing-intelligence-page__scenario-workspace .pricing-scenario-sidebar__viewport {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: min(72vh, 720px);
+    padding: 4px var(--s7-pricing-page-gap-md, 10px) 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .pricing-intelligence-page__scenario-workspace .pricing-scenario-sidebar__list {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .pricing-intelligence-page__scenario-main {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--s7-pricing-page-gap-md, 10px);
+  }
+
+  /* Card de cálculo ~36% mais estreito vs faixa anterior (~45%); gráfico absorve o espaço. */
+  .pricing-intelligence-page__scenario-main .pricing-intelligence-page__scenario-detail-col {
+    flex: 0 1 auto;
+    width: 100%;
+    max-width: min(29%, 360px);
+    min-width: min(100%, 200px);
+  }
+
+  .pricing-intelligence-page__scenario-main .pricing-intelligence-page__scenario-right-stack {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .pricing-intelligence-page__scenario-main:not(:has(.pricing-intelligence-page__scenario-detail-col))
+    .pricing-intelligence-page__scenario-right-stack {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+}
+
+/* Badges ML na página: estilo label ML (azul + branco; ATIVA verde). */
+.pricing-intelligence-page__scenario-workspace .s7-ml-scenario-compare__badge {
+  border-radius: 5px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.pricing-intelligence-page__scenario-workspace .s7-ml-scenario-compare__badge--participating,
+.pricing-intelligence-page__scenario-workspace .s7-ml-scenario-compare__badge--available,
+.pricing-intelligence-page__scenario-workspace .s7-ml-scenario-compare__badge--neutral {
+  font-size: calc(11px * 0.81 * 1.1 * var(--s7-pricing-sidebar-card-scale));
+  padding: calc(4px * var(--s7-pricing-sidebar-card-scale)) calc(10px * var(--s7-pricing-sidebar-card-scale));
+}
+
+.pricing-intelligence-page__scenario-workspace .s7-ml-scenario-compare__badge--participating {
+  color: #fff;
+  background: #16a34a;
+  border: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.pricing-intelligence-page__scenario-workspace .s7-ml-scenario-compare__badge--available,
+.pricing-intelligence-page__scenario-workspace .s7-ml-scenario-compare__badge--neutral {
+  color: #fff;
+  background: #3483fa;
+  border: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+
+/* Painel S7 — resumo / status / placeholder de ação (página). */
+.pricing-intelligence-page__decision-panel {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.pricing-intelligence-page__decision-panel__block {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.pricing-intelligence-page__decision-panel__block:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.pricing-intelligence-page__decision-panel__block--action {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.pricing-intelligence-page__decision-panel__heading {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.pricing-intelligence-page__decision-panel__scenario-name {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.92);
+  word-break: break-word;
+}
+
+.pricing-intelligence-page__decision-panel__metrics {
+  margin: 0;
+}
+
+.pricing-intelligence-page__decision-panel__metric-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.pricing-intelligence-page__decision-panel__metric-row:last-child {
+  margin-bottom: 0;
+}
+
+.pricing-intelligence-page__decision-panel__metric-row dt {
+  margin: 0;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.pricing-intelligence-page__decision-panel__metric-row dd {
+  margin: 0;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.92);
+  text-align: right;
+}
+
+.pricing-intelligence-page__decision-panel__status {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.pricing-intelligence-page__decision-panel__status--healthy {
+  color: rgb(5, 122, 85);
+}
+
+.pricing-intelligence-page__decision-panel__status--warn {
+  color: rgb(180, 83, 9);
+}
+
+.pricing-intelligence-page__decision-panel__status--loss {
+  color: rgb(185, 28, 28);
+}
+
+.pricing-intelligence-page__decision-panel__cta {
+  width: 100%;
+}
+
+/* Rail horizontal compacto + detalhe único — Precificação Inteligente (página) */
+.pricing-scenario-rail {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 12px;
+}
+
+.pricing-intelligence-page__scenario-workspace .pricing-scenario-sidebar {
+  margin: 0;
+}
+
+.pricing-scenario-rail__viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding: 2px 0 4px;
+}
+
+.pricing-scenario-rail__track {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 10px;
+  width: max-content;
+  min-width: min(100%, 280px);
+}
+
+/* Card compacto da lista de cenários (rail horizontal <1100px ou sidebar ≥1100px) */
+.pricing-scenario-rail__item.pricing-scenario-sidebar-card {
+  flex: 0 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  width: 170px;
+  height: 76px;
+  padding: 0;
+  margin: 0;
+  display: block;
+  text-align: left;
+  /* Raio-x ML card usa 12px; aqui ~10px no card compacto = leitura “mais quadrada” no trilho lateral. */
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+  font: inherit;
+  color: rgba(15, 23, 42, 0.92);
+  overflow: visible;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+
+.pricing-scenario-rail__item.pricing-scenario-sidebar-card:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.pricing-scenario-rail__item.pricing-scenario-sidebar-card:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.pricing-scenario-sidebar-card--status-active {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.pricing-scenario-sidebar-card--status-available {
+  border-color: rgba(59, 130, 246, 0.28);
+}
+
+.pricing-scenario-sidebar-card--status-scheduled {
+  /* Mesmo mental model ML que “Disponível” (azul). */
+  border-color: rgba(59, 130, 246, 0.28);
+}
+
+.pricing-scenario-sidebar-card--status-baseline {
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+.pricing-scenario-sidebar-card--status-neutral {
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+.pricing-scenario-sidebar-card--loss {
+  background: rgba(254, 242, 242, 0.92);
+  border-color: rgba(248, 113, 113, 0.42);
+}
+
+.pricing-scenario-sidebar-card--best:not(.pricing-scenario-sidebar-card--selected) {
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.35), 0 2px 10px rgba(251, 191, 36, 0.12);
+}
+
+.pricing-scenario-sidebar-card--selected.pricing-scenario-sidebar-card--status-baseline {
+  border-color: rgb(37, 99, 235);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.22), 0 6px 20px rgba(37, 99, 235, 0.12);
+}
+
+.pricing-scenario-sidebar-card--selected.pricing-scenario-sidebar-card--status-active {
+  border-color: rgb(22, 163, 74);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25), 0 6px 20px rgba(34, 197, 94, 0.12);
+}
+
+.pricing-scenario-sidebar-card--selected.pricing-scenario-sidebar-card--status-available {
+  border-color: rgb(59, 130, 246);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), 0 6px 18px rgba(59, 130, 246, 0.1);
+}
+
+.pricing-scenario-sidebar-card--selected.pricing-scenario-sidebar-card--status-scheduled {
+  border-color: rgb(59, 130, 246);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), 0 6px 18px rgba(59, 130, 246, 0.1);
+}
+
+.pricing-scenario-sidebar-card--selected.pricing-scenario-sidebar-card--loss {
+  border-color: rgb(220, 38, 38);
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.35), 0 6px 18px rgba(220, 38, 38, 0.12);
+}
+
+.pricing-scenario-sidebar-card--selected.pricing-scenario-sidebar-card--status-neutral {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18), 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.pricing-scenario-sidebar-card__inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+  height: 100%;
+  min-height: 0;
+  padding: 5px 8px 5px 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Título: layout legado (chips em cima) — flex entre chips e linha status + métricas. */
+.pricing-scenario-sidebar-card__inner:not(.pricing-scenario-sidebar-card__inner--stack-v2) > :nth-child(2) {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Página (sidebar): nome → lucro/margem → badges. */
+.pricing-scenario-sidebar-card__inner--stack-v2 {
+  gap: 3px;
+}
+
+.pricing-scenario-sidebar-card__inner--stack-v2 > .pricing-scenario-sidebar-card__title-row {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pricing-scenario-sidebar-card__metrics-line {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+  font-size: 9.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-scenario-sidebar-card__badges-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.pricing-scenario-sidebar-card__badges-row .s7-ml-scenario-compare__badge {
+  flex-shrink: 0;
+}
+
+.pricing-scenario-sidebar-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-height: 0;
+}
+
+.pricing-scenario-sidebar-card__chip {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 999px;
+  line-height: 1.2;
+}
+
+.pricing-scenario-sidebar-card__chip--best {
+  background: rgba(251, 191, 36, 0.28);
+  color: rgb(100, 45, 10);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.pricing-scenario-sidebar-card__chip--loss {
+  background: rgba(254, 226, 226, 0.98);
+  color: rgb(127, 29, 29);
+  border: 1px solid rgba(252, 165, 165, 0.65);
+}
+
+.pricing-scenario-sidebar-card__title-text,
+.pricing-scenario-sidebar-card__title-tip {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-scenario-sidebar-card__status-metrics-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.pricing-scenario-sidebar-card__status-metrics-row__metrics {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin-left: auto;
+  min-width: 0;
+  max-width: 58%;
+  font-size: 9.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-scenario-sidebar-card__metrics-sep {
+  margin: 0 3px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.28);
+  flex-shrink: 0;
+}
+
+.pricing-scenario-sidebar-card__profit {
+  color: rgba(15, 23, 42, 0.9);
+  flex-shrink: 0;
+}
+
+.pricing-scenario-sidebar-card__profit--healthy {
+  color: rgb(5, 122, 85);
+}
+
+.pricing-scenario-sidebar-card__profit--low {
+  color: rgb(180, 83, 9);
+}
+
+.pricing-scenario-sidebar-card__profit--loss {
+  color: rgb(185, 28, 28);
+}
+
+.pricing-scenario-sidebar-card__margin {
+  color: rgba(15, 23, 42, 0.52);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Tooltip rico (portal) — nome completo do cenário; :has() escopa só painéis com o inner da sidebar */
+.s7-tooltip-rich__panel:has(.pricing-scenario-sidebar-card__tooltip-rich-inner) {
+  background: #0f172a;
+  color: #fff;
+  border: 1px solid #020617;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+  padding: 8px 12px;
+  min-width: 0;
+}
+
+.pricing-scenario-sidebar-card__tooltip-rich-inner {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.pricing-scenario-sidebar .pricing-scenario-sidebar-card__title-tip-rich.s7-tooltip--rich-panel.s7-tooltip-trigger {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  color: inherit;
+}
+
+.pricing-scenario-sidebar .pricing-scenario-sidebar-card__title-tip-rich.s7-tooltip--rich-panel.s7-tooltip-trigger:hover,
+.pricing-scenario-sidebar .pricing-scenario-sidebar-card__title-tip-rich.s7-tooltip--rich-panel.s7-tooltip-trigger:focus-within {
+  color: inherit;
+}
+
+@media (max-width: 1099px) {
+  .pricing-scenario-rail__item.pricing-scenario-sidebar-card {
+    width: 154px;
+    height: 72px;
+  }
+}
+
+/* Página Precificação: mini cards da sidebar ~15% menores (promoções + Clássico/Premium). */
+.pricing-intelligence-page .pricing-scenario-rail__item.pricing-scenario-sidebar-card {
+  width: calc(170px * var(--s7-pricing-sidebar-card-scale));
+  height: calc(76px * var(--s7-pricing-sidebar-card-scale));
+  border-radius: calc(10px * var(--s7-pricing-sidebar-card-scale));
+}
+
+@media (max-width: 1099px) {
+  .pricing-intelligence-page .pricing-scenario-rail__item.pricing-scenario-sidebar-card {
+    width: calc(154px * var(--s7-pricing-sidebar-card-scale));
+    height: calc(72px * var(--s7-pricing-sidebar-card-scale));
+  }
+}
+
+.pricing-intelligence-page .pricing-scenario-sidebar-card__inner {
+  padding: calc(5px * var(--s7-pricing-sidebar-card-scale)) calc(8px * var(--s7-pricing-sidebar-card-scale));
+  gap: calc(2px * var(--s7-pricing-sidebar-card-scale));
+}
+
+.pricing-intelligence-page .pricing-scenario-sidebar-card__inner--stack-v2 {
+  gap: calc(3px * var(--s7-pricing-sidebar-card-scale));
+}
+
+.pricing-intelligence-page .pricing-scenario-sidebar-card__badges-row {
+  gap: calc(4px * var(--s7-pricing-sidebar-card-scale));
+}
+
+.pricing-intelligence-page .pricing-scenario-sidebar-card__title-text,
+.pricing-intelligence-page .pricing-scenario-sidebar-card__title-tip {
+  font-size: calc(10.5px * var(--s7-pricing-sidebar-card-scale));
+}
+
+.pricing-intelligence-page .pricing-scenario-sidebar-card__metrics-line {
+  font-size: calc(9.5px * var(--s7-pricing-sidebar-card-scale));
+}
+
+.pricing-intelligence-page .pricing-scenario-sidebar-card__metrics-sep {
+  margin: 0 calc(3px * var(--s7-pricing-sidebar-card-scale));
+}
+
+.pricing-intelligence-page .pricing-scenario-sidebar-card__metrics-line--listing-type-visual-placeholder .pricing-scenario-sidebar-card__profit,
+.pricing-intelligence-page .pricing-scenario-sidebar-card__metrics-line--listing-type-visual-placeholder .pricing-scenario-sidebar-card__margin {
+  color: rgba(15, 23, 42, 0.38);
+}
+
+.pricing-intelligence-page .pricing-scenario-rail__track {
+  gap: calc(10px * var(--s7-pricing-sidebar-card-scale));
+}
+
+.pricing-scenario-best-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.95), rgba(255, 255, 255, 0.98));
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(15, 23, 42, 0.88);
+}
+
+.pricing-scenario-best-summary__lead {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.pricing-scenario-best-summary__text {
+  min-width: 0;
+}
+
+.pricing-scenario-best-summary__label {
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.pricing-scenario-best-summary__name {
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.92);
+}
+
+.pricing-scenario-best-summary__metrics strong {
+  font-weight: 700;
+  color: rgb(5, 122, 85);
+}
+
+.pricing-scenario-best-summary__sep {
+  margin: 0 5px;
+  color: rgba(15, 23, 42, 0.28);
+  font-weight: 500;
+}
+
+.pricing-scenario-detail {
+  width: 100%;
+  min-width: 0;
+}
+
+.pricing-scenario-detail .s7-ml-scenario-compare__card {
+  max-width: 100%;
+}
+
+.pricing-scenario-detail__alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgb(127, 29, 29);
+  background: rgba(254, 242, 242, 0.95);
+  border: 1px solid rgba(252, 165, 165, 0.65);
+}
+
+.pricing-scenario-detail__alert-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.pricing-scenario-detail--loss .s7-ml-scenario-compare__card {
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow: 0 0 0 1px rgba(254, 202, 202, 0.6);
+}
+
+.pricing-scenario-detail--low-margin .s7-ml-scenario-compare__card {
+  border-color: rgba(251, 191, 36, 0.4);
 }
 
 /* Precificação + rail ML: painel não pode ser overflow:auto senão recorta ::after do .s7-tip (tooltip some). */
@@ -2710,6 +4144,48 @@
   max-width: 100%;
 }
 
+/* Página Precificação: só com lucros ≥ 0 — plot mais baixo, menos vão até a legenda (dados inalterados). */
+.pricing-intelligence-page__chart-slot.anuncios-pricing-modal__ml-chart-slot
+  .s7-ml-scenario-chart.s7-ml-scenario-chart--plot-compact-positive {
+  --s7-ml-chart-plot-h: 128px;
+}
+
+.pricing-intelligence-page__chart-slot.anuncios-pricing-modal__ml-chart-slot
+  .s7-ml-scenario-chart.s7-ml-scenario-chart--plot-compact-positive
+  .s7-ml-scenario-chart__bars-wrap {
+  padding-bottom: 22px;
+}
+
+.pricing-intelligence-page__chart-slot.anuncios-pricing-modal__ml-chart-slot
+  .s7-ml-scenario-chart.s7-ml-scenario-chart--plot-compact-positive
+  .s7-ml-scenario-chart__block {
+  margin-bottom: 6px;
+}
+
+/* Página: gráfico stub Preço de venda — mesma altura compacta vertical do gráfico de promoções (sem dados fake). */
+.pricing-intelligence-page__chart-slot--page-vertical-compact.anuncios-pricing-modal__ml-chart-slot
+  .s7-ml-scenario-chart--listing-type-stub
+  .s7-ml-scenario-chart__bars-plot-area {
+  height: 128px;
+}
+
+.pricing-intelligence-page__chart-slot--page-vertical-compact.anuncios-pricing-modal__ml-chart-slot
+  .s7-ml-scenario-chart__column-hit--listing-type-stub {
+  height: 128px;
+}
+
+.pricing-intelligence-page__chart-slot--page-vertical-compact.anuncios-pricing-modal__ml-chart-slot
+  .s7-ml-scenario-chart--listing-type-stub
+  .s7-ml-scenario-chart__bars-wrap {
+  padding-bottom: 22px;
+}
+
+.pricing-intelligence-page__chart-slot--page-vertical-compact.anuncios-pricing-modal__ml-chart-slot
+  .s7-ml-scenario-chart--listing-type-stub
+  .s7-ml-scenario-chart__block {
+  margin-bottom: 6px;
+}
+
 /* Comparativo ML — shell Raio-x: gráfico à esquerda, cards à direita */
 .s7-ml-scenario-compare-shell {
   display: grid;
@@ -2749,20 +4225,40 @@
 
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__stack {
   max-width: none;
-  width: fit-content;
-  align-self: center;
+  width: 100%;
+  align-self: stretch;
 }
 
-/* Rolagem vertical só na faixa dos cards (toolbar fixa; tooltips do topo fora do clip). */
+/* Rolagem no trilho direito do modal: padding separa cards da scrollbar. */
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__compare-scroll {
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
   max-width: 100%;
-  /* Vertical: várias linhas de cards; horizontal só se a viewport for mais estreita que 5 colunas. */
+  box-sizing: border-box;
+  padding: 0 14px 6px 12px;
+  /* Vertical: várias linhas de cards; horizontal só se a viewport for mais estreita que 4 colunas. */
   overflow-x: auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
+}
+
+.anuncios-raiox-compare--spacious.anuncios-raiox-compare--single-card .anuncios-raiox-compare__compare-scroll {
+  scrollbar-gutter: auto;
+}
+
+@media (min-width: 480px) {
+  .anuncios-raiox-compare--spacious.anuncios-raiox-compare--single-card .anuncios-raiox-compare__toolbar-meta--with-copy {
+    flex-wrap: nowrap;
+  }
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__compare-scroll-inner {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare-shell--raiox-cards-only {
@@ -2774,8 +4270,8 @@
 /* Fator único para o bloco de cálculo (Anuncios.jsx: ADS_RAIOX_ML_COMPARE_BLOCK_SCALE). */
 .anuncios-raiox-compare--spacious {
   --raiox-ml-calc-scale: 0.87;
-  align-self: center;
-  width: max-content;
+  align-self: stretch;
+  width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   display: flex;
@@ -2785,14 +4281,14 @@
 }
 
 /*
- * Raio-x ML: grid com no máximo 5 colunas (base + promoções); quebra linha no 6º card.
- * Largura fixa por card; shell limita largura a 5 colunas (Anuncios.jsx).
+ * Raio-x ML: grid com no máximo 4 colunas (base + promoções); quebra linha no 5º card.
+ * Largura fixa por card; shell limita largura a 4 colunas (Anuncios.jsx).
  */
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__grid--comfortable {
   --s7-ml-card-gap: calc(20px * var(--raiox-ml-calc-scale));
   --s7-ml-card-fixed: calc(280px * var(--raiox-ml-calc-scale));
   display: grid;
-  grid-template-columns: repeat(var(--raiox-ml-compare-cols, 5), var(--s7-ml-card-fixed));
+  grid-template-columns: repeat(var(--raiox-ml-compare-cols, 4), var(--s7-ml-card-fixed));
   gap: var(--s7-ml-card-gap);
   align-content: start;
   justify-content: start;
@@ -2832,6 +4328,10 @@
 
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-vigencia {
   font-size: calc(11px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-vigencia--baseline-badge {
+  min-height: calc((1.25em + 2px) * var(--raiox-ml-calc-scale));
 }
 
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__badge {
@@ -2888,6 +4388,19 @@
   line-height: 1.32;
 }
 
+.anuncios-raiox-compare--spacious
+  .s7-ml-scenario-compare__card-body
+  .anuncios-sell-popover__section--raiox-resultado
+  .anuncios-sell-popover__line--raiox-result-metric
+  > span:first-child,
+.anuncios-raiox-compare--spacious
+  .s7-ml-scenario-compare__card-body
+  .anuncios-sell-popover__section--raiox-resultado
+  .anuncios-sell-popover__line--raiox-result-metric
+  > strong {
+  font-size: calc(11px * var(--raiox-ml-calc-scale));
+}
+
 .anuncios-raiox-compare--spacious .s7-ml-scenario-compare__card-body .anuncios-sell-popover__muted {
   margin-top: 2px;
   line-height: 1.35;
@@ -2928,7 +4441,6 @@
     transform 0.15s ease,
     filter 0.15s ease;
   position: relative;
-  z-index: 100300;
 }
 
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__pricing-btn:hover {
@@ -2957,7 +4469,7 @@
   z-index: 210500;
 }
 
-/* Botão “Ver comparativo”: um passo menor que o texto dos cards (só este controle). */
+/* Comparativo S7: ícone colorido flat (sem moldura). */
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn {
   display: inline-flex;
   align-items: center;
@@ -2987,6 +4499,36 @@
   outline-offset: 2px;
 }
 
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn.anuncios-raiox-compare__chart-btn--icon-only {
+  gap: 0;
+  padding: 0;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn.anuncios-raiox-compare__chart-btn--icon-only:hover {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  filter: brightness(1.05);
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn-icon {
+  width: calc(30px * var(--raiox-ml-calc-scale));
+  height: calc(30px * var(--raiox-ml-calc-scale));
+  object-fit: contain;
+  display: block;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn.s7-tip[data-tip]::before,
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__chart-btn.s7-tip[data-tip]::after {
+  z-index: 210500;
+}
+
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta {
   margin-left: 2px;
   font-size: calc(11px * var(--raiox-ml-calc-scale));
@@ -2994,6 +4536,67 @@
   line-height: 1.25;
   color: rgba(15, 23, 42, 0.64);
   white-space: nowrap;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta--with-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: center;
+  gap: 4px 8px;
+  white-space: normal;
+  line-height: 1;
+  /* Mesma altura de referência que o botão da engrenagem — centraliza ID/SKU com os controles à esquerda. */
+  min-height: calc(27px * var(--raiox-ml-calc-scale));
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-block {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-block--sku {
+  align-items: center;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-sep {
+  color: rgba(15, 23, 42, 0.32);
+  padding: 0 2px;
+  user-select: none;
+  line-height: 1;
+  align-self: center;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-sku-prefix {
+  /* Mesmo corpo que o número (SKU + valor na mesma linha óptica). */
+  font-size: calc(11px * var(--raiox-ml-calc-scale));
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.5);
+  margin-right: 3px;
+}
+
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-text {
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Copiar na toolbar do Raio-x: ícone colado ao ID/SKU (área clicável mínima sem “vão” visual). */
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta .products-catalog__copy-btn {
+  opacity: 1;
+  pointer-events: auto;
+  font-size: calc(13px * var(--raiox-ml-calc-scale));
+  min-width: 1.35em;
+  min-height: 22px;
+  width: auto;
+  padding: 0 1px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Mini modal: só gráfico (menor que o Raio-x principal) */
@@ -3020,10 +4623,21 @@
 .anuncios-raiox-chart-mini__dialog {
   position: relative;
   z-index: 1;
-  width: min(520px, calc(100vw - 32px));
-  max-height: min(580px, 86vh);
-  overflow: auto;
-  padding: 16px 18px 18px;
+  /* Largura: proporcional ao nº de cenários via `--s7-raiox-chart-mini-dialog-width` (Anuncios.jsx); fallback = largura anterior. */
+  width: min(
+    var(--s7-raiox-chart-mini-dialog-width, min(calc(520px * 1.16 * 1.16), calc(100vw - 32px))),
+    calc(100vw - 32px)
+  );
+  max-width: min(980px, calc(100vw - 32px));
+  min-width: min(300px, calc(100vw - 32px));
+  max-height: min(calc(580px * 1.09 * 1.33 * 1.33 * 1.22), calc(92vh * 1.09 * 1.33 * 1.33));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px 18px 20px;
   border-radius: 16px;
   border: 1px solid rgba(15, 23, 42, 0.1);
   background: #ffffff;
@@ -3032,22 +4646,314 @@
     0 0 0 1px rgba(15, 23, 42, 0.04);
   pointer-events: auto;
   -webkit-overflow-scrolling: touch;
+  /* Mesmo vão vertical entre: título do modal ↔ linha capa+nome ↔ linha de ícones. */
+  --s7-raiox-mini-header-stack-gap: 11px;
 }
 
-.anuncios-raiox-chart-mini__title {
+.anuncios-raiox-chart-mini__dialog > .anuncios-compare-modal__head-row {
+  margin-bottom: var(--s7-raiox-mini-header-stack-gap);
+  /* Evita “altura” da linha do X esticar o vão visual abaixo do badge do título. */
+  align-items: flex-start;
+}
+
+/* Título do modal: mesmo visual de badge “Programada” (teste de layout). */
+.anuncios-raiox-chart-mini__title.s7-ml-scenario-compare__badge {
   margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--s7-text, #1e293b);
+  align-self: flex-start;
+  max-width: calc(100% - 48px);
+  width: max-content;
+  min-width: 0;
+}
+
+.anuncios-raiox-chart-mini__title.s7-ml-scenario-compare__badge--available {
+  font-size: calc(11px * 0.81 * 1.19);
+}
+
+.anuncios-raiox-chart-mini__context {
+  margin-top: 0;
+  padding-bottom: 12px;
+  min-width: 0;
+}
+
+/* Linha: capa fora do badge (à esquerda) + badge só com o título. */
+.anuncios-raiox-chart-mini__context-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 var(--s7-raiox-mini-header-stack-gap, 11px);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.anuncios-raiox-chart-mini__context-name-thumb {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 8px;
+  border: none;
+  box-sizing: border-box;
+  box-shadow: none;
+}
+
+/* Nome do anúncio: texto escuro simples (sem badge). */
+.anuncios-raiox-chart-mini__context-name-row .anuncios-raiox-chart-mini__context-name--plain {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.anuncios-raiox-chart-mini__context-name--plain .anuncios-raiox-chart-mini__context-name-text {
+  display: block;
+  color: var(--s7-text, #0f172a);
+  font-size: 14px;
+  font-weight: 600;
   letter-spacing: -0.02em;
+  line-height: 1.4;
+  text-transform: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anuncios-raiox-chart-mini__context-pricing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.anuncios-raiox-chart-mini__context-pricing:hover {
+  filter: brightness(1.06);
+}
+
+.anuncios-raiox-chart-mini__context-pricing:active {
+  transform: scale(0.97);
+}
+
+.anuncios-raiox-chart-mini__context-pricing:focus-visible {
+  outline: 2px solid var(--s7-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+.anuncios-raiox-chart-mini__context-pricing-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+.anuncios-raiox-chart-mini__context-pricing.s7-tip[data-tip]::before,
+.anuncios-raiox-chart-mini__context-pricing.s7-tip[data-tip]::after {
+  z-index: 200110;
+}
+
+.anuncios-raiox-chart-mini__context-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.62);
+  min-width: 0;
+}
+
+.anuncios-raiox-chart-mini__context-spec {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(248, 250, 252, 0.95);
+  color: rgba(15, 23, 42, 0.72);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.anuncios-raiox-chart-mini__context-spec:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  background: rgba(37, 99, 235, 0.06);
+  color: var(--s7-primary, #2563eb);
+}
+
+.anuncios-raiox-chart-mini__context-spec:focus-visible {
+  outline: 2px solid var(--s7-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+.anuncios-raiox-chart-mini__context-spec.s7-tip[data-tip]::before,
+.anuncios-raiox-chart-mini__context-spec.s7-tip[data-tip]::after {
+  z-index: 200110;
+}
+
+.anuncios-raiox-chart-mini__context-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.anuncios-raiox-chart-mini__context-meta--sku .anuncios-raiox-chart-mini__context-meta-value {
+  max-width: min(160px, 38vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anuncios-raiox-chart-mini__context-meta-label {
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.45);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.anuncios-raiox-chart-mini__context-meta-value {
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.78);
+  min-width: 0;
+}
+
+.anuncios-raiox-chart-mini__context-sep {
+  color: rgba(15, 23, 42, 0.22);
+  font-weight: 500;
+  user-select: none;
+}
+
+.anuncios-raiox-chart-mini__context-copy {
+  flex-shrink: 0;
 }
 
 .anuncios-raiox-chart-mini__body {
-  margin-top: 0;
+  margin-top: 10px;
+  /* Só no corpo (max-height do .__dialog intacto): eixo vertical para o card flex; vão extra sobe acima do bloco do gráfico. */
+  min-height: min(360px, calc(100dvh - 168px));
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: visible;
 }
 
+/* Mini-modal “Comparativo de ofertas S7”: escala ~+19% (legível, sem afetar gráfico embutido no painel ML). */
 .anuncios-raiox-chart-mini__body .s7-ml-scenario-chart {
-  margin-top: 4px;
+  --s7-ml-chart-modal-scale: 1.19;
+  margin-top: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  /* Padding lateral do card: ~71% menor que 14px×escala (evita gráfico “espalhado” no mini-modal). Vertical inalterado. */
+  padding: calc(14px * var(--s7-ml-chart-modal-scale)) calc(4px * var(--s7-ml-chart-modal-scale))
+    calc(16px * var(--s7-ml-chart-modal-scale));
+  border-radius: calc(12px * var(--s7-ml-chart-modal-scale));
+  overflow: visible;
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__block {
+  flex: 0 0 auto;
+  /* Vão vertical do card fica acima do plot: desce baseline + barras + ticks juntos, sem alterar .bars-plot-area. */
+  margin-top: auto;
+  /* Reserva para valores R$ absolutos acima das barras (não aumenta .bars-plot-area). */
+  padding-top: calc(22px * var(--s7-ml-chart-modal-scale));
+  margin-bottom: calc(6px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__bars-wrap {
+  /* Faixa útil dos ticks fica no padding do .chart-container (mini) para evitar overflow vertical. */
+  padding-bottom: calc(4px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__bars-plot-area {
+  height: calc(176px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__bars-columns {
+  gap: calc(24px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__column-hit {
+  width: calc(48px * var(--s7-ml-chart-modal-scale));
+  height: calc(176px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__bar-value-float {
+  font-size: calc(10px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__bar-track {
+  max-width: calc(48px * var(--s7-ml-chart-modal-scale));
+  min-height: calc(176px * var(--s7-ml-chart-modal-scale));
+  height: calc(176px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__bar-fill-inner {
+  min-height: calc(4px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__bar-margin-in {
+  font-size: calc(11px * (2 / 3) * var(--s7-ml-chart-modal-scale));
+  bottom: calc(6px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__value {
+  font-size: calc(10px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__tick {
+  font-size: calc(12px * var(--s7-ml-chart-modal-scale));
+  /* Positivo: tick logo abaixo da trilha. */
+  top: calc(100% + (4px * var(--s7-ml-chart-modal-scale)));
+  max-width: min(120px, 22vw);
+}
+
+.anuncios-raiox-chart-mini__body
+  .s7-ml-scenario-chart
+  .s7-ml-scenario-chart__column-hit--neg-brl
+  .s7-ml-scenario-chart__tick {
+  /* Negativo: posição definida por coluna (--s7-ml-tick-top no JSX). */
+  top: var(--s7-ml-tick-top, calc(100% + (4px * var(--s7-ml-chart-modal-scale))));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__legend {
+  flex-shrink: 0;
+  padding: calc(6px * var(--s7-ml-chart-modal-scale)) 0 0;
+  gap: calc(8px * var(--s7-ml-chart-modal-scale)) calc(12px * var(--s7-ml-chart-modal-scale));
+  font-size: calc(10px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__legend li {
+  gap: calc(5px * var(--s7-ml-chart-modal-scale));
+}
+
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__swatch {
+  width: calc(10px * var(--s7-ml-chart-modal-scale));
+  height: calc(10px * var(--s7-ml-chart-modal-scale));
+  border-radius: calc(3px * var(--s7-ml-chart-modal-scale));
 }
 
 /* Fallback: cards à esquerda, gráfico à direita */
@@ -3085,13 +4991,13 @@
 }
 
 /*
- * Comparativo: até 5 colunas por linha (inclui “Preço normal”). `--raiox-ml-compare-cols` vem do JSX (min(5, n)).
+ * Comparativo: até 4 colunas por linha (inclui “Preço normal”). `--raiox-ml-compare-cols` vem do JSX (min(4, n)).
  * Precificação inteligente: colunas fluidas com largura mínima; Raio-x spacious sobrescreve com largura fixa.
  */
 .s7-ml-scenario-compare__grid--comfortable {
   --s7-ml-card-gap: 12px;
   --s7-ml-card-min: 240px;
-  --raiox-ml-compare-cols: 5;
+  --raiox-ml-compare-cols: 4;
   display: grid;
   grid-template-columns: repeat(
     var(--raiox-ml-compare-cols),
@@ -3183,6 +5089,12 @@
   min-width: 0;
 }
 
+.s7-ml-scenario-compare__card-vigencia--baseline-badge {
+  display: flex;
+  align-items: center;
+  min-height: calc(1.25em + 2px);
+}
+
 .s7-ml-scenario-compare__badge {
   font-size: 11px;
   font-weight: 600;
@@ -3220,6 +5132,20 @@
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
 }
 
+.s7-ml-scenario-compare__badge--neutral {
+  flex-shrink: 0;
+  color: #fff;
+  font-weight: 700;
+  font-size: calc(11px * 0.81);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: rgba(30, 41, 59, 0.92);
+  border: none;
+  border-radius: 6px;
+  padding: 3px 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
 .s7-ml-scenario-compare__card-body {
   padding: 8px 10px 10px;
 }
@@ -3232,20 +5158,53 @@
   margin-top: 0;
 }
 
+@keyframes s7-ml-scenario-chart-bar-enter {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
 /* Gráfico comparativo (lucro / margem) — valores exibidos = mesmos campos da API dos cards */
 .s7-ml-scenario-chart {
+  /* Altura da trilha / colunas; página pode reduzir só visual quando não há lucro negativo. */
+  --s7-ml-chart-plot-h: 176px;
   padding: 10px 12px 12px;
   border-radius: 12px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: linear-gradient(165deg, rgba(15, 23, 42, 0.04) 0%, rgba(255, 255, 255, 0.88) 100%);
   box-sizing: border-box;
+  /* Verde único para toda a faixa “Bom ou melhor” (great + excellent), sem variação por %. */
+  --s7-ml-chart-green: #22c55e;
+  /* Balão .s7-tip dentro do gráfico: tokens escuros (padrão S7 solicitado; não altera :root global). */
+  --s7-tooltip-bg: #111111;
+  --s7-tooltip-text: #ffffff;
+  --s7-tooltip-border: rgba(255, 255, 255, 0.12);
+  --s7-tooltip-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
-.s7-ml-scenario-chart__title {
-  margin: 0 0 2px;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(15, 23, 42, 0.92);
+/* Chip S7 no hover: ~16% menor (fonte + padding + raio) vs. 12px/6px8px/8px. */
+.s7-ml-scenario-chart .s7-tooltip.s7-tip[data-tip]::after {
+  font-size: calc(12px * 0.84);
+  font-weight: 500;
+  line-height: 1.25;
+  padding: calc(6px * 0.84) calc(8px * 0.84);
+  border-radius: calc(8px * 0.84);
+  background: #111111 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 calc(4px * 0.84) calc(14px * 0.84) rgba(0, 0, 0, 0.26);
+  max-width: min(calc(320px * 0.84), calc(100vw - 24px));
+}
+
+.s7-ml-scenario-chart .s7-tooltip.s7-tip[data-tip]::before {
+  border-top-color: #111111 !important;
+}
+
+.s7-ml-scenario-chart .s7-tooltip.s7-tip.s7-tooltip--top-start.s7-tip-wrap[data-tip]::after {
+  white-space: normal;
 }
 
 .s7-ml-scenario-chart__subtitle {
@@ -3256,7 +5215,7 @@
 }
 
 .s7-ml-scenario-chart__block {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .s7-ml-scenario-chart__block:last-of-type {
@@ -3272,53 +5231,254 @@
   margin-bottom: 8px;
 }
 
-.s7-ml-scenario-chart__bars {
+/* Faixa do gráfico: linha zero só na área de plotagem (altura = trilha), rótulos fora. */
+.s7-ml-scenario-chart__bars-wrap {
+  position: relative;
+  width: 100%;
+  /* Tick + opcional R$ negativo fora da trilha — reserva vertical compacta. */
+  padding-bottom: 32px;
+  box-sizing: border-box;
+}
+
+/* Centraliza o bloco de colunas; largura natural (max-content); scroll horizontal se muitos cenários. */
+.s7-ml-scenario-chart__chart-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+/* Mini Comparativo S7: overflow-x:auto + overflow-y:visible força overflow-y:auto (spec) → scrollbar vertical no card.
+   Fix: eixo Y explícito (hidden) + paddings: inferior (ticks) e superior (R$ no topo da barra mais alta — evita clip na 1ª coluna). */
+.anuncios-raiox-chart-mini__body .s7-ml-scenario-chart .s7-ml-scenario-chart__chart-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: calc(28px * var(--s7-ml-chart-modal-scale));
+  padding-bottom: calc(32px * var(--s7-ml-chart-modal-scale));
+  box-sizing: border-box;
+}
+
+/* Área plotada: altura ~2× a anterior (88→176px) para mais respiro; % do zero continua coerente. */
+.s7-ml-scenario-chart__bars-plot-area {
+  position: relative;
+  height: var(--s7-ml-chart-plot-h, 176px);
+  width: max-content;
+  max-width: 100%;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+/* Grade horizontal discreta (fundo), atrás das barras; não numérica — só apoio visual. */
+.s7-ml-scenario-chart__bars-plot-area::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(
+    to top,
+    transparent 0,
+    transparent calc(25% - 1px),
+    rgba(15, 23, 42, 0.055) calc(25% - 1px),
+    rgba(15, 23, 42, 0.055) 25%
+  );
+}
+
+.s7-ml-scenario-chart__bar-zero-line-global {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  bottom: var(--s7-ml-bar-zero-pct, 50%);
+  transform: translateY(-50%);
+  z-index: 0;
+  pointer-events: none;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-top: 1px dashed var(--s7-border-default, #d1d5db);
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-chart__bars-columns {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
   align-items: flex-end;
-  gap: 6px;
-  min-height: 132px;
-}
-
-.s7-ml-scenario-chart__cell {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.s7-ml-scenario-chart__bar-track {
-  width: 100%;
-  max-width: 36px;
-  height: 88px;
+  gap: 24px;
+  height: 100%;
+  width: max-content;
+  max-width: 100%;
   margin: 0 auto;
+  overflow: visible;
+}
+
+/* Gatilho único S7Tooltip: barra + rótulo; sem herdar azul “link” no texto do eixo. */
+.s7-ml-scenario-chart__column-hit.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.s7-ml-scenario-chart__column-hit.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-ml-scenario-chart__column-hit.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: inherit;
+}
+
+.s7-ml-scenario-chart__column-hit {
+  position: relative;
+  flex: 0 0 auto;
+  width: 48px;
+  height: var(--s7-ml-chart-plot-h, 176px);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-chart__column-hit--selected {
+  z-index: 2;
+}
+
+.s7-ml-scenario-chart__column-hit--selected .s7-ml-scenario-chart__bar-track {
+  outline: 2px solid rgba(37, 99, 235, 0.38);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.s7-ml-scenario-chart__column-hit.s7-tooltip.s7-tip.s7-tooltip-trigger {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   align-items: stretch;
-  border-radius: 6px 6px 2px 2px;
-  background: rgba(15, 23, 42, 0.06);
 }
 
-.s7-ml-scenario-chart__bar-fill {
+/* Trilha: segmento proporcional a |lucro| (linha zero = .s7-ml-scenario-chart__bar-zero-line-global). */
+.s7-ml-scenario-chart__bar-track {
+  position: relative;
+  z-index: 1;
   width: 100%;
+  height: 100%;
+  max-width: 48px;
+  min-height: 0;
+  margin: 0 auto;
+  border-radius: 0;
+  background: transparent;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.s7-ml-scenario-chart__bar-value-float {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  text-align: center;
+  pointer-events: none;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  transform: none;
+}
+
+/* Lucro negativo: R$ fora do segmento; `top` vem do JSX (% do pé da própria barra). */
+.s7-ml-scenario-chart__bar-value-float--below-track {
+  bottom: auto;
+}
+
+.s7-ml-scenario-chart__bar-value-float__text {
+  display: block;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s7-ml-scenario-chart__bar-value-float--neutral .s7-ml-scenario-chart__bar-value-float__text {
+  color: rgba(15, 23, 42, 0.88);
+}
+
+.s7-ml-scenario-chart__bar-magnet {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  z-index: 1;
+  box-sizing: border-box;
+  border-radius: 0;
+  min-height: 0;
+}
+
+.s7-ml-scenario-chart__bar-fill-inner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   min-height: 4px;
-  border-radius: 6px 6px 2px 2px;
-  transition: height 0.2s ease;
+  border-radius: 0;
+  box-shadow: none;
+  transform: scaleY(0);
+  animation: s7-ml-scenario-chart-bar-enter 0.26s ease-out forwards;
 }
 
-.s7-ml-scenario-chart__bar-fill--baseline {
-  background: linear-gradient(180deg, rgba(100, 116, 139, 0.85) 0%, rgba(71, 85, 105, 0.95) 100%);
+.s7-ml-scenario-chart__bar-fill-inner--grow-up {
+  transform-origin: 50% 100%;
 }
 
-.s7-ml-scenario-chart__bar-fill--participating {
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.92) 0%, rgba(37, 99, 235, 1) 100%);
+.s7-ml-scenario-chart__bar-fill-inner--grow-down {
+  transform-origin: 50% 0%;
 }
 
-.s7-ml-scenario-chart__bar-fill--available {
-  background: linear-gradient(180deg, rgba(251, 146, 60, 0.95) 0%, rgba(234, 88, 12, 1) 100%);
+@media (prefers-reduced-motion: reduce) {
+  .s7-ml-scenario-chart__bar-fill-inner {
+    animation: none;
+    transform: scaleY(1);
+  }
+}
+
+/* Margem % dentro da barra (pé da coluna: em lucro junto ao zero; em prejuízo junto ao zero, no topo do segmento). */
+.s7-ml-scenario-chart__bar-margin-in {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 6px;
+  z-index: 2;
+  text-align: center;
+  font-size: calc(11px * 2 / 3);
+  font-weight: 600;
+  line-height: 1.15;
+  color: #ffffff;
+  pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Cor sólida = mesma régua semântica do Raio-X (sem degradê). Verdes via --s7-ml-chart-green*. */
+.s7-ml-scenario-chart__bar-fill-inner.anuncios-sell-popover__offer-sem--critical,
+.s7-ml-scenario-chart__bar-fill-inner.anuncios-sell-popover__offer-sem--danger {
+  background: #dc2626;
+}
+
+.s7-ml-scenario-chart__bar-fill-inner.anuncios-sell-popover__offer-sem--acceptable {
+  background: #d97706;
+}
+
+.s7-ml-scenario-chart__bar-fill-inner.anuncios-sell-popover__offer-sem--regular {
+  background: var(--s7-orange, #ff8533);
+}
+
+.s7-ml-scenario-chart__bar-fill-inner.anuncios-sell-popover__offer-sem--great,
+.s7-ml-scenario-chart__bar-fill-inner.anuncios-sell-popover__offer-sem--excellent {
+  background: var(--s7-ml-chart-green, #22c55e);
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--neutral {
+  background: #64748b;
 }
 
 .s7-ml-scenario-chart__value {
@@ -3333,18 +5493,46 @@
   white-space: nowrap;
 }
 
+/* R$: mesma semântica de cor da barra / faixa de margem (texto sobre fundo claro do card). */
+.s7-ml-scenario-chart__bar-value-float.anuncios-sell-popover__offer-sem--critical .s7-ml-scenario-chart__bar-value-float__text,
+.s7-ml-scenario-chart__bar-value-float.anuncios-sell-popover__offer-sem--danger .s7-ml-scenario-chart__bar-value-float__text {
+  color: #b91c1c;
+}
+
+.s7-ml-scenario-chart__bar-value-float.anuncios-sell-popover__offer-sem--acceptable .s7-ml-scenario-chart__bar-value-float__text {
+  color: #b45309;
+}
+
+.s7-ml-scenario-chart__bar-value-float.anuncios-sell-popover__offer-sem--regular .s7-ml-scenario-chart__bar-value-float__text {
+  color: var(--s7-orange, #ff8533);
+}
+
+.s7-ml-scenario-chart__bar-value-float.anuncios-sell-popover__offer-sem--great .s7-ml-scenario-chart__bar-value-float__text,
+.s7-ml-scenario-chart__bar-value-float.anuncios-sell-popover__offer-sem--excellent .s7-ml-scenario-chart__bar-value-float__text {
+  color: var(--s7-ml-chart-green, #22c55e);
+}
+
 .s7-ml-scenario-chart__tick {
-  font-size: 9px;
-  line-height: 1.2;
-  color: rgba(15, 23, 42, 0.45);
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: block;
+  width: max-content;
+  max-width: min(120px, 22vw);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  color: rgba(37, 99, 235, 0.92);
   text-align: center;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.s7-ml-scenario-chart__column-hit--neg-brl .s7-ml-scenario-chart__tick {
+  top: var(--s7-ml-tick-top, calc(100% + 4px));
 }
 
 .s7-ml-scenario-chart__legend {
@@ -3361,8 +5549,18 @@
 
 .s7-ml-scenario-chart__legend li {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 5px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.s7-ml-scenario-chart__legend-hint {
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.42);
+  white-space: normal;
 }
 
 .s7-ml-scenario-chart__swatch {
@@ -3372,16 +5570,16 @@
   flex-shrink: 0;
 }
 
-.s7-ml-scenario-chart__swatch--baseline {
-  background: rgba(71, 85, 105, 0.9);
+.s7-ml-scenario-chart__swatch--health-critical {
+  background: #dc2626;
 }
 
-.s7-ml-scenario-chart__swatch--participating {
-  background: rgb(37, 99, 235);
+.s7-ml-scenario-chart__swatch--health-regular {
+  background: var(--s7-orange, #ff8533);
 }
 
-.s7-ml-scenario-chart__swatch--available {
-  background: rgb(234, 88, 12);
+.s7-ml-scenario-chart__swatch--health-good {
+  background: var(--s7-ml-chart-green, #22c55e);
 }
 
 /* Raio-x portal: comparativo ML — modo full usa scroll interno no corpo (.anuncios-compare-modal__body-scroll) */
