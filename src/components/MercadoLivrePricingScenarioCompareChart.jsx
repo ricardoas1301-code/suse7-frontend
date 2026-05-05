@@ -3,7 +3,7 @@
 // Altura das barras: parse numérico apenas para escala (não recalcula negócio).
 // ======================================================
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { formatCatalogBRL } from "../utils/productCatalogRow";
 import {
   buildOrderedScenarioRows,
@@ -63,7 +63,7 @@ function getFirstWordLabel(name) {
  *   enablePagePositiveCompact?: boolean;
  * }} props
  */
-export function MercadoLivrePricingScenarioCompareChart({
+function MercadoLivrePricingScenarioCompareChartInner({
   scenarios,
   selectedScenarioTabId = null,
   preserveScenarioDisplayOrder = false,
@@ -76,7 +76,7 @@ export function MercadoLivrePricingScenarioCompareChart({
 
   /** Uma linha de barras: altura pelo lucro (R$); rótulos com R$ + margem % (API, sem recalcular). */
   const chartSeries = useMemo(() => {
-    return rows.map(({ scenario, group }, idx) => {
+    return rows.map(({ scenario, group }) => {
       const r = /** @type {Record<string, unknown>} */ (scenario);
       const res =
         r.result != null && typeof r.result === "object"
@@ -91,6 +91,7 @@ export function MercadoLivrePricingScenarioCompareChart({
             : "";
       const profitN = parseScaleOnly(rawProfit);
       const st = r.starts_at != null ? String(r.starts_at) : "";
+      const ed = r.ends_at != null ? String(r.ends_at) : "";
       const marginTone = getOfferStatusFromMargin(rawMargin || null);
       const marginHealthClass =
         marginTone != null ? offerSemanticSuffixToCssClass(marginTone.color) : "";
@@ -98,8 +99,9 @@ export function MercadoLivrePricingScenarioCompareChart({
       const shortLabel = group === "baseline" ? "Preço de venda" : heading;
       const tickLabel = getFirstWordLabel(shortLabel);
       const tabId = resolveMlScenarioTabId(scenario) || "baseline";
+      const sid = String(r.scenario_id ?? r.promotion_id ?? r.promotion_stable_key ?? "").trim();
       return {
-        key: `${idx}-${String(r.scenario_id ?? r.promotion_id ?? "")}-${st}-${heading}`,
+        key: `${tabId}::${sid}::${st}::${ed}`,
         tabId,
         shortLabel,
         tickLabel,
@@ -140,7 +142,7 @@ export function MercadoLivrePricingScenarioCompareChart({
         </li>
         <li>
           <span className="s7-ml-scenario-chart__swatch s7-ml-scenario-chart__swatch--health-regular" /> Regular
-          <span className="s7-ml-scenario-chart__legend-hint"> · margem de 0 a 4,99%</span>
+          <span className="s7-ml-scenario-chart__legend-hint"> · margem de 0 a 5%</span>
         </li>
         <li>
           <span className="s7-ml-scenario-chart__swatch s7-ml-scenario-chart__swatch--health-good" /> Bom ou melhor
@@ -150,6 +152,22 @@ export function MercadoLivrePricingScenarioCompareChart({
     </div>
   );
 }
+
+/** @param {{ scenarios: unknown[]; selectedScenarioTabId?: string | null; preserveScenarioDisplayOrder?: boolean; enablePagePositiveCompact?: boolean }} prev @param {typeof prev} next */
+function chartPropsEqual(prev, next) {
+  return (
+    prev.scenarios === next.scenarios &&
+    prev.selectedScenarioTabId === next.selectedScenarioTabId &&
+    prev.preserveScenarioDisplayOrder === next.preserveScenarioDisplayOrder &&
+    prev.enablePagePositiveCompact === next.enablePagePositiveCompact
+  );
+}
+
+export const MercadoLivrePricingScenarioCompareChart = memo(
+  MercadoLivrePricingScenarioCompareChartInner,
+  chartPropsEqual,
+);
+MercadoLivrePricingScenarioCompareChart.displayName = "MercadoLivrePricingScenarioCompareChart";
 
 /** @param {(number | null)[]} values */
 function scaleSymmetric(values) {

@@ -81,27 +81,29 @@ export function PricingProductIdentityCard({ row, theme }) {
     <div className={shellClass} style={getMarketplaceThemeCssVars(theme)}>
       <div className="anuncios-raiox-shell__frame" aria-hidden />
       <div className="pricing-product-identity__panel-stack">
-        {theme?.logoSrc != null && String(theme.logoSrc).trim() !== "" ? (
-          <div className="anuncios-raiox-shell__badge pricing-product-identity__badge-overlap">
-            <img
-              src={String(theme.logoSrc)}
-              alt={theme.logoAlt != null && String(theme.logoAlt).trim() !== "" ? String(theme.logoAlt) : theme.displayName}
-              loading="lazy"
-              decoding="async"
-              className="anuncios-raiox-shell__badge-img"
-            />
-          </div>
-        ) : (
-          <div className="anuncios-raiox-shell__badge anuncios-raiox-shell__badge--text pricing-product-identity__badge-overlap">
-            <span className="anuncios-raiox-shell__badge-fallback">{theme?.displayName ?? "Marketplace"}</span>
-          </div>
-        )}
-
         <div
           className="anuncios-sell-popover__panel anuncios-sell-popover__panel--in-shell anuncios-sell-popover__panel--pricing-page-product"
           role="region"
           aria-label="Identidade do anúncio"
         >
+          <div className="pricing-product-identity__mkt-badge-wrap">
+            {theme?.logoSrc != null && String(theme.logoSrc).trim() !== "" ? (
+              <div className="anuncios-raiox-shell__badge">
+                <img
+                  src={String(theme.logoSrc)}
+                  alt={theme.logoAlt != null && String(theme.logoAlt).trim() !== "" ? String(theme.logoAlt) : theme.displayName}
+                  loading="lazy"
+                  decoding="async"
+                  className="anuncios-raiox-shell__badge-img"
+                />
+              </div>
+            ) : (
+              <div className="anuncios-raiox-shell__badge anuncios-raiox-shell__badge--text">
+                <span className="anuncios-raiox-shell__badge-fallback">{theme?.displayName ?? "Marketplace"}</span>
+              </div>
+            )}
+          </div>
+
           <div className="anuncios-raiox-chart-mini__context pricing-product-identity__context" aria-label="Contexto do anúncio">
             <div className="pricing-product-identity__hero">
               {cover !== "" && !imgBroken ? (

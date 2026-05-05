@@ -15,7 +15,9 @@ import { getMarketplaceTheme, getMarketplaceThemeCssVars } from "../../../theme/
 import S7Button from "../../../components/ui/S7Button";
 import S7Icon from "../../../components/ui/S7Icon";
 import S7Tooltip from "../../../components/ui/S7Tooltip";
-import MarketplaceBadge from "../../../components/MarketplaceBadge.jsx";
+import S7CatalogAccountCell, {
+  S7CatalogChannelCell,
+} from "../../../components/catalog/S7CatalogAccountCell.jsx";
 import { MercadoLivrePricingScenarioCompareChart } from "../../../components/MercadoLivrePricingScenarioCompareChart.jsx";
 import { MercadoLivrePricingScenarioComparePanel } from "../../../components/MercadoLivrePricingScenarioComparePanel.jsx";
 import { RaioxVendaTesteModal } from "../../../components/RaioxVendaTesteModal.jsx";
@@ -1978,8 +1980,17 @@ export function AdsCatalogRow({
                   </span>
                 ) : null}
               </div>
-              <div className="anuncios-catalog__minimal-title-mkt">
-                <MarketplaceBadge marketplace={row.marketplaceRaw || row.marketplaceSlug} />
+              <div className="anuncios-catalog__minimal-account-channel">
+                <S7CatalogAccountCell
+                  marketplaceAccountId={row.marketplaceAccountId}
+                  accountAlias={row.accountAlias}
+                  accountLogoUrl={row.accountLogoUrl}
+                  compact
+                />
+                <S7CatalogChannelCell
+                  marketplace={row.marketplaceRaw || row.marketplaceSlug}
+                  marketplaceLabel={row.marketplaceLabelDisplay}
+                />
               </div>
             </div>
             <div className="anuncios-ad-sku-row">
@@ -2193,8 +2204,18 @@ export function AdsCatalogRow({
           </span>
         )}
       </div>
-      <div className="products-catalog__cell anuncios-catalog__cell--mkt">
-        <MarketplaceBadge marketplace={row.marketplaceRaw || row.marketplaceSlug} />
+      <div className="products-catalog__cell anuncios-catalog__cell--account">
+        <S7CatalogAccountCell
+          marketplaceAccountId={row.marketplaceAccountId}
+          accountAlias={row.accountAlias}
+          accountLogoUrl={row.accountLogoUrl}
+        />
+      </div>
+      <div className="products-catalog__cell anuncios-catalog__cell--channel">
+        <S7CatalogChannelCell
+          marketplace={row.marketplaceRaw || row.marketplaceSlug}
+          marketplaceLabel={row.marketplaceLabelDisplay}
+        />
       </div>
       <div
         className="products-catalog__cell products-catalog__cell--money"

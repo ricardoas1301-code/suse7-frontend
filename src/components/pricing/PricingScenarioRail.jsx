@@ -2,6 +2,7 @@
 // Lista de cenários ML — página Precificação Inteligente (rail horizontal ou sidebar no workspace).
 // ======================================================
 
+import { memo } from "react";
 import { resolveMlScenarioTabId } from "../MercadoLivrePricingScenarioRaiox.jsx";
 import { resolveSaleXrayArticleKey } from "../mercadoLivrePricingScenarioCompareShared.js";
 import { PricingScenarioRailItem } from "./PricingScenarioRailItem.jsx";
@@ -16,7 +17,7 @@ import { PricingScenarioRailItem } from "./PricingScenarioRailItem.jsx";
  *   workspaceSidebar?: boolean;
  * }} props
  */
-export function PricingScenarioRail({
+function PricingScenarioRailInner({
   rows,
   selectedTabId,
   onSelectTabId,
@@ -61,3 +62,6 @@ export function PricingScenarioRail({
     </div>
   );
 }
+
+export const PricingScenarioRail = memo(PricingScenarioRailInner);
+PricingScenarioRail.displayName = "PricingScenarioRail";

@@ -81,8 +81,8 @@ export const PRICING_PAGE_MODE = /** @type {const} */ ("precificacoes");
  * - Minis: SKU pendente + placeholders Vendas / Lucro / Em queda
  *
  * **PRICING (`pricing_financial`)**
- * - Grandes: “Ofertas ativas”, “Faturamento bruto (pedidos)”
- * - Minis: Promoção ML ativa, Ofertas pausadas/inativas, SKU pendente
+ * - Grandes: “Produtos precificados”, “Margem média” (payload `pricing_page_summary` em GET /api/ml/listings)
+ * - Minis: “Preços saudáveis”, “Em risco”, “Prejuízo”, “Oportunidades”
  *
  * Colunas (grade completa):
  * - **ADS (`full_catalog`)**: todas as colunas atuais incl. qualidade, experiência, status, saúde.

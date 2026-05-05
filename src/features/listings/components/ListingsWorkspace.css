@@ -7,27 +7,6 @@
   display: block;
 }
 
-.listings-page-head {
-  margin: 0 0 1rem;
-  padding: 0 0 0.25rem;
-}
-
-.listings-page-head__title {
-  margin: 0;
-  font-size: 1.35rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  color: var(--s7-text-primary, #0f172a);
-}
-
-.listings-page-head__subtitle {
-  margin: 0.35rem 0 0;
-  max-width: 52rem;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  color: var(--s7-text-secondary, #64748b);
-}
-
 /* Precificações: reforço sutil de “área financeira” sem reinventar a tabela. */
 .listings-workspace--precificacoes .anuncios-catalog__kpis {
   border-radius: var(--products-catalog-table-radius, 16px);

@@ -39,6 +39,8 @@ const ADS_COLUMN_TOOLTIPS = {
     "Número do anúncio no Mercado Livre (exibido sem o prefixo MLB, como no painel). O id técnico completo continua no banco. Clique para copiar o número exibido.",
   adTitle: "Título público do anúncio no marketplace.",
   product: "Produto interno vinculado ao anúncio.",
+  account: "Conta do vendedor no marketplace (alias / logo), vinculada ao CNPJ no Suse7.",
+  channel: "Canal = marketplace (Mercado Livre, Shopee, etc.). Distinto da coluna Conta.",
   marketplace: "Canal de venda onde o anúncio está publicado.",
   price: "Preço de catálogo (listing_price_brl) — ver também coluna de promoção e effective_sale_price_brl na API.",
   sales: "Unidades vendidas via este anúncio (métricas importadas).",
@@ -145,9 +147,10 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
     setSelectedListingIds(new Set());
   }, []);
 
-  const { catalogRows, listLoading, listError, setListError, fetchListings } = useListingsCatalogFetch({
-    onAfterLoad: clearSelectionAfterFetch,
-  });
+  const { catalogRows, pricingPageSummary, listLoading, listError, setListError, fetchListings } =
+    useListingsCatalogFetch({
+      onAfterLoad: clearSelectionAfterFetch,
+    });
 
   const [syncLoading, setSyncLoading] = useState(false);
   const [healthBackfillLoading, setHealthBackfillLoading] = useState(false);
@@ -593,77 +596,86 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
       />
 
       <h1 className="products-catalog__sr-title">{listingsViewConfig.srTitle}</h1>
-      <header className="listings-page-head" aria-label={listingsViewConfig.pageTitle}>
-        <p className="listings-page-head__title">{listingsViewConfig.pageTitle}</p>
-        {listingsViewConfig.pageSubtitle ? (
-          <p className="listings-page-head__subtitle">{listingsViewConfig.pageSubtitle}</p>
-        ) : null}
-      </header>
 
       {listingsViewConfig.kpiPreset === "pricing_financial" ? (
-        <section className="anuncios-catalog__kpis" aria-label="Resumo financeiro da vitrine">
+        <section className="s7-core-kpis anuncios-catalog__kpis" aria-label="Resumo de precificação">
           <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
             <header className="anuncios-catalog__kpi-head">
-              <h2 className="anuncios-catalog__kpi-title">Ofertas ativas</h2>
+              <h2 className="anuncios-catalog__kpi-title">Produtos precificados</h2>
             </header>
             <div className="anuncios-catalog__kpi-body">
-              <p className="anuncios-catalog__kpi-value">{listLoading ? "…" : activeCount}</p>
+              <p className="anuncios-catalog__kpi-value">
+                {listLoading ? "…" : String(pricingPageSummary?.priced_products_count ?? "—")}
+              </p>
               <p className="anuncios-catalog__kpi-hint">
-                Listagens com status ativo na última importação — base para simular preço e margem no modal S7.
+                Ofertas com margem estimada no servidor (pricing_context) — mesmo lote da grade, sem recalcular no
+                navegador.
               </p>
             </div>
           </article>
 
           <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
             <header className="anuncios-catalog__kpi-head">
-              <h2 className="anuncios-catalog__kpi-title">Faturamento bruto (pedidos)</h2>
+              <h2 className="anuncios-catalog__kpi-title">Margem média</h2>
             </header>
             <div className="anuncios-catalog__kpi-body">
               <p className="anuncios-catalog__kpi-value">
-                {listLoading ? "…" : formatCatalogBRL(totalAdsRevenueKpi)}
+                {listLoading
+                  ? "…"
+                  : pricingPageSummary?.avg_margin_percent != null &&
+                      String(pricingPageSummary.avg_margin_percent).trim() !== ""
+                    ? `${String(pricingPageSummary.avg_margin_percent).replace(".", ",")} %`
+                    : "—"}
               </p>
-              <p className="anuncios-catalog__kpi-hint">
-                Valor agregado vindo do resumo de vendas no servidor (GET /api/ml/sales-summary após sync). Não recalculamos
-                margem no front.
-              </p>
+              <p className="anuncios-catalog__kpi-hint">Média das margens % nas ofertas com simulação completa (API).</p>
             </div>
           </article>
 
-          <div className="anuncios-catalog__kpi-minis" aria-label="Indicadores de oferta e risco">
-            <div className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--stat">
-              <S7StatCard
-                title="Promoção ML ativa"
-                value={listLoading ? "…" : String(promoActiveCount)}
-                subtitle={listLoading ? "Carregando catálogo…" : "Anúncios com preço promocional sinalizado pela API."}
-                variant="sales"
-                iconName="pricing"
-                className="anuncios-catalog__sku-stat-card"
-              />
-            </div>
-            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
+          <div className="anuncios-catalog__kpi-minis" aria-label="Indicadores de risco e oportunidade">
+            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--profit">
               <div className="anuncios-catalog__kpi-mini-head">
-                <h3 className="anuncios-catalog__kpi-mini-title">Ofertas pausadas / inativas</h3>
+                <h3 className="anuncios-catalog__kpi-mini-title">Preços saudáveis</h3>
               </div>
               <div className="anuncios-catalog__kpi-mini-body">
-                <p className="anuncios-catalog__kpi-mini-value">{listLoading ? "…" : String(pausedListingsCount)}</p>
+                <p className="anuncios-catalog__kpi-mini-value">
+                  {listLoading ? "…" : String(pricingPageSummary?.healthy_prices_count ?? "—")}
+                </p>
               </div>
             </article>
-            <div className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--stat">
-              <S7StatCard
-                title="SKU pendente"
-                value={listLoading ? "…" : String(skuPendingCount)}
-                subtitle={
-                  listLoading ? "Carregando catálogo…" : "Sem SKU no ML — bloqueia custo interno e simulação completa."
-                }
-                variant="warning"
-                iconName="AlertTriangle"
-                className="anuncios-catalog__sku-stat-card"
-              />
-            </div>
+            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--warn">
+              <div className="anuncios-catalog__kpi-mini-head">
+                <h3 className="anuncios-catalog__kpi-mini-title">Em risco</h3>
+              </div>
+              <div className="anuncios-catalog__kpi-mini-body">
+                <p className="anuncios-catalog__kpi-mini-value">
+                  {listLoading ? "…" : String(pricingPageSummary?.at_risk_count ?? "—")}
+                </p>
+              </div>
+            </article>
+            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
+              <div className="anuncios-catalog__kpi-mini-head">
+                <h3 className="anuncios-catalog__kpi-mini-title">Prejuízo</h3>
+              </div>
+              <div className="anuncios-catalog__kpi-mini-body">
+                <p className="anuncios-catalog__kpi-mini-value">
+                  {listLoading ? "…" : String(pricingPageSummary?.loss_count ?? "—")}
+                </p>
+              </div>
+            </article>
+            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--sales">
+              <div className="anuncios-catalog__kpi-mini-head">
+                <h3 className="anuncios-catalog__kpi-mini-title">Oportunidades</h3>
+              </div>
+              <div className="anuncios-catalog__kpi-mini-body">
+                <p className="anuncios-catalog__kpi-mini-value">
+                  {listLoading ? "…" : String(pricingPageSummary?.opportunities_count ?? "—")}
+                </p>
+              </div>
+            </article>
           </div>
         </section>
       ) : (
-        <section className="anuncios-catalog__kpis" aria-label="Resumo de anúncios">
+        <section className="s7-core-kpis anuncios-catalog__kpis" aria-label="Resumo de anúncios">
           <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
             <header className="anuncios-catalog__kpi-head">
               <h2 className="anuncios-catalog__kpi-title">Anúncios ativos</h2>
@@ -723,7 +735,7 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
         </section>
       )}
 
-      <div className="products-catalog__controls">
+      <div className="products-catalog__controls s7-sticky-filters">
         <div className="products-catalog__controls-top">
           <div className="products-catalog__search-wrap">
             <div className="products-catalog__search-field">
@@ -1057,8 +1069,11 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
                     <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--product" tip={ADS_COLUMN_TOOLTIPS.product}>
                       Produto
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--mkt" tip={ADS_COLUMN_TOOLTIPS.marketplace}>
-                      Mkt
+                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--account" tip={ADS_COLUMN_TOOLTIPS.account}>
+                      Conta
+                    </AdsCatalogHeadCell>
+                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--channel" tip={ADS_COLUMN_TOOLTIPS.channel}>
+                      Canal
                     </AdsCatalogHeadCell>
                     <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.price}>
                       Preço

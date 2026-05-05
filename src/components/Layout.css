@@ -172,6 +172,11 @@
   background: var(--s7-bg-page, #f2f7ff);
 }
 
+/* Precificação inteligente: metade do respiro padrão sob a navbar (8px → 4px). */
+.page-content.page-content--pricing-intelligence {
+  padding-top: 4px;
+}
+
 
 
 /* ======================================================================

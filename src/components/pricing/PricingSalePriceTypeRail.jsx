@@ -22,6 +22,7 @@ export function PricingSalePriceTypeRail({ selected, onSelect }) {
   return (
     <div
       className="pricing-scenario-rail pricing-scenario-sidebar"
+      data-pricing-sale-price-type-rail="true"
       role="radiogroup"
       aria-label="Tipo de anúncio do preço de venda"
     >
@@ -63,7 +64,7 @@ export function PricingSalePriceTypeRail({ selected, onSelect }) {
                     <span className="pricing-scenario-sidebar-card__margin">--%</span>
                   </span>
                   <span className="pricing-scenario-sidebar-card__badges-row">
-                    <span className="s7-ml-scenario-compare__badge s7-ml-scenario-compare__badge--available">
+                    <span className="s7-ml-scenario-compare__badge s7-ml-scenario-compare__badge--available pricing-intelligence-page__listing-type-pill">
                       {badge}
                     </span>
                   </span>

@@ -11,11 +11,12 @@ import "./Layout.css";
 
 // ---------------- Ícones do menu central ----------------
 import {
-  LayoutDashboard,
   Box,
   Tag,
   Calculator,
+  ShoppingBag,
   Activity,
+  Users,
   BarChart3,
   FileText,
   Code2,
@@ -76,12 +77,14 @@ useEffect(() => {
   // -----------------------------------------------------
   // Itens do menu central
   // -----------------------------------------------------
+  // Logo leva ao Dashboard (/); não duplicamos "Painel" no menu.
   const navItems = [
-    { path: "/", label: "Painel", icon: LayoutDashboard },
-    { path: "/produtos", label: "Produtos", icon: Box },
-    { path: "/anuncios", label: "Anúncios", icon: Tag },
+    { path: "/vendas", label: "Vendas", icon: ShoppingBag },
     { path: "/precificacoes", label: "Precificações", icon: Calculator },
-    { path: "/monitoramento", label: "Monitoramento", icon: Activity },
+    { path: "/anuncios", label: "Anúncios", icon: Tag },
+    { path: "/produtos", label: "Produtos", icon: Box },
+    { path: "/concorrencia", label: "Concorrência", icon: Activity },
+    { path: "/clientes", label: "Clientes 360 S7", icon: Users },
     { path: "/relatorios", label: "Relatórios", icon: BarChart3 },
     { path: "/registros", label: "Registros", icon: FileText },
   ];
@@ -93,6 +96,8 @@ useEffect(() => {
     location.pathname.startsWith("/produtos/novo") ||
     /^\/produtos\/[^/]+\/editar$/.test(location.pathname) ||
     /^\/produtos\/[^/]+$/.test(location.pathname);
+
+  const isPricingIntelligencePage = location.pathname.startsWith("/precificacoes/inteligente");
 
   return (
     <div className={`app-container ${isProductForm ? "app-container--pf-bleed" : ""}`}>
@@ -121,6 +126,22 @@ className={`nav-item ${
       : ""
     : item.path === "/anuncios"
       ? location.pathname.startsWith("/anuncios")
+        ? "active"
+        : ""
+    : item.path === "/vendas"
+      ? location.pathname.startsWith("/vendas")
+        ? "active"
+        : ""
+    : item.path === "/precificacoes"
+      ? location.pathname.startsWith("/precificacoes")
+        ? "active"
+        : ""
+    : item.path === "/concorrencia"
+      ? location.pathname.startsWith("/concorrencia")
+        ? "active"
+        : ""
+    : item.path === "/clientes"
+      ? location.pathname.startsWith("/clientes")
         ? "active"
         : ""
     : location.pathname === item.path
@@ -157,7 +178,9 @@ className={`nav-item ${
 
       {/* ===================== CONTEÚDO ===================== */}
       <main
-        className={`page-content s7-page ${isProductForm ? "page-content--pf-bleed" : ""}`}
+        className={`page-content s7-page ${isProductForm ? "page-content--pf-bleed" : ""} ${
+          isPricingIntelligencePage ? "page-content--pricing-intelligence" : ""
+        }`}
       >
         <Outlet />
       </main>

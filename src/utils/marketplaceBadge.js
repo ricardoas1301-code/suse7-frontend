@@ -21,6 +21,7 @@ export function getMarketplaceBadgeAsset(marketplaceSlug) {
     .trim()
     .toLowerCase();
   if (m === "mercado_livre" || m === "mercadolivre") return MERCADO_LIVRE;
+  // Quando existir PNG/SVG em `public/marketplaces/`, mapear aqui (shopee, amazon, shein).
   if (m === "shopee") return null;
   if (m === "amazon") return null;
   if (m === "shein") return null;

@@ -1,0 +1,479 @@
+/* ======================================================================
+   Concorrência S7 — alinhamento visual a Produtos + Raio-X (Anuncios.css)
+====================================================================== */
+
+.page-content:has(.concorrencia-page) {
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-top: 0;
+}
+
+.concorrencia-page__shell {
+  padding: 10px clamp(4px, 0.65vw, 10px) 44px;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.concorrencia-page__head {
+  margin-bottom: 18px;
+}
+
+.concorrencia-page__title {
+  margin: 0 0 6px;
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.concorrencia-page__subtitle {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.concorrencia-page__mkp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.concorrencia-page__err {
+  color: #b91c1c;
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+}
+
+.concorrencia-page__info {
+  color: #1d4ed8;
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+}
+
+.concorrencia-page__insight {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(165deg, rgba(37, 99, 235, 0.07) 0%, rgba(255, 255, 255, 0.85) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.concorrencia-page__section-title {
+  margin: 0 0 14px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.concorrencia-page__listing-search-wrap {
+  flex: 0 1 min(520px, 100%);
+  min-width: 0;
+}
+
+.concorrencia-page__field-label {
+  display: block;
+  margin: 0 0 6px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.concorrencia-page__toolbar-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Scroll horizontal quando a faixa “spacious” (largura fixa × 5 cards) extrapola o viewport. */
+.concorrencia-page__compare-cards-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+/* Busca de anúncio — painel de sugestões (só após digitação). */
+.concorrencia-listing-search {
+  position: relative;
+}
+
+.concorrencia-listing-search__field .s7-input__label {
+  display: none;
+}
+
+.concorrencia-listing-search__panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 40;
+  max-height: min(320px, 48vh);
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.08),
+    0 16px 40px rgba(15, 23, 42, 0.1);
+}
+
+.concorrencia-listing-search__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: #0f172a;
+}
+
+.concorrencia-listing-search__option:last-child {
+  border-bottom: none;
+}
+
+.concorrencia-listing-search__option:hover,
+.concorrencia-listing-search__option:focus-visible {
+  background: rgba(37, 99, 235, 0.06);
+  outline: none;
+}
+
+.concorrencia-listing-search__option-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.concorrencia-listing-search__option-meta {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-listing-search__empty {
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.concorrencia-listing-search__hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.concorrencia-page__compare-region {
+  margin-top: 8px;
+}
+
+.concorrencia-page__compare-shell {
+  align-items: stretch;
+}
+
+.concorrencia-page__chart-title {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.concorrencia-page__chart-wrap {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.04) 0%, rgba(255, 255, 255, 0.92) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.concorrencia-raiox__permalink {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.concorrencia-raiox__permalink:hover {
+  text-decoration: underline;
+}
+
+/* Gráfico de barras (componente S7CompetitionPriceChart) */
+.s7-competition-chart__plot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 8px;
+  min-height: 160px;
+}
+
+.s7-competition-chart__col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.s7-competition-chart__track {
+  width: 100%;
+  max-width: 48px;
+  height: 120px;
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 4px;
+}
+
+.s7-competition-chart__bar {
+  width: 100%;
+  border-radius: 6px;
+  min-height: 8px;
+  transition: height 0.2s ease;
+}
+
+.s7-competition-chart__label {
+  font-size: 0.65rem;
+  color: #64748b;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s7-competition-chart__value {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+}
+
+/* Modal seleção (inalterado funcionalmente; mantém z-index alto) */
+.s7-concorrencia-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.s7-concorrencia-modal {
+  width: min(520px, 100%);
+  max-height: 85vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+  padding: 0;
+}
+
+.s7-concorrencia-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.s7-concorrencia-modal__head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.s7-concorrencia-modal__close {
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.s7-concorrencia-modal__hint {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.s7-concorrencia-modal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 8px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.s7-concorrencia-modal__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px;
+  border-radius: 8px;
+}
+
+.s7-concorrencia-modal__row:hover {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.s7-concorrencia-modal__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.s7-concorrencia-modal__price {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.s7-concorrencia-modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.s7-concorrencia-modal--pick {
+  width: min(720px, 100%);
+}
+
+.s7-concorrencia-modal__empty {
+  margin: 0;
+  padding: 16px 18px 8px;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.s7-concorrencia-modal__pick-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 10px 10px;
+  max-height: min(52vh, 520px);
+  overflow-y: auto;
+}
+
+.s7-concorrencia-modal__pick-item {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.s7-concorrencia-modal__pick-item:last-child {
+  border-bottom: none;
+}
+
+.s7-concorrencia-modal__pick-row {
+  display: grid;
+  grid-template-columns: auto 52px 1fr;
+  align-items: start;
+  gap: 12px;
+  padding: 10px 8px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.s7-concorrencia-modal__pick-row:hover {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.s7-concorrencia-modal__pick-check {
+  margin-top: 18px;
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+}
+
+.s7-concorrencia-modal__pick-thumb-wrap {
+  display: block;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  flex-shrink: 0;
+}
+
+.s7-concorrencia-modal__pick-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.s7-concorrencia-modal__pick-thumb--ph {
+  background: linear-gradient(135deg, #e2e8f0, #f8fafc);
+}
+
+.s7-concorrencia-modal__pick-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.s7-concorrencia-modal__pick-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.s7-concorrencia-modal__pick-meta {
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.45;
+  flex-wrap: wrap;
+}
+
+.s7-concorrencia-modal__pick-meta strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-concorrencia-modal__pick-dot {
+  margin: 0 4px;
+  color: #94a3b8;
+}
+
+.s7-concorrencia-modal__pick-link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.s7-concorrencia-modal__pick-link:hover {
+  text-decoration: underline;
+}

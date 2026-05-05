@@ -1,0 +1,40 @@
+/* ======================================================================
+   s7-sticky-filters — bloco busca + filtros (chips) fixo ao rolar
+   Uso: adicionar a classe junto a `.products-catalog__controls`.
+   O scroll principal é `.page-content` (Layout); `top: 0` = colado ao
+   topo do conteúdo (abaixo da navbar de 64px).
+====================================================================== */
+
+.page-content .s7-sticky-filters {
+  position: sticky;
+  top: var(--s7-sticky-filters-top, 0px);
+  z-index: 28;
+  box-sizing: border-box;
+  padding-top: 6px;
+  padding-bottom: 10px;
+  background: var(--s7-bg-page, #f2f7ff);
+  box-shadow:
+    0 1px 0 rgba(15, 23, 42, 0.07),
+    0 10px 28px rgba(15, 23, 42, 0.07);
+  border-radius: 0 0 12px 12px;
+}
+
+/* Telas estreitas: chips em linha rolável (não esconder) */
+@media (max-width: 720px) {
+  .page-content .s7-sticky-filters .products-catalog__controls-main {
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 4px;
+  }
+
+  .page-content .s7-sticky-filters .products-catalog__filter-row {
+    flex-wrap: nowrap;
+    width: max-content;
+    max-width: none;
+    min-width: min(100%, max-content);
+    padding-right: 4px;
+  }
+}

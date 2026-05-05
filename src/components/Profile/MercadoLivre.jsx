@@ -1,54 +1,87 @@
 // ======================================================================
-// PÁGINA: Mercado Livre — Integração
-// Objetivo: Gerenciar conexão com o Mercado Livre (OAuth)
-// UX:
-// - NÃO conectado → tela de autenticação (padrão SaaS Suse7)
-// - CONECTADO → status + dados (fonte de verdade: /api/ml/status)
-// - Retorno OAuth (?ml=connected) → toast Suse7 + limpeza da URL (sem reload)
+// PÁGINA: Mercado Livre — multi-conta + vínculo empresa (OAuth backend)
 // ======================================================================
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useLocation, useNavigate } from "react-router-dom";
-import { buildApiUrl } from "../../config/api";
+import { buildApiUrl, apiFetch } from "../../config/api";
 import { useNotifications } from "../../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../../services/notificationTypes";
+import SellerCompanyModal from "./SellerCompanyModal";
 import "./MercadoLivre.css";
 
 import suse7Logo from "../../assets/suse7-logo-redonda.png";
 import mercadoLivreLogo from "../../assets/mercado-livre.png";
 
-// ----------------------------------------------------------------------
-// Anti-duplicata do toast em DEV (React Strict Mode dispara efeitos 2x em sequência)
-// ----------------------------------------------------------------------
 const ML_OAUTH_SUCCESS_TOAST_GAP_MS = 3500;
 let _mlOAuthSuccessToastLastAt = 0;
-
 const ML_OAUTH_CONFIG_ERR_KEY = "ml_oauth_config_errors";
 
+function statusLabel(s) {
+  const v = String(s || "").toLowerCase();
+  if (v === "active") return "Ativa";
+  if (v === "removed") return "Removida";
+  if (v === "expired" || v === "invalid") return "Reautenticar";
+  return s || "—";
+}
+
+function formatSyncAt(iso) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  } catch {
+    return "—";
+  }
+}
+
 export default function MercadoLivre() {
-  // ------------------------------------------------------------------
-  // STATES
-  // ------------------------------------------------------------------
   const [loading, setLoading] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-  const [expiresAt, setExpiresAt] = useState(null);
-  const [mlUsername, setMlUsername] = useState("—");
-  const [showReadonlyIcon, setShowReadonlyIcon] = useState(false);
-  const [iconPosition, setIconPosition] = useState({ x: 0, y: 0 });
-  const [activeReadonlyField, setActiveReadonlyField] = useState(null); // "username" | "status" | null
   const [user, setUser] = useState(null);
   const [bannerError, setBannerError] = useState(null);
+  const [accounts, setAccounts] = useState([]);
+  const [syncingId, setSyncingId] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
+
+  const [companyModalOpen, setCompanyModalOpen] = useState(false);
+  const [companyModalForMl, setCompanyModalForMl] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const { addNotification } = useNotifications();
 
-  // ------------------------------------------------------------------
-  // EFFECT: status real da integração + banner de erro OAuth + toast de sucesso + URL limpa
-  // ------------------------------------------------------------------
+  const loadAccounts = useCallback(async () => {
+    const url = buildApiUrl("/api/marketplace/accounts");
+    if (!url) return [];
+    const { ok, data } = await apiFetch(url, { method: "GET" });
+    if (ok && Array.isArray(data?.accounts)) return data.accounts;
+    return [];
+  }, []);
+
+  const probeOAuthConfig = useCallback(async () => {
+    const probeUrl = buildApiUrl("/api/ml/oauth-config");
+    if (!probeUrl) return;
+    try {
+      const pr = await fetch(probeUrl);
+      const probe = await pr.json().catch(() => ({}));
+      if (probe && probe.ok === false && Array.isArray(probe.errors) && probe.errors.length) {
+        setBannerError(
+          (prev) =>
+            prev ||
+            [
+              "Configuração OAuth no backend (DEV):",
+              ...probe.errors,
+              `redirectUri lido: ${probe.redirectUri || "—"}`,
+            ].join(" ")
+        );
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   useEffect(() => {
-    const loadMLStatus = async () => {
+    const run = async () => {
       try {
         const sp = new URLSearchParams(location.search);
         const errParam = sp.get("ml_error");
@@ -75,80 +108,21 @@ export default function MercadoLivre() {
           /* ignore */
         }
 
-        const probeUrl = buildApiUrl("/api/ml/oauth-config");
-        if (probeUrl) {
-          try {
-            const pr = await fetch(probeUrl);
-            const probe = await pr.json().catch(() => ({}));
-            if (probe && probe.ok === false && Array.isArray(probe.errors) && probe.errors.length) {
-              setBannerError(
-                (prev) =>
-                  prev ||
-                  [
-                    "Configuração OAuth no backend (DEV):",
-                    ...probe.errors,
-                    `redirectUri lido: ${probe.redirectUri || "—"}`,
-                    `Confira o terminal do backend (npm run dev) — deve mostrar ML_CLIENT_ID length > 0 e ML_REDIRECT_URI com localhost:3001.`,
-                  ].join(" ")
-              );
-            }
-          } catch {
-            /* ignore */
-          }
-        }
+        await probeOAuthConfig();
 
         const mlConnectedFromOAuth = sp.get("ml") === "connected";
-
         const {
-          data: { user },
+          data: { user: u },
         } = await supabase.auth.getUser();
+        setUser(u);
 
-        setUser(user);
-
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-
-        const statusUrl = buildApiUrl(
-          `/api/ml/status?user_id=${encodeURIComponent(user.id)}`
-        );
-        if (!statusUrl) {
-          console.error("[ML] Defina VITE_API_BASE_URL");
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(statusUrl);
-        const rawText = await response.text();
-        let data = {};
-        try {
-          data = rawText ? JSON.parse(rawText) : {};
-        } catch {
-          console.error("[ML] /api/ml/status resposta não é JSON", rawText?.slice?.(0, 200));
-          setBannerError(
-            (prev) =>
-              prev ||
-              `O backend retornou status ${response.status} com corpo inválido. Confira se npm run dev está rodando na pasta suse7-backend (porta 3001).`
-          );
-          setIsConnected(false);
-        }
-
-        if (data.error && typeof data.error === "string") {
-          setBannerError((prev) => prev || data.error);
-        }
-
-        if (data.connected) {
-          setIsConnected(true);
-          setMlUsername(data.username || "—");
-          setExpiresAt(data.expires_at || null);
+        if (u) {
+          const list = await loadAccounts();
+          setAccounts(list);
         } else {
-          setIsConnected(false);
+          setAccounts([]);
         }
 
-        // ------------------------------
-        // Toast de sucesso (só gatilho visual; estado conectado veio do fetch acima)
-        // ------------------------------
         if (mlConnectedFromOAuth) {
           const now = Date.now();
           if (now - _mlOAuthSuccessToastLastAt >= ML_OAUTH_SUCCESS_TOAST_GAP_MS) {
@@ -165,9 +139,6 @@ export default function MercadoLivre() {
           }
         }
 
-        // ------------------------------
-        // Remover ml=connected / ml_error da barra de endereço (replace, sem reload)
-        // ------------------------------
         const nextSp = new URLSearchParams(location.search);
         let urlNeedsClean = false;
         if (nextSp.has("ml")) {
@@ -182,30 +153,32 @@ export default function MercadoLivre() {
           const q = nextSp.toString();
           navigate(`${location.pathname}${q ? `?${q}` : ""}`, { replace: true });
         }
-      } catch (err) {
-        console.error("Erro ao carregar status ML:", err);
+      } catch (e) {
+        console.error("[MercadoLivre] load", e);
       } finally {
         setLoading(false);
       }
     };
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- evita refetch em loop com addNotification
+  }, [location.pathname, location.search, navigate, loadAccounts, probeOAuthConfig]);
 
-    loadMLStatus();
-    // addNotification é estável o suficiente; incluir no array dispara fetch extra quando o
-    // NotificationProvider resolve userId (recria o callback).
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- evita loop / refetch desnecessário
-  }, [location.pathname, location.search, navigate]);
-
-  // ------------------------------------------------------------------
-  // HANDLER
-  // ------------------------------------------------------------------
-  const handleConnectML = async () => {
+  const startOAuth = async (sellerCompanyId) => {
     if (!user) return;
-    const connectUrl = buildApiUrl(
-      `/api/ml/connect?user_id=${encodeURIComponent(user.id)}`
-    );
+    let connectUrl = buildApiUrl(`/api/ml/connect?user_id=${encodeURIComponent(user.id)}`);
     if (!connectUrl) {
-      console.error("[ML] Defina VITE_API_BASE_URL");
+      addNotification({
+        event_type: "ML_CFG",
+        entity_type: "marketplace_integration",
+        entity_id: null,
+        title: "Configuração",
+        message: "Defina VITE_API_BASE_URL.",
+        severity: NOTIFICATION_SEVERITY.WARNING,
+      });
       return;
+    }
+    if (sellerCompanyId) {
+      connectUrl += `&seller_company_id=${encodeURIComponent(sellerCompanyId)}`;
     }
     const probeUrl = buildApiUrl("/api/ml/oauth-config");
     if (probeUrl) {
@@ -228,10 +201,93 @@ export default function MercadoLivre() {
     window.location.href = connectUrl;
   };
 
+  const visibleAccounts = accounts.filter((a) => String(a.status || "").toLowerCase() !== "removed");
+  const activeForRule = accounts.filter((a) => String(a.status || "").toLowerCase() === "active");
 
-  // ------------------------------------------------------------------
-  // LOADING
-  // ------------------------------------------------------------------
+  const handleConnectNewMl = () => {
+    if (!user) return;
+    if (activeForRule.length === 0) {
+      startOAuth(null);
+      return;
+    }
+    setCompanyModalForMl(true);
+    setCompanyModalOpen(true);
+  };
+
+  const handleCompanySavedForMl = ({ id }) => {
+    setCompanyModalOpen(false);
+    setCompanyModalForMl(false);
+    if (id) {
+      navigate(`/ml/connect?seller_company_id=${encodeURIComponent(id)}`);
+    }
+  };
+
+  const handleSync = async (accountId) => {
+    const url = buildApiUrl("/api/ml/sync-listings");
+    if (!url) return;
+    setSyncingId(accountId);
+    try {
+      const { ok, data, error } = await apiFetch(url, {
+        method: "POST",
+        body: { marketplace_account_id: accountId },
+      });
+      if (!ok) {
+        addNotification({
+          event_type: "ML_SYNC_ERR",
+          entity_type: "marketplace_account",
+          entity_id: accountId,
+          title: "Sincronização",
+          message: typeof error === "string" ? error : data?.error || "Falha ao sincronizar.",
+          severity: NOTIFICATION_SEVERITY.ERROR,
+        });
+        return;
+      }
+      addNotification({
+        event_type: "ML_SYNC_OK",
+        entity_type: "marketplace_account",
+        entity_id: accountId,
+        title: "Sincronização",
+        message: "Importação de anúncios concluída ou em andamento no servidor.",
+        severity: NOTIFICATION_SEVERITY.INFO,
+      });
+      setAccounts(await loadAccounts());
+    } finally {
+      setSyncingId(null);
+    }
+  };
+
+  const handleRemove = async (accountId) => {
+    if (!window.confirm("Remover esta conta do Suse7? Você poderá reconectar depois com OAuth.")) return;
+    const url = buildApiUrl(`/api/marketplace/accounts/${accountId}`);
+    if (!url) return;
+    setRemovingId(accountId);
+    try {
+      const { ok, data, error } = await apiFetch(url, { method: "DELETE" });
+      if (!ok) {
+        addNotification({
+          event_type: "ML_RM_ERR",
+          entity_type: "marketplace_account",
+          entity_id: accountId,
+          title: "Remover conta",
+          message: typeof error === "string" ? error : data?.error || "Não foi possível remover.",
+          severity: NOTIFICATION_SEVERITY.ERROR,
+        });
+        return;
+      }
+      addNotification({
+        event_type: "ML_RM_OK",
+        entity_type: "marketplace_account",
+        entity_id: accountId,
+        title: "Conta removida",
+        message: "A integração foi desativada.",
+        severity: NOTIFICATION_SEVERITY.INFO,
+      });
+      setAccounts(await loadAccounts());
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="ml-container">
@@ -242,168 +298,114 @@ export default function MercadoLivre() {
     );
   }
 
-  // ==================================================================
-  // RENDER
-  // ==================================================================
   return (
     <div className="ml-container">
-      <div className="ml-card">
+      <div className="ml-card ml-card-wide">
         {bannerError && (
-          <div
-            className="ml-banner-error"
-            style={{
-              marginBottom: 16,
-              padding: "12px 14px",
-              borderRadius: 8,
-              background: "rgba(220, 53, 69, 0.12)",
-              color: "#842029",
-              fontSize: 14,
-            }}
-            role="alert"
-          >
+          <div className="ml-banner-error" role="alert">
             {bannerError}
           </div>
         )}
-        {/* ==========================================================
-           HEADER COM LOGOS (ÍCONES +100%)
-        ========================================================== */}
+
         <div className="ml-header">
           <div className="ml-header-logos">
-            <img
-              src={suse7Logo}
-              alt="Suse7"
-              className="ml-logo suse7"
-            />
+            <img src={suse7Logo} alt="Suse7" className="ml-logo suse7" />
             <span className="ml-header-arrow">↔</span>
-            <img
-              src={mercadoLivreLogo}
-              alt="Mercado Livre"
-              className="ml-logo ml"
-            />
+            <img src={mercadoLivreLogo} alt="Mercado Livre" className="ml-logo ml" />
           </div>
         </div>
 
-        {/* ==========================================================
-           ESTADO: NÃO CONECTADO
-        ========================================================== */}
-        {!isConnected && (
-          <>
-            <h3 className="ml-connect-title">
-              Conectar com Mercado Livre
-            </h3>
+        <h3 className="ml-connect-title">Mercado Livre</h3>
+        <p className="ml-connect-description">
+          Conecte uma ou mais contas de vendedor. Cada conta fica vinculada a um CNPJ cadastrado em{" "}
+          <strong>Perfil da Empresa</strong>. Utilizamos apenas o <strong>OAuth oficial</strong> — nunca pedimos sua
+          senha do Mercado Livre.
+        </p>
 
-            <p className="ml-connect-description">
-              Faça a autenticação da sua conta de vendedor no Mercado Livre
-              para autorizar a integração com o <strong>Suse7 Precifica </strong> 
-              e começe a usar as ferramentas inteligentes de precificação avançada.
-            </p>
+        <div className="ml-accounts-toolbar">
+          <button type="button" className="ml-button primary" onClick={handleConnectNewMl} disabled={!user}>
+            + Conectar nova conta Mercado Livre
+          </button>
+        </div>
 
-            <button
-              className="ml-button"
-              onClick={handleConnectML}
-            >
-              Iniciar autenticação
-            </button>
-
-            {/* BLOCO DE CONTEXTO — O QUE ACONTECE APÓS CONECTAR */}
-<div className="ml-after-connect">
-  <p className="ml-after-title">
-    O que acontece após conectar?
-  </p>
-
-  <ul className="ml-after-list">
-    <li>✔ Sincronização Automática: Seus anúncios são importados e atualizados instantaneamente.</li>
-    <li>✔ Precisão Financeira: Cálculo exato de taxas, comissões de marketplace e seu lucro real.</li>
-    <li>✔ Inteligência de Mercado: Monitoramento de preços e performance em tempo real.</li>
-    <li>✔ Gestão Centralizada: Altere preços e estoque e muito mais sem sair do Suse7.</li>
-    <li>✔ Visão 360º: Tenha painéis de controle atualizados com cada venda realizada.</li>
-    <li>✔ Sync de Anúncios: Importação total de todos os dados como títulos, fotos e descrições...</li>
-  </ul>
-</div>
-
+        {visibleAccounts.length === 0 ? (
+          <div className="ml-accounts-empty">
+            <p>Nenhuma conta Mercado Livre conectada ainda.</p>
             <p className="ml-security-hint">
-              🔒 Conexão segura: utilizamos o protocolo oficial OAuth do Mercado Livre.
-              Seus dados são protegidos por criptografia de ponta a ponta via API oficial.
+              A primeira conexão usa automaticamente a empresa principal do seu cadastro — sem escolher CNPJ no
+              fluxo.
             </p>
-          </>
+            <button type="button" className="ml-button" onClick={() => startOAuth(null)} disabled={!user}>
+              Conectar primeira conta
+            </button>
+          </div>
+        ) : (
+          <div className="ml-accounts-grid">
+            {visibleAccounts.map((acc) => {
+              const alias = acc.account_alias || acc.ml_nickname || `Conta ${String(acc.external_seller_id || "").slice(0, 8)}`;
+              const companyLine = acc.company_trade_name || acc.company_name || "—";
+              const busy = syncingId === acc.id || removingId === acc.id;
+              const isActive = String(acc.status || "").toLowerCase() === "active";
+              return (
+                <div key={acc.id} className={`ml-account-card ${!isActive ? "is-muted" : ""}`}>
+                  <div className="ml-account-card-head">
+                    <span className="ml-account-market">Mercado Livre</span>
+                    <span className={`ml-account-status s-${String(acc.status || "").toLowerCase()}`}>
+                      {statusLabel(acc.status)}
+                    </span>
+                  </div>
+                  <div className="ml-account-alias">{alias}</div>
+                  <div className="ml-account-company">{companyLine}</div>
+                  <div className="ml-account-cnpj">{acc.company_document_masked || "—"}</div>
+                  <div className="ml-account-sync">Último sync: {formatSyncAt(acc.last_sync_at)}</div>
+                  <div className="ml-account-actions">
+                    <button
+                      type="button"
+                      className="ml-button ghost sm"
+                      disabled={!isActive || busy}
+                      onClick={() => handleSync(acc.id)}
+                    >
+                      {syncingId === acc.id ? "Sincronizando..." : "Sincronizar"}
+                    </button>
+                    <button
+                      type="button"
+                      className="ml-button ghost sm"
+                      disabled={busy || !acc.seller_company_id}
+                      onClick={() => startOAuth(acc.seller_company_id)}
+                    >
+                      Reautenticar
+                    </button>
+                    <button
+                      type="button"
+                      className="ml-button danger sm"
+                      disabled={busy}
+                      onClick={() => handleRemove(acc.id)}
+                    >
+                      {removingId === acc.id ? "Removendo..." : "Remover"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
 
-        {/* ==========================================================
-           ESTADO: CONECTADO
-        ========================================================== */}
-        {isConnected && (
-          <>
-             <div className="ml-connected-header">
-
-      <p className="ml-connected-subtitle">
-        Sua conta do <strong>Mercado Livre</strong> já está integrada ao <strong>Suse7 Precifica</strong> e pronta
-        para utilizar as ferramentas inteligentes de precificação avançada.
-      </p>
-    </div>
-
-        {/* ======================================================
-        AÇÕES
-    ====================================================== */}
-<div className="ml-actions single">
-  <button className="ml-button primary">
-    Conta conectada ✔
-  </button>
-</div>
-
-{/* ======================================================
-   NOME DE USUÁRIO (READ-ONLY)
-====================================================== */}
-<div className="ml-field field-lg">
-  <label>Nome de usuário</label>
-
-<div className="readonly-field">
-  <input
-    value={mlUsername || ""}
-    disabled
-  />
-  <span className="readonly-icon"></span>
-</div>
-</div>
-
-{/* ======================================================
-   STATUS DA INTEGRAÇÃO (READ-ONLY)
-====================================================== */}
-<div className="ml-field field-lg">
-  <label>Status da integração</label>
-
-  <div className="readonly-field">
-    <input value="Ativa" disabled />
-    <span className="readonly-icon"></span>
-  </div>
-</div>
-
-
-     {/* ======================================================
-       PRÓXIMOS PASSOS (EM BREVE)
-    ====================================================== */}
-    <div className="ml-next-steps">
-      <p className="ml-next-title">Agora você tem todos os recursos da integração:</p>
-
-    <br />
-      <ul></ul>
-      <ul>
-    <li>✔ Sincronização Automática: Seus anúncios são importados e atualizados instantaneamente.</li>
-    <li>✔ Precisão Financeira: Cálculo exato de taxas, comissões de marketplace e seu lucro real.</li>
-    <li>✔ Inteligência de Mercado: Monitoramento de preços e performance em tempo real.</li>
-    <li>✔ Gestão Centralizada: Altere preços e estoque e muito mais sem sair do Suse7.</li>
-    <li>✔ Visão 360º: Tenha painéis de controle atualizados com cada venda realizada.</li>
-    <li>✔ Sync de Anúncios: Importação total de todos os dados como títulos, fotos e descrições...</li>
-    <br />
-      </ul>
-    </div>
-
-    <p className="ml-security-hint">
-🔒 Conexão segura: utilizamos o protocolo oficial OAuth do Mercado Livre.
-   Seus dados são protegidos por criptografia de ponta a ponta via API oficial.
-    </p>
-  </>
-)}
+        <p className="ml-security-hint" style={{ marginTop: 24 }}>
+          Conexão segura: tokens tratados apenas no backend; o Suse7 não armazena senha do marketplace.
+        </p>
       </div>
+
+      <SellerCompanyModal
+        open={companyModalOpen && companyModalForMl}
+        onClose={() => {
+          setCompanyModalOpen(false);
+          setCompanyModalForMl(false);
+        }}
+        mode="create"
+        companyId={null}
+        profileEmail={user?.email || ""}
+        onSaved={handleCompanySavedForMl}
+      />
     </div>
   );
 }

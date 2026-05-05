@@ -212,3 +212,240 @@ body.modal-open{
   background: #aacfff;
   cursor: not-allowed;
 }
+
+/* ======================================================================
+   DASHBOARD — GRADE PREMIUM (placeholders; métricas reais depois)
+   Faixa superior: 2 cards grandes lado a lado (laranja + azul) + 2×2 colorido;
+   faixa média: 2 cards; inferior: compactos. Paleta alinhada à página Vendas.
+====================================================================== */
+
+.s7-dash-top{
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  gap: 20px;
+  align-items: stretch;
+  max-width: 1200px;
+}
+
+/* Dois cards principais em linha (não empilhados) */
+.s7-dash-top-left{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.s7-dash-top-right{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
+  min-width: 0;
+}
+
+.s7-dash-mid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 22px;
+  max-width: 1200px;
+}
+
+.s7-dash-bottom{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+  max-width: 1200px;
+}
+
+.s7-dash-card{
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  padding: 22px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Faixa colorida no topo (padrão Vendas) + corpo branco */
+.s7-dash-card--accent-orange,
+.s7-dash-card--accent-blue,
+.s7-dash-card--accent-green,
+.s7-dash-card--accent-red{
+  padding: 0;
+  overflow: hidden;
+}
+
+.s7-dash-card--accent-orange{
+  --s7-dash-accent: #ea580c;
+}
+
+.s7-dash-card--accent-blue{
+  --s7-dash-accent: #2563eb;
+}
+
+.s7-dash-card--accent-green{
+  --s7-dash-accent: #16a34a;
+}
+
+.s7-dash-card--accent-red{
+  --s7-dash-accent: #dc2626;
+}
+
+.s7-dash-card__cap{
+  background: var(--s7-dash-accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  line-height: 1.2;
+}
+
+.s7-dash-card__cap--sm{
+  font-size: 0.65rem;
+  padding: 8px 12px;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.s7-dash-card__cap--compact{
+  font-size: 0.62rem;
+  padding: 8px 12px;
+  letter-spacing: 0.08em;
+}
+
+.s7-dash-card__body{
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
+.s7-dash-card__body--sm{
+  padding: 12px 12px 14px;
+  justify-content: space-between;
+}
+
+.s7-dash-card__body--compact{
+  padding: 12px 14px 14px;
+}
+
+.s7-dash-card:hover{
+  border-color: rgba(37, 99, 235, 0.18);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+}
+
+.s7-dash-card--large{
+  min-height: 148px;
+  flex: 1;
+}
+
+.s7-dash-card--small{
+  min-height: 120px;
+  justify-content: stretch;
+}
+
+.s7-dash-card--compact{
+  padding: 16px 18px;
+  min-height: 96px;
+  justify-content: stretch;
+}
+
+.s7-dash-card__eyebrow{
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.s7-dash-card__title{
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.s7-dash-card__title--sm{
+  font-size: 0.98rem;
+}
+
+.s7-dash-card__hint{
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #64748b;
+  flex: 1;
+}
+
+.s7-dash-card__placeholder-value{
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  letter-spacing: 0.04em;
+}
+
+.s7-dash-card__placeholder-pill{
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 1024px){
+  .s7-dash-top{
+    grid-template-columns: 1fr;
+  }
+
+  .s7-dash-top-right{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .s7-dash-mid{
+    grid-template-columns: 1fr;
+  }
+
+  .s7-dash-bottom{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Empilha os dois cards grandes apenas em telas estreitas */
+@media (max-width: 720px){
+  .s7-dash-top-left{
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px){
+  .dashboard-wrapper{
+    padding: 22px 18px;
+  }
+
+  .s7-dash-top-right{
+    grid-template-columns: 1fr;
+  }
+
+  .s7-dash-bottom{
+    grid-template-columns: 1fr;
+  }
+}

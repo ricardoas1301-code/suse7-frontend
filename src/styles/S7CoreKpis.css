@@ -1,0 +1,33 @@
+/* ======================================================================
+   KPIs core (Vendas, Precificações, Anúncios, Produtos) — dimensões e ritmo únicos.
+   Combinar com .anuncios-catalog__kpis e filhos existentes (não substitui o layout da grade).
+   ====================================================================== */
+
+.s7-core-kpis.anuncios-catalog__kpis {
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-head {
+  padding: 12px 16px 13px;
+}
+
+.s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-body {
+  padding: 14px 16px 16px;
+}
+
+.s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-mini-head {
+  padding: 9px 12px 10px;
+}
+
+.s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-mini-body {
+  padding: 12px 14px 14px;
+}
+
+.anuncios-catalog__kpi-mini-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(100, 116, 139, 0.95);
+}

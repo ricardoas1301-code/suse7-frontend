@@ -40,6 +40,7 @@ import {
   Search,
   X,
   Eye,
+  Pencil,
 } from "lucide-react";
 
 export const iconsMap = {
@@ -84,4 +85,5 @@ export const iconsMap = {
   filter_clear: RotateCcw,
   search: Search,
   close: X,
+  edit: Pencil,
 };

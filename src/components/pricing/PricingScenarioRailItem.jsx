@@ -2,12 +2,17 @@
 // Item compacto do rail / sidebar de cenários (página Precificação Inteligente).
 // ======================================================
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { memo, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { cardHeadingLabel, resolveRaioxListingBadge } from "../mercadoLivrePricingScenarioCompareShared.js";
 import { resolveMlScenarioTabId } from "../MercadoLivrePricingScenarioRaiox.jsx";
 import S7Tooltip from "../ui/S7Tooltip.jsx";
 import { formatCatalogBRL } from "../../utils/productCatalogRow";
-import { getScenarioHealthStatus, parseScenarioProfitBrlNumber } from "./pricingScenarioDecisionUi.js";
+import {
+  getMarginDisplayTone,
+  getOfferSemanticUiTone,
+  getProfitDisplayTone,
+  parseScenarioProfitBrlNumber,
+} from "./pricingScenarioDecisionUi.js";
 
 /** @param {string | null | undefined} s */
 function formatBrlCompact(s) {
@@ -23,6 +28,23 @@ function sidebarStatusBadgeClass(kind) {
   if (kind === "active") return `${base} s7-ml-scenario-compare__badge--participating`;
   if (kind === "scheduled" || kind === "available") return `${base} s7-ml-scenario-compare__badge--available`;
   return `${base} s7-ml-scenario-compare__badge--neutral`;
+}
+
+/**
+ * @param {"active" | "scheduled" | "available" | "baseline" | "neutral"} kind
+ * @param {"great" | "regular" | "critical" | "none"} offerUiTone
+ */
+function sidebarStatusBadgeCombinedClass(kind, offerUiTone) {
+  const base = sidebarStatusBadgeClass(kind);
+  const tone =
+    offerUiTone === "great"
+      ? "pricing-scenario-sidebar-card__offer-tone--great"
+      : offerUiTone === "regular"
+        ? "pricing-scenario-sidebar-card__offer-tone--regular"
+        : offerUiTone === "critical"
+          ? "pricing-scenario-sidebar-card__offer-tone--critical"
+          : "";
+  return [base, tone].filter(Boolean).join(" ");
 }
 
 /** @param {string | null} statusLabel @param {string} group */
@@ -48,7 +70,7 @@ function resolveCardStatusKind(statusLabel, group) {
  *   workspaceSidebar?: boolean;
  * }} props
  */
-export function PricingScenarioRailItem({
+function PricingScenarioRailItemInner({
   scenario,
   group,
   baselineHeadingOverride = null,
@@ -83,8 +105,8 @@ export function PricingScenarioRailItem({
     String(bestScenarioTabId).trim() !== "" &&
     tabId === String(bestScenarioTabId).trim();
 
-  const health = getScenarioHealthStatus(scenario);
   const statusKind = resolveCardStatusKind(statusLabel, group);
+  const offerUiTone = getOfferSemanticUiTone(scenario);
   const showTitleTooltip = title.length > 20;
 
   const titleRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
@@ -107,14 +129,29 @@ export function PricingScenarioRailItem({
     return () => ro.disconnect();
   }, [workspaceSidebar, syncTitleTruncation, title]);
 
+  const profitTone = getProfitDisplayTone(scenario);
   const profitMetricClass = [
     "pricing-scenario-sidebar-card__profit",
-    isLossProfit ? "pricing-scenario-sidebar-card__profit--loss" : "",
-    !isLossProfit && health === "healthy" ? "pricing-scenario-sidebar-card__profit--healthy" : "",
-    !isLossProfit && health === "low_margin" ? "pricing-scenario-sidebar-card__profit--low" : "",
+    profitTone === "loss" ? "pricing-scenario-sidebar-card__profit--loss" : "",
+    profitTone === "caution" ? "pricing-scenario-sidebar-card__profit--caution" : "",
+    profitTone === "healthy" ? "pricing-scenario-sidebar-card__profit--healthy" : "",
   ]
     .filter(Boolean)
     .join(" ");
+
+  const marginTone = getMarginDisplayTone(scenario);
+  const marginClass = [
+    "pricing-scenario-sidebar-card__margin",
+    marginTone === "high" ? "pricing-scenario-sidebar-card__margin--high" : "",
+    marginTone === "mid" ? "pricing-scenario-sidebar-card__margin--mid" : "",
+    marginTone === "low" ? "pricing-scenario-sidebar-card__margin--low" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const handleActivate = useCallback(() => {
+    onSelect(tabId);
+  }, [onSelect, tabId]);
 
   const itemClass = [
     "pricing-scenario-rail__item",
@@ -183,7 +220,7 @@ export function PricingScenarioRailItem({
       <button
         type="button"
         className={itemClass}
-        onClick={() => onSelect(tabId)}
+        onClick={handleActivate}
         aria-pressed={selected}
         aria-label={ariaLabel}
       >
@@ -194,9 +231,7 @@ export function PricingScenarioRailItem({
             {marginRaw !== "" ? (
               <>
                 <span className="pricing-scenario-sidebar-card__metrics-sep">·</span>
-                <span className="pricing-scenario-sidebar-card__margin">
-                  {String(marginRaw).replace(".", ",")}%
-                </span>
+                <span className={marginClass}>{String(marginRaw).replace(".", ",")}%</span>
               </>
             ) : null}
           </span>
@@ -207,7 +242,7 @@ export function PricingScenarioRailItem({
               </span>
             ) : null}
             {statusLabel != null && statusLabel !== "" ? (
-              <span className={sidebarStatusBadgeClass(statusKind)}>{statusLabel}</span>
+              <span className={sidebarStatusBadgeCombinedClass(statusKind, offerUiTone)}>{statusLabel}</span>
             ) : null}
             {isBest ? (
               <span className="pricing-scenario-sidebar-card__chip pricing-scenario-sidebar-card__chip--best">
@@ -221,13 +256,7 @@ export function PricingScenarioRailItem({
   }
 
   return (
-    <button
-      type="button"
-      className={itemClass}
-      onClick={() => onSelect(tabId)}
-      aria-pressed={selected}
-      aria-label={ariaLabel}
-    >
+    <button type="button" className={itemClass} onClick={handleActivate} aria-pressed={selected} aria-label={ariaLabel}>
       <span className="pricing-scenario-sidebar-card__inner">
         <span className="pricing-scenario-sidebar-card__chips">
           {isBest ? (
@@ -244,16 +273,14 @@ export function PricingScenarioRailItem({
         {titleBlock}
         <span className="pricing-scenario-sidebar-card__status-metrics-row">
           {statusLabel != null && statusLabel !== "" ? (
-            <span className={sidebarStatusBadgeClass(statusKind)}>{statusLabel}</span>
+            <span className={sidebarStatusBadgeCombinedClass(statusKind, offerUiTone)}>{statusLabel}</span>
           ) : null}
           <span className="pricing-scenario-sidebar-card__status-metrics-row__metrics">
             <span className={profitMetricClass}>{formatBrlCompact(profitRaw || null)}</span>
             {marginRaw !== "" ? (
               <>
                 <span className="pricing-scenario-sidebar-card__metrics-sep">·</span>
-                <span className="pricing-scenario-sidebar-card__margin">
-                  {String(marginRaw).replace(".", ",")}%
-                </span>
+                <span className={marginClass}>{String(marginRaw).replace(".", ",")}%</span>
               </>
             ) : null}
           </span>
@@ -262,3 +289,6 @@ export function PricingScenarioRailItem({
     </button>
   );
 }
+
+export const PricingScenarioRailItem = memo(PricingScenarioRailItemInner);
+PricingScenarioRailItem.displayName = "PricingScenarioRailItem";

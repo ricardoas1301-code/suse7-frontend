@@ -2,6 +2,7 @@
 // Detalhe único do cenário selecionado — página Precificação Inteligente.
 // ======================================================
 
+import { memo } from "react";
 import { MercadoLivrePricingScenarioCompareCard } from "../MercadoLivrePricingScenarioCompareGrid.jsx";
 import { getScenarioHealthStatus, parseScenarioProfitBrlNumber } from "./pricingScenarioDecisionUi.js";
 
@@ -16,7 +17,7 @@ import { getScenarioHealthStatus, parseScenarioProfitBrlNumber } from "./pricing
  *   baselineListingSaleDisplayOverride?: string | null;
  * }} props
  */
-export function PricingScenarioDetail({
+function PricingScenarioDetailInner({
   scenario,
   group,
   baselineHeadingOverride = null,
@@ -38,14 +39,6 @@ export function PricingScenarioDetail({
 
   return (
     <div className={wrapClass}>
-      {isLossProfit ? (
-        <div className="pricing-scenario-detail__alert" role="status">
-          <span className="pricing-scenario-detail__alert-icon" aria-hidden>
-            ❌
-          </span>
-          <span>Prejuízo neste cenário (lucro líquido negativo).</span>
-        </div>
-      ) : null}
       <MercadoLivrePricingScenarioCompareCard
         scenario={scenario}
         group={group}
@@ -60,3 +53,6 @@ export function PricingScenarioDetail({
     </div>
   );
 }
+
+export const PricingScenarioDetail = memo(PricingScenarioDetailInner);
+PricingScenarioDetail.displayName = "PricingScenarioDetail";

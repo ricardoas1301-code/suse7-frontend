@@ -7,6 +7,11 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { createNotificationEvent } from "../services/notificationTypes";
 import { supabase } from "../supabaseClient";
+import { setNotificationChannelDispatcher } from "../services/notificationEngine";
+import {
+  sendNotificationEmail,
+  sendNotificationWhatsapp,
+} from "../services/notificationsApi";
 import NotificationToast from "../components/NotificationToast";
 
 // ----------------------------------------------------------------------
@@ -55,6 +60,44 @@ export function NotificationProvider({ children }) {
     },
     [userId]
   );
+
+  useEffect(() => {
+    setNotificationChannelDispatcher("app", async (notification) => {
+      addNotification({
+        event_type: notification.notification_type ?? notification.event_type ?? "GENERIC",
+        entity_type: notification.entity_type ?? "system",
+        entity_id: notification.entity_id ?? null,
+        title: notification.title ?? "Notificação",
+        message: notification.message ?? "Novo alerta disponível.",
+        severity: notification.priority ?? notification.severity ?? "info",
+        created_at: notification.created_at ?? new Date().toISOString(),
+        read: false,
+        dedupeKey:
+          notification.dedupeKey ??
+          `${notification.notification_type ?? "GENERIC"}|${notification.entity_id ?? "global"}|${new Date()
+            .toISOString()
+            .slice(0, 10)}`,
+      });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("suse7:notification-engine:in-app", {
+            detail: { notification, context: { source: "notification-context-bridge" } },
+          })
+        );
+      }
+      return true;
+    });
+
+    setNotificationChannelDispatcher("email", async (notification) => {
+      const result = await sendNotificationEmail(notification?.id);
+      return result.ok === true;
+    });
+
+    setNotificationChannelDispatcher("whatsapp", async (notification) => {
+      const result = await sendNotificationWhatsapp(notification?.id);
+      return result.ok === true;
+    });
+  }, [addNotification]);
 
   const markAsRead = useCallback((id) => {
     setNotifications((prev) =>

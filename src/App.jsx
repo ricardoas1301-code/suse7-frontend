@@ -14,6 +14,8 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import "./global.css";
 import "./styles/Suse7-Design-System.css";
+import "./styles/S7CoreKpis.css";
+import "./styles/s7-sticky-filters.css";
 
 // Supabase
 import { supabase } from "./supabaseClient";
@@ -41,13 +43,18 @@ import AlterarSenha from "./components/Profile/AlterarSenha";
 import MercadoLivre from "./components/Profile/MercadoLivre";
 import FormasPagamento from "./components/Profile/FormasPagamento";
 import ExtratoConta from "./components/Profile/ExtratoConta";
+import MySubscription from "./components/Profile/MySubscription";
+import SubscriptionPlans from "./components/Profile/SubscriptionPlans";
+import PaymentHistory from "./components/Profile/PaymentHistory";
 import Preferencias from "./components/Profile/Preferencias";
 import Notificacoes from "./components/Profile/Notificacoes";
+import AlertasPopup from "./components/Profile/AlertasPopup";
 
 // Produtos (REAL)
 import Products from "./components/Products";
 import AnunciosPage from "./pages/AnunciosPage";
 import PrecificacoesPage from "./pages/PrecificacoesPage";
+import VendasPage from "./pages/VendasPage";
 import PricingIntelligencePage from "./pages/PricingIntelligencePage";
 import AnunciosTeste from "./pages/AnunciosTeste";
 import MlListingImportDebug from "./pages/debug/MlListingImportDebug.jsx";
@@ -55,6 +62,15 @@ import ProductCreate from "./pages/ProductCreate";
 import ProductEdit from "./pages/ProductEdit";
 import DevCenter from "./pages/admin/DevCenter";
 import DevCenterRoute from "./pages/admin/DevCenterRoute";
+import DevCenterRoot from "./pages/admin/DevCenterRoot";
+import DevCenterDashboard from "./pages/admin/DevCenterDashboard";
+import DevCenterSellers from "./pages/admin/DevCenterSellers";
+import DevCenterSubscriptions from "./pages/admin/DevCenterSubscriptions";
+import DevCenterFinance from "./pages/admin/DevCenterFinance";
+import DevCenterCustomersGlobal from "./pages/admin/DevCenterCustomersGlobal";
+import DevCenterFeatureFlags from "./pages/admin/DevCenterFeatureFlags";
+import ConcorrenciaPage from "./pages/ConcorrenciaPage";
+import Clientes360 from "./pages/Clientes360";
 
 // Notificações (in-app toast)
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -63,10 +79,8 @@ import { SaveStatusProvider } from "./contexts/SaveStatusContext";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
 
 // Temporários
-const Clientes = () => <h1>Clientes</h1>;
 const Faturas = () => <h1>Faturas</h1>;
 const Relatorios = () => <h1>Relatórios</h1>;
-const Monitoramento = () => <h1>Monitoramento</h1>;
 const Registros = () => <h1>Registros</h1>;
 const Configuracoes = () => <h1>Configurações</h1>;
 // ======================================================================
@@ -143,14 +157,22 @@ const router = createBrowserRouter([
           { path: "dados-empresa", element: <DadosEmpresa /> },
           { path: "alterar-senha", element: <AlterarSenha /> },
           { path: "integracoes/mercado-livre", element: <MercadoLivre /> },
-          { path: "pagamentos/formas", element: <FormasPagamento /> },
-          { path: "pagamentos/extrato", element: <ExtratoConta /> },
+          { path: "assinatura", element: <Navigate to="/perfil/assinatura/minha-assinatura" replace /> },
+          { path: "assinatura/minha-assinatura", element: <MySubscription /> },
+          { path: "assinatura/planos", element: <SubscriptionPlans /> },
+          { path: "assinatura/formas-de-pagamento", element: <FormasPagamento /> },
+          { path: "assinatura/historico", element: <PaymentHistory /> },
+          { path: "pagamentos/formas", element: <Navigate to="/perfil/assinatura/formas-de-pagamento" replace /> },
+          { path: "pagamentos/extrato", element: <Navigate to="/perfil/assinatura/historico" replace /> },
           {
             path: "preferencias",
             element: <Preferencias />,
             children: [
-              { index: true, element: <Notificacoes /> },
-              { path: "notificacoes", element: <Notificacoes /> },
+              { index: true, element: <Navigate to="notificacoes/sales" replace /> },
+              { path: "notificacoes", element: <Navigate to="notificacoes/sales" replace /> },
+              { path: "notificacoes/:category", element: <Notificacoes /> },
+              { path: "alertas-pop-up", element: <Navigate to="alertas-pop-up/sales" replace /> },
+              { path: "alertas-pop-up/:category", element: <AlertasPopup /> },
             ],
           },
         ],
@@ -159,12 +181,14 @@ const router = createBrowserRouter([
       { path: "anuncios-2", element: <AnunciosTeste /> },
       { path: "anuncios/debug-importacao", element: <MlListingImportDebug /> },
       { path: "produtos", element: <Products /> },
-      { path: "clientes", element: <Clientes /> },
+      { path: "clientes", element: <Clientes360 /> },
       { path: "faturas", element: <Faturas /> },
       { path: "relatorios", element: <Relatorios /> },
-      { path: "monitoramento", element: <Monitoramento /> },
+      { path: "concorrencia", element: <ConcorrenciaPage /> },
+      { path: "monitoramento", element: <Navigate to="/concorrencia" replace /> },
       { path: "registros", element: <Registros /> },
       { path: "configuracoes", element: <Navigate to="/perfil" replace /> },
+      { path: "vendas", element: <VendasPage /> },
       { path: "precificacoes", element: <PrecificacoesPage /> },
       { path: "precificacoes/inteligente/:listingId", element: <PricingIntelligencePage /> },
       { path: "produtos/novo", element: <ProductCreate /> },
@@ -173,9 +197,18 @@ const router = createBrowserRouter([
         path: "admin/dev-center",
         element: (
           <DevCenterRoute>
-            <DevCenter />
+            <DevCenterRoot />
           </DevCenterRoute>
         ),
+        children: [
+          { index: true, element: <DevCenterDashboard /> },
+          { path: "sellers", element: <DevCenterSellers /> },
+          { path: "subscriptions", element: <DevCenterSubscriptions /> },
+          { path: "finance", element: <DevCenterFinance /> },
+          { path: "customers-global", element: <DevCenterCustomersGlobal /> },
+          { path: "feature-flags", element: <DevCenterFeatureFlags /> },
+          { path: "missions", element: <DevCenter /> },
+        ],
       },
       { path: "*", element: <Navigate to="/" replace /> },
     ],

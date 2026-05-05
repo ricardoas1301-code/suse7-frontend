@@ -1,0 +1,45 @@
+/* ======================================================
+   S7CopyButton — grupo externo (.s7-copy-group) revela o botão no hover
+   Reutiliza .products-catalog__copy-btn (Products.css)
+====================================================== */
+
+.s7-copy-group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+}
+
+/* Touch / pointer grosso: botão levemente visível (hover não confiável) */
+.s7-copy-group:not(.s7-copy-group--always) .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+  opacity: 0.52;
+  pointer-events: auto;
+}
+
+.s7-copy-group--always .products-catalog__copy-btn {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .s7-copy-group:not(.s7-copy-group--always) .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .s7-copy-group:not(.s7-copy-group--always):hover .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .s7-copy-group:not(.s7-copy-group--always):focus-within .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.s7-copy-group .s7-copy-btn.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  color: rgba(15, 23, 42, 0.38);
+}
+
+.s7-copy-group .s7-copy-btn.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-copy-group .s7-copy-btn.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: var(--s7-text, #0f172a);
+}

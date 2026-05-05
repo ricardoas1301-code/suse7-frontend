@@ -9,6 +9,15 @@
 import S7Icon from "./S7Icon";
 import "./S7StatCard.css";
 
+/** @type {Record<string, string>} */
+const VARIANT_ALIASES = {
+  blue: "info",
+  orange: "warning",
+  green: "success",
+  red: "danger",
+  neutral: "default",
+};
+
 export default function S7StatCard({
   title = "",
   value = "",
@@ -20,9 +29,10 @@ export default function S7StatCard({
   highlight = false,
   className = "",
 }) {
+  const resolvedVariant = VARIANT_ALIASES[variant] ?? variant;
   const classes = [
     "s7-stat-card",
-    `s7-stat-card--${variant}`,
+    `s7-stat-card--${resolvedVariant}`,
     highlight ? "s7-stat-card--highlight" : "",
     className,
   ]

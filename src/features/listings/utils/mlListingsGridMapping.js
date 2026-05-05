@@ -108,6 +108,38 @@ export function mapGridApiToCatalogRow(g) {
   const m = String(g.marketplace || "");
   const marketplaceSlug = m === "mercado_livre" ? "mercadolivre" : m || "mercadolivre";
 
+  const marketplaceAccountId =
+    g.marketplace_account_id != null && String(g.marketplace_account_id).trim() !== ""
+      ? String(g.marketplace_account_id).trim()
+      : null;
+  const accountAlias =
+    g.account_alias != null && String(g.account_alias).trim() !== ""
+      ? String(g.account_alias).trim()
+      : g.ml_account_alias != null && String(g.ml_account_alias).trim() !== ""
+        ? String(g.ml_account_alias).trim()
+        : null;
+  const accountLogoUrl =
+    g.account_logo_url != null && String(g.account_logo_url).trim() !== ""
+      ? String(g.account_logo_url).trim()
+      : g.marketplace_account_logo_url != null && String(g.marketplace_account_logo_url).trim() !== ""
+        ? String(g.marketplace_account_logo_url).trim()
+        : null;
+  const marketplaceLabelDisplay =
+    g.marketplace_label != null && String(g.marketplace_label).trim() !== ""
+      ? String(g.marketplace_label).trim()
+      : null;
+
+  const sellerCompanyId =
+    g.seller_company_id != null && String(g.seller_company_id).trim() !== ""
+      ? String(g.seller_company_id).trim()
+      : null;
+  const companyName =
+    g.company_name != null && String(g.company_name).trim() !== "" ? String(g.company_name).trim() : null;
+  const companyDocumentMasked =
+    g.company_document_masked != null && String(g.company_document_masked).trim() !== ""
+      ? String(g.company_document_masked).trim()
+      : null;
+
   const galleryImageUrls = Array.isArray(g.gallery_image_urls)
     ? /** @type {string[]} */ (g.gallery_image_urls).filter((u) => typeof u === "string" && u.trim() !== "")
     : [];
@@ -127,6 +159,13 @@ export function mapGridApiToCatalogRow(g) {
     productName: DASH,
     marketplaceSlug,
     marketplaceRaw: m,
+    marketplaceLabelDisplay,
+    marketplaceAccountId,
+    accountAlias,
+    accountLogoUrl,
+    sellerCompanyId,
+    companyName,
+    companyDocumentMasked,
     productCost: 0,
     /**
      * Preço efetivo (margem/filtros internos): `effective_sale_price_brl`; se ausente na API,
@@ -309,6 +348,11 @@ export function mapGridApiToCatalogRow(g) {
     productCompletenessScore:
       g.product_completeness_score != null && Number.isFinite(Number(g.product_completeness_score))
         ? Math.round(Number(g.product_completeness_score))
+        : null,
+    /** View-model GET /api/ml/listings (Suse7 DB); não recalcular no front. */
+    product_card_metrics:
+      g.product_card_metrics != null && typeof g.product_card_metrics === "object"
+        ? /** @type {Record<string, unknown>} */ (g.product_card_metrics)
         : null,
   };
 }

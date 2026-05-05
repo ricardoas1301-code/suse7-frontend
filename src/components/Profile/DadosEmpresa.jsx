@@ -1,446 +1,180 @@
 // ======================================================================
-// PERFIL — DADOS DA EMPRESA
-// Objetivo: Exibir e editar os dados cadastrais da empresa
+// PERFIL — EMPRESAS (multi-CNPJ) + cards + modal
+// Lista/edita seller_companies via API; espelha empresa principal em profiles (layout).
 // ======================================================================
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import "./Profile.css";
 import "./DadosEmpresa.css";
-import "../Avatar/Avatar.css";
-import FeedbackModal from "../FeedbackModal/FeedbackModal";
+import SellerCompanyModal from "./SellerCompanyModal";
+import { buildApiUrl, apiFetch } from "../../config/api";
 
-
-export default function DadosEmpresa() {
-  // ------------------------------------------------------------------
-  // STATES
-  // ------------------------------------------------------------------
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const [form, setForm] = useState({
-    email: "",
-    cpf_cnpj: "",
-    nome: "",
-    nome_loja: "",
-    site: "",
-    whatsapp: "",
-    telefone: "",
-    cep: "",
-    endereco: "",
-    numero: "",
-    complemento: "",
-    bairro: "",
-    cidade: "",
-    estado: "",
-    imposto_percentual: "",
-    photo_url: "",
-  });
-
-  // ------------------------------------------------------------------
-  // LOAD PROFILE
-  // ------------------------------------------------------------------
-  useEffect(() => {
-    const loadProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("(*)")
-        .eq("id", user.id)
-        .single();
-
-      if (data) {
-        setForm({
-          email: data.email || user.email || "",
-          cpf_cnpj: data.cpf_cnpj || "",
-          nome: data.nome || "",
-          nome_loja: data.nome_loja || "",
-          site: data.site || "",
-          whatsapp: data.whatsapp || "",
-          telefone: data.telefone || "",
-          cep: data.cep || "",
-          endereco: data.endereco || "",
-          numero: data.numero || "",
-          complemento: data.complemento || "",
-          bairro: data.bairro || "",
-          cidade: data.cidade || "",
-          estado: data.estado || "",
-          imposto_percentual: data.imposto_percentual !== null && data.imposto_percentual !== undefined
-          ? String(data.imposto_percentual).replace(".", ",")
-          : "",
-          photo_url: data.photo_url || "",
-        });
-      }
-
-      setLoading(false);
-    };
-
-    loadProfile();
-  }, []);
-
-// ------------------------------------------------------------------
-// WHATSAPP — (99) 99999-9999
-// ------------------------------------------------------------------
-const handleWhatsappChange = (e) => {
-  let value = e.target.value.replace(/\D/g, "").slice(0, 11);
-
-  if (value.length >= 11) {
-    value = value.replace(
-      /^(\d{2})(\d{5})(\d{4})$/,
-      "($1) $2-$3"
-    );
-  } else if (value.length >= 7) {
-    value = value.replace(
-      /^(\d{2})(\d{4,5})(\d{0,4})$/,
-      "($1) $2-$3"
-    );
-  } else if (value.length >= 3) {
-    value = value.replace(/^(\d{2})(\d+)/, "($1) $2");
-  }
-
-  setForm((prev) => ({ ...prev, whatsapp: value }));
-};
-
-// ------------------------------------------------------------------
-// TELEFONE — aceita 10 ou 11 dígitos
-// (99) 9999-9999 | (99) 99999-9999
-// ------------------------------------------------------------------
-const handleTelefoneChange = (e) => {
-  let value = e.target.value.replace(/\D/g, "").slice(0, 11);
-
-  if (value.length === 11) {
-    // Celular
-    value = value.replace(
-      /^(\d{2})(\d{5})(\d{4})$/,
-      "($1) $2-$3"
-    );
-  } else if (value.length === 10) {
-    // Fixo
-    value = value.replace(
-      /^(\d{2})(\d{4})(\d{4})$/,
-      "($1) $2-$3"
-    );
-  } else if (value.length >= 3) {
-    value = value.replace(/^(\d{2})(\d+)/, "($1) $2");
-  }
-
-  setForm((prev) => ({ ...prev, telefone: value }));
-};
-
-
-  // ------------------------------------------------------------------
-  // GENERIC HANDLER
-  // ------------------------------------------------------------------
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-// ------------------------------------------------------------------
-// IMPOSTO (%) — aceita: 6 | 6,33 | 19,28
-// ------------------------------------------------------------------
-const handleImpostoChange = (e) => {
-  let value = e.target.value;
-
-  // Remove tudo que não for número ou vírgula
-  value = value.replace(/[^0-9,]/g, "");
-
-  // Impede mais de uma vírgula
-  if ((value.match(/,/g) || []).length > 1) {
-    return;
-  }
-
-  // Limita casas decimais em 2
-  if (value.includes(",")) {
-    const [int, dec] = value.split(",");
-    value = `${int.slice(0, 2)},${dec.slice(0, 2)}`;
-  } else {
-    value = value.slice(0, 2);
-  }
-
-  setForm((prev) => ({ ...prev, imposto_percentual: value }));
-};
-
-
-  // ------------------------------------------------------------------
-  // CEP MASK + VIA CEP
-  // ------------------------------------------------------------------
-  const handleCepChange = async (e) => {
-    let value = e.target.value.replace(/\D/g, "").slice(0, 8);
-
-    if (value.length > 5) {
-      value = value.replace(/^(\d{5})(\d{1,3})$/, "$1-$2");
-    }
-
-    setForm((prev) => ({ ...prev, cep: value }));
-
-    if (value.length === 9) {
-      const cepClean = value.replace("-", "");
-
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`);
-        const data = await res.json();
-
-        if (!data.erro) {
-          setForm((prev) => ({
-            ...prev,
-            endereco: data.logradouro || "",
-            bairro: data.bairro || "",
-            cidade: data.localidade || "",
-            estado: data.uf || "",
-          }));
-        }
-      } catch (err) {
-        console.error("Erro ao buscar CEP", err);
-      }
-    }
-  };
-
-  // ------------------------------------------------------------------
-  // LOGO UPLOAD
-  // ------------------------------------------------------------------
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const previewUrl = URL.createObjectURL(file);
-    setForm((prev) => ({ ...prev, photo_url: previewUrl }));
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const ext = file.name.split(".").pop();
-    const path = `logos/${user.id}.${ext}`;
-
-    await supabase.storage.from("profiles").upload(path, file, { upsert: true });
-
-    const { data } = supabase.storage.from("profiles").getPublicUrl(path);
-    const logoUrl = `${data.publicUrl}?t=${Date.now()}`;
-
-    await supabase.from("profiles").update({ photo_url: logoUrl }).eq("id", user.id);
-
-    setForm((prev) => ({ ...prev, photo_url: logoUrl }));
-    window.dispatchEvent(new Event("logoUpdated"));
-  };
-
-  // ------------------------------------------------------------------
-  // SAVE
-  // ------------------------------------------------------------------
-const handleSave = async () => {
-  setSaving(true);
-
-  // 🔒 Snapshot seguro do state
-  const payload = { ...form };
-
-  // ❌ campos não editáveis
-  delete payload.email;
-  delete payload.cpf_cnpj;
-
-  // ✅ NORMALIZA imposto (vírgula → ponto)
-if (payload.imposto_percentual !== "" && payload.imposto_percentual !== null) {
-  payload.imposto_percentual = Number(
-    String(payload.imposto_percentual).replace(",", ".")
-  );
+function formatCnpjDisplay(raw) {
+  const d = String(raw ?? "").replace(/\D/g, "");
+  if (d.length !== 14) return raw ?? "";
+  return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
 }
 
-  const { data: { user } } = await supabase.auth.getUser();
+function rateToDisplay(v) {
+  if (v == null || v === "") return "—";
+  return String(v).replace(".", ",");
+}
 
-  const { error } = await supabase
-    .from("profiles")
-    .update(payload)
-    .eq("id", user.id);
+export default function DadosEmpresa() {
+  const [loading, setLoading] = useState(true);
+  const [companies, setCompanies] = useState([]);
+  const [profileEmail, setProfileEmail] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [modalCompanyId, setModalCompanyId] = useState(null);
 
-  setSaving(false);
+  const loadCompanies = useCallback(async () => {
+    const url = buildApiUrl("/api/seller/companies");
+    if (!url) {
+      setCompanies([]);
+      return;
+    }
+    const { ok, data } = await apiFetch(url, { method: "GET" });
+    if (ok && Array.isArray(data?.companies)) {
+      setCompanies(data.companies);
+    } else {
+      setCompanies([]);
+    }
+  }, []);
 
-  if (error) {
-    console.error("Erro ao salvar dados:", error);
-    alert("Erro ao salvar os dados.");
-    return;
+  const syncPrimaryProfile = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    const url = buildApiUrl("/api/seller/companies");
+    if (!url) return;
+    const { ok, data } = await apiFetch(url, { method: "GET" });
+    if (!ok || !Array.isArray(data?.companies)) return;
+    const primary = data.companies.find((c) => c.is_primary);
+    if (!primary?.id) return;
+    const oneUrl = buildApiUrl(`/api/seller/companies/${primary.id}`);
+    const one = await apiFetch(oneUrl, { method: "GET" });
+    if (!one.ok || !one.data?.company) return;
+    const c = one.data.company;
+    const patch = {
+      nome_loja: (c.trade_name && String(c.trade_name).trim()) || c.company_name || null,
+      photo_url: c.logo_url || null,
+    };
+    if (c.document_cnpj) {
+      patch.cpf_cnpj = formatCnpjDisplay(c.document_cnpj);
+    }
+    if (c.default_tax_rate != null && String(c.default_tax_rate).trim() !== "") {
+      const n = Number(String(c.default_tax_rate).replace(",", "."));
+      if (!Number.isNaN(n)) patch.imposto_percentual = n;
+    }
+    await supabase.from("profiles").update(patch).eq("id", user.id);
+    window.dispatchEvent(new Event("logoUpdated"));
+  }, []);
+
+  useEffect(() => {
+    const boot = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user?.email) setProfileEmail(user.email);
+      const { data: prof } = await supabase.from("profiles").select("email").eq("id", user?.id).maybeSingle();
+      if (prof?.email) setProfileEmail(prof.email);
+      await loadCompanies();
+      setLoading(false);
+    };
+    boot();
+  }, [loadCompanies]);
+
+  const openCreate = () => {
+    setModalMode("create");
+    setModalCompanyId(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (id) => {
+    setModalMode("edit");
+    setModalCompanyId(id);
+    setModalOpen(true);
+  };
+
+  const handleModalSaved = async () => {
+    await loadCompanies();
+    await syncPrimaryProfile();
+  };
+
+  if (loading) {
+    return (
+      <div className="dados-empresa-container profile-content">
+        <p>Carregando empresas...</p>
+      </div>
+    );
   }
 
-  setShowSuccess(true);
-};
-
-  if (loading) return <p>Carregando dados...</p>;
-
-  // ------------------------------------------------------------------
-  // RENDER
-  // ------------------------------------------------------------------
   return (
-    <div className="dados-empresa-container">
-      <div className="profile-card">
-
+    <div className="dados-empresa-container profile-content">
+      <div className="profile-card s7-empresa-hero">
         <div className="form-header">
           <h2>Perfil da Empresa</h2>
-          <span className="required-hint"> Campos obrigatórios</span>
+          <button type="button" className="btn-primary s7-btn-inline" onClick={openCreate}>
+            + Nova empresa
+          </button>
         </div>
+        <p className="s7-empresa-intro">
+          Gerencie CNPJs cadastrados. Cada conta do Mercado Livre deve estar vinculada a uma empresa. A empresa
+          marcada como principal alimenta o nome e a logo exibidos no menu do sistema.
+        </p>
 
-        {/* LOGO */}
-        <div className="form-grid">
-          <div className="field-full logo-field">
-            <label>Logo da Empresa</label>
-
-<div className="logo-preview">
-  <div className="suse7-avatar logo-lg">
-    {form.photo_url ? (
-      <img src={form.photo_url} alt="Logo da empresa" />
-    ) : (
-      <span className="avatar-placeholder">
-        {form.nome_loja?.charAt(0)?.toUpperCase() || "?"}
-      </span>
-    )}
-  </div>
-</div>
-
-            <label className="logo-upload-btn">
-              <span className="alterar-imagem">Alterar imagem</span>
-              <input type="file" accept="image/png, image/jpeg" onChange={handleLogoUpload} hidden />
-            </label>
-          </div>
+        <div className="s7-company-cards">
+          {companies.length === 0 ? (
+            <div className="s7-company-card s7-company-card-empty">
+              <p>Nenhuma empresa cadastrada ainda.</p>
+              <button type="button" className="btn-primary" onClick={openCreate}>
+                Cadastrar primeira empresa
+              </button>
+            </div>
+          ) : (
+            companies.map((c) => {
+              const name = (c.trade_name && String(c.trade_name).trim()) || c.company_name || "Empresa";
+              const letter = name.charAt(0).toUpperCase();
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`s7-company-card ${c.active === false ? "is-inactive" : ""}`}
+                  onClick={() => openEdit(c.id)}
+                >
+                  <div className="s7-company-card-avatar">
+                    {c.logo_url ? <img src={c.logo_url} alt="" /> : <span>{letter}</span>}
+                  </div>
+                  <div className="s7-company-card-body">
+                    <div className="s7-company-card-title-row">
+                      <span className="s7-company-card-name">{name}</span>
+                      {c.is_primary ? <span className="s7-badge s7-badge-primary">Principal</span> : null}
+                    </div>
+                    <div className="s7-company-card-meta">{c.document_masked || "—"}</div>
+                    <div className="s7-company-card-footer">
+                      <span className={`s7-status-dot ${c.active !== false ? "on" : "off"}`} />
+                      <span>{c.active !== false ? "Ativa" : "Inativa"}</span>
+                      <span className="s7-company-card-hint">Imposto padrão: {rateToDisplay(c.default_tax_rate)}</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })
+          )}
         </div>
+      </div>
 
-        {/* DADOS */}
-<div className="form-grid">
-  <div className="field-lg">
-    <label>Nome da Empresa *</label>
-    <input
-      name="nome_loja"
-      value={form.nome_loja}
-      onChange={handleChange}
-    />
-  </div>
-
-  <div className="field-md">
-    <label>CPF / CNPJ</label>
-    <div className="readonly-field">
-      <input value={form.cpf_cnpj} disabled />
-      <span className="readonly-icon"></span>
+      <SellerCompanyModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        mode={modalMode}
+        companyId={modalCompanyId}
+        profileEmail={profileEmail}
+        onSaved={handleModalSaved}
+      />
     </div>
-  </div>
-
-  <div className="field-lg">
-    <label>Email</label>
-    <div className="readonly-field">
-      <input value={form.email} disabled />
-      <span className="readonly-icon"></span>
-    </div>
-  </div>
-
-  <div className="field-full site-field">
-    <label>Site</label>
-    <input
-      name="site"
-      value={form.site}
-      onChange={handleChange}
-    />
-  </div>
-</div>
-
-{/* IMPOSTO — LINHA SEPARADA */}
-<div className="form-grid">
-  <div className="field-sm">
-    <label>Imposto (%) *</label>
-    <input
-      name="imposto_percentual"
-      value={form.imposto_percentual}
-      onChange={handleImpostoChange}
-      placeholder="6,33"
-    />
-  </div>
-</div>
-
-
-        {/* CONTATO */}
-        <h4 className="profile-section-title">Contato</h4>
-        <div className="form-grid">
-          <div className="field-lg">
-            <label>Responsável *</label>
-            <input name="nome" value={form.nome} onChange={handleChange} />
-          </div>
-
-          <div className="field-md">
-            <label>WhatsApp *</label>
-            <input
-  name="whatsapp"
-  value={form.whatsapp}
-  onChange={handleWhatsappChange}
-  placeholder="(17) 99933-2833"
-/>
-          </div>
-
-          <div className="field-md">
-            <label>Telefone *</label>
-            <input
-  name="telefone"
-  value={form.telefone}
-  onChange={handleTelefoneChange}
-  placeholder="(17) 93399-3328"
-/>
-
-          </div>
-        </div>
-
-        {/* ENDEREÇO */}
-        <h4 className="profile-section-title">Endereço</h4>
-        <div className="form-grid">
-          <div className="field-sm">
-            <label>CEP *</label>
-            <input value={form.cep} onChange={handleCepChange} />
-          </div>
-
-          <div className="field-sm">
-            <label>UF</label>
-            <input value={form.estado} disabled />
-          </div>
-
-          <div className="field-md">
-            <label>Cidade</label>
-            <input value={form.cidade} disabled />
-          </div>
-
-          <div className="field-lg">
-            <label>Endereço</label>
-            <input name="endereco" value={form.endereco} onChange={handleChange} />
-          </div>
-
-          <div className="field-sm">
-            <label>Número</label>
-            <input name="numero" value={form.numero} onChange={handleChange} />
-          </div>
-
-          <div className="field-md">
-            <label>Complemento</label>
-            <input name="complemento" value={form.complemento} onChange={handleChange} />
-          </div>
-
-          <div className="field-md">
-            <label>Bairro</label>
-            <input value={form.bairro} disabled />
-          </div>
-        </div>
-
-<button
-  className="btn-primary"
-  onMouseDown={() => document.activeElement.blur()}
-  onClick={handleSave}
-  disabled={saving}
->
-  {saving ? "Salvando..." : "Salvar Alterações"}
-</button>
-
-
-      {/* POPUP SUCESSO — PADRÃO SUSE7 */}
-{showSuccess && (
-  <FeedbackModal
-    title="Dados atualizados!"
-    message="As informações da empresa foram salvas com sucesso."
-    onClose={() => setShowSuccess(false)}
-  />
-)}
-</div>
-</div>
-);
+  );
 }

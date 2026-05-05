@@ -1,0 +1,120 @@
+.subscription-page {
+  max-width: 1020px;
+}
+
+.subscription-plans-grid {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.subscription-plan-card {
+  background: #fff;
+  border: 1px solid #dbe5f2;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 3px 16px rgba(15, 23, 42, 0.05);
+}
+
+.subscription-plan-card--recommended {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 8px 24px rgba(37, 99, 235, 0.14);
+}
+
+.subscription-plan-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.subscription-plan-card__header h3 {
+  margin: 0;
+}
+
+.subscription-plan-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #e0ecff;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.subscription-plan-price {
+  margin: 10px 0 4px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.subscription-plan-price span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.subscription-plan-limit,
+.subscription-plan-profile,
+.subscription-plan-description,
+.subscription-plan-trial {
+  margin: 0 0 6px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.subscription-plan-cta {
+  margin-top: 8px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+  padding: 9px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.subscription-status-card {
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid #dbe5f2;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.subscription-status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.subscription-progress {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+  margin: 10px 0;
+}
+
+.subscription-progress__bar {
+  height: 100%;
+}
+
+.subscription-progress__bar--normal { background: #2563eb; }
+.subscription-progress__bar--warning { background: #f59e0b; }
+.subscription-progress__bar--danger { background: #ef4444; }
+
+.subscription-alert {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subscription-alert--normal { color: #1d4ed8; }
+.subscription-alert--warning { color: #b45309; }
+.subscription-alert--danger { color: #b91c1c; }
+

@@ -259,3 +259,43 @@ export function scenarioHeadingForUi(scenario, baselineHeadingOverride = null) {
   }
   return cardHeadingLabel(scenario);
 }
+
+/**
+ * Tom só visual do lucro (API) + margem “colada em zero” (−1% .. +1%) → alerta laranja.
+ * @param {unknown} scenario
+ * @returns {"loss" | "caution" | "healthy"}
+ */
+export function getProfitDisplayTone(scenario) {
+  const p = parseScenarioProfitBrlNumber(scenario);
+  if (p != null && p < 0) return "loss";
+  const m = parseScenarioMarginPctNumber(scenario);
+  if (p != null && p >= 0 && m != null && m >= -1 && m <= 1) return "caution";
+  return "healthy";
+}
+
+/**
+ * Tom só visual da margem % (API): &gt;5% verde, 0–5% laranja, &lt;0% vermelho.
+ * @param {unknown} scenario
+ * @returns {"high" | "mid" | "low" | "none"} high = margem acima de 5%.
+ */
+export function getMarginDisplayTone(scenario) {
+  const m = parseScenarioMarginPctNumber(scenario);
+  if (m == null) return "none";
+  if (m < 0) return "low";
+  if (m > 5) return "high";
+  return "mid";
+}
+
+/**
+ * Tom do status da oferta (`result.offer_status_semantic` da API).
+ * @param {unknown} scenario
+ * @returns {"great" | "regular" | "critical" | "none"}
+ */
+export function getOfferSemanticUiTone(scenario) {
+  const res = scenarioResult(scenario);
+  const sem = res?.offer_status_semantic != null ? String(res.offer_status_semantic).trim().toLowerCase() : "";
+  if (sem === "great" || sem === "excellent") return "great";
+  if (sem === "acceptable" || sem === "regular") return "regular";
+  if (sem === "critical" || sem === "danger") return "critical";
+  return "none";
+}

@@ -14,7 +14,6 @@ import S7ConfirmModal from "./ui/S7ConfirmModal";
 import S7EmptyState from "./ui/S7EmptyState";
 import S7Icon from "./ui/S7Icon";
 import S7Input from "./ui/S7Input";
-import S7RankingCard from "./ui/S7RankingCard";
 import { fetchCatalogRankings } from "../services/products/catalogRankingsService";
 import { applyCatalogFilter, getCatalogFilterChipsForToolbar } from "../utils/catalogFilterRegistry";
 import { filterProductsByCatalogSearch } from "../utils/catalogSearch";
@@ -32,6 +31,7 @@ import {
 import { useProductMainImageSrc } from "../utils/productImageDisplayUrl";
 import { computeCatalogProductReadiness } from "../utils/productReadiness";
 import "./Products.css";
+import "./Anuncios.css";
 
 /** Coluna Marketplaces: dados seguem em `getProductCatalogMetrics`; UI oculta até a visão MKP amadurecer. */
 const SHOW_CATALOG_MARKETPLACES_COLUMN = false;
@@ -293,6 +293,11 @@ export default function Products() {
     top_sales_quantity: [],
     top_revenue: [],
     top_profit: [],
+    catalog_summary: {
+      top10_sales_quantity_total: 0,
+      top10_revenue_brl_total: "0.00",
+      top10_profit_brl_total: "0.00",
+    },
   });
   const [rankingsLoading, setRankingsLoading] = useState(true);
   const [catalogFilterId, setCatalogFilterId] = useState("all");
@@ -331,6 +336,27 @@ export default function Products() {
     return displayProducts.slice(start, start + CATALOG_PAGE_SIZE);
   }, [displayProducts, catalogPage]);
 
+  const productSignalCounts = useMemo(() => {
+    if (!products.length) return { noSales: 0, needAttention: 0 };
+    let noSales = 0;
+    let needAttention = 0;
+    for (const p of products) {
+      const m = getProductCatalogMetrics(p);
+      if ((m.salesCount ?? 0) <= 0) noSales += 1;
+      const incomplete =
+        typeof p?.is_product_ready === "boolean"
+          ? !p.is_product_ready
+          : p?.catalog_completeness != null && p.catalog_completeness !== "complete";
+      if (incomplete) needAttention += 1;
+    }
+    return { noSales, needAttention };
+  }, [products]);
+
+  const hasTop10SalesSignal =
+    rankings.top_sales_quantity.length > 0 ||
+    rankings.top_revenue.length > 0 ||
+    rankings.top_profit.length > 0;
+
   const paginationItems = useMemo(() => buildPaginationItems(catalogPage, totalPages), [catalogPage, totalPages]);
 
   const rangeStart = totalFiltered === 0 ? 0 : (catalogPage - 1) * CATALOG_PAGE_SIZE + 1;
@@ -341,13 +367,6 @@ export default function Products() {
       navigate(`/produtos/${productId}/editar`);
     },
     [navigate]
-  );
-
-  const handleRankingItemClick = useCallback(
-    (item) => {
-      if (item?.product_id) onOpenEdit(item.product_id);
-    },
-    [onOpenEdit]
   );
 
   /**
@@ -431,6 +450,7 @@ export default function Products() {
           top_sales_quantity: data.top_sales_quantity,
           top_revenue: data.top_revenue,
           top_profit: data.top_profit,
+          catalog_summary: data.catalog_summary,
         });
         setRankingsLoading(false);
       }
@@ -509,35 +529,88 @@ export default function Products() {
     <div className="products-catalog">
       <h1 className="products-catalog__sr-title">Produtos</h1>
 
-      <section className="products-catalog__rankings" aria-label="Ranking de performance do catálogo">
-        <S7RankingCard
-          title="Top 10 — vendas (quantidade)"
-          valueType="quantity"
-          variant="sales"
-          items={rankings.top_sales_quantity}
-          loading={rankingsLoading}
-          onItemClick={handleRankingItemClick}
-        />
-        <S7RankingCard
-          title="Top 10 — faturamento"
-          valueType="currency"
-          variant="revenue"
-          items={rankings.top_revenue}
-          loading={rankingsLoading}
-          onItemClick={handleRankingItemClick}
-        />
-        <S7RankingCard
-          title="Top 10 — lucro bruto"
-          valueType="currency"
-          variant="profit"
-          items={rankings.top_profit}
-          loading={rankingsLoading}
-          onItemClick={handleRankingItemClick}
-        />
+      <section className="s7-core-kpis anuncios-catalog__kpis" aria-label="Ranking Top 10 do catálogo">
+        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
+          <header className="anuncios-catalog__kpi-head">
+            <h2 className="anuncios-catalog__kpi-title">Top 10 — Vendas</h2>
+          </header>
+          <div className="anuncios-catalog__kpi-body">
+            <p className="anuncios-catalog__kpi-value">
+              {rankingsLoading
+                ? "…"
+                : !hasTop10SalesSignal
+                  ? "Sem dados ainda"
+                  : String(rankings.catalog_summary?.top10_sales_quantity_total ?? 0)}
+            </p>
+            <p className="anuncios-catalog__kpi-hint">Soma das quantidades vendidas no Top 10 (servidor).</p>
+          </div>
+        </article>
+
+        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
+          <header className="anuncios-catalog__kpi-head">
+            <h2 className="anuncios-catalog__kpi-title">Top 10 — Faturamento</h2>
+          </header>
+          <div className="anuncios-catalog__kpi-body">
+            <p className="anuncios-catalog__kpi-value">
+              {rankingsLoading
+                ? "…"
+                : !hasTop10SalesSignal
+                  ? "Sem dados ainda"
+                  : formatCatalogBRL(rankings.catalog_summary?.top10_revenue_brl_total ?? 0)}
+            </p>
+            <p className="anuncios-catalog__kpi-hint">Soma de faturamento bruto no Top 10 (servidor, Decimal.js).</p>
+          </div>
+        </article>
+
+        <div className="anuncios-catalog__kpi-minis" aria-label="Indicadores do catálogo">
+          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--profit">
+            <div className="anuncios-catalog__kpi-mini-head">
+              <h3 className="anuncios-catalog__kpi-mini-title">Top 10 — Lucro bruto</h3>
+            </div>
+            <div className="anuncios-catalog__kpi-mini-body">
+              <p className="anuncios-catalog__kpi-mini-value">
+                {rankingsLoading
+                  ? "…"
+                  : !hasTop10SalesSignal
+                    ? "Sem dados ainda"
+                    : formatCatalogBRL(rankings.catalog_summary?.top10_profit_brl_total ?? 0)}
+              </p>
+            </div>
+          </article>
+          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--sales">
+            <div className="anuncios-catalog__kpi-mini-head">
+              <h3 className="anuncios-catalog__kpi-mini-title">Sem vendas</h3>
+            </div>
+            <div className="anuncios-catalog__kpi-mini-body">
+              <p className="anuncios-catalog__kpi-mini-value">
+                {productsLoading ? "…" : String(productSignalCounts.noSales)}
+              </p>
+            </div>
+          </article>
+          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--warn">
+            <div className="anuncios-catalog__kpi-mini-head">
+              <h3 className="anuncios-catalog__kpi-mini-title">Precisam atenção</h3>
+            </div>
+            <div className="anuncios-catalog__kpi-mini-body">
+              <p className="anuncios-catalog__kpi-mini-value">
+                {productsLoading ? "…" : String(productSignalCounts.needAttention)}
+              </p>
+            </div>
+          </article>
+          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
+            <div className="anuncios-catalog__kpi-mini-head">
+              <h3 className="anuncios-catalog__kpi-mini-title">Em queda</h3>
+            </div>
+            <div className="anuncios-catalog__kpi-mini-body">
+              <p className="anuncios-catalog__kpi-mini-value">—</p>
+              <p className="anuncios-catalog__kpi-mini-hint">Sem dados ainda</p>
+            </div>
+          </article>
+        </div>
       </section>
 
       {!productsLoading && products.length > 0 ? (
-        <div className="products-catalog__controls">
+        <div className="products-catalog__controls s7-sticky-filters">
           <div className="products-catalog__controls-top">
             <div className="products-catalog__search-wrap">
               <div className="products-catalog__search-field">

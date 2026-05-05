@@ -72,6 +72,9 @@ export async function apiFetch(url, options = {}) {
   if (token) {
     sendHeaders.Authorization = `Bearer ${token}`;
   }
+  if (body != null && sendHeaders["Content-Type"] == null && sendHeaders["content-type"] == null) {
+    sendHeaders["Content-Type"] = "application/json";
+  }
 
   const res = await fetch(url, {
     method,

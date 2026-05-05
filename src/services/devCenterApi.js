@@ -128,3 +128,41 @@ export async function devCenterDeleteNextStep(stepId) {
   if (!url) return { ok: false, status: 0, error: "API não configurada" };
   return apiFetch(url, { method: "DELETE" });
 }
+
+export async function devCenterGetDashboard() {
+  const url = buildApiUrl("/api/dev-center/dashboard");
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+export async function devCenterGetSellers() {
+  const url = buildApiUrl("/api/dev-center/sellers");
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+export async function devCenterGetSubscriptions() {
+  const url = buildApiUrl("/api/dev-center/subscriptions");
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+export async function devCenterGetFinance() {
+  const url = buildApiUrl("/api/dev-center/finance");
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+export async function devCenterGetCustomersGlobal({ q = "" } = {}) {
+  const base = buildApiUrl("/api/dev-center/customers-global");
+  if (!base) return { ok: false, status: 0, error: "API não configurada" };
+  const qs = new URLSearchParams();
+  if (q) qs.set("q", q);
+  return apiFetch(`${base}?${qs.toString()}`, { method: "GET" });
+}
+
+export async function devCenterGetCustomerGlobalDetail(id) {
+  const url = buildApiUrl(`/api/dev-center/customers-global/${encodeURIComponent(id)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}

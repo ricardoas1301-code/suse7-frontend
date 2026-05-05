@@ -4,14 +4,17 @@
 // ======================================================================
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { buildApiUrl } from "../config/api";
 
 const ML_OAUTH_CONFIG_ERR_KEY = "ml_oauth_config_errors";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export default function MLConnect() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     let mounted = true;
@@ -35,12 +38,17 @@ export default function MLConnect() {
 
       const userId = data.user.id;
 
+      const rawCo = searchParams.get("seller_company_id") || searchParams.get("sellerCompanyId") || "";
+      const sellerCompanyId = rawCo.trim() && UUID_REGEX.test(rawCo.trim()) ? rawCo.trim() : "";
+
       // --------------------------------------------------------
       // 3. Redirecionar para o backend (OAuth ML) — path /api/ml/connect
       // --------------------------------------------------------
-      const connectUrl = buildApiUrl(
-        `/api/ml/connect?user_id=${encodeURIComponent(userId)}`
-      );
+      let connectPath = `/api/ml/connect?user_id=${encodeURIComponent(userId)}`;
+      if (sellerCompanyId) {
+        connectPath += `&seller_company_id=${encodeURIComponent(sellerCompanyId)}`;
+      }
+      const connectUrl = buildApiUrl(connectPath);
       if (!connectUrl) {
         console.error(
           "[ML] Defina VITE_API_BASE_URL (dev local: http://localhost:3001; produção: URL do backend deployado)"
@@ -76,7 +84,7 @@ export default function MLConnect() {
     return () => {
       mounted = false;
     };
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   // --------------------------------------------------------------
   // Tela de transição
