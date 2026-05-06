@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
-import { ensurePrimarySellerCompanyForCnpj } from "../services/sellerCompanyBootstrapApi";
+import { ensureSellerCompaniesHydratedFromProfile } from "../services/sellerCompanyBootstrapApi";
 import "./CompleteProfileModal.css";
 import suse7Logo from "../assets/suse7-logo-redonda.png";
 
@@ -259,16 +259,9 @@ const validateForm = () => {
 
       if (error) throw error;
 
-      const cnpj = form.cpf_cnpj.replace(/\D/g, "");
-      if (cnpj.length === 14) {
-        const boot = await ensurePrimarySellerCompanyForCnpj({
-          cnpjDigits: cnpj,
-          companyName: form.nome_loja.trim(),
-          tradeName: form.nome_loja.trim(),
-        });
-        if (!boot.ok && import.meta.env.DEV) {
-          console.warn("[CompleteProfile] Bootstrap seller_company:", boot);
-        }
+      const boot = await ensureSellerCompaniesHydratedFromProfile();
+      if (!boot.ok && import.meta.env.DEV) {
+        console.warn("[CompleteProfile] Hidratação seller_company:", boot);
       }
 
       onClose();

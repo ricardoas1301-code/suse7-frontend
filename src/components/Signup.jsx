@@ -6,7 +6,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import { ensurePrimarySellerCompanyForCnpj } from "../services/sellerCompanyBootstrapApi";
+import { ensureSellerCompaniesHydratedFromProfile } from "../services/sellerCompanyBootstrapApi";
 import { useNavigate, Link } from "react-router-dom";
 import GoogleIcon from "../assets/google.png";
 import "./Signup.css";
@@ -488,16 +488,9 @@ export default function Signup() {
         });
       }
 
-      const cnpj = form.cpf_cnpj.replace(/\D/g, "");
-      if (cnpj.length === 14) {
-        const boot = await ensurePrimarySellerCompanyForCnpj({
-          cnpjDigits: cnpj,
-          companyName: form.nome_loja.trim(),
-          tradeName: form.nome_loja.trim(),
-        });
-        if (!boot.ok && import.meta.env.DEV) {
-          console.warn("[Signup] Bootstrap seller_company:", boot);
-        }
+      const boot = await ensureSellerCompaniesHydratedFromProfile();
+      if (!boot.ok && import.meta.env.DEV) {
+        console.warn("[Signup] Hidratação seller_company:", boot);
       }
 
       navigate("/login");
@@ -828,23 +821,23 @@ export default function Signup() {
           font-size: 2em;
           font-weight: 700;
           color: #333;
-          margin-bottom: 8px;
-          line-height: 1.2;
+          margin-bottom: 11px;
+          line-height: 1.6;
         }
         .signup-left .signup-main-description {
           font-size: 1em;
           color: #666;
-          margin-bottom: 13px;
-          line-height: 1.4;
+          margin-bottom: 17px;
+          line-height: 1.86;
         }
 
         .signup-left .signup-benefits li {
           margin-bottom: 0;
-          gap: 5px;
+          gap: 7px;
         }
         
         .signup-left .signup-small-print {
-          margin-top: 10px;
+          margin-top: 13px;
         }
         
       `}</style>
