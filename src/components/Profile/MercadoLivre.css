@@ -592,3 +592,135 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+/* ======================================================================
+   ONBOARDING PÓS-OAUTH — checklist importação histórica
+====================================================================== */
+
+.ml-onboarding-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.ml-onboarding-modal {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.18);
+  padding: 28px 26px 22px;
+}
+
+.ml-onboarding-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.ml-onboarding-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #4b5563;
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+.ml-onboarding-checklist {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+}
+
+.ml-onboarding-row {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px 12px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: #f9fafb;
+}
+
+.ml-onboarding-row .ml-onboarding-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.ml-onboarding-row .ml-onboarding-err {
+  grid-column: 2 / -1;
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+.ml-onboarding-dot {
+  width: 14px;
+  height: 14px;
+  margin-top: 4px;
+  border-radius: 999px;
+  border: 2px solid #d1d5db;
+  box-sizing: border-box;
+}
+
+.ml-onboarding-row.s-running .ml-onboarding-dot {
+  border-color: #2563eb;
+  border-top-color: transparent;
+  animation: ml-oc-spin 0.85s linear infinite;
+}
+
+.ml-onboarding-row.s-done .ml-onboarding-dot {
+  border-color: #22c55e;
+  background: radial-gradient(circle at center, #22c55e 48%, transparent 50%);
+}
+
+.ml-onboarding-row.s-error .ml-onboarding-dot {
+  border-color: #ef4444;
+  background: linear-gradient(
+      -45deg,
+      transparent 45%,
+      #ef4444 46%,
+      #ef4444 54%,
+      transparent 55%
+    );
+}
+
+.ml-onboarding-row.s-pending .ml-onboarding-dot {
+  opacity: 0.65;
+}
+
+@keyframes ml-oc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ml-onboarding-cta {
+  width: 100%;
+}
+
+.ml-onboarding-footnote {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.ml-onboarding-inline-banner {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 600;
+}

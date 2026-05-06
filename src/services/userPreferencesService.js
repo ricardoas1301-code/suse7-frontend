@@ -83,6 +83,30 @@ function buildUrl(path) {
   return buildApiUrl(path);
 }
 
+function extractPreferenceList(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== "object") return [];
+  if (Array.isArray(payload.list)) return payload.list;
+  if (Array.isArray(payload.preferences)) return payload.preferences;
+  if (Array.isArray(payload.preference_rows)) return payload.preference_rows;
+  return [];
+}
+
+function extractPreferenceMap(payload) {
+  if (!payload || typeof payload !== "object") return {};
+  const prefs = payload.preferences;
+  if (prefs && typeof prefs === "object" && !Array.isArray(prefs)) {
+    return { ...prefs };
+  }
+  const list = extractPreferenceList(payload);
+  const map = {};
+  for (const p of list) {
+    if (!p || typeof p !== "object" || p.key == null) continue;
+    map[String(p.key)] = p.value ?? {};
+  }
+  return map;
+}
+
 // ----------------------------------------------------------------------
 // API
 // ----------------------------------------------------------------------
@@ -130,11 +154,7 @@ export async function getPreferences(prefix = null) {
       return { ok: false, error: result.error };
     }
 
-    const list = result.data?.preferences ?? [];
-    const map = {};
-    for (const p of list) {
-      if (p?.key != null) map[p.key] = p.value ?? {};
-    }
+    const map = extractPreferenceMap(result.data);
 
     const prefixKey = prefix != null ? String(prefix).trim() : "";
     cache.byPrefix[prefixKey] = map;

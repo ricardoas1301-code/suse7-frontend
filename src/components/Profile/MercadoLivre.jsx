@@ -18,6 +18,17 @@ const ML_OAUTH_SUCCESS_TOAST_GAP_MS = 3500;
 let _mlOAuthSuccessToastLastAt = 0;
 const ML_OAUTH_CONFIG_ERR_KEY = "ml_oauth_config_errors";
 
+/** Placeholder até GET sync-status responder (mesma ordem do backend). */
+const ML_DEFAULT_CHECKLIST = [
+  { key: "ml_connect", label: "Conectando conta Mercado Livre", status: "pending" },
+  { key: "sales_history", label: "Importando histórico de vendas", status: "pending" },
+  { key: "listings", label: "Importando anúncios", status: "pending" },
+  { key: "fees", label: "Consolidando taxas financeiras", status: "pending" },
+  { key: "products", label: "Importando produtos/SKUs", status: "pending" },
+  { key: "customers", label: "Importando clientes", status: "pending" },
+  { key: "monitoring", label: "Webhook e monitoramento contínuo", status: "pending" },
+];
+
 function statusLabel(s) {
   const v = String(s || "").toLowerCase();
   if (v === "active") return "Ativa";
@@ -42,6 +53,11 @@ export default function MercadoLivre() {
   const [accounts, setAccounts] = useState([]);
   const [syncingId, setSyncingId] = useState(null);
   const [removingId, setRemovingId] = useState(null);
+
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [onboardingAccountId, setOnboardingAccountId] = useState(null);
+  const [syncStatusPayload, setSyncStatusPayload] = useState(null);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   const [companyModalOpen, setCompanyModalOpen] = useState(false);
   const [companyModalForMl, setCompanyModalForMl] = useState(false);
@@ -111,14 +127,16 @@ export default function MercadoLivre() {
         await probeOAuthConfig();
 
         const mlConnectedFromOAuth = sp.get("ml") === "connected";
+        const mlAccountFromUrl = sp.get("ml_account");
         const {
           data: { user: u },
         } = await supabase.auth.getUser();
         setUser(u);
 
+        let loadedAccounts = [];
         if (u) {
-          const list = await loadAccounts();
-          setAccounts(list);
+          loadedAccounts = await loadAccounts();
+          setAccounts(loadedAccounts);
         } else {
           setAccounts([]);
         }
@@ -137,12 +155,33 @@ export default function MercadoLivre() {
               dedupeKey: "ml-oauth-return-success",
             });
           }
+
+          const uuidOk =
+            typeof mlAccountFromUrl === "string" &&
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+              mlAccountFromUrl.trim()
+            );
+          const preferredAccountId = uuidOk
+            ? mlAccountFromUrl.trim()
+            : loadedAccounts.find((a) => String(a.status || "").toLowerCase() === "active")?.id ||
+              loadedAccounts[0]?.id ||
+              null;
+          if (preferredAccountId) {
+            setOnboardingAccountId(String(preferredAccountId));
+            setOnboardingOpen(true);
+            setOnboardingDismissed(false);
+            setSyncStatusPayload(null);
+          }
         }
 
         const nextSp = new URLSearchParams(location.search);
         let urlNeedsClean = false;
         if (nextSp.has("ml")) {
           nextSp.delete("ml");
+          urlNeedsClean = true;
+        }
+        if (nextSp.has("ml_account")) {
+          nextSp.delete("ml_account");
           urlNeedsClean = true;
         }
         if (nextSp.has("ml_error")) {
@@ -162,6 +201,26 @@ export default function MercadoLivre() {
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- evita refetch em loop com addNotification
   }, [location.pathname, location.search, navigate, loadAccounts, probeOAuthConfig]);
+
+  useEffect(() => {
+    if (!onboardingAccountId) return undefined;
+    let cancelled = false;
+    const poll = async () => {
+      const url = buildApiUrl(
+        `/api/marketplace/accounts/${encodeURIComponent(onboardingAccountId)}/sync-status`
+      );
+      if (!url) return;
+      const { ok, data } = await apiFetch(url, { method: "GET" });
+      if (cancelled || !ok || !data?.ok) return;
+      setSyncStatusPayload(data);
+    };
+    poll();
+    const timer = setInterval(poll, 4000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [onboardingAccountId]);
 
   const startOAuth = async (sellerCompanyId) => {
     if (!user) return;
@@ -298,12 +357,76 @@ export default function MercadoLivre() {
     );
   }
 
+  const checklistRows = syncStatusPayload?.checklist?.length ? syncStatusPayload.checklist : ML_DEFAULT_CHECKLIST;
+
+  const dismissOnboardingModal = () => {
+    setOnboardingDismissed(true);
+    setOnboardingOpen(false);
+  };
+
   return (
     <div className="ml-container">
+      {onboardingOpen && onboardingAccountId && (
+        <div className="ml-onboarding-backdrop">
+          <div
+            className="ml-onboarding-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ml-onboarding-title"
+          >
+            <h3 id="ml-onboarding-title" className="ml-onboarding-title">
+              {syncStatusPayload?.title || "Estamos preparando sua conta Mercado Livre"}
+            </h3>
+            <p className="ml-onboarding-text">
+              {syncStatusPayload?.description ||
+                "Vamos importar seu histórico de vendas, anúncios, taxas financeiras, produtos e clientes. Esse processo pode demorar um pouco na primeira vez. Depois disso, as atualizações serão automáticas."}
+            </p>
+            <ul className="ml-onboarding-checklist">
+              {checklistRows.map((item) => {
+                const st = String(item.status || "pending").toLowerCase();
+                const progressHint =
+                  item.progress_total != null &&
+                  item.progress_total > 0 &&
+                  typeof item.progress_current === "number"
+                    ? ` (${item.progress_current}/${item.progress_total})`
+                    : "";
+                return (
+                  <li key={item.key} className={`ml-onboarding-row s-${st}`}>
+                    <span className="ml-onboarding-dot" aria-hidden />
+                    <span className="ml-onboarding-label">
+                      {item.label}
+                      {progressHint}
+                    </span>
+                    {st === "error" && item.error_message && (
+                      <span className="ml-onboarding-err">{String(item.error_message).slice(0, 160)}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <button type="button" className="ml-button primary ml-onboarding-cta" onClick={dismissOnboardingModal}>
+              Continuar usando o app
+            </button>
+            {(syncStatusPayload?.overall === "running" || syncStatusPayload == null) && (
+              <p className="ml-onboarding-footnote">
+                {syncStatusPayload?.background_note ||
+                  "Estamos terminando sua importação em segundo plano."}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="ml-card ml-card-wide">
         {bannerError && (
           <div className="ml-banner-error" role="alert">
             {bannerError}
+          </div>
+        )}
+        {onboardingDismissed && syncStatusPayload?.overall === "running" && (
+          <div className="ml-onboarding-inline-banner" role="status">
+            {syncStatusPayload?.background_note ||
+              "Estamos terminando sua importação em segundo plano."}
           </div>
         )}
 

@@ -25,6 +25,34 @@ function formatDate(value) {
   return new Date(t).toLocaleDateString("pt-BR");
 }
 
+/** wa.me exige apenas dígitos (sem +). */
+function waMeDigitsFromE164(e164) {
+  const d = String(e164 || "").replace(/\D/g, "");
+  return d || null;
+}
+
+function waMeHref(e164) {
+  const d = waMeDigitsFromE164(e164);
+  return d ? `https://wa.me/${d}` : null;
+}
+
+/** Mascaramento leve na grade (LGPD); drawer mantém valor completo vindo da API. */
+function maskEmailTable(email, emailIsMasked) {
+  if (!email) return null;
+  if (emailIsMasked || /\*+/.test(email)) return email;
+  const [local, dom] = email.split("@");
+  if (!dom) return email;
+  const head = local.slice(0, 2);
+  return `${head}***@${dom}`;
+}
+
+function maskPhoneTable(phone) {
+  if (!phone) return null;
+  const digits = String(phone).replace(/\D/g, "");
+  if (digits.length < 4) return phone;
+  return `(**) *****-${digits.slice(-4)}`;
+}
+
 function statusClass(status) {
   const s = String(status || "").toLowerCase();
   if (s === "novo") return "status-blue";
@@ -268,8 +296,24 @@ export default function Clientes360() {
                 <tr key={row.id}>
                   <td>{row.name || "Cliente não identificado"}</td>
                   <td>{row.document || DASH}</td>
-                  <td>{row.email || DASH}</td>
-                  <td>{row.whatsapp || row.phone || DASH}</td>
+                  <td>{maskEmailTable(row.email, row.email_is_masked) || DASH}</td>
+                  <td>
+                    <div className="clientes360-contact-cell">
+                      <span>{maskPhoneTable(row.whatsapp || row.phone) || DASH}</span>
+                      {waMeHref(row.whatsapp_e164) ? (
+                        <a
+                          className="clientes360-wa-btn"
+                          href={waMeHref(row.whatsapp_e164)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Abrir WhatsApp"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          WhatsApp
+                        </a>
+                      ) : null}
+                    </div>
+                  </td>
                   <td>{[row.city, row.state].filter(Boolean).join("/") || DASH}</td>
                   <td>{row.total_orders ?? 0}</td>
                   <td>{brl(row.total_spent_brl)}</td>
@@ -339,6 +383,28 @@ export default function Clientes360() {
                   <div><dt>E-mail</dt><dd>{selectedCustomer?.customer?.email || DASH}</dd></div>
                   <div><dt>Telefone</dt><dd>{selectedCustomer?.customer?.phone || DASH}</dd></div>
                   <div><dt>WhatsApp</dt><dd>{selectedCustomer?.customer?.whatsapp || DASH}</dd></div>
+                  <div>
+                    <dt>WhatsApp (internacional)</dt>
+                    <dd>
+                      {selectedCustomer?.customer?.whatsapp_e164 ? (
+                        <>
+                          {selectedCustomer.customer.whatsapp_e164}{" "}
+                          {waMeHref(selectedCustomer.customer.whatsapp_e164) ? (
+                            <a
+                              className="clientes360-wa-btn clientes360-wa-btn--inline"
+                              href={waMeHref(selectedCustomer.customer.whatsapp_e164)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Abrir WhatsApp
+                            </a>
+                          ) : null}
+                        </>
+                      ) : (
+                        DASH
+                      )}
+                    </dd>
+                  </div>
                   <div><dt>Tipo pessoa/negócio</dt><dd>{selectedCustomer?.customer?.is_business == null ? DASH : selectedCustomer.customer.is_business ? "Negócio/empresa" : "Pessoa física"}</dd></div>
                 </dl>
               ) : null}
@@ -384,7 +450,14 @@ export default function Clientes360() {
               {selectedTab === "insights" ? (
                 <ul>
                   <li>{(selectedCustomer?.metrics?.total_orders ?? 0) >= 2 ? "Cliente recorrente identificado." : "Cliente com primeira compra registrada."}</li>
-                  <li>{(!selectedCustomer?.customer?.email && !selectedCustomer?.customer?.phone && !selectedCustomer?.customer?.whatsapp) ? "Cliente sem contato completo." : "Cliente com pelo menos um contato disponível."}</li>
+                  <li>
+                    {!selectedCustomer?.customer?.email &&
+                    !selectedCustomer?.customer?.phone &&
+                    !selectedCustomer?.customer?.whatsapp &&
+                    !selectedCustomer?.customer?.whatsapp_e164
+                      ? "Cliente sem contato completo."
+                      : "Cliente com pelo menos um contato disponível."}
+                  </li>
                   <li>{(selectedCustomer?.metrics?.days_since_last_purchase ?? 0) > 90 ? `Cliente inativo ha ${selectedCustomer.metrics.days_since_last_purchase} dias.` : "Cliente com atividade recente."}</li>
                   <li>{Number(selectedCustomer?.metrics?.average_ticket_brl ?? 0) >= 200 ? "Ticket medio relevante para campanhas premium." : "Ticket medio em faixa padrão."}</li>
                 </ul>
