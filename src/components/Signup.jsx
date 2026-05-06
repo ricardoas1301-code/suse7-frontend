@@ -4,8 +4,9 @@
 // Regra primeiro_login: formulário = false, social = true.
 // ======================================================================
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { ensurePrimarySellerCompanyForCnpj } from "../services/sellerCompanyBootstrapApi";
 import { useNavigate, Link } from "react-router-dom";
 import GoogleIcon from "../assets/google.png";
 import "./Signup.css";
@@ -70,6 +71,38 @@ function validarCNPJ(cnpj) {
  * Mensagens para Suse7Alert a partir de AuthError / GoTrue.
  * Ordem: rate limit antes de “já existe”, pois 429 pode vir com texto genérico.
  */
+/** Ícone olho (senha oculta — clique para mostrar). */
+function IconEye({ className }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path
+        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+/** Ícone olho riscado (senha visível — clique para ocultar). */
+function IconEyeOff({ className }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path
+        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function mapAuthSignupError(error) {
   const status = error?.status;
   const code = error?.code;
@@ -139,6 +172,15 @@ function mapAuthSignupError(error) {
 }
 
 export default function Signup() {
+  useEffect(() => {
+    document.documentElement.classList.add("signup-page-lock");
+    document.body.classList.add("signup-page-lock");
+    return () => {
+      document.documentElement.classList.remove("signup-page-lock");
+      document.body.classList.remove("signup-page-lock");
+    };
+  }, []);
+
   const navigate = useNavigate();
 
   // --- Estados para mostrar/esconder senha ---
@@ -399,6 +441,17 @@ export default function Signup() {
         return;
       }
 
+      const session = data?.session;
+      if (session?.access_token && session?.refresh_token) {
+        const { error: sessErr } = await supabase.auth.setSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+        });
+        if (sessErr && import.meta.env.DEV) {
+          console.warn("[Signup] setSession após signUp:", sessErr.message);
+        }
+      }
+
       const profilePayload = {
         id: user.id,
         nome: form.nome,
@@ -435,6 +488,18 @@ export default function Signup() {
         });
       }
 
+      const cnpj = form.cpf_cnpj.replace(/\D/g, "");
+      if (cnpj.length === 14) {
+        const boot = await ensurePrimarySellerCompanyForCnpj({
+          cnpjDigits: cnpj,
+          companyName: form.nome_loja.trim(),
+          tradeName: form.nome_loja.trim(),
+        });
+        if (!boot.ok && import.meta.env.DEV) {
+          console.warn("[Signup] Bootstrap seller_company:", boot);
+        }
+      }
+
       navigate("/login");
     } catch (err) {
       console.error("Signup error:", err);
@@ -461,7 +526,6 @@ export default function Signup() {
     
         <h1 className="signup-main-title">Comece agora o seu <span style={{color: '#0077ff'}}>Teste Grátis</span></h1>
         <p className="signup-main-description">O Suse7 Precifica automatiza toda a gestão de preços dos seus produtos, garantindo agilidade, precisão e segurança, tudo integrado e automatizado.</p>
-         <br />
           <ul className="signup-benefits">
           <li>
             <span className="icon-star">🛒</span>
@@ -516,7 +580,7 @@ export default function Signup() {
           {/* NOME / NOME DA LOJA */}
           <div className="row">
             <div className="field">
-              <label>Seu nome</label>
+              <label>Razão Social</label>
               <input
                 type="text"
                 value={form.nome}
@@ -587,9 +651,9 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* CEP / ENDEREÇO */}
-          <div className="row">
-            <div className="field">
+          {/* CEP / ENDEREÇO — CEP estreito (~35% da metade da linha), endereço ocupa o resto */}
+          <div className="row row--cep-endereco">
+            <div className="field field--cep-tight">
               <label>CEP *</label>
               <input
                 type="text"
@@ -602,7 +666,7 @@ export default function Signup() {
               {errors.cep && <p className="err">{errors.cep}</p>}
             </div>
 
-            <div className="field">
+            <div className="field field--endereco-wide">
               <label>Endereço</label>
               <input
                 type="text"
@@ -612,9 +676,9 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* NUMERO / COMPLEMENTO */}
-          <div className="row">
-            <div className="field">
+          {/* NÚMERO (estreito) + COMPLEMENTO + BAIRRO — mesma linha no desktop */}
+          <div className="row row--numero-comp-bairro">
+            <div className="field field--numero-mini">
               <label>Número</label>
               <input
                 type="text"
@@ -624,7 +688,7 @@ export default function Signup() {
               />
             </div>
 
-            <div className="field">
+            <div className="field field--complemento-tight">
               <label>Complemento</label>
               <input
                 type="text"
@@ -632,11 +696,8 @@ export default function Signup() {
                 onChange={(e) => update("complemento", e.target.value)}
               />
             </div>
-          </div>
 
-          {/* BAIRRO / CIDADE / ESTADO */}
-          <div className="row">
-            <div className="field">
+            <div className="field field--bairro-wide">
               <label>Bairro</label>
               <input
                 type="text"
@@ -644,8 +705,11 @@ export default function Signup() {
                 onChange={(e) => update("bairro", e.target.value)}
               />
             </div>
+          </div>
 
-            <div className="field">
+          {/* CIDADE + UF + IMPOSTO — mesma linha no desktop */}
+          <div className="row row--cidade-uf-imposto">
+            <div className="field field--cidade-wide">
               <label>Cidade</label>
               <input
                 type="text"
@@ -654,7 +718,7 @@ export default function Signup() {
               />
             </div>
 
-            <div className="field small">
+            <div className="field field--uf-tight">
               <label>UF</label>
               <input
                 type="text"
@@ -663,11 +727,8 @@ export default function Signup() {
                 onChange={(e) => update("estado", e.target.value)}
               />
             </div>
-          </div>
 
-          {/* IMPOSTO */}
-          <div className="row">
-            <div className="field imposto-small">
+            <div className="field field--imposto-inline imposto-small">
               <label>Imposto (%) *</label>
               <input
                 type="text"
@@ -685,19 +746,20 @@ export default function Signup() {
             <div className="field">
               <label>Senha *</label>
               <div className="password-wrapper">
-                                <input
-  type={showPassword ? "text" : "password"}
-  className={errors.senha ? "error" : ""}
-  value={form.senha}
-  onChange={(e) => update("senha", e.target.value)}
-/>
-
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className={errors.senha ? "error" : ""}
+                  value={form.senha}
+                  onChange={(e) => update("senha", e.target.value)}
+                  autoComplete="new-password"
+                />
                 <button
                   type="button"
                   className="password-toggle-btn"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 >
-                  {showPassword ? "✖" : "✔"}
+                  {showPassword ? <IconEyeOff /> : <IconEye />}
                 </button>
               </div>
               {errors.senha && <p className="err">{errors.senha}</p>}
@@ -707,18 +769,19 @@ export default function Signup() {
               <label>Confirmar senha *</label>
               <div className="password-wrapper">
                 <input
-  type={showPassword2 ? "text" : "password"}
-  className={errors.senha2 ? "error" : ""}
-  value={form.senha2}
-  onChange={(e) => update("senha2", e.target.value)}
-/>
-
+                  type={showPassword2 ? "text" : "password"}
+                  className={errors.senha2 ? "error" : ""}
+                  value={form.senha2}
+                  onChange={(e) => update("senha2", e.target.value)}
+                  autoComplete="new-password"
+                />
                 <button
                   type="button"
                   className="password-toggle-btn"
                   onClick={() => setShowPassword2(!showPassword2)}
+                  aria-label={showPassword2 ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
                 >
-                  {showPassword2 ? "✖" : "✔"}
+                  {showPassword2 ? <IconEyeOff /> : <IconEye />}
                 </button>
               </div>
               {errors.senha2 && <p className="err">{errors.senha2}</p>}
@@ -757,70 +820,33 @@ export default function Signup() {
       {/* Estilos adicionais */}
       <style>{`
         .signup-left {
-          overflow-y: auto; 
-          padding-right: 20px;
+          overflow-y: visible;
+          padding-right: 12px;
         }
         
         .signup-left .signup-main-title {
           font-size: 2em;
           font-weight: 700;
           color: #333;
-          margin-bottom: 15px;
+          margin-bottom: 8px;
           line-height: 1.2;
         }
         .signup-left .signup-main-description {
           font-size: 1em;
           color: #666;
-          margin-bottom: 25px;
+          margin-bottom: 13px;
           line-height: 1.4;
         }
 
         .signup-left .signup-benefits li {
-          margin-bottom: 15px;
-          gap: 10px;
+          margin-bottom: 0;
+          gap: 5px;
         }
         
         .signup-left .signup-small-print {
-          margin-top: 20px;
+          margin-top: 10px;
         }
         
-        /* ---------------------------------------------------------------------------------------
-         Alinhamento do Ícone de Senha (Mantido o CSS correto)
-        --------------------------------------------------------------------------------------- */
-        .password-wrapper {
-            position: relative;
-            margin-bottom: 0; 
-        }
-
-        .password-wrapper .login-input {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 1px solid #cfd7e3;
-            background: #f1f5ff;
-            font-size: 14px;
-            box-sizing: border-box; 
-            
-            padding-right: 48px !important; 
-            margin-bottom: 0; 
-        }
-
-        .password-toggle-btn {
-            position: absolute;
-            right: 15px; 
-            top: 50%;
-            transform: translateY(-50%);
-            
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #4a4a4a;
-            font-size: 18px;
-            padding: 0;
-            line-height: 1; 
-            outline: none;
-            z-index: 10;
-        }
       `}</style>
 
 {alertData && (

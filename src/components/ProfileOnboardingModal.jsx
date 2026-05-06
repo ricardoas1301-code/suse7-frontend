@@ -5,6 +5,7 @@
    ------------------------------------------------------------- */
 import React, { useEffect, useState } from "react";         // React + Hooks
 import { supabase } from "../supabaseClient";               // Cliente Supabase
+import { ensurePrimarySellerCompanyForCnpj } from "../services/sellerCompanyBootstrapApi";
 import SuseLogo from "../assets/suse7-logo-redonda.png";    // Logo Suse7 redonda
 
 
@@ -340,6 +341,18 @@ const handleSubmit = async (e) => {
       console.error("Erro Supabase:", error);
       setSaving(false);
       return setErrorMsg("Erro ao salvar. Tente novamente.");
+    }
+
+    const cnpj = form.cpf_cnpj.replace(/\D/g, "");
+    if (cnpj.length === 14) {
+      const boot = await ensurePrimarySellerCompanyForCnpj({
+        cnpjDigits: cnpj,
+        companyName: form.nome_loja.trim(),
+        tradeName: form.nome_loja.trim(),
+      });
+      if (!boot.ok && import.meta.env.DEV) {
+        console.warn("[ProfileOnboarding] Bootstrap seller_company:", boot);
+      }
     }
 
     // --- FECHA MODAL ---
