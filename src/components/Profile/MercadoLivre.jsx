@@ -21,12 +21,12 @@ const ML_OAUTH_CONFIG_ERR_KEY = "ml_oauth_config_errors";
 /** Placeholder até GET sync-status responder (mesma ordem do backend). */
 const ML_DEFAULT_CHECKLIST = [
   { key: "ml_connect", label: "Conectando conta Mercado Livre", status: "pending" },
-  { key: "sales_history", label: "Importando histórico de vendas", status: "pending" },
-  { key: "listings", label: "Importando anúncios", status: "pending" },
-  { key: "fees", label: "Consolidando taxas financeiras", status: "pending" },
-  { key: "products", label: "Importando produtos/SKUs", status: "pending" },
-  { key: "customers", label: "Importando clientes", status: "pending" },
-  { key: "monitoring", label: "Webhook e monitoramento contínuo", status: "pending" },
+  { key: "sales_history", label: "Vendas", status: "pending" },
+  { key: "listings", label: "Anúncios", status: "pending" },
+  { key: "fees", label: "Taxas", status: "pending" },
+  { key: "products", label: "Produtos/SKU", status: "pending" },
+  { key: "customers", label: "Clientes 360", status: "pending" },
+  { key: "monitoring", label: "Webhook/monitoramento", status: "pending" },
 ];
 
 function statusLabel(s) {
@@ -58,6 +58,9 @@ export default function MercadoLivre() {
   const [onboardingAccountId, setOnboardingAccountId] = useState(null);
   const [syncStatusPayload, setSyncStatusPayload] = useState(null);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [onboardingSyncStarting, setOnboardingSyncStarting] = useState(false);
+  /** Após POST start-initial-sync com sucesso (permite fechar modal quando sync-status ainda não refletiu). */
+  const [initialPipelineEngaged, setInitialPipelineEngaged] = useState(false);
 
   const [companyModalOpen, setCompanyModalOpen] = useState(false);
   const [companyModalForMl, setCompanyModalForMl] = useState(false);
@@ -137,7 +140,7 @@ export default function MercadoLivre() {
 
         await probeOAuthConfig();
 
-        const mlConnectedFromOAuth = sp.get("ml") === "connected";
+        const mlConnectedFromOAuth = sp.get("ml") === "connected" || sp.get("connected") === "1";
         const mlAccountFromUrl = sp.get("ml_account");
         const {
           data: { user: u },
@@ -175,15 +178,25 @@ export default function MercadoLivre() {
             /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
               mlAccountFromUrl.trim()
             );
-          const preferredAccountId = uuidOk
+          let preferredAccountId = uuidOk
             ? mlAccountFromUrl.trim()
             : loadedAccounts.find((a) => String(a.status || "").toLowerCase() === "active")?.id ||
               loadedAccounts[0]?.id ||
               null;
+          if (!preferredAccountId && u) {
+            const retry = await loadAccounts();
+            setAccounts(retry);
+            preferredAccountId =
+              retry.find((a) => String(a.status || "").toLowerCase() === "active")?.id ||
+              retry[0]?.id ||
+              null;
+          }
           if (preferredAccountId) {
             setOnboardingAccountId(String(preferredAccountId));
             setOnboardingOpen(true);
             setOnboardingDismissed(false);
+            setOnboardingSyncStarting(false);
+            setInitialPipelineEngaged(false);
             setSyncStatusPayload(null);
           }
         }
@@ -196,6 +209,10 @@ export default function MercadoLivre() {
         }
         if (nextSp.has("ml_account")) {
           nextSp.delete("ml_account");
+          urlNeedsClean = true;
+        }
+        if (nextSp.has("connected")) {
+          nextSp.delete("connected");
           urlNeedsClean = true;
         }
         if (nextSp.has("ml_error")) {
@@ -343,6 +360,50 @@ export default function MercadoLivre() {
     }
   };
 
+  const handleStartInitialPipeline = async () => {
+    if (!onboardingAccountId) return;
+    const url = buildApiUrl(
+      `/api/marketplace/accounts/${encodeURIComponent(onboardingAccountId)}/start-initial-sync`
+    );
+    if (!url) return;
+    setOnboardingSyncStarting(true);
+    try {
+      const { ok, data, error } = await apiFetch(url, { method: "POST", body: {} });
+      if (!ok) {
+        addNotification({
+          event_type: "ML_INITIAL_SYNC_ERR",
+          entity_type: "marketplace_account",
+          entity_id: onboardingAccountId,
+          title: "Sincronização inicial",
+          message: typeof error === "string" ? error : data?.error || "Não foi possível iniciar a sincronização.",
+          severity: NOTIFICATION_SEVERITY.ERROR,
+        });
+        return;
+      }
+      setInitialPipelineEngaged(true);
+      const stUrl = buildApiUrl(
+        `/api/marketplace/accounts/${encodeURIComponent(onboardingAccountId)}/sync-status`
+      );
+      if (stUrl) {
+        const pr = await apiFetch(stUrl, { method: "GET" });
+        if (pr.ok && pr.data?.ok) setSyncStatusPayload(pr.data);
+      }
+      addNotification({
+        event_type: "ML_INITIAL_SYNC_OK",
+        entity_type: "marketplace_account",
+        entity_id: onboardingAccountId,
+        title: "Sincronização inicial",
+        message:
+          data?.skipped === true
+            ? "A sincronização já estava em fila; acompanhe o progresso abaixo."
+            : "Importação inicial enfileirada. Acompanhe o progresso abaixo.",
+        severity: NOTIFICATION_SEVERITY.INFO,
+      });
+    } finally {
+      setOnboardingSyncStarting(false);
+    }
+  };
+
   const handleRemove = async (accountId) => {
     if (!window.confirm("Remover esta conta do Suse7? Você poderá reconectar depois com OAuth.")) return;
     const url = buildApiUrl(`/api/marketplace/accounts/${accountId}`);
@@ -388,7 +449,14 @@ export default function MercadoLivre() {
 
   const checklistRows = syncStatusPayload?.checklist?.length ? syncStatusPayload.checklist : ML_DEFAULT_CHECKLIST;
 
+  const awaitingPipelineStart =
+    onboardingOpen &&
+    onboardingAccountId &&
+    (syncStatusPayload?.overall === "awaiting_start" ||
+      (!initialPipelineEngaged && syncStatusPayload == null));
+
   const dismissOnboardingModal = () => {
+    if (awaitingPipelineStart) return;
     setOnboardingDismissed(true);
     setOnboardingOpen(false);
   };
@@ -404,11 +472,11 @@ export default function MercadoLivre() {
             aria-labelledby="ml-onboarding-title"
           >
             <h3 id="ml-onboarding-title" className="ml-onboarding-title">
-              {syncStatusPayload?.title || "Estamos preparando sua conta Mercado Livre"}
+              {syncStatusPayload?.title || "Conta Mercado Livre conectada"}
             </h3>
             <p className="ml-onboarding-text">
               {syncStatusPayload?.description ||
-                "Vamos importar seu histórico de vendas, anúncios, taxas financeiras, produtos e clientes. Esse processo pode demorar um pouco na primeira vez. Depois disso, as atualizações serão automáticas."}
+                "Conta Mercado Livre conectada com sucesso. Agora vamos sincronizar seus dados para preparar o Suse7."}
             </p>
             <ul className="ml-onboarding-checklist">
               {checklistRows.map((item) => {
@@ -433,14 +501,27 @@ export default function MercadoLivre() {
                 );
               })}
             </ul>
-            <button type="button" className="ml-button primary ml-onboarding-cta" onClick={dismissOnboardingModal}>
-              Continuar usando o app
-            </button>
-            {(syncStatusPayload?.overall === "running" || syncStatusPayload == null) && (
-              <p className="ml-onboarding-footnote">
-                {syncStatusPayload?.background_note ||
-                  "Estamos terminando sua importação em segundo plano."}
-              </p>
+            {awaitingPipelineStart ? (
+              <button
+                type="button"
+                className="ml-button primary ml-onboarding-cta"
+                disabled={onboardingSyncStarting}
+                onClick={() => handleStartInitialPipeline()}
+              >
+                {onboardingSyncStarting ? "Iniciando…" : "Sincronizar"}
+              </button>
+            ) : (
+              <>
+                <button type="button" className="ml-button primary ml-onboarding-cta" onClick={dismissOnboardingModal}>
+                  Continuar usando o app
+                </button>
+                {syncStatusPayload?.overall === "running" && (
+                  <p className="ml-onboarding-footnote">
+                    {syncStatusPayload?.background_note ||
+                      "Estamos terminando sua importação em segundo plano."}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>
