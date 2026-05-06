@@ -61,6 +61,8 @@ export default function MercadoLivre() {
 
   const [companyModalOpen, setCompanyModalOpen] = useState(false);
   const [companyModalForMl, setCompanyModalForMl] = useState(false);
+  /** Empresa principal (signup) — obrigatória na primeira conexão ML. */
+  const [primarySellerCompanyId, setPrimarySellerCompanyId] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,6 +74,15 @@ export default function MercadoLivre() {
     const { ok, data } = await apiFetch(url, { method: "GET" });
     if (ok && Array.isArray(data?.accounts)) return data.accounts;
     return [];
+  }, []);
+
+  const loadPrimarySellerCompanyId = useCallback(async () => {
+    const url = buildApiUrl("/api/seller/companies");
+    if (!url) return null;
+    const { ok, data } = await apiFetch(url, { method: "GET" });
+    if (!ok || !Array.isArray(data?.companies)) return null;
+    const primary = data.companies.find((c) => c.is_primary);
+    return primary?.id ?? data.companies[0]?.id ?? null;
   }, []);
 
   const probeOAuthConfig = useCallback(async () => {
@@ -137,8 +148,11 @@ export default function MercadoLivre() {
         if (u) {
           loadedAccounts = await loadAccounts();
           setAccounts(loadedAccounts);
+          const primaryCo = await loadPrimarySellerCompanyId();
+          setPrimarySellerCompanyId(primaryCo);
         } else {
           setAccounts([]);
+          setPrimarySellerCompanyId(null);
         }
 
         if (mlConnectedFromOAuth) {
@@ -200,7 +214,7 @@ export default function MercadoLivre() {
     };
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- evita refetch em loop com addNotification
-  }, [location.pathname, location.search, navigate, loadAccounts, probeOAuthConfig]);
+  }, [location.pathname, location.search, navigate, loadAccounts, loadPrimarySellerCompanyId, probeOAuthConfig]);
 
   useEffect(() => {
     if (!onboardingAccountId) return undefined;
@@ -261,14 +275,28 @@ export default function MercadoLivre() {
   };
 
   const visibleAccounts = accounts.filter((a) => String(a.status || "").toLowerCase() !== "removed");
-  const activeForRule = accounts.filter((a) => String(a.status || "").toLowerCase() === "active");
 
-  const handleConnectNewMl = () => {
+  /** Primeira conta ML: OAuth com empresa principal (sem modal de nova empresa). */
+  const handleConnectMyAccount = () => {
     if (!user) return;
-    if (activeForRule.length === 0) {
-      startOAuth(null);
+    if (!primarySellerCompanyId) {
+      addNotification({
+        event_type: "ML_NO_PRIMARY_COMPANY",
+        entity_type: "marketplace_integration",
+        entity_id: null,
+        title: "Empresa principal",
+        message:
+          "Não encontramos uma empresa com CNPJ vinculada ao seu perfil. Conclua o cadastro em Perfil da Empresa ou atualize a página.",
+        severity: NOTIFICATION_SEVERITY.WARNING,
+      });
       return;
     }
+    startOAuth(primarySellerCompanyId);
+  };
+
+  /** A partir da segunda conta: cadastrar CNPJ no modal e depois OAuth. */
+  const handleConnectNewAccount = () => {
+    if (!user) return;
     setCompanyModalForMl(true);
     setCompanyModalOpen(true);
   };
@@ -342,6 +370,7 @@ export default function MercadoLivre() {
         severity: NOTIFICATION_SEVERITY.INFO,
       });
       setAccounts(await loadAccounts());
+      setPrimarySellerCompanyId(await loadPrimarySellerCompanyId());
     } finally {
       setRemovingId(null);
     }
@@ -440,30 +469,29 @@ export default function MercadoLivre() {
 
         <h3 className="ml-connect-title">Mercado Livre</h3>
         <p className="ml-connect-description">
-          Conecte uma ou mais contas de vendedor. Cada conta fica vinculada a um CNPJ cadastrado em{" "}
-          <strong>Perfil da Empresa</strong>. Utilizamos apenas o <strong>OAuth oficial</strong> — nunca pedimos sua
+          A <strong>primeira</strong> conta usa a empresa principal do seu cadastro. Contas adicionais ficam ligadas
+          a um <strong>novo CNPJ</strong> que você cadastra ao conectar outra conta. OAuth oficial — nunca pedimos sua
           senha do Mercado Livre.
         </p>
-
-        <div className="ml-accounts-toolbar">
-          <button type="button" className="ml-button primary" onClick={handleConnectNewMl} disabled={!user}>
-            + Conectar nova conta Mercado Livre
-          </button>
-        </div>
 
         {visibleAccounts.length === 0 ? (
           <div className="ml-accounts-empty">
             <p>Nenhuma conta Mercado Livre conectada ainda.</p>
             <p className="ml-security-hint">
-              A primeira conexão usa automaticamente a empresa principal do seu cadastro — sem escolher CNPJ no
-              fluxo.
+              Usamos automaticamente a <strong>empresa principal</strong> do Perfil da Empresa (CNPJ do cadastro).
             </p>
-            <button type="button" className="ml-button" onClick={() => startOAuth(null)} disabled={!user}>
-              Conectar primeira conta
+            <button type="button" className="ml-button primary" onClick={handleConnectMyAccount} disabled={!user}>
+              Conectar minha conta
             </button>
           </div>
         ) : (
-          <div className="ml-accounts-grid">
+          <>
+            <div className="ml-accounts-toolbar">
+              <button type="button" className="ml-button primary" onClick={handleConnectNewAccount} disabled={!user}>
+                Conectar nova conta
+              </button>
+            </div>
+            <div className="ml-accounts-grid">
             {visibleAccounts.map((acc) => {
               const alias = acc.account_alias || acc.ml_nickname || `Conta ${String(acc.external_seller_id || "").slice(0, 8)}`;
               const companyLine = acc.company_trade_name || acc.company_name || "—";
@@ -511,6 +539,7 @@ export default function MercadoLivre() {
               );
             })}
           </div>
+          </>
         )}
 
         <p className="ml-security-hint" style={{ marginTop: 24 }}>

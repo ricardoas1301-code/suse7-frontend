@@ -26,7 +26,6 @@ export default function DadosEmpresa() {
   const [companies, setCompanies] = useState([]);
   const [profileEmail, setProfileEmail] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("create");
   const [modalCompanyId, setModalCompanyId] = useState(null);
 
   const loadCompanies = useCallback(async () => {
@@ -87,14 +86,7 @@ export default function DadosEmpresa() {
     boot();
   }, [loadCompanies]);
 
-  const openCreate = () => {
-    setModalMode("create");
-    setModalCompanyId(null);
-    setModalOpen(true);
-  };
-
   const openEdit = (id) => {
-    setModalMode("edit");
     setModalCompanyId(id);
     setModalOpen(true);
   };
@@ -117,22 +109,22 @@ export default function DadosEmpresa() {
       <div className="profile-card s7-empresa-hero">
         <div className="form-header">
           <h2>Perfil da Empresa</h2>
-          <button type="button" className="btn-primary s7-btn-inline" onClick={openCreate}>
-            + Nova empresa
-          </button>
         </div>
         <p className="s7-empresa-intro">
-          Gerencie CNPJs cadastrados. Cada conta do Mercado Livre deve estar vinculada a uma empresa. A empresa
-          marcada como principal alimenta o nome e a logo exibidos no menu do sistema.
+          Visualize e edite os dados da sua empresa. A empresa principal alimenta o nome e a logo no menu. Para
+          cadastrar um <strong>novo CNPJ</strong>, use <strong>Integrações → Mercado Livre → Conectar nova conta</strong>{" "}
+          (cada nova conta ML pode ser vinculada a uma empresa).
         </p>
 
         <div className="s7-company-cards">
           {companies.length === 0 ? (
-            <div className="s7-company-card s7-company-card-empty">
+            <div className="s7-company-card-empty s7-empresa-empty-panel">
               <p>Nenhuma empresa cadastrada ainda.</p>
-              <button type="button" className="btn-primary" onClick={openCreate}>
-                Cadastrar primeira empresa
-              </button>
+              <p className="s7-empresa-empty-hint">
+                Se você concluiu o cadastro com <strong>CNPJ</strong>, a empresa principal é criada automaticamente.
+                Atualize a página ou confira o documento em <strong>Meu perfil</strong>. Novos CNPJs entram ao conectar
+                uma nova conta Mercado Livre.
+              </p>
             </div>
           ) : (
             companies.map((c) => {
@@ -170,7 +162,7 @@ export default function DadosEmpresa() {
       <SellerCompanyModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        mode={modalMode}
+        mode="edit"
         companyId={modalCompanyId}
         profileEmail={profileEmail}
         onSaved={handleModalSaved}
