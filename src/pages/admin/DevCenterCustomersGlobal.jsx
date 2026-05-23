@@ -5,8 +5,7 @@ import {
   OpsFiltersBar,
   OpsDrawerShell,
   OpsTimeline,
-  OpsHealthBadge,
-  OpsConfidenceBadge,
+  OpsGlobalOperationalContext,
   OpsEmptyState,
 } from "../../components/devCenter/ops";
 import { devCenterGetCustomersGlobal, devCenterGetCustomerGlobalDetail } from "../../services/devCenterApi";
@@ -133,8 +132,8 @@ export default function DevCenterCustomersGlobal() {
       <header className="dc-customers360__head">
         <h2>Clientes Globais 360 S7</h2>
         <p>
-          Visão admin cross-seller (LGPD). Indicadores operacionais vêm do contrato admin global — exibidos
-          apenas no resumo superior (agregado, sem badges por linha).
+          Visão admin cross-seller (LGPD). Resumo superior: métricas plataforma. Drawer: contexto agregado
+          do registro global (sem nota operacional por cliente).
         </p>
         <p className="dc-customers360__scope-note">{CUSTOMERS_DOMAIN_ADMIN_GLOBAL.scopeNote}</p>
         {lastUpdated ? (
@@ -242,40 +241,8 @@ export default function DevCenterCustomersGlobal() {
             </section>
 
             <section className="ops-drawer-block">
-              <h3>Saúde ingestão</h3>
-              <p className="ops-scope-hint">
-                {detailContract?.ingestion?.status === "not_available"
-                  ? "Indisponível por cliente — agregado no resumo superior."
-                  : "Agregado admin global — ver resumo superior (não por cliente)."}
-              </p>
-              {globalOpsSummary?.ingestion_health ? (
-                <OpsHealthBadge
-                  status={String(globalOpsSummary.ingestion_health.status)}
-                  coveragePct={globalOpsSummary.ingestion_health.coverage_pct}
-                  pending={globalOpsSummary.ingestion_health.orders?.pending_materialization}
-                  computedAt={globalOpsSummary.ingestion_health.computed_at}
-                />
-              ) : (
-                <OpsEmptyState compact title="Indisponível" message="Ative CUSTOMERS_INGESTION_HEALTH_ENABLED no backend." />
-              )}
-            </section>
-
-            <section className="ops-drawer-block">
-              <h3>Qualidade dos dados</h3>
-              <p className="ops-scope-hint">
-                {detailContract?.quality?.status === "not_available"
-                  ? "Indisponível por cliente — agregado no resumo superior."
-                  : "Agregado admin global — ver resumo superior (não por cliente)."}
-              </p>
-              {globalOpsSummary?.data_quality_overview ? (
-                <OpsConfidenceBadge
-                  status={String(globalOpsSummary.data_quality_overview.status)}
-                  confidencePct={globalOpsSummary.data_quality_overview.confidence_pct}
-                  computedAt={globalOpsSummary.data_quality_overview.computed_at}
-                />
-              ) : (
-                <OpsEmptyState compact title="Indisponível" message="Ative CUSTOMERS_DATA_QUALITY_ENABLED no backend." />
-              )}
+              <h3>Saúde operacional (Global)</h3>
+              <OpsGlobalOperationalContext contract={detailContract} />
             </section>
 
             <section className="ops-drawer-block">

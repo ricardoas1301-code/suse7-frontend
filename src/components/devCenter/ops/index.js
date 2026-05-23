@@ -7,6 +7,7 @@ import OpsTimeline from "./OpsTimeline";
 import OpsHealthBadge from "./OpsHealthBadge";
 import OpsConfidenceBadge from "./OpsConfidenceBadge";
 import OpsEmptyState from "./OpsEmptyState";
+import OpsGlobalOperationalContext from "./OpsGlobalOperationalContext";
 
 export {
   OpsStatsGrid,
@@ -16,4 +17,5 @@ export {
   OpsHealthBadge,
   OpsConfidenceBadge,
   OpsEmptyState,
+  OpsGlobalOperationalContext,
 };
