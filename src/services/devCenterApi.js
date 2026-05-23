@@ -171,7 +171,7 @@ export async function devCenterGetFinanceDetail(id) {
   return apiFetch(url, { method: "GET" });
 }
 
-// S_4.6.2 — domínio admin global. NÃO adicionar /api/customers aqui.
+// Guardrail: domínio admin global — ver constants/customersDomainBoundary.js
 export async function devCenterGetCustomersGlobal({ q = "" } = {}) {
   const base = buildApiUrl("/api/dev-center/customers-global");
   if (!base) return { ok: false, status: 0, error: "API não configurada" };

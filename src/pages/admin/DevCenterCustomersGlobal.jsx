@@ -10,8 +10,7 @@ import {
   OpsEmptyState,
 } from "../../components/devCenter/ops";
 import { devCenterGetCustomersGlobal, devCenterGetCustomerGlobalDetail } from "../../services/devCenterApi";
-import { DEV_CENTER_CUSTOMERS_GLOBAL_SCOPE } from "./devCenterCustomersGlobalScope";
-// S_4.6.2 — proibido nesta página: DEV_CENTER_CUSTOMERS_GLOBAL_SCOPE.forbiddenSellerApis (/api/customers*)
+import { CUSTOMERS_DOMAIN_ADMIN_GLOBAL } from "../../constants/customersDomainBoundary.js";
 import { formatPtDate, formatPtDateShort } from "../../components/devCenter/ops/opsPresentation";
 import "../../components/devCenter/ops/ops.css";
 
@@ -123,7 +122,7 @@ export default function DevCenterCustomersGlobal() {
           Visão admin cross-seller (LGPD). Indicadores operacionais vêm do contrato admin global — exibidos
           apenas no resumo superior (agregado, sem badges por linha).
         </p>
-        <p className="dc-customers360__scope-note">{DEV_CENTER_CUSTOMERS_GLOBAL_SCOPE.scopeNote}</p>
+        <p className="dc-customers360__scope-note">{CUSTOMERS_DOMAIN_ADMIN_GLOBAL.scopeNote}</p>
         {lastUpdated ? (
           <p className="dc-customers360__updated">Última atualização: {formatPtDate(lastUpdated)}</p>
         ) : null}

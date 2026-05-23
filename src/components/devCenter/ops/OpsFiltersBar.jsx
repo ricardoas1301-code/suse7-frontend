@@ -11,6 +11,7 @@ const STATUS_OPTIONS = [
 ];
 
 /**
+ * Filtros ops — scope "global" (Dev Center) ou "seller" (Clientes360 futuro).
  * @param {{
  *   q: string;
  *   onQChange: (v: string) => void;

@@ -1,8 +1,7 @@
-// Domínio seller — contrato oficial em clientes360CustomersScope.js (S_4.6.2).
-// Proibido nesta página: GET /api/dev-center/customers-global*
+// Domínio seller — contrato em constants/customersDomainBoundary.js (CUSTOMERS_DOMAIN_SELLER).
 import { useEffect, useMemo, useState } from "react";
 import { buildApiUrl, apiFetch } from "../config/api";
-import { CLIENTES360_CUSTOMERS_SCOPE } from "./clientes360CustomersScope";
+import { CUSTOMERS_DOMAIN_SELLER } from "../constants/customersDomainBoundary.js";
 import "../components/Products.css";
 import "../components/Anuncios.css";
 import "./Clientes360.css";
@@ -12,9 +11,8 @@ import S7Button from "../components/ui/S7Button";
 
 const DASH = "—";
 
-/** Guardrail S_4.6.2 — rotas seller oficiais (evita reintrodução acidental de contrato admin). */
-const SELLER_CUSTOMERS_LIST_API = CLIENTES360_CUSTOMERS_SCOPE.officialApis.list;
-const SELLER_CUSTOMERS_INGEST_API = CLIENTES360_CUSTOMERS_SCOPE.officialApis.ingest;
+const SELLER_CUSTOMERS_LIST_API = CUSTOMERS_DOMAIN_SELLER.officialApis.list;
+const SELLER_CUSTOMERS_INGEST_API = CUSTOMERS_DOMAIN_SELLER.officialApis.ingest;
 const STATUS_FILTER_CHIPS = [
   { id: "", label: "Todos", icon: "catalog_filter_all", iconTone: "neutral" },
   { id: "recorrente", label: "Recorrentes", icon: "catalog_filter_with_sales", iconTone: "success" },

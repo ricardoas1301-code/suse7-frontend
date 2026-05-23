@@ -1,11 +1,32 @@
 // =============================================================================
-// Fronteira de domínio — Clientes Admin Global × Seller (S_4.6.2)
+// Fronteira de domínio — Clientes Admin Global × Seller (S_4.6.4 — fundação estável)
 //
-// Regra oficial:
-//   Dev Center Global → somente adminGlobal.officialApis
-//   Clientes360 seller → somente seller.officialApis
+// INVENTÁRIO — DOMÍNIO ADMIN GLOBAL [ATIVO]
+//   Endpoints:
+//     GET /api/dev-center/customers-global      → customers[] + summary (admin_global)
+//     GET /api/dev-center/customers-global/:id  → customer mascarado (LGPD)
+//   Frontend:
+//     DevCenterCustomersGlobal.jsx, devCenterApi.js (getCustomersGlobal*)
+//     OpsStatsGrid, OpsFiltersBar (scope=global), OpsDrawerShell, OpsTimeline,
+//     OpsHealthBadge, OpsConfidenceBadge, OpsEmptyState, opsPresentation.js
+//   Backend:
+//     devCenterAdminRoutes.js, devCenterCustomersGlobalOpsSummaryService.js
+//   Responsabilidades: listagem cross-seller, summary agregado, LGPD
 //
-// Não cruzar contratos entre domínios.
+// INVENTÁRIO — DOMÍNIO SELLER [ATIVO]
+//   Endpoints:
+//     GET  /api/customers
+//     GET  /api/customers/:id
+//     POST /api/customers/ingest-from-sales
+//   Frontend: Clientes360.jsx (buildApiUrl + apiFetch direto)
+//   Backend: handlers/customers/*, customerIngestionHealthService, customerDataQualityService
+//   Responsabilidades: operação seller escopada por JWT
+//
+// REMOVIDO (S_4.6.1): customersApi.js, fetchCustomersList, OpsIssueList, fallback seller no Dev Center
+// LEGADO: OpsFiltersBar scope=seller — kit compartilhado para Clientes360 futuro (não usado ainda)
+//
+// Regra: Dev Center Global NUNCA consome contrato seller. Clientes360 NUNCA consome admin global.
+// Smoke permanente: npm run smoke:dev-center-customers-boundary (backend)
 // =============================================================================
 
 /** @typedef {{ list: string; detail: string; ingest?: string }} CustomersOfficialApis */
@@ -53,7 +74,7 @@ export const CUSTOMERS_DOMAIN_SELLER = Object.freeze({
     "Contrato seller escopado por JWT (user_id). Listagem e detalhe do seller autenticado. Não consumir contrato admin global.",
 });
 
-/** Guardrail compartilhado — referência única para auditorias de fronteira. */
+/** Referência única para auditorias de fronteira e guardrails. */
 export const CUSTOMERS_DOMAIN_BOUNDARY = Object.freeze({
   adminGlobal: CUSTOMERS_DOMAIN_ADMIN_GLOBAL,
   seller: CUSTOMERS_DOMAIN_SELLER,

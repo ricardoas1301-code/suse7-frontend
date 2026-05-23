@@ -1,4 +1,5 @@
-// Kit ops Dev Center — S_4.6.2: não importar contrato seller (/api/customers) neste pacote.
+// Kit ops Dev Center — consumidor atual: DevCenterCustomersGlobal (admin global).
+// Não importar /api/customers neste pacote. Ver customersDomainBoundary.js.
 import OpsStatsGrid from "./OpsStatsGrid";
 import OpsFiltersBar from "./OpsFiltersBar";
 import OpsDrawerShell from "./OpsDrawerShell";

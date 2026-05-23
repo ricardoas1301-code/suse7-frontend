@@ -3,8 +3,8 @@ import OpsConfidenceBadge from "./OpsConfidenceBadge";
 import "./ops.css";
 
 /**
- * Ops strip de métricas — consumidor atual: Dev Center Global (summary.scope = admin_global).
- * Domínio seller (Clientes360) deve usar GET /api/customers — ver customersDomainBoundary.js.
+ * Consumidor atual: Dev Center Global (summary.scope = admin_global).
+ * Seller: Clientes360 → GET /api/customers (customersDomainBoundary.js).
  * @param {{ summary?: Record<string, unknown> | null; loading?: boolean }} props
  */
 export default function OpsStatsGrid({ summary, loading = false }) {
