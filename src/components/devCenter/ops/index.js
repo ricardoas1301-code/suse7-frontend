@@ -4,7 +4,6 @@ import OpsDrawerShell from "./OpsDrawerShell";
 import OpsTimeline from "./OpsTimeline";
 import OpsHealthBadge from "./OpsHealthBadge";
 import OpsConfidenceBadge from "./OpsConfidenceBadge";
-import OpsIssueList from "./OpsIssueList";
 import OpsEmptyState from "./OpsEmptyState";
 
 export {
@@ -14,6 +13,5 @@ export {
   OpsTimeline,
   OpsHealthBadge,
   OpsConfidenceBadge,
-  OpsIssueList,
   OpsEmptyState,
 };

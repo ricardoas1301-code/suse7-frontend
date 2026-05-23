@@ -81,7 +81,6 @@ export default function DevCenterCustomersGlobal() {
         return;
       }
       setRows(Array.isArray(res.data?.customers) ? res.data.customers : []);
-      // 4A.5 — summary operacional vem do contrato admin global (não seller).
       setGlobalOpsSummary(res.data?.summary ?? null);
       setLastUpdated(new Date().toISOString());
     }, 320);
@@ -106,16 +105,6 @@ export default function DevCenterCustomersGlobal() {
     };
   }, [selectedId]);
 
-  const opsSummary = useMemo(
-    () => ({
-      total_customers: globalOpsSummary?.total_customers ?? rows.length,
-      incomplete_contact: globalOpsSummary?.incomplete_contact ?? null,
-      ingestion_health: globalOpsSummary?.ingestion_health ?? null,
-      data_quality_overview: globalOpsSummary?.data_quality_overview ?? null,
-    }),
-    [globalOpsSummary, rows.length],
-  );
-
   const timelineItems = useMemo(() => {
     if (!detail) return [];
     return [
@@ -133,13 +122,13 @@ export default function DevCenterCustomersGlobal() {
           Visão admin cross-seller (LGPD). Indicadores operacionais vêm do contrato admin global — exibidos
           apenas no resumo superior (agregado, sem badges por linha).
         </p>
-        <p className="dc-customers360__scope-note">{DEV_CENTER_CUSTOMERS_GLOBAL_SCOPE.opsMetricsNote}</p>
+        <p className="dc-customers360__scope-note">{DEV_CENTER_CUSTOMERS_GLOBAL_SCOPE.scopeNote}</p>
         {lastUpdated ? (
           <p className="dc-customers360__updated">Última atualização: {formatPtDate(lastUpdated)}</p>
         ) : null}
       </header>
 
-      <OpsStatsGrid summary={opsSummary} loading={loading} />
+      <OpsStatsGrid summary={globalOpsSummary} loading={loading} />
 
       <OpsFiltersBar scope="global" q={q} onQChange={setQ} />
 
