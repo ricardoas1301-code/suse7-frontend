@@ -4,7 +4,8 @@
 // INVENTÁRIO — DOMÍNIO ADMIN GLOBAL [ATIVO]
 //   Endpoints:
 //     GET /api/dev-center/customers-global      → customers[] + summary (admin_global)
-//     GET /api/dev-center/customers-global/:id  → customer mascarado (LGPD)
+//     GET /api/dev-center/customers-global/:id  → customer + overview + activity + quality + ingestion + metadata
+//       quality/ingestion por cliente: not_available (S_4.7.1)
 //   Frontend:
 //     DevCenterCustomersGlobal.jsx, devCenterApi.js (getCustomersGlobal*)
 //     OpsStatsGrid, OpsFiltersBar (scope=global), OpsDrawerShell, OpsTimeline,

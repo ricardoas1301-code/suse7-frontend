@@ -66,6 +66,8 @@ export default function DevCenterCustomersGlobal() {
 
   const [selectedId, setSelectedId] = useState(null);
   const [detail, setDetail] = useState(null);
+  /** Contrato S_4.7.1 — blocos overview/activity/quality/ingestion/metadata para evolução futura do drawer. */
+  const [detailContract, setDetailContract] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
@@ -90,6 +92,7 @@ export default function DevCenterCustomersGlobal() {
   useEffect(() => {
     if (!selectedId) {
       setDetail(null);
+      setDetailContract(null);
       return;
     }
     let cancelled = false;
@@ -97,8 +100,13 @@ export default function DevCenterCustomersGlobal() {
     devCenterGetCustomerGlobalDetail(selectedId).then((res) => {
       if (cancelled) return;
       setDetailLoading(false);
-      if (res.ok) setDetail(res.data?.customer ?? null);
-      else setDetail(null);
+      if (res.ok) {
+        setDetail(res.data?.customer ?? null);
+        setDetailContract(res.data ?? null);
+      } else {
+        setDetail(null);
+        setDetailContract(null);
+      }
     });
     return () => {
       cancelled = true;
@@ -106,13 +114,19 @@ export default function DevCenterCustomersGlobal() {
   }, [selectedId]);
 
   const timelineItems = useMemo(() => {
-    if (!detail) return [];
+    const source = detailContract?.overview ?? detail;
+    if (!source) return [];
     return [
-      { id: "first", label: "Primeira compra global", at: detail.first_purchase_global, tone: "default" },
-      { id: "last", label: "Última compra global", at: detail.last_purchase_global, tone: "accent" },
-      { id: "updated", label: "Última atualização registro", at: detail.updated_at, tone: "muted" },
+      { id: "first", label: "Primeira compra global", at: source.first_purchase_global, tone: "default" },
+      { id: "last", label: "Última compra global", at: source.last_purchase_global, tone: "accent" },
+      {
+        id: "updated",
+        label: "Última atualização registro",
+        at: detailContract?.metadata?.record_updated_at ?? detail?.updated_at,
+        tone: "muted",
+      },
     ].filter((i) => i.at);
-  }, [detail]);
+  }, [detail, detailContract]);
 
   return (
     <section className="dc-module dc-customers360">
@@ -229,7 +243,11 @@ export default function DevCenterCustomersGlobal() {
 
             <section className="ops-drawer-block">
               <h3>Saúde ingestão</h3>
-              <p className="ops-scope-hint">Agregado admin global — ver resumo superior (não por cliente).</p>
+              <p className="ops-scope-hint">
+                {detailContract?.ingestion?.status === "not_available"
+                  ? "Indisponível por cliente — agregado no resumo superior."
+                  : "Agregado admin global — ver resumo superior (não por cliente)."}
+              </p>
               {globalOpsSummary?.ingestion_health ? (
                 <OpsHealthBadge
                   status={String(globalOpsSummary.ingestion_health.status)}
@@ -244,7 +262,11 @@ export default function DevCenterCustomersGlobal() {
 
             <section className="ops-drawer-block">
               <h3>Qualidade dos dados</h3>
-              <p className="ops-scope-hint">Agregado admin global — ver resumo superior (não por cliente).</p>
+              <p className="ops-scope-hint">
+                {detailContract?.quality?.status === "not_available"
+                  ? "Indisponível por cliente — agregado no resumo superior."
+                  : "Agregado admin global — ver resumo superior (não por cliente)."}
+              </p>
               {globalOpsSummary?.data_quality_overview ? (
                 <OpsConfidenceBadge
                   status={String(globalOpsSummary.data_quality_overview.status)}
@@ -258,7 +280,7 @@ export default function DevCenterCustomersGlobal() {
 
             <section className="ops-drawer-block">
               <h3>Sellers relacionados</h3>
-              <RelatedSellersList sellers={detail.related_sellers} />
+              <RelatedSellersList sellers={detailContract?.activity?.related_sellers ?? detail?.related_sellers} />
             </section>
           </>
         ) : null}
