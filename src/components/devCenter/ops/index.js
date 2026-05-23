@@ -1,3 +1,4 @@
+// Kit ops Dev Center — S_4.6.2: não importar contrato seller (/api/customers) neste pacote.
 import OpsStatsGrid from "./OpsStatsGrid";
 import OpsFiltersBar from "./OpsFiltersBar";
 import OpsDrawerShell from "./OpsDrawerShell";

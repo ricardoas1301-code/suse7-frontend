@@ -11,6 +11,7 @@ import {
 } from "../../components/devCenter/ops";
 import { devCenterGetCustomersGlobal, devCenterGetCustomerGlobalDetail } from "../../services/devCenterApi";
 import { DEV_CENTER_CUSTOMERS_GLOBAL_SCOPE } from "./devCenterCustomersGlobalScope";
+// S_4.6.2 — proibido nesta página: DEV_CENTER_CUSTOMERS_GLOBAL_SCOPE.forbiddenSellerApis (/api/customers*)
 import { formatPtDate, formatPtDateShort } from "../../components/devCenter/ops/opsPresentation";
 import "../../components/devCenter/ops/ops.css";
 

@@ -141,8 +141,20 @@ export async function devCenterGetSellers() {
   return apiFetch(url, { method: "GET" });
 }
 
+export async function devCenterGetSellerDetail(id) {
+  const url = buildApiUrl(`/api/dev-center/sellers/${encodeURIComponent(id)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
 export async function devCenterGetSubscriptions() {
   const url = buildApiUrl("/api/dev-center/subscriptions");
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+export async function devCenterGetSubscriptionDetail(id) {
+  const url = buildApiUrl(`/api/dev-center/subscriptions/${encodeURIComponent(id)}`);
   if (!url) return { ok: false, status: 0, error: "API não configurada" };
   return apiFetch(url, { method: "GET" });
 }
@@ -153,6 +165,13 @@ export async function devCenterGetFinance() {
   return apiFetch(url, { method: "GET" });
 }
 
+export async function devCenterGetFinanceDetail(id) {
+  const url = buildApiUrl(`/api/dev-center/finance/${encodeURIComponent(id)}`);
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+// S_4.6.2 — domínio admin global. NÃO adicionar /api/customers aqui.
 export async function devCenterGetCustomersGlobal({ q = "" } = {}) {
   const base = buildApiUrl("/api/dev-center/customers-global");
   if (!base) return { ok: false, status: 0, error: "API não configurada" };
