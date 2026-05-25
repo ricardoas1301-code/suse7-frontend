@@ -387,6 +387,10 @@
   opacity: 0.7;
 }
 
+.ops-kv dd {
+  min-height: 1.25em;
+}
+
 .ops-order-list {
   display: grid;
   gap: 8px;

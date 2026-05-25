@@ -1,32 +1,61 @@
+import OpsEmptyState from "./OpsEmptyState";
 import {
   contractUnavailableLabel,
+  formatOptionalCount,
+  formatOptionalText,
   formatRelativeUpdated,
   syncStaleReasonLabel,
 } from "./opsPresentation";
+import { OPS_DRAWER_EMPTY } from "./opsDrawerEmptyCopy";
 import "./ops.css";
 
 const DASH = "—";
 
 /**
- * Saúde operacional agregada no drawer — S_4.7.2.
+ * Saúde operacional agregada no drawer — S_4.7.2 / empty states S_4.7.4.
  * Usa exclusivamente blocos do contrato detail (sem score, sem request extra).
  * @param {{ contract?: Record<string, unknown> | null }} props
  */
 export default function OpsGlobalOperationalContext({ contract = null }) {
-  const overview = /** @type {Record<string, unknown> | null | undefined} */ (contract?.overview);
-  const activity = /** @type {Record<string, unknown> | null | undefined} */ (contract?.activity);
-  const quality = /** @type {Record<string, unknown> | null | undefined} */ (contract?.quality);
-  const ingestion = /** @type {Record<string, unknown> | null | undefined} */ (contract?.ingestion);
-  const metadata = /** @type {Record<string, unknown> | null | undefined} */ (contract?.metadata);
-  const sync = /** @type {Record<string, unknown> | null | undefined} */ (metadata?.sync);
-  const contact = /** @type {Record<string, unknown> | null | undefined} */ (overview?.contact);
+  if (!contract || typeof contract !== "object") {
+    return <OpsEmptyState compact {...OPS_DRAWER_EMPTY.NO_OPERATIONAL} />;
+  }
+
+  const overview =
+    contract.overview && typeof contract.overview === "object"
+      ? /** @type {Record<string, unknown>} */ (contract.overview)
+      : null;
+  const activity =
+    contract.activity && typeof contract.activity === "object"
+      ? /** @type {Record<string, unknown>} */ (contract.activity)
+      : null;
+  const quality =
+    contract.quality && typeof contract.quality === "object"
+      ? /** @type {Record<string, unknown>} */ (contract.quality)
+      : null;
+  const ingestion =
+    contract.ingestion && typeof contract.ingestion === "object"
+      ? /** @type {Record<string, unknown>} */ (contract.ingestion)
+      : null;
+  const metadata =
+    contract.metadata && typeof contract.metadata === "object"
+      ? /** @type {Record<string, unknown>} */ (contract.metadata)
+      : null;
+  const sync =
+    metadata?.sync && typeof metadata.sync === "object"
+      ? /** @type {Record<string, unknown>} */ (metadata.sync)
+      : null;
+  const contact =
+    overview?.contact && typeof overview.contact === "object"
+      ? /** @type {Record<string, unknown>} */ (overview.contact)
+      : null;
 
   const syncValue = (() => {
     if (!sync || sync.stale == null) {
       const rel = formatRelativeUpdated(
         metadata?.record_updated_at != null ? String(metadata.record_updated_at) : null,
       );
-      return rel !== DASH ? rel : "Indisponível";
+      return rel !== DASH ? rel : "Sem histórico suficiente";
     }
     if (sync.stale === true) {
       const lag =
@@ -43,12 +72,18 @@ export default function OpsGlobalOperationalContext({ contract = null }) {
     if (quality?.status === "not_available") {
       return contractUnavailableLabel(quality.reason != null ? String(quality.reason) : null);
     }
+    if (!quality?.status) {
+      return "Informação ainda não calculada";
+    }
     return "Indisponível";
   })();
 
   const ingestionValue = (() => {
     if (ingestion?.status === "not_available") {
       return contractUnavailableLabel(ingestion.reason != null ? String(ingestion.reason) : null);
+    }
+    if (!ingestion?.status) {
+      return "Dados agregados indisponíveis";
     }
     return "Indisponível";
   })();
@@ -65,30 +100,30 @@ export default function OpsGlobalOperationalContext({ contract = null }) {
     : [];
 
   const contactValue = (() => {
-    if (!contact) return DASH;
+    if (!contact) return "Não informado";
     if (contact.incomplete === true) return "Incompleto";
     const hasEmail = contact.has_email === true;
     const hasPhone = contact.has_phone === true;
     if (hasEmail && hasPhone) return "Completo";
     if (hasEmail || hasPhone) return "Parcial";
-    return "Sem contato";
+    return "Sem contato registrado";
   })();
 
   const rows = [
-    { id: "sync", label: "Sincronização", value: syncValue },
-    { id: "quality", label: "Qualidade", value: qualityValue },
-    { id: "ingestion", label: "Ingestão", value: ingestionValue },
+    { id: "sync", label: "Sincronização", value: formatOptionalText(syncValue) },
+    { id: "quality", label: "Qualidade", value: formatOptionalText(qualityValue) },
+    { id: "ingestion", label: "Ingestão", value: formatOptionalText(ingestionValue) },
     {
       id: "relations",
       label: "Relacionamentos",
-      value: sellersCount != null ? `${sellersCount} seller${sellersCount === 1 ? "" : "s"}` : DASH,
+      value: sellersCount != null ? `${formatOptionalCount(sellersCount)} seller${sellersCount === 1 ? "" : "s"}` : DASH,
       hint: channels.length ? `Canais: ${channels.join(", ")}` : null,
     },
-    { id: "contact", label: "Contato", value: contactValue },
+    { id: "contact", label: "Contato", value: formatOptionalText(contactValue) },
   ];
 
   return (
-    <section className="ops-operational-context" aria-label="Saúde operacional agregada">
+    <div className="ops-operational-context" aria-label="Saúde operacional agregada">
       <p className="ops-scope-hint">
         Contexto agregado deste registro global — não representa nota operacional individual do cliente.
       </p>
@@ -101,6 +136,6 @@ export default function OpsGlobalOperationalContext({ contract = null }) {
           </div>
         ))}
       </dl>
-    </section>
+    </div>
   );
 }

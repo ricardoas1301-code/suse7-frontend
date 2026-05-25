@@ -4,6 +4,37 @@
 
 const DASH = "—";
 
+/** Valor mascarado ou campo LGPD ausente — neutro, sem culpar o usuário. */
+export function formatOptionalMasked(value) {
+  const s = String(value ?? "").trim();
+  return s || "Não informado";
+}
+
+/** Contagem opcional — evita 0 enganoso quando o campo não veio no contrato. */
+export function formatOptionalCount(value) {
+  if (value == null || value === "") return DASH;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return DASH;
+  return String(n);
+}
+
+/** Valor monetário opcional — sem NaN na UI. */
+export function formatOptionalMoney(value) {
+  if (value == null || value === "") return DASH;
+  const n = Number(value);
+  if (Number.isFinite(n)) {
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  const s = String(value).trim();
+  return s || DASH;
+}
+
+/** Texto genérico seguro — nunca renderiza undefined/null. */
+export function formatOptionalText(value) {
+  const s = String(value ?? "").trim();
+  return s || DASH;
+}
+
 export function formatPtDate(iso) {
   if (!iso) return DASH;
   const t = Date.parse(String(iso));
@@ -59,8 +90,8 @@ export function issueCodeLabel(code) {
 /** @param {string | null | undefined} reason — contrato detail (not_available) */
 export function contractUnavailableLabel(reason) {
   const map = {
-    per_customer_quality_not_computed: "Não calculado por cliente",
-    per_customer_ingestion_not_computed: "Escopo seller (não agregado)",
+    per_customer_quality_not_computed: "Informação ainda não calculada",
+    per_customer_ingestion_not_computed: "Dados agregados indisponíveis",
   };
   const key = String(reason ?? "").trim();
   return key && map[key] ? map[key] : "Indisponível";

@@ -7,6 +7,7 @@ import OpsTimeline from "./OpsTimeline";
 import OpsHealthBadge from "./OpsHealthBadge";
 import OpsConfidenceBadge from "./OpsConfidenceBadge";
 import OpsEmptyState from "./OpsEmptyState";
+import OpsGlobalDrawerBody from "./OpsGlobalDrawerBody";
 import OpsGlobalOperationalContext from "./OpsGlobalOperationalContext";
 
 export {
@@ -18,4 +19,5 @@ export {
   OpsConfidenceBadge,
   OpsEmptyState,
   OpsGlobalOperationalContext,
+  OpsGlobalDrawerBody,
 };
