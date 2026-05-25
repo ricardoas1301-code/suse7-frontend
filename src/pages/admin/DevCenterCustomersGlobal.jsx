@@ -43,6 +43,11 @@ import {
 
 } from "./devCenterGlobalDetailCache.js";
 
+import {
+  normalizeDevCenterGlobalSearchQuery,
+  isValidDevCenterGlobalCustomerId,
+} from "./devCenterCustomersGlobalInput.js";
+
 import "../../components/devCenter/ops/ops.css";
 
 
@@ -121,6 +126,8 @@ export default function DevCenterCustomersGlobal() {
 
   useEffect(() => {
 
+    let cancelled = false;
+
     const t = setTimeout(async () => {
 
       setLoading(true);
@@ -128,6 +135,8 @@ export default function DevCenterCustomersGlobal() {
       setError(null);
 
       const res = await devCenterGetCustomersGlobal({ q });
+
+      if (cancelled) return;
 
       setLoading(false);
 
@@ -151,7 +160,13 @@ export default function DevCenterCustomersGlobal() {
 
     }, 320);
 
-    return () => clearTimeout(t);
+    return () => {
+
+      cancelled = true;
+
+      clearTimeout(t);
+
+    };
 
   }, [q]);
 
@@ -160,6 +175,26 @@ export default function DevCenterCustomersGlobal() {
   useEffect(() => {
 
     if (!selectedId) {
+
+      setDetailLoading(false);
+
+      setDetailRevalidating(false);
+
+      setDetailFetchError(false);
+
+      setDetail(null);
+
+      setDetailContract(null);
+
+      setDetailFetchedAt(null);
+
+      return;
+
+    }
+
+
+
+    if (!isValidDevCenterGlobalCustomerId(selectedId)) {
 
       setDetailLoading(false);
 
@@ -427,7 +462,11 @@ export default function DevCenterCustomersGlobal() {
 
 
 
-      <OpsFiltersBar scope="global" q={q} onQChange={setQ} />
+      <OpsFiltersBar
+        scope="global"
+        q={q}
+        onQChange={(value) => setQ(normalizeDevCenterGlobalSearchQuery(value))}
+      />
 
 
 

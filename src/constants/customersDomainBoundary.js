@@ -30,6 +30,7 @@
 // Governança LGPD: constants/customersGlobalLgpdGovernance.js (S_4.8.1)
 // Governança cross-seller: constants/customersGlobalCrossSellerGovernance.js (S_4.8.2)
 // Governança permissões: constants/customersGlobalPermissionsGovernance.js (S_4.8.3)
+// Hardening: constants/customersGlobalHardeningGovernance.js (S_4.8.4)
 // Smoke permanente: npm run smoke:dev-center-customers-boundary (backend)
 // =============================================================================
 

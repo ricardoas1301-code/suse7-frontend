@@ -176,12 +176,23 @@ export async function devCenterGetCustomersGlobal({ q = "" } = {}) {
   const base = buildApiUrl("/api/dev-center/customers-global");
   if (!base) return { ok: false, status: 0, error: "API não configurada" };
   const qs = new URLSearchParams();
-  if (q) qs.set("q", q);
+  const qNorm = String(q ?? "")
+    .trim()
+    .toLowerCase()
+    .slice(0, 120)
+    .split(/\s+/)
+    .filter(Boolean)
+    .join(" ");
+  if (qNorm) qs.set("q", qNorm);
   return apiFetch(`${base}?${qs.toString()}`, { method: "GET" });
 }
 
 export async function devCenterGetCustomerGlobalDetail(id) {
-  const url = buildApiUrl(`/api/dev-center/customers-global/${encodeURIComponent(id)}`);
+  const safeId = String(id ?? "").trim();
+  if (!safeId || safeId.length > 36) {
+    return { ok: false, status: 400, error: "Identificador inválido" };
+  }
+  const url = buildApiUrl(`/api/dev-center/customers-global/${encodeURIComponent(safeId)}`);
   if (!url) return { ok: false, status: 0, error: "API não configurada" };
   return apiFetch(url, { method: "GET" });
 }
