@@ -1,7 +1,7 @@
 # Dev Center — Clientes Globais
 
 Documentação final do módulo **Clientes Globais** (admin cross-seller).  
-Epic fechado: **S_4.6 → S_4.9.3** (build, responsividade, QA manual).
+Epic **S_4 ENCERRADO** — S_4.1 → S_4.9.4 (build, responsividade, QA manual, documentação, checkpoint final).
 
 > **Princípio:** backend interpreta, frontend renderiza.  
 > **Fronteira:** admin global isolado do domínio seller (Clientes360).
@@ -21,9 +21,10 @@ O módulo **Clientes Globais** permite que operadores autorizados do Dev Center 
 | **Persistência** | Supabase service role no backend |
 | **LGPD** | Campos sensíveis mascarados na API; valores normalizados nunca expostos |
 
-**Checkpoints de referência (frontend):** `0cf5a05` … `dbe3a5f` (S_4.9.2A responsividade).
+**Checkpoints de referência (frontend):** `0cf5a05` … `4beea1d` → **4A94** (encerramento S_4).
 
-**Manifesto técnico (código):** `src/constants/customersGlobalBaselineManifest.js`
+**Manifesto técnico (fonte de verdade):** `src/constants/customersGlobalBaselineManifest.js`  
+**Encerramento do épico:** `docs/dev-center/S_4_EPIC_CLOSURE.md`
 
 ---
 
