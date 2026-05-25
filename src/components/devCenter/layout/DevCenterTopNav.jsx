@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { ArrowLeft, Menu, X } from "lucide-react";
-import suse7Logo from "../../../assets/suse7-logo-redonda.png";
 import NotificationBell from "../../NotificationBell";
 import AvatarMenu from "../../AvatarMenu";
 import { DEV_CENTER_NAV_ITEMS } from "./devCenterNavItems";
@@ -45,10 +44,8 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
       <div className="dc-topnav__bar">
         <div className="dc-topnav__brand">
           <Link to="/admin/dev-center" className="dc-topnav__brand-link">
-            <img src={suse7Logo} alt="" className="dc-topnav__brand-logo" width={34} height={34} />
-            <span className="dc-topnav__brand-text">Dev Center</span>
+            Dev Center
           </Link>
-          <span className="dc-topnav__badge">Admin</span>
         </div>
 
         <button
