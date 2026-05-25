@@ -31,6 +31,7 @@
 // Governança cross-seller: constants/customersGlobalCrossSellerGovernance.js (S_4.8.2)
 // Governança permissões: constants/customersGlobalPermissionsGovernance.js (S_4.8.3)
 // Hardening: constants/customersGlobalHardeningGovernance.js (S_4.8.4)
+// Baseline S_4.9.1: constants/customersGlobalBaselineManifest.js
 // Smoke permanente: npm run smoke:dev-center-customers-boundary (backend)
 // =============================================================================
 
