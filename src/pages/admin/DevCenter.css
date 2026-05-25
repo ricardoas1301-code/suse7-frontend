@@ -29,6 +29,14 @@
   padding: 32px;
 }
 
+.dev-center--gate {
+  min-height: 100dvh;
+  min-height: 100vh;
+  max-width: none;
+  margin: 0;
+  background: var(--s7-admin-bg, #f4f6f9);
+}
+
 .dev-center--forbidden .s7-title {
   margin: 0;
 }
@@ -141,10 +149,10 @@
 }
 
 .dev-center__card {
-  background: var(--s7-bg);
-  border: 1px solid var(--s7-border);
-  border-radius: var(--dc-radius);
-  box-shadow: var(--s7-shadow-section);
+  background: var(--s7-admin-surface, var(--s7-bg));
+  border: 1px solid var(--s7-admin-border, var(--s7-border));
+  border-radius: var(--s7-admin-radius-lg, var(--dc-radius));
+  box-shadow: var(--s7-admin-shadow-soft, var(--s7-shadow-section));
   padding: 20px;
 }
 
@@ -592,7 +600,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
-  z-index: 2000;
+  z-index: var(--s7-z-modal-top, 210500);
   display: flex;
   align-items: center;
   justify-content: center;
