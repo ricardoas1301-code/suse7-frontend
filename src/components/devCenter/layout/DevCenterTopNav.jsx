@@ -34,20 +34,33 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [mobileOpen]);
 
-  /** @param {{ isActive: boolean }} state */
-  function topNavLinkClass({ isActive }) {
-    return ["dc-topnav__link", isActive ? "dc-topnav__link--active" : ""].filter(Boolean).join(" ");
+  /** @param {typeof DEV_CENTER_NAV_ITEMS[number]} item @param {{ isActive: boolean }} state */
+  function topNavLinkClass(item) {
+    return ({ isActive }) =>
+      [
+        "dc-topnav__link",
+        item.homeBrand ? "dc-topnav__link--home" : "",
+        isActive ? "dc-topnav__link--active" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+  }
+
+  /** @param {typeof DEV_CENTER_NAV_ITEMS[number]} item @param {{ isActive: boolean }} state */
+  function drawerLinkClass(item) {
+    return ({ isActive }) =>
+      [
+        "dc-topnav__drawer-link",
+        item.homeBrand ? "dc-topnav__drawer-link--home" : "",
+        isActive ? "dc-topnav__drawer-link--active" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
   }
 
   return (
     <header className="dc-topnav" data-mobile-open={mobileOpen ? "true" : "false"}>
       <div className="dc-topnav__bar">
-        <div className="dc-topnav__brand">
-          <Link to="/admin/dev-center" className="dc-topnav__brand-link">
-            Dev Center
-          </Link>
-        </div>
-
         <button
           ref={menuBtnRef}
           type="button"
@@ -64,7 +77,7 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
           {DEV_CENTER_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
-              <NavLink key={item.to} to={item.to} end={item.end} className={topNavLinkClass}>
+              <NavLink key={item.to} to={item.to} end={item.end} className={topNavLinkClass(item)}>
                 {({ isActive }) => (
                   <>
                     <Icon className="dc-topnav__link-icon nav-icon" strokeWidth={2} aria-hidden />
@@ -106,11 +119,7 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
                 key={item.to}
                 to={item.to}
                 end={item.end}
-                className={({ isActive }) =>
-                  ["dc-topnav__drawer-link", isActive ? "dc-topnav__drawer-link--active" : ""]
-                    .filter(Boolean)
-                    .join(" ")
-                }
+                className={drawerLinkClass(item)}
                 onClick={() => setMobileOpen(false)}
               >
                 {({ isActive }) => (
