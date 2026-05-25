@@ -1,5 +1,9 @@
 // =============================================================================
-// Dev Center S_4.7.3 — cache in-memory do detailContract (drawer global)
+// Dev Center S_4.7.3 / S_4.8.1 — cache in-memory do detailContract (drawer global)
+//
+// LGPD: armazena apenas o JSON já mascarado retornado pela API admin global.
+// Sem localStorage/sessionStorage. Sem dedupe_key / *_normalized.
+// TTL 90s, max 8 entradas FIFO — memória leve por aba.
 // =============================================================================
 
 import { isDetailContractSyncStale } from "../../components/devCenter/ops/opsPresentation.js";

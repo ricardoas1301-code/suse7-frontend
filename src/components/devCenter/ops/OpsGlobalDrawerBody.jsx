@@ -4,6 +4,7 @@ import OpsTimeline from "./OpsTimeline";
 import OpsEmptyState from "./OpsEmptyState";
 import { OPS_DRAWER_EMPTY } from "./opsDrawerEmptyCopy";
 import { formatOptionalText } from "./opsPresentation";
+import { formatExternalRef } from "./opsGlobalLgpdPresentation";
 import "./ops.css";
 
 const DASH = "—";
@@ -29,7 +30,7 @@ function RelatedSellersList({ sellers }) {
               Conta:{" "}
               {e.marketplace_account_id ? `${String(e.marketplace_account_id).slice(0, 8)}…` : DASH}
             </span>
-            <span>Buyer: {formatOptionalText(e.external_customer_id)}</span>
+            <span>Buyer: {formatExternalRef(e.external_customer_id)}</span>
           </li>
         );
       })}

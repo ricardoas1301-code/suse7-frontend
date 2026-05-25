@@ -27,6 +27,7 @@
 // LEGADO: OpsFiltersBar scope=seller — kit compartilhado para Clientes360 futuro (não usado ainda)
 //
 // Regra: Dev Center Global NUNCA consome contrato seller. Clientes360 NUNCA consome admin global.
+// Governança LGPD: constants/customersGlobalLgpdGovernance.js (S_4.8.1)
 // Smoke permanente: npm run smoke:dev-center-customers-boundary (backend)
 // =============================================================================
 
