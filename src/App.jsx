@@ -6,6 +6,7 @@ import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
+  Outlet,
   useLocation,
   useNavigate,
 } from "react-router-dom";
@@ -43,11 +44,18 @@ import AlterarSenha from "./components/Profile/AlterarSenha";
 import MercadoLivre from "./components/Profile/MercadoLivre";
 import FormasPagamento from "./components/Profile/FormasPagamento";
 import ExtratoConta from "./components/Profile/ExtratoConta";
-import MySubscription from "./components/Profile/MySubscription";
-import SubscriptionPlans from "./components/Profile/SubscriptionPlans";
 import PaymentHistory from "./components/Profile/PaymentHistory";
+import PlansPage from "./billing/pages/PlansPage";
+import NotificacoesInboxPage from "./pages/NotificacoesInboxPage";
+import SubscriptionPage from "./billing/pages/SubscriptionPage";
+import CheckoutRedirectPage from "./billing/pages/CheckoutRedirectPage";
+import { BillingAccessProvider } from "./billing/hooks/useBillingAccess.jsx";
+import { protectPremiumRoute } from "./billing/protectPremiumRoute.jsx";
 import Preferencias from "./components/Profile/Preferencias";
-import Notificacoes from "./components/Profile/Notificacoes";
+import CentralNotificacoesHub from "./components/Profile/CentralNotificacoesHub";
+import LegacyNotificacoesRedirect from "./components/Profile/LegacyNotificacoesRedirect";
+import NotificationHistorico from "./components/Profile/NotificationHistorico";
+import DestinatariosNotificacoes from "./components/Profile/DestinatariosNotificacoes";
 import AlertasPopup from "./components/Profile/AlertasPopup";
 
 // Produtos (REAL)
@@ -60,33 +68,32 @@ import AnunciosTeste from "./pages/AnunciosTeste";
 import MlListingImportDebug from "./pages/debug/MlListingImportDebug.jsx";
 import ProductCreate from "./pages/ProductCreate";
 import ProductEdit from "./pages/ProductEdit";
-import DevCenter from "./pages/admin/DevCenter";
+import SellerTicketsPage from "./pages/admin/tickets/SellerTicketsPage";
 import DevCenterRoute from "./pages/admin/DevCenterRoute";
-import DevCenterRoot from "./pages/admin/DevCenterRoot";
+import DevCenterShell from "./pages/admin/DevCenterShell";
 import DevCenterDashboard from "./pages/admin/DevCenterDashboard";
 import DevCenterSellers from "./pages/admin/DevCenterSellers";
 import DevCenterSubscriptions from "./pages/admin/DevCenterSubscriptions";
 import DevCenterFinance from "./pages/admin/DevCenterFinance";
 import DevCenterCustomersGlobal from "./pages/admin/DevCenterCustomersGlobal";
 import DevCenterFeatureFlags from "./pages/admin/DevCenterFeatureFlags";
+import DevCenterToolbox from "./pages/admin/DevCenterToolbox";
 import ConcorrenciaPage from "./pages/ConcorrenciaPage";
 import Clientes360 from "./pages/Clientes360";
+import RelatoriosPage from "./pages/RelatoriosPage";
 
-// Notificações (in-app toast)
-import { NotificationProvider } from "./contexts/NotificationContext";
 // Status de save (ampulheta global)
 import { SaveStatusProvider } from "./contexts/SaveStatusContext";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
 
 // Temporários
 const Faturas = () => <h1>Faturas</h1>;
-const Relatorios = () => <h1>Relatórios</h1>;
 const Registros = () => <h1>Registros</h1>;
 const Configuracoes = () => <h1>Configurações</h1>;
 // ======================================================================
 // AUTH WRAPPER
 // ======================================================================
-const AuthWrapper = ({ children }) => {
+function AuthOutlet() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -100,8 +107,8 @@ const AuthWrapper = ({ children }) => {
   }, []);
 
   if (loading) return <div>Carregando...</div>;
-  return session ? children : <Navigate to="/login" replace />;
-};
+  return session ? <Outlet /> : <Navigate to="/login" replace />;
+}
 
 // ======================================================================
 // REDIRECT ML (?ml=connected) — legado para rotas que não tratam o retorno OAuth
@@ -137,17 +144,22 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <MLRedirectHandler>
-        <AuthWrapper>
-          <NotificationProvider>
-            <SaveStatusProvider>
-              <Layout />
-              <SaveStatusIndicator />
-            </SaveStatusProvider>
-          </NotificationProvider>
-        </AuthWrapper>
+        <AuthOutlet />
       </MLRedirectHandler>
     ),
     children: [
+      {
+        element: (
+          <BillingAccessProvider>
+            <SaveStatusProvider>
+              <>
+                <Layout />
+                <SaveStatusIndicator />
+              </>
+            </SaveStatusProvider>
+          </BillingAccessProvider>
+        ),
+        children: [
       { index: true, element: <Dashboard /> },
       {
         path: "perfil",
@@ -158,9 +170,11 @@ const router = createBrowserRouter([
           { path: "alterar-senha", element: <AlterarSenha /> },
           { path: "integracoes/mercado-livre", element: <MercadoLivre /> },
           { path: "assinatura", element: <Navigate to="/perfil/assinatura/minha-assinatura" replace /> },
-          { path: "assinatura/minha-assinatura", element: <MySubscription /> },
-          { path: "assinatura/planos", element: <SubscriptionPlans /> },
+          { path: "assinatura/minha-assinatura", element: <SubscriptionPage /> },
+          { path: "assinatura/planos", element: <PlansPage /> },
+          { path: "assinatura/checkout", element: <CheckoutRedirectPage /> },
           { path: "assinatura/formas-de-pagamento", element: <FormasPagamento /> },
+          { path: "assinatura/formas-pagamento", element: <Navigate to="/perfil/assinatura/formas-de-pagamento" replace /> },
           { path: "assinatura/historico", element: <PaymentHistory /> },
           { path: "pagamentos/formas", element: <Navigate to="/perfil/assinatura/formas-de-pagamento" replace /> },
           { path: "pagamentos/extrato", element: <Navigate to="/perfil/assinatura/historico" replace /> },
@@ -168,36 +182,42 @@ const router = createBrowserRouter([
             path: "preferencias",
             element: <Preferencias />,
             children: [
-              { index: true, element: <Navigate to="notificacoes/sales" replace /> },
-              { path: "notificacoes", element: <Navigate to="notificacoes/sales" replace /> },
-              { path: "notificacoes/:category", element: <Notificacoes /> },
+              { index: true, element: <Navigate to="notificacoes" replace /> },
+              { path: "notificacoes", element: <CentralNotificacoesHub /> },
+              { path: "notificacoes/destinatarios", element: <Navigate to="/perfil/preferencias/notificacoes?tab=recipients" replace /> },
+              { path: "notificacoes/historico", element: <NotificationHistorico /> },
+              { path: "notificacoes/:category", element: <LegacyNotificacoesRedirect /> },
               { path: "alertas-pop-up", element: <Navigate to="alertas-pop-up/sales" replace /> },
               { path: "alertas-pop-up/:category", element: <AlertasPopup /> },
             ],
           },
         ],
       },
-      { path: "anuncios", element: <AnunciosPage /> },
-      { path: "anuncios-2", element: <AnunciosTeste /> },
-      { path: "anuncios/debug-importacao", element: <MlListingImportDebug /> },
-      { path: "produtos", element: <Products /> },
+      { path: "anuncios", element: protectPremiumRoute(<AnunciosPage />, "anuncios") },
+      { path: "anuncios-2", element: protectPremiumRoute(<AnunciosTeste />, "anuncios") },
+      { path: "anuncios/debug-importacao", element: protectPremiumRoute(<MlListingImportDebug />, "anuncios") },
+      { path: "produtos", element: protectPremiumRoute(<Products />, "produtos") },
       { path: "clientes", element: <Clientes360 /> },
       { path: "faturas", element: <Faturas /> },
-      { path: "relatorios", element: <Relatorios /> },
-      { path: "concorrencia", element: <ConcorrenciaPage /> },
+      { path: "relatorios", element: protectPremiumRoute(<RelatoriosPage />, "relatorios") },
+      { path: "concorrencia", element: protectPremiumRoute(<ConcorrenciaPage />, "concorrencia") },
       { path: "monitoramento", element: <Navigate to="/concorrencia" replace /> },
       { path: "registros", element: <Registros /> },
       { path: "configuracoes", element: <Navigate to="/perfil" replace /> },
-      { path: "vendas", element: <VendasPage /> },
-      { path: "precificacoes", element: <PrecificacoesPage /> },
-      { path: "precificacoes/inteligente/:listingId", element: <PricingIntelligencePage /> },
-      { path: "produtos/novo", element: <ProductCreate /> },
-      { path: "produtos/:id/editar", element: <ProductEdit /> },
+      { path: "notificacoes", element: <NotificacoesInboxPage /> },
+      { path: "vendas", element: protectPremiumRoute(<VendasPage />, "vendas") },
+      { path: "precificacoes", element: protectPremiumRoute(<PrecificacoesPage />, "precificacoes") },
+      { path: "precificacoes/inteligente/:listingId", element: protectPremiumRoute(<PricingIntelligencePage />, "precificacoes") },
+      { path: "produtos/novo", element: protectPremiumRoute(<ProductCreate />, "produtos") },
+      { path: "produtos/:id/editar", element: protectPremiumRoute(<ProductEdit />, "produtos") },
+      { path: "*", element: <Navigate to="/" replace /> },
+        ],
+      },
       {
         path: "admin/dev-center",
         element: (
           <DevCenterRoute>
-            <DevCenterRoot />
+            <DevCenterShell />
           </DevCenterRoute>
         ),
         children: [
@@ -207,10 +227,12 @@ const router = createBrowserRouter([
           { path: "finance", element: <DevCenterFinance /> },
           { path: "customers-global", element: <DevCenterCustomersGlobal /> },
           { path: "feature-flags", element: <DevCenterFeatureFlags /> },
-          { path: "missions", element: <DevCenter /> },
+          { path: "tickets", element: <SellerTicketsPage /> },
+          { path: "toolbox", element: <DevCenterToolbox /> },
+          { path: "missions", element: <Navigate to="/admin/dev-center/tickets" replace /> },
+          { path: "*", element: <Navigate to="/admin/dev-center" replace /> },
         ],
       },
-      { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
 ]);
