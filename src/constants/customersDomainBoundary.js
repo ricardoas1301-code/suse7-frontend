@@ -29,6 +29,7 @@
 // Regra: Dev Center Global NUNCA consome contrato seller. Clientes360 NUNCA consome admin global.
 // Governança LGPD: constants/customersGlobalLgpdGovernance.js (S_4.8.1)
 // Governança cross-seller: constants/customersGlobalCrossSellerGovernance.js (S_4.8.2)
+// Governança permissões: constants/customersGlobalPermissionsGovernance.js (S_4.8.3)
 // Smoke permanente: npm run smoke:dev-center-customers-boundary (backend)
 // =============================================================================
 

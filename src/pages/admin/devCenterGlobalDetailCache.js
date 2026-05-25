@@ -1,20 +1,17 @@
 // =============================================================================
-// Dev Center S_4.7.3 / S_4.8.1 / S_4.8.2 — cache in-memory do detailContract (drawer global)
+// Dev Center S_4.7.3 / S_4.8.1 / S_4.8.2 / S_4.8.3 — cache detailContract (drawer global)
 //
-// LGPD: armazena apenas o JSON já mascarado retornado pela API admin global.
-// Cross-seller: chave prefixada admin_global — não mistura domínio seller.
-// Sem localStorage/sessionStorage. TTL 90s, max 8 entradas FIFO.
+// LGPD: JSON mascarado da API admin global.
+// Cross-seller: admin_global:{userId}:{id}
+// Permissões: cache NUNCA concede acesso — limpo ao negar/trocar usuário (S_4.8.3).
+// Sem localStorage. TTL 90s, max 8 FIFO.
 // =============================================================================
 
 import { isDetailContractSyncStale } from "../../components/devCenter/ops/opsPresentation.js";
 
-/** Escopo explícito — evita colisão se outro cache usar o mesmo id em contexto diferente. */
 export const DEV_CENTER_DETAIL_CACHE_SCOPE = "admin_global";
 
-/** TTL curto — mesmo cliente reaberto dentro da janela evita refetch. */
 export const DEV_CENTER_DETAIL_CACHE_TTL_MS = 90_000;
-
-/** Memória leve — entradas mais antigas evictadas (FIFO). */
 export const DEV_CENTER_DETAIL_CACHE_MAX_ENTRIES = 8;
 
 /** @typedef {{ contract: Record<string, unknown>; fetchedAt: number }} DetailCacheEntry */
@@ -22,11 +19,35 @@ export const DEV_CENTER_DETAIL_CACHE_MAX_ENTRIES = 8;
 /** @type {Map<string, DetailCacheEntry>} */
 const store = new Map();
 
+/** @type {string | null} */
+let boundUserId = null;
+
 export { isDetailContractSyncStale };
+
+/** Limpa todo o cache — logout, negação ou troca de sessão. */
+export function clearDevCenterGlobalDetailCache() {
+  store.clear();
+}
+
+/**
+ * Vincula cache ao usuário autorizado — troca de userId invalida entradas anteriores.
+ * @param {string | null | undefined} userId
+ */
+export function bindDevCenterGlobalDetailCacheUser(userId) {
+  const next = userId != null && String(userId).trim() ? String(userId) : null;
+  if (boundUserId && next && boundUserId !== next) {
+    store.clear();
+  }
+  if (!next) {
+    store.clear();
+  }
+  boundUserId = next;
+}
 
 /** @param {string} id */
 export function buildDevCenterGlobalDetailCacheKey(id) {
-  return `${DEV_CENTER_DETAIL_CACHE_SCOPE}:${String(id)}`;
+  const uid = boundUserId ?? "_unbound";
+  return `${DEV_CENTER_DETAIL_CACHE_SCOPE}:${uid}:${String(id)}`;
 }
 
 /** @param {DetailCacheEntry} entry @param {number} [now] */
@@ -36,11 +57,13 @@ export function isDetailCacheEntryFresh(entry, now = Date.now()) {
 
 /** @param {string} id */
 export function getDevCenterGlobalDetailCache(id) {
+  if (!boundUserId) return null;
   return store.get(buildDevCenterGlobalDetailCacheKey(id)) ?? null;
 }
 
 /** @param {string} id @param {Record<string, unknown>} contract */
 export function setDevCenterGlobalDetailCache(id, contract) {
+  if (!boundUserId) return;
   store.set(buildDevCenterGlobalDetailCacheKey(id), { contract, fetchedAt: Date.now() });
   while (store.size > DEV_CENTER_DETAIL_CACHE_MAX_ENTRIES) {
     const oldest = store.keys().next().value;
@@ -52,10 +75,9 @@ export function setDevCenterGlobalDetailCache(id, contract) {
 /**
  * @param {string} id
  * @param {DetailCacheEntry | null | undefined} cached
- * @returns {{ fetch: boolean; reason: "miss" | "hit" | "ttl_expired" | "sync_stale" }}
  */
 export function resolveDevCenterDetailFetch(id, cached) {
-  if (!id) return { fetch: false, reason: "miss" };
+  if (!id || !boundUserId) return { fetch: false, reason: "miss" };
   if (!cached) return { fetch: true, reason: "miss" };
   if (!isDetailCacheEntryFresh(cached)) return { fetch: true, reason: "ttl_expired" };
   if (isDetailContractSyncStale(cached.contract)) return { fetch: true, reason: "sync_stale" };
