@@ -86,3 +86,27 @@ export function syncStaleReasonLabel(reason) {
   const key = String(reason ?? "").trim();
   return key && map[key] ? map[key] : DASH;
 }
+
+/**
+ * Rótulo de freshness do drawer (S_4.7.3) — percepção de atualização, sem score.
+ * @param {number | null | undefined} fetchedAt — epoch ms do cache/rede
+ * @param {Record<string, unknown> | null | undefined} contract
+ * @param {{ revalidating?: boolean }} [opts]
+ */
+export function formatDetailFreshnessLabel(fetchedAt, contract, opts = {}) {
+  if (opts.revalidating) return "Atualizando…";
+  if (isDetailContractSyncStale(contract)) return "Pode estar desatualizado";
+
+  if (fetchedAt == null || !Number.isFinite(fetchedAt)) return null;
+
+  const min = Math.max(0, Math.round((Date.now() - fetchedAt) / 60_000));
+  if (min < 1) return "Atualizado agora";
+  if (min === 1) return "Atualizado há 1 min";
+  return `Atualizado há ${min} min`;
+}
+
+/** @param {Record<string, unknown> | null | undefined} contract */
+export function isDetailContractSyncStale(contract) {
+  const sync = /** @type {Record<string, unknown> | undefined} */ (contract?.metadata)?.sync;
+  return sync?.stale === true;
+}

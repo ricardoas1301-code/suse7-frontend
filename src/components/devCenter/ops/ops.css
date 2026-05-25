@@ -239,6 +239,21 @@
   color: var(--s7-admin-muted, #64748b);
 }
 
+.ops-drawer__freshness {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--s7-admin-muted, #64748b);
+}
+
+.ops-drawer__freshness--busy {
+  font-style: italic;
+}
+
+.ops-drawer__freshness--warn {
+  color: #64748b;
+  font-weight: 600;
+}
+
 .ops-drawer__body {
   overflow: auto;
   padding: 16px 20px 24px;

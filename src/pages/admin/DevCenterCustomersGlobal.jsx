@@ -10,7 +10,16 @@ import {
 } from "../../components/devCenter/ops";
 import { devCenterGetCustomersGlobal, devCenterGetCustomerGlobalDetail } from "../../services/devCenterApi";
 import { CUSTOMERS_DOMAIN_ADMIN_GLOBAL } from "../../constants/customersDomainBoundary.js";
-import { formatPtDate, formatPtDateShort } from "../../components/devCenter/ops/opsPresentation";
+import {
+  formatPtDate,
+  formatPtDateShort,
+  formatDetailFreshnessLabel,
+} from "../../components/devCenter/ops/opsPresentation";
+import {
+  getDevCenterGlobalDetailCache,
+  setDevCenterGlobalDetailCache,
+  resolveDevCenterDetailFetch,
+} from "./devCenterGlobalDetailCache.js";
 import "../../components/devCenter/ops/ops.css";
 
 const DASH = "—";
@@ -67,7 +76,10 @@ export default function DevCenterCustomersGlobal() {
   const [detail, setDetail] = useState(null);
   /** Contrato S_4.7.1 — blocos overview/activity/quality/ingestion/metadata para evolução futura do drawer. */
   const [detailContract, setDetailContract] = useState(null);
+  const [detailFetchedAt, setDetailFetchedAt] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailRevalidating, setDetailRevalidating] = useState(false);
+  const [detailFetchError, setDetailFetchError] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -90,27 +102,80 @@ export default function DevCenterCustomersGlobal() {
 
   useEffect(() => {
     if (!selectedId) {
-      setDetail(null);
-      setDetailContract(null);
+      setDetailLoading(false);
+      setDetailRevalidating(false);
+      setDetailFetchError(false);
       return;
     }
+
+    const cached = getDevCenterGlobalDetailCache(selectedId);
+    const decision = resolveDevCenterDetailFetch(selectedId, cached);
+
+    const applyContract = (/** @type {Record<string, unknown>} */ payload, /** @type {number} */ fetchedAt) => {
+      setDetail(/** @type {Record<string, unknown> | null} */ (payload.customer ?? null));
+      setDetailContract(payload);
+      setDetailFetchedAt(fetchedAt);
+    };
+
+    if (cached?.contract) {
+      applyContract(cached.contract, cached.fetchedAt);
+    }
+
+    if (!decision.fetch) {
+      setDetailLoading(false);
+      setDetailRevalidating(false);
+      setDetailFetchError(false);
+      return;
+    }
+
+    const hasCachedUi = Boolean(cached?.contract);
+    if (!hasCachedUi) {
+      setDetailLoading(true);
+      setDetail(null);
+      setDetailContract(null);
+    } else {
+      setDetailRevalidating(true);
+    }
+    setDetailFetchError(false);
+
     let cancelled = false;
-    setDetailLoading(true);
     devCenterGetCustomerGlobalDetail(selectedId).then((res) => {
       if (cancelled) return;
       setDetailLoading(false);
-      if (res.ok) {
-        setDetail(res.data?.customer ?? null);
-        setDetailContract(res.data ?? null);
-      } else {
-        setDetail(null);
-        setDetailContract(null);
+      setDetailRevalidating(false);
+
+      if (res.ok && res.data) {
+        const payload = /** @type {Record<string, unknown>} */ (res.data);
+        const fetchedAt = Date.now();
+        setDevCenterGlobalDetailCache(selectedId, payload);
+        applyContract(payload, fetchedAt);
+        setDetailFetchError(false);
+        return;
       }
+
+      if (cached?.contract) {
+        applyContract(cached.contract, cached.fetchedAt);
+        setDetailFetchError(true);
+        return;
+      }
+
+      setDetail(null);
+      setDetailContract(null);
+      setDetailFetchedAt(null);
     });
+
     return () => {
       cancelled = true;
     };
   }, [selectedId]);
+
+  const detailFreshnessLabel = useMemo(
+    () =>
+      formatDetailFreshnessLabel(detailFetchedAt, detailContract, {
+        revalidating: detailRevalidating,
+      }),
+    [detailFetchedAt, detailContract, detailRevalidating],
+  );
 
   const timelineItems = useMemo(() => {
     const source = detailContract?.overview ?? detail;
@@ -196,10 +261,16 @@ export default function DevCenterCustomersGlobal() {
         open={Boolean(selectedId)}
         title={detail?.name ?? "Cliente global"}
         subtitle={detail?.id ? `ID ${String(detail.id).slice(0, 8)}…` : null}
+        freshnessLabel={
+          detailFetchError && detail
+            ? "Pode estar desatualizado — falha ao atualizar"
+            : detailFreshnessLabel
+        }
+        revalidating={detailRevalidating}
         onClose={() => setSelectedId(null)}
         loading={detailLoading}
       >
-        {!detailLoading && !detail ? (
+        {!detailLoading && !detailRevalidating && !detail && selectedId ? (
           <OpsEmptyState title="Detalhe indisponível" message="Não foi possível carregar o cliente global." />
         ) : null}
 
