@@ -1,6 +1,6 @@
 /* ======================================================
    DESIGN TOKENS — TOP NAV (Seller + Dev Center)
-   Paridade visual do menu horizontal superior.
+   Referência: Layout.css .navbar-premium / .nav-item (/vendas)
 ====================================================== */
 
 :root {
@@ -12,11 +12,17 @@
   --s7-topnav-line-height: 1.4;
   --s7-topnav-letter-spacing: normal;
 
+  --s7-topnav-bar-height: 64px;
+  --s7-topnav-bar-padding-x: 33px;
+  --s7-topnav-bar-bg: #ffffff;
+  --s7-topnav-bar-border: #e5e7eb;
+
   --s7-topnav-link-gap: 6px;
+  --s7-topnav-items-gap: 18px;
   --s7-topnav-link-padding-y: 8px;
   --s7-topnav-link-padding-x: 12px;
   --s7-topnav-link-radius: 10px;
-  --s7-topnav-link-min-height: 36px;
+  --s7-topnav-icon-size: 16px;
 
   --s7-topnav-link-color: #374151;
   --s7-topnav-icon-color: #6b7280;
@@ -27,13 +33,17 @@
   --s7-topnav-active-bg: #2563eb;
   --s7-topnav-active-color: #ffffff;
   --s7-topnav-active-icon-color: #e9ebf1;
-  --s7-topnav-active-border: #2563eb;
-  --s7-topnav-active-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
 
-  /* Identidade Dev Center — produto admin */
-  --s7-dev-center-brand-font-size: 16px;
-  --s7-dev-center-brand-font-weight: 700;
-  --s7-dev-center-brand-letter-spacing: -0.02em;
+  --s7-topnav-actions-gap: 12px;
+  --s7-topnav-actions-padding-left: 33px;
+
+  /* Slot esquerdo — paridade com .nav-logo-img (63px) */
+  --s7-topnav-brand-slot-min-width: 63px;
+
+  /* Dev Center — identidade admin */
+  --s7-dev-center-brand-font-size: 15px;
+  --s7-dev-center-brand-font-weight: 600;
+  --s7-dev-center-brand-letter-spacing: normal;
   --s7-dev-center-brand-color: var(--s7-orange);
   --s7-dev-center-brand-color-hover: var(--s7-orange-hover);
 }

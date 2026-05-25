@@ -2,6 +2,7 @@
    PROTEÇÃO GLOBAL DE IMAGENS
 ===================================================== */
 @import "./styles/tokens/index.css";
+@import "./styles/s7-topnav-shared.css";
 
 /* Utilitário de página — cor em: styles/tokens/colors.css (--s7-bg-page) */
 .s7-page {

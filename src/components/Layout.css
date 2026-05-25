@@ -27,12 +27,9 @@
   align-items: center;
 
   /* 🔥 Espaço padrão nas bordas do navbar */
-  padding: 0 33px;
+  padding: 0 var(--s7-topnav-bar-padding-x);
 
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-
-  /* 🔥 Evita overflow lateral e “quebras” */
+  /* shell: s7-topnav-shared.css */
   box-sizing: border-box;
   overflow: visible; /* 🔥 PERMITE O DROPDOWN APARECER */
 }
@@ -68,66 +65,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
-  gap: 18px;
+  gap: var(--s7-topnav-items-gap);
   white-space: nowrap;
-
-  pointer-events: auto; /* 🔥 ISSO É O PULO DO GATO */
-}
-
-.nav-center .nav-item {
-  pointer-events: auto; /* 🔥 só os botões clicam */
-}
-
-
-.nav-center {
+  pointer-events: auto;
   position: relative;
   z-index: 1;
 }
 
-/* Itens do menu */
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: var(--s7-topnav-link-gap);
-
-  padding: var(--s7-topnav-link-padding-y) var(--s7-topnav-link-padding-x);
-  border-radius: var(--s7-topnav-link-radius);
-
-  font-family: var(--s7-topnav-font-family);
-  font-size: var(--s7-topnav-font-size);
-  font-weight: var(--s7-topnav-font-weight);
-  line-height: var(--s7-topnav-line-height);
-  letter-spacing: var(--s7-topnav-letter-spacing);
-  color: var(--s7-topnav-link-color);
-  text-decoration: none;
-}
-
-.nav-item:hover {
-  background: var(--s7-topnav-hover-bg);
-  color: var(--s7-topnav-hover-color);
-}
-
-.nav-item:hover .nav-icon {
-  color: var(--s7-topnav-hover-icon-color);
-}
-
-/* Item ativo */
-.nav-item.active {
-  background: var(--s7-topnav-active-bg);
-  color: var(--s7-topnav-active-color);
-  font-weight: var(--s7-topnav-font-weight-active);
-}
-
-/* Ícone */
-.nav-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--s7-topnav-icon-color);
-}
-
-.nav-item.active .nav-icon {
-  color: var(--s7-topnav-active-icon-color);
+.nav-center .nav-item {
+  pointer-events: auto;
 }
 
 /* ======================================================================
@@ -138,14 +84,11 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-
-  padding-left: 33px;
-  gap: 12px;
-
+  padding-left: var(--s7-topnav-actions-padding-left);
+  gap: var(--s7-topnav-actions-gap);
   flex-shrink: 0;
   position: relative;
-
-  z-index: 50; /* 🔥 AGORA FUNCIONA */
+  z-index: 50;
   pointer-events: auto;
 }
 

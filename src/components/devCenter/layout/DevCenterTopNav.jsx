@@ -64,16 +64,10 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
           {DEV_CENTER_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={topNavLinkClass}
-                aria-current={undefined}
-              >
+              <NavLink key={item.to} to={item.to} end={item.end} className={topNavLinkClass}>
                 {({ isActive }) => (
                   <>
-                    <Icon className="dc-topnav__link-icon" aria-hidden />
+                    <Icon className="dc-topnav__link-icon nav-icon" strokeWidth={2} aria-hidden />
                     <span aria-current={isActive ? "page" : undefined}>{item.label}</span>
                   </>
                 )}
@@ -81,8 +75,6 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
             );
           })}
         </nav>
-
-        <div className="dc-topnav__spacer" aria-hidden />
 
         <div className="dc-topnav__actions">
           <NotificationBell />
@@ -123,7 +115,7 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className="dc-topnav__link-icon" aria-hidden />
+                    <Icon className="dc-topnav__link-icon nav-icon" strokeWidth={2} aria-hidden />
                     <span aria-current={isActive ? "page" : undefined}>{item.label}</span>
                   </>
                 )}
