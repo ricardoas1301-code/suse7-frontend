@@ -167,6 +167,12 @@ export default function DevCenterCustomersGlobal() {
 
       setDetailFetchError(false);
 
+      setDetail(null);
+
+      setDetailContract(null);
+
+      setDetailFetchedAt(null);
+
       return;
 
     }
