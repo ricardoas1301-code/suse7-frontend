@@ -15,6 +15,9 @@ import {
   SHARE_FONTS,
   SHARE_LAYOUT,
   SHARE_FOOTER_SIGNATURE_LINE_HEIGHT,
+  SHARE_KPI_LABEL_LINE_HEIGHT,
+  SHARE_KPI_LABEL_VALUE_GAP,
+  SHARE_KPI_VALUE_LINE_HEIGHT,
   SHARE_LINE_HEIGHT,
 } from "./SaleRayXShareStyles.js";
 import {
@@ -233,7 +236,10 @@ function drawHeaderProductImage(
   const productX = shellX + shellW - padIn - productSize;
   const minY = shellY + padIn;
   const maxY = shellY + shellH - padIn - productSize;
-  let productY = shellY + padIn + Math.max(0, (metaContentH - productSize) / 2);
+  const topAlignY = shellY + padIn;
+  const centeredY = topAlignY + Math.max(0, (metaContentH - productSize) / 2);
+  // Sobe em relação ao centro; topo alinhado ao bloco Conta / Marketplace / MLB
+  let productY = Math.min(topAlignY + 4, centeredY);
   productY = Math.min(Math.max(productY, minY), maxY);
 
   const productCenterX = productX + productSize / 2;
@@ -282,30 +288,30 @@ function drawHealthKpiShell(
   const colGap = SHARE_LAYOUT.kpiColumnGap;
   const innerW = width - innerPad * 2;
   const colW = (innerW - colGap * 2) / 3;
-  const blockH = h - innerPad * 2;
-  const labelOffset = 12;
-  const valueOffset = 26;
-  const stackH = labelOffset + valueOffset;
-  const blockStartY = y + innerPad + Math.max(0, (blockH - stackH) / 2);
+  const stackH =
+    SHARE_KPI_LABEL_LINE_HEIGHT + SHARE_KPI_LABEL_VALUE_GAP + SHARE_KPI_VALUE_LINE_HEIGHT;
+  const blockMidY = y + h / 2;
+  const labelCenterY = blockMidY - stackH / 2 + SHARE_KPI_LABEL_LINE_HEIGHT / 2;
+  const valueCenterY =
+    blockMidY + stackH / 2 - SHARE_KPI_VALUE_LINE_HEIGHT / 2;
 
   cards.forEach((card, idx) => {
     const colX = x + innerPad + idx * (colW + colGap);
-    const bias = idx === 2 ? SHARE_LAYOUT.kpiHealthColumnBias : 0.5;
-    const centerX = colX + colW * bias;
-    const labelY = blockStartY + labelOffset;
-    const valueY = blockStartY + valueOffset;
+    const centerX = colX + colW / 2;
 
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.font = SHARE_FONTS.kpiLabel;
     ctx.fillStyle = healthVisual.kpiLabelColor;
-    ctx.fillText(card.label, centerX, labelY);
+    ctx.fillText(card.label, centerX, labelCenterY);
 
     ctx.font = SHARE_FONTS.kpiValue;
     ctx.fillStyle = card.valueColor;
     const valLine = wrapText(ctx, card.value, colW)[0] ?? card.value;
-    ctx.fillText(valLine, centerX, valueY);
+    ctx.fillText(valLine, centerX, valueCenterY);
   });
 
+  ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
 }
 
@@ -491,6 +497,21 @@ function estimateFinancialHeight(
   return h;
 }
 
+function measureFooterSignatureContentHeight(
+  ctx: CanvasRenderingContext2D,
+  footerLines: string[],
+  innerWidth: number,
+) {
+  if (!footerLines.length) return 0;
+  ctx.font = SHARE_FONTS.footerSignature;
+  let h = 0;
+  footerLines.forEach((line, idx) => {
+    h += wrapText(ctx, line, innerWidth).length * SHARE_FOOTER_SIGNATURE_LINE_HEIGHT;
+    if (idx < footerLines.length - 1) h += SHARE_LAYOUT.footerSignatureLineGap;
+  });
+  return h;
+}
+
 function estimateFooterHeight(
   ctx: CanvasRenderingContext2D,
   payload: SaleRayXSharePayload,
@@ -499,12 +520,7 @@ function estimateFooterHeight(
   const plan = buildShareLayoutPlan(payload, (tone, margin) =>
     summaryToneToColor(tone as "neutral", margin),
   );
-  let h = 0;
-  ctx.font = SHARE_FONTS.footerSignature;
-  for (const line of plan.footerLines) {
-    h += wrapText(ctx, line, innerWidth).length * SHARE_FOOTER_SIGNATURE_LINE_HEIGHT + 2;
-  }
-  return h;
+  return measureFooterSignatureContentHeight(ctx, plan.footerLines, innerWidth);
 }
 
 export type ShareImageFormat = "png" | "jpeg";
@@ -691,16 +707,35 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   }
 
   if (plan.footerLines.length) {
-    let footY = y + cardH + SHARE_LAYOUT.footerMarginTop;
+    const footerBlockStart = y + cardH;
+    const footerContentH = measureFooterSignatureContentHeight(
+      ctx,
+      plan.footerLines,
+      contentW,
+    );
+    const footerBlockH =
+      SHARE_LAYOUT.footerMarginTop + footerContentH + SHARE_LAYOUT.footerMarginBottom;
+    let cy =
+      footerBlockStart +
+      (footerBlockH - footerContentH) / 2 +
+      SHARE_FOOTER_SIGNATURE_LINE_HEIGHT / 2;
+
     ctx.font = SHARE_FONTS.footerSignature;
     ctx.fillStyle = SHARE_COLORS.muted;
     ctx.textAlign = "center";
-    for (const line of plan.footerLines) {
+    ctx.textBaseline = "middle";
+
+    plan.footerLines.forEach((line, idx) => {
       for (const part of wrapText(ctx, line, contentW)) {
-        ctx.fillText(part, width / 2, footY + 12);
-        footY += SHARE_FOOTER_SIGNATURE_LINE_HEIGHT;
+        ctx.fillText(part, width / 2, cy);
+        cy += SHARE_FOOTER_SIGNATURE_LINE_HEIGHT;
       }
-    }
+      if (idx < plan.footerLines.length - 1) {
+        cy += SHARE_LAYOUT.footerSignatureLineGap;
+      }
+    });
+
+    ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
   }
 

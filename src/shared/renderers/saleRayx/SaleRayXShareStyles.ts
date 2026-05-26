@@ -7,6 +7,7 @@ import {
   saleRayxFinancialTypography,
   saleRayxFooterSignatureLineHeight,
   saleRayxFooterSignatureTypography,
+  saleRayxKpiLineHeight,
   saleRayxKpiTypography,
   saleRayxTypography,
   saleRayxTypographyLineHeight,
@@ -51,6 +52,7 @@ export const SHARE_LAYOUT = {
   metaFieldGap: 8,
   footerMarginTop: 24,
   footerMarginBottom: 24,
+  footerSignatureLineGap: 5,
   dottedDash: [4, 4] as number[],
 } as const;
 
@@ -62,7 +64,7 @@ export const SHARE_FONTS = {
   body: saleRayxTypography.body,
   bodyBold: saleRayxTypography.bodyBold,
   detail: saleRayxTypography.detail,
-  kpiLabel: saleRayxTypography.label,
+  kpiLabel: saleRayxKpiTypography.label,
   kpiValue: saleRayxKpiTypography.valuePrimary,
   valuePrimary: saleRayxTypography.valuePrimary,
   valueSecondary: saleRayxTypography.valueSecondary,
@@ -85,6 +87,9 @@ export const SHARE_VALUE_LINE_HEIGHT = saleRayxTypographyLineHeight.value;
 export const SHARE_DETAIL_LINE_HEIGHT = saleRayxTypographyLineHeight.detail;
 export const SHARE_SECTION_LINE_HEIGHT = saleRayxTypographyLineHeight.section;
 export const SHARE_FOOTER_SIGNATURE_LINE_HEIGHT = saleRayxFooterSignatureLineHeight;
+export const SHARE_KPI_LABEL_LINE_HEIGHT = saleRayxKpiLineHeight.label;
+export const SHARE_KPI_VALUE_LINE_HEIGHT = saleRayxKpiLineHeight.value;
+export const SHARE_KPI_LABEL_VALUE_GAP = saleRayxKpiLineHeight.gap;
 
 export const SHARE_FIN_LINE_HEIGHT = saleRayxFinancialLineHeight.meta;
 export const SHARE_FIN_VALUE_LINE_HEIGHT = saleRayxFinancialLineHeight.value;
