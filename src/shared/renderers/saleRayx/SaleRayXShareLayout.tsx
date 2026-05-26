@@ -16,6 +16,7 @@ export type SaleRayXSharePayload = {
   templateVersion: string;
   variant: string;
   productImage?: string | null;
+  productImageSource?: string | null;
   marketplace?: string | null;
   marketplaceLabel?: string | null;
   marketplaceAccentColor?: string | null;
@@ -32,6 +33,8 @@ export type ShareMetaField = {
   valueTone?: SaleRayXShareMetaValueTone;
   accentColor?: string;
   truncateMode?: "twoLineEllipsis";
+  /** Label em linha própria; valor alinhado abaixo (ex.: nome do anúncio) */
+  labelOnOwnLine?: boolean;
   emphasis?: "bold";
 };
 
@@ -225,6 +228,7 @@ export function buildShareLayoutPlan(
       label: "Anúncio",
       value: announcementName,
       truncateMode: "twoLineEllipsis",
+      labelOnOwnLine: true,
     });
   }
 

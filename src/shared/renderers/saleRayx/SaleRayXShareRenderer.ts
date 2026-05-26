@@ -8,6 +8,7 @@ import {
   WHATSAPP_SHARE_CAPTION,
 } from "./SaleRayXShareStyles.js";
 import { exportSaleRayxShareImage } from "./SaleRayXImageExporter.js";
+import { resolveShareProductThumbnail } from "./resolveShareProductThumbnail.js";
 import type { SaleRayXShareOutputMode, SaleRayXSharePayload } from "./SaleRayXShareLayout.js";
 
 export type SaleRayXShareInput = {
@@ -155,7 +156,20 @@ export async function generateSaleRayxShareImage(
   input: SaleRayXShareInput,
   _outputMode: SaleRayXShareOutputMode = "copy",
 ): Promise<GenerateShareImageResult> {
+  const thumbnail = await resolveShareProductThumbnail(input.product, input.general);
   const payload = buildSaleRayxSharePayload(input);
+  if (thumbnail.url) {
+    payload.productImage = thumbnail.url;
+  }
+  payload.productImageSource = thumbnail.source;
+
+  if (import.meta.env.DEV) {
+    console.info("[S7 Raio-X Share] thumbnail_resolve", {
+      thumbnail_source: thumbnail.source,
+      thumbnail_url: thumbnail.url,
+    });
+  }
+
   const cacheKey = buildShareCacheKey(payload);
   const cached = imageCache.get(cacheKey);
   const caption = resolveWhatsappCaption(payload.templateVersion);

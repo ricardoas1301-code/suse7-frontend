@@ -3,14 +3,15 @@
 // =============================================================================
 
 import suse7LogoUrl from "../../../assets/suse7-logo-redonda.png";
-import {
-  computeMoneyColumnLayout,
-  summaryToneToColor,
-} from "../../../components/sales/saleRayxSummaryRender.js";
+import { summaryToneToColor } from "../../../components/sales/saleRayxSummaryRender.js";
 import { SALE_RAYX_BRAND_TITLE } from "../../../components/sales/saleRayxSummary.js";
 import {
   SHARE_COLORS,
-  SHARE_DETAIL_LINE_HEIGHT,
+  SHARE_FIN_DETAIL_LINE_HEIGHT,
+  SHARE_FIN_LINE_HEIGHT,
+  SHARE_FIN_SECTION_LINE_HEIGHT,
+  SHARE_FIN_VALUE_LINE_HEIGHT,
+  SHARE_FINANCIAL_FONTS,
   SHARE_FONTS,
   SHARE_LAYOUT,
   SHARE_LINE_HEIGHT,
@@ -34,13 +35,39 @@ function loadImage(src: string, useCors = true): Promise<HTMLImageElement> {
   });
 }
 
-async function loadProductImage(src: string): Promise<HTMLImageElement | null> {
+function logThumbnailDev(event: string, payload: Record<string, unknown>) {
+  if (import.meta.env.DEV) {
+    console.info(`[S7 Raio-X Share] ${event}`, payload);
+  }
+}
+
+async function loadProductImage(
+  src: string,
+  source: string | null | undefined,
+): Promise<HTMLImageElement | null> {
+  logThumbnailDev("thumbnail_source", {
+    thumbnail_source: source ?? "payload",
+    thumbnail_url: src,
+  });
   try {
-    return await loadImage(src, true);
+    const img = await loadImage(src, true);
+    logThumbnailDev("thumbnail_loaded", { thumbnail_source: source, thumbnail_loaded: true });
+    return img;
   } catch {
     try {
-      return await loadImage(src, false);
-    } catch {
+      const img = await loadImage(src, false);
+      logThumbnailDev("thumbnail_loaded", {
+        thumbnail_source: source,
+        thumbnail_loaded: true,
+        cors: false,
+      });
+      return img;
+    } catch (err) {
+      logThumbnailDev("thumbnail_failed", {
+        thumbnail_source: source,
+        thumbnail_loaded: false,
+        error: err instanceof Error ? err.message : "IMAGE_LOAD_FAILED",
+      });
       return null;
     }
   }
@@ -55,6 +82,11 @@ function measureMetaFieldLines(
   field: ShareMetaField,
   metaTextWidth: number,
 ): string[] {
+  if (field.labelOnOwnLine && field.label) {
+    ctx.font = SHARE_FONTS.metaBold;
+    return wrapTextMaxLinesEllipsis(ctx, field.value, metaTextWidth, 2);
+  }
+
   if (!metaFieldHasLabel(field)) {
     ctx.font = SHARE_FONTS.valueSecondary;
     if (field.truncateMode === "twoLineEllipsis") {
@@ -79,6 +111,10 @@ function measureMetaFieldHeight(
   field: ShareMetaField,
   metaTextWidth: number,
 ): number {
+  if (field.labelOnOwnLine && field.label) {
+    const valueLines = measureMetaFieldLines(ctx, field, metaTextWidth);
+    return SHARE_LINE_HEIGHT + valueLines.length * SHARE_LINE_HEIGHT;
+  }
   return measureMetaFieldLines(ctx, field, metaTextWidth).length * SHARE_LINE_HEIGHT;
 }
 
@@ -86,15 +122,34 @@ function drawMetaField(
   ctx: CanvasRenderingContext2D,
   field: ShareMetaField,
   startY: number,
-  pad: number,
-  metaTextWidth: number,
+  innerX: number,
+  innerWidth: number,
 ): number {
+  if (field.labelOnOwnLine && field.label) {
+    ctx.font = SHARE_FONTS.metaLabel;
+    ctx.fillStyle = SHARE_COLORS.muted;
+    ctx.fillText(`${field.label}:`, innerX, startY + 13);
+
+    const valueStartY = startY + SHARE_LINE_HEIGHT;
+    ctx.font = SHARE_FONTS.metaBold;
+    ctx.fillStyle = SHARE_COLORS.text;
+    const valueLines = wrapTextMaxLinesEllipsis(ctx, field.value, innerWidth, 2);
+    for (let i = 0; i < valueLines.length; i += 1) {
+      ctx.fillText(valueLines[i], innerX, valueStartY + 13 + i * SHARE_LINE_HEIGHT);
+    }
+    return (
+      valueStartY +
+      valueLines.length * SHARE_LINE_HEIGHT +
+      SHARE_LAYOUT.metaFieldGap
+    );
+  }
+
   if (!metaFieldHasLabel(field)) {
     ctx.font = SHARE_FONTS.valueSecondary;
     ctx.fillStyle = SHARE_COLORS.text;
-    const valueLines = measureMetaFieldLines(ctx, field, metaTextWidth);
+    const valueLines = measureMetaFieldLines(ctx, field, innerWidth);
     for (let i = 0; i < valueLines.length; i += 1) {
-      ctx.fillText(valueLines[i], pad, startY + 13 + i * SHARE_LINE_HEIGHT);
+      ctx.fillText(valueLines[i], innerX, startY + 13 + i * SHARE_LINE_HEIGHT);
     }
     return startY + valueLines.length * SHARE_LINE_HEIGHT + SHARE_LAYOUT.metaFieldGap;
   }
@@ -103,7 +158,7 @@ function drawMetaField(
   const label = `${field.label}: `;
   const labelW = ctx.measureText(label).width;
   ctx.fillStyle = SHARE_COLORS.muted;
-  ctx.fillText(label, pad, startY + 13);
+  ctx.fillText(label, innerX, startY + 13);
 
   ctx.font = SHARE_FONTS.metaBold;
   const valueColor =
@@ -112,18 +167,35 @@ function drawMetaField(
       : SHARE_COLORS.text;
   ctx.fillStyle = valueColor;
 
-  const valueMaxWidth = Math.max(50, metaTextWidth - labelW);
+  const valueMaxWidth = Math.max(50, innerWidth - labelW);
   const valueLines =
     field.truncateMode === "twoLineEllipsis"
       ? wrapTextMaxLinesEllipsis(ctx, field.value, valueMaxWidth, 2)
       : wrapText(ctx, field.value, valueMaxWidth);
 
-  const valueX = pad + labelW;
+  const valueX = innerX + labelW;
   for (let i = 0; i < valueLines.length; i += 1) {
     ctx.fillText(valueLines[i], valueX, startY + 13 + i * SHARE_LINE_HEIGHT);
   }
 
   return startY + valueLines.length * SHARE_LINE_HEIGHT + SHARE_LAYOUT.metaFieldGap;
+}
+
+function drawNeutralHeaderShell(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const radius = SHARE_LAYOUT.shellRadius;
+  ctx.fillStyle = SHARE_COLORS.white;
+  roundRect(ctx, x, y, width, height, radius);
+  ctx.fill();
+  ctx.strokeStyle = SHARE_COLORS.headerShellBorder;
+  ctx.lineWidth = 1;
+  roundRect(ctx, x, y, width, height, radius);
+  ctx.stroke();
 }
 
 function drawHealthShell(
@@ -351,18 +423,30 @@ function estimateFinancialHeight(
   for (const row of plan.financialLines) {
     if (row.kind === "blank") h += 6;
     else if (row.kind === "dotted") h += 10;
-    else if (row.kind === "section") h += SHARE_SECTION_LINE_HEIGHT + 4;
-    else if (row.kind === "health") h += SHARE_VALUE_LINE_HEIGHT;
+    else if (row.kind === "section") h += SHARE_FIN_SECTION_LINE_HEIGHT + 4;
+    else if (row.kind === "health") h += SHARE_FIN_VALUE_LINE_HEIGHT;
     else if (row.kind === "money") {
-      h += SHARE_LINE_HEIGHT;
-      if (row.detail) h += SHARE_DETAIL_LINE_HEIGHT;
+      h += row.variant === "resultado" ? SHARE_FIN_VALUE_LINE_HEIGHT : SHARE_FIN_LINE_HEIGHT;
+      if (row.detail) h += SHARE_FIN_DETAIL_LINE_HEIGHT;
     } else if (row.kind === "text") {
-      ctx.font = SHARE_FONTS.body;
-      h += wrapText(ctx, row.text, innerWidth).length * SHARE_LINE_HEIGHT;
+      ctx.font = SHARE_FINANCIAL_FONTS.body;
+      h += wrapText(ctx, row.text, innerWidth).length * SHARE_FIN_LINE_HEIGHT;
     }
   }
+  return h;
+}
+
+function estimateFooterHeight(
+  ctx: CanvasRenderingContext2D,
+  payload: SaleRayXSharePayload,
+  innerWidth: number,
+) {
+  const plan = buildShareLayoutPlan(payload, (tone, margin) =>
+    summaryToneToColor(tone as "neutral", margin),
+  );
+  let h = 0;
+  ctx.font = SHARE_FONTS.footer;
   for (const line of plan.footerLines) {
-    ctx.font = SHARE_FONTS.footer;
     h += wrapText(ctx, line, innerWidth).length * 14 + 2;
   }
   return h;
@@ -389,7 +473,7 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   const productSize = SHARE_LAYOUT.productImageSize;
   const contentW = width - pad * 2;
   const productX = width - pad - productSize - SHARE_LAYOUT.productInsetFromRight;
-  const metaTextWidth = productX - pad - SHARE_LAYOUT.headerGap;
+  const headerInnerW = contentW - SHARE_LAYOUT.headerShellPadding * 2;
 
   const measureCanvas = document.createElement("canvas");
   const measureCtx = measureCanvas.getContext("2d");
@@ -399,19 +483,23 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
     summaryToneToColor(tone as "neutral", margin),
   );
 
-  let metaHeight = pad + SHARE_LAYOUT.logoSize + 14;
+  let metaContentH = 0;
   for (const field of plan.metaFields) {
-    metaHeight += measureMetaFieldHeight(measureCtx, field, metaTextWidth) + SHARE_LAYOUT.metaFieldGap;
+    metaContentH +=
+      measureMetaFieldHeight(measureCtx, field, headerInnerW) + SHARE_LAYOUT.metaFieldGap;
   }
+  const headerShellH = metaContentH + SHARE_LAYOUT.headerShellPadding * 2;
+  const logoRowH = SHARE_LAYOUT.logoSize + 14;
+  const headerBlockH =
+    Math.max(logoRowH, productSize + 6) + headerShellH + SHARE_LAYOUT.headerToKpiGap;
 
-  const headerHeight =
-    Math.max(metaHeight, pad + productSize + 8) + SHARE_LAYOUT.headerToKpiGap;
   const kpiBlockHeight = SHARE_LAYOUT.kpiShellHeight + SHARE_LAYOUT.sectionGap;
-  const financialInnerWidth = width - pad * 2 - SHARE_LAYOUT.financialCardPadding * 2;
+  const financialInnerWidth = contentW - SHARE_LAYOUT.financialCardPadding * 2;
   const financialHeight = estimateFinancialHeight(measureCtx, payload, financialInnerWidth);
-  const height = headerHeight + kpiBlockHeight + financialHeight + pad;
-
-  const moneyLayout = computeMoneyColumnLayout(measureCtx, payload.renderModel);
+  const footerHeight = estimateFooterHeight(measureCtx, payload, contentW);
+  const footerGap = plan.footerLines.length > 0 ? SHARE_LAYOUT.footerGap : 0;
+  const height =
+    pad + headerBlockH + kpiBlockHeight + financialHeight + footerGap + footerHeight + pad;
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -427,7 +515,9 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
 
   const [logo, productImg] = await Promise.all([
     loadImage(String(suse7LogoUrl)),
-    payload.productImage ? loadProductImage(String(payload.productImage)) : Promise.resolve(null),
+    payload.productImage
+      ? loadProductImage(String(payload.productImage), payload.productImageSource)
+      : Promise.resolve(null),
   ]);
 
   let y = pad;
@@ -450,6 +540,10 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
     drawCoverImage(ctx, productImg, productX, productY, productSize, productSize);
     ctx.restore();
   } else {
+    logThumbnailDev("thumbnail_failed", {
+      thumbnail_source: payload.productImageSource ?? "fallback",
+      thumbnail_loaded: false,
+    });
     const r = productSize / 2;
     ctx.fillStyle = SHARE_COLORS.cardBg;
     ctx.beginPath();
@@ -465,13 +559,18 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
     ctx.textAlign = "left";
   }
 
-  y += SHARE_LAYOUT.logoSize + 14;
+  y += logoRowH;
 
+  const headerShellY = y;
+  drawNeutralHeaderShell(ctx, pad, headerShellY, contentW, headerShellH);
+
+  const headerInnerX = pad + SHARE_LAYOUT.headerShellPadding;
+  let innerY = headerShellY + SHARE_LAYOUT.headerShellPadding;
   for (const field of plan.metaFields) {
-    y = drawMetaField(ctx, field, y, pad, metaTextWidth);
+    innerY = drawMetaField(ctx, field, innerY, headerInnerX, headerInnerW);
   }
 
-  y = Math.max(y, pad + productSize + 6) + SHARE_LAYOUT.headerToKpiGap;
+  y = headerShellY + headerShellH + SHARE_LAYOUT.headerToKpiGap;
 
   const kpiY = y;
   drawHealthKpiShell(ctx, pad, kpiY, contentW, plan.healthVisual, plan.kpiCards);
@@ -486,7 +585,7 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   drawHealthShell(ctx, cardX, y, cardW, cardH, plan.healthVisual);
 
   let fy = y + SHARE_LAYOUT.financialCardPadding;
-  const valueColumnX = cardInnerX + moneyLayout.valueRightX;
+  const valueColumnX = cardInnerX + cardInnerW - SHARE_LAYOUT.financialValueRightInset;
 
   for (const row of plan.financialLines) {
     if (row.kind === "blank") {
@@ -499,67 +598,69 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
       continue;
     }
     if (row.kind === "section") {
-      ctx.font = SHARE_FONTS.section;
+      ctx.font = SHARE_FINANCIAL_FONTS.section;
       ctx.fillStyle = SHARE_COLORS.text;
-      ctx.fillText(row.text.toUpperCase(), cardInnerX, fy + 12);
-      fy += SHARE_SECTION_LINE_HEIGHT + 4;
+      ctx.fillText(row.text.toUpperCase(), cardInnerX, fy + 13);
+      fy += SHARE_FIN_SECTION_LINE_HEIGHT + 4;
       continue;
     }
     if (row.kind === "health") {
       ctx.textAlign = "left";
-      ctx.font = SHARE_FONTS.body;
+      ctx.font = SHARE_FINANCIAL_FONTS.body;
       ctx.fillStyle = SHARE_COLORS.text;
-      ctx.fillText("Saúde da venda", cardInnerX, fy + 14);
+      ctx.fillText("Saúde da venda", cardInnerX, fy + 15);
       ctx.textAlign = "right";
-      ctx.font = SHARE_FONTS.valuePrimary;
+      ctx.font = SHARE_FINANCIAL_FONTS.valuePrimary;
       ctx.fillStyle = plan.healthVisual.valueColor;
-      ctx.fillText(row.value, valueColumnX, fy + 14);
+      ctx.fillText(row.value, valueColumnX, fy + 15);
       ctx.textAlign = "left";
-      fy += SHARE_VALUE_LINE_HEIGHT;
+      fy += SHARE_FIN_VALUE_LINE_HEIGHT;
       continue;
     }
     if (row.kind === "money") {
       const isResultado = row.variant === "resultado";
       ctx.textAlign = "left";
-      ctx.font = isResultado ? SHARE_FONTS.body : SHARE_FONTS.body;
+      ctx.font = SHARE_FINANCIAL_FONTS.body;
       ctx.fillStyle = SHARE_COLORS.text;
-      ctx.fillText(row.label, cardInnerX, fy + (isResultado ? 14 : 13));
+      ctx.fillText(row.label, cardInnerX, fy + (isResultado ? 15 : 14));
       ctx.textAlign = "right";
-      ctx.font = isResultado ? SHARE_FONTS.valuePrimary : SHARE_FONTS.valueSecondary;
+      ctx.font = isResultado
+        ? SHARE_FINANCIAL_FONTS.valuePrimary
+        : SHARE_FINANCIAL_FONTS.valueSecondary;
       ctx.fillStyle = row.color;
-      ctx.fillText(row.value, valueColumnX, fy + (isResultado ? 14 : 13));
+      ctx.fillText(row.value, valueColumnX, fy + (isResultado ? 15 : 14));
       ctx.textAlign = "left";
-      fy += isResultado ? SHARE_VALUE_LINE_HEIGHT : SHARE_LINE_HEIGHT;
+      fy += isResultado ? SHARE_FIN_VALUE_LINE_HEIGHT : SHARE_FIN_LINE_HEIGHT;
       if (row.detail) {
-        ctx.font = SHARE_FONTS.detail;
+        ctx.font = SHARE_FINANCIAL_FONTS.detail;
         ctx.fillStyle = SHARE_COLORS.detail;
-        ctx.fillText(row.detail, cardInnerX, fy + 11);
-        fy += SHARE_DETAIL_LINE_HEIGHT;
+        ctx.fillText(row.detail, cardInnerX, fy + 12);
+        fy += SHARE_FIN_DETAIL_LINE_HEIGHT;
       }
       continue;
     }
     if (row.kind === "text") {
-      ctx.font = SHARE_FONTS.body;
+      ctx.font = SHARE_FINANCIAL_FONTS.body;
       ctx.fillStyle = row.color ?? SHARE_COLORS.text;
       for (const part of wrapText(ctx, row.text, cardInnerW)) {
-        ctx.fillText(part, cardInnerX, fy + 13);
-        fy += SHARE_LINE_HEIGHT;
+        ctx.fillText(part, cardInnerX, fy + 14);
+        fy += SHARE_FIN_LINE_HEIGHT;
       }
     }
   }
 
   if (plan.footerLines.length) {
-    fy += 6;
-    drawDottedLine(ctx, cardInnerX, fy, cardInnerW);
-    fy += 12;
+    let footY = y + cardH + footerGap;
     ctx.font = SHARE_FONTS.footer;
     ctx.fillStyle = SHARE_COLORS.muted;
+    ctx.textAlign = "center";
     for (const line of plan.footerLines) {
-      for (const part of wrapText(ctx, line, cardInnerW)) {
-        ctx.fillText(part, cardInnerX, fy + 10);
-        fy += 14;
+      for (const part of wrapText(ctx, line, contentW - pad * 2)) {
+        ctx.fillText(part, width / 2, footY + 10);
+        footY += 14;
       }
     }
+    ctx.textAlign = "left";
   }
 
   return new Promise((resolve, reject) => {
