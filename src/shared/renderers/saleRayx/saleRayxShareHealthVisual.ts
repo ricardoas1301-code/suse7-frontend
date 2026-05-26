@@ -10,36 +10,54 @@ export type SaleHealthVisualTone = "critical" | "attention" | "healthy" | "unkno
 export type SaleHealthVisualState = {
   statusLabel: string;
   tone: SaleHealthVisualTone;
-  color: string;
+  accentColor: string;
   borderColor: string;
+  valueColor: string;
+  badgeColor: string;
   backgroundColor: string;
   kpiLabelColor: string;
+  /** Alias de valueColor — compatibilidade */
+  color: string;
 };
 
 const KPI_LABEL_COLOR = "#ff8533";
 
 const PALETTE: Record<
   SaleHealthVisualTone,
-  { color: string; borderColor: string; backgroundColor: string }
+  {
+    accentColor: string;
+    borderColor: string;
+    valueColor: string;
+    badgeColor: string;
+    backgroundColor: string;
+  }
 > = {
   critical: {
-    color: "#dc2626",
+    accentColor: "#ef4444",
     borderColor: "#ef4444",
+    valueColor: "#dc2626",
+    badgeColor: "#dc2626",
     backgroundColor: "rgba(255, 80, 80, 0.08)",
   },
   attention: {
-    color: "#f97316",
+    accentColor: "#f97316",
     borderColor: "#f97316",
+    valueColor: "#ea580c",
+    badgeColor: "#f97316",
     backgroundColor: "rgba(249, 115, 22, 0.06)",
   },
   healthy: {
-    color: "#16a34a",
+    accentColor: "#22c55e",
     borderColor: "#22c55e",
+    valueColor: "#16a34a",
+    badgeColor: "#16a34a",
     backgroundColor: "rgba(34, 197, 94, 0.06)",
   },
   unknown: {
-    color: "#64748b",
+    accentColor: "#94a3b8",
     borderColor: "#e2e8f0",
+    valueColor: "#64748b",
+    badgeColor: "#64748b",
     backgroundColor: "rgba(248, 250, 252, 0.96)",
   },
 };
@@ -58,8 +76,8 @@ function toneFromMargin(m: number | null): SaleHealthVisualTone {
 }
 
 /**
- * Estado visual para KPIs exportados (cores/bordas do bloco superior).
- * Faixas de margem para cor: &lt;0 crítico, 0–5 atenção, &gt;5 saudável.
+ * Estado visual unificado (KPI shell + financial shell + resultado).
+ * Faixas: &lt;0 crítico, 0–5 atenção, &gt;5 saudável.
  */
 export function getSaleHealthVisualState(
   marginPercentRaw: unknown,
@@ -87,9 +105,12 @@ export function getSaleHealthVisualState(
   return {
     statusLabel,
     tone,
-    color: palette.color,
+    accentColor: palette.accentColor,
     borderColor: palette.borderColor,
+    valueColor: palette.valueColor,
+    badgeColor: palette.badgeColor,
     backgroundColor: palette.backgroundColor,
     kpiLabelColor: KPI_LABEL_COLOR,
+    color: palette.valueColor,
   };
 }

@@ -14,6 +14,8 @@ import {
   SHARE_FONTS,
   SHARE_LAYOUT,
   SHARE_LINE_HEIGHT,
+  SHARE_SECTION_LINE_HEIGHT,
+  SHARE_VALUE_LINE_HEIGHT,
 } from "./SaleRayXShareStyles.js";
 import {
   buildShareLayoutPlan,
@@ -54,7 +56,7 @@ function measureMetaFieldLines(
   metaTextWidth: number,
 ): string[] {
   if (!metaFieldHasLabel(field)) {
-    ctx.font = SHARE_FONTS.metaBold;
+    ctx.font = SHARE_FONTS.valueSecondary;
     if (field.truncateMode === "twoLineEllipsis") {
       return wrapTextMaxLinesEllipsis(ctx, field.value, metaTextWidth, 2);
     }
@@ -88,7 +90,7 @@ function drawMetaField(
   metaTextWidth: number,
 ): number {
   if (!metaFieldHasLabel(field)) {
-    ctx.font = SHARE_FONTS.metaBold;
+    ctx.font = SHARE_FONTS.valueSecondary;
     ctx.fillStyle = SHARE_COLORS.text;
     const valueLines = measureMetaFieldLines(ctx, field, metaTextWidth);
     for (let i = 0; i < valueLines.length; i += 1) {
@@ -97,7 +99,7 @@ function drawMetaField(
     return startY + valueLines.length * SHARE_LINE_HEIGHT + SHARE_LAYOUT.metaFieldGap;
   }
 
-  ctx.font = SHARE_FONTS.meta;
+  ctx.font = SHARE_FONTS.metaLabel;
   const label = `${field.label}: `;
   const labelW = ctx.measureText(label).width;
   ctx.fillStyle = SHARE_COLORS.muted;
@@ -105,7 +107,9 @@ function drawMetaField(
 
   ctx.font = SHARE_FONTS.metaBold;
   const valueColor =
-    field.valueTone === "accent" && field.accentColor ? field.accentColor : SHARE_COLORS.text;
+    field.valueTone === "accent" && field.accentColor
+      ? field.accentColor
+      : SHARE_COLORS.text;
   ctx.fillStyle = valueColor;
 
   const valueMaxWidth = Math.max(50, metaTextWidth - labelW);
@@ -122,6 +126,27 @@ function drawMetaField(
   return startY + valueLines.length * SHARE_LINE_HEIGHT + SHARE_LAYOUT.metaFieldGap;
 }
 
+function drawHealthShell(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  healthVisual: SaleHealthVisualState,
+) {
+  const radius = SHARE_LAYOUT.shellRadius;
+  const borderWidth = healthVisual.tone === "critical" ? 2 : 1.5;
+
+  ctx.fillStyle = healthVisual.backgroundColor;
+  roundRect(ctx, x, y, width, height, radius);
+  ctx.fill();
+
+  ctx.strokeStyle = healthVisual.borderColor;
+  ctx.lineWidth = borderWidth;
+  roundRect(ctx, x, y, width, height, radius);
+  ctx.stroke();
+}
+
 function drawHealthKpiShell(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -131,17 +156,7 @@ function drawHealthKpiShell(
   cards: { label: string; value: string; valueColor: string }[],
 ) {
   const h = SHARE_LAYOUT.kpiShellHeight;
-  const radius = 10;
-  const borderWidth = healthVisual.tone === "critical" ? 2 : 1.5;
-
-  ctx.fillStyle = healthVisual.backgroundColor;
-  roundRect(ctx, x, y, width, h, radius);
-  ctx.fill();
-
-  ctx.strokeStyle = healthVisual.borderColor;
-  ctx.lineWidth = borderWidth;
-  roundRect(ctx, x, y, width, h, radius);
-  ctx.stroke();
+  drawHealthShell(ctx, x, y, width, h, healthVisual);
 
   const innerPad = SHARE_LAYOUT.kpiShellPadding;
   const colGap = SHARE_LAYOUT.kpiColumnGap;
@@ -150,8 +165,8 @@ function drawHealthKpiShell(
 
   cards.forEach((card, idx) => {
     const colX = x + innerPad + idx * (colW + colGap);
-    const labelY = y + innerPad + 12;
-    const valueY = y + h - innerPad - 6;
+    const labelY = y + innerPad + 11;
+    const valueY = y + h - innerPad - 4;
 
     ctx.textAlign = "left";
     ctx.font = SHARE_FONTS.kpiLabel;
@@ -336,7 +351,8 @@ function estimateFinancialHeight(
   for (const row of plan.financialLines) {
     if (row.kind === "blank") h += 6;
     else if (row.kind === "dotted") h += 10;
-    else if (row.kind === "section") h += SHARE_LINE_HEIGHT + 4;
+    else if (row.kind === "section") h += SHARE_SECTION_LINE_HEIGHT + 4;
+    else if (row.kind === "health") h += SHARE_VALUE_LINE_HEIGHT;
     else if (row.kind === "money") {
       h += SHARE_LINE_HEIGHT;
       if (row.detail) h += SHARE_DETAIL_LINE_HEIGHT;
@@ -388,12 +404,12 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
     metaHeight += measureMetaFieldHeight(measureCtx, field, metaTextWidth) + SHARE_LAYOUT.metaFieldGap;
   }
 
-  const headerHeight = Math.max(metaHeight, pad + productSize + 8);
+  const headerHeight =
+    Math.max(metaHeight, pad + productSize + 8) + SHARE_LAYOUT.headerToKpiGap;
   const kpiBlockHeight = SHARE_LAYOUT.kpiShellHeight + SHARE_LAYOUT.sectionGap;
   const financialInnerWidth = width - pad * 2 - SHARE_LAYOUT.financialCardPadding * 2;
   const financialHeight = estimateFinancialHeight(measureCtx, payload, financialInnerWidth);
-  const height =
-    headerHeight + kpiBlockHeight + financialHeight + SHARE_LAYOUT.financialCardPadding + pad;
+  const height = headerHeight + kpiBlockHeight + financialHeight + pad;
 
   const moneyLayout = computeMoneyColumnLayout(measureCtx, payload.renderModel);
 
@@ -455,7 +471,7 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
     y = drawMetaField(ctx, field, y, pad, metaTextWidth);
   }
 
-  y = Math.max(y, pad + productSize + SHARE_LAYOUT.sectionGap);
+  y = Math.max(y, pad + productSize + 6) + SHARE_LAYOUT.headerToKpiGap;
 
   const kpiY = y;
   drawHealthKpiShell(ctx, pad, kpiY, contentW, plan.healthVisual, plan.kpiCards);
@@ -467,12 +483,7 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   const cardInnerX = cardX + SHARE_LAYOUT.financialCardPadding;
   const cardInnerW = cardW - SHARE_LAYOUT.financialCardPadding * 2;
   const cardH = financialHeight;
-  ctx.fillStyle = SHARE_COLORS.white;
-  roundRect(ctx, cardX, y, cardW, cardH, SHARE_LAYOUT.financialCardRadius);
-  ctx.fill();
-  ctx.strokeStyle = SHARE_COLORS.border;
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  drawHealthShell(ctx, cardX, y, cardW, cardH, plan.healthVisual);
 
   let fy = y + SHARE_LAYOUT.financialCardPadding;
   const valueColumnX = cardInnerX + moneyLayout.valueRightX;
@@ -491,20 +502,34 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
       ctx.font = SHARE_FONTS.section;
       ctx.fillStyle = SHARE_COLORS.text;
       ctx.fillText(row.text.toUpperCase(), cardInnerX, fy + 12);
-      fy += SHARE_LINE_HEIGHT + 4;
+      fy += SHARE_SECTION_LINE_HEIGHT + 4;
       continue;
     }
-    if (row.kind === "money") {
+    if (row.kind === "health") {
       ctx.textAlign = "left";
       ctx.font = SHARE_FONTS.body;
       ctx.fillStyle = SHARE_COLORS.text;
-      ctx.fillText(row.label, cardInnerX, fy + 13);
+      ctx.fillText("Saúde da venda", cardInnerX, fy + 14);
       ctx.textAlign = "right";
-      ctx.font = SHARE_FONTS.bodyBold;
-      ctx.fillStyle = row.color;
-      ctx.fillText(row.value, valueColumnX, fy + 13);
+      ctx.font = SHARE_FONTS.valuePrimary;
+      ctx.fillStyle = plan.healthVisual.valueColor;
+      ctx.fillText(row.value, valueColumnX, fy + 14);
       ctx.textAlign = "left";
-      fy += SHARE_LINE_HEIGHT;
+      fy += SHARE_VALUE_LINE_HEIGHT;
+      continue;
+    }
+    if (row.kind === "money") {
+      const isResultado = row.variant === "resultado";
+      ctx.textAlign = "left";
+      ctx.font = isResultado ? SHARE_FONTS.body : SHARE_FONTS.body;
+      ctx.fillStyle = SHARE_COLORS.text;
+      ctx.fillText(row.label, cardInnerX, fy + (isResultado ? 14 : 13));
+      ctx.textAlign = "right";
+      ctx.font = isResultado ? SHARE_FONTS.valuePrimary : SHARE_FONTS.valueSecondary;
+      ctx.fillStyle = row.color;
+      ctx.fillText(row.value, valueColumnX, fy + (isResultado ? 14 : 13));
+      ctx.textAlign = "left";
+      fy += isResultado ? SHARE_VALUE_LINE_HEIGHT : SHARE_LINE_HEIGHT;
       if (row.detail) {
         ctx.font = SHARE_FONTS.detail;
         ctx.fillStyle = SHARE_COLORS.detail;

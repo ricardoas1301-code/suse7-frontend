@@ -25,3 +25,4 @@ export {
   type SaleHealthVisualState,
   type SaleHealthVisualTone,
 } from "./saleRayxShareHealthVisual.js";
+export { saleRayxTypography, saleRayxTypographyLineHeight } from "./saleRayxTypography.js";

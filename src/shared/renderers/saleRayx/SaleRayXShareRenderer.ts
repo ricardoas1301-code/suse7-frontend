@@ -38,6 +38,7 @@ function resolveProductImage(product?: Record<string, unknown> | null): string |
   const candidates = [
     product.product_thumbnail_url,
     product.listing_thumbnail_url,
+    product.marketplace_thumbnail_url,
     product.product_image_url,
     product.thumbnail_url,
     product.image_url,
