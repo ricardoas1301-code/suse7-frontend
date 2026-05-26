@@ -148,7 +148,6 @@ export function buildShareLayoutPlan(
         financialLines.push({ kind: "dotted" });
         financialLines.push({ kind: "section", text: text.replace(/^[^\w]*\s*/, "") });
       } else if (text.includes("Margem de contingência")) {
-        financialLines.push({ kind: "dotted" });
         financialLines.push({ kind: "section", text });
       } else {
         financialLines.push({ kind: "text", text });

@@ -7,14 +7,13 @@ import {
   saleRayxFinancialTypography,
   saleRayxFooterSignatureLineHeight,
   saleRayxFooterSignatureTypography,
-  saleRayxKpiLineHeight,
   saleRayxKpiTypography,
   saleRayxTypography,
   saleRayxTypographyLineHeight,
 } from "./saleRayxTypography.js";
 
 /** Template oficial congelado — A4.5.2.A */
-export const SALE_RAYX_SHARE_TEMPLATE_VERSION = "s7-rayx-share-v2.2-final.1";
+export const SALE_RAYX_SHARE_TEMPLATE_VERSION = "s7-rayx-share-v2.2-final";
 
 const PRODUCT_IMAGE_BASE_PX = 72;
 const PRODUCT_IMAGE_SCALE = 1.26;
@@ -40,10 +39,10 @@ export const SHARE_LAYOUT = {
   headerImageGap: 12,
   headerShellPadding: 17,
   headerToKpiGap: 22,
-  kpiShellHeight: 76,
-  kpiShellPadding: 10,
+  kpiShellHeight: 68,
+  kpiShellPadding: 9,
   kpiColumnGap: 10,
-  footerSignatureLineGap: 6,
+  kpiHealthColumnBias: 0.56,
   shellRadius: 10,
   financialCardRadius: 10,
   financialCardPadding: 14,
@@ -63,7 +62,7 @@ export const SHARE_FONTS = {
   body: saleRayxTypography.body,
   bodyBold: saleRayxTypography.bodyBold,
   detail: saleRayxTypography.detail,
-  kpiLabel: saleRayxKpiTypography.label,
+  kpiLabel: saleRayxTypography.label,
   kpiValue: saleRayxKpiTypography.valuePrimary,
   valuePrimary: saleRayxTypography.valuePrimary,
   valueSecondary: saleRayxTypography.valueSecondary,
@@ -86,9 +85,6 @@ export const SHARE_VALUE_LINE_HEIGHT = saleRayxTypographyLineHeight.value;
 export const SHARE_DETAIL_LINE_HEIGHT = saleRayxTypographyLineHeight.detail;
 export const SHARE_SECTION_LINE_HEIGHT = saleRayxTypographyLineHeight.section;
 export const SHARE_FOOTER_SIGNATURE_LINE_HEIGHT = saleRayxFooterSignatureLineHeight;
-export const SHARE_KPI_LABEL_LINE_HEIGHT = saleRayxKpiLineHeight.label;
-export const SHARE_KPI_VALUE_LINE_HEIGHT = saleRayxKpiLineHeight.value;
-export const SHARE_KPI_LABEL_VALUE_GAP = saleRayxKpiLineHeight.gap;
 
 export const SHARE_FIN_LINE_HEIGHT = saleRayxFinancialLineHeight.meta;
 export const SHARE_FIN_VALUE_LINE_HEIGHT = saleRayxFinancialLineHeight.value;

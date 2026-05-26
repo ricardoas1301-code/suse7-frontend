@@ -15,9 +15,6 @@ import {
   SHARE_FONTS,
   SHARE_LAYOUT,
   SHARE_FOOTER_SIGNATURE_LINE_HEIGHT,
-  SHARE_KPI_LABEL_LINE_HEIGHT,
-  SHARE_KPI_LABEL_VALUE_GAP,
-  SHARE_KPI_VALUE_LINE_HEIGHT,
   SHARE_LINE_HEIGHT,
 } from "./SaleRayXShareStyles.js";
 import {
@@ -228,12 +225,16 @@ function drawHeaderProductImage(
   shellX: number,
   shellY: number,
   shellW: number,
-  _shellH: number,
+  shellH: number,
+  metaContentH: number,
   productSize: number,
 ) {
   const padIn = SHARE_LAYOUT.headerShellPadding;
   const productX = shellX + shellW - padIn - productSize;
-  const productY = shellY + padIn;
+  const minY = shellY + padIn;
+  const maxY = shellY + shellH - padIn - productSize;
+  let productY = shellY + padIn + Math.max(0, (metaContentH - productSize) / 2);
+  productY = Math.min(Math.max(productY, minY), maxY);
 
   const productCenterX = productX + productSize / 2;
   const productCenterY = productY + productSize / 2;
@@ -490,22 +491,6 @@ function estimateFinancialHeight(
   return h;
 }
 
-function measureFooterContentHeight(
-  ctx: CanvasRenderingContext2D,
-  footerLines: string[],
-  innerWidth: number,
-) {
-  if (!footerLines.length) return 0;
-  ctx.font = SHARE_FONTS.footerSignature;
-  let h = 0;
-  footerLines.forEach((line, idx) => {
-    const parts = wrapText(ctx, line, innerWidth);
-    h += parts.length * SHARE_FOOTER_SIGNATURE_LINE_HEIGHT;
-    if (idx < footerLines.length - 1) h += SHARE_LAYOUT.footerSignatureLineGap;
-  });
-  return h;
-}
-
 function estimateFooterHeight(
   ctx: CanvasRenderingContext2D,
   payload: SaleRayXSharePayload,
@@ -514,7 +499,12 @@ function estimateFooterHeight(
   const plan = buildShareLayoutPlan(payload, (tone, margin) =>
     summaryToneToColor(tone as "neutral", margin),
   );
-  return measureFooterContentHeight(ctx, plan.footerLines, innerWidth);
+  let h = 0;
+  ctx.font = SHARE_FONTS.footerSignature;
+  for (const line of plan.footerLines) {
+    h += wrapText(ctx, line, innerWidth).length * SHARE_FOOTER_SIGNATURE_LINE_HEIGHT + 2;
+  }
+  return h;
 }
 
 export type ShareImageFormat = "png" | "jpeg";
@@ -701,31 +691,16 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   }
 
   if (plan.footerLines.length) {
-    const footerBlockStart = y + cardH;
-    const footerContentH = measureFooterContentHeight(ctx, plan.footerLines, contentW);
-    const footerBlockH =
-      SHARE_LAYOUT.footerMarginTop + footerContentH + SHARE_LAYOUT.footerMarginBottom;
-    let cy =
-      footerBlockStart +
-      (footerBlockH - footerContentH) / 2 +
-      SHARE_FOOTER_SIGNATURE_LINE_HEIGHT / 2;
-
+    let footY = y + cardH + SHARE_LAYOUT.footerMarginTop;
     ctx.font = SHARE_FONTS.footerSignature;
     ctx.fillStyle = SHARE_COLORS.muted;
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    plan.footerLines.forEach((line, idx) => {
+    for (const line of plan.footerLines) {
       for (const part of wrapText(ctx, line, contentW)) {
-        ctx.fillText(part, width / 2, cy);
-        cy += SHARE_FOOTER_SIGNATURE_LINE_HEIGHT;
+        ctx.fillText(part, width / 2, footY + 12);
+        footY += SHARE_FOOTER_SIGNATURE_LINE_HEIGHT;
       }
-      if (idx < plan.footerLines.length - 1) {
-        cy += SHARE_LAYOUT.footerSignatureLineGap;
-      }
-    });
-
-    ctx.textBaseline = "alphabetic";
+    }
     ctx.textAlign = "left";
   }
 
