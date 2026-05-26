@@ -1,15 +1,19 @@
 // =============================================================================
-// Estilos visuais — Raio-X compartilhável (template v2.3)
+// Estilos visuais — Raio-X compartilhável (template congelado v2.2-final)
 // =============================================================================
 
 import {
   saleRayxFinancialLineHeight,
   saleRayxFinancialTypography,
+  saleRayxFooterSignatureLineHeight,
+  saleRayxFooterSignatureTypography,
+  saleRayxKpiTypography,
   saleRayxTypography,
   saleRayxTypographyLineHeight,
 } from "./saleRayxTypography.js";
 
-export const SALE_RAYX_SHARE_TEMPLATE_VERSION = "s7-rayx-share-v2.3";
+/** Template oficial congelado — A4.5.2.A */
+export const SALE_RAYX_SHARE_TEMPLATE_VERSION = "s7-rayx-share-v2.2-final";
 
 const PRODUCT_IMAGE_BASE_PX = 72;
 const PRODUCT_IMAGE_SCALE = 1.26;
@@ -32,20 +36,21 @@ export const SHARE_LAYOUT = {
   padding: 20,
   logoSize: 36,
   productImageSize: Math.round(PRODUCT_IMAGE_BASE_PX * PRODUCT_IMAGE_SCALE),
-  productInsetFromRight: 36,
-  headerGap: 16,
+  headerImageGap: 12,
   headerShellPadding: 17,
   headerToKpiGap: 22,
-  kpiShellHeight: 64,
+  kpiShellHeight: 68,
   kpiShellPadding: 9,
   kpiColumnGap: 10,
+  kpiHealthColumnBias: 0.56,
   shellRadius: 10,
   financialCardRadius: 10,
   financialCardPadding: 14,
   financialValueRightInset: 2,
   sectionGap: 10,
   metaFieldGap: 8,
-  footerGap: 14,
+  footerMarginTop: 24,
+  footerMarginBottom: 24,
   dottedDash: [4, 4] as number[],
 } as const;
 
@@ -58,11 +63,12 @@ export const SHARE_FONTS = {
   bodyBold: saleRayxTypography.bodyBold,
   detail: saleRayxTypography.detail,
   kpiLabel: saleRayxTypography.label,
-  kpiValue: saleRayxTypography.valuePrimary,
+  kpiValue: saleRayxKpiTypography.valuePrimary,
   valuePrimary: saleRayxTypography.valuePrimary,
   valueSecondary: saleRayxTypography.valueSecondary,
   section: saleRayxTypography.sectionTitle,
   footer: saleRayxTypography.footer,
+  footerSignature: saleRayxFooterSignatureTypography.meta,
 } as const;
 
 export const SHARE_FINANCIAL_FONTS = {
@@ -78,6 +84,7 @@ export const SHARE_LINE_HEIGHT = saleRayxTypographyLineHeight.meta;
 export const SHARE_VALUE_LINE_HEIGHT = saleRayxTypographyLineHeight.value;
 export const SHARE_DETAIL_LINE_HEIGHT = saleRayxTypographyLineHeight.detail;
 export const SHARE_SECTION_LINE_HEIGHT = saleRayxTypographyLineHeight.section;
+export const SHARE_FOOTER_SIGNATURE_LINE_HEIGHT = saleRayxFooterSignatureLineHeight;
 
 export const SHARE_FIN_LINE_HEIGHT = saleRayxFinancialLineHeight.meta;
 export const SHARE_FIN_VALUE_LINE_HEIGHT = saleRayxFinancialLineHeight.value;

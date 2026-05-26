@@ -30,5 +30,7 @@ export {
   saleRayxTypographyLineHeight,
   saleRayxFinancialTypography,
   SALE_RAYX_FINANCIAL_TYPE_SCALE,
+  SALE_RAYX_KPI_VALUE_SCALE,
+  SALE_RAYX_FOOTER_SIGNATURE_SCALE,
 } from "./saleRayxTypography.js";
 export { resolveShareProductThumbnail } from "./resolveShareProductThumbnail.js";

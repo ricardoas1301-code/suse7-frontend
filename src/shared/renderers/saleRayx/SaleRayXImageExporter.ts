@@ -14,9 +14,8 @@ import {
   SHARE_FINANCIAL_FONTS,
   SHARE_FONTS,
   SHARE_LAYOUT,
+  SHARE_FOOTER_SIGNATURE_LINE_HEIGHT,
   SHARE_LINE_HEIGHT,
-  SHARE_SECTION_LINE_HEIGHT,
-  SHARE_VALUE_LINE_HEIGHT,
 } from "./SaleRayXShareStyles.js";
 import {
   buildShareLayoutPlan,
@@ -219,6 +218,55 @@ function drawHealthShell(
   ctx.stroke();
 }
 
+function drawHeaderProductImage(
+  ctx: CanvasRenderingContext2D,
+  productImg: HTMLImageElement | null,
+  payload: SaleRayXSharePayload,
+  shellX: number,
+  shellY: number,
+  shellW: number,
+  shellH: number,
+  metaContentH: number,
+  productSize: number,
+) {
+  const padIn = SHARE_LAYOUT.headerShellPadding;
+  const productX = shellX + shellW - padIn - productSize;
+  const minY = shellY + padIn;
+  const maxY = shellY + shellH - padIn - productSize;
+  let productY = shellY + padIn + Math.max(0, (metaContentH - productSize) / 2);
+  productY = Math.min(Math.max(productY, minY), maxY);
+
+  const productCenterX = productX + productSize / 2;
+  const productCenterY = productY + productSize / 2;
+  const r = productSize / 2;
+
+  if (productImg) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(productCenterX, productCenterY, r, 0, Math.PI * 2);
+    ctx.clip();
+    drawCoverImage(ctx, productImg, productX, productY, productSize, productSize);
+    ctx.restore();
+    return;
+  }
+
+  logThumbnailDev("thumbnail_failed", {
+    thumbnail_source: payload.productImageSource ?? "fallback",
+    thumbnail_loaded: false,
+  });
+  ctx.fillStyle = SHARE_COLORS.cardBg;
+  ctx.beginPath();
+  ctx.arc(productCenterX, productCenterY, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = SHARE_COLORS.muted;
+  ctx.font = SHARE_FONTS.detail;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("Anúncio", productCenterX, productCenterY);
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+}
+
 function drawHealthKpiShell(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -234,21 +282,28 @@ function drawHealthKpiShell(
   const colGap = SHARE_LAYOUT.kpiColumnGap;
   const innerW = width - innerPad * 2;
   const colW = (innerW - colGap * 2) / 3;
+  const blockH = h - innerPad * 2;
+  const labelOffset = 12;
+  const valueOffset = 26;
+  const stackH = labelOffset + valueOffset;
+  const blockStartY = y + innerPad + Math.max(0, (blockH - stackH) / 2);
 
   cards.forEach((card, idx) => {
     const colX = x + innerPad + idx * (colW + colGap);
-    const labelY = y + innerPad + 11;
-    const valueY = y + h - innerPad - 4;
+    const bias = idx === 2 ? SHARE_LAYOUT.kpiHealthColumnBias : 0.5;
+    const centerX = colX + colW * bias;
+    const labelY = blockStartY + labelOffset;
+    const valueY = blockStartY + valueOffset;
 
-    ctx.textAlign = "left";
+    ctx.textAlign = "center";
     ctx.font = SHARE_FONTS.kpiLabel;
     ctx.fillStyle = healthVisual.kpiLabelColor;
-    ctx.fillText(card.label, colX, labelY);
+    ctx.fillText(card.label, centerX, labelY);
 
     ctx.font = SHARE_FONTS.kpiValue;
     ctx.fillStyle = card.valueColor;
     const valLine = wrapText(ctx, card.value, colW)[0] ?? card.value;
-    ctx.fillText(valLine, colX, valueY);
+    ctx.fillText(valLine, centerX, valueY);
   });
 
   ctx.textAlign = "left";
@@ -445,9 +500,9 @@ function estimateFooterHeight(
     summaryToneToColor(tone as "neutral", margin),
   );
   let h = 0;
-  ctx.font = SHARE_FONTS.footer;
+  ctx.font = SHARE_FONTS.footerSignature;
   for (const line of plan.footerLines) {
-    h += wrapText(ctx, line, innerWidth).length * 14 + 2;
+    h += wrapText(ctx, line, innerWidth).length * SHARE_FOOTER_SIGNATURE_LINE_HEIGHT + 2;
   }
   return h;
 }
@@ -472,8 +527,9 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   const pad = SHARE_LAYOUT.padding;
   const productSize = SHARE_LAYOUT.productImageSize;
   const contentW = width - pad * 2;
-  const productX = width - pad - productSize - SHARE_LAYOUT.productInsetFromRight;
   const headerInnerW = contentW - SHARE_LAYOUT.headerShellPadding * 2;
+  const headerTextInnerW =
+    headerInnerW - productSize - SHARE_LAYOUT.headerImageGap;
 
   const measureCanvas = document.createElement("canvas");
   const measureCtx = measureCanvas.getContext("2d");
@@ -486,20 +542,24 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   let metaContentH = 0;
   for (const field of plan.metaFields) {
     metaContentH +=
-      measureMetaFieldHeight(measureCtx, field, headerInnerW) + SHARE_LAYOUT.metaFieldGap;
+      measureMetaFieldHeight(measureCtx, field, headerTextInnerW) + SHARE_LAYOUT.metaFieldGap;
   }
-  const headerShellH = metaContentH + SHARE_LAYOUT.headerShellPadding * 2;
+  const headerShellH = Math.max(
+    metaContentH + SHARE_LAYOUT.headerShellPadding * 2,
+    productSize + SHARE_LAYOUT.headerShellPadding * 2,
+  );
   const logoRowH = SHARE_LAYOUT.logoSize + 14;
-  const headerBlockH =
-    Math.max(logoRowH, productSize + 6) + headerShellH + SHARE_LAYOUT.headerToKpiGap;
+  const headerBlockH = logoRowH + headerShellH + SHARE_LAYOUT.headerToKpiGap;
 
   const kpiBlockHeight = SHARE_LAYOUT.kpiShellHeight + SHARE_LAYOUT.sectionGap;
   const financialInnerWidth = contentW - SHARE_LAYOUT.financialCardPadding * 2;
   const financialHeight = estimateFinancialHeight(measureCtx, payload, financialInnerWidth);
   const footerHeight = estimateFooterHeight(measureCtx, payload, contentW);
-  const footerGap = plan.footerLines.length > 0 ? SHARE_LAYOUT.footerGap : 0;
-  const height =
-    pad + headerBlockH + kpiBlockHeight + financialHeight + footerGap + footerHeight + pad;
+  const footerBlockH =
+    plan.footerLines.length > 0
+      ? SHARE_LAYOUT.footerMarginTop + footerHeight + SHARE_LAYOUT.footerMarginBottom
+      : 0;
+  const height = pad + headerBlockH + kpiBlockHeight + financialHeight + footerBlockH + pad;
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -521,9 +581,6 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   ]);
 
   let y = pad;
-  const productY = pad + 2;
-  const productCenterX = productX + productSize / 2;
-  const productCenterY = productY + productSize / 2;
 
   ctx.drawImage(logo, pad, y, SHARE_LAYOUT.logoSize, SHARE_LAYOUT.logoSize);
   ctx.fillStyle = SHARE_COLORS.text;
@@ -531,43 +588,27 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   ctx.textAlign = "left";
   ctx.fillText(SALE_RAYX_BRAND_TITLE, pad + SHARE_LAYOUT.logoSize + 10, y + 24);
 
-  if (productImg) {
-    const r = productSize / 2;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(productCenterX, productCenterY, r, 0, Math.PI * 2);
-    ctx.clip();
-    drawCoverImage(ctx, productImg, productX, productY, productSize, productSize);
-    ctx.restore();
-  } else {
-    logThumbnailDev("thumbnail_failed", {
-      thumbnail_source: payload.productImageSource ?? "fallback",
-      thumbnail_loaded: false,
-    });
-    const r = productSize / 2;
-    ctx.fillStyle = SHARE_COLORS.cardBg;
-    ctx.beginPath();
-    ctx.arc(productCenterX, productCenterY, r, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = SHARE_COLORS.muted;
-    ctx.font = SHARE_FONTS.detail;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("Anúncio", productCenterX, productCenterY);
-    ctx.textBaseline = "alphabetic";
-    ctx.textAlign = "left";
-  }
-
   y += logoRowH;
 
   const headerShellY = y;
   drawNeutralHeaderShell(ctx, pad, headerShellY, contentW, headerShellH);
 
+  drawHeaderProductImage(
+    ctx,
+    productImg,
+    payload,
+    pad,
+    headerShellY,
+    contentW,
+    headerShellH,
+    metaContentH,
+    productSize,
+  );
+
   const headerInnerX = pad + SHARE_LAYOUT.headerShellPadding;
   let innerY = headerShellY + SHARE_LAYOUT.headerShellPadding;
   for (const field of plan.metaFields) {
-    innerY = drawMetaField(ctx, field, innerY, headerInnerX, headerInnerW);
+    innerY = drawMetaField(ctx, field, innerY, headerInnerX, headerTextInnerW);
   }
 
   y = headerShellY + headerShellH + SHARE_LAYOUT.headerToKpiGap;
@@ -650,14 +691,14 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   }
 
   if (plan.footerLines.length) {
-    let footY = y + cardH + footerGap;
-    ctx.font = SHARE_FONTS.footer;
+    let footY = y + cardH + SHARE_LAYOUT.footerMarginTop;
+    ctx.font = SHARE_FONTS.footerSignature;
     ctx.fillStyle = SHARE_COLORS.muted;
     ctx.textAlign = "center";
     for (const line of plan.footerLines) {
-      for (const part of wrapText(ctx, line, contentW - pad * 2)) {
-        ctx.fillText(part, width / 2, footY + 10);
-        footY += 14;
+      for (const part of wrapText(ctx, line, contentW)) {
+        ctx.fillText(part, width / 2, footY + 12);
+        footY += SHARE_FOOTER_SIGNATURE_LINE_HEIGHT;
       }
     }
     ctx.textAlign = "left";

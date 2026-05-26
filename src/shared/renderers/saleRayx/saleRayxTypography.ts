@@ -7,6 +7,12 @@ const FONT_STACK = "Arial, Helvetica, sans-serif";
 /** Escala proporcional do bloco financeiro (A4.5.3) */
 export const SALE_RAYX_FINANCIAL_TYPE_SCALE = 1.16;
 
+/** KPI values only (A4.5.2.A) */
+export const SALE_RAYX_KPI_VALUE_SCALE = 1.16;
+
+/** Rodapé assinatura premium (A4.5.2.A) */
+export const SALE_RAYX_FOOTER_SIGNATURE_SCALE = 1.33;
+
 function scalePx(px: number, scale = 1): number {
   return Math.round(px * scale);
 }
@@ -56,3 +62,17 @@ export const saleRayxFinancialLineHeight = {
   section: Math.round(18 * SALE_RAYX_FINANCIAL_TYPE_SCALE),
   detail: Math.round(15 * SALE_RAYX_FINANCIAL_TYPE_SCALE),
 } as const;
+
+/** KPI — somente valuePrimary +16% */
+export const saleRayxKpiTypography = {
+  valuePrimary: font("bold", 17, SALE_RAYX_KPI_VALUE_SCALE),
+} as const;
+
+/** Rodapé — meta +33% */
+export const saleRayxFooterSignatureTypography = {
+  meta: font("", 14, SALE_RAYX_FOOTER_SIGNATURE_SCALE),
+} as const;
+
+export const saleRayxFooterSignatureLineHeight = Math.round(
+  saleRayxTypographyLineHeight.meta * SALE_RAYX_FOOTER_SIGNATURE_SCALE,
+);
