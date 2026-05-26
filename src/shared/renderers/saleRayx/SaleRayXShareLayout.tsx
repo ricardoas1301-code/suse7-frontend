@@ -68,6 +68,34 @@ export type ShareLayoutPlan = {
   footerLines: string[];
 };
 
+function normalizeSectionHeading(text: string): string {
+  return String(text).replace(/^[^\w]*\s*/, "").trim();
+}
+
+function isContingencySectionText(text: string): boolean {
+  const normalized = String(text)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  return normalized.includes("margem de contingencia");
+}
+
+function isCustosInternosSectionText(text: string): boolean {
+  return String(text).includes("CUSTOS INTERNOS");
+}
+
+type SummaryLine = SaleRayxSummaryRenderModel["lines"][number];
+
+function nextLineIsContingencySection(lines: SummaryLine[], index: number): boolean {
+  const next = lines[index + 1];
+  return next?.kind === "text" && isContingencySectionText(String(next.text));
+}
+
+function nextLineIsCustosInternosSection(lines: SummaryLine[], index: number): boolean {
+  const next = lines[index + 1];
+  return next?.kind === "text" && isCustosInternosSectionText(String(next.text));
+}
+
 /**
  * Monta plano de desenho a partir do renderModel (sem lógica financeira).
  */
@@ -103,7 +131,9 @@ export function buildShareLayoutPlan(
   let quantidadeValue: string | null = null;
   let clienteValue: string | null = null;
 
-  for (const row of lines) {
+  for (let i = 0; i < lines.length; i += 1) {
+    const row = lines[i];
+
     if (row.kind === "text" && String(row.text).includes("Gerado por Suse7")) {
       inFooter = true;
       inFinancial = false;
@@ -134,6 +164,9 @@ export function buildShareLayoutPlan(
       continue;
     }
     if (row.kind === "blank") {
+      if (nextLineIsContingencySection(lines, i) || nextLineIsCustosInternosSection(lines, i)) {
+        continue;
+      }
       financialLines.push({ kind: "blank" });
       continue;
     }
@@ -142,13 +175,14 @@ export function buildShareLayoutPlan(
       if (text.includes("RESULTADO")) {
         inResultado = true;
         financialLines.push({ kind: "dotted" });
-        financialLines.push({ kind: "section", text: text.replace(/^[^\w]*\s*/, "") });
-      } else if (text.includes("CUSTOS INTERNOS")) {
+        financialLines.push({ kind: "section", text: normalizeSectionHeading(text) });
+      } else if (isCustosInternosSectionText(text)) {
         inResultado = false;
         financialLines.push({ kind: "dotted" });
-        financialLines.push({ kind: "section", text: text.replace(/^[^\w]*\s*/, "") });
-      } else if (text.includes("Margem de contingência")) {
-        financialLines.push({ kind: "section", text });
+        financialLines.push({ kind: "section", text: normalizeSectionHeading(text) });
+      } else if (isContingencySectionText(text)) {
+        financialLines.push({ kind: "dotted" });
+        financialLines.push({ kind: "section", text: normalizeSectionHeading(text) });
       } else {
         financialLines.push({ kind: "text", text });
       }
