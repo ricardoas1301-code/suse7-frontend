@@ -1,0 +1,22 @@
+// =============================================================================
+// Raio-X compartilhável — exports públicos
+// =============================================================================
+
+export {
+  buildSaleRayxSharePayload,
+  buildShareCacheKey,
+  generateSaleRayxShareImage,
+  blobToBase64DataUri,
+  clearSaleRayxShareCache,
+  WHATSAPP_SHARE_CAPTION,
+  SALE_RAYX_SHARE_TEMPLATE_VERSION,
+} from "./SaleRayXShareRenderer.js";
+
+export { exportSaleRayxShareImage } from "./SaleRayXImageExporter.js";
+export { buildShareLayoutPlan, SaleRayXShareLayout } from "./SaleRayXShareLayout.js";
+export { copySaleRayxShare } from "./SaleRayXCopyAdapter.js";
+export { printSaleRayxShare } from "./SaleRayXPrintAdapter.js";
+export { sendSaleRayxWhatsAppShare } from "./SaleRayXWhatsappAdapter.js";
+
+export type { SaleRayXShareInput } from "./SaleRayXShareRenderer.js";
+export type { SaleRayXShareOutputMode, SaleRayXSharePayload } from "./SaleRayXShareLayout.js";
