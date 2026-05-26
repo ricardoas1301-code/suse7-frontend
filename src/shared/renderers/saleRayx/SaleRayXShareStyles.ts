@@ -2,7 +2,7 @@
 // Estilos visuais — Raio-X compartilhável (fonte: modal Raio-X)
 // =============================================================================
 
-export const SALE_RAYX_SHARE_TEMPLATE_VERSION = "s7-rayx-share-v2";
+export const SALE_RAYX_SHARE_TEMPLATE_VERSION = "s7-rayx-share-v2.1";
 
 export const SHARE_COLORS = {
   text: "#111827",
@@ -21,9 +21,11 @@ export const SHARE_LAYOUT = {
   padding: 20,
   logoSize: 36,
   productImageSize: 72,
-  headerGap: 12,
-  kpiHeight: 74,
-  kpiGap: 8,
+  productInsetFromRight: 40,
+  headerGap: 16,
+  kpiShellHeight: 54,
+  kpiShellPadding: 8,
+  kpiColumnGap: 10,
   financialCardRadius: 10,
   financialCardPadding: 12,
   sectionGap: 8,
@@ -47,5 +49,4 @@ export const SHARE_FONTS = {
 export const SHARE_LINE_HEIGHT = 19;
 export const SHARE_DETAIL_LINE_HEIGHT = 15;
 
-export const WHATSAPP_SHARE_CAPTION = `📣 Suse7 — Raio-X da venda
-`;
+export const WHATSAPP_SHARE_CAPTION = `💰 Suse7 — Raio-X da venda`;

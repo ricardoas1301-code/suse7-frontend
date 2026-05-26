@@ -20,3 +20,8 @@ export { sendSaleRayxWhatsAppShare } from "./SaleRayXWhatsappAdapter.js";
 
 export type { SaleRayXShareInput } from "./SaleRayXShareRenderer.js";
 export type { SaleRayXShareOutputMode, SaleRayXSharePayload } from "./SaleRayXShareLayout.js";
+export {
+  getSaleHealthVisualState,
+  type SaleHealthVisualState,
+  type SaleHealthVisualTone,
+} from "./saleRayxShareHealthVisual.js";

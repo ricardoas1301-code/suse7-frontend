@@ -35,12 +35,18 @@ function resolveWhatsappCaption(payloadTemplateVersion: string): string {
 
 function resolveProductImage(product?: Record<string, unknown> | null): string | null {
   if (!product) return null;
-  const url =
-    product.product_thumbnail_url ??
-    product.listing_thumbnail_url ??
-    product.product_image_url ??
-    null;
-  return url != null && String(url).trim() !== "" ? String(url).trim() : null;
+  const candidates = [
+    product.product_thumbnail_url,
+    product.listing_thumbnail_url,
+    product.product_image_url,
+    product.thumbnail_url,
+    product.image_url,
+    product.picture_url,
+  ];
+  for (const raw of candidates) {
+    if (raw != null && String(raw).trim() !== "") return String(raw).trim();
+  }
+  return null;
 }
 
 function resolveMarketplaceSlug(raw?: string | null): string | null {

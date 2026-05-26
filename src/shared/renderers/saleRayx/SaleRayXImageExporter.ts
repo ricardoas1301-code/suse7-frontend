@@ -15,19 +15,156 @@ import {
   SHARE_LAYOUT,
   SHARE_LINE_HEIGHT,
 } from "./SaleRayXShareStyles.js";
-import { buildShareLayoutPlan, type SaleRayXSharePayload } from "./SaleRayXShareLayout.js";
+import {
+  buildShareLayoutPlan,
+  type SaleRayXSharePayload,
+  type ShareMetaField,
+} from "./SaleRayXShareLayout.js";
+import type { SaleHealthVisualState } from "./saleRayxShareHealthVisual.js";
 
-/**
- * @param {string} src
- */
-function loadImage(src: string): Promise<HTMLImageElement> {
+function loadImage(src: string, useCors = true): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    if (useCors) img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error("IMAGE_LOAD_FAILED"));
     img.src = resolveMaybeAbsoluteUrl(src);
   });
+}
+
+async function loadProductImage(src: string): Promise<HTMLImageElement | null> {
+  try {
+    return await loadImage(src, true);
+  } catch {
+    try {
+      return await loadImage(src, false);
+    } catch {
+      return null;
+    }
+  }
+}
+
+function metaFieldHasLabel(field: ShareMetaField): boolean {
+  return field.label != null && String(field.label).trim() !== "";
+}
+
+function measureMetaFieldLines(
+  ctx: CanvasRenderingContext2D,
+  field: ShareMetaField,
+  metaTextWidth: number,
+): string[] {
+  if (!metaFieldHasLabel(field)) {
+    ctx.font = SHARE_FONTS.metaBold;
+    if (field.truncateMode === "twoLineEllipsis") {
+      return wrapTextMaxLinesEllipsis(ctx, field.value, metaTextWidth, 2);
+    }
+    return wrapText(ctx, field.value, metaTextWidth);
+  }
+
+  ctx.font = SHARE_FONTS.meta;
+  const label = `${field.label}: `;
+  const labelW = ctx.measureText(label).width;
+  ctx.font = SHARE_FONTS.metaBold;
+  const valueMaxWidth = Math.max(50, metaTextWidth - labelW);
+  if (field.truncateMode === "twoLineEllipsis") {
+    return wrapTextMaxLinesEllipsis(ctx, field.value, valueMaxWidth, 2);
+  }
+  return wrapText(ctx, field.value, valueMaxWidth);
+}
+
+function measureMetaFieldHeight(
+  ctx: CanvasRenderingContext2D,
+  field: ShareMetaField,
+  metaTextWidth: number,
+): number {
+  return measureMetaFieldLines(ctx, field, metaTextWidth).length * SHARE_LINE_HEIGHT;
+}
+
+function drawMetaField(
+  ctx: CanvasRenderingContext2D,
+  field: ShareMetaField,
+  startY: number,
+  pad: number,
+  metaTextWidth: number,
+): number {
+  if (!metaFieldHasLabel(field)) {
+    ctx.font = SHARE_FONTS.metaBold;
+    ctx.fillStyle = SHARE_COLORS.text;
+    const valueLines = measureMetaFieldLines(ctx, field, metaTextWidth);
+    for (let i = 0; i < valueLines.length; i += 1) {
+      ctx.fillText(valueLines[i], pad, startY + 13 + i * SHARE_LINE_HEIGHT);
+    }
+    return startY + valueLines.length * SHARE_LINE_HEIGHT + SHARE_LAYOUT.metaFieldGap;
+  }
+
+  ctx.font = SHARE_FONTS.meta;
+  const label = `${field.label}: `;
+  const labelW = ctx.measureText(label).width;
+  ctx.fillStyle = SHARE_COLORS.muted;
+  ctx.fillText(label, pad, startY + 13);
+
+  ctx.font = SHARE_FONTS.metaBold;
+  const valueColor =
+    field.valueTone === "accent" && field.accentColor ? field.accentColor : SHARE_COLORS.text;
+  ctx.fillStyle = valueColor;
+
+  const valueMaxWidth = Math.max(50, metaTextWidth - labelW);
+  const valueLines =
+    field.truncateMode === "twoLineEllipsis"
+      ? wrapTextMaxLinesEllipsis(ctx, field.value, valueMaxWidth, 2)
+      : wrapText(ctx, field.value, valueMaxWidth);
+
+  const valueX = pad + labelW;
+  for (let i = 0; i < valueLines.length; i += 1) {
+    ctx.fillText(valueLines[i], valueX, startY + 13 + i * SHARE_LINE_HEIGHT);
+  }
+
+  return startY + valueLines.length * SHARE_LINE_HEIGHT + SHARE_LAYOUT.metaFieldGap;
+}
+
+function drawHealthKpiShell(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  healthVisual: SaleHealthVisualState,
+  cards: { label: string; value: string; valueColor: string }[],
+) {
+  const h = SHARE_LAYOUT.kpiShellHeight;
+  const radius = 10;
+  const borderWidth = healthVisual.tone === "critical" ? 2 : 1.5;
+
+  ctx.fillStyle = healthVisual.backgroundColor;
+  roundRect(ctx, x, y, width, h, radius);
+  ctx.fill();
+
+  ctx.strokeStyle = healthVisual.borderColor;
+  ctx.lineWidth = borderWidth;
+  roundRect(ctx, x, y, width, h, radius);
+  ctx.stroke();
+
+  const innerPad = SHARE_LAYOUT.kpiShellPadding;
+  const colGap = SHARE_LAYOUT.kpiColumnGap;
+  const innerW = width - innerPad * 2;
+  const colW = (innerW - colGap * 2) / 3;
+
+  cards.forEach((card, idx) => {
+    const colX = x + innerPad + idx * (colW + colGap);
+    const labelY = y + innerPad + 12;
+    const valueY = y + h - innerPad - 6;
+
+    ctx.textAlign = "left";
+    ctx.font = SHARE_FONTS.kpiLabel;
+    ctx.fillStyle = healthVisual.kpiLabelColor;
+    ctx.fillText(card.label, colX, labelY);
+
+    ctx.font = SHARE_FONTS.kpiValue;
+    ctx.fillStyle = card.valueColor;
+    const valLine = wrapText(ctx, card.value, colW)[0] ?? card.value;
+    ctx.fillText(valLine, colX, valueY);
+  });
+
+  ctx.textAlign = "left";
 }
 
 function resolveMaybeAbsoluteUrl(src: string): string {
@@ -234,33 +371,25 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   const width = SHARE_LAYOUT.canvasWidth;
   const pad = SHARE_LAYOUT.padding;
   const productSize = SHARE_LAYOUT.productImageSize;
-  const leftWidth = width - pad * 2 - productSize - SHARE_LAYOUT.headerGap;
+  const contentW = width - pad * 2;
+  const productX = width - pad - productSize - SHARE_LAYOUT.productInsetFromRight;
+  const metaTextWidth = productX - pad - SHARE_LAYOUT.headerGap;
 
   const measureCanvas = document.createElement("canvas");
   const measureCtx = measureCanvas.getContext("2d");
   if (!measureCtx) throw new Error("Canvas não suportado.");
 
-  measureCtx.font = SHARE_FONTS.meta;
   const plan = buildShareLayoutPlan(payload, (tone, margin) =>
     summaryToneToColor(tone as "neutral", margin),
   );
 
   let metaHeight = pad + SHARE_LAYOUT.logoSize + 14;
   for (const field of plan.metaFields) {
-    measureCtx.font = SHARE_FONTS.meta;
-    const label = `${field.label}: `;
-    const labelW = measureCtx.measureText(label).width;
-    measureCtx.font = SHARE_FONTS.metaBold;
-    const valueMaxWidth = Math.max(50, leftWidth - labelW);
-    const valueLines =
-      field.truncateMode === "twoLineEllipsis"
-        ? wrapTextMaxLinesEllipsis(measureCtx, field.value, valueMaxWidth, 2)
-        : wrapText(measureCtx, field.value, valueMaxWidth);
-    metaHeight += valueLines.length * SHARE_LINE_HEIGHT + SHARE_LAYOUT.metaFieldGap;
+    metaHeight += measureMetaFieldHeight(measureCtx, field, metaTextWidth) + SHARE_LAYOUT.metaFieldGap;
   }
 
   const headerHeight = Math.max(metaHeight, pad + productSize + 8);
-  const kpiBlockHeight = SHARE_LAYOUT.kpiHeight + SHARE_LAYOUT.sectionGap;
+  const kpiBlockHeight = SHARE_LAYOUT.kpiShellHeight + SHARE_LAYOUT.sectionGap;
   const financialInnerWidth = width - pad * 2 - SHARE_LAYOUT.financialCardPadding * 2;
   const financialHeight = estimateFinancialHeight(measureCtx, payload, financialInnerWidth);
   const height =
@@ -282,15 +411,13 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
 
   const [logo, productImg] = await Promise.all([
     loadImage(String(suse7LogoUrl)),
-    payload.productImage
-      ? loadImage(String(payload.productImage)).catch(() => null)
-      : Promise.resolve(null),
+    payload.productImage ? loadProductImage(String(payload.productImage)) : Promise.resolve(null),
   ]);
 
   let y = pad;
-  const productX = width - pad - productSize;
+  const productY = pad + 2;
   const productCenterX = productX + productSize / 2;
-  const productCenterY = y + productSize / 2;
+  const productCenterY = productY + productSize / 2;
 
   ctx.drawImage(logo, pad, y, SHARE_LAYOUT.logoSize, SHARE_LAYOUT.logoSize);
   ctx.fillStyle = SHARE_COLORS.text;
@@ -304,7 +431,7 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
     ctx.beginPath();
     ctx.arc(productCenterX, productCenterY, r, 0, Math.PI * 2);
     ctx.clip();
-    drawCoverImage(ctx, productImg, productX, y, productSize, productSize);
+    drawCoverImage(ctx, productImg, productX, productY, productSize, productSize);
     ctx.restore();
   } else {
     const r = productSize / 2;
@@ -325,57 +452,18 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
   y += SHARE_LAYOUT.logoSize + 14;
 
   for (const field of plan.metaFields) {
-    const startY = y;
-    ctx.font = SHARE_FONTS.meta;
-    const label = `${field.label}: `;
-    const labelW = ctx.measureText(label).width;
-    ctx.fillStyle = SHARE_COLORS.muted;
-    ctx.fillText(label, pad, startY + 13);
-
-    ctx.font = SHARE_FONTS.metaBold;
-    const valueColor =
-      field.valueTone === "accent" && field.accentColor ? field.accentColor : SHARE_COLORS.text;
-    ctx.fillStyle = valueColor;
-
-    const valueMaxWidth = Math.max(50, leftWidth - labelW);
-    const valueLines =
-      field.truncateMode === "twoLineEllipsis"
-        ? wrapTextMaxLinesEllipsis(ctx, field.value, valueMaxWidth, 2)
-        : wrapText(ctx, field.value, valueMaxWidth);
-
-    const valueX = pad + labelW;
-    for (let i = 0; i < valueLines.length; i += 1) {
-      ctx.fillText(valueLines[i], valueX, startY + 13 + i * SHARE_LINE_HEIGHT);
-    }
-
-    y = startY + valueLines.length * SHARE_LINE_HEIGHT + SHARE_LAYOUT.metaFieldGap;
+    y = drawMetaField(ctx, field, y, pad, metaTextWidth);
   }
 
   y = Math.max(y, pad + productSize + SHARE_LAYOUT.sectionGap);
 
   const kpiY = y;
-  const kpiW = (width - pad * 2 - SHARE_LAYOUT.kpiGap * 2) / 3;
-  plan.kpiCards.forEach((card, idx) => {
-    const x = pad + idx * (kpiW + SHARE_LAYOUT.kpiGap);
-    ctx.fillStyle = SHARE_COLORS.cardBg;
-    roundRect(ctx, x, kpiY, kpiW, SHARE_LAYOUT.kpiHeight, 8);
-    ctx.fill();
-    ctx.strokeStyle = SHARE_COLORS.border;
-    ctx.stroke();
-    ctx.font = SHARE_FONTS.kpiLabel;
-    ctx.fillStyle = SHARE_COLORS.muted;
-    ctx.fillText(card.label, x + 10, kpiY + 18);
-    ctx.font = SHARE_FONTS.kpiValue;
-    ctx.fillStyle = card.color;
-    const valLines = wrapText(ctx, card.value, kpiW - 20);
-    const valueY = kpiY + SHARE_LAYOUT.kpiHeight - 24;
-    ctx.fillText(valLines[0] ?? card.value, x + 10, valueY);
-  });
+  drawHealthKpiShell(ctx, pad, kpiY, contentW, plan.healthVisual, plan.kpiCards);
 
-  y = kpiY + SHARE_LAYOUT.kpiHeight + SHARE_LAYOUT.sectionGap;
+  y = kpiY + SHARE_LAYOUT.kpiShellHeight + SHARE_LAYOUT.sectionGap;
 
   const cardX = pad;
-  const cardW = width - pad * 2;
+  const cardW = contentW;
   const cardInnerX = cardX + SHARE_LAYOUT.financialCardPadding;
   const cardInnerW = cardW - SHARE_LAYOUT.financialCardPadding * 2;
   const cardH = financialHeight;
