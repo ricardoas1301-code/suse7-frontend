@@ -681,9 +681,7 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
       ctx.fillStyle = SHARE_COLORS.text;
       ctx.fillText(row.label, cardInnerX, fy + (isResultado ? 15 : 14));
       ctx.textAlign = "right";
-      ctx.font = isResultado
-        ? SHARE_FINANCIAL_FONTS.valuePrimary
-        : SHARE_FINANCIAL_FONTS.valueSecondary;
+      ctx.font = SHARE_FINANCIAL_FONTS.valuePrimary;
       ctx.fillStyle = row.color;
       ctx.fillText(row.value, valueColumnX, fy + (isResultado ? 15 : 14));
       ctx.textAlign = "left";
