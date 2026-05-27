@@ -2,19 +2,27 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useSellerToolbox } from "../SellerToolboxContext";
 import {
   buildTimelineMockEvents,
+  createInitialTimelineFilters,
+  filterTimelineEvents,
   resolveTimelinePanelState,
   sortTimelineEventsDesc,
 } from "./timelineModel";
 
 /** @typedef {import("./timelineModel").TimelineEventViewModel} TimelineEventViewModel */
+/** @typedef {import("./timelineModel").TimelineFiltersViewModel} TimelineFiltersViewModel */
 
 /**
  * @typedef {{
  *   panelState: import("./timelineModel").TimelinePanelState;
  *   events: TimelineEventViewModel[];
+ *   filteredEvents: TimelineEventViewModel[];
+ *   filters: TimelineFiltersViewModel;
  *   loading: boolean;
  *   error: string;
  *   empty: boolean;
+ *   filteredEmpty: boolean;
+ *   updateFilters: (patch: Partial<TimelineFiltersViewModel>) => void;
+ *   resetFilters: () => void;
  *   resetTimeline: () => void;
  *   setTimelineEvents: (events: TimelineEventViewModel[]) => void;
  * }} TimelineViewValue
@@ -29,6 +37,7 @@ function createInitialTimelineState() {
     loadState: /** @type {"idle" | "loading" | "loaded" | "error"} */ ("idle"),
     loadError: "",
     forceEmpty: false,
+    filters: createInitialTimelineFilters(),
   };
 }
 
@@ -41,21 +50,23 @@ export function TimelineViewProvider({ children }) {
 
   const loadMockEvents = useCallback((forceEmpty = false) => {
     if (forceEmpty) {
-      setTimelineState({
+      setTimelineState((current) => ({
+        ...current,
         events: [],
         loadState: "loaded",
         loadError: "",
         forceEmpty: true,
-      });
+      }));
       return;
     }
 
-    setTimelineState({
+    setTimelineState((current) => ({
+      ...current,
       events: sortTimelineEventsDesc(buildTimelineMockEvents()),
       loadState: "loaded",
       loadError: "",
       forceEmpty: false,
-    });
+    }));
   }, []);
 
   useEffect(() => {
@@ -68,6 +79,7 @@ export function TimelineViewProvider({ children }) {
       ...current,
       loadState: "loading",
       loadError: "",
+      filters: createInitialTimelineFilters(),
     }));
 
     const timer = window.setTimeout(() => {
@@ -89,17 +101,44 @@ export function TimelineViewProvider({ children }) {
     [sellerId, drawerState, toolboxState, isReady, timelineState.forceEmpty],
   );
 
+  const filteredEvents = useMemo(
+    () => filterTimelineEvents(timelineState.events, timelineState.filters),
+    [timelineState.events, timelineState.filters],
+  );
+
+  const updateFilters = useCallback((patch) => {
+    setTimelineState((current) => ({
+      ...current,
+      filters: {
+        ...current.filters,
+        ...patch,
+      },
+    }));
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setTimelineState((current) => ({
+      ...current,
+      filters: createInitialTimelineFilters(),
+    }));
+  }, []);
+
   const resetTimeline = useCallback(() => {
+    setTimelineState((current) => ({
+      ...current,
+      filters: createInitialTimelineFilters(),
+    }));
     loadMockEvents(false);
   }, [loadMockEvents]);
 
   const setTimelineEvents = useCallback((events) => {
-    setTimelineState({
+    setTimelineState((current) => ({
+      ...current,
       events: sortTimelineEventsDesc(events),
       loadState: "loaded",
       loadError: "",
       forceEmpty: events.length === 0,
-    });
+    }));
   }, []);
 
   const stateRef = useRef(timelineState);
@@ -112,8 +151,9 @@ export function TimelineViewProvider({ children }) {
       get: () => stateRef.current,
       reset: () => resetTimeline(),
       empty: () => loadMockEvents(true),
+      setFilters: (patch) => updateFilters(patch),
     };
-  }, [resetTimeline, loadMockEvents]);
+  }, [resetTimeline, loadMockEvents, updateFilters]);
 
   const loading = panelState === "loading" || timelineState.loadState === "loading";
   const error =
@@ -122,18 +162,38 @@ export function TimelineViewProvider({ children }) {
   const empty =
     timelineState.forceEmpty ||
     (timelineState.loadState === "loaded" && timelineState.events.length === 0);
+  const filteredEmpty =
+    !empty && timelineState.loadState === "loaded" && filteredEvents.length === 0;
 
   const value = useMemo(
     () => ({
       panelState,
       events: timelineState.events,
+      filteredEvents,
+      filters: timelineState.filters,
       loading,
       error,
       empty,
+      filteredEmpty,
+      updateFilters,
+      resetFilters,
       resetTimeline,
       setTimelineEvents,
     }),
-    [panelState, timelineState.events, loading, error, empty, resetTimeline, setTimelineEvents],
+    [
+      panelState,
+      timelineState.events,
+      timelineState.filters,
+      filteredEvents,
+      loading,
+      error,
+      empty,
+      filteredEmpty,
+      updateFilters,
+      resetFilters,
+      resetTimeline,
+      setTimelineEvents,
+    ],
   );
 
   return <TimelineViewContext.Provider value={value}>{children}</TimelineViewContext.Provider>;

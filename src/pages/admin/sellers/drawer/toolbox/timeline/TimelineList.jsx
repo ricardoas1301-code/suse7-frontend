@@ -5,11 +5,11 @@ import { useTimelineView } from "./useTimelineView";
 import "./TimelineList.css";
 
 function TimelineList() {
-  const { events } = useTimelineView();
+  const { filteredEvents } = useTimelineView();
 
-  const groups = useMemo(() => groupTimelineEventsByDay(events), [events]);
+  const groups = useMemo(() => groupTimelineEventsByDay(filteredEvents), [filteredEvents]);
 
-  if (!events.length) return null;
+  if (!filteredEvents.length) return null;
 
   return (
     <div className="timeline-list" aria-label="Feed cronológico operacional">

@@ -2,6 +2,28 @@
 
 /** @typedef {"sale" | "listing" | "product" | "customer" | "marketplace_account"} TimelineEntityType */
 
+/** @typedef {"all" | TimelineEntityType} TimelineEntityFilterValue */
+
+/** @typedef {"all" | TimelineEventSeverity} TimelineSeverityFilterValue */
+
+/**
+ * @typedef {{
+ *   ticketId: string;
+ *   label: string;
+ * }} TimelineRelatedTicketViewModel
+ */
+
+/**
+ * @typedef {Record<string, string | number | boolean | null | undefined>} TimelineBeforeAfterSnapshot
+ */
+
+/**
+ * @typedef {{
+ *   before: TimelineBeforeAfterSnapshot;
+ *   after: TimelineBeforeAfterSnapshot;
+ * }} TimelineBeforeAfterViewModel
+ */
+
 /**
  * @typedef {{
  *   eventId: string;
@@ -14,7 +36,17 @@
  *   createdAt: string;
  *   reason: string;
  *   severity: TimelineEventSeverity;
+ *   relatedTicket?: TimelineRelatedTicketViewModel | null;
+ *   beforeAfter?: TimelineBeforeAfterViewModel | null;
  * }} TimelineEventViewModel
+ */
+
+/**
+ * @typedef {{
+ *   searchQuery: string;
+ *   entityType: TimelineEntityFilterValue;
+ *   severity: TimelineSeverityFilterValue;
+ * }} TimelineFiltersViewModel
  */
 
 /**
@@ -27,6 +59,149 @@
  */
 
 /** @typedef {"idle" | "loading" | "loaded" | "empty" | "error"} TimelinePanelState */
+
+/** @type {readonly { value: TimelineEntityFilterValue; label: string }[]} */
+export const TIMELINE_ENTITY_FILTER_OPTIONS = [
+  { value: "all", label: "Todas" },
+  { value: "sale", label: "Venda" },
+  { value: "listing", label: "Anúncio" },
+  { value: "product", label: "Produto" },
+  { value: "customer", label: "Cliente" },
+  { value: "marketplace_account", label: "Conta marketplace" },
+];
+
+/** @type {readonly { value: TimelineSeverityFilterValue; label: string }[]} */
+export const TIMELINE_SEVERITY_FILTER_OPTIONS = [
+  { value: "all", label: "Todas" },
+  { value: "normal", label: "Normal" },
+  { value: "warning", label: "Atenção" },
+  { value: "critical", label: "Crítico" },
+];
+
+/**
+ * @returns {TimelineFiltersViewModel}
+ */
+export function createInitialTimelineFilters() {
+  return {
+    searchQuery: "",
+    entityType: "all",
+    severity: "all",
+  };
+}
+
+/**
+ * @param {TimelineEntityFilterValue | string | null | undefined} value
+ */
+export function resolveTimelineEntityFilterLabel(value) {
+  const option = TIMELINE_ENTITY_FILTER_OPTIONS.find((item) => item.value === value);
+  if (option) return option.label;
+  return resolveTimelineEntityLabel(value);
+}
+
+/**
+ * @param {TimelineSeverityFilterValue | string | null | undefined} value
+ */
+export function resolveTimelineSeverityFilterLabel(value) {
+  const option = TIMELINE_SEVERITY_FILTER_OPTIONS.find((item) => item.value === value);
+  if (option) return option.label;
+  return resolveTimelineSeverityLabel(value);
+}
+
+/**
+ * @param {string | null | undefined} query
+ */
+export function normalizeTimelineSearchQuery(query) {
+  return String(query ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * @param {TimelineFiltersViewModel} filters
+ */
+export function hasActiveTimelineFilters(filters) {
+  return (
+    normalizeTimelineSearchQuery(filters.searchQuery).length > 0 ||
+    filters.entityType !== "all" ||
+    filters.severity !== "all"
+  );
+}
+
+/**
+ * @param {TimelineEventViewModel[]} events
+ * @param {TimelineFiltersViewModel} filters
+ */
+export function filterTimelineEvents(events, filters) {
+  const query = normalizeTimelineSearchQuery(filters.searchQuery);
+
+  return events.filter((event) => {
+    if (filters.entityType !== "all" && event.entityType !== filters.entityType) {
+      return false;
+    }
+
+    if (filters.severity !== "all" && event.severity !== filters.severity) {
+      return false;
+    }
+
+    if (!query) return true;
+
+    const ticketId = event.relatedTicket?.ticketId ?? event.relatedTicket?.label ?? "";
+    const haystack = [event.eventLabel, event.entityId, event.adminName, ticketId]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
+}
+
+/**
+ * @param {string} field
+ * @param {string | number | boolean | null | undefined} value
+ */
+export function formatBeforeAfterValue(field, value) {
+  if (value == null || value === "") return null;
+
+  const normalizedField = String(field ?? "").toLowerCase();
+
+  if (normalizedField.includes("amount")) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    return parsed.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+
+  if (normalizedField.includes("status") || normalizedField === "health") {
+    switch (String(value)) {
+      case "healthy":
+        return "healthy";
+      case "warning":
+        return "warning";
+      case "danger":
+      case "critical":
+        return "critical";
+      case "pending":
+        return "pending";
+      case "processed":
+        return "processed";
+      default:
+        return String(value);
+    }
+  }
+
+  return String(value);
+}
+
+/**
+ * @param {TimelineBeforeAfterSnapshot | null | undefined} snapshot
+ */
+export function formatBeforeAfterSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") return "—";
+
+  const parts = Object.entries(snapshot)
+    .map(([field, value]) => formatBeforeAfterValue(field, value))
+    .filter(Boolean);
+
+  return parts.length ? parts.join(" · ") : "—";
+}
 
 /**
  * @param {TimelineEventSeverity | string | null | undefined} severity
@@ -216,6 +391,20 @@ export function buildTimelineMockEvents(nowMs = Date.now()) {
       createdAt: minutesAgo(5),
       reason: "Ajuste operacional após divergência de margem reportada pelo seller.",
       severity: "normal",
+      relatedTicket: {
+        ticketId: "SUP-2011",
+        label: "SUP-2011",
+      },
+      beforeAfter: {
+        before: {
+          status: "warning",
+          netAmount: 169.89,
+        },
+        after: {
+          status: "healthy",
+          netAmount: 171.42,
+        },
+      },
     },
     {
       eventId: "evt_003",
@@ -228,18 +417,30 @@ export function buildTimelineMockEvents(nowMs = Date.now()) {
       createdAt: minutesAgo(20),
       reason: "Rebuild Cliente360: cliente incompleto após sync de vendas.",
       severity: "warning",
+      relatedTicket: {
+        ticketId: "SUP-2048",
+        label: "SUP-2048",
+      },
     },
     {
       eventId: "evt_004",
-      eventType: "reimport_listing",
-      eventLabel: "Reimportação de anúncio",
+      eventType: "recalculate_listing_health",
+      eventLabel: "Recálculo de saúde do anúncio",
       entityType: "listing",
       entityId: "MLB6086959274",
       adminName: "Marina",
       adminEmail: "marina@suse7.com.br",
       createdAt: hoursAgo(2),
-      reason: "Reimportação manual para validar vínculo SKU ↔ anúncio.",
+      reason: "Recálculo manual após alerta de saúde operacional no catálogo.",
       severity: "normal",
+      beforeAfter: {
+        before: {
+          healthStatus: "warning",
+        },
+        after: {
+          healthStatus: "healthy",
+        },
+      },
     },
     {
       eventId: "evt_005",
@@ -252,6 +453,18 @@ export function buildTimelineMockEvents(nowMs = Date.now()) {
       createdAt: daysAgoAt(1, 14, 22),
       reason: "Token suspeito: conferência operacional pós-login do seller.",
       severity: "warning",
+      relatedTicket: {
+        ticketId: "SUP-1988",
+        label: "SUP-1988",
+      },
+      beforeAfter: {
+        before: {
+          tokenStatus: "warning",
+        },
+        after: {
+          tokenStatus: "healthy",
+        },
+      },
     },
     {
       eventId: "evt_006",
@@ -264,6 +477,10 @@ export function buildTimelineMockEvents(nowMs = Date.now()) {
       createdAt: daysAgoAt(1, 9, 15),
       reason: "Sync desatualizado: reprocessamento manual solicitado pelo suporte.",
       severity: "normal",
+      relatedTicket: {
+        ticketId: "SUP-2055",
+        label: "SUP-2055",
+      },
     },
     {
       eventId: "evt_007",
@@ -276,18 +493,30 @@ export function buildTimelineMockEvents(nowMs = Date.now()) {
       createdAt: daysAgoAt(2, 16, 40),
       reason: "Investigação crítica de divergência financeira em pedido de alto valor.",
       severity: "critical",
+      relatedTicket: {
+        ticketId: "SUP-2102",
+        label: "SUP-2102",
+      },
     },
     {
       eventId: "evt_008",
-      eventType: "recalculate_sale_financial",
-      eventLabel: "Recálculo financeiro da venda",
-      entityType: "sale",
-      entityId: "2000016503467163",
+      eventType: "reprocess_product_listing_link",
+      eventLabel: "Reprocessamento vínculo produto-anúncio",
+      entityType: "product",
+      entityId: "FOGAO-4B-IND",
       adminName: "João",
       adminEmail: "joao@suse7.com.br",
       createdAt: daysAgoAt(3, 11, 5),
-      reason: "Conferência interna de margem após ajuste de custo do produto.",
+      reason: "Rebuild operacional dos vínculos SKU ↔ anúncio após divergência de catálogo.",
       severity: "normal",
+      beforeAfter: {
+        before: {
+          linkStatus: "warning",
+        },
+        after: {
+          linkStatus: "healthy",
+        },
+      },
     },
   ]);
 }

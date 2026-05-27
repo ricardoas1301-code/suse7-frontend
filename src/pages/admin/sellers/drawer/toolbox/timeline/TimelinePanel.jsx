@@ -24,10 +24,10 @@ function TimelinePanelSkeleton() {
  */
 function TimelinePanel({ category }) {
   const { sellerId } = useSellerToolbox();
-  const { panelState, events, loading, empty } = useTimelineView();
+  const { panelState, filteredEvents, loading, empty, filteredEmpty } = useTimelineView();
   const loggedOpenRef = useRef(false);
 
-  const summary = useMemo(() => buildTimelineSummary(events), [events]);
+  const summary = useMemo(() => buildTimelineSummary(filteredEvents), [filteredEvents]);
 
   useEffect(() => {
     if (loggedOpenRef.current) return;
@@ -102,7 +102,9 @@ function TimelinePanel({ category }) {
 
             <TimelineFiltersBar />
 
-            {empty ? <TimelineEmptyState /> : <TimelineList />}
+            {empty ? <TimelineEmptyState /> : null}
+            {!empty && filteredEmpty ? <TimelineEmptyState variant="filtered" /> : null}
+            {!empty && !filteredEmpty ? <TimelineList /> : null}
           </>
         ) : null}
       </div>
