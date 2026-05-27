@@ -14,6 +14,7 @@ import { SellerCacheRefreshViewProvider } from "./cacheRefresh/useSellerCacheRef
 import { SalesSyncViewProvider } from "./centralSync/sales/useSalesSyncView";
 import { ListingsSyncViewProvider } from "./centralSync/listings/useListingsSyncView";
 import { ProductsSyncViewProvider } from "./centralSync/products/useProductsSyncView";
+import { CustomersSyncViewProvider } from "./centralSync/customers/useCustomersSyncView";
 import { SellerToolboxActionReasonProvider } from "./useSellerToolboxActionReason";
 import { SellerToolboxConfirmActionProvider } from "./useSellerToolboxConfirmAction";
 import { SellerToolboxFeedbackProvider } from "./useSellerToolboxFeedback";
@@ -36,6 +37,7 @@ function SellerToolboxDrawerShell({ onClose }) {
             <SalesSyncViewProvider>
             <ListingsSyncViewProvider>
             <ProductsSyncViewProvider>
+            <CustomersSyncViewProvider>
             <SellerToolboxActionReasonProvider>
               <aside
                 className="dc-drawer seller-toolbox-drawer"
@@ -58,6 +60,7 @@ function SellerToolboxDrawerShell({ onClose }) {
                 <SellerToolboxActionReason />
               </aside>
             </SellerToolboxActionReasonProvider>
+            </CustomersSyncViewProvider>
             </ProductsSyncViewProvider>
             </ListingsSyncViewProvider>
             </SalesSyncViewProvider>

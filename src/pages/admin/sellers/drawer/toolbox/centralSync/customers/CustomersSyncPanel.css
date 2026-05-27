@@ -1,0 +1,104 @@
+.customers-sync-panel--embedded {
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+.customers-sync-panel--embedded .customers-sync-panel__body {
+  padding: 0;
+}
+
+.customers-sync-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.customers-sync-panel__head {
+  padding: 0 0 10px;
+}
+
+.customers-sync-panel__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.customers-sync-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.customers-sync-panel__search-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+}
+
+.customers-sync-panel__search-loading-line {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.18) 0%, rgba(148, 163, 184, 0.32) 50%, rgba(148, 163, 184, 0.18) 100%);
+  background-size: 200% 100%;
+  animation: customers-sync-panel-shimmer 1.2s ease-in-out infinite;
+}
+
+.customers-sync-panel__search-loading-line--short {
+  width: 55%;
+}
+
+.customers-sync-panel__message,
+.customers-sync-panel__inline-empty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.customers-sync-panel__message {
+  padding: 12px;
+  border-radius: var(--s7-admin-radius);
+}
+
+.customers-sync-panel__message--empty,
+.customers-sync-panel__inline-empty {
+  color: var(--s7-admin-muted);
+  border: 1px dashed var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+  padding: 10px 12px;
+  border-radius: var(--s7-admin-radius);
+}
+
+.customers-sync-panel__message--error {
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+  background: rgba(180, 83, 9, 0.04);
+}
+
+.customers-sync-panel__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.customers-sync-panel__skeleton-block {
+  display: block;
+  height: 72px;
+  border-radius: var(--s7-admin-radius);
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.18) 0%, rgba(148, 163, 184, 0.32) 50%, rgba(148, 163, 184, 0.18) 100%);
+  background-size: 200% 100%;
+  animation: customers-sync-panel-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes customers-sync-panel-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

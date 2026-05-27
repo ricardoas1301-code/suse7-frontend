@@ -23,6 +23,7 @@ import { useSellerCacheRefreshView } from "./cacheRefresh/useSellerCacheRefreshV
 import { useSalesSyncView } from "./centralSync/sales/useSalesSyncView";
 import { useListingsSyncView } from "./centralSync/listings/useListingsSyncView";
 import { useProductsSyncView } from "./centralSync/products/useProductsSyncView";
+import { useCustomersSyncView } from "./centralSync/customers/useCustomersSyncView";
 import { SELLER_TOOLBOX_OPERATION_CATEGORIES } from "./sellerToolboxOperationalLog";
 import "./SellerToolboxActionReason.css";
 
@@ -51,6 +52,7 @@ function SellerToolboxActionReasonOverlay() {
   const { sale, applySalesReimportResult, applySalesFinancialRecalculateResult, applySalesCustomerReprocessResult } = useSalesSyncView();
   const { listing, applyListingsReimportResult, applyListingsHealthRecalculateResult } = useListingsSyncView();
   const { product, applyProductsListingLinkReprocessResult } = useProductsSyncView();
+  const { customer, applyCustomers360ReprocessResult } = useCustomersSyncView();
   const reasonRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
   const loggedOpenRef = useRef(false);
 
@@ -170,6 +172,7 @@ function SellerToolboxActionReasonOverlay() {
             salesSync: { sale },
             listingsSync: { listing },
             productsSync: { product },
+            customersSync: { customer },
             metadata: operationMetadata ?? null,
           }) ?? {};
 
@@ -226,6 +229,10 @@ function SellerToolboxActionReasonOverlay() {
 
             if (config.applyProductsListingLinkReprocessResult) {
               applyProductsListingLinkReprocessResult(data);
+            }
+
+            if (config.applyCustomers360ReprocessResult) {
+              applyCustomers360ReprocessResult(data);
             }
 
             logOperation({
@@ -304,6 +311,8 @@ function SellerToolboxActionReasonOverlay() {
       applyListingsHealthRecalculateResult,
       product,
       applyProductsListingLinkReprocessResult,
+      customer,
+      applyCustomers360ReprocessResult,
     ],
   );
 

@@ -86,6 +86,16 @@ import {
   PRODUCTS_SYNC_SEARCH_OPERATION_CONFIG,
   PRODUCTS_SYNC_REPROCESS_LINK_OPERATION_CONFIG,
 } from "../centralSync/products/productsSyncOperationModel";
+import {
+  SELLER_TOOLBOX_SEARCH_CUSTOMER_ACTION_ID,
+} from "../centralSync/customers/sellerToolboxSearchCustomerOperation";
+import {
+  SELLER_TOOLBOX_REPROCESS_CUSTOMER_360_ACTION_ID,
+} from "../centralSync/customers/sellerToolboxReprocessCustomer360Operation";
+import {
+  CUSTOMERS_SYNC_SEARCH_OPERATION_CONFIG,
+  CUSTOMERS_SYNC_REPROCESS_360_OPERATION_CONFIG,
+} from "../centralSync/customers/customersSyncOperationModel";
 
 export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_QUICK_REASON_KEYS = new Set([
   "operational_fix",
@@ -116,6 +126,8 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_ACTION_IDS = new Set([
   SELLER_TOOLBOX_RECALCULATE_LISTING_HEALTH_ACTION_ID,
   SELLER_TOOLBOX_SEARCH_PRODUCT_ACTION_ID,
   SELLER_TOOLBOX_REPROCESS_PRODUCT_LISTING_LINK_ACTION_ID,
+  SELLER_TOOLBOX_SEARCH_CUSTOMER_ACTION_ID,
+  SELLER_TOOLBOX_REPROCESS_CUSTOMER_360_ACTION_ID,
 ]);
 
 /**
@@ -257,6 +269,8 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *   applyListingsHealthRecalculateResult?: boolean;
  *   applyProductsSyncSearchResult?: boolean;
  *   applyProductsListingLinkReprocessResult?: boolean;
+ *   applyCustomersSyncSearchResult?: boolean;
+ *   applyCustomers360ReprocessResult?: boolean;
  *   requiresReason?: boolean;
  *   buildHandlerContext?: (input: {
  *     consumption: import("./sellerToolboxConsumptionModel").SellerConsumptionViewModel | null;
@@ -271,6 +285,7 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *     salesSync?: { sale?: import("../centralSync/sales/salesSyncModel").SalesSyncViewModel | null } | null;
  *     listingsSync?: { listing?: import("../centralSync/listings/listingsSyncModel").ListingsSyncViewModel | null } | null;
  *     productsSync?: { product?: import("../centralSync/products/productsSyncModel").ProductsSyncViewModel | null } | null;
+ *     customersSync?: { customer?: import("../centralSync/customers/customersSyncModel").CustomersSyncViewModel | null } | null;
  *     metadata?: Record<string, unknown> | null;
  *   }) => Record<string, unknown>;
  *   devLog: {
@@ -528,6 +543,8 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
   [SELLER_TOOLBOX_RECALCULATE_LISTING_HEALTH_ACTION_ID]: LISTINGS_SYNC_RECALCULATE_HEALTH_OPERATION_CONFIG,
   [SELLER_TOOLBOX_SEARCH_PRODUCT_ACTION_ID]: PRODUCTS_SYNC_SEARCH_OPERATION_CONFIG,
   [SELLER_TOOLBOX_REPROCESS_PRODUCT_LISTING_LINK_ACTION_ID]: PRODUCTS_SYNC_REPROCESS_LINK_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_SEARCH_CUSTOMER_ACTION_ID]: CUSTOMERS_SYNC_SEARCH_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_REPROCESS_CUSTOMER_360_ACTION_ID]: CUSTOMERS_SYNC_REPROCESS_360_OPERATION_CONFIG,
 };
 
 /**

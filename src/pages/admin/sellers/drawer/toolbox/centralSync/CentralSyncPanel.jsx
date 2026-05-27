@@ -5,9 +5,10 @@ import { useSellerToolbox } from "../SellerToolboxContext";
 import SalesSyncPanel from "./sales/SalesSyncPanel";
 import ListingsSyncPanel from "./listings/ListingsSyncPanel";
 import ProductsSyncPanel from "./products/ProductsSyncPanel";
+import CustomersSyncPanel from "./customers/CustomersSyncPanel";
 import "./CentralSyncPanel.css";
 
-/** @typedef {"sale" | "listing" | "product"} CentralSyncDomainTab */
+/** @typedef {"sale" | "listing" | "product" | "customer"} CentralSyncDomainTab */
 
 /**
  * @param {{ category: import("../sellerToolboxCategoriesModel").SellerToolboxCategory }} props
@@ -18,6 +19,7 @@ function CentralSyncPanel({ category }) {
   const loggedOpenRef = useRef(false);
   const loggedListingOpenRef = useRef(false);
   const loggedProductOpenRef = useRef(false);
+  const loggedCustomerOpenRef = useRef(false);
 
   useEffect(() => {
     if (loggedOpenRef.current) return;
@@ -46,9 +48,19 @@ function CentralSyncPanel({ category }) {
     });
   }, [activeTab, sellerId, category.id]);
 
+  useEffect(() => {
+    if (activeTab !== "customer" || loggedCustomerOpenRef.current) return;
+    loggedCustomerOpenRef.current = true;
+    logSellerToolbox("central_sync_customers_panel_open", {
+      sellerId,
+      categoryId: category.id,
+    });
+  }, [activeTab, sellerId, category.id]);
+
   const handleSelectSale = useCallback(() => setActiveTab("sale"), []);
   const handleSelectListing = useCallback(() => setActiveTab("listing"), []);
   const handleSelectProduct = useCallback(() => setActiveTab("product"), []);
+  const handleSelectCustomer = useCallback(() => setActiveTab("customer"), []);
 
   return (
     <section
@@ -100,6 +112,14 @@ function CentralSyncPanel({ category }) {
         >
           Produto
         </button>
+        <button
+          type="button"
+          className={`central-sync-panel__tab${activeTab === "customer" ? " central-sync-panel__tab--active" : ""}`}
+          aria-pressed={activeTab === "customer"}
+          onClick={handleSelectCustomer}
+        >
+          Cliente
+        </button>
       </nav>
 
       <div className="central-sync-panel__body">
@@ -111,6 +131,9 @@ function CentralSyncPanel({ category }) {
         </div>
         <div className="central-sync-panel__domain" hidden={activeTab !== "product"}>
           <ProductsSyncPanel embedded />
+        </div>
+        <div className="central-sync-panel__domain" hidden={activeTab !== "customer"}>
+          <CustomersSyncPanel embedded />
         </div>
       </div>
 
