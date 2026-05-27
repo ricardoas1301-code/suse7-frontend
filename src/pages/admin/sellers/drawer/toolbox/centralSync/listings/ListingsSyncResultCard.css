@@ -1,0 +1,166 @@
+.listings-sync-result-card {
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+  overflow: hidden;
+  min-width: 0;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+}
+
+.listings-sync-result-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.listings-sync-result-card__marketplace {
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+}
+
+.listings-sync-result-card__title {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+  word-break: break-word;
+}
+
+.listings-sync-result-card__subtitle {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--s7-admin-muted);
+  word-break: break-word;
+}
+
+.listings-sync-result-card__body {
+  padding: 12px 14px;
+}
+
+.listings-sync-result-card__grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.listings-sync-result-card__row {
+  display: grid;
+  grid-template-columns: minmax(0, 38%) minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+}
+
+.listings-sync-result-card__row dt {
+  margin: 0;
+  font-size: 11px;
+  color: var(--s7-admin-muted);
+}
+
+.listings-sync-result-card__row dd {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s7-admin-text);
+  word-break: break-word;
+}
+
+.listings-sync-result-card__amount {
+  font-weight: 700;
+}
+
+.listings-sync-result-card__status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.listings-sync-result-card__status--listing-active {
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.25);
+  background: rgba(22, 163, 74, 0.12);
+}
+
+.listings-sync-result-card__status--listing-paused,
+.listings-sync-result-card__status--listing-under_review {
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.listings-sync-result-card__status--listing-closed,
+.listings-sync-result-card__status--listing-inactive,
+.listings-sync-result-card__status--listing-neutral {
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.listings-sync-result-card__status--health-healthy {
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.25);
+  background: rgba(22, 163, 74, 0.12);
+}
+
+.listings-sync-result-card__status--health-warning {
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.listings-sync-result-card__status--health-danger {
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.listings-sync-result-card__status--health-pending,
+.listings-sync-result-card__status--health-neutral {
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.listings-sync-result-card__status--link-linked {
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.25);
+  background: rgba(22, 163, 74, 0.12);
+}
+
+.listings-sync-result-card__status--link-unlinked,
+.listings-sync-result-card__status--link-neutral {
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.listings-sync-result-card__status--link-pending {
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.listings-sync-result-card__status--link-error {
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+@media (min-width: 720px) {
+  .listings-sync-result-card__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+  }
+}

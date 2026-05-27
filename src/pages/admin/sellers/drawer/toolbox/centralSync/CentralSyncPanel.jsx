@@ -1,0 +1,105 @@
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { ScanSearch } from "lucide-react";
+import { logSellerToolbox } from "../../../sellerToolboxDevLog";
+import { useSellerToolbox } from "../SellerToolboxContext";
+import SalesSyncPanel from "./sales/SalesSyncPanel";
+import ListingsSyncPanel from "./listings/ListingsSyncPanel";
+import "./CentralSyncPanel.css";
+
+/** @typedef {"sale" | "listing"} CentralSyncDomainTab */
+
+/**
+ * @param {{ category: import("../sellerToolboxCategoriesModel").SellerToolboxCategory }} props
+ */
+function CentralSyncPanel({ category }) {
+  const { sellerId } = useSellerToolbox();
+  const [activeTab, setActiveTab] = useState(/** @type {CentralSyncDomainTab} */ ("sale"));
+  const loggedOpenRef = useRef(false);
+  const loggedListingOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (loggedOpenRef.current) return;
+    loggedOpenRef.current = true;
+    logSellerToolbox("central_sync_panel_open", {
+      sellerId,
+      categoryId: category.id,
+    });
+  }, [sellerId, category.id]);
+
+  useEffect(() => {
+    if (activeTab !== "listing" || loggedListingOpenRef.current) return;
+    loggedListingOpenRef.current = true;
+    logSellerToolbox("central_sync_listings_panel_open", {
+      sellerId,
+      categoryId: category.id,
+    });
+  }, [activeTab, sellerId, category.id]);
+
+  const handleSelectSale = useCallback(() => setActiveTab("sale"), []);
+  const handleSelectListing = useCallback(() => setActiveTab("listing"), []);
+
+  return (
+    <section
+      className="central-sync-panel"
+      data-category-id={category.id}
+      data-active-domain={activeTab}
+      data-seller-id={sellerId ?? undefined}
+      aria-labelledby="central-sync-panel-title"
+    >
+      <header className="central-sync-panel__head">
+        <div className="central-sync-panel__icon-wrap" aria-hidden>
+          <ScanSearch className="central-sync-panel__icon" strokeWidth={2} />
+        </div>
+        <div className="central-sync-panel__titles">
+          <div className="central-sync-panel__title-row">
+            <h4 id="central-sync-panel-title" className="central-sync-panel__title">
+              Central Sync
+            </h4>
+            {import.meta.env.DEV ? (
+              <span className="central-sync-panel__dev-badge">DEV</span>
+            ) : null}
+          </div>
+          <p className="central-sync-panel__desc">{category.description}</p>
+        </div>
+      </header>
+
+      <nav className="central-sync-panel__tabs" aria-label="Domínios da Central Sync">
+        <button
+          type="button"
+          className={`central-sync-panel__tab${activeTab === "sale" ? " central-sync-panel__tab--active" : ""}`}
+          aria-pressed={activeTab === "sale"}
+          onClick={handleSelectSale}
+        >
+          Venda
+        </button>
+        <button
+          type="button"
+          className={`central-sync-panel__tab${activeTab === "listing" ? " central-sync-panel__tab--active" : ""}`}
+          aria-pressed={activeTab === "listing"}
+          onClick={handleSelectListing}
+        >
+          Anúncio
+        </button>
+      </nav>
+
+      <div className="central-sync-panel__body">
+        <div className="central-sync-panel__domain" hidden={activeTab !== "sale"}>
+          <SalesSyncPanel category={category} embedded />
+        </div>
+        <div className="central-sync-panel__domain" hidden={activeTab !== "listing"}>
+          <ListingsSyncPanel embedded />
+        </div>
+      </div>
+
+      <footer className="central-sync-panel__foot">
+        <span className="central-sync-panel__seal">
+          {import.meta.env.DEV
+            ? "Simulação local — Central Sync sem backend"
+            : "Somente leitura"}
+        </span>
+      </footer>
+    </section>
+  );
+}
+
+export default memo(CentralSyncPanel);

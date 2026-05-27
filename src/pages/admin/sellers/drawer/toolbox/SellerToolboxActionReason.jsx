@@ -21,6 +21,7 @@ import { useSellerConsumptionView } from "./subscription/useSellerConsumptionVie
 import { useSellerFeatureFlagsView } from "./featureFlags/useSellerFeatureFlagsView";
 import { useSellerCacheRefreshView } from "./cacheRefresh/useSellerCacheRefreshView";
 import { useSalesSyncView } from "./centralSync/sales/useSalesSyncView";
+import { useListingsSyncView } from "./centralSync/listings/useListingsSyncView";
 import { SELLER_TOOLBOX_OPERATION_CATEGORIES } from "./sellerToolboxOperationalLog";
 import "./SellerToolboxActionReason.css";
 
@@ -47,6 +48,7 @@ function SellerToolboxActionReasonOverlay() {
   const { applyFeatureFlagOperationResult } = useSellerFeatureFlagsView();
   const { lastRefreshedAt, refreshedScopes, applyRefreshResult, applyClearCacheResult, applyReloadPanelResult, lastClearedAt, clearedScopes, lastReloadedAt, reloadedPanels } = useSellerCacheRefreshView();
   const { sale, applySalesReimportResult, applySalesFinancialRecalculateResult, applySalesCustomerReprocessResult } = useSalesSyncView();
+  const { listing, applyListingsReimportResult, applyListingsHealthRecalculateResult } = useListingsSyncView();
   const reasonRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
   const loggedOpenRef = useRef(false);
 
@@ -164,6 +166,7 @@ function SellerToolboxActionReasonOverlay() {
               reloadedPanels,
             },
             salesSync: { sale },
+            listingsSync: { listing },
             metadata: operationMetadata ?? null,
           }) ?? {};
 
@@ -208,6 +211,14 @@ function SellerToolboxActionReasonOverlay() {
 
             if (config.applySalesCustomerReprocessResult) {
               applySalesCustomerReprocessResult(data);
+            }
+
+            if (config.applyListingsReimportResult) {
+              applyListingsReimportResult(data);
+            }
+
+            if (config.applyListingsHealthRecalculateResult) {
+              applyListingsHealthRecalculateResult(data);
             }
 
             logOperation({
@@ -281,6 +292,9 @@ function SellerToolboxActionReasonOverlay() {
       applySalesReimportResult,
       applySalesFinancialRecalculateResult,
       applySalesCustomerReprocessResult,
+      listing,
+      applyListingsReimportResult,
+      applyListingsHealthRecalculateResult,
     ],
   );
 

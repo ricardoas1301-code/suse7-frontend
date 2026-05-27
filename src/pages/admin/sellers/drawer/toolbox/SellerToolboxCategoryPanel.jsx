@@ -10,7 +10,7 @@ import {
   ScanSearch,
   User,
 } from "lucide-react";
-import SalesSyncPanel from "./centralSync/sales/SalesSyncPanel";
+import CentralSyncPanel from "./centralSync/CentralSyncPanel";
 import SellerCacheRefreshPanel from "./cacheRefresh/SellerCacheRefreshPanel";
 import SellerFeatureFlagsPanel from "./featureFlags/SellerFeatureFlagsPanel";
 import { buildSellerDrawerHeaderModel } from "../sellerDrawerHeaderModel";
@@ -60,7 +60,7 @@ function SellerToolboxCategoryPanel({ category }) {
   }
 
   if (category.id === "central_sync") {
-    return <SalesSyncPanel category={category} />;
+    return <CentralSyncPanel category={category} />;
   }
 
   if (category.id === "sync") {

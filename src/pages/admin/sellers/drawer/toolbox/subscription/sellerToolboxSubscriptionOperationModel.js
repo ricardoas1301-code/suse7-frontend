@@ -62,6 +62,20 @@ import {
   SALES_SYNC_RECALCULATE_FINANCIAL_OPERATION_CONFIG,
   SALES_SYNC_REPROCESS_CUSTOMER_OPERATION_CONFIG,
 } from "../centralSync/sales/salesSyncOperationModel";
+import {
+  SELLER_TOOLBOX_SEARCH_LISTING_ACTION_ID,
+} from "../centralSync/listings/sellerToolboxSearchListingOperation";
+import {
+  SELLER_TOOLBOX_REIMPORT_LISTING_ACTION_ID,
+} from "../centralSync/listings/sellerToolboxReimportListingOperation";
+import {
+  SELLER_TOOLBOX_RECALCULATE_LISTING_HEALTH_ACTION_ID,
+} from "../centralSync/listings/sellerToolboxRecalculateListingHealthOperation";
+import {
+  LISTINGS_SYNC_SEARCH_OPERATION_CONFIG,
+  LISTINGS_SYNC_REIMPORT_OPERATION_CONFIG,
+  LISTINGS_SYNC_RECALCULATE_HEALTH_OPERATION_CONFIG,
+} from "../centralSync/listings/listingsSyncOperationModel";
 
 export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_QUICK_REASON_KEYS = new Set([
   "operational_fix",
@@ -87,6 +101,9 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_ACTION_IDS = new Set([
   SELLER_TOOLBOX_REIMPORT_SALE_ACTION_ID,
   SELLER_TOOLBOX_RECALCULATE_SALE_FINANCIAL_ACTION_ID,
   SELLER_TOOLBOX_REPROCESS_SALE_CUSTOMER_ACTION_ID,
+  SELLER_TOOLBOX_SEARCH_LISTING_ACTION_ID,
+  SELLER_TOOLBOX_REIMPORT_LISTING_ACTION_ID,
+  SELLER_TOOLBOX_RECALCULATE_LISTING_HEALTH_ACTION_ID,
 ]);
 
 /**
@@ -223,6 +240,9 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *   applySalesReimportResult?: boolean;
  *   applySalesFinancialRecalculateResult?: boolean;
  *   applySalesCustomerReprocessResult?: boolean;
+ *   applyListingsSyncSearchResult?: boolean;
+ *   applyListingsReimportResult?: boolean;
+ *   applyListingsHealthRecalculateResult?: boolean;
  *   requiresReason?: boolean;
  *   buildHandlerContext?: (input: {
  *     consumption: import("./sellerToolboxConsumptionModel").SellerConsumptionViewModel | null;
@@ -235,6 +255,7 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *       reloadedPanels?: string[];
  *     } | null;
  *     salesSync?: { sale?: import("../centralSync/sales/salesSyncModel").SalesSyncViewModel | null } | null;
+ *     listingsSync?: { listing?: import("../centralSync/listings/listingsSyncModel").ListingsSyncViewModel | null } | null;
  *     metadata?: Record<string, unknown> | null;
  *   }) => Record<string, unknown>;
  *   devLog: {
@@ -487,6 +508,9 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
   [SELLER_TOOLBOX_REIMPORT_SALE_ACTION_ID]: SALES_SYNC_REIMPORT_SALE_OPERATION_CONFIG,
   [SELLER_TOOLBOX_RECALCULATE_SALE_FINANCIAL_ACTION_ID]: SALES_SYNC_RECALCULATE_FINANCIAL_OPERATION_CONFIG,
   [SELLER_TOOLBOX_REPROCESS_SALE_CUSTOMER_ACTION_ID]: SALES_SYNC_REPROCESS_CUSTOMER_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_SEARCH_LISTING_ACTION_ID]: LISTINGS_SYNC_SEARCH_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_REIMPORT_LISTING_ACTION_ID]: LISTINGS_SYNC_REIMPORT_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_RECALCULATE_LISTING_HEALTH_ACTION_ID]: LISTINGS_SYNC_RECALCULATE_HEALTH_OPERATION_CONFIG,
 };
 
 /**

@@ -1,5 +1,17 @@
 /* S_5.4.1 — Central Sync / Venda */
 
+.sales-sync-panel--embedded {
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+.sales-sync-panel--embedded .sales-sync-panel__body {
+  padding: 0;
+}
+
 .sales-sync-panel {
   border: 1px solid var(--s7-admin-border);
   border-radius: var(--s7-admin-radius);
