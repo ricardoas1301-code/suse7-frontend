@@ -16,6 +16,7 @@ import { ListingsSyncViewProvider } from "./centralSync/listings/useListingsSync
 import { ProductsSyncViewProvider } from "./centralSync/products/useProductsSyncView";
 import { CustomersSyncViewProvider } from "./centralSync/customers/useCustomersSyncView";
 import { AccountsSyncViewProvider } from "./centralSync/accounts/useAccountsSyncView";
+import { TimelineViewProvider } from "./timeline/useTimelineView";
 import { SellerToolboxActionReasonProvider } from "./useSellerToolboxActionReason";
 import { SellerToolboxConfirmActionProvider } from "./useSellerToolboxConfirmAction";
 import { SellerToolboxFeedbackProvider } from "./useSellerToolboxFeedback";
@@ -40,6 +41,7 @@ function SellerToolboxDrawerShell({ onClose }) {
             <ProductsSyncViewProvider>
             <CustomersSyncViewProvider>
             <AccountsSyncViewProvider>
+            <TimelineViewProvider>
             <SellerToolboxActionReasonProvider>
               <aside
                 className="dc-drawer seller-toolbox-drawer"
@@ -62,6 +64,7 @@ function SellerToolboxDrawerShell({ onClose }) {
                 <SellerToolboxActionReason />
               </aside>
             </SellerToolboxActionReasonProvider>
+            </TimelineViewProvider>
             </AccountsSyncViewProvider>
             </CustomersSyncViewProvider>
             </ProductsSyncViewProvider>

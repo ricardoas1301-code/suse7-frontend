@@ -1,0 +1,21 @@
+.timeline-empty-state {
+  padding: 14px;
+  border: 1px dashed var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface-soft);
+  text-align: center;
+}
+
+.timeline-empty-state__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.timeline-empty-state__desc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--s7-admin-muted);
+}

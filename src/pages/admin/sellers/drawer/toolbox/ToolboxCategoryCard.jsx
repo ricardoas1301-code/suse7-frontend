@@ -8,6 +8,7 @@ import {
   Plug,
   RefreshCw,
   ScanSearch,
+  ScrollText,
   User,
 } from "lucide-react";
 import { useSellerToolbox } from "./SellerToolboxContext";
@@ -21,6 +22,7 @@ const ICONS = {
   Flag,
   Database,
   ScanSearch,
+  ScrollText,
   RefreshCw,
   Package,
   History,

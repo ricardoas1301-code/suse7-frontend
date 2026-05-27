@@ -4,7 +4,7 @@
  *   id: string;
  *   label: string;
  *   description: string;
- *   icon: "User" | "CreditCard" | "Plug" | "RefreshCw" | "Package" | "History" | "Flag" | "Database" | "ScanSearch";
+ *   icon: "User" | "CreditCard" | "Plug" | "RefreshCw" | "Package" | "History" | "Flag" | "Database" | "ScanSearch" | "ScrollText";
  * }} SellerToolboxCategory
  */
 
@@ -45,6 +45,12 @@ export const SELLER_TOOLBOX_CATEGORIES = [
     label: "Central Sync",
     description: "Sincronização operacional por entidade — começando por Venda",
     icon: "ScanSearch",
+  },
+  {
+    id: "operational_timeline",
+    label: "Timeline Operacional",
+    description: "Feed cronológico de ações administrativas com auditoria operacional",
+    icon: "ScrollText",
   },
   {
     id: "sync",

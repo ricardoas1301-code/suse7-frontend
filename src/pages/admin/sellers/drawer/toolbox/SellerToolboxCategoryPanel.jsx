@@ -8,9 +8,11 @@ import {
   Plug,
   RefreshCw,
   ScanSearch,
+  ScrollText,
   User,
 } from "lucide-react";
 import CentralSyncPanel from "./centralSync/CentralSyncPanel";
+import TimelinePanel from "./timeline/TimelinePanel";
 import SellerCacheRefreshPanel from "./cacheRefresh/SellerCacheRefreshPanel";
 import SellerFeatureFlagsPanel from "./featureFlags/SellerFeatureFlagsPanel";
 import { buildSellerDrawerHeaderModel } from "../sellerDrawerHeaderModel";
@@ -30,6 +32,7 @@ const ICONS = {
   Flag,
   Database,
   ScanSearch,
+  ScrollText,
   RefreshCw,
   Package,
   History,
@@ -61,6 +64,10 @@ function SellerToolboxCategoryPanel({ category }) {
 
   if (category.id === "central_sync") {
     return <CentralSyncPanel category={category} />;
+  }
+
+  if (category.id === "operational_timeline") {
+    return <TimelinePanel category={category} />;
   }
 
   if (category.id === "sync") {
