@@ -14,6 +14,18 @@ import {
   SELLER_TOOLBOX_CORRECT_CYCLE_CONSUMPTION_ACTION_ID,
   executeFakeCorrectCycleConsumption,
 } from "./sellerToolboxCorrectCycleConsumptionOperation";
+import {
+  SELLER_TOOLBOX_CHANGE_BILLING_CYCLE_ACTION_ID,
+  executeFakeChangeBillingCycle,
+} from "./sellerToolboxChangeBillingCycleOperation";
+import {
+  SELLER_TOOLBOX_MANAGE_SUBSCRIPTION_STATUS_ACTION_ID,
+  executeFakeManageSubscriptionStatus,
+} from "./sellerToolboxManageSubscriptionStatusOperation";
+import {
+  SELLER_TOOLBOX_MANAGE_SUBSCRIPTION_BENEFITS_ACTION_ID,
+  executeFakeManageSubscriptionBenefits,
+} from "./sellerToolboxManageSubscriptionBenefitsOperation";
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxOperationQuickReason[]} */
 export const SUBSCRIPTION_MANAGEMENT_CHANGE_PLAN_QUICK_REASONS = [
@@ -51,11 +63,41 @@ export const SUBSCRIPTION_MANAGEMENT_CORRECT_CONSUMPTION_QUICK_REASONS = [
   { key: "seller_support", label: "Suporte ao seller", prefix: "Suporte ao seller: " },
 ];
 
+/** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxOperationQuickReason[]} */
+export const SUBSCRIPTION_MANAGEMENT_CHANGE_BILLING_CYCLE_QUICK_REASONS = [
+  { key: "commercial_migration", label: "Migração comercial", prefix: "Migração comercial: " },
+  { key: "admin_adjustment", label: "Ajuste administrativo", prefix: "Ajuste administrativo: " },
+  { key: "seller_support", label: "Suporte ao seller", prefix: "Suporte ao seller: " },
+  { key: "operational_correction", label: "Correção operacional", prefix: "Correção operacional: " },
+  { key: "annual_upgrade", label: "Upgrade anual", prefix: "Upgrade anual: " },
+];
+
+/** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxOperationQuickReason[]} */
+export const SUBSCRIPTION_MANAGEMENT_MANAGE_STATUS_QUICK_REASONS = [
+  { key: "admin_suspension", label: "Suspensão administrativa", prefix: "Suspensão administrativa: " },
+  { key: "manual_reactivation", label: "Reativação manual", prefix: "Reativação manual: " },
+  { key: "operational_adjustment", label: "Ajuste operacional", prefix: "Ajuste operacional: " },
+  { key: "premium_support", label: "Suporte premium", prefix: "Suporte premium: " },
+  { key: "internal_review", label: "Conferência interna", prefix: "Conferência interna: " },
+];
+
+/** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxOperationQuickReason[]} */
+export const SUBSCRIPTION_MANAGEMENT_MANAGE_BENEFITS_QUICK_REASONS = [
+  { key: "manual_release", label: "Liberação manual", prefix: "Liberação manual: " },
+  { key: "promotional_benefit", label: "Benefício promocional", prefix: "Benefício promocional: " },
+  { key: "commercial_adjustment", label: "Ajuste comercial", prefix: "Ajuste comercial: " },
+  { key: "operational_correction", label: "Correção operacional", prefix: "Correção operacional: " },
+  { key: "strategic_support", label: "Suporte estratégico", prefix: "Suporte estratégico: " },
+];
+
 export const SUBSCRIPTION_MANAGEMENT_OPERATION_ACTION_IDS = [
   SELLER_TOOLBOX_CHANGE_SUBSCRIPTION_PLAN_ACTION_ID,
   SELLER_TOOLBOX_EDIT_SUBSCRIPTION_PRICE_ACTION_ID,
   SELLER_TOOLBOX_ADJUST_SALES_LIMIT_ACTION_ID,
   SELLER_TOOLBOX_CORRECT_CYCLE_CONSUMPTION_ACTION_ID,
+  SELLER_TOOLBOX_CHANGE_BILLING_CYCLE_ACTION_ID,
+  SELLER_TOOLBOX_MANAGE_SUBSCRIPTION_STATUS_ACTION_ID,
+  SELLER_TOOLBOX_MANAGE_SUBSCRIPTION_BENEFITS_ACTION_ID,
 ];
 
 /**
@@ -76,6 +118,13 @@ export function extractSubscriptionManagementHandlerContext(metadata, subscripti
     subscriptionPrice: Number(metadata?.subscriptionPrice ?? state?.subscriptionPrice ?? 0),
     salesLimit: Number(metadata?.salesLimit ?? state?.salesLimit ?? 0),
     currentConsumption: Number(metadata?.currentConsumption ?? state?.currentConsumption ?? 0),
+    billingCycle: String(metadata?.billingCycle ?? state?.billingCycle ?? "monthly").trim(),
+    subscriptionStatus: String(metadata?.subscriptionStatus ?? state?.subscriptionStatus ?? "active").trim(),
+    benefits: Array.isArray(metadata?.benefits)
+      ? metadata.benefits.map((key) => String(key))
+      : Array.isArray(state?.benefits)
+        ? [...state.benefits]
+        : [],
   };
 }
 
@@ -281,6 +330,163 @@ export const SUBSCRIPTION_MANAGEMENT_CORRECT_CONSUMPTION_OPERATION_CONFIG = {
     },
     error: {
       title: "Falha ao corrigir consumo",
+      description: "Não foi possível concluir a simulação. Nenhum dado real foi alterado.",
+    },
+  },
+};
+
+/** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
+export const SUBSCRIPTION_MANAGEMENT_CHANGE_BILLING_CYCLE_OPERATION_CONFIG = {
+  handler: executeFakeChangeBillingCycle,
+  quickReasons: SUBSCRIPTION_MANAGEMENT_CHANGE_BILLING_CYCLE_QUICK_REASONS,
+  applySubscriptionManagementResult: true,
+  buildHandlerContext: ({ metadata, subscriptionManagement }) =>
+    extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
+  devLog: {
+    started: "billing_cycle_change_started",
+    completed: "billing_cycle_change_completed",
+    failed: "billing_cycle_change_failed",
+    buildStartedPayload: (sellerId, metadata) => ({
+      sellerId,
+      previousValue: metadata?.billingCycle ?? null,
+      newValue: null,
+    }),
+    buildCompletedPayload: (sellerId, data) => ({
+      sellerId,
+      previousValue: data.previousBillingCycle,
+      newValue: data.newBillingCycle,
+      timestamp: data.changedAt,
+    }),
+    buildFailedPayload: (sellerId, metadata) => ({
+      sellerId,
+      previousValue: metadata?.billingCycle ?? null,
+      newValue: null,
+    }),
+  },
+  operationalLog: {
+    event: "billing_cycle_changed",
+    buildMetadata: (data, reasonLength, actionId, metadata) => ({
+      sellerId: metadata?.sellerId ?? null,
+      actionId,
+      previousValue: data.previousBillingCycle,
+      newValue: data.newBillingCycle,
+      reasonLength,
+      timestamp: data.changedAt,
+    }),
+  },
+  feedback: {
+    success: {
+      title: "Ciclo alterado (simulado)",
+      description: "Estado local atualizado — nenhum billing real foi alterado.",
+    },
+    error: {
+      title: "Falha ao alterar ciclo",
+      description: "Não foi possível concluir a simulação. Nenhum dado real foi alterado.",
+    },
+  },
+};
+
+/** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
+export const SUBSCRIPTION_MANAGEMENT_MANAGE_STATUS_OPERATION_CONFIG = {
+  handler: executeFakeManageSubscriptionStatus,
+  quickReasons: SUBSCRIPTION_MANAGEMENT_MANAGE_STATUS_QUICK_REASONS,
+  applySubscriptionManagementResult: true,
+  buildHandlerContext: ({ metadata, subscriptionManagement }) =>
+    extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
+  devLog: {
+    started: "subscription_status_manage_started",
+    completed: "subscription_status_manage_completed",
+    failed: "subscription_status_manage_failed",
+    buildStartedPayload: (sellerId, metadata) => ({
+      sellerId,
+      previousValue: metadata?.subscriptionStatus ?? null,
+      newValue: null,
+    }),
+    buildCompletedPayload: (sellerId, data) => ({
+      sellerId,
+      previousValue: data.previousStatus,
+      newValue: data.newStatus,
+      timestamp: data.changedAt,
+    }),
+    buildFailedPayload: (sellerId, metadata) => ({
+      sellerId,
+      previousValue: metadata?.subscriptionStatus ?? null,
+      newValue: null,
+    }),
+  },
+  operationalLog: {
+    event: "subscription_status_managed",
+    buildMetadata: (data, reasonLength, actionId, metadata) => ({
+      sellerId: metadata?.sellerId ?? null,
+      actionId,
+      previousValue: data.previousStatus,
+      newValue: data.newStatus,
+      reasonLength,
+      timestamp: data.changedAt,
+    }),
+  },
+  feedback: {
+    success: {
+      title: "Status atualizado (simulado)",
+      description: "Estado local atualizado — nenhuma assinatura real foi alterada.",
+    },
+    error: {
+      title: "Falha ao alterar status",
+      description: "Não foi possível concluir a simulação. Nenhum dado real foi alterado.",
+    },
+  },
+};
+
+/** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
+export const SUBSCRIPTION_MANAGEMENT_MANAGE_BENEFITS_OPERATION_CONFIG = {
+  handler: executeFakeManageSubscriptionBenefits,
+  quickReasons: SUBSCRIPTION_MANAGEMENT_MANAGE_BENEFITS_QUICK_REASONS,
+  applySubscriptionManagementResult: true,
+  buildHandlerContext: ({ metadata, subscriptionManagement }) =>
+    extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
+  devLog: {
+    started: "subscription_benefits_manage_started",
+    completed: "subscription_benefits_manage_completed",
+    failed: "subscription_benefits_manage_failed",
+    buildStartedPayload: (sellerId, metadata) => ({
+      sellerId,
+      benefitsCount: Array.isArray(metadata?.benefits) ? metadata.benefits.length : null,
+      previousValue: null,
+      newValue: null,
+    }),
+    buildCompletedPayload: (sellerId, data) => ({
+      sellerId,
+      benefitsCount: Array.isArray(data.newBenefits) ? data.newBenefits.length : null,
+      previousValue: data.benefitKey,
+      newValue: data.action,
+      timestamp: data.changedAt,
+    }),
+    buildFailedPayload: (sellerId, metadata) => ({
+      sellerId,
+      benefitsCount: Array.isArray(metadata?.benefits) ? metadata.benefits.length : null,
+      previousValue: null,
+      newValue: null,
+    }),
+  },
+  operationalLog: {
+    event: "subscription_benefits_managed",
+    buildMetadata: (data, reasonLength, actionId, metadata) => ({
+      sellerId: metadata?.sellerId ?? null,
+      actionId,
+      previousValue: data.benefitKey,
+      newValue: data.action,
+      benefitsCount: Array.isArray(data.newBenefits) ? data.newBenefits.length : null,
+      reasonLength,
+      timestamp: data.changedAt,
+    }),
+  },
+  feedback: {
+    success: {
+      title: "Benefícios atualizados (simulado)",
+      description: "Estado local atualizado — nenhum entitlement real foi alterado.",
+    },
+    error: {
+      title: "Falha ao gerenciar benefícios",
       description: "Não foi possível concluir a simulação. Nenhum dado real foi alterado.",
     },
   },

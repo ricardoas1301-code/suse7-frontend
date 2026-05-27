@@ -1,4 +1,4 @@
-/** @typedef {"active" | "past_due" | "cancelled" | "trialing"} SubscriptionManagementStatus */
+/** @typedef {"active" | "suspended" | "canceled" | "trial" | "past_due" | "cancelled" | "trialing"} SubscriptionManagementLifecycleStatus */
 
 /** @typedef {"monthly" | "yearly"} SubscriptionManagementBillingCycle */
 
@@ -10,7 +10,8 @@
  *   currentConsumption: number;
  *   remainingSales: number;
  *   billingCycle: SubscriptionManagementBillingCycle;
- *   subscriptionStatus: SubscriptionManagementStatus;
+ *   subscriptionStatus: SubscriptionManagementLifecycleStatus;
+ *   benefits: string[];
  * }} SubscriptionManagementStateViewModel
  */
 
@@ -19,6 +20,7 @@
  *   label: string;
  *   before: string;
  *   after: string;
+ *   changeType?: "default" | "benefit-add" | "benefit-remove";
  * }} SubscriptionManagementPreviewRow
  */
 
@@ -30,6 +32,26 @@ export const SUBSCRIPTION_MANAGEMENT_FAKE_NEW_PLAN = "Enterprise";
 export const SUBSCRIPTION_MANAGEMENT_FAKE_NEW_PRICE = 199.9;
 export const SUBSCRIPTION_MANAGEMENT_FAKE_NEW_LIMIT = 10000;
 export const SUBSCRIPTION_MANAGEMENT_FAKE_NEW_CONSUMPTION = 1450;
+
+/** @type {readonly string[]} */
+export const SUBSCRIPTION_MANAGEMENT_MOCK_BENEFIT_KEYS = [
+  "pricing_ai",
+  "whatsapp_notifications",
+  "advanced_dashboard",
+  "priority_support",
+  "multi_marketplace",
+  "api_access",
+];
+
+/** @type {Record<string, { label: string; category?: string }>} */
+export const SUBSCRIPTION_MANAGEMENT_BENEFIT_CATALOG = {
+  pricing_ai: { label: "Precificação IA", category: "Inteligência" },
+  whatsapp_notifications: { label: "Notificações WhatsApp", category: "Comunicação" },
+  advanced_dashboard: { label: "Dashboard Avançado", category: "Analytics" },
+  priority_support: { label: "Priority Support", category: "Suporte" },
+  multi_marketplace: { label: "Multi Marketplace", category: "Integração" },
+  api_access: { label: "API Access", category: "Integração" },
+};
 
 /**
  * @param {number} salesLimit
@@ -43,18 +65,37 @@ export function computeRemainingSales(salesLimit, currentConsumption) {
  * @returns {SubscriptionManagementStateViewModel}
  */
 export function buildSubscriptionManagementMockState() {
-  const salesLimit = 5000;
-  const currentConsumption = 1825;
+  const salesLimit = 10000;
+  const currentConsumption = 1450;
 
   return {
-    currentPlan: "Pro",
-    subscriptionPrice: 149.9,
+    currentPlan: "Enterprise",
+    subscriptionPrice: 199.9,
     salesLimit,
     currentConsumption,
     remainingSales: computeRemainingSales(salesLimit, currentConsumption),
     billingCycle: "monthly",
     subscriptionStatus: "active",
+    benefits: ["pricing_ai", "whatsapp_notifications", "advanced_dashboard"],
   };
+}
+
+/**
+ * @param {string | null | undefined} benefitKey
+ */
+export function resolveBenefitLabel(benefitKey) {
+  const key = String(benefitKey ?? "").trim();
+  if (!key) return "—";
+  return SUBSCRIPTION_MANAGEMENT_BENEFIT_CATALOG[key]?.label ?? key;
+}
+
+/**
+ * @param {string | null | undefined} benefitKey
+ */
+export function resolveBenefitCategory(benefitKey) {
+  const key = String(benefitKey ?? "").trim();
+  if (!key) return null;
+  return SUBSCRIPTION_MANAGEMENT_BENEFIT_CATALOG[key]?.category ?? null;
 }
 
 /**
@@ -91,34 +132,41 @@ export function resolveBillingCycleLabel(cycle) {
 }
 
 /**
- * @param {SubscriptionManagementStatus | string | null | undefined} status
+ * @param {SubscriptionManagementLifecycleStatus | string | null | undefined} status
  */
-export function resolveSubscriptionStatusLabel(status) {
+export function resolveSubscriptionLifecycleStatusLabel(status) {
   switch (status) {
     case "active":
-      return "Ativo";
-    case "past_due":
-      return "Inadimplente";
+      return "Ativa";
+    case "suspended":
+      return "Suspensa";
+    case "canceled":
     case "cancelled":
-      return "Cancelado";
+      return "Cancelada";
+    case "trial":
     case "trialing":
       return "Trial";
+    case "past_due":
+      return "Inadimplente";
     default:
       return String(status ?? "—");
   }
 }
 
 /**
- * @param {SubscriptionManagementStatus | string | null | undefined} status
+ * @param {SubscriptionManagementLifecycleStatus | string | null | undefined} status
  */
-export function resolveSubscriptionStatusVariant(status) {
+export function resolveSubscriptionLifecycleStatusVariant(status) {
   switch (status) {
     case "active":
       return "healthy";
+    case "trial":
     case "trialing":
       return "info";
+    case "suspended":
     case "past_due":
       return "warning";
+    case "canceled":
     case "cancelled":
       return "muted";
     default:
@@ -127,11 +175,33 @@ export function resolveSubscriptionStatusVariant(status) {
 }
 
 /**
- * @param {SubscriptionManagementStatus | string | null | undefined} status
+ * @param {SubscriptionManagementLifecycleStatus | string | null | undefined} status
+ */
+export function resolveSubscriptionStatusLabel(status) {
+  return resolveSubscriptionLifecycleStatusLabel(status);
+}
+
+/**
+ * @param {SubscriptionManagementLifecycleStatus | string | null | undefined} status
+ */
+export function resolveSubscriptionStatusVariant(status) {
+  return resolveSubscriptionLifecycleStatusVariant(status);
+}
+
+/**
+ * @param {SubscriptionManagementLifecycleStatus | string | null | undefined} status
  */
 export function subscriptionManagementStatusClassName(status) {
-  const variant = resolveSubscriptionStatusVariant(status);
+  const variant = resolveSubscriptionLifecycleStatusVariant(status);
   return `subscription-management-current-state__status subscription-management-current-state__status--${variant}`;
+}
+
+/**
+ * @param {SubscriptionManagementLifecycleStatus | string | null | undefined} status
+ */
+export function subscriptionManagementLifecycleStatusClassName(status) {
+  const variant = resolveSubscriptionLifecycleStatusVariant(status);
+  return `subscription-management-governance__status subscription-management-governance__status--${variant}`;
 }
 
 /**
@@ -154,6 +224,51 @@ export function resolveSubscriptionManagementPanelState({
   if (toolboxState === "error") return "error";
   if (toolboxState === "empty") return "error";
   return "loaded";
+}
+
+/**
+ * @param {SubscriptionManagementBillingCycle | string} billingCycle
+ */
+export function resolveNextBillingCycle(billingCycle) {
+  return billingCycle === "yearly" ? "monthly" : "yearly";
+}
+
+/**
+ * @param {SubscriptionManagementLifecycleStatus | string} status
+ */
+export function resolveNextSubscriptionLifecycleStatus(status) {
+  if (status === "active") return "suspended";
+  if (status === "suspended") return "active";
+  return "active";
+}
+
+/**
+ * @param {string[]} benefits
+ */
+export function resolveNextBenefitsMutation(benefits) {
+  const current = Array.isArray(benefits) ? [...benefits] : [];
+
+  if (current.includes("advanced_dashboard")) {
+    return {
+      action: "remove",
+      benefitKey: "advanced_dashboard",
+      newBenefits: current.filter((key) => key !== "advanced_dashboard"),
+    };
+  }
+
+  if (!current.includes("priority_support")) {
+    return {
+      action: "add",
+      benefitKey: "priority_support",
+      newBenefits: [...current, "priority_support"],
+    };
+  }
+
+  return {
+    action: "remove",
+    benefitKey: "priority_support",
+    newBenefits: current.filter((key) => key !== "priority_support"),
+  };
 }
 
 /**
@@ -220,12 +335,76 @@ export function buildCorrectConsumptionPreviewRows(state) {
 }
 
 /**
+ * @param {SubscriptionManagementStateViewModel} state
+ * @returns {SubscriptionManagementPreviewRow[]}
+ */
+export function buildChangeBillingCyclePreviewRows(state) {
+  const nextCycle = resolveNextBillingCycle(state.billingCycle);
+
+  return [
+    {
+      label: "Ciclo",
+      before: resolveBillingCycleLabel(state.billingCycle),
+      after: resolveBillingCycleLabel(nextCycle),
+    },
+  ];
+}
+
+/**
+ * @param {SubscriptionManagementStateViewModel} state
+ * @returns {SubscriptionManagementPreviewRow[]}
+ */
+export function buildManageSubscriptionStatusPreviewRows(state) {
+  const nextStatus = resolveNextSubscriptionLifecycleStatus(state.subscriptionStatus);
+
+  return [
+    {
+      label: "Status",
+      before: resolveSubscriptionLifecycleStatusLabel(state.subscriptionStatus),
+      after: resolveSubscriptionLifecycleStatusLabel(nextStatus),
+    },
+  ];
+}
+
+/**
+ * @param {SubscriptionManagementStateViewModel} state
+ * @returns {SubscriptionManagementPreviewRow[]}
+ */
+export function buildManageBenefitsPreviewRows(state) {
+  const mutation = resolveNextBenefitsMutation(state.benefits ?? []);
+  const benefitLabel = resolveBenefitLabel(mutation.benefitKey);
+
+  if (mutation.action === "remove") {
+    return [
+      {
+        label: "Benefícios",
+        before: benefitLabel,
+        after: `- ${benefitLabel}`,
+        changeType: "benefit-remove",
+      },
+    ];
+  }
+
+  return [
+    {
+      label: "Benefícios",
+      before: "—",
+      after: `+ ${benefitLabel}`,
+      changeType: "benefit-add",
+    },
+  ];
+}
+
+/**
  * @param {Record<string, unknown>} result
  * @param {SubscriptionManagementStateViewModel} currentState
  * @returns {SubscriptionManagementStateViewModel}
  */
 export function applySubscriptionManagementOperationResult(result, currentState) {
-  const next = { ...currentState };
+  const next = {
+    ...currentState,
+    benefits: Array.isArray(currentState.benefits) ? [...currentState.benefits] : [],
+  };
 
   if (typeof result.newPlan === "string" && result.newPlan) {
     next.currentPlan = result.newPlan;
@@ -246,6 +425,18 @@ export function applySubscriptionManagementOperationResult(result, currentState)
       result.remainingSales != null && !Number.isNaN(Number(result.remainingSales))
         ? Number(result.remainingSales)
         : computeRemainingSales(next.salesLimit, next.currentConsumption);
+  }
+
+  if (typeof result.newBillingCycle === "string" && result.newBillingCycle) {
+    next.billingCycle = /** @type {SubscriptionManagementBillingCycle} */ (result.newBillingCycle);
+  }
+
+  if (typeof result.newStatus === "string" && result.newStatus) {
+    next.subscriptionStatus = /** @type {SubscriptionManagementLifecycleStatus} */ (result.newStatus);
+  }
+
+  if (Array.isArray(result.newBenefits)) {
+    next.benefits = result.newBenefits.map((key) => String(key));
   }
 
   return next;

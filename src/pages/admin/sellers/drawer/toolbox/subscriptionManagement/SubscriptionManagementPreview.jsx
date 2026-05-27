@@ -18,18 +18,33 @@ function SubscriptionManagementPreview({ rows, visible = false }) {
       </header>
 
       <div className="subscription-management-preview__rows">
-        {rows.map((row) => (
-          <div key={row.label} className="subscription-management-preview__row">
-            <span className="subscription-management-preview__label">{row.label}</span>
-            <div className="subscription-management-preview__change">
-              <span className="subscription-management-preview__before">{row.before}</span>
-              <span className="subscription-management-preview__arrow" aria-hidden>
-                →
-              </span>
-              <span className="subscription-management-preview__after">{row.after}</span>
+        {rows.map((row) => {
+          const isBenefitChange =
+            row.changeType === "benefit-add" || row.changeType === "benefit-remove";
+
+          return (
+            <div key={`${row.label}-${row.after}`} className="subscription-management-preview__row">
+              <span className="subscription-management-preview__label">{row.label}</span>
+              {isBenefitChange ? (
+                <span
+                  className={`subscription-management-preview__benefit subscription-management-preview__benefit--${
+                    row.changeType === "benefit-add" ? "add" : "remove"
+                  }`}
+                >
+                  {row.after}
+                </span>
+              ) : (
+                <div className="subscription-management-preview__change">
+                  <span className="subscription-management-preview__before">{row.before}</span>
+                  <span className="subscription-management-preview__arrow" aria-hidden>
+                    →
+                  </span>
+                  <span className="subscription-management-preview__after">{row.after}</span>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

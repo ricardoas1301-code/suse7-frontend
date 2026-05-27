@@ -73,3 +73,16 @@
   font-weight: 700;
   color: #166534;
 }
+
+.subscription-management-preview__benefit {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.subscription-management-preview__benefit--add {
+  color: #166534;
+}
+
+.subscription-management-preview__benefit--remove {
+  color: #b45309;
+}
