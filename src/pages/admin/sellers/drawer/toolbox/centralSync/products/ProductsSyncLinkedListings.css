@@ -1,0 +1,126 @@
+.products-sync-linked-listings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface-soft);
+  min-width: 0;
+}
+
+.products-sync-linked-listings__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.products-sync-linked-listings__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.products-sync-linked-listings__desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--s7-admin-muted);
+}
+
+.products-sync-linked-listings__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.products-sync-linked-listings__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+  min-width: 0;
+}
+
+.products-sync-linked-listings__item-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.products-sync-linked-listings__listing-id {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+  word-break: break-word;
+}
+
+.products-sync-linked-listings__marketplace {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+}
+
+.products-sync-linked-listings__item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.products-sync-linked-listings__account {
+  font-size: 11px;
+  color: var(--s7-admin-muted);
+}
+
+.products-sync-linked-listings__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.products-sync-linked-listings__badge--status {
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.products-sync-linked-listings__badge--health-healthy {
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.25);
+  background: rgba(22, 163, 74, 0.12);
+}
+
+.products-sync-linked-listings__badge--health-warning {
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.products-sync-linked-listings__badge--health-danger {
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.products-sync-linked-listings__badge--health-pending {
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(148, 163, 184, 0.12);
+}

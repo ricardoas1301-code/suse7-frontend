@@ -22,6 +22,7 @@ import { useSellerFeatureFlagsView } from "./featureFlags/useSellerFeatureFlagsV
 import { useSellerCacheRefreshView } from "./cacheRefresh/useSellerCacheRefreshView";
 import { useSalesSyncView } from "./centralSync/sales/useSalesSyncView";
 import { useListingsSyncView } from "./centralSync/listings/useListingsSyncView";
+import { useProductsSyncView } from "./centralSync/products/useProductsSyncView";
 import { SELLER_TOOLBOX_OPERATION_CATEGORIES } from "./sellerToolboxOperationalLog";
 import "./SellerToolboxActionReason.css";
 
@@ -49,6 +50,7 @@ function SellerToolboxActionReasonOverlay() {
   const { lastRefreshedAt, refreshedScopes, applyRefreshResult, applyClearCacheResult, applyReloadPanelResult, lastClearedAt, clearedScopes, lastReloadedAt, reloadedPanels } = useSellerCacheRefreshView();
   const { sale, applySalesReimportResult, applySalesFinancialRecalculateResult, applySalesCustomerReprocessResult } = useSalesSyncView();
   const { listing, applyListingsReimportResult, applyListingsHealthRecalculateResult } = useListingsSyncView();
+  const { product, applyProductsListingLinkReprocessResult } = useProductsSyncView();
   const reasonRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
   const loggedOpenRef = useRef(false);
 
@@ -167,6 +169,7 @@ function SellerToolboxActionReasonOverlay() {
             },
             salesSync: { sale },
             listingsSync: { listing },
+            productsSync: { product },
             metadata: operationMetadata ?? null,
           }) ?? {};
 
@@ -219,6 +222,10 @@ function SellerToolboxActionReasonOverlay() {
 
             if (config.applyListingsHealthRecalculateResult) {
               applyListingsHealthRecalculateResult(data);
+            }
+
+            if (config.applyProductsListingLinkReprocessResult) {
+              applyProductsListingLinkReprocessResult(data);
             }
 
             logOperation({
@@ -295,6 +302,8 @@ function SellerToolboxActionReasonOverlay() {
       listing,
       applyListingsReimportResult,
       applyListingsHealthRecalculateResult,
+      product,
+      applyProductsListingLinkReprocessResult,
     ],
   );
 

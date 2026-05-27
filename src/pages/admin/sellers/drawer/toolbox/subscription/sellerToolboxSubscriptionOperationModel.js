@@ -76,6 +76,16 @@ import {
   LISTINGS_SYNC_REIMPORT_OPERATION_CONFIG,
   LISTINGS_SYNC_RECALCULATE_HEALTH_OPERATION_CONFIG,
 } from "../centralSync/listings/listingsSyncOperationModel";
+import {
+  SELLER_TOOLBOX_SEARCH_PRODUCT_ACTION_ID,
+} from "../centralSync/products/sellerToolboxSearchProductOperation";
+import {
+  SELLER_TOOLBOX_REPROCESS_PRODUCT_LISTING_LINK_ACTION_ID,
+} from "../centralSync/products/sellerToolboxReprocessProductListingLinkOperation";
+import {
+  PRODUCTS_SYNC_SEARCH_OPERATION_CONFIG,
+  PRODUCTS_SYNC_REPROCESS_LINK_OPERATION_CONFIG,
+} from "../centralSync/products/productsSyncOperationModel";
 
 export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_QUICK_REASON_KEYS = new Set([
   "operational_fix",
@@ -104,6 +114,8 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_ACTION_IDS = new Set([
   SELLER_TOOLBOX_SEARCH_LISTING_ACTION_ID,
   SELLER_TOOLBOX_REIMPORT_LISTING_ACTION_ID,
   SELLER_TOOLBOX_RECALCULATE_LISTING_HEALTH_ACTION_ID,
+  SELLER_TOOLBOX_SEARCH_PRODUCT_ACTION_ID,
+  SELLER_TOOLBOX_REPROCESS_PRODUCT_LISTING_LINK_ACTION_ID,
 ]);
 
 /**
@@ -243,6 +255,8 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *   applyListingsSyncSearchResult?: boolean;
  *   applyListingsReimportResult?: boolean;
  *   applyListingsHealthRecalculateResult?: boolean;
+ *   applyProductsSyncSearchResult?: boolean;
+ *   applyProductsListingLinkReprocessResult?: boolean;
  *   requiresReason?: boolean;
  *   buildHandlerContext?: (input: {
  *     consumption: import("./sellerToolboxConsumptionModel").SellerConsumptionViewModel | null;
@@ -256,6 +270,7 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *     } | null;
  *     salesSync?: { sale?: import("../centralSync/sales/salesSyncModel").SalesSyncViewModel | null } | null;
  *     listingsSync?: { listing?: import("../centralSync/listings/listingsSyncModel").ListingsSyncViewModel | null } | null;
+ *     productsSync?: { product?: import("../centralSync/products/productsSyncModel").ProductsSyncViewModel | null } | null;
  *     metadata?: Record<string, unknown> | null;
  *   }) => Record<string, unknown>;
  *   devLog: {
@@ -511,6 +526,8 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
   [SELLER_TOOLBOX_SEARCH_LISTING_ACTION_ID]: LISTINGS_SYNC_SEARCH_OPERATION_CONFIG,
   [SELLER_TOOLBOX_REIMPORT_LISTING_ACTION_ID]: LISTINGS_SYNC_REIMPORT_OPERATION_CONFIG,
   [SELLER_TOOLBOX_RECALCULATE_LISTING_HEALTH_ACTION_ID]: LISTINGS_SYNC_RECALCULATE_HEALTH_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_SEARCH_PRODUCT_ACTION_ID]: PRODUCTS_SYNC_SEARCH_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_REPROCESS_PRODUCT_LISTING_LINK_ACTION_ID]: PRODUCTS_SYNC_REPROCESS_LINK_OPERATION_CONFIG,
 };
 
 /**
