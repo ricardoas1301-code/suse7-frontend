@@ -100,6 +100,13 @@ export const SUBSCRIPTION_MANAGEMENT_OPERATION_ACTION_IDS = [
   SELLER_TOOLBOX_MANAGE_SUBSCRIPTION_BENEFITS_ACTION_ID,
 ];
 
+/** @type {{ requiresAdministrativeReason: true; requiresMandatoryPreview: true; applySubscriptionManagementResult: true }} */
+export const SUBSCRIPTION_MANAGEMENT_AUDIT_OPERATION_FLAGS = {
+  requiresAdministrativeReason: true,
+  requiresMandatoryPreview: true,
+  applySubscriptionManagementResult: true,
+};
+
 /**
  * @param {string | null | undefined} actionId
  */
@@ -130,9 +137,9 @@ export function extractSubscriptionManagementHandlerContext(metadata, subscripti
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SUBSCRIPTION_MANAGEMENT_CHANGE_PLAN_OPERATION_CONFIG = {
+  ...SUBSCRIPTION_MANAGEMENT_AUDIT_OPERATION_FLAGS,
   handler: executeFakeChangeSubscriptionPlan,
   quickReasons: SUBSCRIPTION_MANAGEMENT_CHANGE_PLAN_QUICK_REASONS,
-  applySubscriptionManagementResult: true,
   buildHandlerContext: ({ metadata, subscriptionManagement }) =>
     extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
   devLog: {
@@ -183,9 +190,9 @@ export const SUBSCRIPTION_MANAGEMENT_CHANGE_PLAN_OPERATION_CONFIG = {
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SUBSCRIPTION_MANAGEMENT_EDIT_PRICE_OPERATION_CONFIG = {
+  ...SUBSCRIPTION_MANAGEMENT_AUDIT_OPERATION_FLAGS,
   handler: executeFakeEditSubscriptionPrice,
   quickReasons: SUBSCRIPTION_MANAGEMENT_EDIT_PRICE_QUICK_REASONS,
-  applySubscriptionManagementResult: true,
   buildHandlerContext: ({ metadata, subscriptionManagement }) =>
     extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
   devLog: {
@@ -234,9 +241,9 @@ export const SUBSCRIPTION_MANAGEMENT_EDIT_PRICE_OPERATION_CONFIG = {
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SUBSCRIPTION_MANAGEMENT_ADJUST_LIMIT_OPERATION_CONFIG = {
+  ...SUBSCRIPTION_MANAGEMENT_AUDIT_OPERATION_FLAGS,
   handler: executeFakeAdjustSalesLimit,
   quickReasons: SUBSCRIPTION_MANAGEMENT_ADJUST_LIMIT_QUICK_REASONS,
-  applySubscriptionManagementResult: true,
   buildHandlerContext: ({ metadata, subscriptionManagement }) =>
     extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
   devLog: {
@@ -285,9 +292,9 @@ export const SUBSCRIPTION_MANAGEMENT_ADJUST_LIMIT_OPERATION_CONFIG = {
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SUBSCRIPTION_MANAGEMENT_CORRECT_CONSUMPTION_OPERATION_CONFIG = {
+  ...SUBSCRIPTION_MANAGEMENT_AUDIT_OPERATION_FLAGS,
   handler: executeFakeCorrectCycleConsumption,
   quickReasons: SUBSCRIPTION_MANAGEMENT_CORRECT_CONSUMPTION_QUICK_REASONS,
-  applySubscriptionManagementResult: true,
   buildHandlerContext: ({ metadata, subscriptionManagement }) =>
     extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
   devLog: {
@@ -337,9 +344,9 @@ export const SUBSCRIPTION_MANAGEMENT_CORRECT_CONSUMPTION_OPERATION_CONFIG = {
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SUBSCRIPTION_MANAGEMENT_CHANGE_BILLING_CYCLE_OPERATION_CONFIG = {
+  ...SUBSCRIPTION_MANAGEMENT_AUDIT_OPERATION_FLAGS,
   handler: executeFakeChangeBillingCycle,
   quickReasons: SUBSCRIPTION_MANAGEMENT_CHANGE_BILLING_CYCLE_QUICK_REASONS,
-  applySubscriptionManagementResult: true,
   buildHandlerContext: ({ metadata, subscriptionManagement }) =>
     extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
   devLog: {
@@ -388,9 +395,9 @@ export const SUBSCRIPTION_MANAGEMENT_CHANGE_BILLING_CYCLE_OPERATION_CONFIG = {
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SUBSCRIPTION_MANAGEMENT_MANAGE_STATUS_OPERATION_CONFIG = {
+  ...SUBSCRIPTION_MANAGEMENT_AUDIT_OPERATION_FLAGS,
   handler: executeFakeManageSubscriptionStatus,
   quickReasons: SUBSCRIPTION_MANAGEMENT_MANAGE_STATUS_QUICK_REASONS,
-  applySubscriptionManagementResult: true,
   buildHandlerContext: ({ metadata, subscriptionManagement }) =>
     extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
   devLog: {
@@ -439,9 +446,9 @@ export const SUBSCRIPTION_MANAGEMENT_MANAGE_STATUS_OPERATION_CONFIG = {
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SUBSCRIPTION_MANAGEMENT_MANAGE_BENEFITS_OPERATION_CONFIG = {
+  ...SUBSCRIPTION_MANAGEMENT_AUDIT_OPERATION_FLAGS,
   handler: executeFakeManageSubscriptionBenefits,
   quickReasons: SUBSCRIPTION_MANAGEMENT_MANAGE_BENEFITS_QUICK_REASONS,
-  applySubscriptionManagementResult: true,
   buildHandlerContext: ({ metadata, subscriptionManagement }) =>
     extractSubscriptionManagementHandlerContext(metadata, subscriptionManagement),
   devLog: {

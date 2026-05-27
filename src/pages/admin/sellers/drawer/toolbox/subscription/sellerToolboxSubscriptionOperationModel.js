@@ -329,6 +329,8 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *   applyAccountsTokenValidationResult?: boolean;
  *   applyAccountsForceSyncResult?: boolean;
  *   applySubscriptionManagementResult?: boolean;
+ *   requiresAdministrativeReason?: boolean;
+ *   requiresMandatoryPreview?: boolean;
  *   requiresReason?: boolean;
  *   buildHandlerContext?: (input: {
  *     consumption: import("./sellerToolboxConsumptionModel").SellerConsumptionViewModel | null;

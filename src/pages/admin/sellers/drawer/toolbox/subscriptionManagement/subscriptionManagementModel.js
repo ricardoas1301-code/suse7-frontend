@@ -21,6 +21,7 @@
  *   before: string;
  *   after: string;
  *   changeType?: "default" | "benefit-add" | "benefit-remove";
+ *   critical?: boolean;
  * }} SubscriptionManagementPreviewRow
  */
 
@@ -295,6 +296,7 @@ export function buildEditPricePreviewRows(state) {
       label: "Valor",
       before: formatSubscriptionPrice(state.subscriptionPrice),
       after: formatSubscriptionPrice(SUBSCRIPTION_MANAGEMENT_FAKE_NEW_PRICE),
+      critical: true,
     },
   ];
 }
@@ -362,6 +364,7 @@ export function buildManageSubscriptionStatusPreviewRows(state) {
       label: "Status",
       before: resolveSubscriptionLifecycleStatusLabel(state.subscriptionStatus),
       after: resolveSubscriptionLifecycleStatusLabel(nextStatus),
+      critical: true,
     },
   ];
 }

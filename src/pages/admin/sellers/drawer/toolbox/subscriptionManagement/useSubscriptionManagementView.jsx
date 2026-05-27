@@ -1,5 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { logSellerToolbox } from "../../../sellerToolboxDevLog";
 import { useSellerToolbox } from "../SellerToolboxContext";
+import { useSellerToolboxOperationalLog } from "../useSellerToolboxOperationalLog";
+import { SELLER_TOOLBOX_OPERATION_CATEGORIES } from "../sellerToolboxOperationalLog";
 import {
   applySubscriptionManagementOperationResult,
   buildSubscriptionManagementMockState,
@@ -8,14 +11,19 @@ import {
 
 /** @typedef {import("./subscriptionManagementModel").SubscriptionManagementStateViewModel} SubscriptionManagementStateViewModel */
 /** @typedef {import("./subscriptionManagementModel").SubscriptionManagementPanelState} SubscriptionManagementPanelState */
+/** @typedef {import("./subscriptionManagementAuditModel").SubscriptionManagementAuditLogEntry} SubscriptionManagementAuditLogEntry */
+
+const MAX_AUDIT_LOGS = 50;
 
 /**
  * @typedef {{
  *   panelState: SubscriptionManagementPanelState;
  *   currentState: SubscriptionManagementStateViewModel;
+ *   auditLogs: SubscriptionManagementAuditLogEntry[];
  *   loading: boolean;
  *   error: string;
  *   applySubscriptionManagementResult: (result: Record<string, unknown>) => void;
+ *   appendAuditLog: (entry: SubscriptionManagementAuditLogEntry) => void;
  *   resetSubscriptionManagement: () => void;
  * }} SubscriptionManagementViewValue
  */
@@ -26,6 +34,7 @@ const SubscriptionManagementViewContext = createContext(null);
 function createInitialManagementState() {
   return {
     currentState: buildSubscriptionManagementMockState(),
+    auditLogs: /** @type {SubscriptionManagementAuditLogEntry[]} */ ([]),
     loadState: /** @type {"idle" | "loading" | "loaded" | "error"} */ ("idle"),
     loadError: "",
   };
@@ -36,6 +45,7 @@ function createInitialManagementState() {
  */
 export function SubscriptionManagementViewProvider({ children }) {
   const { sellerId, drawerState, toolboxState, isReady } = useSellerToolbox();
+  const { logOperation } = useSellerToolboxOperationalLog();
   const [managementState, setManagementState] = useState(createInitialManagementState);
 
   useEffect(() => {
@@ -48,11 +58,13 @@ export function SubscriptionManagementViewProvider({ children }) {
       ...current,
       loadState: "loading",
       loadError: "",
+      auditLogs: [],
     }));
 
     const timer = window.setTimeout(() => {
       setManagementState({
         currentState: buildSubscriptionManagementMockState(),
+        auditLogs: [],
         loadState: "loaded",
         loadError: "",
       });
@@ -81,9 +93,42 @@ export function SubscriptionManagementViewProvider({ children }) {
     }));
   }, []);
 
+  const appendAuditLog = useCallback(
+    (entry) => {
+      setManagementState((current) => ({
+        ...current,
+        auditLogs: [entry, ...current.auditLogs].slice(0, MAX_AUDIT_LOGS),
+      }));
+
+      logSellerToolbox("subscription_management_audit_created", {
+        sellerId: entry.sellerId,
+        auditId: entry.auditId,
+        operationType: entry.operationType,
+        adminName: entry.adminName,
+        immutable: entry.immutable,
+        timestamp: entry.createdAt,
+      });
+
+      logOperation({
+        event: "subscription_management_audit_created",
+        category: SELLER_TOOLBOX_OPERATION_CATEGORIES.FUTURE_ACTION,
+        metadata: {
+          auditId: entry.auditId,
+          operationType: entry.operationType,
+          immutable: entry.immutable,
+          sellerId: entry.sellerId,
+          adminName: entry.adminName,
+          timestamp: entry.createdAt,
+        },
+      });
+    },
+    [logOperation],
+  );
+
   const resetSubscriptionManagement = useCallback(() => {
     setManagementState({
       currentState: buildSubscriptionManagementMockState(),
+      auditLogs: [],
       loadState: "loaded",
       loadError: "",
     });
@@ -98,6 +143,7 @@ export function SubscriptionManagementViewProvider({ children }) {
     window.__S7_TOOLBOX_SUBSCRIPTION_MANAGEMENT__ = {
       get: () => stateRef.current,
       reset: () => resetSubscriptionManagement(),
+      getAuditLogs: () => stateRef.current.auditLogs,
     };
   }, [resetSubscriptionManagement]);
 
@@ -110,17 +156,21 @@ export function SubscriptionManagementViewProvider({ children }) {
     () => ({
       panelState,
       currentState: managementState.currentState,
+      auditLogs: managementState.auditLogs,
       loading,
       error,
       applySubscriptionManagementResult,
+      appendAuditLog,
       resetSubscriptionManagement,
     }),
     [
       panelState,
       managementState.currentState,
+      managementState.auditLogs,
       loading,
       error,
       applySubscriptionManagementResult,
+      appendAuditLog,
       resetSubscriptionManagement,
     ],
   );

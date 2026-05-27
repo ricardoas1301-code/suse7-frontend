@@ -5,6 +5,7 @@ import { isSubscriptionManagementOperationActionId } from "./subscriptionManagem
 import SubscriptionManagementCurrentState from "./SubscriptionManagementCurrentState";
 import SubscriptionManagementGovernance from "./SubscriptionManagementGovernance";
 import SubscriptionManagementPreview from "./SubscriptionManagementPreview";
+import SubscriptionManagementAuditPreview from "./SubscriptionManagementAuditPreview";
 import SubscriptionManagementActions from "./SubscriptionManagementActions";
 import { useSubscriptionManagementView } from "./useSubscriptionManagementView";
 import "./SubscriptionManagementPanel.css";
@@ -20,7 +21,7 @@ function SubscriptionManagementPanelSkeleton() {
 }
 
 function SubscriptionManagementPanel() {
-  const { panelState, currentState, loading, error } = useSubscriptionManagementView();
+  const { panelState, currentState, auditLogs, loading, error } = useSubscriptionManagementView();
   const { isConfirmOpen, pendingAction } = useSellerToolboxConfirmAction();
   const { isReasonOpen, reasonState, executingActionId } = useSellerToolboxActionReason();
 
@@ -59,8 +60,9 @@ function SubscriptionManagementPanel() {
 
   return (
     <div className="subscription-management-panel" data-panel-state={panelState}>
+      <SubscriptionManagementAuditPreview auditLogs={auditLogs} />
       <SubscriptionManagementCurrentState state={currentState} />
-      <SubscriptionManagementPreview rows={activePreview} visible={showPreview} />
+      <SubscriptionManagementPreview rows={activePreview} visible={showPreview} variant="impact" />
       <SubscriptionManagementGovernance state={currentState} />
       <SubscriptionManagementActions />
     </div>

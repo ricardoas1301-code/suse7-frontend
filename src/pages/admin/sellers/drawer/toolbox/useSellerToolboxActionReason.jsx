@@ -5,6 +5,26 @@ import {
   SELLER_TOOLBOX_REASON_MAX_LENGTH,
   validateSellerToolboxReasonText,
 } from "./sellerToolboxActionReasonModel";
+import {
+  isSubscriptionManagementAuditableOperation,
+  validateAdministrativeReason,
+} from "./subscriptionManagement/subscriptionManagementAuditModel";
+
+/**
+ * @param {string | null | undefined} actionId
+ * @param {string} reason
+ */
+function validateReasonForAction(actionId, reason) {
+  if (isSubscriptionManagementAuditableOperation(actionId)) {
+    const result = validateAdministrativeReason(reason);
+    return {
+      isValid: result.valid,
+      errorMessage: result.message,
+    };
+  }
+
+  return validateSellerToolboxReasonText(reason);
+}
 
 /** @typedef {import("./sellerToolboxActionReasonModel").SellerToolboxReasonState} SellerToolboxReasonState */
 
@@ -70,8 +90,13 @@ export function SellerToolboxActionReasonProvider({ children }) {
       reasonCategory: input?.reasonCategory ?? null,
     });
     if (!next) return false;
+
+    const validation = validateReasonForAction(next.actionId, next.reason);
     setCompletedAction(null);
-    setReasonState(next);
+    setReasonState({
+      ...next,
+      isValid: validation.isValid,
+    });
     setValidationError("");
     setExecutingActionId(null);
     return true;
@@ -81,7 +106,7 @@ export function SellerToolboxActionReasonProvider({ children }) {
     setReasonState((current) => {
       if (!current) return current;
       const trimmed = normalizeSellerToolboxReasonText(reason).slice(0, SELLER_TOOLBOX_REASON_MAX_LENGTH);
-      const validation = validateSellerToolboxReasonText(trimmed);
+      const validation = validateReasonForAction(current.actionId, trimmed);
       return {
         ...current,
         reason: trimmed,
@@ -100,7 +125,7 @@ export function SellerToolboxActionReasonProvider({ children }) {
           ? current.reason
           : trimmedPrefix
         : current.reason;
-      const validation = validateSellerToolboxReasonText(nextReason);
+      const validation = validateReasonForAction(current.actionId, nextReason);
       return {
         ...current,
         reasonCategory: key,
@@ -113,7 +138,16 @@ export function SellerToolboxActionReasonProvider({ children }) {
 
   const validateReason = useCallback(() => {
     if (!reasonState) return false;
-    const validation = validateSellerToolboxReasonText(reasonState.reason);
+
+    if (isSubscriptionManagementAuditableOperation(reasonState.actionId)) {
+      const previewRows = reasonState.metadata?.previewRows;
+      if (!Array.isArray(previewRows) || previewRows.length === 0) {
+        setValidationError("Preview operacional obrigatório antes de executar.");
+        return false;
+      }
+    }
+
+    const validation = validateReasonForAction(reasonState.actionId, reasonState.reason);
     setReasonState((current) =>
       current
         ? {

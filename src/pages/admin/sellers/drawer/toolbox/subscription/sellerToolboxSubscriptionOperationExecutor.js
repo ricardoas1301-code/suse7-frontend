@@ -1,5 +1,6 @@
 import { logSellerToolbox } from "../../../sellerToolboxDevLog";
-import { validateSellerToolboxReasonText } from "../sellerToolboxActionReasonModel";
+import { validateSellerToolboxReasonText, normalizeSellerToolboxReasonText } from "../sellerToolboxActionReasonModel";
+import { validateAdministrativeReason } from "../subscriptionManagement/subscriptionManagementAuditModel";
 import { getSellerToolboxSubscriptionOperationConfig } from "./sellerToolboxSubscriptionOperationModel";
 
 /**
@@ -66,13 +67,19 @@ export async function executeSubscriptionOperation({
 
   const requiresReason = config.requiresReason !== false;
   const validation = requiresReason
-    ? validateSellerToolboxReasonText(normalizedReason)
-    : { isValid: true, errorMessage: "", reasonLength: 0 };
+    ? config.requiresAdministrativeReason
+      ? validateAdministrativeReason(normalizedReason)
+      : validateSellerToolboxReasonText(normalizedReason)
+    : { valid: true, isValid: true, errorMessage: "", message: "", reasonLength: 0 };
 
-  if (!validation.isValid) {
+  const isValid = config.requiresAdministrativeReason
+    ? validation.valid
+    : validation.isValid;
+
+  if (!isValid) {
     const error = {
       code: "INVALID_REASON",
-      message: validation.errorMessage,
+      message: validation.message || validation.errorMessage,
     };
     onError?.(error);
     return {
@@ -83,7 +90,9 @@ export async function executeSubscriptionOperation({
   }
 
   const handler = execute ?? config.handler;
-  const reasonLength = validation.reasonLength;
+  const reasonLength = config.requiresAdministrativeReason
+    ? normalizeSellerToolboxReasonText(normalizedReason).length
+    : validation.reasonLength;
 
   const context = {
     sellerId: normalizedSellerId,

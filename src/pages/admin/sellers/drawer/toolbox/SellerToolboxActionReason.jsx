@@ -26,6 +26,12 @@ import { useProductsSyncView } from "./centralSync/products/useProductsSyncView"
 import { useCustomersSyncView } from "./centralSync/customers/useCustomersSyncView";
 import { useAccountsSyncView } from "./centralSync/accounts/useAccountsSyncView";
 import { useSubscriptionManagementView } from "./subscriptionManagement/useSubscriptionManagementView";
+import SubscriptionManagementPreview from "./subscriptionManagement/SubscriptionManagementPreview";
+import {
+  ADMINISTRATIVE_REASON_MIN_LENGTH,
+  createSubscriptionManagementAuditEntry,
+  isSubscriptionManagementAuditableOperation,
+} from "./subscriptionManagement/subscriptionManagementAuditModel";
 import { SELLER_TOOLBOX_OPERATION_CATEGORIES } from "./sellerToolboxOperationalLog";
 import "./SellerToolboxActionReason.css";
 
@@ -57,10 +63,18 @@ function SellerToolboxActionReasonOverlay() {
   const { customer, applyCustomers360ReprocessResult } = useCustomersSyncView();
   const { account, applyAccountsTokenValidationResult, applyAccountsForceSyncResult } =
     useAccountsSyncView();
-  const { currentState: subscriptionManagementState, applySubscriptionManagementResult } =
+  const { currentState: subscriptionManagementState, applySubscriptionManagementResult, appendAuditLog } =
     useSubscriptionManagementView();
   const reasonRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
   const loggedOpenRef = useRef(false);
+
+  const isAdministrativeAuditFlow = isSubscriptionManagementAuditableOperation(reasonState?.actionId);
+
+  const administrativePreviewRows = useMemo(() => {
+    if (!isAdministrativeAuditFlow) return null;
+    const rows = reasonState?.metadata?.previewRows;
+    return Array.isArray(rows) ? rows : null;
+  }, [isAdministrativeAuditFlow, reasonState?.metadata?.previewRows]);
 
   const isExecuting = executingActionId != null;
 
@@ -252,6 +266,18 @@ function SellerToolboxActionReasonOverlay() {
             }
 
             if (config.applySubscriptionManagementResult) {
+              if (config.requiresAdministrativeReason && sellerId) {
+                appendAuditLog(
+                  createSubscriptionManagementAuditEntry({
+                    operationType: actionId,
+                    sellerId,
+                    reason,
+                    beforeState: subscriptionManagementState,
+                    operationResult: data,
+                  }),
+                );
+              }
+
               applySubscriptionManagementResult(data);
             }
 
@@ -338,6 +364,7 @@ function SellerToolboxActionReasonOverlay() {
       applyAccountsForceSyncResult,
       subscriptionManagementState,
       applySubscriptionManagementResult,
+      appendAuditLog,
     ],
   );
 
@@ -378,7 +405,11 @@ function SellerToolboxActionReasonOverlay() {
   const reasonLength = reasonState.reason.length;
 
   return (
-    <div className="seller-toolbox-reason" data-valid={reasonState.isValid || undefined}>
+    <div
+      className="seller-toolbox-reason"
+      data-valid={reasonState.isValid || undefined}
+      data-administrative-audit={isAdministrativeAuditFlow || undefined}
+    >
       <div
         className="seller-toolbox-reason__backdrop"
         aria-hidden
@@ -394,15 +425,33 @@ function SellerToolboxActionReasonOverlay() {
         data-executing={isExecuting || undefined}
       >
         <header className="seller-toolbox-reason__head">
-          <h4 id="seller-toolbox-reason-title" className="seller-toolbox-reason__title">
-            Motivo da ação
-          </h4>
+          <div className="seller-toolbox-reason__title-row">
+            <h4 id="seller-toolbox-reason-title" className="seller-toolbox-reason__title">
+              {isAdministrativeAuditFlow ? "Justificativa administrativa" : "Motivo da ação"}
+            </h4>
+            {isAdministrativeAuditFlow ? (
+              <span className="seller-toolbox-reason__required-badge">Justificativa obrigatória</span>
+            ) : null}
+          </div>
           <p id="seller-toolbox-reason-desc" className="seller-toolbox-reason__subtitle">
             {reasonState.title}
           </p>
         </header>
 
         <p className="seller-toolbox-reason__message">{reasonState.description}</p>
+
+        {isAdministrativeAuditFlow ? (
+          <>
+            <SubscriptionManagementPreview
+              rows={administrativePreviewRows}
+              visible={Boolean(administrativePreviewRows?.length)}
+              variant="impact"
+            />
+            <p className="seller-toolbox-reason__audit-notice" role="note">
+              Esta ação será registrada na timeline operacional.
+            </p>
+          </>
+        ) : null}
 
         <div className="seller-toolbox-reason__quick">
           {quickReasons.map((preset) => (
@@ -421,19 +470,31 @@ function SellerToolboxActionReasonOverlay() {
         </div>
 
         <label className="seller-toolbox-reason__field">
-          <span className="seller-toolbox-reason__label">Motivo operacional</span>
+          <span className="seller-toolbox-reason__label">
+            {isAdministrativeAuditFlow ? "Justificativa administrativa" : "Motivo operacional"}
+          </span>
           <textarea
             ref={reasonRef}
             className="seller-toolbox-reason__input"
             value={reasonState.reason}
             rows={4}
             maxLength={SELLER_TOOLBOX_REASON_MAX_LENGTH}
-            placeholder="Descreva o motivo desta ação..."
+            placeholder={
+              isAdministrativeAuditFlow
+                ? `Descreva o motivo administrativo (mín. ${ADMINISTRATIVE_REASON_MIN_LENGTH} caracteres)...`
+                : "Descreva o motivo desta ação..."
+            }
             disabled={isExecuting}
             onChange={(event) => setReason(event.target.value)}
           />
           <span className="seller-toolbox-reason__counter">
             {reasonLength}/{SELLER_TOOLBOX_REASON_MAX_LENGTH}
+            {isAdministrativeAuditFlow ? (
+              <span className="seller-toolbox-reason__counter-hint">
+                {" "}
+                · mín. {ADMINISTRATIVE_REASON_MIN_LENGTH}
+              </span>
+            ) : null}
           </span>
         </label>
 
