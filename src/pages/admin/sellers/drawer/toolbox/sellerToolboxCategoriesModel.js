@@ -19,7 +19,7 @@ export const SELLER_TOOLBOX_CATEGORIES = [
   {
     id: "subscription",
     label: "Assinatura",
-    description: "Plano, ciclo e status de cobrança",
+    description: "Plano, assinatura e gestão operacional comercial",
     icon: "CreditCard",
   },
   {

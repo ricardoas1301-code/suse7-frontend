@@ -1,0 +1,48 @@
+.subscription-management-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.subscription-management-panel__message {
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--s7-admin-radius);
+  font-size: 12px;
+}
+
+.subscription-management-panel__message--error {
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  background: rgba(220, 38, 38, 0.06);
+  color: #b91c1c;
+}
+
+.subscription-management-panel__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subscription-management-panel__skeleton-block {
+  display: block;
+  height: 56px;
+  border-radius: var(--s7-admin-radius);
+  background: linear-gradient(
+    90deg,
+    var(--s7-admin-surface-soft) 0%,
+    var(--s7-admin-surface) 50%,
+    var(--s7-admin-surface-soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: subscription-management-panel-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes subscription-management-panel-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}

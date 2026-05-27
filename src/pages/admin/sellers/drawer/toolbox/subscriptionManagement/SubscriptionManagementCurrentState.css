@@ -1,0 +1,101 @@
+.subscription-management-current-state {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+  min-width: 0;
+}
+
+.subscription-management-current-state__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.subscription-management-current-state__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.subscription-management-current-state__status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.subscription-management-current-state__status--healthy {
+  background: rgba(22, 101, 52, 0.1);
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.2);
+}
+
+.subscription-management-current-state__status--info {
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.subscription-management-current-state__status--warning {
+  background: rgba(180, 83, 9, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+.subscription-management-current-state__status--muted,
+.subscription-management-current-state__status--neutral {
+  background: var(--s7-admin-surface-soft);
+  color: var(--s7-admin-muted);
+  border: 1px solid var(--s7-admin-border);
+}
+
+.subscription-management-current-state__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  margin: 0;
+}
+
+.subscription-management-current-state__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.subscription-management-current-state__item dt {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+}
+
+.subscription-management-current-state__item dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--s7-admin-text);
+  word-break: break-word;
+}
+
+.subscription-management-current-state__value--available {
+  color: #166534;
+}
+
+@media (min-width: 720px) {
+  .subscription-management-current-state__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

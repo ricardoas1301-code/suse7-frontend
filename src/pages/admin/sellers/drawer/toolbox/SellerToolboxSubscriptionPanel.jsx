@@ -6,6 +6,7 @@ import SellerToolboxAddExtraDaysAction from "./SellerToolboxAddExtraDaysAction";
 import SellerToolboxAddExtraSalesAction from "./SellerToolboxAddExtraSalesAction";
 import SellerToolboxTrialActions from "./SellerToolboxTrialActions";
 import SellerConsumptionPanel from "./SellerConsumptionPanel";
+import SubscriptionManagementPanel from "./subscriptionManagement/SubscriptionManagementPanel";
 import {
   buildSellerToolboxSubscriptionModel,
   resolveSellerToolboxSubscriptionPanelState,
@@ -57,6 +58,7 @@ function SellerToolboxSubscriptionPanel({ category }) {
     if (loggedOpenRef.current) return;
     loggedOpenRef.current = true;
     logSellerToolbox("subscription_panel_open", { sellerId, categoryId: category.id });
+    logSellerToolbox("subscription_management_panel_open", { sellerId, categoryId: category.id });
   }, [sellerId, category.id]);
 
   useEffect(() => {
@@ -180,6 +182,15 @@ function SellerToolboxSubscriptionPanel({ category }) {
 
             <section className="seller-toolbox-subscription-section">
               <header className="seller-toolbox-subscription-section__head">
+                <h5 className="seller-toolbox-subscription-section__title">Gestão comercial</h5>
+              </header>
+              <div className="seller-toolbox-subscription-section__body">
+                <SubscriptionManagementPanel />
+              </div>
+            </section>
+
+            <section className="seller-toolbox-subscription-section">
+              <header className="seller-toolbox-subscription-section__head">
                 <h5 className="seller-toolbox-subscription-section__title">Consumo</h5>
               </header>
               <div className="seller-toolbox-subscription-section__body">
@@ -202,7 +213,11 @@ function SellerToolboxSubscriptionPanel({ category }) {
       </div>
 
       <footer className="seller-toolbox-subscription-panel__foot">
-        <span className="seller-toolbox-subscription-panel__seal">Somente leitura</span>
+        <span className="seller-toolbox-subscription-panel__seal">
+          {import.meta.env.DEV
+            ? "Simulação local — gestão de assinatura sem backend"
+            : "Somente leitura"}
+        </span>
       </footer>
     </section>
   );
