@@ -96,6 +96,20 @@ import {
   CUSTOMERS_SYNC_SEARCH_OPERATION_CONFIG,
   CUSTOMERS_SYNC_REPROCESS_360_OPERATION_CONFIG,
 } from "../centralSync/customers/customersSyncOperationModel";
+import {
+  SELLER_TOOLBOX_SEARCH_MARKETPLACE_ACCOUNT_ACTION_ID,
+} from "../centralSync/accounts/sellerToolboxSearchMarketplaceAccountOperation";
+import {
+  SELLER_TOOLBOX_VALIDATE_MARKETPLACE_TOKEN_ACTION_ID,
+} from "../centralSync/accounts/sellerToolboxValidateMarketplaceTokenOperation";
+import {
+  SELLER_TOOLBOX_FORCE_MARKETPLACE_SYNC_ACTION_ID,
+} from "../centralSync/accounts/sellerToolboxForceMarketplaceSyncOperation";
+import {
+  ACCOUNTS_SYNC_SEARCH_OPERATION_CONFIG,
+  ACCOUNTS_SYNC_VALIDATE_TOKEN_OPERATION_CONFIG,
+  ACCOUNTS_SYNC_FORCE_SYNC_OPERATION_CONFIG,
+} from "../centralSync/accounts/accountsSyncOperationModel";
 
 export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_QUICK_REASON_KEYS = new Set([
   "operational_fix",
@@ -128,6 +142,9 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_ACTION_IDS = new Set([
   SELLER_TOOLBOX_REPROCESS_PRODUCT_LISTING_LINK_ACTION_ID,
   SELLER_TOOLBOX_SEARCH_CUSTOMER_ACTION_ID,
   SELLER_TOOLBOX_REPROCESS_CUSTOMER_360_ACTION_ID,
+  SELLER_TOOLBOX_SEARCH_MARKETPLACE_ACCOUNT_ACTION_ID,
+  SELLER_TOOLBOX_VALIDATE_MARKETPLACE_TOKEN_ACTION_ID,
+  SELLER_TOOLBOX_FORCE_MARKETPLACE_SYNC_ACTION_ID,
 ]);
 
 /**
@@ -271,6 +288,9 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *   applyProductsListingLinkReprocessResult?: boolean;
  *   applyCustomersSyncSearchResult?: boolean;
  *   applyCustomers360ReprocessResult?: boolean;
+ *   applyAccountsSyncSearchResult?: boolean;
+ *   applyAccountsTokenValidationResult?: boolean;
+ *   applyAccountsForceSyncResult?: boolean;
  *   requiresReason?: boolean;
  *   buildHandlerContext?: (input: {
  *     consumption: import("./sellerToolboxConsumptionModel").SellerConsumptionViewModel | null;
@@ -286,6 +306,7 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
  *     listingsSync?: { listing?: import("../centralSync/listings/listingsSyncModel").ListingsSyncViewModel | null } | null;
  *     productsSync?: { product?: import("../centralSync/products/productsSyncModel").ProductsSyncViewModel | null } | null;
  *     customersSync?: { customer?: import("../centralSync/customers/customersSyncModel").CustomersSyncViewModel | null } | null;
+ *     accountsSync?: { account?: import("../centralSync/accounts/accountsSyncModel").AccountsSyncViewModel | null } | null;
  *     metadata?: Record<string, unknown> | null;
  *   }) => Record<string, unknown>;
  *   devLog: {
@@ -545,6 +566,9 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
   [SELLER_TOOLBOX_REPROCESS_PRODUCT_LISTING_LINK_ACTION_ID]: PRODUCTS_SYNC_REPROCESS_LINK_OPERATION_CONFIG,
   [SELLER_TOOLBOX_SEARCH_CUSTOMER_ACTION_ID]: CUSTOMERS_SYNC_SEARCH_OPERATION_CONFIG,
   [SELLER_TOOLBOX_REPROCESS_CUSTOMER_360_ACTION_ID]: CUSTOMERS_SYNC_REPROCESS_360_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_SEARCH_MARKETPLACE_ACCOUNT_ACTION_ID]: ACCOUNTS_SYNC_SEARCH_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_VALIDATE_MARKETPLACE_TOKEN_ACTION_ID]: ACCOUNTS_SYNC_VALIDATE_TOKEN_OPERATION_CONFIG,
+  [SELLER_TOOLBOX_FORCE_MARKETPLACE_SYNC_ACTION_ID]: ACCOUNTS_SYNC_FORCE_SYNC_OPERATION_CONFIG,
 };
 
 /**

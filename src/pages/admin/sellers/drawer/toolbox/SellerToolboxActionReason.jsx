@@ -24,6 +24,7 @@ import { useSalesSyncView } from "./centralSync/sales/useSalesSyncView";
 import { useListingsSyncView } from "./centralSync/listings/useListingsSyncView";
 import { useProductsSyncView } from "./centralSync/products/useProductsSyncView";
 import { useCustomersSyncView } from "./centralSync/customers/useCustomersSyncView";
+import { useAccountsSyncView } from "./centralSync/accounts/useAccountsSyncView";
 import { SELLER_TOOLBOX_OPERATION_CATEGORIES } from "./sellerToolboxOperationalLog";
 import "./SellerToolboxActionReason.css";
 
@@ -53,6 +54,8 @@ function SellerToolboxActionReasonOverlay() {
   const { listing, applyListingsReimportResult, applyListingsHealthRecalculateResult } = useListingsSyncView();
   const { product, applyProductsListingLinkReprocessResult } = useProductsSyncView();
   const { customer, applyCustomers360ReprocessResult } = useCustomersSyncView();
+  const { account, applyAccountsTokenValidationResult, applyAccountsForceSyncResult } =
+    useAccountsSyncView();
   const reasonRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
   const loggedOpenRef = useRef(false);
 
@@ -173,6 +176,7 @@ function SellerToolboxActionReasonOverlay() {
             listingsSync: { listing },
             productsSync: { product },
             customersSync: { customer },
+            accountsSync: { account },
             metadata: operationMetadata ?? null,
           }) ?? {};
 
@@ -233,6 +237,14 @@ function SellerToolboxActionReasonOverlay() {
 
             if (config.applyCustomers360ReprocessResult) {
               applyCustomers360ReprocessResult(data);
+            }
+
+            if (config.applyAccountsTokenValidationResult) {
+              applyAccountsTokenValidationResult(data);
+            }
+
+            if (config.applyAccountsForceSyncResult) {
+              applyAccountsForceSyncResult(data);
             }
 
             logOperation({
@@ -313,6 +325,9 @@ function SellerToolboxActionReasonOverlay() {
       applyProductsListingLinkReprocessResult,
       customer,
       applyCustomers360ReprocessResult,
+      account,
+      applyAccountsTokenValidationResult,
+      applyAccountsForceSyncResult,
     ],
   );
 
