@@ -1,0 +1,164 @@
+/* S_5.2.5 — Feedback operacional da Toolbox (local) */
+
+.seller-toolbox-feedback {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: start;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: var(--s7-admin-radius);
+  border: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-feedback--success {
+  border-color: rgba(22, 163, 74, 0.22);
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.seller-toolbox-feedback--error {
+  border-color: rgba(180, 83, 9, 0.22);
+  background: rgba(180, 83, 9, 0.04);
+}
+
+.seller-toolbox-feedback--warning {
+  border-color: rgba(217, 119, 6, 0.22);
+  background: rgba(217, 119, 6, 0.05);
+}
+
+.seller-toolbox-feedback--info {
+  border-color: rgba(37, 99, 235, 0.2);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.seller-toolbox-feedback__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--s7-admin-surface);
+  border: 1px solid var(--s7-admin-border);
+  flex-shrink: 0;
+}
+
+.seller-toolbox-feedback--success .seller-toolbox-feedback__icon-wrap {
+  color: #15803d;
+}
+
+.seller-toolbox-feedback--error .seller-toolbox-feedback__icon-wrap {
+  color: #b45309;
+}
+
+.seller-toolbox-feedback--warning .seller-toolbox-feedback__icon-wrap {
+  color: #d97706;
+}
+
+.seller-toolbox-feedback--info .seller-toolbox-feedback__icon-wrap {
+  color: #2563eb;
+}
+
+.seller-toolbox-feedback__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.seller-toolbox-feedback__copy {
+  min-width: 0;
+}
+
+.seller-toolbox-feedback__headline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seller-toolbox-feedback__type {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-feedback__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-feedback__message {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-feedback__action {
+  margin-top: 8px;
+}
+
+.seller-toolbox-feedback__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--s7-admin-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.seller-toolbox-feedback__close:hover {
+  border-color: var(--s7-admin-border);
+  background: var(--s7-admin-surface);
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-feedback__close:focus-visible {
+  outline: 2px solid var(--s7-admin-accent, #2563eb);
+  outline-offset: 2px;
+}
+
+.seller-toolbox-feedback__close-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.seller-toolbox-feedback-dev {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.35);
+}
+
+.seller-toolbox-feedback-dev__label {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-feedback-dev__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.seller-toolbox-feedback-dev__btn {
+  font-size: 10px !important;
+  opacity: 0.78;
+}
+
+.seller-toolbox-feedback-dev__btn:hover {
+  opacity: 1;
+}

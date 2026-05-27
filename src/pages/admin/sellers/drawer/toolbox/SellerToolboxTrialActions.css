@@ -1,0 +1,79 @@
+/* S_5.3.1.4 — Trial actions (DEV, fake flow) */
+
+.seller-toolbox-trial-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.28);
+}
+
+.seller-toolbox-trial-actions__head {
+  display: flex;
+  align-items: center;
+}
+
+.seller-toolbox-trial-actions__status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--s7-admin-border);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-trial-actions__status--active {
+  border-color: rgba(37, 99, 235, 0.35);
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.seller-toolbox-trial-actions__status--ended {
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+.seller-toolbox-trial-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.seller-toolbox-trial-actions__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--s7-admin-radius);
+  border: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--s7-admin-text);
+  cursor: pointer;
+  opacity: 0.82;
+}
+
+.seller-toolbox-trial-actions__btn:hover:not(:disabled) {
+  opacity: 1;
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.seller-toolbox-trial-actions__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.seller-toolbox-trial-actions__badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+}

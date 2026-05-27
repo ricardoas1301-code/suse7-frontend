@@ -1,0 +1,255 @@
+/* S_5.2.3.2 — Painel Assinatura (read-only) */
+
+.seller-toolbox-subscription-panel {
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.seller-toolbox-subscription-panel__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px 12px;
+  padding: 14px;
+  border-bottom: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-subscription-panel__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface);
+  color: var(--s7-admin-accent, #2563eb);
+  flex-shrink: 0;
+}
+
+.seller-toolbox-subscription-panel__icon {
+  width: 17px;
+  height: 17px;
+}
+
+.seller-toolbox-subscription-panel__titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.seller-toolbox-subscription-panel__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-subscription-panel__desc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-subscription-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+
+.seller-toolbox-subscription-panel__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-toolbox-subscription-panel__message {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 12px;
+  border-radius: var(--s7-admin-radius);
+}
+
+.seller-toolbox-subscription-panel__message--empty {
+  color: var(--s7-admin-muted);
+  border: 1px dashed var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-subscription-panel__message--error {
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+  background: rgba(180, 83, 9, 0.04);
+}
+
+.seller-toolbox-subscription-panel__consumption-empty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--s7-admin-muted);
+  padding: 10px 12px;
+  border-radius: var(--s7-admin-radius);
+  border: 1px dashed var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-subscription-section {
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface-soft);
+  overflow: hidden;
+}
+
+.seller-toolbox-subscription-section__head {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--s7-admin-border);
+}
+
+.seller-toolbox-subscription-section__title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-subscription-section__body {
+  padding: 12px;
+}
+
+.seller-toolbox-subscription-kv {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-toolbox-subscription-kv__row {
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+}
+
+.seller-toolbox-subscription-kv__row dt {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-subscription-kv__row dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--s7-admin-text);
+  word-break: break-word;
+}
+
+.seller-toolbox-subscription-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.seller-toolbox-subscription-badge {
+  font-size: 11px;
+}
+
+.seller-toolbox-subscription-panel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 14px;
+  border-top: 1px solid var(--s7-admin-border);
+  background: color-mix(in srgb, var(--s7-admin-surface) 92%, transparent);
+}
+
+.seller-toolbox-subscription-panel__seal {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px dashed var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-subscription-panel__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-toolbox-subscription-panel__skeleton-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-subscription-panel__skeleton-line {
+  display: block;
+  height: 11px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--s7-admin-surface-soft) 0%,
+    var(--s7-admin-border) 50%,
+    var(--s7-admin-surface-soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: seller-toolbox-subscription-shimmer 1.15s ease-in-out infinite;
+}
+
+.seller-toolbox-subscription-panel__skeleton-line--title {
+  width: 42%;
+  height: 13px;
+}
+
+.seller-toolbox-subscription-panel__skeleton-line--short {
+  width: 58%;
+}
+
+@keyframes seller-toolbox-subscription-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.seller-toolbox-subscription-operations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.28);
+}
+
+@media (max-width: 520px) {
+  .seller-toolbox-subscription-kv__row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .seller-toolbox-subscription-panel__body {
+    padding: 10px 12px;
+  }
+}

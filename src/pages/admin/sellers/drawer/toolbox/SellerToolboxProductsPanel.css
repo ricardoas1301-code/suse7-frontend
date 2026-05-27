@@ -1,0 +1,280 @@
+/* S_5.2.3.5 — Painel Produtos / Anúncios (read-only) */
+
+.seller-toolbox-products-panel {
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.seller-toolbox-products-panel__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px 12px;
+  padding: 14px;
+  border-bottom: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-products-panel__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface);
+  color: var(--s7-admin-accent, #2563eb);
+  flex-shrink: 0;
+}
+
+.seller-toolbox-products-panel__icon {
+  width: 17px;
+  height: 17px;
+}
+
+.seller-toolbox-products-panel__titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.seller-toolbox-products-panel__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-products-panel__desc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-products-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+
+.seller-toolbox-products-panel__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-toolbox-products-panel__message,
+.seller-toolbox-products-panel__inline-empty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.seller-toolbox-products-panel__message {
+  padding: 12px;
+  border-radius: var(--s7-admin-radius);
+}
+
+.seller-toolbox-products-panel__message--empty,
+.seller-toolbox-products-panel__inline-empty {
+  color: var(--s7-admin-muted);
+  border: 1px dashed var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+  padding: 10px 12px;
+  border-radius: var(--s7-admin-radius);
+}
+
+.seller-toolbox-products-panel__message--error {
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+  background: rgba(180, 83, 9, 0.04);
+}
+
+.seller-toolbox-products-section {
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface-soft);
+  overflow: hidden;
+}
+
+.seller-toolbox-products-section__head {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--s7-admin-border);
+}
+
+.seller-toolbox-products-section__title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-products-section__body {
+  padding: 12px;
+}
+
+.seller-toolbox-products-health-status {
+  display: flex;
+  align-items: center;
+}
+
+.seller-toolbox-products-kv {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-toolbox-products-kv__row {
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+}
+
+.seller-toolbox-products-kv__row dt {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-products-kv__row dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--s7-admin-text);
+  word-break: break-word;
+}
+
+.seller-toolbox-products-distribution {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-toolbox-products-distribution__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+}
+
+.seller-toolbox-products-distribution__item strong {
+  font-size: 13px;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-products-distribution__item span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-products-distribution__overflow {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-products-badge {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.seller-toolbox-products-panel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 14px;
+  border-top: 1px solid var(--s7-admin-border);
+  background: color-mix(in srgb, var(--s7-admin-surface) 92%, transparent);
+}
+
+.seller-toolbox-products-panel__seal {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px dashed var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-products-panel__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-toolbox-products-panel__skeleton-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-products-panel__skeleton-line {
+  display: block;
+  height: 11px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--s7-admin-surface-soft) 0%,
+    var(--s7-admin-border) 50%,
+    var(--s7-admin-surface-soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: seller-toolbox-products-shimmer 1.15s ease-in-out infinite;
+}
+
+.seller-toolbox-products-panel__skeleton-line--title {
+  width: 42%;
+  height: 13px;
+}
+
+.seller-toolbox-products-panel__skeleton-line--short {
+  width: 58%;
+}
+
+@keyframes seller-toolbox-products-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .seller-toolbox-products-kv__row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .seller-toolbox-products-panel__body {
+    padding: 10px 12px;
+  }
+}

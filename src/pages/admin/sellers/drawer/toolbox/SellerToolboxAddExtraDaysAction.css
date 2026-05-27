@@ -1,0 +1,44 @@
+/* S_5.3.1.1 — Adicionar dias extras (DEV, fake flow) */
+
+.seller-toolbox-add-days-action__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--s7-admin-radius);
+  border: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--s7-admin-text);
+  cursor: pointer;
+  opacity: 0.82;
+}
+
+.seller-toolbox-add-days-action__btn:hover:not(:disabled) {
+  opacity: 1;
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.seller-toolbox-add-days-action__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.seller-toolbox-add-days-action__badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-add-days-action__hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--s7-admin-muted);
+}

@@ -1,0 +1,361 @@
+/* S_5.2.3.3 — Painel Integrações (read-only) */
+
+.seller-toolbox-integrations-panel {
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.seller-toolbox-integrations-panel__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px 12px;
+  padding: 14px;
+  border-bottom: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-integrations-panel__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--s7-admin-border);
+  background: var(--s7-admin-surface);
+  color: var(--s7-admin-accent, #2563eb);
+  flex-shrink: 0;
+}
+
+.seller-toolbox-integrations-panel__icon {
+  width: 17px;
+  height: 17px;
+}
+
+.seller-toolbox-integrations-panel__titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.seller-toolbox-integrations-panel__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-integrations-panel__desc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-integrations-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+
+.seller-toolbox-integrations-panel__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-toolbox-integrations-panel__message,
+.seller-toolbox-integrations-panel__inline-empty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.seller-toolbox-integrations-panel__message {
+  padding: 12px;
+  border-radius: var(--s7-admin-radius);
+}
+
+.seller-toolbox-integrations-panel__message--empty,
+.seller-toolbox-integrations-panel__inline-empty {
+  color: var(--s7-admin-muted);
+  border: 1px dashed var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+  padding: 10px 12px;
+  border-radius: var(--s7-admin-radius);
+}
+
+.seller-toolbox-integrations-panel__message--error {
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+  background: rgba(180, 83, 9, 0.04);
+}
+
+.seller-toolbox-integrations-section {
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface-soft);
+  overflow: hidden;
+}
+
+.seller-toolbox-integrations-section__head {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--s7-admin-border);
+}
+
+.seller-toolbox-integrations-section__title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-integrations-section__body {
+  padding: 12px;
+}
+
+.seller-toolbox-integrations-kv {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-toolbox-integrations-kv__row {
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+}
+
+.seller-toolbox-integrations-kv__row dt {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-integrations-kv__row dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--s7-admin-text);
+  word-break: break-word;
+}
+
+.seller-toolbox-integrations-marketplaces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-toolbox-integrations-marketplaces__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+}
+
+.seller-toolbox-integrations-marketplaces__main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.seller-toolbox-integrations-marketplaces__main strong {
+  font-size: 13px;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-integrations-marketplaces__meta {
+  font-size: 12px;
+  color: var(--s7-admin-muted);
+  white-space: nowrap;
+}
+
+.seller-toolbox-integrations-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-toolbox-integrations-accounts__group {
+  padding: 10px 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+}
+
+.seller-toolbox-integrations-accounts__marketplace {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-integrations-accounts__list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-integrations-accounts__empty,
+.seller-toolbox-integrations-accounts__overflow {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-integrations-accounts__overflow {
+  margin-top: 6px;
+}
+
+.seller-toolbox-integrations-health {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-toolbox-integrations-health__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface);
+}
+
+.seller-toolbox-integrations-health__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.seller-toolbox-integrations-health__copy strong {
+  font-size: 13px;
+  color: var(--s7-admin-text);
+}
+
+.seller-toolbox-integrations-health__copy span {
+  font-size: 12px;
+  color: var(--s7-admin-muted);
+}
+
+.seller-toolbox-integration-badge {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.seller-toolbox-integrations-panel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 14px;
+  border-top: 1px solid var(--s7-admin-border);
+  background: color-mix(in srgb, var(--s7-admin-surface) 92%, transparent);
+}
+
+.seller-toolbox-integrations-panel__seal {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--s7-admin-muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px dashed var(--s7-admin-border);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-integrations-panel__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-toolbox-integrations-panel__skeleton-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid var(--s7-admin-border);
+  border-radius: var(--s7-admin-radius);
+  background: var(--s7-admin-surface-soft);
+}
+
+.seller-toolbox-integrations-panel__skeleton-line {
+  display: block;
+  height: 11px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--s7-admin-surface-soft) 0%,
+    var(--s7-admin-border) 50%,
+    var(--s7-admin-surface-soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: seller-toolbox-integrations-shimmer 1.15s ease-in-out infinite;
+}
+
+.seller-toolbox-integrations-panel__skeleton-line--title {
+  width: 42%;
+  height: 13px;
+}
+
+.seller-toolbox-integrations-panel__skeleton-line--short {
+  width: 58%;
+}
+
+@keyframes seller-toolbox-integrations-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .seller-toolbox-integrations-kv__row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .seller-toolbox-integrations-marketplaces__item,
+  .seller-toolbox-integrations-health__item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .seller-toolbox-integrations-panel__body {
+    padding: 10px 12px;
+  }
+}
