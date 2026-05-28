@@ -114,7 +114,7 @@ export async function executeSubscriptionOperation({
     const data = await handler(context);
 
     if (!data || typeof data !== "object") {
-      throw new Error("fake_execution_failed");
+      throw new Error("operation_empty_result");
     }
 
     logSellerToolbox(
@@ -153,7 +153,7 @@ export async function executeSubscriptionOperation({
       message:
         cause instanceof Error && cause.message
           ? cause.message
-          : "Não foi possível concluir a operação fake.",
+          : "Não foi possível concluir a operação.",
     };
 
     onError?.(error);

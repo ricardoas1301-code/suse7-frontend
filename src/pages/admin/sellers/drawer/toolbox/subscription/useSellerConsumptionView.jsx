@@ -4,6 +4,7 @@ import { isSellerToolboxSubscriptionEmpty } from "../sellerToolboxSubscriptionMo
 import {
   normalizeConsumptionAmount,
   buildSellerConsumptionViewModel,
+  buildSellerConsumptionInputFromDetail,
   createSellerConsumptionMockInput,
   resolveSellerConsumptionViewState,
   SELLER_TOOLBOX_CONSUMPTION_DEFAULT_MOCK,
@@ -60,13 +61,21 @@ export function SellerConsumptionViewProvider({ children }) {
     [sellerId, drawerState, toolboxState, isReady, subscriptionEmpty],
   );
 
+  const officialInput = useMemo(
+    () => buildSellerConsumptionInputFromDetail({ sellerId, detail }),
+    [sellerId, detail],
+  );
+
   const consumption = useMemo(() => {
     if (viewState !== "loaded") return null;
-    return buildSellerConsumptionViewModel({
+
+    const input = officialInput ?? {
       ...mockInput,
       sellerId: sellerId ?? null,
-    });
-  }, [viewState, mockInput, sellerId]);
+    };
+
+    return buildSellerConsumptionViewModel(input);
+  }, [viewState, officialInput, mockInput, sellerId]);
 
   const setMockConsumed = useCallback((consumed) => {
     setMockInput((current) => ({

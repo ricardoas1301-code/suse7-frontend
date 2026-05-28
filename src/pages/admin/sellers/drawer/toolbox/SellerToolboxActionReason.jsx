@@ -325,7 +325,7 @@ function SellerToolboxActionReasonOverlay() {
           onError: () => {
             setCompletedAction({
               actionId,
-              status: "error_fake",
+              status: "error",
               metadata: operationMetadata ?? undefined,
             });
 

@@ -147,6 +147,20 @@ export async function devCenterGetSellerDetail(id) {
   return apiFetch(url, { method: "GET" });
 }
 
+/**
+ * @param {string} sellerId
+ * @param {{ actionId: string; reason: string; metadata?: Record<string, unknown> | null }} body
+ */
+export async function devCenterExecutarOperacaoAssinaturaSeller(sellerId, body) {
+  const safeId = String(sellerId ?? "").trim();
+  if (!safeId) return { ok: false, status: 400, error: "Seller inválido" };
+  const url = buildApiUrl(
+    `/api/dev-center/sellers/${encodeURIComponent(safeId)}/subscription/operations`,
+  );
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "POST", body });
+}
+
 export async function devCenterGetSubscriptions() {
   const url = buildApiUrl("/api/dev-center/subscriptions");
   if (!url) return { ok: false, status: 0, error: "API não configurada" };

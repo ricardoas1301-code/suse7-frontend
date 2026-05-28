@@ -1,25 +1,11 @@
-import { SELLER_TOOLBOX_ADD_SUBSCRIPTION_DAYS_ACTION_ID, executeFakeAddDays } from "./sellerToolboxAddExtraDaysOperation";
-import {
-  SELLER_TOOLBOX_ADD_SUBSCRIPTION_SALES_ACTION_ID,
-  executeFakeAddSales,
-} from "./sellerToolboxAddExtraSalesOperation";
-import {
-  SELLER_TOOLBOX_ENABLE_TRIAL_ACTION_ID,
-  executeFakeEnableTrial,
-} from "./sellerToolboxEnableTrialOperation";
-import {
-  SELLER_TOOLBOX_END_TRIAL_ACTION_ID,
-  executeFakeEndTrial,
-} from "./sellerToolboxEndTrialOperation";
-import {
-  SELLER_TOOLBOX_RESET_CONSUMPTION_ACTION_ID,
-  executeFakeResetConsumption,
-} from "./sellerToolboxResetConsumptionOperation";
-import {
-  SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_ACTION_ID,
-  executeFakeRecalculateConsumption,
-} from "./sellerToolboxRecalculateConsumptionOperation";
-import { SELLER_TOOLBOX_CONSUMPTION_DEFAULT_MOCK } from "./sellerToolboxConsumptionModel";
+import { SELLER_TOOLBOX_ADD_SUBSCRIPTION_DAYS_ACTION_ID } from "./sellerToolboxAddExtraDaysOperation";
+import { SELLER_TOOLBOX_ADD_SUBSCRIPTION_SALES_ACTION_ID } from "./sellerToolboxAddExtraSalesOperation";
+import { SELLER_TOOLBOX_ENABLE_TRIAL_ACTION_ID } from "./sellerToolboxEnableTrialOperation";
+import { SELLER_TOOLBOX_END_TRIAL_ACTION_ID } from "./sellerToolboxEndTrialOperation";
+import { SELLER_TOOLBOX_RESET_CONSUMPTION_ACTION_ID } from "./sellerToolboxResetConsumptionOperation";
+import { SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_ACTION_ID } from "./sellerToolboxRecalculateConsumptionOperation";
+import { createRealSubscriptionOperationHandler } from "./sellerToolboxSubscriptionApiOperations";
+import { DEV_CENTER_CATEGORIAS_RELOAD } from "../../../../../../components/devCenter/operational/devCenterOperationalReloadModel";
 import {
   SELLER_TOOLBOX_ENABLE_FEATURE_FLAG_ACTION_ID,
 } from "../featureFlags/sellerToolboxEnableFeatureFlagOperation";
@@ -147,6 +133,12 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_QUICK_REASON_KEYS = new Set([
   "internal_test",
   "other",
 ]);
+
+/** @type {string[]} */
+export const SELLER_TOOLBOX_REAL_SUBSCRIPTION_RELOAD_CATEGORIES = [
+  DEV_CENTER_CATEGORIAS_RELOAD.ASSINATURA,
+  DEV_CENTER_CATEGORIAS_RELOAD.RESUMO_SELLER,
+];
 
 /** @type {Set<string>} */
 export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_ACTION_IDS = new Set([
@@ -381,7 +373,8 @@ export const SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS = [
 /** @type {Record<string, SellerToolboxSubscriptionOperationConfig>} */
 export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
   [SELLER_TOOLBOX_ADD_SUBSCRIPTION_DAYS_ACTION_ID]: {
-    handler: executeFakeAddDays,
+    handler: createRealSubscriptionOperationHandler(SELLER_TOOLBOX_ADD_SUBSCRIPTION_DAYS_ACTION_ID),
+    recarregarCategoriasOperacionais: SELLER_TOOLBOX_REAL_SUBSCRIPTION_RELOAD_CATEGORIES,
     devLog: {
       started: "subscription_add_days_started",
       completed: "subscription_add_days_completed",
@@ -403,17 +396,18 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
     },
     feedback: {
       success: {
-        title: "Dias extras simulados",
-        description: "Simulação concluída sem alterar dados reais.",
+        title: "Dias extras adicionados",
+        description: "Assinatura atualizada e painéis recarregados sem perder contexto.",
       },
       error: {
-        title: "Falha na simulação",
-        description: "Não foi possível concluir a operação fake. Nenhum dado foi alterado.",
+        title: "Falha ao adicionar dias",
+        description: "Não foi possível concluir a operação. Nenhuma alteração foi persistida.",
       },
     },
   },
   [SELLER_TOOLBOX_ADD_SUBSCRIPTION_SALES_ACTION_ID]: {
-    handler: executeFakeAddSales,
+    handler: createRealSubscriptionOperationHandler(SELLER_TOOLBOX_ADD_SUBSCRIPTION_SALES_ACTION_ID),
+    recarregarCategoriasOperacionais: SELLER_TOOLBOX_REAL_SUBSCRIPTION_RELOAD_CATEGORIES,
     devLog: {
       started: "subscription_add_sales_started",
       completed: "subscription_add_sales_completed",
@@ -435,18 +429,19 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
     },
     feedback: {
       success: {
-        title: "Vendas extras simuladas",
-        description: "Simulação concluída sem alterar dados reais.",
+        title: "Vendas extras adicionadas",
+        description: "Bônus operacional persistido e painéis recarregados.",
       },
       error: {
-        title: "Falha na simulação",
-        description: "Não foi possível concluir a operação fake. Nenhum dado foi alterado.",
+        title: "Falha ao adicionar vendas extras",
+        description: "Não foi possível concluir a operação. Nenhuma alteração foi persistida.",
       },
     },
   },
   [SELLER_TOOLBOX_ENABLE_TRIAL_ACTION_ID]: {
-    handler: executeFakeEnableTrial,
+    handler: createRealSubscriptionOperationHandler(SELLER_TOOLBOX_ENABLE_TRIAL_ACTION_ID),
     quickReasons: SELLER_TOOLBOX_ENABLE_TRIAL_QUICK_REASONS,
+    recarregarCategoriasOperacionais: SELLER_TOOLBOX_REAL_SUBSCRIPTION_RELOAD_CATEGORIES,
     devLog: {
       started: "trial_enable_started",
       completed: "trial_enable_completed",
@@ -468,18 +463,19 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
     },
     feedback: {
       success: {
-        title: "Trial liberado (simulado)",
-        description: "Estado local atualizado — nenhuma assinatura real foi alterada.",
+        title: "Trial liberado",
+        description: "Período de trial persistido no backend e painéis atualizados.",
       },
       error: {
-        title: "Falha na simulação",
-        description: "Não foi possível liberar o trial fake. Nenhum dado foi alterado.",
+        title: "Falha ao liberar trial",
+        description: "Não foi possível concluir a operação. Nenhuma alteração foi persistida.",
       },
     },
   },
   [SELLER_TOOLBOX_END_TRIAL_ACTION_ID]: {
-    handler: executeFakeEndTrial,
+    handler: createRealSubscriptionOperationHandler(SELLER_TOOLBOX_END_TRIAL_ACTION_ID),
     quickReasons: SELLER_TOOLBOX_END_TRIAL_QUICK_REASONS,
+    recarregarCategoriasOperacionais: SELLER_TOOLBOX_REAL_SUBSCRIPTION_RELOAD_CATEGORIES,
     devLog: {
       started: "trial_end_started",
       completed: "trial_end_completed",
@@ -501,24 +497,19 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
     },
     feedback: {
       success: {
-        title: "Trial encerrado (simulado)",
-        description: "Estado local atualizado — nenhuma assinatura real foi alterada.",
+        title: "Trial encerrado",
+        description: "Encerramento persistido no backend e painéis atualizados.",
       },
       error: {
-        title: "Falha na simulação",
-        description: "Não foi possível encerrar o trial fake. Nenhum dado foi alterado.",
+        title: "Falha ao encerrar trial",
+        description: "Não foi possível concluir a operação. Nenhuma alteração foi persistida.",
       },
     },
   },
   [SELLER_TOOLBOX_RESET_CONSUMPTION_ACTION_ID]: {
-    handler: executeFakeResetConsumption,
+    handler: createRealSubscriptionOperationHandler(SELLER_TOOLBOX_RESET_CONSUMPTION_ACTION_ID),
     quickReasons: SELLER_TOOLBOX_RESET_CONSUMPTION_QUICK_REASONS,
-    applyConsumptionResult: true,
-    buildHandlerContext: ({ consumption }) => ({
-      monthlyLimit:
-        consumption?.monthlyLimit ?? SELLER_TOOLBOX_CONSUMPTION_DEFAULT_MOCK.monthlyLimit,
-      previousConsumed: consumption?.consumed ?? 0,
-    }),
+    recarregarCategoriasOperacionais: SELLER_TOOLBOX_REAL_SUBSCRIPTION_RELOAD_CATEGORIES,
     devLog: {
       started: "consumption_reset_started",
       completed: "consumption_reset_completed",
@@ -542,24 +533,19 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
     },
     feedback: {
       success: {
-        title: "Consumo resetado com sucesso",
-        description: "O painel foi atualizado localmente — nenhum dado real foi alterado.",
+        title: "Consumo resetado",
+        description: "Consumo do ciclo zerado no backend e painéis recarregados.",
       },
       error: {
         title: "Falha ao resetar consumo",
-        description: "Não foi possível concluir o reset fake. Nenhum dado foi alterado.",
+        description: "Não foi possível concluir a operação. Nenhuma alteração foi persistida.",
       },
     },
   },
   [SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_ACTION_ID]: {
-    handler: executeFakeRecalculateConsumption,
+    handler: createRealSubscriptionOperationHandler(SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_ACTION_ID),
     quickReasons: SELLER_TOOLBOX_RECALCULATE_CONSUMPTION_QUICK_REASONS,
-    applyConsumptionResult: true,
-    buildHandlerContext: ({ consumption }) => ({
-      monthlyLimit:
-        consumption?.monthlyLimit ?? SELLER_TOOLBOX_CONSUMPTION_DEFAULT_MOCK.monthlyLimit,
-      previousConsumed: consumption?.consumed ?? 0,
-    }),
+    recarregarCategoriasOperacionais: SELLER_TOOLBOX_REAL_SUBSCRIPTION_RELOAD_CATEGORIES,
     devLog: {
       started: "consumption_recalculate_started",
       completed: "consumption_recalculate_completed",
@@ -585,12 +571,12 @@ export const SELLER_TOOLBOX_SUBSCRIPTION_OPERATION_REGISTRY = {
     },
     feedback: {
       success: {
-        title: "Consumo recalculado com sucesso",
-        description: "O painel foi atualizado localmente — nenhum dado real foi alterado.",
+        title: "Consumo recalculado",
+        description: "Consumo reprocessado no backend e painéis recarregados.",
       },
       error: {
         title: "Falha ao recalcular consumo",
-        description: "Não foi possível concluir o recálculo fake. Nenhum dado foi alterado.",
+        description: "Não foi possível concluir a operação. Nenhuma alteração foi persistida.",
       },
     },
   },

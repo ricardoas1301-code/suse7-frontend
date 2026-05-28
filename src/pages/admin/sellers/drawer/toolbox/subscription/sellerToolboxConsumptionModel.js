@@ -156,6 +156,37 @@ export function formatConsumptionSourceLabel(source) {
 }
 
 /**
+ * @param {{
+ *   sellerId?: string | null;
+ *   detail?: { subscription?: Record<string, unknown> | null } | null;
+ * }} input
+ * @returns {import("./sellerToolboxConsumptionModel").SellerConsumptionRawInput | null}
+ */
+export function buildSellerConsumptionInputFromDetail({ sellerId = null, detail = null }) {
+  const subscription = detail?.subscription;
+  const usage = subscription?.usage;
+  if (!subscription || !usage || typeof usage !== "object") return null;
+
+  const monthlyLimit = usage.limit ?? usage.usage_limit ?? subscription.usage_limit;
+  const consumed = usage.current ?? usage.usage_current ?? subscription.usage_current;
+
+  if (monthlyLimit == null && consumed == null) return null;
+
+  return {
+    sellerId,
+    planName: String(subscription.plan_label ?? subscription.plan_key ?? "—").trim() || "—",
+    monthlyLimit: monthlyLimit ?? 0,
+    consumed: consumed ?? 0,
+    sources: [],
+    recalculatedAt:
+      usage.recalculated_at ??
+      usage.recalculatedAt ??
+      subscription.usage_recalculated_at ??
+      null,
+  };
+}
+
+/**
  * @param {SellerConsumptionRawInput} input
  * @returns {SellerConsumptionViewModel}
  */
