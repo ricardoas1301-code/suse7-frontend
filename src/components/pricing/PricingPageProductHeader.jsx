@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import S7Icon from "../ui/S7Icon.jsx";
-import S7CopyButton from "../ui/S7CopyButton.jsx";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../ui/S7CopyButton.jsx";
 import S7Tooltip from "../ui/S7Tooltip.jsx";
 
 const DASH = "—";
@@ -280,14 +280,37 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
           <p className="pricing-intelligence-page__product-header-meta pricing-intelligence-page__product-header-meta--copy">
             <span className="pricing-intelligence-page__product-header-meta-item s7-copy-group">
               <span>MLB{listingId}</span>
-              <S7CopyButton value={`MLB${listingId}`} ariaLabel="Copiar código MLB" tooltipText="Copiar MLB" size={12} />
+              <S7CopyButton
+                value={`MLB${listingId}`}
+                ariaLabel="Copiar código MLB"
+                tooltipText="Copiar MLB"
+                toastLabel="MLB"
+                showToast={true}
+                iconMode="unicode"
+                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                toastEventType="LISTING_ID_COPIED"
+                toastFailEventType="LISTING_ID_COPY_FAILED"
+                toastEntityType="marketplace_listing"
+              />
             </span>
             <span className="pricing-intelligence-page__product-header-meta-sep" aria-hidden>
               |
             </span>
             <span className="pricing-intelligence-page__product-header-meta-item s7-copy-group">
-              <span>SKU {sku}</span>
-              <S7CopyButton value={sku} ariaLabel="Copiar SKU" tooltipText="Copiar SKU" size={12} />
+              <span className="anuncios-ad-sku-label">SKU</span>
+              <span className="anuncios-ad-sku-value">{sku}</span>
+              <S7CopyButton
+                value={sku}
+                ariaLabel="Copiar SKU"
+                tooltipText="Copiar SKU"
+                toastLabel="SKU"
+                showToast={true}
+                iconMode="unicode"
+                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                toastEventType="LISTING_SKU_COPIED"
+                toastFailEventType="LISTING_SKU_COPY_FAILED"
+                toastEntityType="marketplace_listing"
+              />
             </span>
           </p>
           <div className="pricing-intelligence-page__product-metrics">
@@ -376,14 +399,37 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
               <p className="pricing-intelligence-page__product-header-meta pricing-intelligence-page__product-header-meta--copy">
                 <span className="pricing-intelligence-page__product-header-meta-item s7-copy-group">
                   <span>MLB{listingId}</span>
-                  <S7CopyButton value={`MLB${listingId}`} ariaLabel="Copiar código MLB" tooltipText="Copiar MLB" size={12} />
+                  <S7CopyButton
+                value={`MLB${listingId}`}
+                ariaLabel="Copiar código MLB"
+                tooltipText="Copiar MLB"
+                toastLabel="MLB"
+                showToast={true}
+                iconMode="unicode"
+                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                toastEventType="LISTING_ID_COPIED"
+                toastFailEventType="LISTING_ID_COPY_FAILED"
+                toastEntityType="marketplace_listing"
+              />
                 </span>
                 <span className="pricing-intelligence-page__product-header-meta-sep" aria-hidden>
                   |
                 </span>
                 <span className="pricing-intelligence-page__product-header-meta-item s7-copy-group">
-                  <span>SKU {sku}</span>
-                  <S7CopyButton value={sku} ariaLabel="Copiar SKU" tooltipText="Copiar SKU" size={12} />
+                  <span className="anuncios-ad-sku-label">SKU</span>
+                  <span className="anuncios-ad-sku-value">{sku}</span>
+                  <S7CopyButton
+                value={sku}
+                ariaLabel="Copiar SKU"
+                tooltipText="Copiar SKU"
+                toastLabel="SKU"
+                showToast={true}
+                iconMode="unicode"
+                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                toastEventType="LISTING_SKU_COPIED"
+                toastFailEventType="LISTING_SKU_COPY_FAILED"
+                toastEntityType="marketplace_listing"
+              />
                 </span>
               </p>
             </div>

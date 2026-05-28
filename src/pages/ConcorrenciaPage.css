@@ -75,8 +75,8 @@
   color: #0f172a;
 }
 
-.concorrencia-page__listing-search-wrap {
-  flex: 0 1 min(520px, 100%);
+.concorrencia-listing-search--block {
+  width: 100%;
   min-width: 0;
 }
 
@@ -476,4 +476,69 @@
 
 .s7-concorrencia-modal__pick-link:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .concorrencia-page__shell {
+    padding: 10px 2px 24px;
+  }
+
+  .concorrencia-page__title {
+    font-size: 1.1rem;
+  }
+
+  .concorrencia-page__subtitle {
+    font-size: 0.84rem;
+    max-width: 100%;
+  }
+
+  .concorrencia-page__field-label {
+    font-size: 10px;
+  }
+
+  .concorrencia-page__listing-search-wrap {
+    flex: 1 1 100%;
+  }
+
+  .concorrencia-page__toolbar-actions {
+    gap: 8px;
+  }
+
+  .concorrencia-page__chart-wrap {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .s7-competition-chart__plot {
+    min-height: 132px;
+    gap: 6px;
+  }
+
+  .s7-competition-chart__track {
+    height: 96px;
+    max-width: 40px;
+  }
+
+  .s7-concorrencia-modal {
+    width: min(96vw, 760px);
+    max-height: 84vh;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 430px) {
+  .concorrencia-page__shell {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .s7-concorrencia-modal__pick-row {
+    grid-template-columns: auto 44px 1fr;
+    gap: 8px;
+  }
+
+  .s7-concorrencia-modal__pick-thumb-wrap {
+    width: 44px;
+    height: 44px;
+  }
 }

@@ -1,3 +1,5 @@
+@import "./tokens/z-index.css";
+
 /* ======================================================================
    SUSE7 — DESIGN SYSTEM v1.0
    Objetivo:
@@ -437,7 +439,7 @@
 ====================================================== */
 .s7-tooltip:not(.s7-tip):not(.s7-tooltip--rich-panel) {
   position: fixed;
-  z-index: 99999;
+  z-index: var(--s7-z-tooltip, 290000);
 
   padding: 6px 10px;
   border-radius: 8px;
@@ -479,7 +481,7 @@
   bottom: calc(100% + 10px);
   transform: translateX(-50%) translateY(0);
 
-  z-index: 99999;
+  z-index: var(--s7-z-tooltip, 290000);
 
   /* ✅ -33% menor */
   font-size: 11px;
@@ -517,7 +519,7 @@
   bottom: calc(100% + 2px);
   transform: translateX(-50%);
 
-  z-index: 99999;
+  z-index: var(--s7-z-tooltip, 290000);
 
   border: 5px solid transparent;
   border-top-color: var(--s7-tooltip-bg);

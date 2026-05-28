@@ -1,0 +1,233 @@
+/* ======================================================================
+   KPI executivo — linha inferior da página Vendas (premium / Top 10)
+   ====================================================================== */
+
+.vendas-executive-kpi {
+  --vek-accent: #2563eb;
+  min-width: 0;
+  height: 100%;
+  min-height: var(--s7-executive-kpi-h, 112px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 22px rgba(15, 23, 42, 0.05);
+}
+
+.vendas-executive-kpi--tone-quantity {
+  --vek-accent: var(--s7-orange, #ff8533);
+}
+
+.vendas-executive-kpi--tone-revenue {
+  --vek-accent: #2563eb;
+}
+
+.vendas-executive-kpi--tone-profit {
+  --vek-accent: #15803d;
+}
+
+.vendas-executive-kpi--tone-conversion {
+  --vek-accent: #7c3aed;
+}
+
+.vendas-executive-kpi__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 14px 10px;
+  background: var(--vek-accent);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.vendas-executive-kpi__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.22);
+}
+
+.vendas-executive-kpi__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 14px 16px;
+  min-height: 0;
+}
+
+.vendas-executive-kpi__body--skeleton {
+  justify-content: center;
+}
+
+.vendas-executive-kpi__skeleton-value {
+  display: block;
+  width: min(72%, 148px);
+  height: clamp(22px, 2.8vw, 28px);
+  border-radius: 8px;
+  background: linear-gradient(90deg, #eef2f7 0%, #f8fafc 45%, #eef2f7 100%);
+  background-size: 200% 100%;
+  animation: vendas-executive-kpi-shimmer 1.35s ease-in-out infinite;
+}
+
+.vendas-executive-kpi__body--empty .vendas-executive-kpi__value {
+  font-size: clamp(20px, 2.4vw, 24px);
+  font-weight: 700;
+  color: #94a3b8 !important;
+  letter-spacing: 0;
+}
+
+.vendas-executive-kpi__body--error {
+  gap: 6px;
+}
+
+.vendas-executive-kpi__state-message {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #92400e;
+}
+
+.vendas-executive-kpi__state-actions {
+  display: none;
+  min-height: 28px;
+  width: 100%;
+}
+
+.vendas-executive-kpi__body--unavailable .vendas-executive-kpi__value {
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0;
+}
+
+.vendas-executive-kpi__value {
+  margin: 0;
+  width: 100%;
+  font-size: clamp(22px, 2.8vw, 28px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+
+.vendas-executive-kpi--tone-quantity .vendas-executive-kpi__value {
+  color: var(--s7-orange, #ff8533);
+}
+
+.vendas-executive-kpi--tone-revenue .vendas-executive-kpi__value {
+  color: #1d4ed8;
+}
+
+.vendas-executive-kpi--tone-profit .vendas-executive-kpi__value {
+  color: #15803d;
+}
+
+.vendas-executive-kpi--tone-conversion .vendas-executive-kpi__value {
+  color: #6d28d9;
+}
+
+.vendas-executive-kpi--tone-conversion .vendas-executive-kpi__body--unavailable .vendas-executive-kpi__value {
+  color: #64748b;
+}
+
+.vendas-executive-kpi__subtitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #64748b;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Responsivo KPIs (grid em VendasPage.css) ---- */
+@media (max-width: 1180px) {
+  .vendas-executive-kpi__head {
+    padding: 8px 12px 9px;
+  }
+
+  .vendas-executive-kpi__title {
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .vendas-executive-kpi__body {
+    padding: 12px 12px 14px;
+  }
+
+  .vendas-executive-kpi__value {
+    font-size: clamp(20px, 2.5vw, 26px);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 640px) {
+  .vendas-executive-kpi__head {
+    padding: 8px 11px 9px;
+  }
+
+  .vendas-executive-kpi__title {
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+  }
+
+  .vendas-executive-kpi__value {
+    font-size: clamp(18px, 5.2vw, 24px);
+  }
+
+  .vendas-executive-kpi__body--unavailable .vendas-executive-kpi__value {
+    font-size: clamp(17px, 4.8vw, 22px);
+  }
+
+  .vendas-executive-kpi__subtitle {
+    font-size: 10px;
+  }
+
+  .vendas-executive-kpi__state-message {
+    font-size: 10px;
+  }
+
+  .vendas-executive-kpi__skeleton-value {
+    width: min(68%, 132px);
+    height: clamp(20px, 5vw, 24px);
+  }
+}
+
+@media (max-width: 400px) {
+  .vendas-executive-kpi__title {
+    font-size: 10px;
+  }
+
+  .vendas-executive-kpi__value {
+    font-size: clamp(17px, 6vw, 22px);
+    letter-spacing: -0.015em;
+  }
+}
+
+@keyframes vendas-executive-kpi-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}

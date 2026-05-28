@@ -83,3 +83,61 @@
 .public-navbar-btn:hover {
   background: #1e4ec9;              /* Azul mais escuro no hover */
 }
+
+/* =====================================================================
+   MOBILE — NAVBAR PÚBLICA
+   ===================================================================== */
+@media (max-width: 768px) {
+  .public-navbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .public-navbar-logo {
+    width: 84px;
+    flex-shrink: 0;
+  }
+
+  .public-navbar-menu {
+    gap: 10px;
+    min-width: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .public-navbar-menu::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .public-navbar-link,
+  .public-navbar-menu a {
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .public-navbar-btn {
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 390px) {
+  .public-navbar {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .public-navbar-logo {
+    width: 78px;
+  }
+}
+
+@media (max-width: 320px) {
+  .public-navbar-logo {
+    width: 72px;
+  }
+}

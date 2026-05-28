@@ -1,0 +1,169 @@
+.s7-billing-timeline-panel {
+  background: #fff;
+  border: 1px solid #dbe5f2;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+  min-height: 280px;
+  animation: s7-billing-fade-in 0.35s ease-out both;
+}
+
+.s7-billing-timeline-panel__header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.s7-billing-timeline-panel__header p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.s7-billing-timeline-panel__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.s7-billing-timeline-panel__filter {
+  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.s7-billing-timeline-panel__filter:hover {
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.s7-billing-timeline-panel__filter--active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+}
+
+.s7-billing-timeline-panel__groups {
+  margin-top: 18px;
+  display: grid;
+  gap: 22px;
+}
+
+.s7-billing-timeline-panel__group-label {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.s7-billing-timeline-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.s7-billing-timeline-panel--error {
+  display: grid;
+  gap: 10px;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.s7-billing-timeline-panel__error {
+  margin: 12px 0 0;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.s7-billing-timeline-panel__hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.s7-billing-timeline-panel--loading .s7-billing-timeline-panel__filters--skeleton {
+  pointer-events: none;
+}
+
+.s7-billing-timeline-panel__filter-skeleton {
+  display: inline-block;
+  width: 72px;
+  height: 32px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: s7-billing-timeline-shimmer 1.2s ease-in-out infinite;
+}
+
+.s7-billing-timeline-panel__skeleton-list {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.s7-billing-timeline-panel__skeleton-card {
+  height: 88px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: s7-billing-timeline-shimmer 1.2s ease-in-out infinite;
+}
+
+.s7-billing-timeline-panel__skeleton-card--short {
+  width: 78%;
+}
+
+.s7-billing-finance-empty--compact {
+  margin-top: 14px;
+  padding: 20px 16px;
+}
+
+@keyframes s7-billing-timeline-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .s7-billing-timeline-panel {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .s7-billing-timeline-panel__filters {
+    flex-wrap: nowrap;
+    padding-bottom: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s7-billing-timeline-panel {
+    animation: none;
+  }
+}

@@ -15,6 +15,11 @@
   background: #f5f6fa;
 }
 
+/* Dashboard agora usa o mesmo "frame" visual da página Vendas */
+.dashboard-page {
+  min-height: auto;
+}
+
 /* HEADER (se você usar futuramente) */
 .dash-header{
   display: flex;
@@ -341,6 +346,11 @@ body.modal-open{
   padding: 12px 14px 14px;
 }
 
+.s7-dash-card__body--empty{
+  padding: 0 !important;
+  min-height: 0;
+}
+
 .s7-dash-card:hover{
   border-color: rgba(37, 99, 235, 0.18);
   box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
@@ -354,6 +364,29 @@ body.modal-open{
 .s7-dash-card--small{
   min-height: 120px;
   justify-content: stretch;
+}
+
+@media (min-width: 901px){
+  .s7-dash-top{
+    --s7-top-kpi-large-h: 264px;
+    --s7-top-kpi-right-h: 264px;
+  }
+
+  .s7-dash-card--large{
+    height: var(--s7-top-kpi-large-h);
+    min-height: var(--s7-top-kpi-large-h);
+    max-height: var(--s7-top-kpi-large-h);
+  }
+
+  .s7-dash-top-right{
+    height: var(--s7-top-kpi-right-h);
+  }
+
+  .s7-dash-card--small{
+    height: calc((var(--s7-top-kpi-right-h) - 14px) / 2);
+    min-height: calc((var(--s7-top-kpi-right-h) - 14px) / 2);
+    max-height: calc((var(--s7-top-kpi-right-h) - 14px) / 2);
+  }
 }
 
 .s7-dash-card--compact{
@@ -388,6 +421,10 @@ body.modal-open{
   line-height: 1.45;
   color: #64748b;
   flex: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .s7-dash-card__placeholder-value{
@@ -409,6 +446,72 @@ body.modal-open{
   color: #64748b;
   background: #f1f5f9;
   border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+/* Card Top 10 (mock visual) */
+.s7-dash-ranking{
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 10px;
+  min-height: 104px;
+}
+
+.s7-dash-ranking__podium{
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.s7-dash-ranking__podium-item{
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  border-radius: 10px 10px 8px 8px;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 6px 4px;
+}
+
+.s7-dash-ranking__podium-item--first { min-height: 86px; }
+.s7-dash-ranking__podium-item--second { min-height: 74px; }
+.s7-dash-ranking__podium-item--third { min-height: 66px; }
+
+.s7-dash-ranking__thumb{
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #cbd5e1;
+  margin-bottom: 6px;
+}
+
+.s7-dash-ranking__place{
+  font-size: 11px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.s7-dash-ranking__next-list{
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+  font-size: 10px;
+  line-height: 1.25;
+  color: #334155;
+  max-height: 104px;
+  overflow: hidden;
+}
+
+.s7-dash-ranking__next-list li{
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 1024px){

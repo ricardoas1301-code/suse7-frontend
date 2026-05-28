@@ -6,12 +6,15 @@
 
 
 
-import { getSaleRayxHealthState, getSaleRayxHealthShellClasses } from "./saleRayxHealthState";
+import { getSaleRayxHealthShellClasses, resolveSaleRayxHealthState } from "./saleRayxHealthState";
 
 import { getSaleRayxMarginSemantic } from "./saleRayxMarginSemantic";
 
-import { collectSaleRayxCommercialAdjustments } from "./saleRayxPricingVariables";
+import { collectSaleRayxContingencyMargin } from "./saleRayxPricingVariables";
 
+import S7Icon from "../ui/S7Icon";
+import S7Tooltip from "../ui/S7Tooltip";
+import SaleAppliedPromotionTooltipBody from "./SaleAppliedPromotionTooltipBody";
 import SaleRayXFinancialLine from "./SaleRayXFinancialLine";
 
 import {
@@ -30,7 +33,51 @@ import {
 
 } from "./saleRayxFormat";
 
+/** @param {unknown} v */
+function isTruthyAppliedPromotionFlag(v) {
+  if (v === true || v === 1) return true;
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase();
+    return s === "true" || s === "1";
+  }
+  return false;
+}
 
+/**
+ * @param {Record<string, unknown> | null | undefined} fin
+ */
+function pickAppliedSalePromotion(fin) {
+  const mr =
+    fin?.marketplace_revenue && typeof fin.marketplace_revenue === "object"
+      ? /** @type {Record<string, unknown>} */ (fin.marketplace_revenue)
+      : null;
+  const raw =
+    (mr?.applied_sale_promotion && typeof mr.applied_sale_promotion === "object"
+      ? mr.applied_sale_promotion
+      : fin?.applied_sale_promotion && typeof fin.applied_sale_promotion === "object"
+        ? fin.applied_sale_promotion
+        : null) ?? null;
+  if (!raw) return null;
+
+  if (!isTruthyAppliedPromotionFlag(raw.has_applied_promotion)) return null;
+
+  const original =
+    raw.original_product_price_brl != null ? String(raw.original_product_price_brl).trim() : "";
+  if (!original) return null;
+
+  const name = raw.promotion_name != null ? String(raw.promotion_name).trim() : "";
+  const percent =
+    raw.promotion_discount_percent != null ? String(raw.promotion_discount_percent).trim() : "";
+
+  if (!name && !percent) return null;
+
+  return /** @type {Record<string, unknown>} */ ({
+    ...raw,
+    original_product_price_brl: original,
+    promotion_name: name || "Promoção",
+    promotion_discount_percent: percent || null,
+  });
+}
 
 /**
 
@@ -82,7 +129,7 @@ function buildMarketplaceFeePercentDetail(fin, feePercent) {
 
  */
 
-export default function SaleFinancialBreakdownCard({ financial, profitMargin }) {
+export default function SaleFinancialBreakdownCard({ financial, profitMargin, detail = null }) {
 
   const fin = financial && typeof financial === "object" ? financial : {};
 
@@ -92,11 +139,18 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
 
   const marginValue = pm.margin_percent ?? fin.margin_percent;
 
-  const { offerSemClass, healthLabel } = getSaleRayxMarginSemantic(marginValue);
+  const finResult = fin.result && typeof fin.result === "object" ? /** @type {Record<string, unknown>} */ (fin.result) : null;
+  const healthLabelFromApi =
+    pm.health_label ?? fin.health_label ?? finResult?.health_label ?? null;
+  const { offerSemClass, healthLabel: healthLabelFallback } = getSaleRayxMarginSemantic(marginValue);
+  const resultHealthLabel =
+    healthLabelFromApi != null && String(healthLabelFromApi).trim() !== ""
+      ? String(healthLabelFromApi).trim()
+      : healthLabelFallback != null && String(healthLabelFallback).trim() !== ""
+        ? String(healthLabelFallback).trim()
+        : DASH;
 
-  const resultHealthLabel = healthLabel != null && String(healthLabel).trim() !== "" ? String(healthLabel).trim() : DASH;
-
-  const healthState = getSaleRayxHealthState(marginValue);
+  const healthState = resolveSaleRayxHealthState(fin, pm, marginValue);
 
   const cardShellClass = getSaleRayxHealthShellClasses(healthState, { pulse: false });
 
@@ -108,6 +162,47 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
       : {};
 
   const salePrice = mr.gross_sale_amount_brl ?? fin.sale_price ?? fin.gross_amount;
+
+  const appliedSalePromotion = pickAppliedSalePromotion(fin);
+
+  if (import.meta.env.DEV) {
+    console.debug("[S7 Raio-X][detail usado no modal]", detail);
+    console.debug("[S7 Raio-X][marketplace revenue usado]", mr);
+    console.debug("[S7 Raio-X][applied promotion picked]", appliedSalePromotion);
+  }
+
+  const salePricePromoTooltip =
+    appliedSalePromotion != null ? (
+      <S7Tooltip
+        placement="bottom-start"
+        offset={6}
+        richContent={
+          <SaleAppliedPromotionTooltipBody
+            originalProductPriceBrl={
+              appliedSalePromotion.original_product_price_brl != null
+                ? String(appliedSalePromotion.original_product_price_brl)
+                : null
+            }
+            salePriceBrl={salePrice != null ? String(salePrice) : null}
+            promotionName={String(appliedSalePromotion.promotion_name).trim()}
+            promotionDiscountPercent={
+              appliedSalePromotion.promotion_discount_percent != null &&
+              String(appliedSalePromotion.promotion_discount_percent).trim() !== ""
+                ? String(appliedSalePromotion.promotion_discount_percent)
+                : null
+            }
+          />
+        }
+      >
+        <button
+          type="button"
+          className="anuncios-sell-popover__promo-price-tip-btn vendas-sale-rayx__sale-promo-tip-btn"
+          aria-label="Detalhes do desconto aplicado nesta venda"
+        >
+          <S7Icon name="info" size={13} strokeWidth={2} />
+        </button>
+      </S7Tooltip>
+    ) : null;
 
   const marketplaceFee =
     (mr.marketplace_fee && typeof mr.marketplace_fee === "object"
@@ -123,6 +218,16 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
     fin.marketplace_fee_amount;
 
   const shippingRaw = mr.shipping_amount_brl ?? fin.shipping_cost ?? fin.shipping_cost_amount;
+  const shippingBonusRaw = mr.shipping_bonus_brl ?? fin.shipping_bonus_brl;
+
+  const parsePositiveMoney = (raw) => {
+    if (raw == null || String(raw).trim() === "") return 0;
+    const n = Number(String(raw).replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+
+  const showShippingLine = parsePositiveMoney(shippingRaw) > 0;
+  const showShippingBonusLine = parsePositiveMoney(shippingBonusRaw) > 0;
 
   const rebateObj =
     mr.marketplace_rebate && typeof mr.marketplace_rebate === "object"
@@ -168,47 +273,59 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
     feePercent,
   );
 
-  const productCost = fin.product_cost_only_brl ?? fin.product_cost_amount;
+  const internalCosts =
+    fin.internal_costs && typeof fin.internal_costs === "object"
+      ? /** @type {Record<string, unknown>} */ (fin.internal_costs)
+      : null;
 
-  const internalTaxes = fin.internal_taxes ?? fin.internal_tax_amount;
+  const productCost =
+    internalCosts?.product_cost_brl ?? fin.product_cost_only_brl ?? fin.product_cost_amount;
 
-  const operationPackaging = fin.operation_packaging_cost;
+  const internalTaxes = internalCosts?.internal_tax_brl ?? fin.internal_taxes ?? fin.internal_tax_amount;
 
-  const commercialAdjustments = collectSaleRayxCommercialAdjustments(fin);
+  const operationPackaging =
+    internalCosts?.operation_packaging_cost_brl ?? fin.operation_packaging_cost;
+
+  const internalTaxPercent =
+    internalCosts?.tax_percent_applied != null ? String(internalCosts.tax_percent_applied) : null;
+  const internalTaxPercentLabel = formatPercentDetailLabel(internalTaxPercent);
+  const internalTaxPercentDetail = internalTaxPercentLabel
+    ? `Alíquota ${internalTaxPercentLabel}`
+    : null;
+
+  const contingencyMarginLines = collectSaleRayxContingencyMargin(fin);
 
 
 
   return (
-
     <article
-
       className={`s7-ml-scenario-compare__card s7-ml-scenario-compare__card--baseline vendas-sale-rayx__financial-card vendas-sale-rayx__financial-card--no-head ${cardShellClass}`}
-
       data-sale-rayx-card="financial"
-
     >
-
       <div className="s7-ml-scenario-compare__card-body vendas-sale-rayx__financial-card-body">
-
-        <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section">
+        <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section vendas-sale-rayx__financial-section--marketplace-revenue">
 
           <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
 
-          <div className="anuncios-sell-popover__block">
+          <div className="anuncios-sell-popover__block vendas-sale-rayx__fin-block--sale-value">
 
             <SaleRayXFinancialLine
 
               label="Valor da venda"
 
+              labelAddon={salePricePromoTooltip}
+
               value={formatBrlApi(salePrice != null ? String(salePrice) : null)}
 
               lineClass="anuncios-sell-popover__line--key"
+
+              valueTone="key"
 
             />
 
           </div>
 
-          <div className="anuncios-sell-popover__block">
+          <div className="anuncios-sell-popover__block vendas-sale-rayx__fin-lines-group">
 
             <SaleRayXFinancialLine
 
@@ -218,20 +335,31 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
 
               percentDetail={feePercentDetail}
 
-            />
-
-            <SaleRayXFinancialLine
-
-              label="Envios"
-
-              value={formatNegativeBrlApi(shippingRaw != null ? String(shippingRaw) : null) ?? DASH}
+              valueTone="negative"
 
             />
+
+            {showShippingLine ? (
+              <SaleRayXFinancialLine
+                label="Envios"
+                value={formatNegativeBrlApi(shippingRaw != null ? String(shippingRaw) : null) ?? DASH}
+                valueTone="negative"
+              />
+            ) : null}
+
+            {showShippingBonusLine ? (
+              <SaleRayXFinancialLine
+                label="Bônus por envio"
+                value={formatBrlApi(shippingBonusRaw != null ? String(shippingBonusRaw) : null)}
+                valueTone="positive"
+              />
+            ) : null}
 
             {showDiscountsAndBonuses ? (
               <SaleRayXFinancialLine
                 label="Descontos e bônus"
                 value={formatPositiveBrlApi(String(positiveAdjustments)) ?? DASH}
+                valueTone="positive"
               />
             ) : null}
 
@@ -243,23 +371,23 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
 
               lineClass="anuncios-sell-popover__line--total anuncios-sell-popover__line--key"
 
+              valueTone="key"
+
             />
 
           </div>
 
         </div>
 
+        {contingencyMarginLines.length > 0 ? (
 
+          <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section vendas-sale-rayx__financial-section--contingency-margin">
 
-        {commercialAdjustments.length > 0 ? (
+            <h4 className="anuncios-sell-popover__section-title">Margem de contingência</h4>
 
-          <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section">
+            <div className="anuncios-sell-popover__block vendas-sale-rayx__fin-lines-group">
 
-            <h4 className="anuncios-sell-popover__section-title">Ajustes comerciais</h4>
-
-            <div className="anuncios-sell-popover__block">
-
-              {commercialAdjustments.map((row) => (
+              {contingencyMarginLines.map((row) => (
 
                 <SaleRayXFinancialLine
 
@@ -270,6 +398,8 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
                   value={row.value}
 
                   percentDetail={row.percentDetail}
+
+                  valueTone="negative"
 
                 />
 
@@ -283,26 +413,41 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
 
 
 
-        <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section">
+        <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section vendas-sale-rayx__financial-section--internal-costs">
 
           <h4 className="anuncios-sell-popover__section-title">Custos internos</h4>
 
-          <div className="anuncios-sell-popover__block">
-
-            <SaleRayXFinancialLine label="Custo do produto" value={formatBrlApi(productCost != null ? String(productCost) : null)} />
-
-          </div>
-
-          <div className="anuncios-sell-popover__block">
-
-            <SaleRayXFinancialLine label="Impostos internos" value={formatBrlApi(internalTaxes != null ? String(internalTaxes) : null)} />
+          <div className="anuncios-sell-popover__block vendas-sale-rayx__fin-lines-group">
 
             <SaleRayXFinancialLine
+              label="Custo do produto"
+              value={
+                productCost != null
+                  ? formatNegativeBrlApi(String(productCost)) ?? DASH
+                  : DASH
+              }
+              valueTone="negative"
+            />
 
+            <SaleRayXFinancialLine
+              label="Impostos internos"
+              value={
+                internalTaxes != null
+                  ? formatNegativeBrlApi(String(internalTaxes)) ?? DASH
+                  : DASH
+              }
+              percentDetail={internalTaxPercentDetail}
+              valueTone="negative"
+            />
+
+            <SaleRayXFinancialLine
               label="Operação + embalagem"
-
-              value={formatBrlApi(operationPackaging != null ? String(operationPackaging) : null)}
-
+              value={
+                operationPackaging != null
+                  ? formatNegativeBrlApi(String(operationPackaging)) ?? DASH
+                  : DASH
+              }
+              valueTone="negative"
             />
 
           </div>
@@ -370,11 +515,8 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin }) 
           </div>
 
         </div>
-
       </div>
-
     </article>
-
   );
 
 }

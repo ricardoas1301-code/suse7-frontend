@@ -196,6 +196,8 @@
 
 /* —— KPIs: 2 grandes + bloco 2×2 —— */
 .anuncios-catalog__kpis {
+  --s7-top-kpi-large-h: 264px;
+  --s7-top-kpi-right-h: 264px;
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(0, 1.08fr) minmax(260px, 0.92fr);
   gap: 18px;
@@ -260,6 +262,10 @@
   gap: 8px;
 }
 
+.anuncios-catalog__kpi-body--empty {
+  padding: 0;
+}
+
 .anuncios-catalog__kpi-value {
   margin: 0;
   font-size: clamp(22px, 3.2vw, 30px);
@@ -276,6 +282,10 @@
   line-height: 1.45;
   color: var(--s7-muted, #64748b);
   max-width: 36ch;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .anuncios-catalog__kpi-minis {
@@ -284,6 +294,24 @@
   grid-template-rows: 1fr 1fr;
   gap: 12px;
   min-height: 160px;
+}
+
+@media (min-width: 901px) {
+  .anuncios-catalog__kpi-card--large {
+    height: var(--s7-top-kpi-large-h);
+    min-height: var(--s7-top-kpi-large-h);
+    max-height: var(--s7-top-kpi-large-h);
+  }
+
+  .anuncios-catalog__kpi-minis {
+    height: var(--s7-top-kpi-right-h);
+    min-height: var(--s7-top-kpi-right-h);
+    max-height: var(--s7-top-kpi-right-h);
+  }
+
+  .anuncios-catalog__kpi-mini {
+    min-height: 0;
+  }
 }
 
 .anuncios-catalog__kpi-mini {
@@ -343,6 +371,10 @@
   align-items: center;
   padding: 14px 16px 16px;
   min-height: 0;
+}
+
+.anuncios-catalog__kpi-mini-body--empty {
+  padding: 0;
 }
 
 .anuncios-catalog__kpi-mini-value {
@@ -618,6 +650,10 @@
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.anuncios-completar-tooltip-anchor {
+  display: inline-flex;
 }
 
 .anuncios-completar-info-btn {
@@ -1190,7 +1226,12 @@
 .anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre .anuncios-raiox-shell__badge {
   pointer-events: none;
   /* padding shell + margin-top do painel (6px). */
-  top: calc(var(--raiox-ml-shell-pad-y) + 6px - (45px * 0.84) / 2);
+  height: calc(45px * 0.84 * 0.91);
+  top: calc(var(--raiox-ml-shell-pad-y) + 6px - (45px * 0.84 * 0.91) / 2);
+}
+
+.anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre .anuncios-raiox-shell__badge-img {
+  max-height: calc(38px * 0.84 * 0.91);
 }
 
 .anuncios-raiox-shell--ml-compare-fill.anuncios-raiox-shell--mercado_livre
@@ -1938,12 +1979,19 @@
   line-height: 1.35;
 }
 
+.anuncios-ad-sku-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .anuncios-ad-sku-label {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #9ca3af;
+  margin-right: 1px;
 }
 
 .anuncios-ad-sku-value {
@@ -3474,14 +3522,15 @@
   align-self: center;
 }
 
-.pricing-intelligence-page__identity-col .pricing-product-identity__raiox-meta .anuncios-raiox-compare__toolbar-meta-sku-prefix {
+.pricing-intelligence-page__identity-col .pricing-product-identity__raiox-meta .anuncios-raiox-compare__toolbar-meta-sku-prefix,
+.pricing-intelligence-page__identity-col .pricing-product-identity__raiox-meta .anuncios-ad-sku-label {
   font-size: calc(11px * var(--raiox-ml-calc-scale));
   line-height: 1;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: rgba(15, 23, 42, 0.5);
-  margin-right: 3px;
+  margin-right: 2px;
 }
 
 .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target {
@@ -3544,22 +3593,27 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .pricing-intelligence-page__identity-col
-    .pricing-product-identity__copy-target
-    .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+  .pricing-intelligence-page .pricing-product-identity__copy-target .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
     opacity: 0;
     pointer-events: none;
   }
 
-  .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target:hover .products-catalog__copy-btn,
-  .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target:focus-within .products-catalog__copy-btn {
+  .pricing-intelligence-page .pricing-product-identity__copy-target:hover .products-catalog__copy-btn,
+  .pricing-intelligence-page .pricing-product-identity__copy-target:focus-within .products-catalog__copy-btn {
     opacity: 1;
     pointer-events: auto;
   }
 
-  .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target:hover .anuncios-raiox-compare__toolbar-meta-text,
-  .pricing-intelligence-page__identity-col .pricing-product-identity__copy-target:focus-within .anuncios-raiox-compare__toolbar-meta-text {
+  .pricing-intelligence-page .pricing-product-identity__copy-target:hover .anuncios-raiox-compare__toolbar-meta-text,
+  .pricing-intelligence-page .pricing-product-identity__copy-target:focus-within .anuncios-raiox-compare__toolbar-meta-text {
     opacity: 0.92;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .pricing-intelligence-page .pricing-product-identity__copy-target .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0.52;
+    pointer-events: auto;
   }
 }
 
@@ -3917,6 +3971,13 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(37, 99, 235, 0.92);
+}
+
+.pricing-intelligence-page__simulation-price__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 4px;
 }
 
 .pricing-intelligence-page__simulation-price__grid {
@@ -5276,6 +5337,21 @@
   min-width: 0;
 }
 
+/* Títulos do modal (Raio-x) e do anúncio — +9% de respiro entre as linhas. */
+.anuncios-raiox-compare__title-stack,
+.vendas-sale-rayx__modal-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(4px * 1.09);
+  min-width: 0;
+}
+
+.anuncios-raiox-compare__title-stack .anuncios-sell-popover__title,
+.vendas-sale-rayx__modal-title-stack .anuncios-sell-popover__title {
+  margin: 0;
+}
+
 /* Toolbar + grade de cenários na mesma coluna (largura = faixa dos cards). */
 .anuncios-raiox-compare__stack {
   display: flex;
@@ -5294,6 +5370,43 @@
   align-self: stretch;
 }
 
+/* Raio-x portal: corpo do comparativo preenche a altura útil do shell. */
+.anuncios-raiox-shell--ml-compare-fill
+  .anuncios-sell-popover__panel--compare-near-full
+  > .anuncios-raiox-compare__title-stack {
+  flex-shrink: 0;
+}
+
+.anuncios-raiox-shell--ml-compare-fill
+  .anuncios-sell-popover__panel--compare-near-full
+  > .anuncios-compare-modal__body-scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.anuncios-raiox-shell--ml-compare-fill
+  .anuncios-sell-popover__panel--compare-near-full
+  > .anuncios-compare-modal__body-scroll
+  > .anuncios-raiox-compare--spacious {
+  flex: 1 1 0;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.anuncios-raiox-shell--ml-compare-fill .anuncios-raiox-compare--spacious .anuncios-raiox-compare__stack {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.anuncios-raiox-shell--ml-compare-fill .anuncios-raiox-compare--spacious .anuncios-raiox-compare__compare-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+}
+
 /* Rolagem no trilho direito do modal: padding separa cards da scrollbar. */
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__compare-scroll {
   flex: 1 1 auto;
@@ -5307,6 +5420,13 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
+}
+
+/* Raio-x portal: cards de cenário em vista cheia — sem trilho vertical interno. */
+.anuncios-raiox-shell--ml-compare-fill .anuncios-raiox-compare--spacious .anuncios-raiox-compare__compare-scroll {
+  overflow-y: visible;
+  scrollbar-gutter: auto;
+  padding-right: 12px;
 }
 
 .anuncios-raiox-compare--spacious.anuncios-raiox-compare--single-card .anuncios-raiox-compare__compare-scroll {
@@ -5633,7 +5753,8 @@
   align-self: center;
 }
 
-.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-sku-prefix {
+.anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-sku-prefix,
+.anuncios-raiox-compare--spacious .anuncios-ad-sku-label {
   /* Mesmo corpo que o número (SKU + valor na mesma linha óptica). */
   font-size: calc(11px * var(--raiox-ml-calc-scale));
   line-height: 1;
@@ -5641,7 +5762,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: rgba(15, 23, 42, 0.5);
-  margin-right: 3px;
+  margin-right: 2px;
 }
 
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-text {
@@ -5651,8 +5772,6 @@
 
 /* Copiar na toolbar do Raio-x: ícone colado ao ID/SKU (área clicável mínima sem “vão” visual). */
 .anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta .products-catalog__copy-btn {
-  opacity: 1;
-  pointer-events: auto;
   font-size: calc(13px * var(--raiox-ml-calc-scale));
   min-width: 1.35em;
   min-height: 22px;
@@ -5675,6 +5794,10 @@
   padding: 16px;
   box-sizing: border-box;
   pointer-events: none;
+}
+
+.anuncios-raiox-chart-mini-layer.anuncios-raiox-chart-mini-layer--above-sale-rayx {
+  z-index: 200120;
 }
 
 .anuncios-raiox-chart-mini__backdrop {
@@ -5909,6 +6032,35 @@
 
 .anuncios-raiox-chart-mini__context-copy {
   flex-shrink: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-block .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .anuncios-raiox-compare--spacious .anuncios-raiox-compare__copy-target .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .anuncios-raiox-chart-mini__context-meta .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-block:hover .products-catalog__copy-btn,
+  .anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-block:focus-within .products-catalog__copy-btn,
+  .anuncios-raiox-compare--spacious .anuncios-raiox-compare__copy-target:hover .products-catalog__copy-btn,
+  .anuncios-raiox-compare--spacious .anuncios-raiox-compare__copy-target:focus-within .products-catalog__copy-btn,
+  .anuncios-raiox-chart-mini__context-meta:hover .products-catalog__copy-btn,
+  .anuncios-raiox-chart-mini__context-meta:focus-within .products-catalog__copy-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Touch / pointer grosso: botão levemente visível (sem sobrescrever hover reveal no desktop) */
+@media (hover: none), (pointer: coarse) {
+  .anuncios-raiox-compare--spacious .anuncios-raiox-compare__toolbar-meta-block .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .anuncios-raiox-compare--spacious .anuncios-raiox-compare__copy-target .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .anuncios-raiox-chart-mini__context-meta .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0.52;
+    pointer-events: auto;
+  }
 }
 
 .anuncios-raiox-chart-mini__body {
@@ -7252,4 +7404,332 @@
   color: rgba(15, 23, 42, 0.55);
   max-width: 160px;
   word-break: break-all;
+}
+
+@media (max-width: 768px) {
+  .anuncios-catalog {
+    padding: 10px 2px 24px;
+  }
+
+  .anuncios-catalog__sync-actions {
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .anuncios-catalog__sync-actions > * {
+    flex: 1 1 180px;
+  }
+
+  .anuncios-catalog__kpis {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .anuncios-catalog__kpi-card {
+    min-height: 132px;
+    border-radius: 14px;
+  }
+
+  .anuncios-catalog__kpi-head {
+    padding: 10px 12px;
+  }
+
+  .anuncios-catalog__kpi-body {
+    padding: 10px 12px 12px;
+  }
+
+  .anuncios-catalog__sku-modal {
+    border-radius: 12px;
+    padding: 16px 14px 14px;
+  }
+
+  .anuncios-catalog__sku-modal-actions {
+    justify-content: stretch;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .anuncios-catalog__sku-modal-actions > * {
+    flex: 1 1 140px;
+  }
+}
+
+@media (max-width: 430px) {
+  .anuncios-catalog {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.anuncios-quick-cost-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 210000;
+  background: rgba(8, 15, 31, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.anuncios-quick-cost-modal {
+  width: min(454px, 100%);
+  border-radius: 18px;
+  border: 1px solid #5f9bff;
+  background: #fff;
+  box-shadow: 0 20px 52px rgba(12, 28, 56, 0.28);
+  padding: 18px;
+  animation: anunciosQuickCostModalIn 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.anuncios-quick-cost-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.anuncios-quick-cost-modal__title {
+  margin: 0;
+  font-size: 1.04rem;
+  color: #132441;
+}
+
+.anuncios-quick-cost-modal__close {
+  border: 0;
+  background: transparent;
+  color: #7e8aa1;
+  font-size: 0.92rem;
+  line-height: 1.1;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: color 140ms ease, transform 140ms ease;
+}
+
+.anuncios-quick-cost-modal__close:hover:not(:disabled),
+.anuncios-quick-cost-modal__close:focus-visible:not(:disabled) {
+  color: #4f5f7b;
+  transform: translateY(-1px);
+}
+
+.anuncios-quick-cost-modal__line {
+  display: contents;
+}
+
+.anuncios-quick-cost-modal__identity {
+  display: contents;
+}
+
+.anuncios-quick-cost-modal__product {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: row;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 14px;
+  border: 1px solid #d9e0eb;
+}
+
+.anuncios-quick-cost-modal__thumb {
+  width: 108px;
+  height: 108px;
+  border-radius: 8px;
+  border: 0;
+  object-fit: cover;
+  background: #fff;
+}
+
+.anuncios-quick-cost-modal__identity-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.anuncios-quick-cost-modal__thumb--placeholder {
+  background: linear-gradient(180deg, #edf2f8 0%, #e2e8f2 100%);
+}
+
+.anuncios-quick-cost-modal__name {
+  margin: 0;
+  color: var(--s7-orange, #ff8533);
+  font-weight: 700;
+  font-size: 0.83rem;
+  text-align: left;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.anuncios-quick-cost-modal__sku-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.anuncios-quick-cost-modal__sku {
+  margin: 0;
+  color: #637287;
+  font-size: 0.84rem;
+}
+
+.anuncios-quick-cost-modal__sku-copy {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.anuncios-quick-cost-modal__sku-row:hover .anuncios-quick-cost-modal__sku-copy,
+.anuncios-quick-cost-modal__sku-row:focus-within .anuncios-quick-cost-modal__sku-copy,
+.anuncios-quick-cost-modal__sku-copy.products-catalog__copy-btn--ok {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.anuncios-quick-cost-modal__body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.anuncios-quick-cost-modal__costs-col {
+  display: grid;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.anuncios-quick-cost-modal__body .s7-input__wrapper {
+  width: min(30%, 170px);
+  min-width: 170px;
+  max-width: 170px;
+  animation: anunciosQuickCostInputIn 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.anuncios-quick-cost-modal__body .s7-input__field {
+  height: 30px;
+  font-size: 0.8rem;
+  padding: 0 8px;
+}
+
+.anuncios-quick-cost-modal__body .s7-input__label {
+  font-size: 0.74rem;
+}
+
+.anuncios-quick-cost-modal__body .s7-input__wrapper:nth-child(1) {
+  animation-delay: 50ms;
+}
+
+.anuncios-quick-cost-modal__body .s7-input__wrapper:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.anuncios-quick-cost-modal__body .s7-input__wrapper:nth-child(3) {
+  animation-delay: 130ms;
+}
+
+.anuncios-quick-cost-modal__error {
+  margin: 2px 0 0;
+  width: 100%;
+  text-align: center;
+  color: #bf1f34;
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+
+.anuncios-quick-cost-modal__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.anuncios-quick-cost-modal__btn {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  height: 38px;
+  padding: 0 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.anuncios-quick-cost-modal__btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.anuncios-quick-cost-modal__btn--ghost {
+  border-color: rgba(18, 46, 99, 0.22);
+  color: #2b3a56;
+  background: #fff;
+}
+
+.anuncios-quick-cost-modal__btn--primary {
+  background: linear-gradient(90deg, #0f4fd5 0%, #225ee0 100%);
+  color: #fff;
+  min-width: 176px;
+}
+
+@media (max-width: 430px) {
+  .anuncios-quick-cost-modal__overlay {
+    padding: 10px;
+  }
+
+  .anuncios-quick-cost-modal {
+    border-radius: 14px;
+    padding: 13px;
+  }
+
+  .anuncios-quick-cost-modal__actions {
+    justify-content: stretch;
+  }
+
+  .anuncios-quick-cost-modal__footer-summary {
+    justify-content: stretch;
+  }
+
+  .anuncios-quick-cost-modal__product--footer {
+    width: 100%;
+  }
+
+  .anuncios-quick-cost-modal__body .s7-input__wrapper {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .anuncios-quick-cost-modal__btn {
+    flex: 1;
+  }
+}
+
+@keyframes anunciosQuickCostModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes anunciosQuickCostInputIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

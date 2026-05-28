@@ -79,7 +79,7 @@ export default function ContactModal({ onClose }) {
           </select>
 
           <label className="label">Mensagem</label>
-          <textarea name="message" placeholder="Digite sua mensagem" rows="6" required></textarea>
+          <textarea name="message" placeholder="Digite sua mensagem" rows="4" required></textarea>
 
           <button type="submit" disabled={loading}>
             {loading ? "Enviando..." : "Enviar mensagem"}

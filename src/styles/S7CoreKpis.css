@@ -4,6 +4,8 @@
    ====================================================================== */
 
 .s7-core-kpis.anuncios-catalog__kpis {
+  --s7-top-kpi-large-h: 264px;
+  --s7-top-kpi-right-h: 264px;
   margin-bottom: 20px;
   gap: 16px;
 }
@@ -14,6 +16,7 @@
 
 .s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-body {
   padding: 14px 16px 16px;
+  justify-content: space-between;
 }
 
 .s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-mini-head {
@@ -22,6 +25,24 @@
 
 .s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-mini-body {
   padding: 12px 14px 14px;
+}
+
+@media (min-width: 901px) {
+  .s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-card--large {
+    height: var(--s7-top-kpi-large-h);
+    min-height: var(--s7-top-kpi-large-h);
+    max-height: var(--s7-top-kpi-large-h);
+  }
+
+  .s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-minis {
+    height: var(--s7-top-kpi-right-h);
+    min-height: var(--s7-top-kpi-right-h);
+    max-height: var(--s7-top-kpi-right-h);
+  }
+
+  .s7-core-kpis.anuncios-catalog__kpis .anuncios-catalog__kpi-mini {
+    min-height: 0;
+  }
 }
 
 .anuncios-catalog__kpi-mini-hint {

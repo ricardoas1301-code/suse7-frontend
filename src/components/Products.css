@@ -5,10 +5,13 @@
 /* Reduz gutter lateral do Layout só nesta rota (mais área útil, estilo wide)
    padding-top: 0 — evita faixa entre navbar e cabeçalho sticky da grade (conteúdo “vazando”) */
 .page-content:has(.products-catalog),
-.page-content:has(.anuncios-catalog) {
+.page-content:has(.anuncios-catalog),
+.page-content:has(.vendas-page),
+.page-content:has(.relatorios-page) {
   padding-left: 4px;
   padding-right: 4px;
   padding-top: 0;
+  scrollbar-gutter: stable;
 }
 
 .products-catalog {
@@ -48,7 +51,7 @@
   margin-bottom: 12px;
 }
 
-/* Linha 1: busca + Novo produto | Linha 2: chips + Limpar filtros */
+/* Linha 1: busca full-width | Linha 2: chips + Limpar + ações à direita (paridade com Anúncios) */
 .products-catalog__controls {
   display: flex;
   flex-direction: column;
@@ -57,19 +60,79 @@
   padding: 2px 0 4px;
 }
 
-/* Busca + Novo produto na mesma linha (botão logo após o input) */
+/* ======================================================================
+   Card branco busca + filtros — paridade visual com Anúncios (ListingsWorkspace).
+   Acoplar junto a: .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card
+   Espaços laterais: leve inset + padding interno assimétrico (igual rota /anuncios).
+====================================================================== */
+
+.page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+.page-content .concorrencia-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+.page-content .clientes360-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+.page-content .relatorios-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card {
+  margin-bottom: 20px;
+  margin-left: clamp(0px, 0.5vw, 10px);
+  margin-right: clamp(0px, 0.5vw, 10px);
+  padding: 16px 28px 18px 48px;
+  box-sizing: border-box;
+  background: var(--s7-bg, #fff);
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 6px 20px rgba(15, 23, 42, 0.05);
+}
+
+@media (max-width: 768px) {
+  .page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+  .page-content .concorrencia-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+  .page-content .clientes360-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+  .page-content .relatorios-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card {
+    margin-bottom: 12px;
+    margin-left: clamp(0px, 0.35vw, 6px);
+    margin-right: clamp(0px, 0.35vw, 6px);
+    padding: 14px 20px 16px 30px;
+  }
+}
+
+/*
+ * Card busca + filtros (Anúncios, Precificações, Produtos, Concorrência, Clientes 360, Relatórios):
+ * largura do campo de busca = 37% da linha (redução de 63% em relação a ocupar ~100%).
+ * Altura segue o S7Input / tokens existentes — não alterar padding vertical aqui.
+ */
+.page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card
+  .products-catalog__controls-top
+  > .products-catalog__search-wrap {
+  flex: 0 1 37%;
+  width: 37%;
+  max-width: 37%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card
+    .products-catalog__controls-top
+    > .products-catalog__search-wrap {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 .products-catalog__controls-top {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
   gap: 12px 14px;
+  width: 100%;
 }
 
-/* Até ~414px de largura; encolhe no mobile; sem flex-grow para o botão ficar colado à direita do campo */
 .products-catalog__search-wrap {
-  flex: 0 1 414px;
+  flex: 1 1 auto;
   min-width: 0;
+  width: 100%;
   max-width: 100%;
 }
 
@@ -127,6 +190,43 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 9px;
+}
+
+/* Chips à esquerda; CTA à direita (Produtos: Novo produto; outras páginas: toolbar) */
+.products-catalog__filter-row--spread {
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+}
+
+.products-catalog__filter-row-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 9px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.products-catalog__filter-row-end {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .products-catalog__filter-row--spread {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .products-catalog__filter-row-end {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 .products-catalog__controls-actions {
@@ -1160,17 +1260,18 @@
   padding: 0;
   font-size: 14px;
   line-height: 1;
-  color: var(--s7-muted, #6b7280);
+  color: var(--s7-copy-btn-color, rgba(15, 23, 42, 0.38));
   transition: opacity 140ms ease, transform 160ms ease, color 160ms ease;
 }
 
-.products-catalog__copy-btn:hover {
+.products-catalog__copy-btn:hover,
+.products-catalog__copy-btn:focus-visible {
   transform: scale(1.08);
-  color: var(--s7-text, #0f172a);
+  color: var(--s7-copy-btn-color-active, var(--s7-text, #0f172a));
 }
 
 .products-catalog__copy-btn--ok {
-  color: var(--s7-success, #059669);
+  color: var(--s7-copy-btn-color-active, var(--s7-text, #0f172a));
 }
 
 /* Copiar: esconde ícones até hover na linha do nome ou do SKU (menos poluído).

@@ -13,8 +13,15 @@ export function getSaleHealthUi(f) {
   const h = f.health;
   const profitMissing = f.profit_brl == null || String(f.profit_brl).trim() === "";
   const marginMissing = f.margin_percent == null || String(f.margin_percent).trim() === "";
+  const marginN =
+    f.margin_percent != null && String(f.margin_percent).trim() !== ""
+      ? Number(String(f.margin_percent).replace(",", "."))
+      : NaN;
 
   if (h === "healthy") {
+    if (Number.isFinite(marginN) && marginN >= 20) {
+      return { badgeClass: "vendas-health-badge--healthy", label: "Excelente", showDot: true };
+    }
     return { badgeClass: "vendas-health-badge--healthy", label: "Saudável", showDot: true };
   }
   if (h === "critical") {
@@ -24,6 +31,9 @@ export function getSaleHealthUi(f) {
     return { badgeClass: "vendas-health-badge--unknown", label: "Sem dados", showDot: false };
   }
   if (h === "attention") {
+    if (Number.isFinite(marginN) && marginN < 5) {
+      return { badgeClass: "vendas-health-badge--warn", label: "Margem baixa", showDot: true };
+    }
     return { badgeClass: "vendas-health-badge--warn", label: "Atenção", showDot: true };
   }
   return { badgeClass: "vendas-health-badge--unknown", label: "Sem dados", showDot: false };

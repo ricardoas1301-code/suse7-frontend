@@ -41,6 +41,15 @@ import {
   X,
   Eye,
   Pencil,
+  CheckCircle2,
+  Shield,
+  Lock,
+  Layers,
+  Zap,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
 } from "lucide-react";
 
 export const iconsMap = {
@@ -84,6 +93,22 @@ export const iconsMap = {
   ads_filter_visits: Eye,
   filter_clear: RotateCcw,
   search: Search,
+  chevron_down: ChevronDown,
+  chevron_left: ChevronLeft,
+  chevron_right: ChevronRight,
+  calendar: CalendarDays,
   close: X,
   edit: Pencil,
+
+  /** Billing — timeline e experiência financeira (Fase 3.0.3) */
+  billing_check: CheckCircle2,
+  billing_alert: CircleAlert,
+  billing_refresh: RotateCcw,
+  billing_shield: Shield,
+  billing_bolt: Zap,
+  billing_clock: Clock,
+  billing_lock: Lock,
+  billing_layers: Layers,
+  billing_payment: Receipt,
+  billing_money: CircleDollarSign,
 };

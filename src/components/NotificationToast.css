@@ -10,7 +10,7 @@
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 9998;
+  z-index: var(--s7-z-toast, 300000);
   display: flex;
   flex-direction: column;
   gap: 12px;

@@ -1,3 +1,5 @@
+import { ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE } from "./notificationRoutingCatalog";
+
 export const NOTIFICATION_CHANNELS = {
   app: "app",
   email: "email",
@@ -98,6 +100,7 @@ export const NOTIFICATION_CATALOG = [
     items: [
       {
         type: NOTIFICATION_TYPES.NEGATIVE_SALE,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.NEGATIVE_SALE,
         label: "Venda com prejuízo",
         description: "Quando o lucro líquido da venda for menor que R$ 0,00.",
         priority: NOTIFICATION_PRIORITIES.critical,
@@ -105,6 +108,7 @@ export const NOTIFICATION_CATALOG = [
       },
       {
         type: NOTIFICATION_TYPES.LOW_MARGIN_SALE,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.LOW_MARGIN_SALE,
         label: "Venda com margem baixa",
         description: "Quando a margem líquida da venda for menor que 5%.",
         priority: NOTIFICATION_PRIORITIES.important,
@@ -112,6 +116,7 @@ export const NOTIFICATION_CATALOG = [
       },
       {
         type: NOTIFICATION_TYPES.DAILY_SALES_SUMMARY,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.DAILY_SALES_SUMMARY,
         label: "Resumo diário de vendas",
         description:
           "Resumo no fim do dia com total vendido, lucro total, margem média, quantidade de vendas e produtos mais vendidos.",
@@ -128,6 +133,7 @@ export const NOTIFICATION_CATALOG = [
     items: [
       {
         type: NOTIFICATION_TYPES.LOW_STOCK,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.LOW_STOCK,
         label: "Estoque baixo",
         description: "Produto com estoque abaixo do nível configurado.",
         priority: NOTIFICATION_PRIORITIES.important,
@@ -135,6 +141,7 @@ export const NOTIFICATION_CATALOG = [
       },
       {
         type: NOTIFICATION_TYPES.MIN_STOCK,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.MIN_STOCK,
         label: "Estoque abaixo do mínimo",
         description: "Produto abaixo do estoque mínimo definido pelo seller.",
         priority: NOTIFICATION_PRIORITIES.important,
@@ -142,6 +149,7 @@ export const NOTIFICATION_CATALOG = [
       },
       {
         type: NOTIFICATION_TYPES.OUT_OF_STOCK,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.OUT_OF_STOCK,
         label: "Estoque zerado",
         description: "Produto sem estoque disponível.",
         priority: NOTIFICATION_PRIORITIES.critical,
@@ -170,6 +178,7 @@ export const NOTIFICATION_CATALOG = [
     items: [
       {
         type: NOTIFICATION_TYPES.MARKETPLACE_PRICE_CHANGED,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.MARKETPLACE_PRICE_CHANGED,
         label: "Alteração de preço no marketplace",
         description: "Preço atual mudou em relação ao último snapshot salvo.",
         priority: NOTIFICATION_PRIORITIES.important,
@@ -177,6 +186,7 @@ export const NOTIFICATION_CATALOG = [
       },
       {
         type: NOTIFICATION_TYPES.MARKETPLACE_FEE_CHANGED,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.MARKETPLACE_FEE_CHANGED,
         label: "Alteração de comissão/tarifa",
         description: "Tarifa de venda/comissão mudou versus o snapshot anterior.",
         priority: NOTIFICATION_PRIORITIES.important,
@@ -184,6 +194,7 @@ export const NOTIFICATION_CATALOG = [
       },
       {
         type: NOTIFICATION_TYPES.MARKETPLACE_SHIPPING_CHANGED,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.MARKETPLACE_SHIPPING_CHANGED,
         label: "Alteração de frete",
         description: "Custo de frete do seller mudou versus o snapshot anterior.",
         priority: NOTIFICATION_PRIORITIES.important,
@@ -191,6 +202,7 @@ export const NOTIFICATION_CATALOG = [
       },
       {
         type: NOTIFICATION_TYPES.LISTING_COMPETITIVENESS_LOST,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.LISTING_COMPETITIVENESS_LOST,
         label: "Anúncio com perda de competitividade",
         description: "Quando o anúncio perder posição, relevância ou competitividade.",
         priority: NOTIFICATION_PRIORITIES.medium,
@@ -199,6 +211,7 @@ export const NOTIFICATION_CATALOG = [
       },
       {
         type: NOTIFICATION_TYPES.LISTING_OPPORTUNITY_FOUND,
+        routingKey: ROUTING_KEY_BY_LEGACY_NOTIFICATION_TYPE.LISTING_OPPORTUNITY_FOUND,
         label: "Anúncio com melhoria de oportunidade",
         description: "Quando houver potencial de melhorar margem ou preço.",
         priority: NOTIFICATION_PRIORITIES.info,

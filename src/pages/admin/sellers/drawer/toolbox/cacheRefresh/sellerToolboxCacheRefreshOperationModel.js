@@ -10,6 +10,7 @@ import {
   SELLER_TOOLBOX_RELOAD_PANEL_DATA_ACTION_ID,
   executeFakeReloadPanelData,
 } from "./sellerToolboxReloadPanelDataOperation";
+import { DEV_CENTER_CATEGORIAS_RELOAD } from "../../../../../../components/devCenter/operational/devCenterOperationalReloadModel";
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxOperationQuickReason[]} */
 export const SELLER_TOOLBOX_REFRESH_SELLER_QUICK_REASONS = [
@@ -152,6 +153,10 @@ export const SELLER_TOOLBOX_REFRESH_SELLER_OPERATION_CONFIG = {
   handler: executeFakeRefreshSeller,
   quickReasons: SELLER_TOOLBOX_REFRESH_SELLER_QUICK_REASONS,
   applyCacheRefreshResult: true,
+  recarregarCategoriasOperacionais: [
+    DEV_CENTER_CATEGORIAS_RELOAD.RESUMO_SELLER,
+    DEV_CENTER_CATEGORIAS_RELOAD.LISTA_SELLERS,
+  ],
   buildHandlerContext: ({ metadata, cacheRefresh }) =>
     extractRefreshSellerHandlerContext({ metadata, cacheRefresh }),
   devLog: {
@@ -203,6 +208,7 @@ export const SELLER_TOOLBOX_CLEAR_OPERATIONAL_CACHE_OPERATION_CONFIG = {
   handler: executeFakeClearOperationalCache,
   quickReasons: SELLER_TOOLBOX_CLEAR_OPERATIONAL_CACHE_QUICK_REASONS,
   applyCacheClearResult: true,
+  recarregarCategoriasOperacionais: [DEV_CENTER_CATEGORIAS_RELOAD.TOOLBOX],
   buildHandlerContext: ({ metadata, cacheRefresh }) =>
     extractClearOperationalCacheHandlerContext({ metadata, cacheRefresh }),
   devLog: {
@@ -254,6 +260,7 @@ export const SELLER_TOOLBOX_RELOAD_PANEL_DATA_OPERATION_CONFIG = {
   handler: executeFakeReloadPanelData,
   quickReasons: SELLER_TOOLBOX_RELOAD_PANEL_DATA_QUICK_REASONS,
   applyCacheReloadResult: true,
+  recarregarPorPaineisDoResultado: true,
   buildHandlerContext: ({ metadata, cacheRefresh }) =>
     extractReloadPanelDataHandlerContext({ metadata, cacheRefresh }),
   devLog: {

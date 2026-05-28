@@ -37,6 +37,34 @@
   background: var(--s7-admin-bg, #f4f6f9);
 }
 
+.dev-center--gate-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 32px 20px;
+}
+
+.dev-center__retry-btn {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--s7-admin-border, #e5e7eb);
+  border-radius: var(--s7-admin-radius-sm, 6px);
+  background: var(--s7-admin-surface, #fff);
+  color: var(--s7-admin-text, #111827);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.dev-center__retry-btn:hover {
+  background: var(--s7-admin-surface-soft, #f8fafc);
+  border-color: var(--s7-admin-accent, #2563eb);
+}
+
 .dev-center--forbidden .s7-title {
   margin: 0;
 }

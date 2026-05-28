@@ -1,4 +1,8 @@
 import { buildApiUrl, apiFetch } from "../config/api";
+import {
+  ensureAuthSessionBootstrapped,
+  getAuthBootstrapUser,
+} from "../auth/authBootstrapService";
 import { supabase } from "../supabaseClient";
 import { NOTIFICATION_TYPES } from "../constants/notificationPreferences";
 import { triggerNotificationEvent } from "./notificationEngine";
@@ -108,9 +112,8 @@ export async function scanSalesEvents(userContext) {
 }
 
 export async function scanProductEvents(userContext) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  await ensureAuthSessionBootstrapped();
+  const user = getAuthBootstrapUser();
   if (!user) return [];
 
   const { data, error } = await supabase

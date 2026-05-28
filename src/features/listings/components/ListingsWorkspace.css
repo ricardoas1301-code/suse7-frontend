@@ -11,3 +11,5 @@
 .listings-workspace--precificacoes .anuncios-catalog__kpis {
   border-radius: var(--products-catalog-table-radius, 16px);
 }
+
+/* Card de filtros: estilos em Products.css — classe .s7-catalog-filter-card no Anuncios.jsx */

@@ -1,0 +1,289 @@
+.s7-billing-revenue-health {
+  background: #fff;
+  border: 1px solid #dbe5f2;
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+  animation: s7-billing-fade-in 0.35s ease-out both;
+}
+
+.s7-billing-revenue-health--success {
+  border-color: #86efac;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 62%);
+}
+
+.s7-billing-revenue-health--warning {
+  border-color: #fcd34d;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 62%);
+}
+
+.s7-billing-revenue-health--danger {
+  border-color: #fca5a5;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 62%);
+}
+
+.s7-billing-revenue-health--unavailable {
+  border-color: #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 62%);
+}
+
+.s7-billing-revenue-health__layout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: center;
+}
+
+.s7-billing-revenue-health__title-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.s7-billing-revenue-health__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #2563eb;
+}
+
+.s7-billing-revenue-health--success .s7-billing-revenue-health__icon {
+  color: #15803d;
+}
+
+.s7-billing-revenue-health--warning .s7-billing-revenue-health__icon {
+  color: #b45309;
+}
+
+.s7-billing-revenue-health--danger .s7-billing-revenue-health__icon {
+  color: #b91c1c;
+}
+
+.s7-billing-revenue-health__eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.s7-billing-revenue-health__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.s7-billing-revenue-health__insight {
+  margin: 14px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-billing-revenue-health__description {
+  margin: 8px 0 0;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.s7-billing-revenue-health__recommendation {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.s7-billing-revenue-health__action {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.s7-billing-revenue-health__score-panel {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.s7-billing-revenue-health__ring {
+  --s7-health-score: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at center, #fff 58%, transparent 59%),
+    conic-gradient(#2563eb calc(var(--s7-health-score) * 1%), #e2e8f0 0);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+}
+
+.s7-billing-revenue-health--success .s7-billing-revenue-health__ring {
+  background:
+    radial-gradient(circle at center, #fff 58%, transparent 59%),
+    conic-gradient(#16a34a calc(var(--s7-health-score) * 1%), #e2e8f0 0);
+}
+
+.s7-billing-revenue-health--warning .s7-billing-revenue-health__ring {
+  background:
+    radial-gradient(circle at center, #fff 58%, transparent 59%),
+    conic-gradient(#d97706 calc(var(--s7-health-score) * 1%), #e2e8f0 0);
+}
+
+.s7-billing-revenue-health--danger .s7-billing-revenue-health__ring {
+  background:
+    radial-gradient(circle at center, #fff 58%, transparent 59%),
+    conic-gradient(#dc2626 calc(var(--s7-health-score) * 1%), #e2e8f0 0);
+}
+
+.s7-billing-revenue-health__ring-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.s7-billing-revenue-health__progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.s7-billing-revenue-health__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  transition: width 0.45s ease;
+}
+
+.s7-billing-revenue-health--success .s7-billing-revenue-health__progress-fill {
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+}
+
+.s7-billing-revenue-health--warning .s7-billing-revenue-health__progress-fill {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+}
+
+.s7-billing-revenue-health--danger .s7-billing-revenue-health__progress-fill {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+}
+
+.s7-billing-revenue-health__meta {
+  margin: 0;
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+}
+
+.s7-billing-revenue-health--loading {
+  display: grid;
+  gap: 12px;
+}
+
+.s7-billing-revenue-health__skeleton {
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: s7-billing-revenue-health-shimmer 1.2s ease-in-out infinite;
+}
+
+.s7-billing-revenue-health__skeleton--title {
+  height: 24px;
+  width: 48%;
+}
+
+.s7-billing-revenue-health__skeleton--ring {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+}
+
+.s7-billing-revenue-health__skeleton--short {
+  width: 42%;
+}
+
+.s7-billing-revenue-health--error {
+  display: grid;
+  gap: 10px;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.s7-billing-revenue-health__error {
+  margin: 0;
+  color: #b91c1c;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+@keyframes s7-billing-revenue-health-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .s7-billing-revenue-health__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .s7-billing-revenue-health__score-panel {
+    justify-items: start;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "ring badge"
+      "progress progress"
+      "meta meta";
+    column-gap: 14px;
+    row-gap: 8px;
+    align-items: center;
+  }
+
+  .s7-billing-revenue-health__ring {
+    grid-area: ring;
+    width: 72px;
+    height: 72px;
+  }
+
+  .s7-billing-revenue-health__score-panel .s7-billing-status-badge {
+    grid-area: badge;
+    align-self: center;
+  }
+
+  .s7-billing-revenue-health__progress {
+    grid-area: progress;
+  }
+
+  .s7-billing-revenue-health__meta {
+    grid-area: meta;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s7-billing-revenue-health,
+  .s7-billing-revenue-health__progress-fill {
+    animation: none;
+    transition: none;
+  }
+}

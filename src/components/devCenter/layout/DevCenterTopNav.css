@@ -4,6 +4,8 @@
   position: relative;
   flex-shrink: 0;
   z-index: var(--s7-z-sticky, 100);
+  /* -30% vs Seller — libera largura para "Caixa de Ferramentas" */
+  --s7-topnav-items-gap: calc(18px * 0.7);
 }
 
 .dc-topnav__bar {
@@ -175,7 +177,7 @@
   }
 
   .dc-topnav__menu {
-    gap: 10px;
+    gap: calc(10px * 0.7);
   }
 
   .dc-topnav__actions {
@@ -185,7 +187,7 @@
 
 @media (max-width: 900px) {
   .dc-topnav__menu {
-    gap: 8px;
+    gap: calc(8px * 0.7);
   }
 
   .dc-topnav__link span {

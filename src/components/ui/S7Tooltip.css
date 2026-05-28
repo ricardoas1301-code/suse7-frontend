@@ -97,3 +97,73 @@
   color: inherit;
   stroke: currentColor;
 }
+
+/* ======================================================
+   TOOLTIP PORTAL (texto — S7Tooltip modo copy / DS)
+   position: fixed no body; acima de modais; abaixo do toast
+====================================================== */
+
+.s7-tooltip-portal-root {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  max-width: 100%;
+}
+
+.s7-tooltip-portal__bubble {
+  position: relative;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 56px;
+  max-width: min(240px, calc(100vw - 16px));
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--s7-tooltip-bg);
+  color: var(--s7-tooltip-text);
+  border: 1px solid var(--s7-tooltip-border);
+  box-shadow: var(--s7-tooltip-shadow);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  animation: s7-tooltip-portal-in 0.15s ease-out;
+}
+
+.s7-tooltip-portal__bubble--wrap {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  max-width: min(320px, calc(100vw - 16px));
+}
+
+.s7-tooltip-portal__bubble--bottom-start::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: var(--s7-tooltip-arrow-left, 14px);
+  border: 5px solid transparent;
+  border-bottom-color: var(--s7-tooltip-bg);
+}
+
+.s7-tooltip-portal__bubble--top-start::before {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: var(--s7-tooltip-arrow-left, 14px);
+  border: 5px solid transparent;
+  border-top-color: var(--s7-tooltip-bg);
+}
+
+@keyframes s7-tooltip-portal-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

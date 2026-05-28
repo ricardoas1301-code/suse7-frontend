@@ -1,0 +1,591 @@
+/* ======================================================================
+
+   Seletor de período premium — Vendas
+
+   ====================================================================== */
+
+
+
+.vendas-period-picker {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  width: fit-content;
+
+  max-width: 100%;
+
+  min-width: 0;
+
+}
+
+
+
+.vendas-period-picker__trigger {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  width: fit-content;
+
+  max-width: min(100%, 26rem);
+
+  min-height: 36px;
+
+  padding: 0 12px;
+
+  border-radius: 10px;
+
+  border: 1px solid rgba(148, 163, 184, 0.45);
+
+  background: #ffffff;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  color: #0f172a;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  transition:
+
+    border-color 0.15s ease,
+
+    box-shadow 0.15s ease;
+
+}
+
+
+
+.vendas-period-picker__trigger:hover {
+
+  border-color: rgba(255, 133, 51, 0.45);
+
+}
+
+
+
+.vendas-period-picker__trigger:focus-visible {
+
+  outline: none;
+
+  border-color: rgba(37, 99, 235, 0.55);
+
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+
+}
+
+
+
+.vendas-period-picker__trigger-icon {
+
+  flex: 0 0 auto;
+
+  color: var(--s7-orange, #ff8533);
+
+}
+
+
+
+.vendas-period-picker__trigger-text {
+
+  flex: 1 1 auto;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+
+
+.vendas-period-picker__trigger-chevron {
+
+  flex: 0 0 auto;
+
+  color: #64748b;
+
+}
+
+
+
+.vendas-period-picker__panel {
+
+  box-sizing: border-box;
+
+  width: min(720px, calc(100vw - 20px));
+
+  overflow: auto;
+
+  overscroll-behavior: contain;
+
+  border-radius: 14px;
+
+  border: 1px solid rgba(15, 23, 42, 0.1);
+
+  background: #ffffff;
+
+  box-shadow:
+
+    0 16px 40px rgba(15, 23, 42, 0.14),
+
+    0 4px 12px rgba(15, 23, 42, 0.06);
+
+}
+
+
+
+.vendas-period-picker__panel-inner {
+
+  display: grid;
+
+  grid-template-columns: minmax(0, 1fr) auto;
+
+  gap: 0;
+
+  min-width: 0;
+
+}
+
+
+
+.vendas-period-picker__calendars {
+
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 8px;
+
+  padding: 14px 12px 10px;
+
+  min-width: 0;
+
+}
+
+
+
+.vendas-period-picker__presets {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding: 14px 12px;
+
+  border-left: 1px solid rgba(148, 163, 184, 0.2);
+
+  min-width: 148px;
+
+  background: #f8fafc;
+
+}
+
+
+
+.vendas-period-picker__preset {
+
+  height: 34px;
+
+  padding: 0 12px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  color: #475569;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: background 0.12s ease;
+
+}
+
+
+
+.vendas-period-picker__preset:hover {
+
+  background: rgba(255, 255, 255, 0.9);
+
+  color: #0f172a;
+
+}
+
+
+
+.vendas-period-picker__preset--active {
+
+  background: #ffffff;
+
+  color: #c2410c;
+
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+
+}
+
+
+
+.vendas-period-picker__month {
+
+  min-width: 0;
+
+}
+
+
+
+.vendas-period-picker__month-head {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 6px;
+
+  margin-bottom: 8px;
+
+}
+
+
+
+.vendas-period-picker__month-title {
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  color: #0f172a;
+
+  text-transform: capitalize;
+
+}
+
+
+
+.vendas-period-picker__nav {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 28px;
+
+  height: 28px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #64748b;
+
+  cursor: pointer;
+
+}
+
+
+
+.vendas-period-picker__nav:hover {
+
+  background: #f1f5f9;
+
+  color: #0f172a;
+
+}
+
+
+
+.vendas-period-picker__weekdays {
+
+  display: grid;
+
+  grid-template-columns: repeat(7, 1fr);
+
+  gap: 2px;
+
+  margin-bottom: 4px;
+
+}
+
+
+
+.vendas-period-picker__weekday {
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  color: #94a3b8;
+
+  text-align: center;
+
+  line-height: 1.2;
+
+}
+
+
+
+.vendas-period-picker__days {
+
+  display: grid;
+
+  grid-template-columns: repeat(7, 1fr);
+
+  gap: 2px;
+
+}
+
+
+
+.vendas-period-picker__day {
+
+  height: 32px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  font-size: 12px;
+
+  font-weight: 500;
+
+  color: #0f172a;
+
+  cursor: pointer;
+
+}
+
+
+
+.vendas-period-picker__day--outside {
+
+  color: #cbd5e1;
+
+}
+
+
+
+.vendas-period-picker__day--in-range {
+
+  background: rgba(255, 133, 51, 0.12);
+
+  border-radius: 0;
+
+}
+
+
+
+.vendas-period-picker__day--between {
+
+  color: #9a3412;
+
+}
+
+
+
+.vendas-period-picker__day--start,
+
+.vendas-period-picker__day--end {
+
+  background: var(--s7-orange, #ff8533);
+
+  color: #ffffff;
+
+  font-weight: 700;
+
+  border-radius: 8px;
+
+}
+
+
+
+.vendas-period-picker__day--start.vendas-period-picker__day--in-range {
+
+  border-radius: 8px 0 0 8px;
+
+}
+
+
+
+.vendas-period-picker__day--end.vendas-period-picker__day--in-range {
+
+  border-radius: 0 8px 8px 0;
+
+}
+
+
+
+.vendas-period-picker__day--start.vendas-period-picker__day--end {
+
+  border-radius: 8px;
+
+}
+
+
+
+.vendas-period-picker__footer {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 10px 14px 12px;
+
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+
+  background: #fafbfc;
+
+}
+
+
+
+.vendas-period-picker__draft-label {
+
+  margin: 0;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  color: #64748b;
+
+}
+
+
+
+.vendas-period-picker__actions {
+
+  display: flex;
+
+  gap: 8px;
+
+  margin-left: auto;
+
+}
+
+
+
+.vendas-period-picker__btn {
+
+  height: 34px;
+
+  padding: 0 16px;
+
+  border-radius: 10px;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  border: 1px solid transparent;
+
+}
+
+
+
+.vendas-period-picker__btn--ghost {
+
+  background: #ffffff;
+
+  border-color: rgba(148, 163, 184, 0.45);
+
+  color: #475569;
+
+}
+
+
+
+.vendas-period-picker__btn--primary {
+
+  background: var(--s7-orange, #ff8533);
+
+  color: #ffffff;
+
+  border-color: transparent;
+
+}
+
+
+
+.vendas-period-picker__btn--primary:disabled {
+
+  opacity: 0.45;
+
+  cursor: not-allowed;
+
+}
+
+
+
+@media (max-width: 768px) {
+
+  .vendas-period-picker__panel-inner {
+
+    grid-template-columns: minmax(0, 1fr);
+
+  }
+
+
+
+  .vendas-period-picker__presets {
+
+    flex-direction: row;
+
+    flex-wrap: wrap;
+
+    border-left: none;
+
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+
+    min-width: 0;
+
+  }
+
+
+
+  .vendas-period-picker__calendars {
+
+    grid-template-columns: minmax(0, 1fr);
+
+  }
+
+}
+
+

@@ -1,0 +1,14 @@
+/* ======================================================================
+   Relatórios — layout wide + espaçamento do empty state
+====================================================================== */
+
+.relatorios-page {
+  padding: 10px clamp(4px, 0.65vw, 10px) 44px;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.relatorios-page__empty {
+  margin-top: 8px;
+}

@@ -1,0 +1,24 @@
+/* ======================================================
+   DESIGN TOKENS — ADMIN (Dev Center)
+   Identidade visual separada do seller — neutro, premium, escalável.
+   Consumo principal: .dc-shell e descendentes admin (.dc-*)
+====================================================== */
+
+:root {
+  --s7-admin-bg: #f4f6f9;
+  --s7-admin-surface: #ffffff;
+  --s7-admin-surface-soft: #f8fafc;
+  --s7-admin-border: rgba(15, 23, 42, 0.08);
+  --s7-admin-border-strong: rgba(15, 23, 42, 0.12);
+  --s7-admin-text: #0f172a;
+  --s7-admin-muted: #64748b;
+  --s7-admin-accent: #334155;
+  --s7-admin-accent-soft: rgba(51, 65, 85, 0.08);
+  --s7-admin-sidebar: #ffffff;
+  --s7-admin-hover: rgba(15, 23, 42, 0.04);
+  --s7-admin-active: rgba(15, 23, 42, 0.06);
+  --s7-admin-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --s7-admin-shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --s7-admin-radius: 12px;
+  --s7-admin-radius-lg: 14px;
+}

@@ -1,18 +1,19 @@
 // ======================================================
-// HOOK: useCopyFeedback
-// Mostra ✓ por 5 segundos após copiar texto
+// HOOK: useCopyFeedback (LEGADO — depreciado)
+//
+// Substituir por S7CopyButton + useCopyToClipboard (padrão oficial Suse7).
+// Mantido temporariamente para compatibilidade; não usar em código novo.
 // ======================================================
 
 import { useState } from "react";
 
+/** @deprecated Use S7CopyButton ou useCopyToClipboard */
 export function useCopyFeedback() {
   const [copiedKey, setCopiedKey] = useState(null);
 
   function handleCopy(text, key) {
     navigator.clipboard.writeText(text ?? "");
-    // feedback imediato
     setCopiedKey(key);
-    // mantém o check visível por 6 segundos
     setTimeout(() => {
       setCopiedKey(null);
     }, 6000);

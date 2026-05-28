@@ -31,6 +31,9 @@ Centralizar cores principais do Suse7
   /* ERROR */
   --s7-color-error: #dc2626;
 
+  /** Status venda — padrão Mercado Livre (ex.: “A caminho”) */
+  --s7-status-success: #00a650;
+
   /**
    * LARANJA SUSE7 — tom de referência da faixa de tabelas (vivo, saturado).
    * Faixa em gradiente: #ff914d (topo) → #ff7a21 (base); sólido médio #ff8533.

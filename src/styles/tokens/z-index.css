@@ -1,0 +1,16 @@
+/* ======================================================
+   DESIGN TOKENS — Z-INDEX (camadas globais)
+   Maior número = mais à frente.
+   Referência: Raio-x portal ~200100; modais topo ~210500.
+====================================================== */
+
+:root {
+  --s7-z-modal: 200100;
+  --s7-z-modal-top: 210500;
+  /** Tooltips — acima de modais/cards; abaixo do toast */
+  --s7-z-tooltip: 290000;
+  /** Toast / notificações — sempre acima de modais e backdrops */
+  --s7-z-toast: 300000;
+  /** Drawers admin (Dev Center) — acima do shell, abaixo de modais topo */
+  --s7-z-drawer: 210400;
+}

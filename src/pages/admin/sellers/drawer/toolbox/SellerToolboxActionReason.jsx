@@ -32,6 +32,7 @@ import {
   createSubscriptionManagementAuditEntry,
   isSubscriptionManagementAuditableOperation,
 } from "./subscriptionManagement/subscriptionManagementAuditModel";
+import { useDevCenterOperationalReloadOpcional } from "../../../../../components/devCenter/operational";
 import { SELLER_TOOLBOX_OPERATION_CATEGORIES } from "./sellerToolboxOperationalLog";
 import "./SellerToolboxActionReason.css";
 
@@ -65,6 +66,7 @@ function SellerToolboxActionReasonOverlay() {
     useAccountsSyncView();
   const { currentState: subscriptionManagementState, applySubscriptionManagementResult, appendAuditLog } =
     useSubscriptionManagementView();
+  const reloadOperacional = useDevCenterOperationalReloadOpcional();
   const reasonRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
   const loggedOpenRef = useRef(false);
 
@@ -229,6 +231,20 @@ function SellerToolboxActionReasonOverlay() {
               applyReloadPanelResult(data);
             }
 
+            if (config.recarregarCategoriasOperacionais?.length && reloadOperacional) {
+              void reloadOperacional.recarregarCategorias(config.recarregarCategoriasOperacionais);
+            }
+
+            if (
+              config.recarregarPorPaineisDoResultado &&
+              reloadOperacional &&
+              Array.isArray(data.reloadedPanels)
+            ) {
+              void reloadOperacional.recarregarPorPaineis(
+                data.reloadedPanels.map((painel) => String(painel)),
+              );
+            }
+
             if (config.applySalesReimportResult) {
               applySalesReimportResult(data);
             }
@@ -365,6 +381,7 @@ function SellerToolboxActionReasonOverlay() {
       subscriptionManagementState,
       applySubscriptionManagementResult,
       appendAuditLog,
+      reloadOperacional,
     ],
   );
 

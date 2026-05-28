@@ -2,6 +2,7 @@
 // src/App.jsx — ROTAS PRINCIPAIS DO SUSE7
 // ======================================================================
 
+import { useEffect } from "react";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -11,15 +12,13 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import { useState, useEffect } from "react";
 import "./App.css";
 import "./global.css";
 import "./styles/Suse7-Design-System.css";
 import "./styles/S7CoreKpis.css";
 import "./styles/s7-sticky-filters.css";
 
-// Supabase
-import { supabase } from "./supabaseClient";
+import { useAuthBootstrap } from "./contexts/AuthBootstrapContext";
 
 // Layout e páginas principais
 import Layout from "./components/Layout";
@@ -94,17 +93,7 @@ const Configuracoes = () => <h1>Configurações</h1>;
 // AUTH WRAPPER
 // ======================================================================
 function AuthOutlet() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setLoading(false);
-    };
-    load();
-  }, []);
+  const { loading, session } = useAuthBootstrap();
 
   if (loading) return <div>Carregando...</div>;
   return session ? <Outlet /> : <Navigate to="/login" replace />;

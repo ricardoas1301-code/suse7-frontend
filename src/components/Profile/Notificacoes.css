@@ -251,6 +251,28 @@
   border-left: 4px solid #93c5fd;
 }
 
+/* Resumo de roteamento (Fase 3) — dados de GET /api/notifications/routing-summary */
+.notif-routing-summary-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin: 8px 0 12px;
+}
+
+.notif-routing-summary-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1e3a5f;
+}
+
+.notif-routing-summary-badge--muted {
+  background: var(--s7-surface-muted, #f1f5f9);
+  color: var(--s7-muted, #64748b);
+}
+
 @media (max-width: 720px) {
   .notif-page {
     max-width: 100%;

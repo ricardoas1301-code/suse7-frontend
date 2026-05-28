@@ -3,18 +3,18 @@
    Estrutura principal do fundo que centraliza todo o conteúdo
    ===================================================================== */
 .login-bg {
-  background: #f5f7ff;          /* Cor suave para o fundo */
-  min-height: 100vh;            /* Ocupa toda a altura da tela */
-  display: flex;                /* Habilita flexbox */
-  flex-direction: column;       /* Elementos organizados na vertical */
-  justify-content: space-evenly;/* Espaço distribuído entre box e rodapé */
-  align-items: center;          /* Centraliza horizontalmente */
-  padding: 20px 0;              /* Espaçamento superior e inferior */
-}
-
-/* Remove barra de rolagem horizontal (caso algo estoure o layout) */
-body, html {
+  background: #f5f7ff;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 
@@ -23,14 +23,19 @@ body, html {
    Caixa branca com sombra e bordas arredondadas
    ===================================================================== */
 .login-box {
-  background: #ffffff;           /* Fundo branco */
-  width: 100%;                   /* Ocupa toda a largura possível */
-  max-width: 380px;              /* Largura máxima para evitar ficar grande */
-  padding: 50px;                 /* Espaçamento interno */
-  border-radius: 18px;           /* Bordas arredondadas premium */
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06); /* Sombra suave */
-  text-align: center;            /* Centraliza conteúdo interno */
-  margin-top: -20px; 
+  background: #ffffff;
+  width: 100%;
+  max-width: 380px;
+  padding: clamp(18px, 3.2dvh, 28px) clamp(16px, 4vw, 22px);
+  border-radius: 16px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  /* Column flex so every row (incl. password wrapper) stretches to the same width as the e-mail field */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 
@@ -38,9 +43,10 @@ body, html {
    LOGO — Imagem superior do Suse7
    ===================================================================== */
 .login-logo {
-  width: 133px;                  /* Tamanho da logo */
-  margin: 0 auto -33px auto;      /* Centraliza + margem inferior */
-  display: block;                /* Força comportamento de bloco */
+  width: clamp(104px, 28vw, 128px);
+  margin: 0 auto -22px auto;
+  display: block;
+  align-self: center;
 }
 
 
@@ -48,10 +54,10 @@ body, html {
    TÍTULO DO FORMULÁRIO
    ===================================================================== */
 .login-subtitle {
-  font-size: 20px;               /* Tamanho do texto */
-  font-weight: 600;              /* Peso da fonte */
-  color: #333;                   /* Cor escura */
-  margin-bottom: 25px;           /* Espaço inferior */
+  font-size: clamp(17px, 2.4dvh, 20px);
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 14px;
 }
 
 
@@ -59,12 +65,12 @@ body, html {
    LABELS DOS INPUTS — Titulos acima das caixas de texto
    ===================================================================== */
 .login-label {
-  display: block;                /* Cada label ocupa a linha inteira */
-  text-align: left;              /* Alinhamento à esquerda */
-  font-size: 14px;               /* Tamanho da fonte */
-  font-weight: 500;              /* Peso médio */
-  color: #4a4a4a;                /* Cor neutra escura */
-  margin-bottom: 5px;            /* Espaço abaixo do label */
+  display: block;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a4a4a;
+  margin-bottom: 4px;
 }
 
 
@@ -72,14 +78,18 @@ body, html {
    INPUTS PADRÃO SUSE7 — Campos de email e senha
    ===================================================================== */
 .login-input {
-  width: 100%;                   /* Ocupa 100% da largura do card */
-  padding: 12px 16px;            /* Altura e espaçamento interno */
-  border-radius: 10px;           /* Cantos arredondados */
-  border: 1px solid #cfd7e3;     /* Borda cinza suave */
-  background: #f1f5ff;           /* Fundo azul muito claro */
-  font-size: 14px;               /* Tamanho do texto */
-  margin-bottom: 18px;           /* Espaço inferior */
-  box-sizing: border-box;        /* Inclui padding dentro da largura */
+  width: 100%;
+  display: block;
+  height: 40px;
+  padding: 10px 14px;
+  line-height: 1.2;
+  border-radius: 10px;
+  border: 1px solid #cfd7e3;
+  background: #f1f5ff;
+  font-size: 14px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  appearance: none;
 }
 
 /* Estilo do input quando recebe foco */
@@ -113,17 +123,18 @@ body, html {
    BOTÃO ENTRAR — Botão principal
    ===================================================================== */
 .login-submit {
-  width: 100%;                   /* Largura total */
-  padding: 14px;                 /* Altura confortável */
-  background: #2563eb;           /* Azul principal */
-  color: white;                  /* Texto branco */
-  border: none;                  /* Sem borda */
-  border-radius: 12px;           /* Bordas arredondadas */
-  font-weight: 600;              /* Negrito leve */
-  font-size: 15px;               /* Tamanho do texto */
-  cursor: pointer;               /* Mãozinha ao passar o mouse */
-  transition: 0.2s;              /* Suavidade no hover */
-  margin-bottom: -10px;
+  width: 100%;
+  padding: 11px 14px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-bottom: 0;
+  box-sizing: border-box;
 }
 
 /* Efeito ao passar o mouse no botão */
@@ -136,9 +147,9 @@ body, html {
    DIVISOR ENTRE LOGIN E GOOGLE
    ===================================================================== */
 .login-divider {
-  margin: 25px 0 20px 0;         /* Espaços verticais */
-  color: #727272;                /* Cinza médio */
-  font-size: 14px;               /* Tamanho da fonte */
+  margin: 14px 0 12px 0;
+  color: #727272;
+  font-size: 13px;
 }
 
 
@@ -146,20 +157,21 @@ body, html {
    BOTÃO GOOGLE — Login com Google
    ===================================================================== */
 .login-google-btn {
-  width: 100%;                   /* Botão largo */
-  padding: 12px;                 /* Altura */
-  border: 1px solid #d7d7d7;     /* Borda cinza */
-  border-radius: 12px;           /* Bordas arredondadas */
-  background: #ffffff;           /* Fundo branco */
-  cursor: pointer;               /* Ação de clique */
-  display: flex;                 /* Layout horizontal */
-  justify-content: center;       /* Centraliza conteúdo */
-  align-items: center;           /* Alinha verticalmente */
-  gap: 8px;                      /* Espaço entre logo e texto */
-  transition: 0.2s;              /* Efeito no hover */
-  font-size: 15px;               /* Tamanho do texto */
-  font-weight: 500;              /* Peso médio */
-  color: #555;                   /* Cinza escuro */
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d7d7d7;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  box-sizing: border-box;
 }
 
 .login-google-btn:hover {
@@ -177,7 +189,9 @@ body, html {
    LINK: "Ainda não tem cadastro?"
    ===================================================================== */
 .login-footer-small {
-  margin-top: 20px;
+  margin-top: 12px;
+  font-size: 13px;
+  transform: translateY(8px);
 }
 
 .login-footer-small a {
@@ -196,10 +210,12 @@ body, html {
    (Fale conosco | Termos | Privacidade)
    ===================================================================== */
 .login-footer {
-  margin-top: 10px;              /* Espaço acima */
-  font-size: 14px;               /* Tamanho da fonte */
-  text-align: centrer;            /* Centralizado */
+  margin-top: 4px;
+  font-size: 12px;
+  text-align: center;
   font-family: "Inter", sans-serif;
+  flex-shrink: 0;
+  line-height: 1.45;
 }
 
 .login-footer a {
@@ -256,27 +272,34 @@ body, html {
 
 /* Container que envolve o input e o botão */
 .password-wrapper {
-    position: relative;
-    /* Copia a margem que estava no .login-input */
-    margin-bottom: 18px; 
-    line-height: 0; /* Ajuda a controlar a altura */
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: block;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  line-height: 0;
+  align-self: stretch;
 }
 
-/* O novo input de senha (copia estilos do .login-input) */
+/* Mesma “caixa” do e-mail: 100% da largura do card + área do olho */
 .login-input-password {
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 10px;
-    border: 1px solid #cfd7e3;
-    background: #f1f5ff;
-    font-size: 14px;
-    box-sizing: border-box; 
-    
-    /* 🔥 Garante que o texto da senha não entre por baixo do ícone */
-    padding-right: 48px; 
-    
-    /* Remove a margem inferior, que agora está no wrapper */
-    margin-bottom: 0; 
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: block;
+  height: 40px;
+  padding: 10px 14px;
+  padding-right: 42px;
+  line-height: 1.2;
+  border-radius: 10px;
+  border: 1px solid #cfd7e3;
+  background: #f1f5ff;
+  font-size: 14px;
+  box-sizing: border-box;
+  margin-bottom: 0;
+  appearance: none;
 }
 
 /* Estilo do novo input quando recebe foco */
@@ -288,48 +311,68 @@ body, html {
 /* Botão de mostrar/esconder senha (o ícone) */
 .password-toggle-btn {
   position: absolute;
-
-  /* 🔥 posição correta dentro do input */
-  right: 14px;
-
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
-
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #4a4a4a;
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  line-height: 1;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  line-height: 0;
   outline: none;
-  z-index: 10;
+  z-index: 2;
+}
+
+.password-toggle-btn:hover {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.password-toggle-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 
 .login-error-msg {
   background: #fff5f5;
   color: #b10000;
-  padding: 12px 18px;
-  border-radius: 12px;
-
-  /* 🔥 Borda vermelha padrão SaaS */
+  padding: 8px 12px;
+  border-radius: 10px;
   border: 1.5px solid #d32f2f;
-
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   text-align: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto 10px auto;
+  box-sizing: border-box;
+  animation: loginFadeIn 0.25s ease-in-out;
+}
 
-  width: calc(100% - 40px);
-  margin: 0 auto 20px auto;
-
-  animation: fadeIn 0.25s ease-in-out;
+@keyframes loginFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 
 .forgot-password {
-  margin-top: 12px;
-  font-size: 14px;
+  display: inline-block;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  font-size: 13px;
   color: #4a63ff;
   cursor: pointer;
   text-decoration: none;
@@ -339,3 +382,96 @@ body, html {
   text-decoration: underline;
 }
 
+/* =====================================================================
+   RESPONSIVIDADE MOBILE — LOGIN
+   Mantém desktop intacto e refina UX em telas pequenas
+   ===================================================================== */
+@media (max-width: 768px) {
+  .login-bg {
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 12px 12px max(12px, env(safe-area-inset-bottom));
+  }
+
+  .login-box {
+    max-width: 420px;
+    margin-top: max(8px, env(safe-area-inset-top));
+    border-radius: 14px;
+    padding: 18px 14px 16px;
+  }
+
+  .login-logo {
+    width: clamp(100px, 34vw, 122px);
+    margin-bottom: -18px;
+  }
+
+  .login-subtitle {
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+
+  .login-label {
+    font-size: 12px;
+  }
+
+  .login-input,
+  .login-input-password {
+    height: 42px;
+    font-size: 16px; /* evita zoom automático no iOS */
+  }
+
+  .password-wrapper {
+    margin-bottom: 10px;
+  }
+
+  .forgot-password {
+    margin-top: 2px;
+    margin-bottom: 12px;
+    font-size: 12.5px;
+  }
+
+  .login-submit {
+    min-height: 42px;
+    font-size: 15px;
+  }
+
+  .login-divider {
+    margin: 12px 0 10px;
+  }
+
+  .login-google-btn {
+    min-height: 42px;
+    font-size: 15px;
+  }
+
+  .login-footer-small {
+    margin-top: 10px;
+    transform: translateY(6px);
+    font-size: 12.5px;
+  }
+
+  .login-footer {
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+
+  .login-copy {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .login-bg {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .login-box {
+    padding: 16px 12px 14px;
+    border-radius: 12px;
+  }
+
+  .login-logo {
+    margin-bottom: -16px;
+  }
+}

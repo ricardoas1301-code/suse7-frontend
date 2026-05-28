@@ -8,21 +8,33 @@ import { DASH } from "./saleRayxFormat";
  * @param {{
  *   label: string;
  *   value: string;
+ *   labelAddon?: import("react").ReactNode;
  *   percentDetail?: string | null;
  *   lineClass?: string;
  *   strongClass?: string;
  *   labelClass?: string;
+ *   valueTone?: "default" | "key" | "negative" | "positive";
  * }} props
  */
 export default function SaleRayXFinancialLine({
   label,
   value,
+  labelAddon = null,
   percentDetail = null,
   lineClass = "",
   strongClass = "",
   labelClass = "",
+  valueTone = "default",
 }) {
   const empty = value === DASH;
+  const toneClass =
+    valueTone === "negative"
+      ? "vendas-sale-rayx__fin-value--negative"
+      : valueTone === "positive"
+        ? "vendas-sale-rayx__fin-value--positive"
+        : valueTone === "key"
+          ? "vendas-sale-rayx__fin-value--key"
+          : "";
 
   return (
     <div
@@ -30,10 +42,13 @@ export default function SaleRayXFinancialLine({
     >
       <div className="vendas-sale-rayx__fin-line-label">
         <span className={labelClass || undefined}>{label}</span>
+        {labelAddon}
         {percentDetail ? <span className="vendas-sale-rayx__fin-line-detail">{percentDetail}</span> : null}
       </div>
       <strong
-        className={[strongClass || "", empty ? "anuncios-sell-popover__value--empty" : ""].filter(Boolean).join(" ") || undefined}
+        className={[toneClass, strongClass || "", empty ? "anuncios-sell-popover__value--empty" : ""]
+          .filter(Boolean)
+          .join(" ") || undefined}
       >
         {value}
       </strong>

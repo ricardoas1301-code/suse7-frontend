@@ -10,6 +10,10 @@
   top: var(--s7-sticky-filters-top, 0px);
   z-index: 28;
   box-sizing: border-box;
+}
+
+/* Faixa sticky “full bleed” (legado) — não usar em listagens com card branco */
+.page-content .s7-sticky-filters:not(.s7-catalog-filter-card) {
   padding-top: 6px;
   padding-bottom: 10px;
   background: var(--s7-bg-page, #f2f7ff);

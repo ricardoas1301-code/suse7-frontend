@@ -5,6 +5,7 @@
 // ======================================================
 
 import { useCallback, useState } from "react";
+import S7Button from "../ui/S7Button.jsx";
 import S7Input from "../ui/S7Input.jsx";
 import S7Icon from "../ui/S7Icon.jsx";
 import S7Tooltip from "../ui/S7Tooltip.jsx";
@@ -31,6 +32,8 @@ import S7Tooltip from "../ui/S7Tooltip.jsx";
  *   onSafetyReservePctChange: (v: string) => void;
  *   safetyReserveEnabled: boolean;
  *   onSafetyReserveEnabledChange: (enabled: boolean) => void;
+ *   onSaveFinancialSettings?: () => void;
+ *   saveFinancialSettingsLoading?: boolean;
  *   mode?: "simulator" | "promotions";
  * }} props
  */
@@ -55,6 +58,8 @@ export function PricingPageSimulationInputs({
   onSafetyReservePctChange,
   safetyReserveEnabled,
   onSafetyReserveEnabledChange,
+  onSaveFinancialSettings,
+  saveFinancialSettingsLoading = false,
   mode = "simulator",
 }) {
   // ======================================================
@@ -78,7 +83,13 @@ export function PricingPageSimulationInputs({
   // Sanitização de percentual (apenas inteiros 0-9).
   // Não faz cálculo; apenas valida entrada visual.
   // ======================================================
-  const sanitizeIntegerPercent = useCallback((raw) => String(raw ?? "").replace(/\D/g, ""), []);
+  const sanitizePercentInput = useCallback((raw) => {
+    const s = String(raw ?? "").replace(/[^\d,.]/g, "");
+    const normalized = s.replace(",", ".");
+    const parts = normalized.split(".");
+    if (parts.length <= 1) return s.replace(".", ",");
+    return `${parts[0].replace(".", ",")},${parts.slice(1).join("")}`;
+  }, []);
   const percentSuffix = <span className="pricing-intelligence-page__simulation-price__percent-suffix">%</span>;
 
   // ======================================================
@@ -201,7 +212,7 @@ export function PricingPageSimulationInputs({
               label="Desconto da promoção"
               name="pricing-page-sim-promo"
               value={plannedPromoPct}
-              onChange={(e) => onPlannedPromoPctChange(sanitizeIntegerPercent(e.target.value))}
+              onChange={(e) => onPlannedPromoPctChange(sanitizePercentInput(e.target.value))}
               placeholder="0"
               autoComplete="off"
               inputMode="numeric"
@@ -231,7 +242,7 @@ export function PricingPageSimulationInputs({
                 label="Margem desejada"
                 name="pricing-page-sim-margin"
                 value={desiredMarginPct}
-                onChange={(e) => onDesiredMarginPctChange(sanitizeIntegerPercent(e.target.value))}
+                onChange={(e) => onDesiredMarginPctChange(sanitizePercentInput(e.target.value))}
                 placeholder="0"
                 autoComplete="off"
                 inputMode="numeric"
@@ -251,7 +262,7 @@ export function PricingPageSimulationInputs({
                     label=""
                     name="pricing-page-sim-promo"
                     value={plannedPromoPct}
-                    onChange={(e) => onPlannedPromoPctChange(sanitizeIntegerPercent(e.target.value))}
+                    onChange={(e) => onPlannedPromoPctChange(sanitizePercentInput(e.target.value))}
                     placeholder="0"
                     autoComplete="off"
                     inputMode="numeric"
@@ -278,7 +289,7 @@ export function PricingPageSimulationInputs({
                     label=""
                     name="pricing-page-sim-ml-ads"
                     value={mlAdsPct}
-                    onChange={(e) => onMlAdsPctChange(sanitizeIntegerPercent(e.target.value))}
+                    onChange={(e) => onMlAdsPctChange(sanitizePercentInput(e.target.value))}
                     placeholder="0"
                     autoComplete="off"
                     inputMode="numeric"
@@ -305,7 +316,7 @@ export function PricingPageSimulationInputs({
                     label=""
                     name="pricing-page-sim-affiliates"
                     value={affiliatesPct}
-                    onChange={(e) => onAffiliatesPctChange(sanitizeIntegerPercent(e.target.value))}
+                    onChange={(e) => onAffiliatesPctChange(sanitizePercentInput(e.target.value))}
                     placeholder="0"
                     autoComplete="off"
                     inputMode="numeric"
@@ -332,7 +343,7 @@ export function PricingPageSimulationInputs({
                     label=""
                     name="pricing-page-sim-reserve"
                     value={safetyReservePct}
-                    onChange={(e) => onSafetyReservePctChange(sanitizeIntegerPercent(e.target.value))}
+                    onChange={(e) => onSafetyReservePctChange(sanitizePercentInput(e.target.value))}
                     placeholder="0"
                     autoComplete="off"
                     inputMode="numeric"
@@ -353,6 +364,20 @@ export function PricingPageSimulationInputs({
           </>
         )}
       </div>
+      {mode === "simulator" && onSaveFinancialSettings ? (
+        <div className="pricing-intelligence-page__simulation-price__actions">
+          <S7Button
+            type="button"
+            variant="primary"
+            size="sm"
+            loading={saveFinancialSettingsLoading}
+            disabled={saveFinancialSettingsLoading}
+            onClick={onSaveFinancialSettings}
+          >
+            Salvar configurações
+          </S7Button>
+        </div>
+      ) : null}
     </section>
   );
 }

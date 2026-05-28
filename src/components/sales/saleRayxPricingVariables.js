@@ -179,33 +179,73 @@ export function collectSaleRayxPricingVariables(financial) {
   return lines;
 }
 
+/** Margem de contingência no Raio-x: somente ML Ads e Reserva (sem promo nem afiliados). */
+const RAYX_CONTINGENCY_IDS = new Set(["ml_ads", "safety_reserve"]);
+
 /**
- * Ajustes comerciais previstos (somente flags ativas da precificação do anúncio).
+ * @param {Record<string, unknown>} r
+ */
+function formatContingencyLineRow(r) {
+  const label = r.label != null ? String(r.label).trim() : "";
+  if (label === "") return null;
+  const amountRaw = r.amount_brl ?? r.amount ?? r.value;
+  const percentRaw = r.percent ?? r.percent_value;
+  const hasAmount = isActiveAmount(amountRaw);
+  const hasPercent = isActivePercent(percentRaw);
+  if (!hasAmount && !hasPercent) return null;
+  return {
+    label,
+    value: hasAmount ? formatNegativeBrlApi(String(amountRaw)) ?? DASH : DASH,
+    percentDetail: hasPercent ? formatPercentDetailLabel(percentRaw) : null,
+  };
+}
+
+/**
+ * Margem de contingência — somente ML Ads e Reserva perdas/devoluções.
  *
  * @param {Record<string, unknown> | null | undefined} financial
+ * @returns {{ label: string; value: string; percentDetail: string | null }[]}
  */
-export function collectSaleRayxCommercialAdjustments(financial) {
+export function collectSaleRayxContingencyMargin(financial) {
   const fin = financial && typeof financial === "object" ? financial : {};
+
+  const cm =
+    fin.contingency_margin && typeof fin.contingency_margin === "object"
+      ? /** @type {Record<string, unknown>} */ (fin.contingency_margin)
+      : null;
+  const cmLines = Array.isArray(cm?.lines) ? cm.lines : null;
+  if (cmLines && cmLines.length > 0) {
+    /** @type {{ label: string; value: string; percentDetail: string | null }[]} */
+    const lines = [];
+    for (const row of cmLines) {
+      if (!row || typeof row !== "object") continue;
+      const formatted = formatContingencyLineRow(/** @type {Record<string, unknown>} */ (row));
+      if (formatted) lines.push(formatted);
+    }
+    if (lines.length > 0) return lines;
+  }
+
   if (Array.isArray(fin.commercial_adjustment_lines) && fin.commercial_adjustment_lines.length > 0) {
     /** @type {{ label: string; value: string; percentDetail: string | null }[]} */
     const lines = [];
     for (const row of fin.commercial_adjustment_lines) {
       if (!row || typeof row !== "object") continue;
       const r = /** @type {Record<string, unknown>} */ (row);
-      const label = r.label != null ? String(r.label).trim() : "";
-      if (label === "") continue;
-      const amountRaw = r.amount_brl ?? r.amount ?? r.value;
-      const percentRaw = r.percent ?? r.percent_value;
-      const hasAmount = isActiveAmount(amountRaw);
-      const hasPercent = isActivePercent(percentRaw);
-      if (!hasAmount && !hasPercent) continue;
-      lines.push({
-        label,
-        value: hasAmount ? formatNegativeBrlApi(String(amountRaw)) ?? DASH : DASH,
-        percentDetail: hasPercent ? formatPercentDetailLabel(percentRaw) : null,
-      });
+      const key = r.key != null ? String(r.key) : "";
+      if (key && !RAYX_CONTINGENCY_IDS.has(key)) continue;
+      const formatted = formatContingencyLineRow(r);
+      if (formatted) lines.push(formatted);
     }
     if (lines.length > 0) return lines;
   }
-  return collectSaleRayxPricingVariables(financial);
+
+  return collectSaleRayxPricingVariables(financial).filter((line) => {
+    const def = PRICING_VARIABLE_DEFS.find((d) => d.label === line.label);
+    return def != null && RAYX_CONTINGENCY_IDS.has(def.id);
+  });
+}
+
+/** @deprecated use collectSaleRayxContingencyMargin */
+export function collectSaleRayxCommercialAdjustments(financial) {
+  return collectSaleRayxContingencyMargin(financial);
 }

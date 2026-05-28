@@ -6,15 +6,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { useCopyFeedback } from "../hooks/useCopyFeedback";
 import { useNotifications } from "../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import S7Button from "./ui/S7Button";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "./ui/S7CopyButton";
 import S7ConfirmModal from "./ui/S7ConfirmModal";
 import S7EmptyState from "./ui/S7EmptyState";
 import S7Icon from "./ui/S7Icon";
 import S7Input from "./ui/S7Input";
-import { fetchCatalogRankings } from "../services/products/catalogRankingsService";
 import { applyCatalogFilter, getCatalogFilterChipsForToolbar } from "../utils/catalogFilterRegistry";
 import { filterProductsByCatalogSearch } from "../utils/catalogSearch";
 import {
@@ -108,8 +107,6 @@ function buildPaginationItems(current, total) {
 
 function ProductCatalogRow({
   product,
-  copiedKey,
-  onCopy,
   onOpenEdit,
   onRequestDelete,
   showMarketplacesColumn = false,
@@ -117,10 +114,6 @@ function ProductCatalogRow({
   const id = product?.id;
   const name = String(product?.product_name || "Sem nome").trim() || "Sem nome";
   const sku = String(product?.sku || "").trim();
-  const nameCopyKey = `name-${id}`;
-  const skuCopyKey = `sku-${id}`;
-  const showNameCopyCheck = copiedKey === nameCopyKey;
-  const showSkuCopyCheck = copiedKey === skuCopyKey;
   const imgUrl = useProductMainImageSrc(product);
   const metrics = getProductCatalogMetrics(product);
   const stock = getProductStockDisplay(product);
@@ -141,24 +134,6 @@ function ProductCatalogRow({
       }
     },
     [handleRowActivate]
-  );
-
-  const handleCopyNameClick = useCallback(
-    (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      onCopy(name, nameCopyKey);
-    },
-    [name, nameCopyKey, onCopy]
-  );
-
-  const handleCopySkuClick = useCallback(
-    (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (sku) onCopy(sku, skuCopyKey);
-    },
-    [sku, skuCopyKey, onCopy]
   );
 
   const handleDeleteClick = useCallback(
@@ -204,29 +179,35 @@ function ProductCatalogRow({
           >
             {name}
           </span>
-          <button
-            type="button"
-            className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left ${showNameCopyCheck ? "products-catalog__copy-btn--ok" : ""}`}
-            data-tip={showNameCopyCheck ? "Copiado!" : "Copiar"}
-            onClick={handleCopyNameClick}
-            aria-label={`Copiar nome ${name}`}
-          >
-            {showNameCopyCheck ? "✓" : "⧉"}
-          </button>
+          <S7CopyButton
+            value={name}
+            ariaLabel={`Copiar nome ${name}`}
+            tooltipText="Copiar nome"
+            toastLabel="Nome do produto"
+            showToast={true}
+            iconMode="unicode"
+            flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+            flashKey={`product-name-${id}`}
+            toastEntityType="product"
+          />
         </div>
         <div className="products-catalog__sku-row">
-          <span className="products-catalog__sku-label">SKU</span>
-          <span className="products-catalog__sku-value">{sku || "—"}</span>
+          <span className="anuncios-ad-sku-label">SKU</span>
+          <span className="anuncios-ad-sku-value">{sku || "—"}</span>
           {sku ? (
-            <button
-              type="button"
-              className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left ${showSkuCopyCheck ? "products-catalog__copy-btn--ok" : ""}`}
-              data-tip={showSkuCopyCheck ? "Copiado!" : "Copiar"}
-              onClick={handleCopySkuClick}
-              aria-label={`Copiar SKU ${sku}`}
-            >
-              {showSkuCopyCheck ? "✓" : "⧉"}
-            </button>
+            <S7CopyButton
+              value={sku}
+              ariaLabel={`Copiar SKU ${sku}`}
+              tooltipText="Copiar SKU"
+              toastLabel="SKU"
+              showToast={true}
+              iconMode="unicode"
+              flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+              flashKey={`product-sku-${id}`}
+              toastEventType="LISTING_SKU_COPIED"
+              toastFailEventType="LISTING_SKU_COPY_FAILED"
+              toastEntityType="product"
+            />
           ) : null}
         </div>
       </div>
@@ -289,24 +270,12 @@ function ProductCatalogRow({
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
-  const [rankings, setRankings] = useState({
-    top_sales_quantity: [],
-    top_revenue: [],
-    top_profit: [],
-    catalog_summary: {
-      top10_sales_quantity_total: 0,
-      top10_revenue_brl_total: "0.00",
-      top10_profit_brl_total: "0.00",
-    },
-  });
-  const [rankingsLoading, setRankingsLoading] = useState(true);
   const [catalogFilterId, setCatalogFilterId] = useState("all");
   const [catalogSearchQuery, setCatalogSearchQuery] = useState("");
   const [catalogPage, setCatalogPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { copiedKey, handleCopy } = useCopyFeedback();
   const { addNotification } = useNotifications();
   const catalogFilterChips = useMemo(() => getCatalogFilterChipsForToolbar(), []);
 
@@ -335,27 +304,6 @@ export default function Products() {
     const start = (catalogPage - 1) * CATALOG_PAGE_SIZE;
     return displayProducts.slice(start, start + CATALOG_PAGE_SIZE);
   }, [displayProducts, catalogPage]);
-
-  const productSignalCounts = useMemo(() => {
-    if (!products.length) return { noSales: 0, needAttention: 0 };
-    let noSales = 0;
-    let needAttention = 0;
-    for (const p of products) {
-      const m = getProductCatalogMetrics(p);
-      if ((m.salesCount ?? 0) <= 0) noSales += 1;
-      const incomplete =
-        typeof p?.is_product_ready === "boolean"
-          ? !p.is_product_ready
-          : p?.catalog_completeness != null && p.catalog_completeness !== "complete";
-      if (incomplete) needAttention += 1;
-    }
-    return { noSales, needAttention };
-  }, [products]);
-
-  const hasTop10SalesSignal =
-    rankings.top_sales_quantity.length > 0 ||
-    rankings.top_revenue.length > 0 ||
-    rankings.top_profit.length > 0;
 
   const paginationItems = useMemo(() => buildPaginationItems(catalogPage, totalPages), [catalogPage, totalPages]);
 
@@ -441,26 +389,6 @@ export default function Products() {
   }, [deleteTarget, addNotification]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setRankingsLoading(true);
-      const data = await fetchCatalogRankings();
-      if (!cancelled) {
-        setRankings({
-          top_sales_quantity: data.top_sales_quantity,
-          top_revenue: data.top_revenue,
-          top_profit: data.top_profit,
-          catalog_summary: data.catalog_summary,
-        });
-        setRankingsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     const loadProducts = async () => {
       const {
         data: { user },
@@ -530,36 +458,18 @@ export default function Products() {
       <h1 className="products-catalog__sr-title">Produtos</h1>
 
       <section className="s7-core-kpis anuncios-catalog__kpis" aria-label="Ranking Top 10 do catálogo">
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
+        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
           <header className="anuncios-catalog__kpi-head">
             <h2 className="anuncios-catalog__kpi-title">Top 10 — Vendas</h2>
           </header>
-          <div className="anuncios-catalog__kpi-body">
-            <p className="anuncios-catalog__kpi-value">
-              {rankingsLoading
-                ? "…"
-                : !hasTop10SalesSignal
-                  ? "Sem dados ainda"
-                  : String(rankings.catalog_summary?.top10_sales_quantity_total ?? 0)}
-            </p>
-            <p className="anuncios-catalog__kpi-hint">Soma das quantidades vendidas no Top 10 (servidor).</p>
-          </div>
+          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
         </article>
 
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
+        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
           <header className="anuncios-catalog__kpi-head">
             <h2 className="anuncios-catalog__kpi-title">Top 10 — Faturamento</h2>
           </header>
-          <div className="anuncios-catalog__kpi-body">
-            <p className="anuncios-catalog__kpi-value">
-              {rankingsLoading
-                ? "…"
-                : !hasTop10SalesSignal
-                  ? "Sem dados ainda"
-                  : formatCatalogBRL(rankings.catalog_summary?.top10_revenue_brl_total ?? 0)}
-            </p>
-            <p className="anuncios-catalog__kpi-hint">Soma de faturamento bruto no Top 10 (servidor, Decimal.js).</p>
-          </div>
+          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
         </article>
 
         <div className="anuncios-catalog__kpi-minis" aria-label="Indicadores do catálogo">
@@ -567,97 +477,68 @@ export default function Products() {
             <div className="anuncios-catalog__kpi-mini-head">
               <h3 className="anuncios-catalog__kpi-mini-title">Top 10 — Lucro bruto</h3>
             </div>
-            <div className="anuncios-catalog__kpi-mini-body">
-              <p className="anuncios-catalog__kpi-mini-value">
-                {rankingsLoading
-                  ? "…"
-                  : !hasTop10SalesSignal
-                    ? "Sem dados ainda"
-                    : formatCatalogBRL(rankings.catalog_summary?.top10_profit_brl_total ?? 0)}
-              </p>
-            </div>
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--sales">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Sem vendas</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body">
-              <p className="anuncios-catalog__kpi-mini-value">
-                {productsLoading ? "…" : String(productSignalCounts.noSales)}
-              </p>
-            </div>
+            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
           </article>
           <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--warn">
             <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Precisam atenção</h3>
+              <h3 className="anuncios-catalog__kpi-mini-title">Sem vendas</h3>
             </div>
-            <div className="anuncios-catalog__kpi-mini-body">
-              <p className="anuncios-catalog__kpi-mini-value">
-                {productsLoading ? "…" : String(productSignalCounts.needAttention)}
-              </p>
-            </div>
+            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
           </article>
           <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
             <div className="anuncios-catalog__kpi-mini-head">
+              <h3 className="anuncios-catalog__kpi-mini-title">Precisam atenção</h3>
+            </div>
+            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
+          </article>
+          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--sales">
+            <div className="anuncios-catalog__kpi-mini-head">
               <h3 className="anuncios-catalog__kpi-mini-title">Em queda</h3>
             </div>
-            <div className="anuncios-catalog__kpi-mini-body">
-              <p className="anuncios-catalog__kpi-mini-value">—</p>
-              <p className="anuncios-catalog__kpi-mini-hint">Sem dados ainda</p>
-            </div>
+            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
           </article>
         </div>
       </section>
 
-      {!productsLoading && products.length > 0 ? (
-        <div className="products-catalog__controls s7-sticky-filters">
-          <div className="products-catalog__controls-top">
-            <div className="products-catalog__search-wrap">
-              <div className="products-catalog__search-field">
-                <span className="products-catalog__search-icon" aria-hidden>
-                  <S7Icon name="search" size={18} strokeWidth={1.85} />
-                </span>
-                <S7Input
-                  label=""
-                  name="catalog-search"
-                  value={catalogSearchQuery}
-                  onChange={(e) => setCatalogSearchQuery(e.target.value)}
-                  placeholder="Buscar por nome, SKU, EAN, marca ou modelo"
-                  className="products-catalog__search-s7"
-                  inputClassName="products-catalog__search-input-field"
-                  autoComplete="off"
-                  aria-label="Buscar produtos por nome, SKU, EAN, marca ou modelo"
-                  rightElement={
-                    catalogSearchQuery ? (
-                      <button
-                        type="button"
-                        className="products-catalog__search-clear"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCatalogSearchQuery("");
-                        }}
-                        aria-label="Limpar busca"
-                      >
-                        <S7Icon name="close" size={16} strokeWidth={2} />
-                      </button>
-                    ) : null
-                  }
-                />
-              </div>
-            </div>
-            <div className="products-catalog__controls-actions">
-              <S7Button
-                variant="primary"
-                iconName="plus"
-                className="products-catalog__new-product-btn"
-                onClick={() => navigate("/produtos/novo")}
-              >
-                Novo produto
-              </S7Button>
+      <div className="products-catalog__controls s7-sticky-filters s7-catalog-filter-card">
+        <div className="products-catalog__controls-top">
+          <div className="products-catalog__search-wrap">
+            <div className="products-catalog__search-field">
+              <span className="products-catalog__search-icon" aria-hidden>
+                <S7Icon name="search" size={18} strokeWidth={1.85} />
+              </span>
+              <S7Input
+                label=""
+                name="catalog-search"
+                value={catalogSearchQuery}
+                onChange={(e) => setCatalogSearchQuery(e.target.value)}
+                placeholder="Buscar por nome, SKU, EAN, marca ou modelo"
+                className="products-catalog__search-s7"
+                inputClassName="products-catalog__search-input-field"
+                autoComplete="off"
+                aria-label="Buscar produtos por nome, SKU, EAN, marca ou modelo"
+                rightElement={
+                  catalogSearchQuery ? (
+                    <button
+                      type="button"
+                      className="products-catalog__search-clear"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCatalogSearchQuery("");
+                      }}
+                      aria-label="Limpar busca"
+                    >
+                      <S7Icon name="close" size={16} strokeWidth={2} />
+                    </button>
+                  ) : null
+                }
+              />
             </div>
           </div>
-          <div className="products-catalog__controls-main">
-            <div className="products-catalog__filter-row" role="toolbar" aria-label="Filtros rápidos do catálogo">
+        </div>
+        <div className="products-catalog__controls-main">
+          <div className="products-catalog__filter-row products-catalog__filter-row--spread" role="toolbar" aria-label="Filtros rápidos do catálogo">
+            <div className="products-catalog__filter-row-chips">
               {catalogFilterChips.map((def) => {
                 const isActive = catalogFilterId === def.id;
                 const chipTitle = def.enabled ? def.description : `${def.description} Em breve.`;
@@ -696,20 +577,19 @@ export default function Products() {
                 <span>Limpar filtros</span>
               </button>
             </div>
+            <div className="products-catalog__filter-row-end">
+              <S7Button
+                variant="primary"
+                iconName="plus"
+                className="products-catalog__new-product-btn"
+                onClick={() => navigate("/produtos/novo")}
+              >
+                Novo produto
+              </S7Button>
+            </div>
           </div>
         </div>
-      ) : !productsLoading ? (
-        <div className="products-catalog__toolbar">
-          <S7Button
-            variant="primary"
-            iconName="plus"
-            className="products-catalog__new-product-btn"
-            onClick={() => navigate("/produtos/novo")}
-          >
-            Novo produto
-          </S7Button>
-        </div>
-      ) : null}
+      </div>
 
       {productsLoading ? (
         <p className="products-catalog__loading">Carregando produtos...</p>
@@ -717,7 +597,7 @@ export default function Products() {
         <div className="products-catalog__empty-card">
           <S7EmptyState
             title="Nenhum produto cadastrado"
-            description="Cadastre itens para precificar, vincular anúncios e acompanhar resultados por marketplace. Use o botão Novo produto acima."
+            description="Cadastre itens para precificar, vincular anúncios e acompanhar resultados por marketplace. Use o botão Novo produto na barra de filtros."
           />
         </div>
       ) : displayProducts.length === 0 ? (
@@ -803,8 +683,6 @@ export default function Products() {
                   <ProductCatalogRow
                     key={product.id}
                     product={product}
-                    copiedKey={copiedKey}
-                    onCopy={handleCopy}
                     onOpenEdit={onOpenEdit}
                     onRequestDelete={handleRequestDeleteProduct}
                     showMarketplacesColumn={SHOW_CATALOG_MARKETPLACES_COLUMN}

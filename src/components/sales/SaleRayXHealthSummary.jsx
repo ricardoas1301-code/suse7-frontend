@@ -3,7 +3,7 @@
 // ======================================================
 
 import { DASH, formatBrlApi, formatPercentApi } from "./saleRayxFormat";
-import { getSaleRayxHealthState, getSaleRayxHealthShellClasses } from "./saleRayxHealthState";
+import { getSaleRayxHealthShellClasses, resolveSaleRayxHealthState } from "./saleRayxHealthState";
 import { getSaleRayxMarginSemantic } from "./saleRayxMarginSemantic";
 
 /**
@@ -41,9 +41,17 @@ export default function SaleRayXHealthSummary({ financial, profitMargin }) {
   const marginValue = pm.margin_percent ?? fin.margin_percent;
   const profitDisplay = formatBrlApi(profitValue != null ? String(profitValue) : null);
   const marginDisplay = formatPercentApi(marginValue != null ? String(marginValue) : null);
-  const { offerSemClass, healthLabel } = getSaleRayxMarginSemantic(marginValue);
-  const healthDisplay = healthLabel != null && String(healthLabel).trim() !== "" ? String(healthLabel).trim() : DASH;
-  const healthState = getSaleRayxHealthState(marginValue);
+  const finResult = fin.result && typeof fin.result === "object" ? /** @type {Record<string, unknown>} */ (fin.result) : null;
+  const healthLabelFromApi =
+    pm.health_label ?? fin.health_label ?? finResult?.health_label ?? null;
+  const { offerSemClass, healthLabel: healthLabelFallback } = getSaleRayxMarginSemantic(marginValue);
+  const healthDisplay =
+    healthLabelFromApi != null && String(healthLabelFromApi).trim() !== ""
+      ? String(healthLabelFromApi).trim()
+      : healthLabelFallback != null && String(healthLabelFallback).trim() !== ""
+        ? String(healthLabelFallback).trim()
+        : DASH;
+  const healthState = resolveSaleRayxHealthState(fin, pm, marginValue);
   const shellClass = getSaleRayxHealthShellClasses(healthState, { pulse: healthState === "critical" });
 
   return (

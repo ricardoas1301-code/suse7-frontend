@@ -1,0 +1,213 @@
+/**
+ * Mock operacional — Fase C (frontend only).
+ * Futuro backend: seller_tickets, seller_ticket_messages, seller_ticket_notes, seller_ticket_events
+ */
+
+const now = Date.now();
+const h = (hoursAgo) => new Date(now - hoursAgo * 3600000).toISOString();
+
+/** @type {import('./sellerTicketsTypes').SellerTicket[]} */
+export const MOCK_SELLER_TICKETS = [
+  {
+    id: "TKT-2401",
+    sellerName: "Loja Ray-X Comercial",
+    sellerEmail: "contato@rayx.com.br",
+    subject: "Divergência de tarifa ML na precificação inteligente",
+    category: "precificacao",
+    priority: "critica",
+    status: "em_atendimento",
+    marketplace: "mercado_livre",
+    assignee: "ricardo@suse7.com.br",
+    slaLabel: "1h 20m restantes",
+    updatedAt: h(1),
+    createdAt: h(6),
+    messages: [
+      {
+        id: "m1",
+        type: "seller",
+        author: "contato@rayx.com.br",
+        body: "O Raio-x da precificação está mostrando tarifa diferente do painel do ML para o mesmo anúncio MLB4890123.",
+        at: h(5.5),
+      },
+      {
+        id: "m2",
+        type: "team",
+        author: "Ricardo (S7)",
+        body: "Recebido. Estamos cruzando o payload de cenários ML com a última sincronização do anúncio.",
+        at: h(4),
+      },
+    ],
+    internalNotes: [
+      {
+        id: "n1",
+        author: "Neo",
+        body: "Verificar se marketplace_cost_reduction entrou no cenário baseline após deploy de 12/05.",
+        at: h(3.5),
+      },
+    ],
+    timeline: [
+      { id: "e1", kind: "system", label: "Ticket aberto pelo seller", at: h(6) },
+      { id: "e2", kind: "status", label: "Status → Em atendimento", at: h(4.2) },
+      { id: "e3", kind: "message", label: "Resposta equipe S7", at: h(4) },
+      { id: "e4", kind: "note", label: "Nota interna adicionada", at: h(3.5) },
+    ],
+  },
+  {
+    id: "TKT-2402",
+    sellerName: "Mega Store BR",
+    sellerEmail: "suporte@megastore.br",
+    subject: "Integração ML desconectou após renovação de token",
+    category: "integracao",
+    priority: "alta",
+    status: "aguardando_seller",
+    marketplace: "mercado_livre",
+    assignee: "neo@suse7.com.br",
+    slaLabel: "Aguardando seller",
+    updatedAt: h(8),
+    createdAt: h(20),
+    messages: [
+      {
+        id: "m3",
+        type: "seller",
+        author: "suporte@megastore.br",
+        body: "Após clicar em reconectar, o callback retorna mas a conta continua como desconectada.",
+        at: h(18),
+      },
+      {
+        id: "m4",
+        type: "team",
+        author: "Neo (S7)",
+        body: "Pode reenviar print da tela Integrações e confirmar se o usuário ML é o mesmo da conta anterior?",
+        at: h(10),
+      },
+    ],
+    internalNotes: [],
+    timeline: [
+      { id: "e5", kind: "system", label: "Ticket aberto", at: h(20) },
+      { id: "e6", kind: "status", label: "Status → Aguardando seller", at: h(10) },
+    ],
+  },
+  {
+    id: "TKT-2403",
+    sellerName: "Outlet Premium",
+    sellerEmail: "financeiro@outletpremium.com",
+    subject: "Cobrança duplicada no histórico de assinatura",
+    category: "financeiro",
+    priority: "media",
+    status: "aberto",
+    marketplace: "geral",
+    assignee: "nao_atribuido",
+    slaLabel: "8h restantes",
+    updatedAt: h(2),
+    createdAt: h(2),
+    messages: [
+      {
+        id: "m5",
+        type: "seller",
+        author: "financeiro@outletpremium.com",
+        body: "Apareceram duas cobranças no mesmo dia no extrato. Preciso de conferência antes de contestar no cartão.",
+        at: h(2),
+      },
+    ],
+    internalNotes: [
+      {
+        id: "n2",
+        author: "Pedro",
+        body: "Checar billing_payment_history — possível retry de webhook.",
+        at: h(1.5),
+      },
+    ],
+    timeline: [
+      { id: "e7", kind: "system", label: "Ticket aberto", at: h(2) },
+      { id: "e8", kind: "note", label: "Nota interna (triagem)", at: h(1.5) },
+    ],
+  },
+  {
+    id: "TKT-2404",
+    sellerName: "Tech Imports",
+    sellerEmail: "ops@techimports.com",
+    subject: "Vendas não aparecem na listagem após sync",
+    category: "vendas",
+    priority: "alta",
+    status: "em_atendimento",
+    marketplace: "mercado_livre",
+    assignee: "pedro@suse7.com.br",
+    slaLabel: "3h restantes",
+    updatedAt: h(3),
+    createdAt: h(12),
+    messages: [
+      {
+        id: "m6",
+        type: "seller",
+        author: "ops@techimports.com",
+        body: "Últimas 6 vendas do ML não entraram na página Vendas desde ontem à noite.",
+        at: h(11),
+      },
+    ],
+    internalNotes: [],
+    timeline: [
+      { id: "e9", kind: "system", label: "Ticket aberto", at: h(12) },
+      { id: "e10", kind: "status", label: "Status → Em atendimento", at: h(8) },
+    ],
+  },
+  {
+    id: "TKT-2405",
+    sellerName: "Casa & Jardim",
+    sellerEmail: "loja@casajardim.com",
+    subject: "Sugestão: filtro por SKU na página Anúncios",
+    category: "melhorias",
+    priority: "baixa",
+    status: "resolvido",
+    marketplace: "mercado_livre",
+    assignee: "ricardo@suse7.com.br",
+    slaLabel: "Resolvido",
+    updatedAt: h(30),
+    createdAt: h(72),
+    messages: [
+      {
+        id: "m7",
+        type: "seller",
+        author: "loja@casajardim.com",
+        body: "Seria útil buscar anúncios pelo SKU interno direto na grade.",
+        at: h(70),
+      },
+      {
+        id: "m8",
+        type: "team",
+        author: "Ricardo (S7)",
+        body: "Registrado no backlog de produto. Encerramos como melhoria aceita para roadmap.",
+        at: h(30),
+      },
+    ],
+    internalNotes: [],
+    timeline: [
+      { id: "e11", kind: "system", label: "Ticket aberto", at: h(72) },
+      { id: "e12", kind: "status", label: "Status → Resolvido", at: h(30) },
+    ],
+  },
+  {
+    id: "TKT-2406",
+    sellerName: "Sport Max",
+    sellerEmail: "admin@sportmax.com",
+    subject: "Erro 500 ao abrir Raio-x da venda",
+    category: "bugs",
+    priority: "critica",
+    status: "aberto",
+    marketplace: "mercado_livre",
+    assignee: "neo@suse7.com.br",
+    slaLabel: "45m restantes",
+    updatedAt: h(0.5),
+    createdAt: h(0.8),
+    messages: [
+      {
+        id: "m9",
+        type: "seller",
+        author: "admin@sportmax.com",
+        body: "Ao clicar em uma venda de hoje o modal abre vazio e depois some.",
+        at: h(0.8),
+      },
+    ],
+    internalNotes: [],
+    timeline: [{ id: "e13", kind: "system", label: "Ticket aberto", at: h(0.8) }],
+  },
+];

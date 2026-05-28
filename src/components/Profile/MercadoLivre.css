@@ -535,6 +535,111 @@
   color: #991b1b;
 }
 
+.ml-connection-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  max-width: 70%;
+  text-align: right;
+}
+
+.ml-connection-badge.is-ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ml-connection-badge.is-warn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ml-account-monitor-headline {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.01em;
+}
+
+.ml-connection-alert {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.ml-account-card-primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.ml-sync-view-link {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ml-sync-view-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ml-sync-view-link.is-muted {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.ml-sync-view-link.is-emphasis {
+  color: #2563eb;
+}
+
+.ml-account-advanced {
+  margin-top: 8px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 8px;
+}
+
+.ml-account-advanced > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  list-style: none;
+}
+
+.ml-account-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ml-account-advanced > summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.ml-account-advanced[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.ml-account-advanced-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .ml-account-alias {
   font-size: 16px;
   font-weight: 700;
@@ -613,6 +718,7 @@
   max-width: 520px;
   background: #ffffff;
   border-radius: 14px;
+  border: 1px solid #bfdbfe;
   box-shadow: 0 22px 55px rgba(15, 23, 42, 0.18);
   padding: 28px 26px 22px;
 }
@@ -707,6 +813,68 @@
   width: 100%;
 }
 
+.ml-onboarding-sync-blocked-wrap {
+  width: 100%;
+}
+
+/* CTA informativo durante sync inicial — aparência de botão primário, porém desabilitado */
+.ml-button.primary.ml-onboarding-cta--sync-wait:disabled,
+.ml-button.primary.ml-onboarding-cta--sync-wait[aria-disabled="true"] {
+  cursor: not-allowed !important;
+  opacity: 1;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  color: #ffffff;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.ml-onboarding-sync-wait-main {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.ml-onboarding-sync-wait-sub {
+  margin: 10px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  opacity: 1;
+  max-width: none;
+  text-align: center;
+}
+
+.ml-onboarding-final-hint {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  font-weight: 600;
+}
+
+.ml-onboarding-final-hint--ok {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.ml-onboarding-final-hint--warn {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
 .ml-onboarding-footnote {
   margin: 12px 0 0;
   font-size: 12px;
@@ -723,4 +891,270 @@
   color: #1e40af;
   font-size: 13px;
   font-weight: 600;
+}
+
+.ml-onboarding-background-sync {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ml-onboarding-stage-line {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #374151;
+  text-align: center;
+}
+
+.ml-onboarding-stage-label {
+  font-weight: 700;
+  color: #111827;
+}
+
+.ml-onboarding-stage-detail {
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.ml-account-sync-stage {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.ml-onboarding-final-hint--muted {
+  color: #4b5563;
+}
+
+.ml-account-sync-layers {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ml-account-sync-layer-line {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.ml-onboarding-account-picker {
+  margin: 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.ml-onboarding-account-picker label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.ml-onboarding-account-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  background: #fff;
+}
+
+/* Histórico ML — sublinhas do checklist (backend: historical_ux) */
+.ml-onboarding-row-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ml-hist-ux-sublines {
+  margin: 2px 0 0 0;
+  padding-left: 1.1rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #4b5563;
+  font-weight: 500;
+  max-width: 100%;
+}
+
+.ml-hist-ux-sublines li {
+  margin: 2px 0;
+}
+
+.ml-hist-ux-divergence {
+  margin: 4px 0 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.ml-hist-institutional {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fafbfc;
+}
+
+.ml-hist-institutional summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  list-style-position: outside;
+}
+
+.ml-hist-institutional-body {
+  margin-top: 8px;
+}
+
+.ml-hist-institutional-body .ml-onboarding-text {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4b5563;
+  text-align: left;
+}
+
+.ml-hist-institutional-body .ml-onboarding-text:last-child {
+  margin-bottom: 0;
+}
+
+.ml-preline {
+  white-space: pre-line;
+}
+
+/* Modal técnico — checklist (scroll interno) */
+.ml-onboarding-modal--technical {
+  max-width: 560px;
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
+}
+
+.ml-onboarding-subtitle {
+  margin: -6px 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  text-align: center;
+}
+
+/* Modal operacional — Importação inteligente (substitui painel fixo do topo) */
+.ml-operational-import-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1150;
+  background: rgba(17, 24, 39, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.ml-operational-import-modal {
+  width: 100%;
+  max-width: 640px;
+  max-height: min(92vh, 880px);
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ml-operational-import-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 22px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.ml-operational-import-head-text {
+  min-width: 0;
+}
+
+.ml-operational-import-title {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.ml-operational-import-lead {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #475569;
+  max-width: 52ch;
+}
+
+.ml-operational-import-close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ml-operational-import-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.ml-operational-import-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 22px 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ml-operational-import-footer {
+  flex-shrink: 0;
+  padding: 14px 22px 20px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+@media (max-width: 540px) {
+  .ml-operational-import-modal {
+    max-height: 100vh;
+    border-radius: 14px 14px 0 0;
+    margin-top: auto;
+  }
+
+  .ml-operational-import-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
 }

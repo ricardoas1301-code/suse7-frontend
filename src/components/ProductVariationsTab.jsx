@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { S7Section, S7FormField, S7Input, S7Button } from "./ui";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "./ui/S7CopyButton";
 import { PvLabelWithTooltip } from "./PvLocalTooltip";
 import "./ProductVariationsTab.css";
 
@@ -35,7 +36,6 @@ export default function ProductVariationsTab({
   // variants
   variantRows,
   variantAttrColumns,
-  copiedKey,
   skuErrorsById,
   /** Exibir erros de SKU após Avançar/Salvar/painel ou blur no campo */
   variationsSubmitAttempted = false,
@@ -58,7 +58,6 @@ export default function ProductVariationsTab({
   handleGenerateSkuAuto,
   removeSkuBaseChip,
   handleSkuBaseKeyDown,
-  handleCopy,
   handleVariantRowChange,
   isVariantLinkedToMarketplaces,
   setSkuManualIntegratedModal,
@@ -509,17 +508,22 @@ export default function ProductVariationsTab({
                             SKU <span className="pv-card-field__required">*</span>
                           </label>
                           <div className="pv-card-field__actions">
-                            <button
-                              type="button"
-                              className="pf-copy-btn pv-card-field__copy-btn s7-tip s7-tip-bottom s7-tip-left"
-                              onClick={() => handleCopy(row.sku, `variant_sku_${row.id}`)}
-                              aria-label="Copiar SKU"
-                              data-tip={
-                                copiedKey === `variant_sku_${row.id}` ? "Copiado!" : "Copiar"
-                              }
-                            >
-                              {copiedKey === `variant_sku_${row.id}` ? "✓" : "⧉"}
-                            </button>
+                            {String(row.sku ?? "").trim() !== "" ? (
+                              <S7CopyButton
+                                value={row.sku}
+                                ariaLabel="Copiar SKU"
+                                tooltipText="Copiar SKU"
+                                toastLabel="SKU"
+                                showToast={true}
+                                iconMode="unicode"
+                                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                                flashKey={`variant_sku_${row.id}`}
+                                toastEventType="LISTING_SKU_COPIED"
+                                toastFailEventType="LISTING_SKU_COPY_FAILED"
+                                toastEntityType="product"
+                                className="pv-card-field__copy-btn"
+                              />
+                            ) : null}
                           </div>
                         </div>
 
@@ -588,17 +592,20 @@ export default function ProductVariationsTab({
                         <div className="pv-card-field__header">
                           <label className="pv-card-field__label">EAN / GTIN</label>
                           <div className="pv-card-field__actions">
-                            <button
-                              type="button"
-                              className="pf-copy-btn s7-tip s7-tip-bottom s7-tip-left"
-                              onClick={() => handleCopy(row.gtin, `variant_gtin_${row.id}`)}
-                              aria-label="Copiar EAN/GTIN"
-                              data-tip={
-                                copiedKey === `variant_gtin_${row.id}` ? "Copiado!" : "Copiar"
-                              }
-                            >
-                              {copiedKey === `variant_gtin_${row.id}` ? "✓" : "⧉"}
-                            </button>
+                            {String(row.gtin ?? "").trim() !== "" ? (
+                              <S7CopyButton
+                                value={row.gtin}
+                                ariaLabel="Copiar EAN/GTIN"
+                                tooltipText="Copiar GTIN"
+                                toastLabel="GTIN"
+                                showToast={true}
+                                iconMode="unicode"
+                                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                                flashKey={`variant_gtin_${row.id}`}
+                                toastEntityType="product"
+                                className="pv-card-field__copy-btn"
+                              />
+                            ) : null}
                           </div>
                         </div>
 

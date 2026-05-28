@@ -53,8 +53,12 @@ function ToastItem({ notification, onDismiss, markAsRead, removeNotification }) 
       onMouseLeave={() => setPaused(false)}
     >
       <div className="s7-notification-toast__content">
-        <span className="s7-notification-toast__title">{notification.title}</span>
-        <p className="s7-notification-toast__message">{notification.message}</p>
+        {notification.title ? (
+          <span className="s7-notification-toast__title">{notification.title}</span>
+        ) : null}
+        {notification.message ? (
+          <p className="s7-notification-toast__message">{notification.message}</p>
+        ) : null}
       </div>
       <button
         type="button"

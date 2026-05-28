@@ -73,17 +73,166 @@ export default function S7Tooltip({
   }
 
   if (isValidElement(children)) {
-    return cloneElement(children, {
-      "data-tip": content,
-      className: [mergedClass, children.props.className].filter(Boolean).join(" "),
-      style: { ...(children.props.style || {}), ...style },
-    });
+    return (
+      <S7TooltipTextPortal
+        content={content}
+        placement={placement}
+        offset={offset}
+        wrap={wrap}
+        triggerClassName={mergedClass}
+        style={style}
+      >
+        {children}
+      </S7TooltipTextPortal>
+    );
   }
 
   return (
-    <span className={mergedClass} data-tip={content} style={style}>
-      {children}
-    </span>
+    <S7TooltipTextPortal
+      content={content}
+      placement={placement}
+      offset={offset}
+      wrap={wrap}
+      triggerClassName={mergedClass}
+      style={style}
+    >
+      <span>{children}</span>
+    </S7TooltipTextPortal>
+  );
+}
+
+/**
+ * Tooltip textual via portal (position: fixed) — evita clip por overflow/stacking do Raio-x e modais.
+ */
+function S7TooltipTextPortal({ children, content, placement, offset, wrap, triggerClassName, style }) {
+  const rootRef = useRef(null);
+  const bubbleRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const [active, setActive] = useState(false);
+  const [bubbleStyle, setBubbleStyle] = useState(/** @type {import("react").CSSProperties} */ ({}));
+
+  const isBottomStart = placement === "bottom-start";
+  const gap = Math.max(0, Number(offset) || 6);
+
+  const measure = useCallback(() => {
+    const root = rootRef.current;
+    const bubble = bubbleRef.current;
+    if (!root || !bubble) return;
+
+    const anchor = root.firstElementChild instanceof HTMLElement ? root.firstElementChild : root;
+    const rect = anchor.getBoundingClientRect();
+    const bubbleRect = bubble.getBoundingClientRect();
+    const pad = 8;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    if (isBottomStart) {
+      let left = rect.left;
+      if (left + bubbleRect.width > vw - pad) {
+        left = vw - pad - bubbleRect.width;
+      }
+      if (left < pad) left = pad;
+
+      let top = rect.bottom + gap;
+      const fitsBelow = top + bubbleRect.height <= vh - pad;
+      const topAbove = rect.top - gap - bubbleRect.height;
+      const fitsAbove = topAbove >= pad;
+
+      if (!fitsBelow && fitsAbove) {
+        top = topAbove;
+      }
+
+      setBubbleStyle({
+        position: "fixed",
+        left,
+        top,
+        zIndex: "var(--s7-z-tooltip, 290000)",
+        ["--s7-tooltip-arrow-left"]: `${Math.min(Math.max(rect.left + 14 - left, 10), Math.max(bubbleRect.width - 18, 10))}px`,
+      });
+      return;
+    }
+
+    let left = rect.right - bubbleRect.width;
+    if (left < pad) left = pad;
+    if (left + bubbleRect.width > vw - pad) {
+      left = vw - pad - bubbleRect.width;
+    }
+
+    let top = rect.top - gap - bubbleRect.height;
+    if (top < pad) {
+      top = rect.bottom + gap;
+    }
+
+    setBubbleStyle({
+      position: "fixed",
+      left,
+      top,
+      zIndex: "var(--s7-z-tooltip, 290000)",
+      ["--s7-tooltip-arrow-left"]: `${Math.min(Math.max(rect.right - 14 - left, 10), Math.max(bubbleRect.width - 18, 10))}px`,
+    });
+  }, [gap, isBottomStart]);
+
+  useLayoutEffect(() => {
+    if (!active) return;
+    measure();
+    const id = window.requestAnimationFrame(() => measure());
+    return () => window.cancelAnimationFrame(id);
+  }, [active, content, measure]);
+
+  useEffect(() => {
+    if (!active) return;
+    const onScrollOrResize = () => measure();
+    window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("scroll", onScrollOrResize, true);
+    return () => {
+      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("scroll", onScrollOrResize, true);
+    };
+  }, [active, measure]);
+
+  const showPortal = active && content && typeof document !== "undefined";
+
+  const bubbleEl = showPortal ? (
+    <div
+      ref={bubbleRef}
+      className={[
+        "s7-tooltip-portal__bubble",
+        isBottomStart ? "s7-tooltip-portal__bubble--bottom-start" : "s7-tooltip-portal__bubble--top-start",
+        wrap ? "s7-tooltip-portal__bubble--wrap" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      role="tooltip"
+      style={bubbleStyle}
+    >
+      {content}
+    </div>
+  ) : null;
+
+  const child = isValidElement(children)
+    ? cloneElement(children, {
+        className: [triggerClassName, children.props.className].filter(Boolean).join(" "),
+        style: { ...(children.props.style || {}), ...style },
+      })
+    : children;
+
+  return (
+    <>
+      <span
+        ref={rootRef}
+        className="s7-tooltip-portal-root"
+        onMouseEnter={() => setActive(true)}
+        onMouseLeave={() => setActive(false)}
+        onFocusCapture={() => setActive(true)}
+        onBlurCapture={(e) => {
+          const next = /** @type {Node | null} */ (e.relatedTarget);
+          if (next && rootRef.current?.contains(next)) return;
+          setActive(false);
+        }}
+      >
+        {child}
+      </span>
+      {bubbleEl && createPortal(bubbleEl, document.body)}
+    </>
   );
 }
 
@@ -194,7 +343,7 @@ function S7TooltipRichPanel({ children, panelBody, offset, className, style }) {
       top,
       width: w,
       maxWidth: w,
-      zIndex: 500000,
+      zIndex: "var(--s7-z-tooltip, 290000)",
       transform: "translateY(-50%)",
     });
   }, [offset]);

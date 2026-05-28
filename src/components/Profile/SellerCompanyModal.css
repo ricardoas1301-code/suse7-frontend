@@ -1,161 +1,126 @@
-/* Modal empresa — padrão premium Suse7 */
-.s7-company-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 32px 16px;
-  overflow-y: auto;
+/* Complemento ao CompleteProfileModal.css — modal empresa (Perfil > Dados empresa) */
+
+.s7-seller-company-modal .profile-modal-form input:not([type="checkbox"]):not([type="file"]) {
+  height: auto;
+  min-height: 38px;
+  box-sizing: border-box;
 }
 
-.s7-company-modal {
-  width: 100%;
-  max-width: 640px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
-  padding: 28px 32px 32px;
-  margin-bottom: 48px;
-}
-
-.s7-company-modal-top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.s7-company-modal-logo {
-  width: 72px;
-  height: 72px;
-  border-radius: 14px;
-  object-fit: cover;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-}
-
-.s7-company-modal-logo-ph {
-  width: 72px;
-  height: 72px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #e0e7ff, #f3f4f6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  font-weight: 700;
-  color: #4338ca;
-}
-
-.s7-company-modal-title {
-  margin-top: 14px;
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
+.s7-seller-company-modal .s7-co-loading {
   text-align: center;
+  color: #555;
+  margin: 16px 0;
+  font-size: 14px;
 }
 
-.s7-company-modal-sub {
-  margin-top: 6px;
-  font-size: 13px;
-  color: #6b7280;
-  text-align: center;
-  max-width: 420px;
-}
-
-.s7-company-modal-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px 18px;
-  margin-top: 22px;
-}
-
-.s7-company-modal-grid .s7-field-full {
+.s7-seller-company-modal .profile-grid .s7-co-field-full,
+.s7-seller-company-modal .profile-grid-3 .s7-co-field-full {
   grid-column: 1 / -1;
 }
 
-.s7-company-modal label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 4px;
-}
-
-.s7-company-modal input,
-.s7-company-modal textarea,
-.s7-company-modal select {
-  width: 100%;
-  padding: 9px 11px;
-  border-radius: 9px;
-  border: 1px solid #e5e7eb;
+.s7-seller-company-modal .profile-modal-form textarea.s7-co-textarea {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #cfd7e3;
+  background: #f5f8ff;
   font-size: 14px;
-  background: #f9fafb;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.s7-company-modal input:focus,
-.s7-company-modal textarea:focus,
-.s7-company-modal select:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-  background: #fff;
-}
-
-.s7-company-modal input:disabled {
-  background: #f3f4f6;
-  color: #6b7280;
-  cursor: not-allowed;
-}
-
-.s7-company-modal textarea {
-  min-height: 88px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 72px;
   resize: vertical;
 }
 
-.s7-company-modal-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 26px;
+.s7-seller-company-modal .profile-modal-form textarea.s7-co-textarea:focus {
+  border-color: #0077ff;
+  outline: none;
+  background: #eef5ff;
 }
 
-.s7-company-modal-actions .btn-primary {
+.s7-seller-company-modal .s7-co-logo-row .s7-co-logo-preview-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.s7-seller-company-modal .s7-co-logo-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid #cfd7e3;
+  background: #f5f8ff;
+}
+
+.s7-seller-company-modal .s7-co-logo-ph {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0e7ff, #eef5ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #4338ca;
+  border: 1px solid #cfd7e3;
+}
+
+.s7-seller-company-modal .s7-co-file-input {
+  font-size: 13px;
+  max-width: 100%;
+}
+
+.s7-seller-company-modal .s7-co-upload-hint {
+  font-size: 12px;
+  color: #0077ff;
+  font-weight: 600;
+}
+
+.s7-seller-company-modal .s7-co-checkbox-row {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px;
+}
+
+.s7-seller-company-modal .s7-co-checkbox-row input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.s7-seller-company-modal .s7-co-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+  align-items: stretch;
+}
+
+.s7-seller-company-modal .s7-co-modal-actions .btn-primary {
   flex: 1;
   margin-top: 0;
 }
 
-.s7-company-modal-actions .btn-ghost {
+.s7-seller-company-modal .btn-ghost-s7 {
   flex: 0 0 auto;
-  padding: 12px 18px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid #cfd7e3;
   background: #fff;
   font-weight: 600;
+  font-size: 14px;
   color: #374151;
   cursor: pointer;
 }
 
-.s7-company-modal-actions .btn-ghost:hover {
+.s7-seller-company-modal .btn-ghost-s7:hover:not(:disabled) {
   background: #f9fafb;
 }
 
-.s7-company-modal .logo-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.s7-company-modal .logo-row input[type="file"] {
-  font-size: 13px;
-}
-
-@media (max-width: 560px) {
-  .s7-company-modal-grid {
-    grid-template-columns: 1fr;
-  }
+.s7-seller-company-modal .btn-ghost-s7:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

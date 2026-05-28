@@ -575,8 +575,8 @@ export default function DevCenter() {
         <ShieldAlert size={48} strokeWidth={1.25} />
         <h1 className="s7-title">Acesso restrito</h1>
         <p className="dev-center__muted">
-          O Dev Center está disponível apenas para <strong>ricardo@suse7.com.br</strong>. O acesso também é validado no
-          servidor.
+          O Dev Center está disponível apenas para contas autorizadas (administrador interno ou e-mail na allowlist).
+          O acesso é validado no servidor.
         </p>
       </div>
     );

@@ -10,3 +10,22 @@
   padding: 8px 24px;     /* 🔥 era 24px → agora reduzimos ~70% */
   background: #f6f8fb;
 }
+
+@media (max-width: 768px) {
+  .profile-layout {
+    flex-direction: column;
+    min-height: auto;
+    gap: 10px;
+  }
+
+  .profile-content {
+    padding: 8px 10px 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .profile-content {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}

@@ -55,7 +55,6 @@
  * @property {"minimal" | "full"} defaultViewMode
  * @property {ListingsRowClickAction} rowClickAction
  * @property {"listing_health" | "pricing_financial"} kpiPreset — qual bloco de top cards renderizar
- * @property {boolean} syncPrimaryFirst
  * @property {string} filtersToolbarKey — id estável (telemetria / futuro)
  * @property {string} columnsPresetKey
  * @property {ListingsColumnLayout} columnLayout — `pricing_focus` oculta colunas de catálogo/qualidade na grade completa
@@ -106,7 +105,6 @@ export const listingsPageModes = {
     defaultViewMode: "minimal",
     rowClickAction: "openListingEditor",
     kpiPreset: "listing_health",
-    syncPrimaryFirst: false,
     filtersToolbarKey: "anunciosFilters",
     columnsPresetKey: "anunciosColumns",
     columnLayout: "full_catalog",
@@ -151,7 +149,6 @@ export const listingsPageModes = {
     rowClickAction: "openPricingIntelligence",
     pricingIntelligenceOpenTarget: "new_tab",
     kpiPreset: "pricing_financial",
-    syncPrimaryFirst: true,
     filtersToolbarKey: "precificacoesFilters",
     columnsPresetKey: "precificacoesColumns",
     columnLayout: "pricing_focus",

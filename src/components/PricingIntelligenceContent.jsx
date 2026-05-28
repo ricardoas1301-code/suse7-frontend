@@ -5,6 +5,12 @@
 
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch, buildApiUrl } from "../config/api";
+import {
+  applyPricingSimulationConfigToState,
+  buildPricingSimulationConfigPayload,
+  fetchListingPricingSimulationConfig,
+  savePricingFinancialSettings,
+} from "../utils/listingPricingSimulationConfig";
 import { useNotifications } from "../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import { getMarketplaceTheme, getMarketplaceThemeCssVars } from "../theme/marketplaceTheme.js";
@@ -22,6 +28,7 @@ import {
   mergeListingGridRowIntoMlScenarios,
   saleXrayListingHintFromScenarios,
   shouldSaleXrayDebugTrace,
+  wrapPricingScenariosApiAsSaleXrayModalPayload,
 } from "./mercadoLivrePricingScenarioCompareShared.js";
 import { PricingPageProductHeader } from "./pricing/PricingPageProductHeader.jsx";
 import { PricingScenarioBestSummary } from "./pricing/PricingScenarioBestSummary.jsx";
@@ -247,6 +254,8 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
   const [pageSimMlAdsEnabled, setPageSimMlAdsEnabled] = useState(false);
   const [pageSimAffiliatesEnabled, setPageSimAffiliatesEnabled] = useState(false);
   const [pageSimSafetyReserveEnabled, setPageSimSafetyReserveEnabled] = useState(false);
+  const [pricingSimConfigHydrated, setPricingSimConfigHydrated] = useState(false);
+  const [financialSettingsSaving, setFinancialSettingsSaving] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
@@ -323,6 +332,75 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
   }, []);
 
   useEffect(() => {
+    if (!active || !row.id) {
+      setPricingSimConfigHydrated(false);
+      return;
+    }
+    let cancelled = false;
+    setPricingSimConfigHydrated(false);
+    (async () => {
+      const { ok, config } = await fetchListingPricingSimulationConfig(String(row.id));
+      if (cancelled) return;
+      if (ok) {
+        applyPricingSimulationConfigToState(config, {
+          setPlannedPromoEnabled: setPageSimPlannedPromoEnabled,
+          setPlannedPromoPct: setPageSimPlannedPromoPct,
+          setMlAdsEnabled: setPageSimMlAdsEnabled,
+          setMlAdsPct: setPageSimMlAdsPct,
+          setAffiliatesEnabled: setPageSimAffiliatesEnabled,
+          setAffiliatesPct: setPageSimAffiliatesPct,
+          setSafetyReserveEnabled: setPageSimSafetyReserveEnabled,
+          setSafetyReservePct: setPageSimSafetyReservePct,
+        });
+      }
+      setPricingSimConfigHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [active, row.id]);
+
+  const handleSaveFinancialSettings = useCallback(async () => {
+    if (!row.id) return;
+    setFinancialSettingsSaving(true);
+    const result = await savePricingFinancialSettings(String(row.id), {
+      plannedPromoEnabled: pageSimPlannedPromoEnabled,
+      plannedPromoPct: pageSimPlannedPromoPct,
+      mlAdsEnabled: pageSimMlAdsEnabled,
+      mlAdsPct: pageSimMlAdsPct,
+      affiliatesEnabled: pageSimAffiliatesEnabled,
+      affiliatesPct: pageSimAffiliatesPct,
+      safetyReserveEnabled: pageSimSafetyReserveEnabled,
+      safetyReservePct: pageSimSafetyReservePct,
+    });
+    setFinancialSettingsSaving(false);
+    if (result.ok) {
+      addNotification({
+        severity: NOTIFICATION_SEVERITY.SUCCESS,
+        title: "Configurações salvas",
+        message: "Desconto, ML Ads, afiliados e reserva foram gravados para este anúncio.",
+      });
+      return;
+    }
+    addNotification({
+      severity: NOTIFICATION_SEVERITY.ERROR,
+      title: "Não foi possível salvar",
+      message: result.error ?? "Tente novamente em instantes.",
+    });
+  }, [
+    row.id,
+    pageSimPlannedPromoEnabled,
+    pageSimPlannedPromoPct,
+    pageSimMlAdsEnabled,
+    pageSimMlAdsPct,
+    pageSimAffiliatesEnabled,
+    pageSimAffiliatesPct,
+    pageSimSafetyReserveEnabled,
+    pageSimSafetyReservePct,
+    addNotification,
+  ]);
+
+  useEffect(() => {
     setSelectedScenarioTabId(null);
   }, [row.id]);
 
@@ -347,9 +425,9 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
       setMlScenariosLoading(true);
       setMlScenariosError(null);
       try {
-        const url = buildApiUrl("/api/ml/listings/sale-xray-modal");
+        const url = buildApiUrl("/api/ml/listings/pricing-scenarios");
         if (shouldSaleXrayDebugTrace(row.externalId)) {
-          console.log("[SALE_XRAY] calling sale-xray-modal", {
+          console.log("[SALE_XRAY] calling pricing-scenarios (Raio-x ML)", {
             listingExternalId: row.externalId,
             url: url ?? null,
           });
@@ -389,20 +467,26 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
           }
           return;
         }
-        if (data.from_sale_xray_modal !== true || data.sale_xray_modal == null || typeof data.sale_xray_modal !== "object") {
+        const normalized = wrapPricingScenariosApiAsSaleXrayModalPayload(data);
+        if (
+          normalized == null ||
+          normalized.from_sale_xray_modal !== true ||
+          normalized.sale_xray_modal == null ||
+          typeof normalized.sale_xray_modal !== "object"
+        ) {
           if (!cancelled) {
             setMlScenariosError(
-              "Resposta do Raio-x inválida: esperado contrato sale_xray_modal (from_sale_xray_modal). Verifique o backend.",
+              "Não foi possível montar o Raio-x a partir dos cenários deste anúncio. Sincronize o anúncio e tente de novo.",
             );
             setMlScenariosPayload(null);
           }
           return;
         }
-        if (shouldSaleXrayDebugTrace(data)) {
-          console.log("[SALE_XRAY] response", data);
+        if (shouldSaleXrayDebugTrace(normalized)) {
+          console.log("[SALE_XRAY] response", normalized);
         }
         if (!cancelled) {
-          setMlScenariosPayload(data);
+          setMlScenariosPayload(normalized);
         }
       } catch {
         if (!cancelled) {
@@ -603,6 +687,8 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
         onSafetyReservePctChange={setPageSimSafetyReservePct}
         safetyReserveEnabled={pageSimSafetyReserveEnabled}
         onSafetyReserveEnabledChange={handleToggleSafetyReserve}
+        onSaveFinancialSettings={handleSaveFinancialSettings}
+        saveFinancialSettingsLoading={financialSettingsSaving}
         mode="simulator"
       />
     );
@@ -623,6 +709,8 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     handleToggleAffiliates,
     handleToggleSafetyReserve,
     handleSaleInputChange,
+    handleSaveFinancialSettings,
+    financialSettingsSaving,
   ]);
 
   // ======================================================

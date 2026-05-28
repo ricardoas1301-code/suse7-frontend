@@ -27,6 +27,7 @@ export default function DadosEmpresa() {
   const [profileEmail, setProfileEmail] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCompanyId, setModalCompanyId] = useState(null);
+  const [modalMode, setModalMode] = useState(/** @type {"create" | "edit"} */ ("edit"));
 
   const loadCompanies = useCallback(async () => {
     const url = buildApiUrl("/api/seller/companies");
@@ -87,7 +88,14 @@ export default function DadosEmpresa() {
   }, [loadCompanies]);
 
   const openEdit = (id) => {
+    setModalMode("edit");
     setModalCompanyId(id);
+    setModalOpen(true);
+  };
+
+  const openCreate = () => {
+    setModalMode("create");
+    setModalCompanyId(null);
     setModalOpen(true);
   };
 
@@ -111,11 +119,16 @@ export default function DadosEmpresa() {
           <h2>Perfil da Empresa</h2>
         </div>
         <p className="s7-empresa-intro">
-          Visualize e edite os dados da sua empresa. A empresa principal alimenta o nome e a logo no menu. Para
-          cadastrar um <strong>novo CNPJ</strong>, use <strong>Integrações → Mercado Livre → Conectar nova conta</strong>{" "}
-          (cada nova conta ML pode ser vinculada a uma empresa).
+          Esta área é a fonte oficial dos seus <strong>CNPJs</strong>: visualize, cadastre novas empresas e edite os
+          dados. A empresa principal alimenta nome e logo no menu. Para conectar o Mercado Livre a um CNPJ, use{" "}
+          <strong>Integrações → Mercado Livre</strong> e escolha a empresa já cadastrada aqui.
         </p>
 
+        <div className="s7-empresa-toolbar">
+          <button type="button" className="s7-btn-nova-empresa" onClick={openCreate}>
+            Nova empresa
+          </button>
+        </div>
         <div className="s7-company-cards">
           {companies.length === 0 ? (
             <div className="s7-company-card-empty s7-empresa-empty-panel">
@@ -162,8 +175,8 @@ export default function DadosEmpresa() {
       <SellerCompanyModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        mode="edit"
-        companyId={modalCompanyId}
+        mode={modalMode}
+        companyId={modalMode === "create" ? null : modalCompanyId}
         profileEmail={profileEmail}
         onSaved={handleModalSaved}
       />

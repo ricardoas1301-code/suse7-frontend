@@ -1,6 +1,6 @@
 // ======================================================================
 // Modal cadastro / edição de empresa (seller_companies) — multi-CNPJ
-// Percentuais como string decimal (vírgula), sem float no frontend.
+// Layout alinhado ao CompleteProfileModal; upload em bucket dedicado.
 // ======================================================================
 
 import { useCallback, useEffect, useState } from "react";
@@ -8,7 +8,19 @@ import { supabase } from "../../supabaseClient";
 import { buildApiUrl, apiFetch } from "../../config/api";
 import { useNotifications } from "../../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../../services/notificationTypes";
+import {
+  formatPhoneBr,
+  formatCpfCnpjBr,
+  formatCepBr,
+  sanitizeTaxPercentCommaInput,
+} from "../../utils/profileInputMasks";
+import { isValidCnpjInput, normalizeCnpjDigits } from "../../utils/cnpjValidation";
+import "../CompleteProfileModal.css";
+import suse7Logo from "../../assets/suse7-logo-redonda.png";
 import "./SellerCompanyModal.css";
+
+const COMPANY_LOGOS_BUCKET =
+  import.meta.env.VITE_SUPABASE_STORAGE_BUCKET_COMPANY_LOGOS ?? "company-logos";
 
 function emptyForm() {
   return {
@@ -33,6 +45,13 @@ function emptyForm() {
   };
 }
 
+function sanitizeLogoFileName(originalName, ext) {
+  const withoutExt = String(originalName ?? "logo").replace(/\.[^.\\/]+$/g, "");
+  const base =
+    withoutExt.replace(/[/\\]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64) || "logo";
+  return `${base}.${ext}`;
+}
+
 /**
  * @param {{
  *   open: boolean;
@@ -46,6 +65,7 @@ function emptyForm() {
 export default function SellerCompanyModal({ open, onClose, mode, companyId, profileEmail, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const { addNotification } = useNotifications();
 
@@ -73,15 +93,16 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
         trade_name: c.trade_name ?? "",
         document_cnpj: c.document_cnpj != null ? String(c.document_cnpj).replace(/\D/g, "") : "",
         tax_regime: c.tax_regime ?? "",
-        default_tax_rate: c.default_tax_rate != null && c.default_tax_rate !== "" ? String(c.default_tax_rate).replace(".", ",") : "",
+        default_tax_rate:
+          c.default_tax_rate != null && c.default_tax_rate !== "" ? String(c.default_tax_rate).replace(".", ",") : "",
         operational_cost_rate:
           c.operational_cost_rate != null && c.operational_cost_rate !== ""
             ? String(c.operational_cost_rate).replace(".", ",")
             : "",
         internal_notes: c.internal_notes ?? "",
-        phone: c.phone ?? "",
-        whatsapp: c.whatsapp ?? "",
-        cep: c.cep ?? "",
+        phone: c.phone ? formatPhoneBr(String(c.phone).replace(/\D/g, "")) : "",
+        whatsapp: c.whatsapp ? formatPhoneBr(String(c.whatsapp).replace(/\D/g, "")) : "",
+        cep: c.cep ? formatCepBr(String(c.cep).replace(/\D/g, "")) : "",
         address_street: c.address_street ?? "",
         address_number: c.address_number ?? "",
         address_complement: c.address_complement ?? "",
@@ -114,44 +135,43 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
     setForm((p) => ({ ...p, [name]: value }));
   };
 
-  const handleDecimalComma = (name) => (e) => {
-    let v = e.target.value.replace(/[^0-9,]/g, "");
-    if ((v.match(/,/g) || []).length > 1) return;
-    if (v.includes(",")) {
-      const [int, dec] = v.split(",");
-      v = `${int.slice(0, 6)},${dec.slice(0, 4)}`;
-    } else {
-      v = v.slice(0, 8);
-    }
-    setForm((p) => ({ ...p, [name]: v }));
+  const handleTaxPercent = (field) => (e) => {
+    const next = sanitizeTaxPercentCommaInput(e.target.value);
+    if (next === null) return;
+    setForm((p) => ({ ...p, [field]: next }));
   };
 
-  const handleCnpj = (e) => {
+  const handlePhoneField = (field) => (e) => {
+    const only = e.target.value.replace(/\D/g, "");
+    setForm((p) => ({ ...p, [field]: formatPhoneBr(only) }));
+  };
+
+  const handleCnpjInput = (e) => {
     const d = e.target.value.replace(/\D/g, "").slice(0, 14);
     setForm((p) => ({ ...p, document_cnpj: d }));
   };
 
-  const handleCep = async (e) => {
-    let value = e.target.value.replace(/\D/g, "").slice(0, 8);
-    if (value.length > 5) value = value.replace(/^(\d{5})(\d{1,3})$/, "$1-$2");
-    setForm((p) => ({ ...p, cep: value }));
-    if (value.length === 9) {
-      const cepClean = value.replace("-", "");
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`);
-        const data = await res.json();
-        if (!data.erro) {
-          setForm((p) => ({
-            ...p,
-            address_street: data.logradouro || p.address_street,
-            address_district: data.bairro || p.address_district,
-            address_city: data.localidade || p.address_city,
-            address_state: data.uf || p.address_state,
-          }));
-        }
-      } catch {
-        /* ignore */
-      }
+  const handleCepChange = (e) => {
+    const only = e.target.value.replace(/\D/g, "").slice(0, 8);
+    setForm((p) => ({ ...p, cep: formatCepBr(only) }));
+  };
+
+  const handleCepBlur = async () => {
+    const cepLimpo = form.cep.replace(/\D/g, "");
+    if (cepLimpo.length !== 8) return;
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      const data = await res.json();
+      if (data.erro) return;
+      setForm((p) => ({
+        ...p,
+        address_street: data.logradouro || p.address_street,
+        address_district: data.bairro || p.address_district,
+        address_city: data.localidade || p.address_city,
+        address_state: data.uf || p.address_state,
+      }));
+    } catch {
+      /* ignore */
     }
   };
 
@@ -161,25 +181,66 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const suffix = mode === "edit" && companyId ? companyId : `new-${Date.now()}`;
-    const path = `logos/${user.id}-company-${suffix}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("profiles").upload(path, file, { upsert: true });
-    if (upErr) {
+    if (!user?.id) {
       addNotification({
-        event_type: "SELLER_COMPANY_LOGO_ERR",
-        entity_type: "seller_company",
-        entity_id: companyId,
         title: "Upload da logo",
-        message: upErr.message || "Falha ao enviar imagem.",
+        message: "Sessão inválida. Faça login novamente.",
         severity: NOTIFICATION_SEVERITY.ERROR,
       });
       return;
     }
-    const { data } = supabase.storage.from("profiles").getPublicUrl(path);
-    const logoUrl = `${data.publicUrl}?t=${Date.now()}`;
-    setForm((p) => ({ ...p, logo_url: logoUrl }));
+
+    const extRaw = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const ext = ["jpg", "jpeg", "png", "webp"].includes(extRaw) ? (extRaw === "jpeg" ? "jpg" : extRaw) : "jpg";
+    const mime =
+      ext === "jpg" ? "image/jpeg" : ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+    const companySegment =
+      mode === "edit" && companyId && String(companyId).trim() !== ""
+        ? String(companyId).trim()
+        : `draft-${Date.now()}`;
+    const safeFile = sanitizeLogoFileName(file.name, ext);
+    const path = `${user.id}/${companySegment}/${Date.now()}-${safeFile}`;
+
+    setUploadingLogo(true);
+    try {
+      const { error: upErr } = await supabase.storage.from(COMPANY_LOGOS_BUCKET).upload(path, file, {
+        upsert: true,
+        contentType: file.type && file.type.startsWith("image/") ? file.type : mime,
+      });
+      if (upErr) {
+        addNotification({
+          event_type: "SELLER_COMPANY_LOGO_ERR",
+          entity_type: "seller_company",
+          entity_id: companyId,
+          title: "Upload da logo",
+          message:
+            upErr.message?.includes("Bucket not found") || upErr.message?.includes("not found")
+              ? `Bucket "${COMPANY_LOGOS_BUCKET}" não encontrado no Supabase. Aplique a migration 20260512120000_storage_company_logos_bucket.sql (ou crie o bucket manualmente).`
+              : upErr.message || "Falha ao enviar imagem.",
+          severity: NOTIFICATION_SEVERITY.ERROR,
+        });
+        return;
+      }
+      const { data: pub } = supabase.storage.from(COMPANY_LOGOS_BUCKET).getPublicUrl(path);
+      const logoUrl = pub?.publicUrl ?? "";
+      if (!logoUrl) {
+        addNotification({
+          title: "Upload da logo",
+          message: "Não foi possível obter a URL pública do arquivo.",
+          severity: NOTIFICATION_SEVERITY.ERROR,
+        });
+        return;
+      }
+      setForm((p) => ({ ...p, logo_url: logoUrl }));
+      addNotification({
+        title: "Upload da logo",
+        message: "Imagem enviada. Clique em Salvar para persistir na empresa.",
+        severity: NOTIFICATION_SEVERITY.INFO,
+      });
+    } finally {
+      setUploadingLogo(false);
+      e.target.value = "";
+    }
   };
 
   const handleSave = async () => {
@@ -198,18 +259,32 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
 
     setSaving(true);
     try {
+      const digitsPhone = (s) => (s != null ? String(s).replace(/\D/g, "") : "");
       if (mode === "create") {
+        const docDigits = normalizeCnpjDigits(form.document_cnpj);
+        if (!isValidCnpjInput(docDigits)) {
+          console.warn("[company/profile] cnpj_validation_failed", { mode: "create", reason: "invalid_format_or_checksum" });
+          addNotification({
+            event_type: "SELLER_COMPANY_CNPJ_INVALID",
+            entity_type: "seller_company",
+            entity_id: null,
+            title: "CNPJ inválido",
+            message: "CNPJ inválido. Confira os números e tente novamente.",
+            severity: NOTIFICATION_SEVERITY.ERROR,
+          });
+          return;
+        }
         const body = {
           company_name: form.company_name.trim(),
           trade_name: form.trade_name.trim() || null,
-          document_cnpj: form.document_cnpj.replace(/\D/g, ""),
+          document_cnpj: docDigits,
           tax_regime: form.tax_regime.trim() || null,
           default_tax_rate: form.default_tax_rate.trim() || null,
           operational_cost_rate: form.operational_cost_rate.trim() || null,
           internal_notes: form.internal_notes || null,
-          phone: form.phone.trim() || null,
-          whatsapp: form.whatsapp.trim() || null,
-          cep: form.cep.trim() || null,
+          phone: digitsPhone(form.phone) || null,
+          whatsapp: digitsPhone(form.whatsapp) || null,
+          cep: form.cep.replace(/\D/g, "") || null,
           address_street: form.address_street.trim() || null,
           address_number: form.address_number.trim() || null,
           address_complement: form.address_complement.trim() || null,
@@ -219,14 +294,21 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
           logo_url: form.logo_url.trim() || null,
           active: form.active,
         };
-        const { ok, data, error } = await apiFetch(urlBase, { method: "POST", body });
+        const { ok, data, error, status } = await apiFetch(urlBase, { method: "POST", body });
         if (!ok || !data?.company?.id) {
+          const serverErr = typeof error === "string" ? error : data?.error || "Verifique os dados.";
+          if (status === 409 || /já está cadastrado|já cadastrado/i.test(serverErr)) {
+            console.warn("[company/profile] duplicate_cnpj_blocked", { mode: "create", source: "api_response" });
+          }
+          if (status === 400 && /CNPJ inválido/i.test(serverErr)) {
+            console.warn("[company/profile] cnpj_validation_failed", { mode: "create", source: "api_response" });
+          }
           addNotification({
             event_type: "SELLER_COMPANY_SAVE_ERR",
             entity_type: "seller_company",
             entity_id: null,
             title: "Empresa não salva",
-            message: typeof error === "string" ? error : data?.error || "Verifique os dados.",
+            message: serverErr,
             severity: NOTIFICATION_SEVERITY.ERROR,
           });
           return;
@@ -252,9 +334,9 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
         default_tax_rate: form.default_tax_rate.trim() || null,
         operational_cost_rate: form.operational_cost_rate.trim() || null,
         internal_notes: form.internal_notes || null,
-        phone: form.phone.trim() || null,
-        whatsapp: form.whatsapp.trim() || null,
-        cep: form.cep.trim() || null,
+        phone: digitsPhone(form.phone) || null,
+        whatsapp: digitsPhone(form.whatsapp) || null,
+        cep: form.cep.replace(/\D/g, "") || null,
         address_street: form.address_street.trim() || null,
         address_number: form.address_number.trim() || null,
         address_complement: form.address_complement.trim() || null,
@@ -297,152 +379,186 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
   const letter = (form.trade_name || form.company_name || "?").charAt(0).toUpperCase();
 
   return (
-    <div className="s7-company-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="s7-company-modal-h">
-      <div className="s7-company-modal">
-        <div className="s7-company-modal-top">
-          {form.logo_url ? (
-            <img className="s7-company-modal-logo" src={form.logo_url} alt="" />
-          ) : (
-            <div className="s7-company-modal-logo-ph">{letter}</div>
-          )}
-          <h2 id="s7-company-modal-h" className="s7-company-modal-title">
-            {title}
-          </h2>
-          <p className="s7-company-modal-sub">
-            Cadastro de CNPJ para precificação, impostos e vínculo com contas de marketplace. O login do Suse7 continua
-            sendo o e-mail da sua conta.
-          </p>
+    <div className="profile-modal-backdrop" role="presentation">
+      <div
+        className="profile-modal s7-seller-company-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="s7-seller-company-modal-h"
+      >
+        <div className="profile-modal-header">
+          <img src={suse7Logo} alt="" className="profile-modal-logo" />
+          <h2 id="s7-seller-company-modal-h">{title}</h2>
+          <p>Dados fiscais e de contato da empresa. O login do Suse7 continua sendo o e-mail da sua conta.</p>
         </div>
 
         {profileEmail ? (
-          <div className="s7-company-modal-grid" style={{ marginTop: 0 }}>
-            <div className="s7-field-full">
-              <label>E-mail da conta Suse7</label>
-              <input value={profileEmail} disabled />
+          <div className="profile-modal-form">
+            <div className="profile-grid">
+              <label className="s7-co-field-full">
+                E-mail da conta Suse7
+                <input value={profileEmail} disabled />
+              </label>
             </div>
           </div>
         ) : null}
 
         {loading ? (
-          <p style={{ textAlign: "center", color: "#6b7280", marginTop: 24 }}>Carregando...</p>
+          <p className="s7-co-loading">Carregando...</p>
         ) : (
-          <>
-            <div className="s7-company-modal-grid">
-              <div className="s7-field-full logo-row">
-                <label>Logo</label>
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleLogo} />
-              </div>
-
-              <div className="s7-field-full">
-                <label>Razão social *</label>
-                <input name="company_name" value={form.company_name} onChange={handleChange} autoComplete="organization" />
-              </div>
-
-              <div>
-                <label>Nome fantasia</label>
-                <input name="trade_name" value={form.trade_name} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>CNPJ {mode === "edit" ? "" : "*"}</label>
-                <input
-                  name="document_cnpj"
-                  value={form.document_cnpj}
-                  onChange={handleCnpj}
-                  disabled={mode === "edit"}
-                  inputMode="numeric"
-                  placeholder="Somente números"
-                />
-              </div>
-
-              <div>
-                <label>Regime fiscal</label>
-                <input name="tax_regime" value={form.tax_regime} onChange={handleChange} placeholder="Ex.: Simples Nacional" />
-              </div>
-
-              <div>
-                <label>Alíquota / imposto padrão (%)</label>
-                <input value={form.default_tax_rate} onChange={handleDecimalComma("default_tax_rate")} placeholder="0,00" />
-              </div>
-
-              <div>
-                <label>Custo operacional padrão (%)</label>
-                <input
-                  value={form.operational_cost_rate}
-                  onChange={handleDecimalComma("operational_cost_rate")}
-                  placeholder="0,00"
-                />
-              </div>
-
-              <div className="s7-field-full">
-                <label>Observações internas</label>
-                <textarea name="internal_notes" value={form.internal_notes} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>Telefone</label>
-                <input name="phone" value={form.phone} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>WhatsApp</label>
-                <input name="whatsapp" value={form.whatsapp} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>CEP</label>
-                <input value={form.cep} onChange={handleCep} placeholder="00000-000" />
-              </div>
-
-              <div className="s7-field-full">
-                <label>Endereço</label>
-                <input name="address_street" value={form.address_street} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>Número</label>
-                <input name="address_number" value={form.address_number} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>Complemento</label>
-                <input name="address_complement" value={form.address_complement} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>Bairro</label>
-                <input name="address_district" value={form.address_district} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>Cidade</label>
-                <input name="address_city" value={form.address_city} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>Estado (UF)</label>
-                <input name="address_state" value={form.address_state} onChange={handleChange} maxLength={2} />
-              </div>
-
-              {mode === "edit" ? (
-                <div className="s7-field-full" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <input type="checkbox" id="s7-co-active" name="active" checked={form.active} onChange={handleChange} />
-                  <label htmlFor="s7-co-active" style={{ marginBottom: 0 }}>
-                    Empresa ativa
-                  </label>
-                </div>
-              ) : null}
+          <form
+            className="profile-modal-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+            }}
+          >
+            <div className="profile-grid">
+              <label className="s7-co-field-full s7-co-logo-row">
+                Logo da empresa
+                <span className="s7-co-logo-preview-wrap">
+                  {form.logo_url ? (
+                    <img className="s7-co-logo-preview" src={form.logo_url} alt="" />
+                  ) : (
+                    <span className="s7-co-logo-ph">{letter}</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleLogo}
+                    disabled={uploadingLogo || saving}
+                    className="s7-co-file-input"
+                  />
+                  {uploadingLogo ? <span className="s7-co-upload-hint">Enviando...</span> : null}
+                </span>
+              </label>
             </div>
 
-            <div className="s7-company-modal-actions">
-              <button type="button" className="btn-ghost" onClick={onClose} disabled={saving}>
+            <div className="profile-grid">
+              <label className="s7-co-field-full">
+                Razão social *
+                <input name="company_name" value={form.company_name} onChange={handleChange} autoComplete="organization" />
+              </label>
+            </div>
+
+            <div className="profile-grid">
+              <label>
+                Nome fantasia
+                <input name="trade_name" value={form.trade_name} onChange={handleChange} />
+              </label>
+              <label>
+                CNPJ {mode === "edit" ? "" : "*"}
+                <input
+                  name="document_cnpj"
+                  value={formatCpfCnpjBr(form.document_cnpj)}
+                  onChange={handleCnpjInput}
+                  disabled={mode === "edit"}
+                  inputMode="numeric"
+                  autoComplete="off"
+                />
+              </label>
+            </div>
+
+            <div className="profile-grid">
+              <label>
+                Regime fiscal
+                <input name="tax_regime" value={form.tax_regime} onChange={handleChange} placeholder="Ex.: Simples Nacional" />
+              </label>
+              <label>
+                Alíquota / imposto padrão (%)
+                <input value={form.default_tax_rate} onChange={handleTaxPercent("default_tax_rate")} placeholder="Ex.: 6 ou 13,28" />
+              </label>
+            </div>
+
+            <div className="profile-grid">
+              <label>
+                Custo operacional padrão (%)
+                <input
+                  value={form.operational_cost_rate}
+                  onChange={handleTaxPercent("operational_cost_rate")}
+                  placeholder="Ex.: 2 ou 5,5"
+                />
+              </label>
+              <label>
+                Estado (UF)
+                <input name="address_state" value={form.address_state} onChange={handleChange} maxLength={2} placeholder="SP" />
+              </label>
+            </div>
+
+            <div className="profile-grid">
+              <label className="s7-co-field-full">
+                Observações internas
+                <textarea name="internal_notes" value={form.internal_notes} onChange={handleChange} className="s7-co-textarea" rows={3} />
+              </label>
+            </div>
+
+            <div className="profile-grid">
+              <label>
+                Telefone
+                <input name="phone" value={form.phone} onChange={handlePhoneField("phone")} inputMode="tel" autoComplete="tel" />
+              </label>
+              <label>
+                WhatsApp
+                <input
+                  name="whatsapp"
+                  value={form.whatsapp}
+                  onChange={handlePhoneField("whatsapp")}
+                  inputMode="tel"
+                  autoComplete="tel"
+                />
+              </label>
+            </div>
+
+            <div className="profile-grid">
+              <label>
+                CEP
+                <input name="cep" value={form.cep} onChange={handleCepChange} onBlur={handleCepBlur} placeholder="00000-000" />
+              </label>
+              <label>
+                Número
+                <input name="address_number" value={form.address_number} onChange={handleChange} />
+              </label>
+            </div>
+
+            <div className="profile-grid">
+              <label className="s7-co-field-full">
+                Endereço
+                <input name="address_street" value={form.address_street} onChange={handleChange} />
+              </label>
+            </div>
+
+            <div className="profile-grid-3">
+              <label>
+                Complemento
+                <input name="address_complement" value={form.address_complement} onChange={handleChange} />
+              </label>
+              <label>
+                Bairro
+                <input name="address_district" value={form.address_district} onChange={handleChange} />
+              </label>
+              <label>
+                Cidade
+                <input name="address_city" value={form.address_city} onChange={handleChange} />
+              </label>
+            </div>
+
+            {mode === "edit" ? (
+              <div className="profile-grid">
+                <label className="s7-co-field-full s7-co-checkbox-row">
+                  <input type="checkbox" id="s7-co-active" name="active" checked={form.active} onChange={handleChange} />
+                  <span>Empresa ativa</span>
+                </label>
+              </div>
+            ) : null}
+
+            <div className="s7-co-modal-actions">
+              <button type="button" className="btn-ghost-s7" onClick={onClose} disabled={saving}>
                 Cancelar
               </button>
-              <button type="button" className="btn-primary" onClick={handleSave} disabled={saving}>
+              <button type="button" className="btn-primary" onClick={handleSave} disabled={saving || uploadingLogo}>
                 {saving ? "Salvando..." : "Salvar"}
               </button>
             </div>
-          </>
+          </form>
         )}
       </div>
     </div>

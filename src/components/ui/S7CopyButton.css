@@ -1,7 +1,23 @@
 /* ======================================================
    S7CopyButton — grupo externo (.s7-copy-group) revela o botão no hover
    Reutiliza .products-catalog__copy-btn (Products.css)
+   Paleta neutra oficial: cinza discreto → preto no hover/copiado (lista Vendas)
 ====================================================== */
+
+:root {
+  --s7-copy-btn-color: rgba(15, 23, 42, 0.38);
+  --s7-copy-btn-color-active: var(--s7-text, #0f172a);
+}
+
+.products-catalog__copy-btn.s7-copy-btn {
+  color: var(--s7-copy-btn-color);
+}
+
+.products-catalog__copy-btn.s7-copy-btn:hover,
+.products-catalog__copy-btn.s7-copy-btn:focus-visible,
+.products-catalog__copy-btn.s7-copy-btn.products-catalog__copy-btn--ok {
+  color: var(--s7-copy-btn-color-active);
+}
 
 .s7-copy-group {
   position: relative;
@@ -35,11 +51,28 @@
   }
 }
 
-.s7-copy-group .s7-copy-btn.s7-tooltip.s7-tip.s7-tooltip-trigger {
-  color: rgba(15, 23, 42, 0.38);
+.s7-copy-btn--unicode .s7-copy-btn__glyph {
+  display: inline-block;
+  line-height: 1;
+  font-size: inherit;
 }
 
-.s7-copy-group .s7-copy-btn.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
-.s7-copy-group .s7-copy-btn.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
-  color: var(--s7-text, #0f172a);
+/* ProductForm — reveal no hover da linha do label */
+@media (hover: hover) and (pointer: fine) {
+  .pf-label-row--copyable .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .s7-ad-title-copy-row .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .pv-card-field__header .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .pf-label-row--copyable:hover .products-catalog__copy-btn,
+  .pf-label-row--copyable:focus-within .products-catalog__copy-btn,
+  .s7-ad-title-copy-row:hover .products-catalog__copy-btn,
+  .s7-ad-title-copy-row:focus-within .products-catalog__copy-btn,
+  .pv-card-field__header:hover .products-catalog__copy-btn,
+  .pv-card-field__header:focus-within .products-catalog__copy-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }

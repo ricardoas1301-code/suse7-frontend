@@ -796,7 +796,7 @@
   padding: 0;
 
   font-size: 14px;
-  color: var(--s7-muted, #6b7280);
+  color: var(--s7-copy-btn-color, rgba(15, 23, 42, 0.38));
   transition: transform 160ms ease, color 160ms ease;
 
   z-index: 50;
@@ -804,7 +804,7 @@
 
 .pf-copy-btn:hover{
   transform: scale(1.08);
-  color: var(--s7-text, #0f172a);
+  color: var(--s7-copy-btn-color-active, var(--s7-text, #0f172a));
 }
 
 /* ======================================================

@@ -1,23 +1,35 @@
 // ======================================================================
-// Página Vendas — cards + filtros + tabela; agregados via GET /api/sales/summary (Decimal no servidor).
+// Página Vendas — cards via GET /api/sales/executive-summary; lista via GET /api/sales.
 // ======================================================================
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildApiUrl, apiFetch } from "../config/api";
+import { useSalesExecutiveSummary } from "../hooks/useSalesExecutiveSummary";
+import { formatBrlFromApiString, formatPercentFromApiString } from "../features/listings/utils/catalogFormatters";
 import { fetchMercadoLivreMarketplaceAccounts } from "../services/marketplaceAccountsApi";
 import SaleDetailModal from "../components/sales/SaleDetailModal";
-import S7Input from "../components/ui/S7Input";
+import SalesTopRankingCard from "../components/sales/SalesTopRankingCard";
+import VendasExecutiveKpiCard from "../components/sales/VendasExecutiveKpiCard";
+import { formatExecutivePeriodLabel } from "../components/sales/salesTopRankingUtils";
+import {
+  EXECUTIVE_PANEL_EMPTY_KPI_VALUE,
+  EXECUTIVE_PANEL_ERROR_MESSAGE,
+  isExecutiveSummaryEmptyForFilters,
+} from "../components/sales/vendasExecutivePanelUx";
+import { isSaleRayxDetailItemId, pickSaleRayxDetailItemId } from "../components/sales/saleRayxDetailItemId";
 import S7Icon from "../components/ui/S7Icon";
 import { getSaleHealthUi } from "../utils/saleHealthUi";
-import { SALES_FILTER_CHIPS } from "../utils/salesToolbarFilters";
 import S7CatalogAccountCell, {
   S7CatalogChannelCell,
   pickCatalogAccountFields,
 } from "../components/catalog/S7CatalogAccountCell.jsx";
-import S7CopyButton from "../components/ui/S7CopyButton";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../components/ui/S7CopyButton";
 import S7Button from "../components/ui/S7Button";
 import QuickProductCostsModal from "../features/listings/components/QuickProductCostsModal.jsx";
 import { resolveSalesRowProductThumbUrl, salesRowThumbCacheKey } from "../utils/resolveSalesRowProductThumbUrl.js";
+import VendasFiltersCard from "../features/vendas/filters/VendasFiltersCard.jsx";
+import { VendasFiltersProvider, useVendasFilters } from "../features/vendas/filters/VendasFiltersContext.jsx";
+import { buildVendasSalesListPeriodQuery } from "../features/vendas/filters/vendasFiltersPeriod.js";
 import "../components/Products.css";
 import "../components/Anuncios.css";
 import "../styles/VendasPage.css";
@@ -129,14 +141,38 @@ function VendasProductIdSkuLine({ listingId, sku }) {
       {lid ? (
         <span className="s7-copy-group vendas-page__product-meta-ad">
           <span className="vendas-page__meta-value vendas-page__meta-value--listing">{lid}</span>
-          <S7CopyButton value={lid} ariaLabel="Copiar código do anúncio" size={13} />
+          <S7CopyButton
+            value={lid}
+            ariaLabel="Copiar ID do anúncio"
+            tooltipText="Copiar ID do anúncio"
+            toastLabel="ID do anúncio"
+            showToast={true}
+            iconMode="unicode"
+            flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+            flashKey={`vendas-list-listing-${lid}`}
+            toastEventType="LISTING_ID_COPIED"
+            toastFailEventType="LISTING_ID_COPY_FAILED"
+            toastEntityType="marketplace_listing"
+          />
         </span>
       ) : null}
       {sk ? (
         <span className="s7-copy-group vendas-page__product-meta-sku">
           <span className="anuncios-ad-sku-label">SKU</span>
           <span className="anuncios-ad-sku-value">{sk}</span>
-          <S7CopyButton value={sk} ariaLabel="Copiar SKU" size={13} />
+          <S7CopyButton
+            value={sk}
+            ariaLabel="Copiar SKU"
+            tooltipText="Copiar SKU"
+            toastLabel="SKU"
+            showToast={true}
+            iconMode="unicode"
+            flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+            flashKey={`vendas-list-sku-${sk}`}
+            toastEventType="LISTING_SKU_COPIED"
+            toastFailEventType="LISTING_SKU_COPY_FAILED"
+            toastEntityType="marketplace_listing"
+          />
         </span>
       ) : null}
     </div>
@@ -149,6 +185,24 @@ function formatBrlApi(s) {
   const n = Number(String(s).replace(",", "."));
   if (!Number.isFinite(n)) return DASH;
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+/** @param {number | string | null | undefined} value */
+function formatExecutiveCount(value) {
+  if (value == null) return "0";
+  const n = typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  if (!Number.isFinite(n)) return "0";
+  return n.toLocaleString("pt-BR");
+}
+
+/** @param {Record<string, unknown> | null | undefined} summary */
+function formatExecutiveConversion(summary) {
+  if (!summary) return DASH;
+  const status = summary.conversion_data_status != null ? String(summary.conversion_data_status) : "unavailable";
+  if (status === "unavailable") return DASH;
+  return formatPercentFromApiString(
+    summary.sales_conversion_rate_percent != null ? String(summary.sales_conversion_rate_percent) : null,
+  );
 }
 
 /** @param {string | null | undefined} s */
@@ -181,7 +235,20 @@ function vendasMlAccountLabel(a) {
 }
 
 export default function VendasPage() {
-  /** Contas ML para o filtro “Conta”. */
+  return (
+    <VendasFiltersProvider>
+      <VendasPageContent />
+    </VendasFiltersProvider>
+  );
+}
+
+function VendasPageContent() {
+  const {
+    filters: vendasFilters,
+    executiveApiParams,
+  } = useVendasFilters();
+
+  /** Contas marketplace para o filtro “Conta”. */
   const [mlAccounts, setMlAccounts] = useState(/** @type {Record<string, unknown>[]} */ ([]));
   const [mlAccountsReady, setMlAccountsReady] = useState(false);
 
@@ -190,14 +257,9 @@ export default function VendasPage() {
   const [pageSize] = useState(DEFAULT_PAGE_SIZE);
   const [total, setTotal] = useState(0);
   const [truncatedList, setTruncatedList] = useState(false);
-  const [marketplace, setMarketplace] = useState("");
-  /** marketplace_accounts.id — vazio = todas as contas */
-  const [accountFilter, setAccountFilter] = useState("");
   const [filter, setFilter] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [summary, setSummary] = useState(/** @type {Record<string, unknown> | null} */ (null));
-  const [summaryTruncated, setSummaryTruncated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(/** @type {string | null} */ (null));
   const [modalOpen, setModalOpen] = useState(false);
@@ -209,6 +271,50 @@ export default function VendasPage() {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 220);
     return () => clearTimeout(t);
   }, [searchInput]);
+
+  const executiveParams = useMemo(
+    () => ({
+      ...executiveApiParams,
+      filter: filter !== "all" ? filter : undefined,
+      q: debouncedSearch || undefined,
+    }),
+    [executiveApiParams, filter, debouncedSearch],
+  );
+
+  const executiveQueryEnabled = useMemo(
+    () => Boolean(vendasFilters.startDate && vendasFilters.endDate),
+    [vendasFilters.startDate, vendasFilters.endDate],
+  );
+
+  const {
+    data: executiveData,
+    summary: executiveSummary,
+    topListings,
+    topListingsByQuantity,
+    topListingsByGrossRevenue,
+    topListingsByNetProfit,
+    topProducts,
+    dataQuality,
+    period: executivePeriod,
+    truncatedScan: executiveTruncated,
+    loading: executiveLoading,
+    error: executiveError,
+  } = useSalesExecutiveSummary(executiveParams, { enabled: executiveQueryEnabled });
+
+  const executivePeriodLabel = useMemo(
+    () => formatExecutivePeriodLabel(executivePeriod),
+    [executivePeriod],
+  );
+
+  const executivePanelEmpty = useMemo(
+    () =>
+      !executiveLoading &&
+      !executiveError &&
+      isExecutiveSummaryEmptyForFilters(executiveSummary),
+    [executiveLoading, executiveError, executiveSummary],
+  );
+
+  const executivePanelError = executiveError ? EXECUTIVE_PANEL_ERROR_MESSAGE : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -234,34 +340,31 @@ export default function VendasPage() {
   const hasNextPage = page < totalPages;
   const load = useCallback(async () => {
     const listBase = buildApiUrl("/api/sales");
-    const summaryBase = buildApiUrl("/api/sales/summary");
-    if (!listBase || !summaryBase) {
+    if (!listBase) {
       setErr("Configure VITE_API_BASE_URL para carregar as vendas.");
       setRows([]);
-      setSummary(null);
       setLoading(false);
       return;
     }
     const qsList = new URLSearchParams();
     qsList.set("page", String(page));
     qsList.set("page_size", String(pageSize));
-    if (marketplace.trim()) qsList.set("marketplace", marketplace.trim());
-    if (accountFilter.trim()) qsList.set("marketplace_account_id", accountFilter.trim());
+    const periodQs = buildVendasSalesListPeriodQuery({
+      periodPreset: vendasFilters.periodPreset,
+      startDate: vendasFilters.startDate,
+      endDate: vendasFilters.endDate,
+      marketplace: vendasFilters.marketplace,
+      marketplaceAccountId: vendasFilters.marketplaceAccountId,
+    });
+    periodQs.forEach((value, key) => {
+      qsList.set(key, value);
+    });
     if (filter && filter !== "all") qsList.set("filter", filter);
     if (debouncedSearch) qsList.set("q", debouncedSearch);
 
-    const qsSummary = new URLSearchParams();
-    if (marketplace.trim()) qsSummary.set("marketplace", marketplace.trim());
-    if (accountFilter.trim()) qsSummary.set("marketplace_account_id", accountFilter.trim());
-    if (filter && filter !== "all") qsSummary.set("filter", filter);
-    if (debouncedSearch) qsSummary.set("q", debouncedSearch);
-
     setLoading(true);
     setErr(null);
-    const [resList, resSum] = await Promise.all([
-      apiFetch(`${listBase}?${qsList.toString()}`, { method: "GET" }),
-      apiFetch(`${summaryBase}?${qsSummary.toString()}`, { method: "GET" }),
-    ]);
+    const resList = await apiFetch(`${listBase}?${qsList.toString()}`, { method: "GET" });
     setLoading(false);
 
     if (!resList.ok) {
@@ -290,6 +393,20 @@ export default function VendasPage() {
         typeof data?.pagination?.has_previous === "boolean" ? data.pagination.has_previous : page > 1;
 
       if (import.meta.env.DEV) {
+        const firstRow = rowsArr[0] ?? null;
+        console.info("[S7][/api/sales response]", {
+          total: t,
+          rowsCount: rowsArr.length,
+          marketplace: vendasFilters.marketplace.trim() || null,
+          marketplace_account_id: vendasFilters.marketplaceAccountId.trim() || null,
+          period_preset: executiveApiParams.period_preset ?? null,
+          start_date: executiveApiParams.start_date ?? null,
+          end_date: executiveApiParams.end_date ?? null,
+          filter: filter !== "all" ? filter : null,
+          q: debouncedSearch || null,
+          firstOrderId: firstRow?.external_order_id ?? firstRow?.sale_display_code ?? null,
+          firstItemId: firstRow?.item_id ?? firstRow?.sale_item_id ?? null,
+        });
         console.log("[S7][sales-pagination-debug]", {
           page,
           pageSize,
@@ -301,15 +418,20 @@ export default function VendasPage() {
         });
       }
     }
-
-    if (resSum.ok && resSum.data?.ok && resSum.data?.summary != null && typeof resSum.data.summary === "object") {
-      setSummary(/** @type {Record<string, unknown>} */ (resSum.data.summary));
-      setSummaryTruncated(Boolean(resSum.data?.truncated_scan));
-    } else {
-      setSummary(null);
-      setSummaryTruncated(false);
-    }
-  }, [page, pageSize, marketplace, accountFilter, filter, debouncedSearch]);
+  }, [
+    page,
+    pageSize,
+    vendasFilters.periodPreset,
+    vendasFilters.startDate,
+    vendasFilters.endDate,
+    vendasFilters.marketplace,
+    vendasFilters.marketplaceAccountId,
+    filter,
+    debouncedSearch,
+    executiveApiParams.period_preset,
+    executiveApiParams.start_date,
+    executiveApiParams.end_date,
+  ]);
 
   useEffect(() => {
     void load();
@@ -317,11 +439,75 @@ export default function VendasPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [marketplace, accountFilter, filter, debouncedSearch]);
+  }, [
+    vendasFilters.periodPreset,
+    vendasFilters.startDate,
+    vendasFilters.endDate,
+    vendasFilters.marketplace,
+    vendasFilters.marketplaceAccountId,
+    filter,
+    debouncedSearch,
+  ]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (loading || executiveLoading) return;
+    if (total <= 0 && rows.length === 0) return;
+
+    const ordersCount =
+      typeof executiveSummary?.orders_count === "number"
+        ? executiveSummary.orders_count
+        : Number.parseInt(String(executiveSummary?.orders_count ?? ""), 10) || 0;
+
+    if (total > 0 && ordersCount === 0) {
+      const firstRow = rows[0] ?? null;
+      console.info("[S7][Sales vs ExecutiveSummary compare]", {
+        salesList: {
+          total,
+          rowsCount: rows.length,
+          marketplace: vendasFilters.marketplace.trim() || null,
+          marketplace_account_id: vendasFilters.marketplaceAccountId.trim() || null,
+          filter: filter !== "all" ? filter : null,
+          q: debouncedSearch || null,
+          firstOrderId: firstRow?.external_order_id ?? firstRow?.sale_display_code ?? null,
+          firstItemId: firstRow?.item_id ?? firstRow?.sale_item_id ?? null,
+        },
+        executiveSummary: {
+          orders_count: ordersCount,
+          listingsCount: topListings.length,
+          summary: executiveSummary,
+          period: executivePeriod,
+          filtersApplied: executiveData?.filters_applied ?? null,
+          dataQuality: executiveData?.data_quality ?? null,
+        },
+      });
+    }
+  }, [
+    loading,
+    executiveLoading,
+    total,
+    rows,
+    executiveSummary,
+    topListings,
+    executivePeriod,
+    executiveData,
+    vendasFilters.marketplace,
+    vendasFilters.marketplaceAccountId,
+    filter,
+    debouncedSearch,
+  ]);
 
   const openDetail = useCallback((itemId) => {
-    if (!itemId) return;
-    setSelectedItemId(String(itemId));
+    const id = String(itemId ?? "").trim();
+    if (!isSaleRayxDetailItemId(id)) {
+      if (import.meta.env.DEV) {
+        console.warn("[S7 Raio-X] não abre modal: item_id ausente ou inválido (exige UUID de sales_order_items)", {
+          itemId: id || null,
+        });
+      }
+      return;
+    }
+    setSelectedItemId(id);
     setModalOpen(true);
   }, []);
 
@@ -330,156 +516,158 @@ export default function VendasPage() {
     setSelectedItemId(null);
   }, []);
 
+  const quantityKpi = useMemo(() => {
+    if (executivePanelEmpty) {
+      return { value: EXECUTIVE_PANEL_EMPTY_KPI_VALUE, subtitle: null };
+    }
+    const qty =
+      executiveSummary?.items_quantity_sold != null
+        ? executiveSummary.items_quantity_sold
+        : executiveSummary?.orders_count;
+    const count = formatExecutiveCount(qty);
+    return { value: `${count} vendas`, subtitle: null };
+  }, [executivePanelEmpty, executiveSummary]);
+
+  const revenueKpi = useMemo(() => {
+    if (executivePanelEmpty) {
+      return { value: EXECUTIVE_PANEL_EMPTY_KPI_VALUE, subtitle: null };
+    }
+    const raw =
+      executiveSummary?.gross_sales_brl != null ? String(executiveSummary.gross_sales_brl) : "0.00";
+    return { value: formatBrlFromApiString(raw), subtitle: null };
+  }, [executivePanelEmpty, executiveSummary]);
+
+  const netProfitKpi = useMemo(() => {
+    if (executivePanelEmpty) {
+      return { value: EXECUTIVE_PANEL_EMPTY_KPI_VALUE, subtitle: null };
+    }
+    const raw =
+      executiveSummary?.contribution_profit_brl != null
+        ? String(executiveSummary.contribution_profit_brl)
+        : executiveSummary?.net_profit_brl != null
+          ? String(executiveSummary.net_profit_brl)
+          : "0.00";
+    return { value: formatBrlFromApiString(raw), subtitle: null };
+  }, [executivePanelEmpty, executiveSummary]);
+
+  const conversionKpi = useMemo(() => {
+    if (executivePanelEmpty) {
+      return { value: EXECUTIVE_PANEL_EMPTY_KPI_VALUE, subtitle: null, unavailable: false };
+    }
+    const status =
+      executiveSummary?.conversion_data_status != null
+        ? String(executiveSummary.conversion_data_status)
+        : "unavailable";
+    if (status === "unavailable") {
+      return {
+        value: "—",
+        subtitle: "Visitas ainda indisponíveis",
+        unavailable: true,
+      };
+    }
+    return {
+      value: formatExecutiveConversion(executiveSummary),
+      subtitle: null,
+      unavailable: false,
+    };
+  }, [executivePanelEmpty, executiveSummary]);
+
   return (
     <div className="vendas-page">
       <h1 className="products-catalog__sr-title">Vendas</h1>
 
-      <section className="s7-core-kpis anuncios-catalog__kpis" aria-label="Resumo das vendas filtradas">
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
-          <header className="anuncios-catalog__kpi-head">
-            <h2 className="anuncios-catalog__kpi-title">Receita de produtos</h2>
-          </header>
-          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
+      {executiveError ? (
+        <p className="vendas-page__kpi-note vendas-page__kpi-note--error" role="status">
+          Resumo executivo indisponível. A listagem de vendas abaixo continua disponível.
+        </p>
+      ) : null}
+      <section
+        className="s7-core-kpis anuncios-catalog__kpis vendas-page__kpis--executive"
+        aria-label="Painel executivo de vendas"
+        data-rankings-products-count={topProducts.length}
+      >
+        <article className="vendas-page__executive-rank-slot">
+          <SalesTopRankingCard
+            title="Top 10 mais vendidos"
+            metric="quantity"
+            listings={/** @type {Record<string, unknown>[]} */ (topListingsByQuantity)}
+            loading={executiveLoading}
+            error={executivePanelError}
+            periodLabel={executivePeriodLabel}
+          />
         </article>
 
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
-          <header className="anuncios-catalog__kpi-head">
-            <h2 className="anuncios-catalog__kpi-title">Total líquido</h2>
-          </header>
-          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
+        <article className="vendas-page__executive-rank-slot">
+          <SalesTopRankingCard
+            title="Top 10 maior faturamento"
+            metric="gross_revenue"
+            listings={/** @type {Record<string, unknown>[]} */ (topListingsByGrossRevenue)}
+            loading={executiveLoading}
+            error={executivePanelError}
+            periodLabel={executivePeriodLabel}
+          />
         </article>
 
-        <div className="anuncios-catalog__kpi-minis" aria-label="Indicadores rápidos">
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--profit">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Vendas</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--warn">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Ticket médio</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Reembolsos / cancel.</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--sales">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Linhas negativas</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
+        <article className="vendas-page__executive-rank-slot">
+          <SalesTopRankingCard
+            title="Top 10 com mais lucro"
+            metric="net_profit"
+            listings={/** @type {Record<string, unknown>[]} */ (topListingsByNetProfit)}
+            loading={executiveLoading}
+            error={executivePanelError}
+            periodLabel={executivePeriodLabel}
+          />
+        </article>
+
+        <div className="vendas-page__executive-kpi-row" aria-label="Indicadores executivos do período">
+          <VendasExecutiveKpiCard
+            title="Quantidade de vendas"
+            tone="quantity"
+            value={quantityKpi.value}
+            loading={executiveLoading}
+            error={executivePanelError}
+            empty={executivePanelEmpty}
+          />
+          <VendasExecutiveKpiCard
+            title="Vendas em R$"
+            tone="revenue"
+            value={revenueKpi.value}
+            loading={executiveLoading}
+            error={executivePanelError}
+            empty={executivePanelEmpty}
+          />
+          <VendasExecutiveKpiCard
+            title="Lucro líquido"
+            tone="profit"
+            value={netProfitKpi.value}
+            loading={executiveLoading}
+            error={executivePanelError}
+            empty={executivePanelEmpty}
+          />
+          <VendasExecutiveKpiCard
+            title="Conversão"
+            tone="conversion"
+            value={conversionKpi.value}
+            subtitle={conversionKpi.subtitle}
+            unavailable={conversionKpi.unavailable}
+            loading={executiveLoading}
+            error={executivePanelError}
+            empty={executivePanelEmpty}
+          />
         </div>
       </section>
 
-      <div className="products-catalog__controls vendas-page__controls s7-sticky-filters">
-        <div className="products-catalog__controls-top vendas-page__filters-row">
-          <div className="vendas-page__filter-field">
-            <label className="vendas-page__muted" htmlFor="vendas-account">
-              Conta
-            </label>
-            <select
-              id="vendas-account"
-              className="vendas-page__select vendas-page__select--filter"
-              value={accountFilter}
-              disabled={!mlAccountsReady}
-              onChange={(e) => setAccountFilter(e.target.value)}
-            >
-              <option value="">Todas</option>
-              {mlAccounts.map((a) => {
-                const id = a.id != null ? String(a.id).trim() : "";
-                if (!id) return null;
-                return (
-                  <option key={id} value={id}>
-                    {vendasMlAccountLabel(a)}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-          <div className="vendas-page__filter-field">
-            <label className="vendas-page__muted" htmlFor="vendas-mkt">
-              Canal
-            </label>
-            <select
-              id="vendas-mkt"
-              className="vendas-page__select vendas-page__select--filter"
-              value={marketplace}
-              onChange={(e) => {
-                setMarketplace(e.target.value);
-              }}
-            >
-              <option value="">Todos</option>
-              <option value="mercado_livre">Mercado Livre</option>
-            </select>
-          </div>
-          <div className="vendas-page__filter-field vendas-page__filter-field--search">
-            <label className="vendas-page__muted" htmlFor="vendas-catalog-search-input">
-              Buscar
-            </label>
-            <div className="products-catalog__search-wrap">
-              <div className="products-catalog__search-field">
-                <span className="products-catalog__search-icon" aria-hidden>
-                  <S7Icon name="search" size={18} strokeWidth={1.85} />
-                </span>
-                <S7Input
-                  label=""
-                  name="vendas-catalog-search-input"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Buscar por título, comprador, SKU, código da venda ou rastreio"
-                  className="products-catalog__search-s7"
-                  inputClassName="products-catalog__search-input-field"
-                  autoComplete="off"
-                  aria-label="Buscar vendas por título, comprador, SKU, código ou rastreio"
-                  rightElement={
-                    searchInput ? (
-                      <button
-                        type="button"
-                        className="products-catalog__search-clear"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setSearchInput("");
-                        }}
-                        aria-label="Limpar busca"
-                      >
-                        <S7Icon name="close" size={16} strokeWidth={2} />
-                      </button>
-                    ) : null
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="products-catalog__controls-main">
-          <div className="products-catalog__filter-row" role="toolbar" aria-label="Filtros de vendas">
-            {SALES_FILTER_CHIPS.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className={`products-catalog__filter-chip ${filter === c.id ? "products-catalog__filter-chip--active" : ""}`}
-                onClick={() => setFilter(c.id)}
-              >
-                <span
-                  className={`products-catalog__filter-chip-icon products-catalog__filter-chip-icon--${c.iconTone}`}
-                  aria-hidden
-                >
-                  <S7Icon name={c.icon} size={15} strokeWidth={1.65} />
-                </span>
-                <span className="products-catalog__filter-chip-label">{c.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <VendasFiltersCard
+        accounts={mlAccounts}
+        accountLabel={vendasMlAccountLabel}
+        accountsReady={mlAccountsReady}
+        listFilter={filter}
+        onListFilterChange={setFilter}
+        searchInput={searchInput}
+        onSearchInputChange={setSearchInput}
+      />
 
-      {truncatedList || summaryTruncated ? (
+      {truncatedList || executiveTruncated ? (
         <p className="vendas-page__scan-note" role="status">
           Atenção: a análise foi limitada (volume alto). Ajuste filtros ou canal para refinar.
         </p>
@@ -529,8 +717,9 @@ export default function VendasPage() {
                 ) : (
                   rows.map((r, rowIndex) => {
                     const f = r.financials ?? {};
+                    const detailItemId = pickSaleRayxDetailItemId(r);
                     const hid =
-                      String(r.item_id ?? r.sale_item_id ?? "").trim() ||
+                      detailItemId ||
                       `${String(r.external_order_id ?? r.sale_display_code ?? "ord")}-${String(r.external_order_item_id ?? r.external_item_id ?? "line")}-${rowIndex}`;
                     const healthUi = getSaleHealthUi(f);
                     const dateParts = formatSaleDateParts(r.sale_date);
@@ -553,11 +742,11 @@ export default function VendasPage() {
                       <tr
                         key={hid}
                         tabIndex={0}
-                        onClick={() => openDetail(hid)}
+                        onClick={() => detailItemId && openDetail(detailItemId)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            openDetail(hid);
+                            if (detailItemId) openDetail(detailItemId);
                           }
                         }}
                       >
@@ -569,8 +758,16 @@ export default function VendasPage() {
                                   <span className="vendas-page__sale-code">{String(r.sale_display_code).trim()}</span>
                                   <S7CopyButton
                                     value={String(r.sale_display_code).trim()}
-                                    ariaLabel="Copiar número da venda"
-                                    size={13}
+                                    ariaLabel="Copiar pedido"
+                                    tooltipText="Copiar pedido"
+                                    toastLabel="Pedido"
+                                    showToast={true}
+                                    iconMode="unicode"
+                                    flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                                    flashKey={`vendas-list-sale-${String(r.sale_display_code).trim()}`}
+                                    toastEventType="SALE_ORDER_COPIED"
+                                    toastFailEventType="SALE_ORDER_COPY_FAILED"
+                                    toastEntityType="sale"
                                   />
                                 </span>
                               ) : (

@@ -1,33 +1,49 @@
-/* FUNDO DO MODAL */
+/* Overlay: centralizado, rolagem só se precisar */
 .modal-bg {
   position: fixed;
   inset: 0;
+  z-index: 9999;
+  box-sizing: border-box;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;     /* 🔥 alinha pelo topo */
-  padding-top: 80px;           /* 🔥 distância do menu superior */
-  z-index: 999;
 }
 
-/* CAIXA DO MODAL */
+/* Card compacto, nunca maior que a viewport */
 .modal-box {
-  background: #ffffff;
-  width: 100%;
-  max-width: 430px;
-  padding: 32px 30px;
-  border-radius: 18px;
-  box-shadow: 0 8px 35px rgba(0, 0, 0, 0.12);
-  animation: modalShow 0.25s ease;
   position: relative;
+  width: min(100%, 400px);
+  max-width: 100%;
+  /* +10% de altura máxima vs 88dvh / 560px */
+  max-height: min(calc(88dvh * 1.1), calc(560px * 1.1));
+  margin: auto;
+  box-sizing: border-box;
+  padding: 20px 18px 18px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  animation: modalShow 0.22s ease;
 }
 
-/* ANIMAÇÃO DE ENTRADA */
+.modal-box > form {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
 @keyframes modalShow {
   from {
     opacity: 0;
-    transform: translateY(15px) scale(0.98);
+    transform: translateY(8px) scale(0.99);
   }
   to {
     opacity: 1;
@@ -35,177 +51,92 @@
   }
 }
 
-/* TÍTULO */
 .modal-box h2 {
-  font-size: 24px;
+  flex-shrink: 0;
+  margin: 0 0 4px 0;
+  font-size: clamp(18px, 4vw, 22px);
   font-weight: 700;
-  margin-bottom: 6px;
   color: #222;
+  text-align: center;
 }
 
-/* SUBTÍTULO */
-.modal-box p {
-  font-size: 14px;
+.modal-box > p {
+  flex-shrink: 0;
+  margin: 0 0 14px 0;
+  font-size: 13px;
   color: #666;
-  margin-bottom: 22px;
+  text-align: center;
 }
 
-/* INPUTS E SELECTS */
+.modal-box .label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  text-align: left;
+}
+
 .modal-box input,
 .modal-box select,
 .modal-box textarea {
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 10px;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border-radius: 8px;
   border: 1px solid #dcdcdc;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   font-size: 14px;
   color: #333;
   background: #fafafa;
-  transition: 0.2s;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.modal-box textarea {
+  min-height: 72px;
+  max-height: 120px;
+  resize: none;
 }
 
 .modal-box input:focus,
 .modal-box select:focus,
 .modal-box textarea:focus {
   border-color: #1e4ec9;
-  background: white;
+  background: #fff;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 50, 50, 0.2);
+  box-shadow: 0 0 0 2px rgba(30, 78, 201, 0.18);
 }
 
-/* BOTÃO PRINCIPAL */
-.modal-box button {
+.modal-box button[type="submit"] {
+  flex-shrink: 0;
   width: 100%;
-  padding: 12px;
+  margin-top: 4px;
+  padding: 10px 12px;
   background: #1e4ec9;
-  color: white;
-  font-size: 15px;
+  color: #fff;
+  font-size: 14px;
   font-weight: 600;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.modal-box button:hover {
-  background: #e13236;
-}
-
-.modal-box button:disabled {
-  background: #ff878a;
-  cursor: not-allowed;
-}
-
-/* MENSAGENS DE SUCESSO E ERRO */
-.msg-success {
-  margin-top: 12px;
-  font-size: 14px;
-  color: #1d9c3c;
-  font-weight: 600;
-}
-
-.msg-error {
-  margin-top: 12px;
-  font-size: 14px;
-  color: #d62828;
-  font-weight: 600;
-}
-
-/* BOTÃO FECHAR */
-.close-btn {
-  position: absolute;
-  top: 14px;
-  right: 18px;
-  font-size: 14px;
-  color: #666;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.close-btn:hover {
-  color: #000;
-  transform: scale(1.05);
-}
-
-/* Caixa principal */
-.modal-box {
-  width: 480px;
-  max-width: 95%;
-  background: white;
-  padding: 30px;
-  border-radius: 14px;
-  box-shadow: 0 6px 25px rgba(0,0,0,0.15);
-  display: flex;
-  flex-direction: column;
-}
-
-/* Títulos */
-.modal-box h2 {
-  margin-bottom: 4px;
-  font-size: 26px;
-  font-weight: 600;
-}
-
-.modal-box p {
-  margin-bottom: 18px;
-  font-size: 14px;
-  color: #555;
-}
-
-/* Labels */
-.label {
-  margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
-
-/* Inputs */
-.modal-box input,
-.modal-box select,
-.modal-box textarea {
-  width: 94%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-  outline: none;
-  background: #f8f8f8;
-  margin-bottom: 18px;
-  transition: all 0.2s ease;
-}
-
-.modal-box input:focus,
-.modal-box select:focus,
-.modal-box textarea:focus {
-  border-color: #1a73e8;
-  background: white;
-}
-
-/* Botão */
-.modal-box button {
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  background: #0d47d7;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 5px;
   transition: background 0.2s ease;
 }
 
-.modal-box button:hover {
-  background: #0b3ec2;
+.modal-box button[type="submit"]:hover:not(:disabled) {
+  background: #163db0;
 }
 
-/* Mensagens */
+.modal-box button[type="submit"]:disabled {
+  background: #94a8e8;
+  cursor: not-allowed;
+}
+
 .msg-success,
 .msg-error {
-  margin-top: 12px;
-  font-size: 14px;
+  flex-shrink: 0;
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -217,12 +148,18 @@
   color: #c20808;
 }
 
-/* Fechar */
 .close-btn {
-  margin-top: 10px;
-  display: block;
-  text-align: center;
-  cursor: pointer;
-  font-size: 14px;
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 13px;
+  font-weight: 500;
   color: #666;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #111;
 }

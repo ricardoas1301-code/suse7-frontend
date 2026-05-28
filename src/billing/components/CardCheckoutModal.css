@@ -1,0 +1,419 @@
+@import "./billingWideCheckoutLayout.css";
+
+.s7-billing-card-checkout-sheet {
+  cursor: pointer;
+}
+
+.s7-billing-card-checkout-sheet .s7-billing-checkout-sheet__panel {
+  cursor: default;
+}
+.s7-billing-card-checkout__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "summary payment"
+    "footer footer";
+  gap: 18px 12px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.s7-billing-card-checkout__summary-col {
+  grid-area: summary;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.s7-billing-card-checkout__summary-header {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+}
+
+.s7-billing-card-checkout__brand-stack {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.s7-billing-card-checkout__suse7-logo {
+  display: block;
+  width: 98px;
+  height: 98px;
+  object-fit: contain;
+}
+
+.s7-billing-card-checkout__title {
+  margin: 14px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.s7-billing-card-checkout__status {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.s7-billing-card-checkout__status--secure {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.s7-billing-card-checkout__status--debit {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.s7-billing-card-checkout__card-type {
+  display: grid;
+  gap: 8px;
+}
+
+.s7-billing-card-checkout__card-type-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.s7-billing-card-checkout__card-type-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.s7-billing-card-checkout__card-type-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #cfd7e3;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+
+.s7-billing-card-checkout__card-type-option--active {
+  border-color: #0077ff;
+  background: #eef5ff;
+  color: #1d4ed8;
+  box-shadow: 0 0 0 1px rgba(0, 119, 255, 0.2);
+}
+
+.s7-billing-card-checkout__debit-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.s7-billing-card-checkout__facts {
+  margin: 12px 0 0;
+  padding-top: 4px;
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  justify-items: center;
+  text-align: center;
+}
+
+.s7-billing-card-checkout__fact {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  text-align: center;
+}
+
+.s7-billing-card-checkout__fact dt {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ea580c;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.s7-billing-card-checkout__fact dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-billing-card-checkout__fact--highlight dd {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.s7-billing-card-checkout__payment-col {
+  grid-area: payment;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.s7-billing-card-checkout__form-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--s7-billing-wide-checkout-action-card-height, 380px);
+  max-height: var(--s7-billing-wide-checkout-action-card-height, 380px);
+  padding: 16px 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  box-sizing: border-box;
+}
+
+.s7-billing-card-checkout__form-body {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.s7-billing-card-checkout__form {
+  display: grid;
+  gap: 8px;
+}
+
+.s7-billing-card-checkout__field {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.s7-billing-card-checkout__field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0077ff;
+  line-height: 1.35;
+}
+
+.s7-billing-card-checkout__field-required {
+  margin-left: 0.2em;
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.s7-billing-card-checkout__field input {
+  margin-top: 2px;
+  border: 1px solid #cfd7e3;
+  border-radius: 10px;
+  padding: 7px 9px;
+  font-size: 10.5px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #0f172a;
+  background: #f5f8ff;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.s7-billing-card-checkout__field input:focus {
+  outline: none;
+  border-color: #0077ff;
+  background: #eef5ff;
+  box-shadow: none;
+}
+
+.s7-billing-card-checkout__field input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.s7-billing-card-checkout__field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.s7-billing-card-checkout__field--error input {
+  border-color: #e57373;
+  background: #fff5f5;
+}
+
+.s7-billing-card-checkout__field--error input:focus {
+  border-color: #e57373;
+  background: #fff5f5;
+  box-shadow: none;
+}
+
+.s7-billing-card-checkout__field-error {
+  color: #e57373;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.s7-billing-card-checkout__saved {
+  display: grid;
+  gap: 8px;
+}
+
+.s7-billing-card-checkout__saved-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.s7-billing-card-checkout__saved-option--selected {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.22);
+}
+
+.s7-billing-card-checkout__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.s7-billing-card-checkout__checkbox input {
+  margin-top: 2px;
+}
+
+.s7-billing-card-checkout__banner-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.s7-billing-card-checkout__actions {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 8px;
+  width: 100%;
+}
+
+.s7-billing-card-checkout__actions > * {
+  width: 100%;
+}
+
+.s7-billing-card-checkout__steps {
+  flex: 0 0 auto;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 12px 10px 28px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.s7-billing-card-checkout__steps li + li {
+  margin-top: 4px;
+}
+
+.s7-billing-card-checkout__footer {
+  grid-area: footer;
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.45;
+  padding: 4px 8px 0;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .s7-billing-checkout-sheet__panel.s7-billing-card-checkout {
+    width: min(100%, calc(100vw - 24px));
+    padding: 18px 16px 20px;
+  }
+
+  .s7-billing-card-checkout__layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "summary"
+      "payment"
+      "footer";
+    gap: 16px;
+    align-items: start;
+  }
+
+  .s7-billing-card-checkout__summary-col {
+    padding: 14px;
+  }
+
+  .s7-billing-card-checkout__payment-col {
+    min-height: 0;
+  }
+
+  .s7-billing-card-checkout__form-card {
+    flex: none;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .s7-billing-card-checkout__form-body {
+    flex: none;
+    overflow-y: visible;
+  }
+
+  .s7-billing-card-checkout__field-row {
+    grid-template-columns: 1fr;
+  }
+}

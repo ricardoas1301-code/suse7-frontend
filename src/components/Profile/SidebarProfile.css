@@ -111,3 +111,34 @@
 .sidebar-profile a.sidebar-submenu__link.active::before {
   background: #2563eb;
 }
+
+@media (max-width: 768px) {
+  .sidebar-profile {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    border-radius: 12px;
+    padding: 10px;
+  }
+
+  .sidebar-title {
+    margin: 12px 0 6px;
+    font-size: 12px;
+  }
+
+  .sidebar-profile a,
+  .sidebar-group-toggle {
+    padding: 9px 10px;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+
+  .sidebar-submenu {
+    padding-left: 8px;
+  }
+
+  .sidebar-profile a.sidebar-submenu__link {
+    font-size: 12px;
+    padding: 7px 9px 7px 10px;
+  }
+}

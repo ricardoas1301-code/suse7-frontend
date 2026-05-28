@@ -5,8 +5,9 @@
 // ======================================================================
 
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { logAuthBootstrap } from "../auth/authBootstrapDevLog";
+import { useAuthBootstrap } from "./AuthBootstrapContext";
 import { createNotificationEvent } from "../services/notificationTypes";
-import { supabase } from "../supabaseClient";
 import { setNotificationChannelDispatcher } from "../services/notificationEngine";
 import {
   sendNotificationEmail,
@@ -23,16 +24,15 @@ export const NotificationContext = createContext(null);
 // Provider
 // ----------------------------------------------------------------------
 export function NotificationProvider({ children }) {
+  const { ready: authReady, user } = useAuthBootstrap();
   const [notifications, setNotifications] = useState([]);
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUserId(data?.user?.id ?? null);
-    };
-    loadUser();
-  }, []);
+    if (!authReady) return;
+    setUserId(user?.id ?? null);
+    logAuthBootstrap("notifications_ready", { userId: user?.id ?? null });
+  }, [authReady, user?.id]);
 
   const addNotification = useCallback(
     (options) => {

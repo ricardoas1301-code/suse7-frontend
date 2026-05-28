@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useBlocker, useNavigate } from "react-router-dom";
 import { useBeforeUnload } from "../hooks/useBeforeUnload";
-import { useCopyFeedback } from "../hooks/useCopyFeedback";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "./ui/S7CopyButton";
 import { createPortal } from "react-dom";
 import { useNotifications } from "../contexts/NotificationContext";
 import { useSaveStatus } from "../contexts/SaveStatusContext";
@@ -1192,8 +1192,6 @@ useLayoutEffect(() => {
   // ------------------------------------------------------
   // UI: Copiar campo com feedback ✓ por 5s
   // ------------------------------------------------------
-  const { copiedKey, handleCopy } = useCopyFeedback();
-
   // ------------------------------------------------------
   // TÍTULOS DO ANÚNCIO (até 10 por produto)
   // - Frontend: UI apenas (sem validação de duplicidade)
@@ -1263,33 +1261,21 @@ useLayoutEffect(() => {
 
 // ======================================================
 // COMPONENTE: FieldLabel (label + info + copiar)
-// Objetivo:
-// - Padronizar label dentro do ProductForm (inline)
-// - Tooltip via Design System: .s7-tip + data-tip
-// - copyKey/copiedKey: mostra ✓ por 5s após copiar
-// Regras:
-// - wrap: permite tooltip longo quebrar linha
-// - tipBottom: força tooltip aparecer para baixo
-// - side: left | right | center (alinhamento lateral do tooltip)
-// - copyBottom: tooltip do copiar para baixo (padrão true)
 // ======================================================
 const FieldLabel = ({
   text,
   required = false,
-  onCopy,
-  copyKey,
-  copiedKey,
+  copyValue = null,
+  copyTooltipText,
+  toastLabel,
   infoText,
   wrap = false,
   tipBottom = false,
   side = "left",
-  copyBottom = true,
 }) => {
-  const showCopyCheck = copyKey != null && copiedKey === copyKey;
-  const effectiveOnCopy = showCopyCheck ? undefined : onCopy;
-  // ------------------------------------------------------
-  // Classes do tooltip INFO
-  // ------------------------------------------------------
+  const copyText = copyValue != null ? String(copyValue).trim() : "";
+  const showCopy = copyText !== "";
+
   const infoTipClass = [
     "s7-tip",
     tipBottom ? "s7-tip-bottom" : "",
@@ -1300,18 +1286,8 @@ const FieldLabel = ({
     .filter(Boolean)
     .join(" ");
 
-  // ------------------------------------------------------
-  // Classes do tooltip COPIAR
-  // ------------------------------------------------------
-  const copyTipClass = [
-    "s7-tip",
-    copyBottom ? "s7-tip-bottom" : "s7-tip-right",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
-    <div className="pf-label-row">
+    <div className={`pf-label-row${showCopy ? " pf-label-row--copyable" : ""}`}>
       <div className="pf-label-left">
         <span className="s7-label">
           {text}
@@ -1330,17 +1306,19 @@ const FieldLabel = ({
         )}
       </div>
 
-      {!!onCopy && (
-        <button
-          type="button"
-          className={`pf-copy-btn ${copyTipClass}`}
-          data-tip={showCopyCheck ? "Copiado!" : "Copiar"}
-          onClick={effectiveOnCopy}
-          aria-label={`Copiar ${text}`}
-        >
-          {showCopyCheck ? "✓" : "⧉"}
-        </button>
-      )}
+      {showCopy ? (
+        <S7CopyButton
+          value={copyText}
+          ariaLabel={`Copiar ${text}`}
+          tooltipText={copyTooltipText ?? `Copiar ${text}`}
+          toastLabel={toastLabel ?? text}
+          showToast={true}
+          iconMode="unicode"
+          flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+          flashKey={`pf-${text}`}
+          toastEntityType="product"
+        />
+      ) : null}
     </div>
   );
 };
@@ -2877,9 +2855,9 @@ const validatePricingTab = () => {
                 <FieldLabel
                   text="Nome do produto"
                   required
-                  copyKey="product_name"
-                  copiedKey={copiedKey}
-                  onCopy={() => handleCopy(product.product_name, "product_name")}
+                  copyValue={product.product_name}
+                  copyTooltipText="Copiar nome"
+                  toastLabel="Nome do produto"
                 />
                 <S7Input
                   name="product_name"
@@ -2942,9 +2920,9 @@ const validatePricingTab = () => {
                     tipBottom={true}
                     wrap={true}
                     side="left"
-                    copyKey="sku"
-                    copiedKey={copiedKey}
-                    onCopy={() => handleCopy(product.sku, "sku")}
+                    copyValue={product.sku}
+                    copyTooltipText="Copiar SKU"
+                    toastLabel="SKU"
                   />
                   <S7Input
                     name="sku"
@@ -2977,9 +2955,9 @@ const validatePricingTab = () => {
                 <div className="pf-group pf-data-col">
                   <FieldLabel
                     text="EAN / GTIN"
-                    copyKey="gtin"
-                    copiedKey={copiedKey}
-                    onCopy={() => handleCopy(product.gtin, "gtin")}
+                    copyValue={product.gtin}
+                    copyTooltipText="Copiar GTIN"
+                    toastLabel="GTIN"
                   />
                   <input
                     className={`s7-input ${errors.gtin ? "s7-input--error" : ""}`}
@@ -3000,9 +2978,9 @@ const validatePricingTab = () => {
               <div className="pf-group pf-data-col">
                 <FieldLabel
                   text="NCM"
-                  copyKey="ncm"
-                  copiedKey={copiedKey}
-                  onCopy={() => handleCopy(product.ncm, "ncm")}
+                  copyValue={product.ncm}
+                  copyTooltipText="Copiar NCM"
+                  toastLabel="NCM"
                 />
                 <input
                   className={`s7-input ${errors.ncm ? "s7-input--error" : ""}`}
@@ -3052,9 +3030,9 @@ const validatePricingTab = () => {
                   tipBottom={true}
                   wrap={true}
                   side="left"
-                  copyKey="seo_keywords"
-                  copiedKey={copiedKey}
-                  onCopy={() => handleCopy(product.seo_keywords, "seo_keywords")}
+                  copyValue={product.seo_keywords}
+                  copyTooltipText="Copiar palavras-chave"
+                  toastLabel="Palavras-chave SEO"
                 />
 
                 <div className="pf-seo-wrapper">
@@ -3395,7 +3373,6 @@ const validatePricingTab = () => {
             skuBaseError={skuBaseError}
             variantRows={variantRows}
             variantAttrColumns={variantAttrColumns}
-            copiedKey={copiedKey}
             skuErrorsById={skuErrorsById}
             variationsSubmitAttempted={variationsSubmitAttempted}
             variationsTouchedFields={variationsTouchedFields}
@@ -3420,7 +3397,6 @@ const validatePricingTab = () => {
             handleGenerateSkuAuto={handleGenerateSkuAuto}
             removeSkuBaseChip={removeSkuBaseChip}
             handleSkuBaseKeyDown={handleSkuBaseKeyDown}
-            handleCopy={handleCopy}
             handleVariantRowChange={handleVariantRowChange}
             isVariantLinkedToMarketplaces={isVariantLinkedToMarketplaces}
             setSkuManualIntegratedModal={setSkuManualIntegratedModal}
@@ -3439,25 +3415,25 @@ const validatePricingTab = () => {
           <div className="pf-container pf-container--description">
             <h2 className="pf-tab-title">Descrição</h2>
             <div className="pf-description-section">
-              <div className="pf-label-row">
+              <div className="pf-label-row pf-label-row--copyable">
                 <div className="pf-label-left">
                   <label className="s7-label" htmlFor="pf-description-textarea">
                     Descrição do produto
                   </label>
                 </div>
-                <button
-                  type="button"
-                  className="pf-copy-btn s7-tip s7-tip-bottom s7-tip-right"
-                  data-tip={copiedKey === "description" ? "Copiado!" : "Copiar"}
-                  aria-label="Copiar descrição"
-                  onClick={() => {
-                    const raw = product?.description ?? "";
-                    if (!String(raw).trim()) return;
-                    handleCopy(raw, "description");
-                  }}
-                >
-                  {copiedKey === "description" ? "✓" : "⧉"}
-                </button>
+                {String(product?.description ?? "").trim() !== "" ? (
+                  <S7CopyButton
+                    value={product.description}
+                    ariaLabel="Copiar descrição"
+                    tooltipText="Copiar descrição"
+                    toastLabel="Descrição"
+                    showToast={true}
+                    iconMode="unicode"
+                    flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                    flashKey="pf-description"
+                    toastEntityType="product"
+                  />
+                ) : null}
               </div>
 
               <div className="pf-description-wrapper">
@@ -3937,15 +3913,19 @@ const validatePricingTab = () => {
                         <div className="s7-ad-title-copy-row">
                           <span className="s7-label s7-ad-titles-card-label">Título {idx + 1}</span>
                           <div className="s7-ad-title-copy-wrap">
-                            <button
-                              type="button"
-                              className="pf-copy-btn s7-tip s7-tip-bottom"
-                              onClick={() => handleCopy(item.value, `ad_title_${item.id}`)}
-                              aria-label="Copiar título"
-                              data-tip={copiedKey === `ad_title_${item.id}` ? "Copiado!" : "Copiar"}
-                            >
-                              {copiedKey === `ad_title_${item.id}` ? "✓" : "⧉"}
-                            </button>
+                            {String(item.value ?? "").trim() !== "" ? (
+                              <S7CopyButton
+                                value={item.value}
+                                ariaLabel="Copiar título"
+                                tooltipText="Copiar título"
+                                toastLabel="Título"
+                                showToast={true}
+                                iconMode="unicode"
+                                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                                flashKey={`ad_title_${item.id}`}
+                                toastEntityType="product"
+                              />
+                            ) : null}
                           </div>
                         </div>
                         <div className="s7-ad-title-row">

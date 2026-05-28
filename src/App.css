@@ -961,3 +961,112 @@ h1, h2, h3 {
   font-size: 14px;
 }
 
+/* =====================================================
+   RESPONSIVIDADE GLOBAL (MOBILE-FIRST OVERRIDES)
+   Escopo: somente telas menores, sem impacto desktop
+===================================================== */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 16px 14px 22px;
+    max-width: 100%;
+  }
+
+  .navbar {
+    height: 58px;
+    padding: 0 12px;
+  }
+
+  .navbar-logo {
+    font-size: 17px;
+    gap: 6px;
+  }
+
+  .navbar-links {
+    gap: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .navbar-links::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .navbar-links a {
+    font-size: 13px;
+  }
+
+  .navbar-user {
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .btn-logout {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .dashboard-wrapper,
+  .prec-page {
+    padding: 16px 14px 24px;
+    min-height: auto;
+  }
+
+  .terms-wrapper {
+    padding: 18px 10px;
+  }
+
+  .terms-box {
+    padding: 18px 14px;
+    border-radius: 12px;
+  }
+
+  .terms-title {
+    font-size: 27px;
+  }
+
+  .terms-subtitle {
+    font-size: 19px;
+  }
+
+  .terms-text,
+  .terms-list {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 430px) {
+  .main-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .main-content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .main-content {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .navbar {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media (max-width: 320px) {
+  .main-content {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+

@@ -85,10 +85,29 @@ export default function SidebarProfile() {
         Notificações
       </button>
       <div className={`sidebar-submenu ${expandedSections.notifications ? "is-open" : ""}`}>
+        <NavLink
+          to="/perfil/preferencias/notificacoes"
+          end
+          className={({ isActive }) => `sidebar-submenu__link${isActive ? " active" : ""}`}
+        >
+          Central de notificações
+        </NavLink>
+        <NavLink
+          to="/perfil/preferencias/notificacoes?tab=recipients"
+          className={({ isActive }) => `sidebar-submenu__link${isActive ? " active" : ""}`}
+        >
+          Destinatários de notificações
+        </NavLink>
+        <NavLink
+          to="/perfil/preferencias/notificacoes/historico"
+          className={({ isActive }) => `sidebar-submenu__link${isActive ? " active" : ""}`}
+        >
+          Histórico de notificações
+        </NavLink>
         {NOTIFICATION_CATEGORY_TABS.map((tab) => (
           <NavLink
             key={tab.key}
-            to={`/perfil/preferencias/notificacoes/${tab.key}`}
+            to={`/perfil/preferencias/notificacoes?focus=${tab.key}`}
             className={({ isActive }) =>
               `sidebar-submenu__link${isActive ? " active" : ""}`
             }

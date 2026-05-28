@@ -66,6 +66,10 @@ export default function SellerOpsDrawer({
 
   loading,
 
+  revalidando = false,
+
+  rotuloFreshness = null,
+
   error,
 
   onClose,
@@ -124,7 +128,7 @@ export default function SellerOpsDrawer({
 
   useEffect(() => {
 
-    if (drawerState !== "loaded") {
+    if (drawerState === "error" || drawerState === "empty") {
 
       setToolboxOpen(false);
 
@@ -213,6 +217,8 @@ export default function SellerOpsDrawer({
 
     toolboxOpen ? "dc-sellers-drawer-stack--toolbox-open" : "",
 
+    revalidando ? "dc-sellers-drawer-stack--revalidating" : "",
+
   ]
 
     .filter(Boolean)
@@ -249,11 +255,21 @@ export default function SellerOpsDrawer({
 
             detail={detail}
 
-            loading={drawerState === "loading"}
+            loading={drawerState === "loading" && !revalidando}
 
             error={drawerState === "error" ? error : null}
 
           />
+
+          {rotuloFreshness ? (
+            <p
+              className={`dc-sellers-drawer__freshness${
+                revalidando ? " dc-sellers-drawer__freshness--busy" : ""
+              }${rotuloFreshness === "Pode estar desatualizado" ? " dc-sellers-drawer__freshness--warn" : ""}`}
+            >
+              {rotuloFreshness}
+            </p>
+          ) : null}
 
 
 

@@ -77,7 +77,7 @@ export default function ConcorrenciaListingSearch({ listings, listingId, onListi
   };
 
   return (
-    <div ref={rootRef} className="concorrencia-listing-search">
+    <div ref={rootRef} className="concorrencia-listing-search concorrencia-listing-search--block">
       <div className="products-catalog__search-field concorrencia-listing-search__field">
         <span className="products-catalog__search-icon" aria-hidden>
           <S7Icon name="search" size={18} strokeWidth={1.85} />

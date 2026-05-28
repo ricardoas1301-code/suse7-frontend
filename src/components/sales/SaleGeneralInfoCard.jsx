@@ -2,38 +2,33 @@
 // Dados gerais da venda (somente leitura, sem card).
 // ======================================================
 
-import { useCallback, useState } from "react";
-import { useNotifications } from "../../contexts/NotificationContext";
-import { NOTIFICATION_SEVERITY } from "../../services/notificationTypes";
-import { DASH, formatDatePt, shortUuid, truncateWordsDisplay } from "./saleRayxFormat";
-import { collectSaleRayxOperationalLines } from "./saleRayxOperationalFields";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../ui/S7CopyButton";
+import { getMarketplaceBadgeAsset } from "../../utils/marketplaceBadge";
+import { DASH, formatDatePt, truncateWordsDisplay } from "./saleRayxFormat";
+import {
+  pickFulfillmentDisplay,
+  pickSaleNumberCopyText,
+  pickSaleNumberDisplay,
+  pickSaleTypeDisplay,
+  pickSaleShippingDisplayCompact,
+  pickSaleStatusLabel,
+} from "./saleRayxGeneralDisplay";
+import { getSaleStatusColor } from "./saleRayxStatusColor";
 import { resolveMoneyReleaseDate } from "./saleRayxMoneyRelease";
-import SaleRayXOperationalActions from "./SaleRayXOperationalActions";
 import SaleRayXProductHeader from "./SaleRayXProductHeader";
 import SaleRayXProductPhoto from "./SaleRayXProductPhoto";
 import SaleRayXAccumulatedPerformance from "./SaleRayXAccumulatedPerformance";
 
-const COPY_FLASH_MS = 2000;
-const COPY_KEY_ORDER = "raiox-order";
-
 /**
- * @param {{
- *   value: string;
- *   copyText: string;
- *   empty: boolean;
- *   copyFlashKey: string | null;
- *   onCopy: (text: string, label: string, flashKey: string) => void;
- * }} props
+ * @param {{ value: string; copyText: string; empty: boolean }} props
  */
-function CopyableValue({ value, copyText, empty, copyFlashKey, onCopy }) {
-  const showCopyOk = copyFlashKey === COPY_KEY_ORDER;
-
+function CopyableSaleNumber({ value, copyText, empty }) {
   return (
     <div className="vendas-sale-rayx__copy-target anuncios-raiox-compare__toolbar-meta-block">
       <span
         className={[
-          "anuncios-sell-popover__muted",
-          "vendas-sale-rayx__copy-target-text",
+          "vendas-sale-rayx__info-value-line",
+          "vendas-sale-rayx__info-value-line--emphasis",
           empty ? "anuncios-sell-popover__value--empty" : "",
         ]
           .filter(Boolean)
@@ -41,19 +36,20 @@ function CopyableValue({ value, copyText, empty, copyFlashKey, onCopy }) {
       >
         {value}
       </span>
-      <button
-        type="button"
-        className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left anuncios-raiox-compare__toolbar-copy${
-          showCopyOk ? " products-catalog__copy-btn--ok" : ""
-        }`}
-        data-tip={showCopyOk ? "Copiado!" : "Copiar pedido e-commerce"}
-        aria-label="Copiar pedido e-commerce"
-        onClick={() => {
-          void onCopy(copyText, "Pedido e-commerce", COPY_KEY_ORDER);
-        }}
-      >
-        {showCopyOk ? "✓" : "⧉"}
-      </button>
+      <S7CopyButton
+        value={copyText}
+        ariaLabel="Copiar venda nº"
+        tooltipText="Copiar venda nº"
+        toastLabel="Venda nº"
+        showToast={true}
+        iconMode="unicode"
+        flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+        flashKey="raiox-sale-number"
+        toastEventType="LISTING_ID_COPIED"
+        toastFailEventType="LISTING_ID_COPY_FAILED"
+        toastEntityType="marketplace_listing"
+        className="anuncios-raiox-compare__toolbar-copy"
+      />
     </div>
   );
 }
@@ -67,7 +63,7 @@ function InfoLineStack({ label, value }) {
       <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key">
         <span>{label}</span>
       </div>
-      <div className="anuncios-sell-popover__muted vendas-sale-rayx__info-value-line">{value}</div>
+      <div className="vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis">{value}</div>
     </div>
   );
 }
@@ -76,37 +72,227 @@ function InfoLineStack({ label, value }) {
  * @param {{
  *   label: string;
  *   value: string;
- *   copyText?: string | null;
- *   copyFlashKey?: string | null;
- *   onCopy?: (text: string, label: string, flashKey: string) => void;
+ *   emphasis?: boolean;
  *   valueTitle?: string | null;
+ *   truncateValue?: boolean;
+ *   tone?: "success" | "warning" | "danger" | "neutral";
+ *   statusColor?: string | null;
  * }} props
  */
-function InfoLine({ label, value, copyText = null, copyFlashKey = null, onCopy, valueTitle = null }) {
+function InfoLine({
+  label,
+  value,
+  emphasis = false,
+  valueTitle = null,
+  truncateValue = false,
+  tone = "neutral",
+  statusColor = null,
+}) {
   const empty = value === DASH;
-  const copyable = copyText != null && String(copyText).trim() !== "" && typeof onCopy === "function";
+  const toneClass =
+    tone === "success"
+      ? "vendas-sale-rayx__info-value-line--status-success"
+      : tone === "warning"
+        ? "vendas-sale-rayx__info-value-line--status-warning"
+        : tone === "danger"
+          ? "vendas-sale-rayx__info-value-line--status-danger"
+          : "";
 
   return (
-    <div className="anuncios-sell-popover__block">
+    <div
+      className={[
+        "anuncios-sell-popover__block",
+        "vendas-sale-rayx__info-line",
+        emphasis ? "vendas-sale-rayx__info-line--emphasis" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key">
         <span>{label}</span>
       </div>
-      {copyable ? (
-        <CopyableValue
-          value={value}
-          copyText={String(copyText).trim()}
-          empty={empty}
-          copyFlashKey={copyFlashKey}
-          onCopy={onCopy}
-        />
-      ) : (
-        <div
-          className={["anuncios-sell-popover__muted", empty ? "anuncios-sell-popover__value--empty" : ""].filter(Boolean).join(" ")}
-          title={valueTitle != null && String(valueTitle).trim() !== "" ? String(valueTitle).trim() : undefined}
+      <div
+        className={[
+          "vendas-sale-rayx__info-value-line",
+          "vendas-sale-rayx__info-value-line--emphasis",
+          truncateValue ? "vendas-sale-rayx__info-value-line--truncate" : "",
+          toneClass,
+          empty ? "anuncios-sell-popover__value--empty" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        title={valueTitle != null && String(valueTitle).trim() !== "" ? String(valueTitle).trim() : undefined}
+        style={statusColor && !empty ? { color: statusColor } : undefined}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * @param {{
+ *   quantity: string;
+ *   client: string;
+ *   clientTitle?: string | null;
+ * }} props
+ */
+function HeroQuantityClientRow({ quantity, client, clientTitle = null }) {
+  return (
+    <div className="anuncios-sell-popover__block vendas-sale-rayx__info-line vendas-sale-rayx__hero-client-qty-row">
+      <div className="vendas-sale-rayx__hero-client-qty-grid">
+        <span className="vendas-sale-rayx__hero-qty-client-label">Cliente</span>
+        <span className="vendas-sale-rayx__hero-qty-client-label vendas-sale-rayx__hero-qty-client-label--qty">
+          Quantidade
+        </span>
+        <span
+          className="vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis vendas-sale-rayx__hero-qty-client-value vendas-sale-rayx__hero-qty-client-value--client vendas-sale-rayx__info-value-line--truncate"
+          title={clientTitle != null && String(clientTitle).trim() !== "" ? String(clientTitle).trim() : undefined}
         >
-          {value}
-        </div>
+          {client}
+        </span>
+        <span className="vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis vendas-sale-rayx__hero-qty-client-value vendas-sale-rayx__hero-qty-client-value--qty">
+          {quantity}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * @param {{ display: { type: "full" | "flex" | "standard"; label: string } }} props
+ */
+function SaleFulfillmentValue({ display }) {
+  const valueClass =
+    display.type === "full"
+      ? "vendas-sale-rayx__fulfillment-value vendas-sale-rayx__fulfillment-value--full"
+      : display.type === "flex"
+        ? "vendas-sale-rayx__fulfillment-value vendas-sale-rayx__fulfillment-value--flex"
+        : "vendas-sale-rayx__fulfillment-value vendas-sale-rayx__fulfillment-value--standard";
+
+  return (
+    <div className={valueClass}>
+      {display.type === "full" ? (
+        <span className="vendas-sale-rayx__fulfillment-badge vendas-sale-rayx__fulfillment-badge--full" aria-label="FULL">
+          <svg
+            className="vendas-sale-rayx__fulfillment-bolt"
+            viewBox="0 0 12 16"
+            width="10"
+            height="13"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              fill="currentColor"
+              d="M7.2 0 2.4 8.2h3.1L4.2 16l7.2-9.4H7.9L7.2 0Z"
+            />
+          </svg>
+          FULL
+        </span>
+      ) : display.type === "flex" ? (
+        <span className="vendas-sale-rayx__fulfillment-badge vendas-sale-rayx__fulfillment-badge--flex">
+          {display.label}
+        </span>
+      ) : (
+        <span className="vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis">{display.label}</span>
       )}
+    </div>
+  );
+}
+
+/**
+ * @param {{
+ *   display: { type: "ads" | "affiliate" | "standard"; label: string; icon: string | null };
+ *   marketplace?: string | null;
+ * }} props
+ */
+function SaleTypeValue({ display, marketplace = null }) {
+  const mlBadge =
+    display.type === "ads" && display.icon === "mercado_livre_ads"
+      ? getMarketplaceBadgeAsset(marketplace ?? "mercado_livre")
+      : null;
+
+  return (
+    <span
+      className={[
+        "vendas-sale-rayx__sale-type-value",
+        display.type === "ads" ? "vendas-sale-rayx__sale-type-value--ads" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {mlBadge ? (
+        <img
+          src={mlBadge.src}
+          alt=""
+          className="vendas-sale-rayx__sale-type-ml-icon"
+          width={14}
+          height={14}
+          loading="lazy"
+          decoding="async"
+        />
+      ) : null}
+      <span className="vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis vendas-sale-rayx__sale-type-label">
+        {display.label}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * @param {{
+ *   display: { type: "full" | "flex" | "standard"; label: string };
+ *   saleTypeDisplay: { type: "ads" | "affiliate" | "standard"; label: string; icon: string | null };
+ *   marketplace?: string | null;
+ * }} props
+ */
+function HeroFulfillmentSaleTypeRow({ display, saleTypeDisplay, marketplace = null }) {
+  return (
+    <div className="anuncios-sell-popover__block vendas-sale-rayx__info-line vendas-sale-rayx__hero-fulfillment-type-row">
+      <div className="vendas-sale-rayx__hero-fulfillment-type-grid">
+        <span className="vendas-sale-rayx__hero-qty-client-label">Entrega</span>
+        <span className="vendas-sale-rayx__hero-qty-client-label vendas-sale-rayx__hero-qty-client-label--qty">
+          Origem da venda
+        </span>
+        <div className="vendas-sale-rayx__hero-fulfillment-type-value vendas-sale-rayx__hero-fulfillment-type-value--delivery">
+          <SaleFulfillmentValue display={display} />
+        </div>
+        <div className="vendas-sale-rayx__hero-fulfillment-type-value vendas-sale-rayx__hero-fulfillment-type-value--type">
+          <SaleTypeValue display={saleTypeDisplay} marketplace={marketplace} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * @param {{ shipping: ReturnType<typeof pickSaleShippingDisplayCompact> }} props
+ */
+function SaleShippingInfoBlock({ shipping }) {
+  if (!shipping) return null;
+
+  return (
+    <div className="anuncios-sell-popover__block vendas-sale-rayx__shipping-block vendas-sale-rayx__shipping-block--compact">
+      <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key">
+        <span>{shipping.title}</span>
+      </div>
+      <div className="vendas-sale-rayx__shipping-lines vendas-sale-rayx__shipping-lines--compact">
+        {shipping.streetLine ? (
+          <div className="vendas-sale-rayx__shipping-line vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis">
+            {shipping.streetLine}
+          </div>
+        ) : null}
+        {shipping.cepCityState ? (
+          <div className="vendas-sale-rayx__shipping-line vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis">
+            {shipping.cepCityState}
+          </div>
+        ) : null}
+        {shipping.receiverLabel ? (
+          <div className="vendas-sale-rayx__shipping-line vendas-sale-rayx__shipping-line--receiver vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis">
+            {shipping.receiverLabel}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -121,7 +307,7 @@ function InfoLine({ label, value, copyText = null, copyFlashKey = null, onCopy, 
  *   itemId?: string | null;
  *   saleContextMetrics?: Record<string, unknown> | null;
  *   listingInternalId?: string | null;
- *   onClose?: () => void;
+ *   onOpenOfferCompare?: () => void;
  * }} props
  */
 export default function SaleGeneralInfoLines({
@@ -133,47 +319,18 @@ export default function SaleGeneralInfoLines({
   itemId,
   saleContextMetrics,
   listingInternalId: listingInternalIdProp,
-  onClose,
+  onOpenOfferCompare,
 }) {
-  const { addNotification } = useNotifications();
-  const [copyFlashKey, setCopyFlashKey] = useState(/** @type {string | null} */ (null));
   const g = general && typeof general === "object" ? general : {};
-  const combineDelivery = g.combine_delivery === true;
-  const orderCopyText = g.external_order_id != null ? String(g.external_order_id).trim() : "";
-  const operationalLines = collectSaleRayxOperationalLines(g, product);
-  const saleTypeLine = operationalLines.find((row) => row.label === "Tipo de venda") ?? null;
-  const otherOperationalLines = operationalLines.filter((row) => row.label !== "Tipo de venda");
+  const saleNumberDisplay = pickSaleNumberDisplay(g);
+  const saleNumberCopy = pickSaleNumberCopyText(g);
+  const saleStatusLabel = pickSaleStatusLabel(g);
+  const saleStatusRaw = g.sale_status ?? g.order_status ?? saleStatusLabel;
+  const { tone: saleStatusTone, color: saleStatusColor } = getSaleStatusColor(saleStatusRaw);
+  const saleTypeDisplay = pickSaleTypeDisplay(g);
+  const fulfillmentDisplay = pickFulfillmentDisplay(g);
+  const shippingCompact = pickSaleShippingDisplayCompact(g.shipping_display_compact);
   const moneyRelease = resolveMoneyReleaseDate(g, product);
-
-  const copyText = useCallback(
-    async (text, label, flashKey) => {
-      const t = String(text ?? "").trim();
-      if (t === "") return;
-      try {
-        await navigator.clipboard.writeText(t);
-        setCopyFlashKey(flashKey);
-        window.setTimeout(() => {
-          setCopyFlashKey((k) => (k === flashKey ? null : k));
-        }, COPY_FLASH_MS);
-        addNotification({
-          event_type: "LISTING_ID_COPIED",
-          entity_type: "marketplace_listing",
-          title: `${label} copiado`,
-          message: `${t} foi copiado para a área de transferência.`,
-          severity: NOTIFICATION_SEVERITY.INFO,
-        });
-      } catch {
-        addNotification({
-          event_type: "LISTING_ID_COPY_FAILED",
-          entity_type: "marketplace_listing",
-          title: "Não foi possível copiar",
-          message: "Verifique permissões do navegador ou use HTTPS.",
-          severity: NOTIFICATION_SEVERITY.WARNING,
-        });
-      }
-    },
-    [addNotification],
-  );
 
   const productTitle =
     listingTitle != null && String(listingTitle).trim() !== ""
@@ -189,7 +346,7 @@ export default function SaleGeneralInfoLines({
 
   const buyerName = truncateWordsDisplay(
     g.buyer_display_name != null ? String(g.buyer_display_name) : null,
-    2,
+    3,
   );
 
   return (
@@ -204,57 +361,70 @@ export default function SaleGeneralInfoLines({
         listingId={product?.listing_id_display ?? general?.listing_id_display ?? null}
         sku={product?.sku_display ?? general?.sku_display ?? null}
         listingInternalId={listingInternalId}
-        onClose={onClose}
+        onOpenOfferCompare={onOpenOfferCompare}
       />
-      <div className="vendas-sale-rayx__sale-data-hero">
-        <SaleRayXProductPhoto product={product} variant="hero" />
-        <div className="vendas-sale-rayx__general-lines vendas-sale-rayx__general-lines--primary">
-          <InfoLine
-            label="Pedido e-commerce"
-            value={orderCopyText !== "" ? orderCopyText : DASH}
-            copyText={orderCopyText !== "" ? orderCopyText : null}
-            copyFlashKey={copyFlashKey}
-            onCopy={copyText}
-          />
-          <InfoLine label="Data da venda" value={formatDatePt(g.sale_date != null ? String(g.sale_date) : null)} />
-          <InfoLine label="Conta marketplace" value={g.account_alias != null ? String(g.account_alias) : DASH} />
-          <InfoLine label="Quantidade" value={g.quantity != null ? String(g.quantity) : DASH} />
+      <div className="vendas-sale-rayx__left-blocks">
+        <div className="vendas-sale-rayx__sale-data-hero">
+          <div className="vendas-sale-rayx__sale-data-hero-top">
+            <SaleRayXProductPhoto product={product} variant="hero" />
+            <div className="vendas-sale-rayx__general-lines vendas-sale-rayx__general-lines--primary vendas-sale-rayx__left-info-stack">
+              <InfoLine
+                label="Conta marketplace"
+                value={g.account_alias != null ? String(g.account_alias) : DASH}
+                emphasis
+              />
+              <div className="anuncios-sell-popover__block vendas-sale-rayx__info-line vendas-sale-rayx__info-line--emphasis">
+                <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key">
+                  <span>Venda nº</span>
+                </div>
+                {saleNumberCopy != null && saleNumberDisplay != null ? (
+                  <CopyableSaleNumber
+                    value={saleNumberDisplay}
+                    copyText={saleNumberCopy}
+                    empty={false}
+                  />
+                ) : (
+                  <div className="vendas-sale-rayx__info-value-line vendas-sale-rayx__info-value-line--emphasis anuncios-sell-popover__value--empty">
+                    {DASH}
+                  </div>
+                )}
+              </div>
+              <InfoLine
+                label="Status da venda"
+                value={saleStatusLabel ?? DASH}
+                emphasis
+                tone={saleStatusTone}
+                statusColor={saleStatusColor}
+              />
+              <InfoLine
+                label="Data da venda"
+                value={formatDatePt(g.sale_date != null ? String(g.sale_date) : null)}
+              />
+            </div>
+            <HeroQuantityClientRow
+              quantity={g.quantity != null ? String(g.quantity) : DASH}
+              client={buyerName.display}
+              clientTitle={buyerName.truncated ? buyerName.full : null}
+            />
+          </div>
+          <div className="vendas-sale-rayx__general-lines vendas-sale-rayx__general-lines--below-image vendas-sale-rayx__left-info-stack">
+            {fulfillmentDisplay ? (
+              <HeroFulfillmentSaleTypeRow
+                display={fulfillmentDisplay}
+                saleTypeDisplay={saleTypeDisplay}
+                marketplace={g.marketplace != null ? String(g.marketplace) : null}
+              />
+            ) : null}
+            <SaleShippingInfoBlock shipping={shippingCompact} />
+          </div>
         </div>
-      </div>
 
-      <div className="vendas-sale-rayx__general-lines vendas-sale-rayx__general-lines--secondary">
-        <InfoLine
-          label="Cliente"
-          value={buyerName.display}
-          valueTitle={buyerName.truncated ? buyerName.full : null}
-        />
-        <InfoLine label="Status no marketplace" value={g.order_status != null ? String(g.order_status) : DASH} />
-        <InfoLine
-          label="Pedido interno"
-          value={shortUuid(g.order_internal_id != null ? String(g.order_internal_id) : null)}
-        />
-        <InfoLine label="Entrega / logística" value={g.delivery_label != null ? String(g.delivery_label) : DASH} />
-        {combineDelivery ? <InfoLine label="Combine a entrega" value="Sim" /> : null}
-        <InfoLine
-          label="Importação financeira"
-          value={g.import_status_label != null ? String(g.import_status_label) : DASH}
-        />
-        {saleTypeLine ? <InfoLine key="tipo-venda" label={saleTypeLine.label} value={saleTypeLine.value} /> : null}
-        <SaleRayXAccumulatedPerformance metrics={saleContextMetrics} />
-        <SaleRayXOperationalActions
-          general={g}
-          product={product}
-          financial={financial}
-          profitMargin={profitMargin}
-          listingTitle={listingTitle}
-          itemId={itemId}
-        />
-        {moneyRelease ? (
-          <InfoLineStack key="money-release" label={moneyRelease.label} value={moneyRelease.dateDisplay} />
-        ) : null}
-        {otherOperationalLines.map((row) => (
-          <InfoLine key={`${row.label}:${row.value}`} label={row.label} value={row.value} />
-        ))}
+        <div className="vendas-sale-rayx__left-post vendas-sale-rayx__left-info-stack">
+          <SaleRayXAccumulatedPerformance metrics={saleContextMetrics} />
+          {moneyRelease ? (
+            <InfoLineStack key="money-release" label={moneyRelease.label} value={moneyRelease.dateDisplay} />
+          ) : null}
+        </div>
       </div>
     </div>
   );

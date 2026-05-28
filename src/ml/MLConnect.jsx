@@ -41,13 +41,17 @@ export default function MLConnect() {
       const rawCo = searchParams.get("seller_company_id") || searchParams.get("sellerCompanyId") || "";
       const sellerCompanyId = rawCo.trim() && UUID_REGEX.test(rawCo.trim()) ? rawCo.trim() : "";
 
+      if (!sellerCompanyId) {
+        console.warn("[MLConnect] missing_seller_company_id — selecione uma empresa em Integrações.");
+        navigate("/perfil/integracoes/mercado-livre?ml_error=seller_company_id_required_for_ml_connect");
+        return;
+      }
+
       // --------------------------------------------------------
       // 3. Redirecionar para o backend (OAuth ML) — path /api/ml/connect
       // --------------------------------------------------------
       let connectPath = `/api/ml/connect?user_id=${encodeURIComponent(userId)}`;
-      if (sellerCompanyId) {
-        connectPath += `&seller_company_id=${encodeURIComponent(sellerCompanyId)}`;
-      }
+      connectPath += `&seller_company_id=${encodeURIComponent(sellerCompanyId)}`;
       const connectUrl = buildApiUrl(connectPath);
       if (!connectUrl) {
         console.error(

@@ -6,8 +6,9 @@
 
 import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { supabase } from "../supabaseClient";
-import "./Layout.css";
+import { logAuthBootstrap } from "../auth/authBootstrapDevLog";
+import { useAuthBootstrap } from "../contexts/AuthBootstrapContext";
+import { supabase } from "../supabaseClient";import "./Layout.css";
 
 // ---------------- Ícones do menu central ----------------
 import {
@@ -26,11 +27,13 @@ import {
 import suse7Logo from "../assets/suse7-logo-redonda.png";
 
 // ---------------- Componentes ----------------
-import NotificationBell from "./NotificationBell";
+import S7NotificationCenter from "./notifications/S7NotificationCenter";
 import AvatarMenu from "./AvatarMenu";
 import { devCenterBootstrap } from "../services/devCenterApi";
+import RenewalOperationalGate from "../billing/components/RenewalOperationalGate";
 
 export default function Layout() {
+  const { ready: authReady, user } = useAuthBootstrap();
   // -----------------------------------------------------
   // States de dados da empresa (vindos do profiles)
   // -----------------------------------------------------
@@ -44,10 +47,9 @@ export default function Layout() {
 // Buscar dados da empresa logada (profiles)
 // -----------------------------------------------------
 useEffect(() => {
-  const loadProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  if (!authReady || !user) return;
 
+  const loadProfile = async () => {
     const { data } = await supabase
       .from("profiles")
       .select("nome_loja, photo_url")
@@ -58,6 +60,8 @@ useEffect(() => {
       setEmpresaNome(data.nome_loja || "");
       setLogoUrl(data.photo_url || "");
     }
+
+    logAuthBootstrap("profile_ready", { userId: user.id });
   };
 
   loadProfile();
@@ -72,8 +76,7 @@ useEffect(() => {
   return () => {
     window.removeEventListener("logoUpdated", handleLogoUpdate);
   };
-}, []);
-
+}, [authReady, user]);
   // -----------------------------------------------------
   // Itens do menu central
   // -----------------------------------------------------
@@ -168,7 +171,7 @@ className={`nav-item ${
 
         {/* Menu da empresa (sino + logo + dropdown) */}
         <div className="nav-right">
-          <NotificationBell />
+          <S7NotificationCenter />
           <AvatarMenu
             empresaNome={empresaNome}
             logoUrl={logoUrl}
@@ -182,7 +185,9 @@ className={`nav-item ${
           isPricingIntelligencePage ? "page-content--pricing-intelligence" : ""
         }`}
       >
-        <Outlet />
+        <RenewalOperationalGate>
+          <Outlet />
+        </RenewalOperationalGate>
       </main>
     </div>
   );

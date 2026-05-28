@@ -1,0 +1,478 @@
+/* ======================================================================
+   S7 — Import Intelligence (premium, não parecer erro/debug)
+====================================================================== */
+
+.s7-import-intel {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto 28px;
+  padding: 22px 24px 20px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.06), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.s7-import-intel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 40%, #f97316 100%);
+  opacity: 0.95;
+}
+
+.s7-import-intel--integrations {
+  max-width: none;
+  margin-bottom: 20px;
+}
+
+/* Dentro do modal operacional (pai define borda/sombra externa) */
+.s7-import-intel--modal {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.s7-import-intel--modal::before {
+  display: none;
+}
+
+.s7-import-intel--modal.s7-import-intel--loading {
+  min-height: 120px;
+}
+
+.s7-import-intel--modal-empty {
+  padding: 12px 4px 8px;
+}
+
+.s7-import-intel--modal-empty::before {
+  display: none;
+}
+
+.s7-import-intel--loading {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+}
+
+.s7-import-intel__shimmer {
+  width: 100%;
+  height: 52px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #eef2f7 0%, #f8fafc 45%, #eef2f7 90%);
+  background-size: 200% 100%;
+  animation: s7-import-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes s7-import-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.s7-import-intel--cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.s7-import-intel--success {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-color: rgba(22, 163, 74, 0.18);
+}
+
+.s7-import-intel--success::before {
+  background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+}
+
+.s7-import-intel__success-icon {
+  flex-shrink: 0;
+  color: #16a34a;
+  margin-top: 2px;
+}
+
+.s7-import-intel__head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.s7-import-intel__head-icon-wrap {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(249, 115, 22, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s7-import-intel__icon {
+  color: #1d4ed8;
+}
+
+.s7-import-intel__icon--pulse {
+  animation: s7-import-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes s7-import-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.04);
+  }
+}
+
+.s7-import-intel__title {
+  margin: 0 0 4px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.s7-import-intel__title--success {
+  margin-bottom: 2px;
+}
+
+.s7-import-intel__sub {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #475569;
+  max-width: 62ch;
+}
+
+.s7-import-intel__reassure {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #334155;
+  background: rgba(37, 99, 235, 0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.s7-import-intel__warn {
+  margin: 0 0 12px;
+  font-size: 0.8125rem;
+  color: #b45309;
+}
+
+.s7-import-intel__accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.s7-import-intel__account {
+  padding: 14px 16px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.s7-import-intel__account-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.s7-import-intel__account-name {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.9375rem;
+}
+
+.s7-import-intel__account-status {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.s7-import-intel__layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.s7-import-intel__layer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  color: #334155;
+}
+
+.s7-import-intel__layer--hot {
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+.s7-import-intel__layer--bg {
+  background: rgba(249, 115, 22, 0.06);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+}
+
+.s7-import-intel__layer-label {
+  font-weight: 600;
+  color: #475569;
+}
+
+.s7-import-intel__pill {
+  margin-left: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.s7-import-intel__pill.ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.s7-import-intel__pill.run {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+.s7-import-intel__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.s7-import-intel__metric-label {
+  display: block;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.s7-import-intel__metric-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-import-intel__progress-wrap {
+  margin-bottom: 12px;
+}
+
+.s7-import-intel__progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.s7-import-intel__progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.s7-import-intel__progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #3b82f6 50%, #f97316);
+  transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.s7-import-intel__footer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.s7-import-intel__forecast {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #475569;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.s7-import-intel__forecast-ico {
+  flex-shrink: 0;
+  color: #f97316;
+  margin-top: 2px;
+}
+
+.s7-import-intel__activity {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.s7-import-intel__hint {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.s7-import-intel__main-progress {
+  margin-bottom: 18px;
+}
+
+.s7-import-intel__layer-block {
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.s7-import-intel__layer-block--hot {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.s7-import-intel__layer-block--hist {
+  background: rgba(249, 115, 22, 0.04);
+}
+
+.s7-import-intel__layer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #0f172a;
+}
+
+.s7-import-intel__layer-copy {
+  margin: 0 0 10px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.s7-import-intel__sub-progress {
+  margin-bottom: 8px;
+}
+
+.s7-import-intel__progress-label--sm {
+  font-size: 0.6875rem;
+}
+
+.s7-import-intel__progress-track--sm {
+  height: 6px;
+}
+
+.s7-import-intel__progress-fill--hot {
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+}
+
+.s7-import-intel__progress-fill--hist {
+  background: linear-gradient(90deg, #ea580c, #fb923c);
+}
+
+.s7-import-intel__sales-line {
+  margin: 0 0 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.s7-import-intel__activity--tight {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.s7-import-intel__metrics--inline {
+  margin-top: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.s7-import-intel__account-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.s7-import-intel__btn {
+  appearance: none;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: #fff;
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.s7-import-intel__btn:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: #2563eb;
+}
+
+.s7-import-intel__foot {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.s7-import-intel__link {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.s7-import-intel__link:hover {
+  text-decoration: underline;
+  color: #1e40af;
+}
+
+@media (max-width: 640px) {
+  .s7-import-intel {
+    padding: 18px 16px;
+    border-radius: 14px;
+  }
+}

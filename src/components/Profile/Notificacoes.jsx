@@ -4,7 +4,7 @@
 //  Persistência escalável em notify.<TYPE> com fallback para legado.
 // ======================================================================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { getPreferences, setPreference } from "../../services/userPreferencesService";
 import { useNotifications } from "../../contexts/NotificationContext";
@@ -20,7 +20,68 @@ import {
   NOTIFICATION_CATEGORY_VIEWS,
   NOTIFICATION_CHANNELS,
 } from "../../constants/notificationPreferences";
+import NotificationRoutingRecipientsPanel from "./NotificationRoutingRecipientsPanel";
+import {
+  fetchMarketplaceAccountsForRouting,
+  fetchNotificationContacts,
+  fetchNotificationRoutingRules,
+} from "../../services/notificationRoutingService";
+import { fetchNotificationRoutingSummary } from "../../services/notificationHistoryService";
 import "./Notificacoes.css";
+
+function NotificationRoutingBadges({ routingKey, summary, loaded }) {
+  if (!routingKey) return null;
+  if (!loaded) {
+    return (
+      <div className="notif-routing-summary-badges" aria-live="polite">
+        <span className="notif-routing-summary-badge notif-routing-summary-badge--muted">Carregando regras…</span>
+      </div>
+    );
+  }
+  const s = summary?.[routingKey];
+  if (!s) {
+    return (
+      <div className="notif-routing-summary-badges">
+        <span className="notif-routing-summary-badge notif-routing-summary-badge--muted">Sem regras salvas</span>
+      </div>
+    );
+  }
+  if (!s.has_rules) {
+    return (
+      <div className="notif-routing-summary-badges">
+        <span className="notif-routing-summary-badge notif-routing-summary-badge--muted">Sem destinatários</span>
+      </div>
+    );
+  }
+  const parts = [];
+  if (s.whatsapp_contacts_count > 0) {
+    parts.push(`WhatsApp: ${s.whatsapp_contacts_count} destinatário(s)`);
+  }
+  if (s.email_contacts_count > 0) {
+    parts.push(`E-mail: ${s.email_contacts_count} destinatário(s)`);
+  }
+  if (s.marketplace_accounts_count > 0) {
+    parts.push(`${s.marketplace_accounts_count} conta(s) configurada(s)`);
+  }
+  if (parts.length === 0) {
+    return (
+      <div className="notif-routing-summary-badges">
+        <span className="notif-routing-summary-badge notif-routing-summary-badge--muted">
+          Regras ativas · adicione destinatários por canal
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className="notif-routing-summary-badges">
+      {parts.map((t) => (
+        <span key={t} className="notif-routing-summary-badge">
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 const CHANNEL_LABELS = {
   [NOTIFICATION_CHANNELS.app]: "Notificações no app",
@@ -98,6 +159,11 @@ export default function Notificacoes() {
   const [loading, setLoading] = useState(true);
   const [scannerRunning, setScannerRunning] = useState(false);
   const [scannerReport, setScannerReport] = useState(null);
+  const [routingContacts, setRoutingContacts] = useState([]);
+  const [routingAccounts, setRoutingAccounts] = useState([]);
+  const [routingRules, setRoutingRules] = useState([]);
+  const [routingSummary, setRoutingSummary] = useState({});
+  const [routingSummaryLoaded, setRoutingSummaryLoaded] = useState(false);
   const { addNotification } = useNotifications();
   const categoryKey = category ?? NOTIFICATION_CATEGORY_VIEWS.sales;
   const validCategories = new Set(Object.keys(NOTIFICATION_CATALOG_BY_VIEW));
@@ -116,6 +182,33 @@ export default function Notificacoes() {
     });
     return () => { cancelled = true; };
   }, []);
+
+  const loadRoutingBundle = useCallback(async () => {
+    setRoutingSummaryLoaded(false);
+    const [cRes, aRes, rRes, sRes] = await Promise.all([
+      fetchNotificationContacts(),
+      fetchMarketplaceAccountsForRouting(),
+      fetchNotificationRoutingRules({}),
+      fetchNotificationRoutingSummary(),
+    ]);
+    setRoutingContacts(cRes.ok ? (cRes.data?.contacts ?? []) : []);
+    setRoutingAccounts(aRes.ok ? (aRes.data?.accounts ?? []) : []);
+    setRoutingRules(rRes.ok ? (rRes.data?.rules ?? []) : []);
+    setRoutingSummary(sRes.ok ? (sRes.summary ?? {}) : {});
+    setRoutingSummaryLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    loadRoutingBundle();
+  }, [loadRoutingBundle]);
+
+  useEffect(() => {
+    const onRefresh = () => {
+      loadRoutingBundle();
+    };
+    window.addEventListener("suse7:routingRulesChanged", onRefresh);
+    return () => window.removeEventListener("suse7:routingRulesChanged", onRefresh);
+  }, [loadRoutingBundle]);
 
   const getEnabled = (type, channel) => {
     const resolved = resolvePref(prefs, type);
@@ -217,7 +310,7 @@ export default function Notificacoes() {
             <div key={activeGroup.id} className="notif-group">
               <h4 className="notif-group__title">{activeGroup.title}</h4>
               <div className="notif-type-list">
-                {activeGroup.items.map(({ type, label, description, priority, tone, future }) => (
+                {activeGroup.items.map(({ type, label, description, priority, tone, future, routingKey }) => (
                   <article key={type} className={`notif-type-card notif-type-card--${tone ?? "neutral"}`}>
                     <header className="notif-type-card__head">
                       <div>
@@ -229,6 +322,12 @@ export default function Notificacoes() {
                         {future ? <span className="notif-badge notif-badge--future">futuro</span> : null}
                       </div>
                     </header>
+
+                    <NotificationRoutingBadges
+                      routingKey={routingKey}
+                      summary={routingSummary}
+                      loaded={routingSummaryLoaded}
+                    />
 
                     <div className="notif-channels" role="group" aria-label={`Canais para ${label}`}>
                       {CHANNEL_ORDER.map((channelId) => {
@@ -251,9 +350,32 @@ export default function Notificacoes() {
                       })}
                     </div>
 
-                    <p className="notif-whatsapp-hint">
-                      WhatsApp será ativado após configurar número/integração.
-                    </p>
+                    {routingKey ? (
+                      <>
+                        <NotificationRoutingRecipientsPanel
+                          routingKey={routingKey}
+                          channel={NOTIFICATION_CHANNELS.whatsapp}
+                          contacts={routingContacts}
+                          marketplaceAccounts={routingAccounts}
+                          routingRules={routingRules}
+                          masterChannelEnabled={getEnabled(type, NOTIFICATION_CHANNELS.whatsapp)}
+                          addNotification={addNotification}
+                        />
+                        <NotificationRoutingRecipientsPanel
+                          routingKey={routingKey}
+                          channel={NOTIFICATION_CHANNELS.email}
+                          contacts={routingContacts}
+                          marketplaceAccounts={routingAccounts}
+                          routingRules={routingRules}
+                          masterChannelEnabled={getEnabled(type, NOTIFICATION_CHANNELS.email)}
+                          addNotification={addNotification}
+                        />
+                      </>
+                    ) : (
+                      <p className="notif-whatsapp-hint">
+                        WhatsApp será ativado após configurar número/integração.
+                      </p>
+                    )}
                   </article>
                 ))}
               </div>

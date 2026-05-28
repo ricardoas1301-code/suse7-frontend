@@ -1,0 +1,57 @@
+.s7-renewal-notice-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.s7-renewal-notice-popup__panel {
+  width: min(440px, 100%);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.s7-renewal-notice-popup__panel h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.s7-renewal-notice-popup__panel p {
+  margin: 0 0 1.25rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.s7-renewal-notice-popup__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.s7-renewal-notice-popup__panel.s7-billing-renewal-notice--warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.s7-renewal-notice-popup__panel.s7-billing-renewal-notice--danger {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.s7-renewal-notice-popup__panel.s7-billing-renewal-notice--critical {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.s7-renewal-notice-popup__panel.s7-billing-renewal-notice--suspended {
+  background: #fef2f2;
+  border-color: #f87171;
+}

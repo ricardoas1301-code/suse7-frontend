@@ -7,7 +7,10 @@
 //   - API_BASE_URL, buildApiUrl(path), getSessionToken(), apiFetch(url, options)
 // ======================================================
 
-import { supabase } from "../supabaseClient";
+import {
+  ensureAuthSessionBootstrapped,
+  getAuthBootstrapAccessToken,
+} from "../auth/authBootstrapService";
 
 // ----------------------------------------------------------------------
 // URL base (VITE_API_BASE_URL; sem barra final)
@@ -17,8 +20,9 @@ export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\
 
 if (import.meta.env.DEV && API_BASE_URL && /vercel\.app/i.test(API_BASE_URL)) {
   console.warn(
-    "[Suse7] VITE_API_BASE_URL aponta para a Vercel em DEV. Para o backend local use http://localhost:3001, salve o .env e reinicie o Vite. " +
-      "Arquivo com prioridade máxima: .env.development.local (gitignore)."
+    "[Suse7] ATENÇÃO: VITE_API_BASE_URL aponta para Vercel em DEV:",
+    API_BASE_URL,
+    "— Raio-X WhatsApp live exige backend LOCAL com flags live. Ajuste suse7-frontend/.env.development.local para http://localhost:3001 e reinicie o Vite."
   );
 }
 
@@ -34,15 +38,25 @@ export function buildApiUrl(path) {
   return `${base}${suffix}`;
 }
 
+/** Single-flight via auth bootstrap — evita getSession paralelo (lock broken). */
+let _getSessionTokenInFlight = /** @type {Promise<string | null> | null} */ (null);
+
 /**
  * Obtém o access_token da sessão Supabase (para envio em Authorization).
  * Usado internamente por apiFetch; exposto para quem precisar checar sessão.
  */
 export async function getSessionToken() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+  const cached = getAuthBootstrapAccessToken();
+  if (cached) return cached;
+
+  if (!_getSessionTokenInFlight) {
+    _getSessionTokenInFlight = ensureAuthSessionBootstrapped()
+      .then((session) => session?.access_token ?? getAuthBootstrapAccessToken())
+      .finally(() => {
+        _getSessionTokenInFlight = null;
+      });
+  }
+  return _getSessionTokenInFlight;
 }
 
 // ----------------------------------------------------------------------
@@ -65,7 +79,15 @@ let _hasWarned401 = false;
  * @returns {Promise<{ ok: boolean; data?: any; error?: string; status: number }>}
  */
 export async function apiFetch(url, options = {}) {
-  const { method = "GET", headers = {}, body, unauthorizedFallback } = options;
+  const { method = "GET", headers = {}, body, unauthorizedFallback, cache, timeoutMs } = options;
+
+  if (!API_BASE_URL) {
+    const message = "VITE_API_BASE_URL não configurada.";
+    if (import.meta.env.DEV) {
+      console.error(`[S7 API] ${message}`);
+    }
+    return { ok: false, error: message, status: 0, connectionError: true };
+  }
 
   const token = await getSessionToken();
   const sendHeaders = { ...headers };
@@ -76,11 +98,42 @@ export async function apiFetch(url, options = {}) {
     sendHeaders["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(url, {
-    method,
-    headers: sendHeaders,
-    ...(body != null && { body: typeof body === "string" ? body : JSON.stringify(body) }),
-  });
+  let res;
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let timeoutId = null;
+  /** @type {AbortController | null} */
+  const controller =
+    timeoutMs != null && Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
+      ? new AbortController()
+      : null;
+  if (controller) {
+    timeoutId = setTimeout(() => controller.abort(), Number(timeoutMs));
+  }
+  try {
+    res = await fetch(url, {
+      method,
+      headers: sendHeaders,
+      ...(cache != null ? { cache } : {}),
+      ...(body != null && { body: typeof body === "string" ? body : JSON.stringify(body) }),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+  } catch (err) {
+    if (controller?.signal.aborted) {
+      const message = "Tempo esgotado ao carregar o resumo executivo. Tente novamente.";
+      if (import.meta.env.DEV) {
+        console.warn("[S7 API] Timeout:", url, { timeoutMs });
+      }
+      return { ok: false, error: message, status: 408, timedOut: true, connectionError: true };
+    }
+    const message =
+      "Não foi possível conectar ao backend. Verifique se a API está online e se VITE_API_BASE_URL está correta.";
+    if (import.meta.env.DEV) {
+      console.warn("[S7 API] Falha de rede:", url, err);
+    }
+    return { ok: false, error: message, status: 0, connectionError: true };
+  } finally {
+    if (timeoutId != null) clearTimeout(timeoutId);
+  }
 
   const data = await res.json().catch(() => ({}));
 

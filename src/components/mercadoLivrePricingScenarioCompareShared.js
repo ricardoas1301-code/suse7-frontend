@@ -624,6 +624,131 @@ function findLegacyMlPromoByScenarioKey(scenariosRaw, scenarioKey) {
 }
 
 /**
+ * Monta `pricing` do contrato sale-xray a partir de uma linha de
+ * `POST /api/ml/listings/pricing-scenarios` (`scenario.marketplace`).
+ *
+ * @param {unknown} row
+ * @returns {Record<string, unknown>}
+ */
+function legacyMlScenarioRowToSaleXrayPricing(row) {
+  const m =
+    row && typeof row === "object" && row.marketplace != null && typeof row.marketplace === "object"
+      ? /** @type {Record<string, unknown>} */ (row.marketplace)
+      : {};
+  return {
+    sale_price_brl: m.sale_price_brl ?? null,
+    fee_amount_brl: m.fee_amount_brl ?? m.sale_fee_amount_brl ?? null,
+    fee_percent: m.sale_fee_percent ?? null,
+    fee_type_label: m.listing_type_label ?? null,
+    ml_card_payout_amount_brl: m.ml_card_payout_amount_brl ?? null,
+    ml_card_payout_brl: m.ml_card_payout_brl ?? null,
+    net_receivable_brl: m.net_receivable_brl ?? m.marketplace_payout_amount_brl ?? null,
+    ml_card_shipping_amount_brl: m.ml_card_shipping_amount_brl ?? null,
+    ml_card_shipping_brl: m.ml_card_shipping_brl ?? null,
+    shipping_cost_amount_brl: m.shipping_cost_amount_brl ?? null,
+    shipping_cost_context: m.shipping_cost_context ?? null,
+    ml_shipping_cost_context: m.ml_shipping_cost_context ?? null,
+    shipping_cost_source: m.shipping_cost_source ?? null,
+    shipping_context: m.shipping_context ?? null,
+    marketplace_payout_source: m.marketplace_payout_source ?? null,
+    charged_fee_gross_brl: m.charged_fee_gross_brl ?? null,
+    charged_fee_net_brl: m.charged_fee_net_brl ?? null,
+    charged_fee_reduction_brl: m.charged_fee_reduction_brl ?? null,
+    charged_fee_rebate_brl: m.charged_fee_rebate_brl ?? null,
+    charged_fee_discount_brl: m.charged_fee_discount_brl ?? null,
+    charged_fee_source: m.charged_fee_source ?? null,
+    charged_fee_is_estimated: m.charged_fee_is_estimated ?? null,
+    billing_tariff_applied: m.billing_tariff_applied ?? null,
+    subsidy_text: m.subsidy_text ?? null,
+    fee_amount_gross_brl: m.fee_amount_gross_brl ?? m.promotion_fee_gross_brl ?? null,
+    fee_amount_net_display_brl: m.fee_amount_net_display_brl ?? m.sale_fee_net_display_brl ?? null,
+    promotion_fee_net_brl: m.promotion_fee_net_brl ?? null,
+    subsidy_ml_brl: m.subsidy_ml_brl ?? null,
+    has_fee_subsidy: m.has_fee_subsidy ?? null,
+    show_fee_subsidy_breakdown: m.show_fee_subsidy_breakdown ?? null,
+    show_fee_updated_result: m.show_fee_updated_result ?? null,
+    subsidy_ml_breakdown_brl: m.subsidy_ml_breakdown_brl ?? null,
+    marketplace_benefit_amount_brl: m.marketplace_benefit_amount_brl ?? null,
+    marketplace_benefit_label: m.marketplace_benefit_label ?? null,
+    marketplace_benefit_type: m.marketplace_benefit_type ?? null,
+    marketplace_benefit_source: m.marketplace_benefit_source ?? null,
+    marketplace_participation_amount_brl: m.marketplace_participation_amount_brl ?? null,
+    marketplace_participation_label: m.marketplace_participation_label ?? null,
+    marketplace_participation_source: m.marketplace_participation_source ?? null,
+    marketplace_participation_resolution: m.marketplace_participation_resolution ?? null,
+  };
+}
+
+/**
+ * Converte a resposta de `pricing-scenarios` (ou devolve intacto se já for sale-xray-modal).
+ * Usado pelo Raio-x ML: o backend expõe `pricing-scenarios`; o contrato `sale_xray_modal` fica no FE.
+ *
+ * @param {unknown} apiData
+ * @returns {Record<string, unknown> | null}
+ */
+export function wrapPricingScenariosApiAsSaleXrayModalPayload(apiData) {
+  if (!apiData || typeof apiData !== "object") return null;
+  const rec = /** @type {Record<string, unknown>} */ (apiData);
+  if (rec.from_sale_xray_modal === true && rec.sale_xray_modal != null && typeof rec.sale_xray_modal === "object") {
+    return { ...rec };
+  }
+  const scenarios = Array.isArray(rec.scenarios) ? /** @type {Record<string, unknown>[]} */ (rec.scenarios.slice()) : [];
+  let baseline =
+    rec.baseline != null && typeof rec.baseline === "object"
+      ? /** @type {Record<string, unknown>} */ (rec.baseline)
+      : null;
+  if (baseline == null) {
+    const found = scenarios.find((s) => s && typeof s === "object" && s.is_baseline === true);
+    baseline = found != null ? /** @type {Record<string, unknown>} */ (found) : null;
+  }
+  if (baseline == null && scenarios.length > 0) {
+    baseline = /** @type {Record<string, unknown>} */ (scenarios[0]);
+  }
+  if (baseline == null) return null;
+
+  const promos = scenarios.filter((s) => s && typeof s === "object" && s.is_baseline !== true);
+
+  const promotion_scenarios = promos.map((row, i) => {
+    const r = /** @type {Record<string, unknown>} */ (row);
+    const sid = r.scenario_id != null ? String(r.scenario_id).trim() : "";
+    const pk = r.promotion_stable_key != null ? String(r.promotion_stable_key).trim() : "";
+    const key =
+      sid !== "" ? sid : pk !== "" ? pk : String(r.key ?? `promo-${i}`).trim() || `promo-${i}`;
+    const startIso = r.starts_at != null ? String(r.starts_at) : "";
+    const endIso = r.ends_at != null ? String(r.ends_at) : "";
+    const vigencia = formatRaioxVigenciaPtBrRange(startIso || null, endIso || null);
+    return {
+      scenario_key: key,
+      pricing: legacyMlScenarioRowToSaleXrayPricing(r),
+      promotion: {
+        promotion_id: r.promotion_id ?? null,
+        promotion_name: r.promotion_name ?? r.label ?? null,
+        status: r.status ?? null,
+        promotion_start_date: r.starts_at ?? null,
+        promotion_end_date: r.ends_at ?? null,
+        promotion_vigencia_text: vigencia,
+        discount_text: null,
+      },
+      result: r.result ?? null,
+      internal_costs: r.internal_costs ?? null,
+    };
+  });
+
+  return {
+    ...rec,
+    ok: true,
+    from_sale_xray_modal: true,
+    sale_xray_modal: {
+      normal_scenario: {
+        pricing: legacyMlScenarioRowToSaleXrayPricing(baseline),
+        result: baseline.result ?? null,
+      },
+      promotion_scenarios,
+    },
+  };
+}
+
+/**
  * Monta as linhas do Raio-x a partir do contrato `sale_xray_modal` (ordem = backend).
  * Mescla com `baseline` / `scenarios` legados para manter `ui`, `data_quality`, etc.
  *

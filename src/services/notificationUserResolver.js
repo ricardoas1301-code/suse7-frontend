@@ -1,4 +1,8 @@
 import { supabase } from "../supabaseClient";
+import {
+  ensureAuthSessionBootstrapped,
+  getAuthBootstrapUser,
+} from "../auth/authBootstrapService";
 import { getPreferences } from "./userPreferencesService";
 
 function maskEmail(email) {
@@ -27,9 +31,8 @@ function normalizePreferencesByType(rawPrefs) {
 }
 
 export async function resolveNotificationUserContext() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  await ensureAuthSessionBootstrapped();
+  const user = getAuthBootstrapUser();
   if (!user) {
     return { ok: false, error: "Usuário não autenticado." };
   }

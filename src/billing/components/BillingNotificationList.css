@@ -1,0 +1,197 @@
+.s7-billing-notifications {
+  background: #fff;
+  border: 1px solid #dbe5f2;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.05);
+  min-height: 280px;
+  animation: s7-billing-fade-in 0.35s ease-out both;
+}
+
+.s7-billing-notifications__header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.s7-billing-notifications__header p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.s7-billing-notifications__list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  max-height: 520px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.s7-billing-notifications__item {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+  animation: s7-billing-notif-in 0.35s ease-out both;
+  animation-delay: var(--s7-notif-stagger, 0ms);
+}
+
+.s7-billing-notifications__item:hover {
+  border-color: #bfdbfe;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px);
+}
+
+.s7-billing-notifications__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.s7-billing-notifications__icon--success {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.s7-billing-notifications__icon--danger,
+.s7-billing-notifications__icon--suspended {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.s7-billing-notifications__icon--renewal {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.s7-billing-notifications__meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.s7-billing-notifications__category {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.s7-billing-notifications__time {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.s7-billing-notifications__title {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-billing-notifications__text {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.s7-billing-notifications--error {
+  display: grid;
+  gap: 10px;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.s7-billing-notifications__error {
+  margin: 12px 0 0;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.s7-billing-notifications__skeleton {
+  margin-top: 16px;
+  height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: s7-billing-notifications-shimmer 1.2s ease-in-out infinite;
+}
+
+.s7-billing-notifications__skeleton--short {
+  margin-top: 10px;
+  width: 72%;
+}
+
+@keyframes s7-billing-notif-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes s7-billing-notifications-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .s7-billing-notifications {
+    padding: 16px;
+  }
+
+  .s7-billing-notifications__list {
+    max-height: none;
+  }
+
+  .s7-billing-notifications__meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s7-billing-notifications,
+  .s7-billing-notifications__item {
+    animation: none;
+    transition: none;
+  }
+
+  .s7-billing-notifications__item:hover {
+    transform: none;
+  }
+}

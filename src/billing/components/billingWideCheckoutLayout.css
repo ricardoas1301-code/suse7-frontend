@@ -1,0 +1,23 @@
+/* Dimensões compartilhadas: modais Pix, Boleto e Cartão (layout 980px). */
+.s7-billing-checkout-sheet__panel.s7-billing-boleto-checkout,
+.s7-billing-checkout-sheet__panel.s7-billing-card-checkout,
+.s7-billing-checkout-sheet__panel.s7-billing-pix-checkout {
+  width: min(980px, calc(100vw - 32px));
+  max-width: 980px;
+  padding: 24px 28px 26px;
+  border-radius: 20px;
+  border: 1.5px solid #93c5fd;
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.16),
+    0 0 0 1px rgba(147, 197, 253, 0.28);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/*
+ * Altura do action-card do boleto: área visual (228px + padding) + botões.
+ * O form-card do cartão usa o mesmo envelope; campos rolam por dentro.
+ */
+.s7-billing-checkout-sheet__panel.s7-billing-card-checkout {
+  --s7-billing-wide-checkout-action-card-height: 380px;
+}

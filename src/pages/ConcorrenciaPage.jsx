@@ -9,12 +9,11 @@ import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import S7Button from "../components/ui/S7Button";
+import S7Icon from "../components/ui/S7Icon";
 import S7CompetitionPriceChart from "../components/concorrencia/S7CompetitionPriceChart";
 import ConcorrenciaSelectModal from "../components/concorrencia/ConcorrenciaSelectModal";
 import ConcorrenciaListingSearch from "../components/concorrencia/ConcorrenciaListingSearch";
 import { ConcorrenciaSellerRaioxCard, ConcorrenciaCompetitorRaioxCard } from "../components/concorrencia/ConcorrenciaRaioxCompare";
-import MarketplaceIcon from "../components/MarketplaceIcon";
-import { marketplaceChipLabel } from "../utils/productCatalogRow";
 import {
   competitionListListings,
   competitionGetOverview,
@@ -234,45 +233,16 @@ export default function ConcorrenciaPage() {
     await loadOverview();
   };
 
-  const kpis = overview?.kpis ?? {};
-  const mkp = overview?.listing?.marketplace != null ? String(overview.listing.marketplace) : "";
-  const mkpLabel = mkp ? marketplaceChipLabel(mkp) : "";
-
   const marketplaceBadgeForCards =
     overview?.listing?.marketplace != null && String(overview.listing.marketplace).trim() !== ""
       ? marketplaceChipLabel(String(overview.listing.marketplace).trim())
       : null;
 
-  /** Indicador derivado só para exibição: anúncio atual sem linha de concorrentes persistida. */
-  const semConcorrentesFlag = listingId && (overview?.competitors ?? []).length === 0 ? 1 : 0;
-
-  /** Enquanto a visão do anúncio recarrega, não misturar KPIs antigos com seleção nova. */
-  const kpiPlaceholder = Boolean(listingId) && busy;
-
-  const largeValue = (v) => (kpiPlaceholder ? "…" : v);
-  const miniValue = (v) => (kpiPlaceholder ? "…" : String(v ?? 0));
-
   return (
-    <div className="page-content concorrencia-page">
+    <div className="concorrencia-page">
       <h1 className="products-catalog__sr-title">Monitoramento de Concorrência S7</h1>
 
       <div className="concorrencia-page__shell">
-        <header className="concorrencia-page__head">
-          <div className="concorrencia-page__head-text">
-            <h2 className="concorrencia-page__title">Monitoramento de Concorrência S7</h2>
-            <p className="concorrencia-page__subtitle">
-              Decisão e simulações no servidor; esta tela apenas reflete o que foi persistido para o seu time.
-            </p>
-            {mkp ? (
-              <p className="concorrencia-page__mkp">
-                <MarketplaceIcon marketplace={mkp} size={20} />
-                <span>{mkpLabel}</span>
-              </p>
-            ) : null}
-          </div>
-        </header>
-
-        {loadListErr ? <p className="concorrencia-page__err">{loadListErr}</p> : null}
         {overviewErr ? <p className="concorrencia-page__err">{overviewErr}</p> : null}
         {actionMsg ? <p className="concorrencia-page__info">{actionMsg}</p> : null}
 
@@ -282,68 +252,48 @@ export default function ConcorrenciaPage() {
             <header className="anuncios-catalog__kpi-head">
               <h2 className="anuncios-catalog__kpi-title">Top 10 — monitorados</h2>
             </header>
-            <div className="anuncios-catalog__kpi-body">
-              <p className="anuncios-catalog__kpi-value">{largeValue(String(kpis.products_monitored ?? 0))}</p>
-              <p className="anuncios-catalog__kpi-hint">Quantidade de anúncios com monitoramento de concorrência ativo na conta (servidor).</p>
-            </div>
+            <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
           </article>
 
           <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
             <header className="anuncios-catalog__kpi-head">
               <h2 className="anuncios-catalog__kpi-title">Top 10 — oportunidades</h2>
             </header>
-            <div className="anuncios-catalog__kpi-body">
-              <p className="anuncios-catalog__kpi-value">{listingId && !kpiPlaceholder ? "—" : "…"}</p>
-              <p className="anuncios-catalog__kpi-hint">
-                Ranking consolidado multi-anúncio entra na próxima etapa do produto; por ora o motor trabalha no contexto do anúncio
-                selecionado.
-              </p>
-            </div>
+            <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
           </article>
 
           <div className="anuncios-catalog__kpi-minis" aria-label="Sinais do anúncio selecionado">
-            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
+            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--profit">
               <div className="anuncios-catalog__kpi-mini-head">
-                <h3 className="anuncios-catalog__kpi-mini-title">Perdendo no preço</h3>
+                <h3 className="anuncios-catalog__kpi-mini-title">Dominando mercado</h3>
               </div>
-              <div className="anuncios-catalog__kpi-mini-body">
-                <p className="anuncios-catalog__kpi-mini-value">{miniValue(kpis.losing_on_price)}</p>
-              </div>
+              <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
             </article>
             <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--warn">
               <div className="anuncios-catalog__kpi-mini-head">
                 <h3 className="anuncios-catalog__kpi-mini-title">Margem em risco</h3>
               </div>
-              <div className="anuncios-catalog__kpi-mini-body">
-                <p className="anuncios-catalog__kpi-mini-value">{miniValue(kpis.margin_at_risk)}</p>
-              </div>
+              <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
             </article>
-            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--profit">
+            <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
               <div className="anuncios-catalog__kpi-mini-head">
-                <h3 className="anuncios-catalog__kpi-mini-title">Dominando mercado</h3>
+                <h3 className="anuncios-catalog__kpi-mini-title">Perdendo no preço</h3>
               </div>
-              <div className="anuncios-catalog__kpi-mini-body">
-                <p className="anuncios-catalog__kpi-mini-value">{miniValue(kpis.dominating)}</p>
-              </div>
+              <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
             </article>
             <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--sales">
               <div className="anuncios-catalog__kpi-mini-head">
                 <h3 className="anuncios-catalog__kpi-mini-title">Sem concorrentes</h3>
               </div>
-              <div className="anuncios-catalog__kpi-mini-body">
-                <p className="anuncios-catalog__kpi-mini-value">
-                  {listingId ? (kpiPlaceholder ? "…" : miniValue(semConcorrentesFlag)) : "…"}
-                </p>
-              </div>
+              <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
             </article>
           </div>
         </section>
 
-        {/* Barra de filtros / ações — família visual Products (controls + S7Button). */}
-        <div className="concorrencia-page__controls products-catalog__controls s7-sticky-filters">
+        {/* Barra busca + filtros — mesmo stacking que Anúncios / Produtos (products-catalog__controls). */}
+        <div className="concorrencia-page__controls products-catalog__controls s7-sticky-filters s7-catalog-filter-card">
           <div className="products-catalog__controls-top">
-            <div className="concorrencia-page__listing-search-wrap">
-              <span className="concorrencia-page__field-label">Anúncio monitorado</span>
+            <div className="products-catalog__search-wrap">
               <ConcorrenciaListingSearch
                 listings={listings}
                 listingId={listingId}
@@ -351,29 +301,49 @@ export default function ConcorrenciaPage() {
                 disabled={busy}
               />
             </div>
-            <div className="products-catalog__controls-actions concorrencia-page__toolbar-actions">
-              <S7Button type="button" variant="secondary" onClick={() => void loadOverview()} disabled={!listingId || busy} loading={busy}>
-                Atualizar
-              </S7Button>
-              <S7Button
-                type="button"
-                variant="secondary"
-                onClick={() => void handleDiscover()}
-                disabled={!listingId || busy || discoverBusy}
-                loading={discoverBusy}
-                loadingLabel="Buscando concorrentes..."
-              >
-                Buscar concorrentes
-              </S7Button>
-              <S7Button type="button" variant="primary" onClick={openPickModalFromOverview} disabled={!listingId || busy || discoverBusy}>
-                Selecionar concorrentes
-              </S7Button>
-              <S7Button type="button" variant="primary" onClick={handleSimulatePricing} disabled={!listingId}>
-                Simular no Precificador
-              </S7Button>
-              <S7Button type="button" variant="secondary" onClick={() => void handleApplyPrice()} disabled={!listingId} loading={applyBusy}>
-                Aplicar preço
-              </S7Button>
+          </div>
+          <div className="products-catalog__controls-main">
+            <div
+              className="products-catalog__filter-row products-catalog__filter-row--spread"
+              role="toolbar"
+              aria-label="Ações de concorrência"
+            >
+              <div className="products-catalog__filter-row-chips">
+                <button
+                  type="button"
+                  className="products-catalog__filter-clear"
+                  disabled={!listingId}
+                  title={listingId ? "Limpar anúncio selecionado e buscar outro" : "Selecione um anúncio para limpar"}
+                  onClick={() => setListingId("")}
+                >
+                  <S7Icon name="filter_clear" size={14} strokeWidth={1.75} className="products-catalog__filter-clear-icon" />
+                  <span>Limpar filtros</span>
+                </button>
+              </div>
+              <div className="products-catalog__filter-row-end concorrencia-page__toolbar-actions">
+                <S7Button type="button" variant="secondary" onClick={() => void loadOverview()} disabled={!listingId || busy} loading={busy}>
+                  Atualizar
+                </S7Button>
+                <S7Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => void handleDiscover()}
+                  disabled={!listingId || busy || discoverBusy}
+                  loading={discoverBusy}
+                  loadingLabel="Buscando concorrentes..."
+                >
+                  Buscar concorrentes
+                </S7Button>
+                <S7Button type="button" variant="primary" onClick={openPickModalFromOverview} disabled={!listingId || busy || discoverBusy}>
+                  Selecionar concorrentes
+                </S7Button>
+                <S7Button type="button" variant="primary" onClick={handleSimulatePricing} disabled={!listingId}>
+                  Simular no Precificador
+                </S7Button>
+                <S7Button type="button" variant="secondary" onClick={() => void handleApplyPrice()} disabled={!listingId} loading={applyBusy}>
+                  Aplicar preço
+                </S7Button>
+              </div>
             </div>
           </div>
         </div>

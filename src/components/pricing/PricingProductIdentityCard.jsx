@@ -3,23 +3,16 @@
 // ID + SKU em uma linha (tipografia Raio-X); copiar só no hover de cada trecho.
 // ======================================================
 
-import { useCallback, useState } from "react";
-import { useNotifications } from "../../contexts/NotificationContext";
-import { NOTIFICATION_SEVERITY } from "../../services/notificationTypes";
+import { useState } from "react";
 import { getMarketplaceThemeCssVars } from "../../theme/marketplaceTheme.js";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../ui/S7CopyButton.jsx";
 import S7Icon from "../ui/S7Icon.jsx";
-
-const COPY_FLASH_MS = 2000;
-const COPY_KEY_EXT = "ext";
-const COPY_KEY_SKU = "sku";
 
 /**
  * @param {{ row: Record<string, unknown>; theme: import("../../theme/marketplaceTheme.js").MarketplaceTheme }} props
  */
 export function PricingProductIdentityCard({ row, theme }) {
-  const { addNotification } = useNotifications();
   const [imgBroken, setImgBroken] = useState(false);
-  const [copyFlash, setCopyFlash] = useState(/** @type {string | null} */ (null));
 
   const cover =
     row?.coverThumbnailUrl != null && String(row.coverThumbnailUrl).trim() !== ""
@@ -39,43 +32,9 @@ export function PricingProductIdentityCard({ row, theme }) {
     .filter(Boolean)
     .join(" ");
 
-  const flashExt = copyFlash === COPY_KEY_EXT;
-  const flashSku = copyFlash === COPY_KEY_SKU;
   const hasListingId = listingId !== "";
   const hasSku = skuRaw !== "";
   const showIdSkuLine = hasListingId || hasSku;
-
-  const copyText = useCallback(
-    async (text, label, flashKey) => {
-      const t = String(text ?? "").trim();
-      if (t === "") return;
-      const okEvent = flashKey === COPY_KEY_SKU ? "LISTING_SKU_COPIED" : "LISTING_ID_COPIED";
-      const failEvent = flashKey === COPY_KEY_SKU ? "LISTING_SKU_COPY_FAILED" : "LISTING_ID_COPY_FAILED";
-      try {
-        await navigator.clipboard.writeText(t);
-        setCopyFlash(flashKey);
-        window.setTimeout(() => {
-          setCopyFlash((k) => (k === flashKey ? null : k));
-        }, COPY_FLASH_MS);
-        addNotification({
-          event_type: okEvent,
-          entity_type: "marketplace_listing",
-          title: `${label} copiado`,
-          message: `${t} foi copiado para a área de transferência.`,
-          severity: NOTIFICATION_SEVERITY.INFO,
-        });
-      } catch {
-        addNotification({
-          event_type: failEvent,
-          entity_type: "marketplace_listing",
-          title: "Não foi possível copiar",
-          message: "Verifique permissões do navegador ou use HTTPS.",
-          severity: NOTIFICATION_SEVERITY.WARNING,
-        });
-      }
-    },
-    [addNotification],
-  );
 
   return (
     <div className={shellClass} style={getMarketplaceThemeCssVars(theme)}>
@@ -138,17 +97,20 @@ export function PricingProductIdentityCard({ row, theme }) {
                 {hasListingId ? (
                   <span className="pricing-product-identity__copy-target">
                     <span className="anuncios-raiox-compare__toolbar-meta-text">{listingId}</span>
-                    <button
-                      type="button"
-                      className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left anuncios-raiox-compare__toolbar-copy${
-                        flashExt ? " products-catalog__copy-btn--ok" : ""
-                      }`}
-                      data-tip={flashExt ? "Copiado!" : "Copiar ID do anúncio"}
-                      aria-label="Copiar ID do anúncio"
-                      onClick={() => void copyText(listingId, "ID do anúncio", COPY_KEY_EXT)}
-                    >
-                      {flashExt ? "✓" : "⧉"}
-                    </button>
+                    <S7CopyButton
+                      value={listingId}
+                      ariaLabel="Copiar ID do anúncio"
+                      tooltipText="Copiar ID do anúncio"
+                      toastLabel="ID do anúncio"
+                      showToast={true}
+                      iconMode="unicode"
+                      flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                      flashKey="pricing-identity-ext"
+                      toastEventType="LISTING_ID_COPIED"
+                      toastFailEventType="LISTING_ID_COPY_FAILED"
+                      toastEntityType="marketplace_listing"
+                      className="anuncios-raiox-compare__toolbar-copy"
+                    />
                   </span>
                 ) : null}
                 {hasListingId && hasSku ? (
@@ -158,19 +120,22 @@ export function PricingProductIdentityCard({ row, theme }) {
                 ) : null}
                 {hasSku ? (
                   <span className="pricing-product-identity__copy-target">
-                    <span className="anuncios-raiox-compare__toolbar-meta-sku-prefix">SKU</span>
-                    <span className="anuncios-raiox-compare__toolbar-meta-text">{skuRaw}</span>
-                    <button
-                      type="button"
-                      className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left anuncios-raiox-compare__toolbar-copy${
-                        flashSku ? " products-catalog__copy-btn--ok" : ""
-                      }`}
-                      data-tip={flashSku ? "Copiado!" : "Copiar SKU"}
-                      aria-label="Copiar SKU"
-                      onClick={() => void copyText(skuRaw, "SKU", COPY_KEY_SKU)}
-                    >
-                      {flashSku ? "✓" : "⧉"}
-                    </button>
+                    <span className="anuncios-ad-sku-label">SKU</span>
+                    <span className="anuncios-ad-sku-value">{skuRaw}</span>
+                    <S7CopyButton
+                      value={skuRaw}
+                      ariaLabel="Copiar SKU"
+                      tooltipText="Copiar SKU"
+                      toastLabel="SKU"
+                      showToast={true}
+                      iconMode="unicode"
+                      flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                      flashKey="pricing-identity-sku"
+                      toastEventType="LISTING_SKU_COPIED"
+                      toastFailEventType="LISTING_SKU_COPY_FAILED"
+                      toastEntityType="marketplace_listing"
+                      className="anuncios-raiox-compare__toolbar-copy"
+                    />
                   </span>
                 ) : null}
               </div>

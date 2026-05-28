@@ -9,17 +9,16 @@ import precificaS7Icon from "../../../assets/precifica-s7-icon.png";
 import raioxTriggerIcon from "../../../assets/raiox-trigger-icon.png";
 import comparativoOfertasS7Icon from "../../../assets/comparativo-ofertas-s7-icon.png";
 import { buildApiUrl, apiFetch } from "../../../config/api";
-import { useNotifications } from "../../../contexts/NotificationContext";
-import { NOTIFICATION_SEVERITY } from "../../../services/notificationTypes";
 import { getMarketplaceTheme, getMarketplaceThemeCssVars } from "../../../theme/marketplaceTheme.js";
 import S7Button from "../../../components/ui/S7Button";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../../../components/ui/S7CopyButton.jsx";
 import S7Icon from "../../../components/ui/S7Icon";
 import S7Tooltip from "../../../components/ui/S7Tooltip";
 import S7CatalogAccountCell, {
   S7CatalogChannelCell,
 } from "../../../components/catalog/S7CatalogAccountCell.jsx";
-import { MercadoLivrePricingScenarioCompareChart } from "../../../components/MercadoLivrePricingScenarioCompareChart.jsx";
 import { MercadoLivrePricingScenarioComparePanel } from "../../../components/MercadoLivrePricingScenarioComparePanel.jsx";
+import RaioxOfferComparisonChartModal from "../../../components/rayx/RaioxOfferComparisonChartModal.jsx";
 import { RaioxVendaTesteModal } from "../../../components/RaioxVendaTesteModal.jsx";
 import {
   buildRaioxScenariosFromSaleXrayModalContract,
@@ -27,6 +26,7 @@ import {
   enrichRaioxScenariosWithListingPromotionMetadata,
   mergeListingGridRowIntoMlScenarios,
   shouldSaleXrayDebugTrace,
+  wrapPricingScenariosApiAsSaleXrayModalPayload,
 } from "../../../components/mercadoLivrePricingScenarioCompareShared.js";
 import { formatCatalogBRL } from "../../../utils/productCatalogRow";
 import {
@@ -45,7 +45,6 @@ import {
 } from "../utils/catalogFormatters.js";
 import { ADS_PAGE_MODE, listingsPageModes } from "../config/listingsPageModes.js";
 import { getListingProductLinkActions, isAnunciosCatalogRowPending } from "../utils/mlListingsGridMapping.js";
-import { formatMissingProductFieldsTooltip } from "../utils/missingProductFieldsTooltip.js";
 import {
   ADS_RAIOX_POPOVER_WIDTH_PX,
   ADS_RAIOX_POPOVER_MAX_H_PX,
@@ -53,14 +52,17 @@ import {
   ADS_RAIOX_POPOVER_VIEWPORT_BOTTOM_GUTTER_PX,
   ADS_RAIOX_ML_COMPARE_VIEWPORT_BOTTOM_GUTTER_PX,
   ADS_RAIOX_ML_COMPARE_MAX_SHELL_W_VW,
-  ADS_RAIOX_ML_COMPARE_VIEWPORT_HEIGHT_BOOST_PX,
   ADS_RAIOX_STATUS_EXPLAIN_Z,
   ADS_RAIOX_STATUS_EXPLAIN_Z_BRIDGE,
   RAIOX_VENDA_ML_CENARIOS_COPY,
   computeIdealRaioxMlCompareShellWidthPx,
-  computeRaioxChartMiniDialogWidthPx,
   getRaioxPopoverViewportInsets,
+  RAIOX_PORTAL_SHELL_CLASS,
+  buildRayxPortalShellPlacementStyle,
+  measureRayxPortalShellMetrics,
+  resolveRaioxPortalShellLayoutPx,
 } from "../utils/raioxCatalogLayout.js";
+import QuickProductCostsModal from "./QuickProductCostsModal.jsx";
 
 
 function ListingCoverThumbInner({ trimmed }) {
@@ -94,12 +96,7 @@ export function ListingCoverThumb({ url }) {
   return <ListingCoverThumbInner key={trimmed || "__empty__"} trimmed={trimmed} />;
 }
 
-const ADS_COPY_FLASH_MS = 6000;
-const ADS_COPY_KEY_ID = "ad-id";
-const ADS_COPY_KEY_SKU = "ad-sku";
-/** Flash dos botões copiar na toolbar do modal Raio-x (evita misturar com a linha minimal da grid). */
-const ADS_COPY_KEY_RAIOX_EXT = "raiox-ext";
-const ADS_COPY_KEY_RAIOX_SKU = "raiox-sku";
+const COMPLETE_PRODUCT_TOOLTIP = "Cadastrar os custos do produto.";
 
 /**
  * Coluna “Você vende por” (vista minimal): preço de tabela, promoção, atacado, “você recebe” + Raio-x ao lado do preço principal.
@@ -126,23 +123,28 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
   const [raioxOpen, setRaioxOpen] = useState(false);
   /** Mini modal só com o gráfico comparativo (Raio-x ML). */
   const [raioxChartOpen, setRaioxChartOpen] = useState(false);
-  /** Viewport para largura dinâmica do mini-modal do gráfico (resize). */
-  const [raioxChartMiniVw, setRaioxChartMiniVw] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth : 1200,
-  );
   /** Modal experimental: lista bruta GET /seller-promotions/items (mesma fonte da grid ML). */
   const [raioxTesteOpen, setRaioxTesteOpen] = useState(false);
   const raioxChartMiniRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const raioxChartMiniPricingRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
 
   /** Posição do shell Raio-x (fixed): centralizado na viewport. */
-  const [raioxPanelGeom, setRaioxPanelGeom] = useState({
-    maxW: ADS_RAIOX_POPOVER_WIDTH_PX,
-    /** Mantém consistência com ADS_RAIOX_POPOVER_MAX_H_PX + insets da viewport (shell estreito). */
-    maxH: ADS_RAIOX_POPOVER_MAX_H_PX,
-    arrowTopPx: 24,
-    /** Escala para caber o shell inteiro na viewport (Raio-x ML largo). */
-    fitScale: 1,
+  const [raioxPanelGeom, setRaioxPanelGeom] = useState(() => {
+    if (typeof window === "undefined") {
+      return {
+        maxW: ADS_RAIOX_POPOVER_WIDTH_PX,
+        maxH: ADS_RAIOX_POPOVER_MAX_H_PX,
+        arrowTopPx: 24,
+        fitScale: 1,
+      };
+    }
+    const layout = resolveRaioxPortalShellLayoutPx(window.innerHeight);
+    return {
+      maxW: ADS_RAIOX_POPOVER_WIDTH_PX,
+      maxH: layout.height,
+      arrowTopPx: 24,
+      fitScale: 1,
+    };
   });
   /** Explicação do status: mini card por hover/foco (payload: título / subtítulo / mensagem do backend). */
   const [statusExplainOpen, setStatusExplainOpen] = useState(false);
@@ -159,9 +161,6 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
   const [mlScenariosPayload, setMlScenariosPayload] = useState(/** @type {Record<string, unknown> | null} */ (null));
   const [mlScenariosLoading, setMlScenariosLoading] = useState(false);
   const [mlScenariosError, setMlScenariosError] = useState(/** @type {string | null} */ (null));
-  const { addNotification } = useNotifications();
-  /** Microfeedback dos botões copiar na toolbar do comparativo Raio-x (modal). */
-  const [raioxToolbarCopyKey, setRaioxToolbarCopyKey] = useState(/** @type {string | null} */ (null));
 
   const clearStatusExplainCloseTimer = useCallback(() => {
     if (statusExplainCloseTimerRef.current != null) {
@@ -189,12 +188,6 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
   }, [raioxOpen]);
 
   useEffect(() => {
-    const onResize = () => setRaioxChartMiniVw(typeof window !== "undefined" ? window.innerWidth : 1200);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  useEffect(() => {
     if (!raioxOpen) {
       clearStatusExplainCloseTimer();
       setStatusExplainOpen(false);
@@ -213,13 +206,8 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
       setMlScenariosPayload(null);
       setMlScenariosError(null);
       setMlScenariosLoading(false);
-      setRaioxToolbarCopyKey(null);
     }
   }, [raioxOpen]);
-
-  useEffect(() => {
-    setRaioxToolbarCopyKey(null);
-  }, [row.externalId, row.sku]);
 
   useEffect(() => {
     if (!raioxOpen) return;
@@ -234,9 +222,9 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
       setMlScenariosLoading(true);
       setMlScenariosError(null);
       try {
-        const url = buildApiUrl("/api/ml/listings/sale-xray-modal");
+        const url = buildApiUrl("/api/ml/listings/pricing-scenarios");
         if (shouldSaleXrayDebugTrace(row.externalId)) {
-          console.log("[SALE_XRAY] calling sale-xray-modal", {
+          console.log("[SALE_XRAY] calling pricing-scenarios (Raio-x ML)", {
             listingExternalId: row.externalId,
             url: url ?? null,
           });
@@ -272,20 +260,26 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
           }
           return;
         }
-        if (data.from_sale_xray_modal !== true || data.sale_xray_modal == null || typeof data.sale_xray_modal !== "object") {
+        const normalized = wrapPricingScenariosApiAsSaleXrayModalPayload(data);
+        if (
+          normalized == null ||
+          normalized.from_sale_xray_modal !== true ||
+          normalized.sale_xray_modal == null ||
+          typeof normalized.sale_xray_modal !== "object"
+        ) {
           if (!cancelled) {
             setMlScenariosError(
-              "Resposta do Raio-x inválida: esperado contrato sale_xray_modal (from_sale_xray_modal). Verifique o backend.",
+              "Não foi possível montar o Raio-x a partir dos cenários deste anúncio. Sincronize o anúncio e tente de novo.",
             );
             setMlScenariosPayload(null);
           }
           return;
         }
-        if (shouldSaleXrayDebugTrace(data)) {
-          console.log("[SALE_XRAY] response", data);
+        if (shouldSaleXrayDebugTrace(normalized)) {
+          console.log("[SALE_XRAY] response", normalized);
         }
         if (!cancelled) {
-          setMlScenariosPayload(data);
+          setMlScenariosPayload(normalized);
         }
       } catch {
         if (!cancelled) {
@@ -318,16 +312,11 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
 
   const hasMlScenarioCompare = mlScenariosForCompare.length > 0;
 
-  /** Só contrato `sale-xray-modal` — sem filtro legado nem fallback para `scenarios` canônico. */
+  /** Cenários do Raio-x ML: payload normalizado (`from_sale_xray_modal`) após `pricing-scenarios`. */
   const mlScenariosForRaioxDisplay = useMemo(() => {
     if (!scenarioMode || !mlScenariosPayload || typeof mlScenariosPayload !== "object") return [];
     return mlScenariosForCompare;
   }, [scenarioMode, mlScenariosPayload, mlScenariosForCompare]);
-
-  const raioxChartMiniDialogWidthPx = useMemo(
-    () => computeRaioxChartMiniDialogWidthPx(mlScenariosForRaioxDisplay.length, raioxChartMiniVw),
-    [mlScenariosForRaioxDisplay.length, raioxChartMiniVw],
-  );
 
   useEffect(() => {
     if (!raioxOpen || !shouldSaleXrayShippingAuditTrace(row.externalId) || !mlScenariosPayload) return;
@@ -448,11 +437,10 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
       const idealW = computeIdealRaioxMlCompareShellWidthPx(n);
       const capW = vw * ADS_RAIOX_ML_COMPARE_MAX_SHELL_W_VW;
       const maxW = Math.min(idealW, capW);
-      /** Altura útil da viewport + boost para o comparativo quase full-screen. */
-      const maxH = vh - topInset - bottomPad + ADS_RAIOX_ML_COMPARE_VIEWPORT_HEIGHT_BOOST_PX;
+      const layout = resolveRaioxPortalShellLayoutPx(vh);
       setRaioxPanelGeom({
         maxW,
-        maxH,
+        maxH: layout.height,
         arrowTopPx: 24,
         fitScale: 1,
       });
@@ -465,7 +453,8 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
     const estW =
       panelEl && panelEl.getBoundingClientRect().width > 40 ? panelEl.getBoundingClientRect().width : maxW;
 
-    const maxH = Math.min(ADS_RAIOX_POPOVER_MAX_H_PX, vh - topInset - bottomPad);
+    const layout = resolveRaioxPortalShellLayoutPx(vh);
+    const maxH = layout.height;
     const availW = vw - 2 * marginTight;
     const availH = vh - topInset - bottomPad;
 
@@ -809,62 +798,7 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
     return "";
   }, [row.adTitle, row.productName]);
 
-  const handleCopyRaioxExternalId = useCallback(async () => {
-    const text = raioxListingIdCopyText;
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      setRaioxToolbarCopyKey(ADS_COPY_KEY_RAIOX_EXT);
-      window.setTimeout(() => {
-        setRaioxToolbarCopyKey((k) => (k === ADS_COPY_KEY_RAIOX_EXT ? null : k));
-      }, ADS_COPY_FLASH_MS);
-      addNotification({
-        event_type: "LISTING_ID_COPIED",
-        entity_type: "marketplace_listing",
-        title: "ID do anúncio copiado",
-        message: `${text} foi copiado para a área de transferência.`,
-        severity: NOTIFICATION_SEVERITY.INFO,
-      });
-    } catch {
-      addNotification({
-        event_type: "LISTING_ID_COPY_FAILED",
-        entity_type: "marketplace_listing",
-        title: "Não foi possível copiar",
-        message: "Verifique permissões do navegador ou use HTTPS.",
-        severity: NOTIFICATION_SEVERITY.WARNING,
-      });
-    }
-  }, [raioxListingIdCopyText, addNotification]);
-
-  const handleCopyRaioxToolbarSku = useCallback(async () => {
-    const sku = row.sku != null ? String(row.sku).trim() : "";
-    if (!sku) return;
-    try {
-      await navigator.clipboard.writeText(sku);
-      setRaioxToolbarCopyKey(ADS_COPY_KEY_RAIOX_SKU);
-      window.setTimeout(() => {
-        setRaioxToolbarCopyKey((k) => (k === ADS_COPY_KEY_RAIOX_SKU ? null : k));
-      }, ADS_COPY_FLASH_MS);
-      addNotification({
-        event_type: "LISTING_SKU_COPIED",
-        entity_type: "marketplace_listing",
-        title: "SKU copiado",
-        message: `${sku} foi copiado para a área de transferência.`,
-        severity: NOTIFICATION_SEVERITY.INFO,
-      });
-    } catch {
-      addNotification({
-        event_type: "LISTING_SKU_COPY_FAILED",
-        entity_type: "marketplace_listing",
-        title: "Não foi possível copiar",
-        message: "Verifique permissões do navegador ou use HTTPS.",
-        severity: NOTIFICATION_SEVERITY.WARNING,
-      });
-    }
-  }, [row.sku, addNotification]);
-
-  const showRaioxExtCopyOk = raioxToolbarCopyKey === ADS_COPY_KEY_RAIOX_EXT;
-  const showRaioxToolbarSkuCopyOk = raioxToolbarCopyKey === ADS_COPY_KEY_RAIOX_SKU;
+  const raioxSkuCopyText = row.sku != null ? String(row.sku).trim() : "";
 
   const raioxMainColumn = (
     <>
@@ -925,46 +859,48 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
                         aria-label="Identificadores do anúncio"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <span className="anuncios-raiox-compare__toolbar-meta-block">
+                        <span className="anuncios-raiox-compare__toolbar-meta-block anuncios-raiox-compare__copy-target">
                           <span className="anuncios-raiox-compare__toolbar-meta-text">{raioxListingIdDisplay}</span>
                           {raioxListingIdCopyText !== "" ? (
-                            <button
-                              type="button"
-                              className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left anuncios-raiox-compare__toolbar-copy${
-                                showRaioxExtCopyOk ? " products-catalog__copy-btn--ok" : ""
-                              }`}
-                              data-tip={showRaioxExtCopyOk ? "Copiado!" : "Copiar ID do anúncio"}
-                              onClick={() => {
-                                void handleCopyRaioxExternalId();
-                              }}
-                              aria-label="Copiar ID do anúncio"
-                            >
-                              {showRaioxExtCopyOk ? "✓" : "⧉"}
-                            </button>
+                            <S7CopyButton
+                              value={raioxListingIdCopyText}
+                              ariaLabel="Copiar ID do anúncio"
+                              tooltipText="Copiar ID do anúncio"
+                              toastLabel="ID do anúncio"
+                              showToast={true}
+                              iconMode="unicode"
+                              flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                              flashKey="raiox-ext"
+                              toastEventType="LISTING_ID_COPIED"
+                              toastFailEventType="LISTING_ID_COPY_FAILED"
+                              toastEntityType="marketplace_listing"
+                              className="anuncios-raiox-compare__toolbar-copy"
+                            />
                           ) : null}
                         </span>
                         <span className="anuncios-raiox-compare__toolbar-meta-sep" aria-hidden="true">
                           |
                         </span>
-                        <span className="anuncios-raiox-compare__toolbar-meta-block anuncios-raiox-compare__toolbar-meta-block--sku">
-                          <span className="anuncios-raiox-compare__toolbar-meta-sku-prefix">SKU</span>
+                        <span className="anuncios-raiox-compare__toolbar-meta-block anuncios-raiox-compare__toolbar-meta-block--sku anuncios-raiox-compare__copy-target">
+                          <span className="anuncios-ad-sku-label">SKU</span>
                           <span className="anuncios-raiox-compare__toolbar-meta-text">
                             {row.sku && String(row.sku).trim() !== "" ? String(row.sku).trim() : DASH}
                           </span>
-                          {row.sku && String(row.sku).trim() !== "" ? (
-                            <button
-                              type="button"
-                              className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left anuncios-raiox-compare__toolbar-copy${
-                                showRaioxToolbarSkuCopyOk ? " products-catalog__copy-btn--ok" : ""
-                              }`}
-                              data-tip={showRaioxToolbarSkuCopyOk ? "Copiado!" : "Copiar SKU"}
-                              onClick={() => {
-                                void handleCopyRaioxToolbarSku();
-                              }}
-                              aria-label="Copiar SKU"
-                            >
-                              {showRaioxToolbarSkuCopyOk ? "✓" : "⧉"}
-                            </button>
+                          {raioxSkuCopyText !== "" ? (
+                            <S7CopyButton
+                              value={raioxSkuCopyText}
+                              ariaLabel="Copiar SKU"
+                              tooltipText="Copiar SKU"
+                              toastLabel="SKU"
+                              showToast={true}
+                              iconMode="unicode"
+                              flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                              flashKey="raiox-sku"
+                              toastEventType="LISTING_SKU_COPIED"
+                              toastFailEventType="LISTING_SKU_COPY_FAILED"
+                              toastEntityType="marketplace_listing"
+                              className="anuncios-raiox-compare__toolbar-copy"
+                            />
                           ) : null}
                         </span>
                       </div>
@@ -1315,7 +1251,12 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
 
   const raioxCardBody = (
     <>
-      <h3 className="anuncios-sell-popover__title">{row.adTitle && String(row.adTitle).trim() !== "" ? row.adTitle : "Raio-x da venda"}</h3>
+      <div className="anuncios-raiox-compare__title-stack">
+        <h2 className="anuncios-sell-popover__title">Raio-x da precificação</h2>
+        <h3 className="anuncios-sell-popover__title">
+          {row.adTitle && String(row.adTitle).trim() !== "" ? row.adTitle : "Raio-x da venda"}
+        </h3>
+      </div>
       {mlScenariosLoading ? (
         <div className="anuncios-raiox-venda-loading" role="status" aria-live="polite">
           <div className="anuncios-raiox-venda-loading__spinner-wrap" aria-hidden>
@@ -1343,6 +1284,9 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
       )}
     </>
   );
+
+  const raioxPortalShellMetrics =
+    typeof window !== "undefined" ? measureRayxPortalShellMetrics(window.innerHeight) : null;
 
   return (
     <div className="anuncios-sell-minimal">
@@ -1412,6 +1356,7 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
                 <div
                   ref={raioxShellRef}
                   className={[
+                    RAIOX_PORTAL_SHELL_CLASS,
                     "anuncios-raiox-shell",
                     "anuncios-raiox-shell--portal",
                     "anuncios-raiox-shell--open",
@@ -1421,21 +1366,15 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
                     .filter(Boolean)
                     .join(" ")}
                   style={{
-                    left: "50%",
-                    top: "50%",
-                    width: raioxPanelGeom.maxW,
-                    maxWidth: raioxPanelGeom.maxW,
-                    ...(hasMlScenarioCompare
-                      ? {
+                    ...(raioxPortalShellMetrics
+                      ? buildRayxPortalShellPlacementStyle({
+                          width: raioxPanelGeom.maxW,
                           height: raioxPanelGeom.maxH,
-                          maxHeight: raioxPanelGeom.maxH,
-                          transform: "translate(-50%, -50%)",
-                        }
-                      : {
-                          maxHeight: raioxPanelGeom.maxH,
-                          transform: `translate(-50%, -50%) scale(${raioxPanelGeom.fitScale})`,
-                        }),
-                    transformOrigin: "center center",
+                          centerYOffset: raioxPortalShellMetrics.centerYOffset,
+                          fitScale: hasMlScenarioCompare ? 1 : raioxPanelGeom.fitScale,
+                          fixedHeight: hasMlScenarioCompare,
+                        })
+                      : {}),
                     ...getMarketplaceThemeCssVars(raioxMarketplaceTheme),
                   }}
                 >
@@ -1481,157 +1420,28 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
               document.body,
             )
           : null}
-        {raioxOpen &&
-        raioxChartOpen &&
-        hasMlScenarioCompare &&
-        mlScenariosForRaioxDisplay.length > 0 &&
-        typeof document !== "undefined"
-          ? createPortal(
-              <div
-                ref={raioxChartMiniRef}
-                className="anuncios-raiox-chart-mini-layer"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="anuncios-raiox-chart-mini-title"
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <div
-                  className="anuncios-raiox-chart-mini__backdrop"
-                  aria-hidden
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setRaioxChartOpen(false);
-                  }}
-                  onMouseDown={(e) => e.stopPropagation()}
-                />
-                <div
-                  className="anuncios-raiox-chart-mini__dialog"
-                  style={{
-                    ["--s7-raiox-chart-mini-dialog-width"]: `${raioxChartMiniDialogWidthPx}px`,
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  <div className="anuncios-compare-modal__head-row">
-                    <h4
-                      id="anuncios-raiox-chart-mini-title"
-                      className="anuncios-raiox-chart-mini__title s7-ml-scenario-compare__badge s7-ml-scenario-compare__badge--available"
-                    >
-                      Comparativo de ofertas S7
-                    </h4>
-                    <button
-                      type="button"
-                      className="anuncios-compare-modal__close"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRaioxChartOpen(false);
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      aria-label="Fechar"
-                    >
-                      <S7Icon name="close" size={18} strokeWidth={2} />
-                    </button>
-                  </div>
-                  <div
-                    className="anuncios-raiox-chart-mini__context"
-                    aria-label="Contexto do anúncio"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {raioxChartMiniListingTitle !== "" ? (
-                      <div className="anuncios-raiox-chart-mini__context-name-row" title={raioxChartMiniListingTitle}>
-                        {row.coverThumbnailUrl != null && String(row.coverThumbnailUrl).trim() !== "" ? (
-                          <img
-                            src={String(row.coverThumbnailUrl).trim()}
-                            alt=""
-                            className="anuncios-raiox-chart-mini__context-name-thumb"
-                            loading="lazy"
-                            decoding="async"
-                            referrerPolicy="no-referrer"
-                            onError={(e) => {
-                              e.currentTarget.remove();
-                            }}
-                          />
-                        ) : null}
-                        <div className="anuncios-raiox-chart-mini__context-name anuncios-raiox-chart-mini__context-name--plain">
-                          <span className="anuncios-raiox-chart-mini__context-name-text">{raioxChartMiniListingTitle}</span>
-                        </div>
-                      </div>
-                    ) : null}
-                    <div className="anuncios-raiox-chart-mini__context-row">
-                      <button
-                        ref={raioxChartMiniPricingRef}
-                        type="button"
-                        className="anuncios-raiox-chart-mini__context-pricing s7-tip s7-tip-bottom s7-tip-left"
-                        data-tip="Precificação inteligente"
-                        aria-label="Abrir precificação inteligente"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRaioxChartOpen(false);
-                          setRaioxOpen(false);
-                          onOpenPricing?.(raioxChartMiniPricingRef.current);
-                        }}
-                      >
-                        <img
-                          src={precificaS7Icon}
-                          alt=""
-                          className="anuncios-raiox-chart-mini__context-pricing-icon"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </button>
-                      <span className="anuncios-raiox-chart-mini__context-meta">
-                        <span className="anuncios-raiox-chart-mini__context-meta-value">{raioxListingIdDisplay}</span>
-                        {raioxListingIdCopyText !== "" ? (
-                          <button
-                            type="button"
-                            className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left anuncios-raiox-chart-mini__context-copy${
-                              showRaioxExtCopyOk ? " products-catalog__copy-btn--ok" : ""
-                            }`}
-                            data-tip={showRaioxExtCopyOk ? "Copiado!" : "Copiar ID do anúncio"}
-                            onClick={() => {
-                              void handleCopyRaioxExternalId();
-                            }}
-                            aria-label="Copiar ID do anúncio"
-                          >
-                            {showRaioxExtCopyOk ? "✓" : "⧉"}
-                          </button>
-                        ) : null}
-                      </span>
-                      <span className="anuncios-raiox-chart-mini__context-sep" aria-hidden="true">
-                        |
-                      </span>
-                      <span className="anuncios-raiox-chart-mini__context-meta anuncios-raiox-chart-mini__context-meta--sku">
-                        <span className="anuncios-raiox-chart-mini__context-meta-label">SKU</span>
-                        <span className="anuncios-raiox-chart-mini__context-meta-value">
-                          {row.sku && String(row.sku).trim() !== "" ? String(row.sku).trim() : DASH}
-                        </span>
-                        {row.sku && String(row.sku).trim() !== "" ? (
-                          <button
-                            type="button"
-                            className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left anuncios-raiox-chart-mini__context-copy${
-                              showRaioxToolbarSkuCopyOk ? " products-catalog__copy-btn--ok" : ""
-                            }`}
-                            data-tip={showRaioxToolbarSkuCopyOk ? "Copiado!" : "Copiar SKU"}
-                            onClick={() => {
-                              void handleCopyRaioxToolbarSku();
-                            }}
-                            aria-label="Copiar SKU"
-                          >
-                            {showRaioxToolbarSkuCopyOk ? "✓" : "⧉"}
-                          </button>
-                        ) : null}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="anuncios-raiox-chart-mini__body">
-                    <MercadoLivrePricingScenarioCompareChart scenarios={mlScenariosForRaioxDisplay} />
-                  </div>
-                </div>
-              </div>,
-              document.body,
-            )
-          : null}
+        <RaioxOfferComparisonChartModal
+          open={
+            raioxOpen &&
+            raioxChartOpen &&
+            hasMlScenarioCompare &&
+            mlScenariosForRaioxDisplay.length > 0
+          }
+          onClose={() => setRaioxChartOpen(false)}
+          layerRef={raioxChartMiniRef}
+          scenarios={mlScenariosForRaioxDisplay}
+          listingTitle={raioxChartMiniListingTitle}
+          thumbnailUrl={row.coverThumbnailUrl != null ? String(row.coverThumbnailUrl).trim() : null}
+          listingIdDisplay={raioxListingIdDisplay}
+          listingIdCopyText={raioxListingIdCopyText}
+          skuLabel={row.sku && String(row.sku).trim() !== "" ? String(row.sku).trim() : null}
+          skuCopyText={raioxSkuCopyText}
+          onOpenPricing={() => {
+            setRaioxChartOpen(false);
+            setRaioxOpen(false);
+            onOpenPricing?.(raioxChartMiniPricingRef.current);
+          }}
+        />
       </div>
       {promoDifferent && promoN != null && mainPriceNum != null ? (
         <p className="anuncios-sell-minimal__promo">
@@ -1697,9 +1507,8 @@ export function AdsCatalogRow({
   const pricingIntelligenceHref = useHref(
     `/precificacoes/inteligente/${encodeURIComponent(String(row.id))}`,
   );
-  const { addNotification } = useNotifications();
-  const [copyFlashKey, setCopyFlashKey] = useState(null);
   const precificaRef = useRef(null);
+  const [quickCostsModalOpen, setQuickCostsModalOpen] = useState(false);
 
   const goToPricingIntelligencePage = useCallback(() => {
     if (pricingIntelligenceOpenTarget === "new_tab") {
@@ -1718,7 +1527,7 @@ export function AdsCatalogRow({
     }
     const linkAct = getListingProductLinkActions(row, onInformSku);
     if (linkAct.showCompletar && row.productId) {
-      navigate(`/produtos/${row.productId}/editar`);
+      setQuickCostsModalOpen(true);
       return;
     }
     if (row.productId && !linkAct.showVincular && !linkAct.showInformSkuMl) {
@@ -1734,64 +1543,9 @@ export function AdsCatalogRow({
     }
   }, [rowClickAction, navigate, onInformSku, goToPricingIntelligencePage, row]);
 
-  /** ID técnico completo (ex.: MLB…) — útil para suporte e integrações. */
-  const handleCopyListingId = useCallback(async () => {
-    if (row.listingNumber === DASH) return;
-    const text = String(row.listingNumber).trim();
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopyFlashKey(ADS_COPY_KEY_ID);
-      window.setTimeout(() => {
-        setCopyFlashKey((k) => (k === ADS_COPY_KEY_ID ? null : k));
-      }, ADS_COPY_FLASH_MS);
-      addNotification({
-        event_type: "LISTING_ID_COPIED",
-        entity_type: "marketplace_listing",
-        title: "ID do anúncio copiado",
-        message: `${text} foi copiado para a área de transferência.`,
-        severity: NOTIFICATION_SEVERITY.INFO,
-      });
-    } catch {
-      addNotification({
-        event_type: "LISTING_ID_COPY_FAILED",
-        entity_type: "marketplace_listing",
-        title: "Não foi possível copiar",
-        message: "Verifique permissões do navegador ou use HTTPS.",
-        severity: NOTIFICATION_SEVERITY.WARNING,
-      });
-    }
-  }, [row.listingNumber, addNotification]);
-
-  const handleCopySku = useCallback(async () => {
-    const sku = row.sku != null ? String(row.sku).trim() : "";
-    if (!sku) return;
-    try {
-      await navigator.clipboard.writeText(sku);
-      setCopyFlashKey(ADS_COPY_KEY_SKU);
-      window.setTimeout(() => {
-        setCopyFlashKey((k) => (k === ADS_COPY_KEY_SKU ? null : k));
-      }, ADS_COPY_FLASH_MS);
-      addNotification({
-        event_type: "LISTING_SKU_COPIED",
-        entity_type: "marketplace_listing",
-        title: "SKU copiado",
-        message: `${sku} foi copiado para a área de transferência.`,
-        severity: NOTIFICATION_SEVERITY.INFO,
-      });
-    } catch {
-      addNotification({
-        event_type: "LISTING_SKU_COPY_FAILED",
-        entity_type: "marketplace_listing",
-        title: "Não foi possível copiar",
-        message: "Verifique permissões do navegador ou use HTTPS.",
-        severity: NOTIFICATION_SEVERITY.WARNING,
-      });
-    }
-  }, [row.sku, addNotification]);
-
-  const showIdCopyOk = copyFlashKey === ADS_COPY_KEY_ID;
-  const showSkuCopyOk = copyFlashKey === ADS_COPY_KEY_SKU;
+  const listingIdCopyText =
+    row.listingNumber !== DASH ? String(row.listingNumber).trim() : "";
+  const skuCopyText = row.sku != null ? String(row.sku).trim() : "";
 
   const rowPending = isAnunciosCatalogRowPending(row);
   const healthClass = HEALTH_BADGE_CLASS[row.healthBand] || HEALTH_BADGE_CLASS.unknown;
@@ -1887,18 +1641,20 @@ export function AdsCatalogRow({
               <span className="anuncios-ad-id-text">
                 {row.listingNumber === DASH ? row.listingNumber : row.listingNumberDisplay}
               </span>
-              {row.listingNumber !== DASH ? (
-                <button
-                  type="button"
-                  className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left${
-                    showIdCopyOk ? " products-catalog__copy-btn--ok" : ""
-                  }`}
-                  data-tip={showIdCopyOk ? "Copiado!" : "Copiar"}
-                  onClick={handleCopyListingId}
-                  aria-label="Copiar ID completo do anúncio"
-                >
-                  {showIdCopyOk ? "✓" : "⧉"}
-                </button>
+              {listingIdCopyText !== "" ? (
+                <S7CopyButton
+                  value={listingIdCopyText}
+                  ariaLabel="Copiar ID completo do anúncio"
+                  tooltipText="Copiar ID do anúncio"
+                  toastLabel="ID do anúncio"
+                  showToast={true}
+                  iconMode="unicode"
+                  flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                  flashKey="ad-id"
+                  toastEventType="LISTING_ID_COPIED"
+                  toastFailEventType="LISTING_ID_COPY_FAILED"
+                  toastEntityType="marketplace_listing"
+                />
               ) : null}
             </div>
             <div className="anuncios-catalog__minimal-title-toolbar">
@@ -1952,31 +1708,24 @@ export function AdsCatalogRow({
                 ) : null}
                 {linkAct.showCompletar && row.productId ? (
                   <span className="anuncios-completar-inline">
-                    <S7Button
-                      type="button"
-                      variant="warning"
-                      size="sm"
-                      className="anuncios-ad-line-action-btn"
-                      onClick={() => navigate(`/produtos/${row.productId}/editar`)}
+                    <S7Tooltip
+                      content={COMPLETE_PRODUCT_TOOLTIP}
+                      placement="bottom-start"
+                      offset={6}
+                      wrap
                     >
-                      Completar cadastro do produto
-                    </S7Button>
-                    {row.missingProductFields != null && row.missingProductFields.length > 0 ? (
-                      <S7Tooltip
-                        content={formatMissingProductFieldsTooltip(row.missingProductFields)}
-                        placement="bottom-start"
-                        offset={6}
-                        wrap
-                      >
-                        <button
+                      <span className="anuncios-completar-tooltip-anchor">
+                        <S7Button
                           type="button"
-                          className="anuncios-completar-info-btn"
-                          aria-label="Campos faltando no cadastro do produto"
+                          variant="warning"
+                          size="sm"
+                          className="anuncios-ad-line-action-btn"
+                          onClick={() => setQuickCostsModalOpen(true)}
                         >
-                          i
-                        </button>
-                      </S7Tooltip>
-                    ) : null}
+                          Completar cadastro do produto
+                        </S7Button>
+                      </span>
+                    </S7Tooltip>
                   </span>
                 ) : null}
               </div>
@@ -1994,25 +1743,29 @@ export function AdsCatalogRow({
               </div>
             </div>
             <div className="anuncios-ad-sku-row">
-              <span className="anuncios-ad-sku-label">SKU</span>
-              {row.sku ? (
-                <>
-                  <span className="anuncios-ad-sku-value">{row.sku}</span>
-                  <button
-                    type="button"
-                    className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left${
-                      showSkuCopyOk ? " products-catalog__copy-btn--ok" : ""
-                    }`}
-                    data-tip={showSkuCopyOk ? "Copiado!" : "Copiar"}
-                    onClick={handleCopySku}
-                    aria-label="Copiar SKU"
-                  >
-                    {showSkuCopyOk ? "✓" : "⧉"}
-                  </button>
-                </>
-              ) : (
-                <span className="anuncios-ad-sku-value anuncios-ad-sku-value--empty">não informado</span>
-              )}
+              <span className="anuncios-ad-sku-pair">
+                <span className="anuncios-ad-sku-label">SKU</span>
+                {row.sku ? (
+                  <>
+                    <span className="anuncios-ad-sku-value">{row.sku}</span>
+                    <S7CopyButton
+                      value={skuCopyText}
+                      ariaLabel="Copiar SKU"
+                      tooltipText="Copiar SKU"
+                      toastLabel="SKU"
+                      showToast={true}
+                      iconMode="unicode"
+                      flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                      flashKey="ad-sku"
+                      toastEventType="LISTING_SKU_COPIED"
+                      toastFailEventType="LISTING_SKU_COPY_FAILED"
+                      toastEntityType="marketplace_listing"
+                    />
+                  </>
+                ) : (
+                  <span className="anuncios-ad-sku-value anuncios-ad-sku-value--empty">não informado</span>
+                )}
+              </span>
               {row.picturesCount != null ? (
                 <>
                   <span className="anuncios-ad-sku-sep" aria-hidden>
@@ -2048,6 +1801,17 @@ export function AdsCatalogRow({
           <AdsMinimalSellColumn row={row} onInformSku={onInformSku} onOpenPricing={goToPricingIntelligencePage} />
         </div>
       </div>
+      <QuickProductCostsModal
+        open={quickCostsModalOpen}
+        productId={row.productId ? String(row.productId) : null}
+        sku={row.sku}
+        productTitle={row.adTitle && row.adTitle !== DASH ? String(row.adTitle) : "Produto"}
+        productImageUrl={row.coverThumbnailUrl ? String(row.coverThumbnailUrl) : null}
+        onClose={() => setQuickCostsModalOpen(false)}
+        onSaved={async () => {
+          await onListingsRefresh?.();
+        }}
+      />
       </>
     );
   }
@@ -2108,19 +1872,22 @@ export function AdsCatalogRow({
         {row.listingNumber === DASH ? (
           row.listingNumber
         ) : (
-          <S7Tooltip
-            content="Clique para copiar o ID completo do anúncio (Mercado Livre)."
-            wrap
-          >
-            <button
-              type="button"
-              className="anuncios-catalog__listing-no-btn"
-              onClick={handleCopyListingId}
-              aria-label={`Copiar ID do anúncio ${row.listingNumberDisplay}`}
-            >
-              {row.listingNumberDisplay}
-            </button>
-          </S7Tooltip>
+          <div className="anuncios-ad-id-row">
+            <span className="anuncios-ad-id-text">{row.listingNumberDisplay}</span>
+            <S7CopyButton
+              value={listingIdCopyText}
+              ariaLabel={`Copiar ID do anúncio ${row.listingNumberDisplay}`}
+              tooltipText="Copiar ID do anúncio"
+              toastLabel="ID do anúncio"
+              showToast={true}
+              iconMode="unicode"
+              flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+              flashKey="ad-id-full"
+              toastEventType="LISTING_ID_COPIED"
+              toastFailEventType="LISTING_ID_COPY_FAILED"
+              toastEntityType="marketplace_listing"
+            />
+          </div>
         )}
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--title">
@@ -2157,31 +1924,24 @@ export function AdsCatalogRow({
             ) : null}
             {linkAct.showCompletar && row.productId ? (
               <span className="anuncios-completar-inline">
-                <S7Button
-                  type="button"
-                  variant="warning"
-                  size="sm"
-                  className="anuncios-ad-line-action-btn"
-                  onClick={() => navigate(`/produtos/${row.productId}/editar`)}
+                <S7Tooltip
+                  content={COMPLETE_PRODUCT_TOOLTIP}
+                  placement="bottom-start"
+                  offset={6}
+                  wrap
                 >
-                  Completar cadastro do produto
-                </S7Button>
-                {row.missingProductFields != null && row.missingProductFields.length > 0 ? (
-                  <S7Tooltip
-                    content={formatMissingProductFieldsTooltip(row.missingProductFields)}
-                    placement="bottom-start"
-                    offset={6}
-                    wrap
-                  >
-                    <button
+                  <span className="anuncios-completar-tooltip-anchor">
+                    <S7Button
                       type="button"
-                      className="anuncios-completar-info-btn"
-                      aria-label="Campos faltando no cadastro do produto"
+                      variant="warning"
+                      size="sm"
+                      className="anuncios-ad-line-action-btn"
+                      onClick={() => setQuickCostsModalOpen(true)}
                     >
-                      i
-                    </button>
-                  </S7Tooltip>
-                ) : null}
+                      Completar cadastro do produto
+                    </S7Button>
+                  </span>
+                </S7Tooltip>
               </span>
             ) : null}
           </div>
@@ -2312,6 +2072,17 @@ export function AdsCatalogRow({
         </>
       ) : null}
     </div>
+    <QuickProductCostsModal
+      open={quickCostsModalOpen}
+      productId={row.productId ? String(row.productId) : null}
+      sku={row.sku}
+      productTitle={row.adTitle && row.adTitle !== DASH ? String(row.adTitle) : "Produto"}
+      productImageUrl={row.coverThumbnailUrl ? String(row.coverThumbnailUrl) : null}
+      onClose={() => setQuickCostsModalOpen(false)}
+      onSaved={async () => {
+        await onListingsRefresh?.();
+      }}
+    />
     </>
   );
 }

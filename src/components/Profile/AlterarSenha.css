@@ -41,17 +41,18 @@
 
 /* =====================================================
    ALTERAR SENHA — wrapper controla a largura REAL
+   (escopo .alterar-senha-page: evita max-width global no Login/Signup)
 ===================================================== */
-.password-wrapper {
+.alterar-senha-page .password-wrapper {
   position: relative;
   width: 100%;
-  max-width: 320px; /* 🔥 largura FINAL do campo */
+  max-width: 320px; /* largura final do campo nesta página */
 }
 
 /* =====================================================
    ALTERAR SENHA — input
 ===================================================== */
-.password-wrapper input {
+.alterar-senha-page .password-wrapper input {
   width: 100%;
   padding: 6px 40px 6px 8px; /* espaço correto pro ícone */
   border-radius: 8px;

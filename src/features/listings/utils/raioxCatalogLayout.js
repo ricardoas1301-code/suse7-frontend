@@ -105,35 +105,6 @@ const ADS_RAIOX_STATUS_EXPLAIN_Z = 200150;
 /** Faixa invisível entre o ícone e o mini card — evita fechar o hover ao atravessar o gap. */
 const ADS_RAIOX_STATUS_EXPLAIN_Z_BRIDGE = 200149;
 
-/** Insets do popover Raio-x: viewport útil (navbar Suse7 + safe-area); evita “estourar” sob a faixa superior. */
-function getRaioxPopoverViewportInsets() {
-  const edge = 12;
-  const gapBelowNav = 8;
-  let top = edge;
-  let bottom = edge;
-  if (typeof document === "undefined") return { top, bottom };
-  const nav = document.querySelector(".navbar-premium");
-  if (nav) {
-    const nb = nav.getBoundingClientRect().bottom;
-    if (Number.isFinite(nb) && nb > 0) top = Math.max(top, nb + gapBelowNav);
-  } else {
-    top = Math.max(top, 72);
-  }
-  try {
-    const tEnv = Number.parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-top)") || "0",
-    );
-    const bEnv = Number.parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-bottom)") || "0",
-    );
-    if (Number.isFinite(tEnv) && tEnv > 0) top = Math.max(top, tEnv + edge);
-    if (Number.isFinite(bEnv) && bEnv > 0) bottom = Math.max(bottom, bEnv + edge);
-  } catch {
-    /* ignore */
-  }
-  return { top, bottom };
-}
-
 export {
   ADS_RAIOX_POPOVER_WIDTH_PX,
   ADS_RAIOX_POPOVER_WIDTH_ML_COMPARE_FLOOR_PX,
@@ -165,5 +136,21 @@ export {
   ADS_RAIOX_STATUS_EXPLAIN_W_PX,
   ADS_RAIOX_STATUS_EXPLAIN_Z,
   ADS_RAIOX_STATUS_EXPLAIN_Z_BRIDGE,
-  getRaioxPopoverViewportInsets,
 };
+
+export {
+  RAIOX_PORTAL_SHELL_CLASS,
+  RAIOX_PORTAL_SHELL_HEIGHT_CSS_VAR,
+  RAIOX_PORTAL_SHELL_LAYOUT_STANDARD_VERSION,
+  RAIOX_PORTAL_SHELL_EDGE_RESPIRE_NOMINAL_PX,
+  RAIOX_PORTAL_SHELL_VIEWPORT_MARGIN_TRIM_RATIO,
+  RAIOX_PORTAL_SHELL_CENTER_OFFSET_RATIO,
+  RAIOX_PORTAL_SHELL_MIN_HEIGHT_PX,
+  buildRayxPortalShellPlacementStyle,
+  getRaioxPortalShellEdgeRespirePx,
+  getRaioxPopoverViewportInsets,
+  measureRayxPortalShellMetrics,
+  resolveRaioxPortalShellCenterYOffsetPx,
+  resolveRaioxPortalShellHeightPx,
+  resolveRaioxPortalShellLayoutPx,
+} from "../../../components/rayx/rayxPortalLayout.js";

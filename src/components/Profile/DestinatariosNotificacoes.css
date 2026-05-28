@@ -1,0 +1,275 @@
+/* ======================================================================
+   Destinatários de notificações — página dedicada
+   ====================================================================== */
+
+.s7-destinatarios-page {
+  max-width: 980px;
+}
+
+.s7-destinatarios-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.s7-destinatarios-page__header h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-destinatarios-page__header p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #475569;
+  max-width: 560px;
+}
+
+.s7-destinatarios-page__primary {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.s7-destinatarios-page__primary:hover {
+  background: #1d4ed8;
+}
+
+.s7-destinatarios-page__primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.s7-destinatarios-page__loading {
+  margin-top: 20px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.s7-destinatarios-page__empty {
+  margin-top: 28px;
+  padding: 28px;
+  text-align: center;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #dbe5f2;
+  border-radius: 14px;
+}
+
+.s7-destinatarios-page__empty p {
+  margin: 0 0 14px;
+  color: #475569;
+}
+
+.s7-destinatarios-page__grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.s7-destinatarios-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 3px 14px rgba(15, 23, 42, 0.05);
+  padding: 16px;
+}
+
+.s7-destinatarios-card__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.s7-destinatarios-card__head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-destinatarios-card__role {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.s7-destinatarios-card__status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.s7-destinatarios-card__status.is-on {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.s7-destinatarios-card__status.is-off {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.s7-destinatarios-card__badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.s7-destinatarios-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.s7-destinatarios-badge--wa {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.s7-destinatarios-badge--mail {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.s7-destinatarios-card__dl {
+  margin: 0;
+  font-size: 13px;
+}
+
+.s7-destinatarios-card__dl dt {
+  margin: 8px 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.s7-destinatarios-card__dl dd {
+  margin: 0;
+  color: #334155;
+}
+
+.s7-destinatarios-card__actions {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.s7-destinatarios-linkbtn {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.s7-destinatarios-linkbtn:hover {
+  text-decoration: underline;
+}
+
+.s7-destinatarios-linkbtn.muted {
+  color: #94a3b8;
+}
+
+.s7-destinatarios-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.s7-destinatarios-modal {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+}
+
+.s7-destinatarios-modal h3 {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-destinatarios-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.s7-destinatarios-field input {
+  padding: 6px 8px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+}
+
+.s7-destinatarios-field input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.s7-destinatarios-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0;
+  font-size: 13px;
+  color: #334155;
+}
+
+.s7-destinatarios-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.s7-destinatarios-btn-secondary {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.s7-destinatarios-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

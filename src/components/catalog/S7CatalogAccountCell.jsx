@@ -12,7 +12,13 @@ export function pickCatalogAccountFields(row) {
   return {
     marketplaceAccountId: row.marketplace_account_id ?? row.marketplaceAccountId ?? null,
     accountAlias: row.account_alias ?? row.accountAlias ?? row.ml_account_alias ?? null,
-    accountLogoUrl: row.account_logo_url ?? row.accountLogoUrl ?? row.marketplace_account_logo_url ?? null,
+    accountLogoUrl:
+      row.account_logo_url ??
+      row.accountLogoUrl ??
+      row.marketplace_account_logo_url ??
+      row.company_logo_url ??
+      row.seller_company_logo_url ??
+      null,
   };
 }
 
@@ -22,6 +28,7 @@ export function pickCatalogAccountFields(row) {
  *   accountAlias?: string | null;
  *   accountLogoUrl?: string | null;
  *   compact?: boolean;
+ *   variant?: "inline" | "stacked"; — stacked: avatar acima, nome abaixo (Vendas)
  * }} props
  */
 export default function S7CatalogAccountCell({
@@ -29,6 +36,7 @@ export default function S7CatalogAccountCell({
   accountAlias,
   accountLogoUrl,
   compact = false,
+  variant = "inline",
 }) {
   const alias = accountAlias != null && String(accountAlias).trim() !== "" ? String(accountAlias).trim() : null;
   const logo = accountLogoUrl != null && String(accountLogoUrl).trim() !== "" ? String(accountLogoUrl).trim() : null;
@@ -48,28 +56,40 @@ export default function S7CatalogAccountCell({
     );
   }
 
+  const stacked = variant === "stacked";
   return (
     <span
-      className={`s7-catalog-account${compact ? " s7-catalog-account--compact" : ""}`}
+      className={`s7-catalog-account${compact ? " s7-catalog-account--compact" : ""}${stacked ? " s7-catalog-account--stacked" : ""}`}
       title={title}
     >
       <span className="s7-catalog-account__avatar">
         {logo ? (
-          <img src={logo} alt="" loading="lazy" decoding="async" />
+          <img src={logo} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
         ) : (
           <span className="s7-catalog-account__initial">{initial}</span>
         )}
       </span>
-      {!compact ? <span className="s7-catalog-account__name">{alias || "—"}</span> : null}
+      {!compact ? (
+        <span className={`s7-catalog-account__name${stacked ? " s7-catalog-account__name--stacked" : ""}`}>
+          {alias || "—"}
+        </span>
+      ) : null}
     </span>
   );
 }
 
+/** Tamanho do logo canal em modo stacked (Vendas): ~15% maior que 34px da coluna Conta. */
+const S7_CHANNEL_STACKED_BADGE_PX = Math.round(34 * 1.15);
+
 /**
- * Coluna Canal — marketplace (logo); nome só em tooltip (sem aumentar altura da linha).
- * @param {{ marketplace?: string | null; marketplaceLabel?: string | null }} props
+ * Coluna Canal — marketplace (logo). `inline`: compacto, nome no tooltip. `stacked`: logo maior + rótulo (Vendas).
+ * @param {{
+ *   marketplace?: string | null;
+ *   marketplaceLabel?: string | null;
+ *   variant?: "inline" | "stacked";
+ * }} props
  */
-export function S7CatalogChannelCell({ marketplace, marketplaceLabel }) {
+export function S7CatalogChannelCell({ marketplace, marketplaceLabel, variant = "inline" }) {
   const lb =
     marketplaceLabel != null && String(marketplaceLabel).trim() !== "" ? String(marketplaceLabel).trim() : null;
   const fallbackTitle = (() => {
@@ -77,9 +97,22 @@ export function S7CatalogChannelCell({ marketplace, marketplaceLabel }) {
     if (s === "mercado_livre" || s === "mercadolivre") return "Mercado Livre";
     return marketplace ? String(marketplace) : "";
   })();
+  const displayLabel = lb || fallbackTitle || null;
+  const stacked = variant === "stacked";
+  const badgeSize = stacked ? S7_CHANNEL_STACKED_BADGE_PX : 22;
+  const title = displayLabel || undefined;
+
   return (
-    <span className="s7-catalog-channel" title={lb || fallbackTitle || undefined}>
-      <MarketplaceBadge marketplace={marketplace} label={lb} size={22} />
+    <span className={`s7-catalog-channel${stacked ? " s7-catalog-channel--stacked" : ""}`} title={title}>
+      <MarketplaceBadge
+        marketplace={marketplace}
+        label={lb}
+        size={badgeSize}
+        className={stacked ? "s7-catalog-channel__badge--stacked" : ""}
+      />
+      {stacked && displayLabel ? (
+        <span className="s7-catalog-channel__label">{displayLabel}</span>
+      ) : null}
     </span>
   );
 }

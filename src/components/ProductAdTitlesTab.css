@@ -235,11 +235,11 @@
   padding: 0;
   margin-right: 59px;
   font-size: 14px;
-  color: var(--s7-muted, #6b7280);
+  color: var(--s7-copy-btn-color, rgba(15, 23, 42, 0.38));
 }
 
 .s7-ad-title-copy-wrap .pf-copy-btn:hover {
-  color: var(--s7-text, #0f172a);
+  color: var(--s7-copy-btn-color-active, var(--s7-text, #0f172a));
 }
 
 /* Linha: input + contador abaixo + lixeira */

@@ -171,6 +171,11 @@ function mapAuthSignupError(error) {
   };
 }
 
+/** Asterisco de campo obrigatório — vermelho padrão SUSE7 (via `.label-asterisk` no CSS) */
+function ReqMark() {
+  return <span className="label-asterisk" aria-hidden="true">*</span>;
+}
+
 export default function Signup() {
   useEffect(() => {
     document.documentElement.classList.add("signup-page-lock");
@@ -582,7 +587,9 @@ export default function Signup() {
             </div>
 
             <div className="field">
-              <label>Nome da loja *</label>
+              <label>
+                Nome da loja <ReqMark />
+              </label>
               <input
                 type="text"
                 className={errors.nome_loja ? "error" : ""}
@@ -596,7 +603,9 @@ export default function Signup() {
           {/* EMAIL / WHATSAPP */}
           <div className="row">
             <div className="field">
-              <label>E-mail *</label>
+              <label>
+                E-mail <ReqMark />
+              </label>
               <input
                 type="email"
                 className={errors.email ? "error" : ""}
@@ -607,7 +616,9 @@ export default function Signup() {
             </div>
 
             <div className="field">
-              <label>WhatsApp *</label>
+              <label>
+                WhatsApp <ReqMark />
+              </label>
               <input
                 type="tel"
                 className={errors.whatsapp ? "error" : ""}
@@ -622,7 +633,9 @@ export default function Signup() {
           {/* CPF/CNPJ / TELEFONE */}
           <div className="row">
             <div className="field">
-              <label>CPF/CNPJ *</label>
+              <label>
+                CPF/CNPJ <ReqMark />
+              </label>
               <input
                 type="text"
                 className={errors.cpf_cnpj ? "error" : ""}
@@ -647,7 +660,9 @@ export default function Signup() {
           {/* CEP / ENDEREÇO — CEP estreito (~35% da metade da linha), endereço ocupa o resto */}
           <div className="row row--cep-endereco">
             <div className="field field--cep-tight">
-              <label>CEP *</label>
+              <label>
+                CEP <ReqMark />
+              </label>
               <input
                 type="text"
                 className={errors.cep ? "error" : ""}
@@ -722,7 +737,9 @@ export default function Signup() {
             </div>
 
             <div className="field field--imposto-inline imposto-small">
-              <label>Imposto (%) *</label>
+              <label>
+                Imposto (%) <ReqMark />
+              </label>
               <input
                 type="text"
                 className={errors.imposto_percentual ? "error" : ""}
@@ -737,7 +754,9 @@ export default function Signup() {
           {/* SENHA */}
           <div className="row">
             <div className="field">
-              <label>Senha *</label>
+              <label>
+                Senha <ReqMark />
+              </label>
               <div className="password-wrapper">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -759,7 +778,9 @@ export default function Signup() {
             </div>
 
             <div className="field">
-              <label>Confirmar senha *</label>
+              <label>
+                Confirmar senha <ReqMark />
+              </label>
               <div className="password-wrapper">
                 <input
                   type={showPassword2 ? "text" : "password"}
@@ -781,31 +802,37 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* TERMOS */}
-          <div className="termos-box">
-            <input
-              type="checkbox"
-              checked={form.termos}
-              onChange={(e) => {
-                const isChecked = e.target.checked;
-                setForm((prev) => ({ ...prev, termos: isChecked }));
-                setErrors((prev) => ({ ...prev, termos: "" }));
-              }}
-            />
-            <label>Eu li e aceito os termos de uso *</label>
+          {/* TERMOS + CRIAR CONTA — mesma linha; botão grande centralizado à direita */}
+          <div className="termos-actions-row">
+            <div className="termos-actions-row__left">
+              <div className="termos-box">
+                <input
+                  type="checkbox"
+                  checked={form.termos}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    setForm((prev) => ({ ...prev, termos: isChecked }));
+                    setErrors((prev) => ({ ...prev, termos: "" }));
+                  }}
+                />
+                <label>
+                  Eu li e aceito os termos de uso <ReqMark />
+                </label>
+              </div>
+            </div>
+            <div className="termos-actions-row__cta">
+              <button
+                type="submit"
+                className="signup-btn signup-btn--inline"
+                disabled={loading}
+                aria-busy={loading}
+                aria-label={loading ? "Criando conta, aguarde" : "Criar conta"}
+              >
+                {loading ? "Criando conta…" : "Criar conta"}
+              </button>
+            </div>
           </div>
-          {errors.termos && <p className="err">{errors.termos}</p>}
-
-          {/* BOTÃO CRIAR CONTA */}
-          <button
-            type="submit"
-            className="signup-btn"
-            disabled={loading}
-            aria-busy={loading}
-            aria-label={loading ? "Criando conta, aguarde" : "Criar conta"}
-          >
-            {loading ? "Criando conta…" : "Criar conta"}
-          </button>
+          {errors.termos && <p className="err err--termos">{errors.termos}</p>}
 
         </form>
       </div>
@@ -815,6 +842,10 @@ export default function Signup() {
         .signup-left {
           overflow-y: visible;
           padding-right: 12px;
+          max-width: 100%;
+          min-width: 0;
+          overflow-wrap: break-word;
+          word-break: break-word;
         }
         
         .signup-left .signup-main-title {
@@ -823,12 +854,16 @@ export default function Signup() {
           color: #333;
           margin-bottom: 11px;
           line-height: 1.6;
+          max-width: 100%;
+          overflow-wrap: break-word;
         }
         .signup-left .signup-main-description {
           font-size: 1em;
           color: #666;
           margin-bottom: 17px;
           line-height: 1.86;
+          max-width: 100%;
+          overflow-wrap: break-word;
         }
 
         .signup-left .signup-benefits li {
