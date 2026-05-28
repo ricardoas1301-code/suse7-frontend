@@ -1,8 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSellerToolbox } from "../SellerToolboxContext";
+import { useDevCenterOperationalReloadOpcional } from "../../../../../../components/devCenter/operational";
 import {
   buildSellerFeatureFlagsViewModel,
   createSellerFeatureFlagsMockInput,
+  mapApiFeatureFlagsToMockEntries,
   resolveSellerFeatureFlagsViewState,
   SELLER_TOOLBOX_FEATURE_FLAGS_DEFAULT_MOCK,
 } from "./sellerToolboxFeatureFlagsModel";
@@ -34,14 +36,31 @@ let devBridgeInitialized = false;
  * @param {{ children: import("react").ReactNode }} props
  */
 export function SellerFeatureFlagsViewProvider({ children }) {
-  const { sellerId, drawerState, toolboxState, isReady } = useSellerToolbox();
+  const { sellerId, drawerState, toolboxState, isReady, detail } = useSellerToolbox();
+  const reloadOperacional = useDevCenterOperationalReloadOpcional();
+  const featureFlagsVersion = reloadOperacional?.versoesCategoria?.feature_flags ?? 0;
+
+  const apiEntries = useMemo(
+    () => mapApiFeatureFlagsToMockEntries(detail?.feature_flags),
+    [detail?.feature_flags, featureFlagsVersion],
+  );
+
+  const hasApiFlags = apiEntries.length > 0;
+
   const [mockInput, setMockInput] = useState(() =>
     createSellerFeatureFlagsMockInput({ sellerId: sellerId ?? null }),
   );
 
   useEffect(() => {
+    if (hasApiFlags) {
+      setMockInput({
+        sellerId: sellerId ?? null,
+        entries: apiEntries,
+      });
+      return;
+    }
     setMockInput(createSellerFeatureFlagsMockInput({ sellerId: sellerId ?? null }));
-  }, [sellerId]);
+  }, [sellerId, hasApiFlags, apiEntries]);
 
   const flags = useMemo(
     () => buildSellerFeatureFlagsViewModel(mockInput.entries),
@@ -72,9 +91,13 @@ export function SellerFeatureFlagsViewProvider({ children }) {
 
   const resetMockFeatureFlags = useMemo(
     () => () => {
+      if (hasApiFlags) {
+        setMockInput({ sellerId: sellerId ?? null, entries: apiEntries });
+        return;
+      }
       setMockInput(createSellerFeatureFlagsMockInput({ sellerId: sellerId ?? null }));
     },
-    [sellerId],
+    [sellerId, hasApiFlags, apiEntries],
   );
 
   const applyFeatureFlagOperationResult = useCallback((result) => {

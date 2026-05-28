@@ -7,6 +7,7 @@ import {
   resolveSellerToolboxIntegrationsPanelState,
   sellerToolboxIntegrationBadgeClassName,
 } from "./sellerToolboxIntegrationsModel";
+import SellerToolboxIntegrationsOperations from "./integrations/SellerToolboxIntegrationsOperations";
 import "./SellerToolboxIntegrationsPanel.css";
 
 function SellerToolboxIntegrationsPanelSkeleton() {
@@ -174,7 +175,16 @@ function SellerToolboxIntegrationsPanel({ category }) {
                         {group.accounts.length > 0 ? (
                           <ul className="seller-toolbox-integrations-accounts__list">
                             {group.accounts.map((account) => (
-                              <li key={account.id}>{account.label}</li>
+                              <li key={account.id} className="seller-toolbox-integrations-accounts__item">
+                                <span>{account.label}</span>
+                                <SellerToolboxIntegrationsOperations
+                                  account={{
+                                    id: account.id,
+                                    label: account.label,
+                                    marketplaceKey: group.marketplaceKey,
+                                  }}
+                                />
+                              </li>
                             ))}
                           </ul>
                         ) : (
@@ -227,7 +237,7 @@ function SellerToolboxIntegrationsPanel({ category }) {
       </div>
 
       <footer className="seller-toolbox-integrations-panel__foot">
-        <span className="seller-toolbox-integrations-panel__seal">Somente leitura</span>
+        <span className="seller-toolbox-integrations-panel__seal">Operações administrativas</span>
       </footer>
     </section>
   );

@@ -201,6 +201,32 @@ export function normalizeSellerFeatureFlag(input) {
 }
 
 /**
+ * Converte payload API (detail.feature_flags) para entradas do view model.
+ * @param {unknown} apiFlags
+ * @returns {import("./sellerToolboxFeatureFlagsModel").SellerFeatureFlagMockEntry[]}
+ */
+export function mapApiFeatureFlagsToMockEntries(apiFlags) {
+  if (!Array.isArray(apiFlags)) return [];
+
+  return apiFlags
+    .map((row) => {
+      if (!row || typeof row !== "object") return null;
+      const key = String(row.key ?? row.flag_key ?? "").trim();
+      if (!key) return null;
+      return {
+        key,
+        enabled: row.enabled === true,
+        source: row.source ?? row.scope ?? "manual",
+        updatedAt: row.updated_at ?? row.updatedAt ?? null,
+        createdAt: row.created_at ?? row.createdAt ?? null,
+        planId: row.plan_id ?? null,
+        marketplaceKey: row.marketplace ?? null,
+      };
+    })
+    .filter(Boolean);
+}
+
+/**
  * @param {SellerFeatureFlagMockEntry[]} [entries]
  * @returns {SellerFeatureFlag[]}
  */

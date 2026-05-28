@@ -8,6 +8,7 @@ import {
   DevCenterOperationalReloadProvider,
   useDevCenterOperationalReload,
 } from "../../../components/devCenter/operational";
+import { resolveToolboxDoubleConfirm } from "./drawer/toolbox/sellerToolboxDoubleConfirmRegistry";
 import SellerOpsStats from "./SellerOpsStats";
 import SellerOpsFilters from "./SellerOpsFilters";
 import SellerOpsQueue, { SellerOpsQueueSkeleton } from "./SellerOpsQueue";
@@ -203,7 +204,11 @@ function SellerOpsPageView({ rows, setRows, selected, setSelected, detail, setDe
         onRetry={retryDetail}
       />
 
-      <DevCenterOperationalConfirmModal />
+      <DevCenterOperationalConfirmModal
+        onConfirmar={(acao) => {
+          resolveToolboxDoubleConfirm(acao);
+        }}
+      />
     </section>
   );
 }

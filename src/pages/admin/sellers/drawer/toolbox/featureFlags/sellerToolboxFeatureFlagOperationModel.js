@@ -1,11 +1,18 @@
 import {
   SELLER_TOOLBOX_ENABLE_FEATURE_FLAG_ACTION_ID,
-  executeFakeEnableFeatureFlag,
 } from "./sellerToolboxEnableFeatureFlagOperation";
 import {
   SELLER_TOOLBOX_DISABLE_FEATURE_FLAG_ACTION_ID,
-  executeFakeDisableFeatureFlag,
 } from "./sellerToolboxDisableFeatureFlagOperation";
+import { createRealFeatureFlagOperationHandler } from "./sellerToolboxFeatureFlagApiOperations";
+import { DEV_CENTER_CATEGORIAS_RELOAD } from "../../../../../../components/devCenter/operational/devCenterOperationalReloadModel";
+
+/** @type {string[]} */
+export const SELLER_TOOLBOX_REAL_FEATURE_FLAG_RELOAD_CATEGORIES = [
+  DEV_CENTER_CATEGORIAS_RELOAD.FEATURE_FLAGS,
+  DEV_CENTER_CATEGORIAS_RELOAD.TOOLBOX,
+  DEV_CENTER_CATEGORIAS_RELOAD.RESUMO_SELLER,
+];
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxOperationQuickReason[]} */
 export const SELLER_TOOLBOX_ENABLE_FEATURE_FLAG_QUICK_REASONS = [
@@ -90,9 +97,10 @@ export function extractEnableFeatureFlagHandlerContext(metadata) {
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SELLER_TOOLBOX_ENABLE_FEATURE_FLAG_OPERATION_CONFIG = {
-  handler: executeFakeEnableFeatureFlag,
+  handler: createRealFeatureFlagOperationHandler(SELLER_TOOLBOX_ENABLE_FEATURE_FLAG_ACTION_ID),
   quickReasons: SELLER_TOOLBOX_ENABLE_FEATURE_FLAG_QUICK_REASONS,
   applyFeatureFlagResult: true,
+  recarregarCategoriasOperacionais: SELLER_TOOLBOX_REAL_FEATURE_FLAG_RELOAD_CATEGORIES,
   buildHandlerContext: ({ metadata }) => extractEnableFeatureFlagHandlerContext(metadata),
   devLog: {
     started: "feature_flag_enable_started",
@@ -129,21 +137,22 @@ export const SELLER_TOOLBOX_ENABLE_FEATURE_FLAG_OPERATION_CONFIG = {
   },
   feedback: {
     success: {
-      title: "Feature flag ativada (simulado)",
-      description: "Estado local atualizado — nenhuma feature real foi alterada.",
+      title: "Feature flag ativada",
+      description: "Estado persistido no backend e painéis recarregados.",
     },
     error: {
       title: "Falha ao ativar feature flag",
-      description: "Não foi possível concluir a operação fake. Nenhum dado foi alterado.",
+      description: "Não foi possível concluir a operação. Nenhuma alteração foi persistida.",
     },
   },
 };
 
 /** @type {import("../subscription/sellerToolboxSubscriptionOperationModel").SellerToolboxSubscriptionOperationConfig} */
 export const SELLER_TOOLBOX_DISABLE_FEATURE_FLAG_OPERATION_CONFIG = {
-  handler: executeFakeDisableFeatureFlag,
+  handler: createRealFeatureFlagOperationHandler(SELLER_TOOLBOX_DISABLE_FEATURE_FLAG_ACTION_ID),
   quickReasons: SELLER_TOOLBOX_DISABLE_FEATURE_FLAG_QUICK_REASONS,
   applyFeatureFlagResult: true,
+  recarregarCategoriasOperacionais: SELLER_TOOLBOX_REAL_FEATURE_FLAG_RELOAD_CATEGORIES,
   buildHandlerContext: ({ metadata }) => extractFeatureFlagHandlerContext(metadata),
   devLog: {
     started: "feature_flag_disable_started",
@@ -180,12 +189,12 @@ export const SELLER_TOOLBOX_DISABLE_FEATURE_FLAG_OPERATION_CONFIG = {
   },
   feedback: {
     success: {
-      title: "Feature flag desativada (simulado)",
-      description: "Estado local atualizado — nenhuma feature real foi alterada.",
+      title: "Feature flag desativada",
+      description: "Estado persistido no backend e painéis recarregados.",
     },
     error: {
       title: "Falha ao desativar feature flag",
-      description: "Não foi possível concluir a operação fake. Nenhum dado foi alterado.",
+      description: "Não foi possível concluir a operação. Nenhuma alteração foi persistida.",
     },
   },
 };

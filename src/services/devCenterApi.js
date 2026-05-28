@@ -161,6 +161,34 @@ export async function devCenterExecutarOperacaoAssinaturaSeller(sellerId, body) 
   return apiFetch(url, { method: "POST", body });
 }
 
+/**
+ * @param {string} sellerId
+ * @param {{ actionId: string; reason: string; metadata?: Record<string, unknown> | null }} body
+ */
+export async function devCenterExecutarOperacaoFeatureFlagSeller(sellerId, body) {
+  const safeId = String(sellerId ?? "").trim();
+  if (!safeId) return { ok: false, status: 400, error: "Seller inválido" };
+  const url = buildApiUrl(
+    `/api/dev-center/sellers/${encodeURIComponent(safeId)}/feature-flags/operations`,
+  );
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "POST", body });
+}
+
+/**
+ * @param {string} sellerId
+ * @param {{ actionId: string; reason: string; metadata?: Record<string, unknown> | null }} body
+ */
+export async function devCenterExecutarOperacaoIntegracaoSeller(sellerId, body) {
+  const safeId = String(sellerId ?? "").trim();
+  if (!safeId) return { ok: false, status: 400, error: "Seller inválido" };
+  const url = buildApiUrl(
+    `/api/dev-center/sellers/${encodeURIComponent(safeId)}/integrations/operations`,
+  );
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "POST", body });
+}
+
 export async function devCenterGetSubscriptions() {
   const url = buildApiUrl("/api/dev-center/subscriptions");
   if (!url) return { ok: false, status: 0, error: "API não configurada" };

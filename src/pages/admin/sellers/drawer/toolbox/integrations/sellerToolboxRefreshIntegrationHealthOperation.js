@@ -1,0 +1,1 @@
+export const SELLER_TOOLBOX_REFRESH_INTEGRATION_HEALTH_ACTION_ID = "refresh_integration_health";

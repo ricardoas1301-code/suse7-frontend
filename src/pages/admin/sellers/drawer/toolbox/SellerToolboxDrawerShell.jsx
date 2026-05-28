@@ -21,6 +21,7 @@ import { SubscriptionManagementViewProvider } from "./subscriptionManagement/use
 import { SellerToolboxActionReasonProvider } from "./useSellerToolboxActionReason";
 import { SellerToolboxConfirmActionProvider } from "./useSellerToolboxConfirmAction";
 import { SellerToolboxFeedbackProvider } from "./useSellerToolboxFeedback";
+import { SellerToolboxDoubleConfirmRegistrar } from "./SellerToolboxDoubleConfirmRegistrar";
 import "./SellerToolboxDrawer.css";
 
 /**
@@ -32,6 +33,7 @@ function SellerToolboxDrawerShell({ onClose }) {
 
   return (
     <SellerToolboxConfirmActionProvider>
+      <SellerToolboxDoubleConfirmRegistrar />
       <SellerToolboxFeedbackProvider>
         <SellerToolboxTrialStatusProvider>
           <SellerConsumptionViewProvider>

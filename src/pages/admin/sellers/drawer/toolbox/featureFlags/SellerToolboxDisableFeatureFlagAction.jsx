@@ -89,7 +89,7 @@ function SellerToolboxDisableFeatureFlagAction({ flag }) {
     openConfirm({
       id: actionId,
       title: "Desativar feature flag?",
-      description: `Esta ação vai simular a remoção desta funcionalidade para o seller no ambiente DEV. Flag: ${flag.label}`,
+      description: `Remove esta funcionalidade para o seller via backend. Flag: ${flag.label}`,
       riskLevel: "medium",
       confirmLabel: "Continuar",
       cancelLabel: "Cancelar",
@@ -111,22 +111,20 @@ function SellerToolboxDisableFeatureFlagAction({ flag }) {
     openConfirm,
   ]);
 
-  if (!import.meta.env.DEV || !flag.enabled) return null;
+  if (!flag.enabled) return null;
 
   return (
     <button
       type="button"
       className="seller-feature-flags-panel__action-btn seller-feature-flags-panel__action-btn--disable"
-      data-dev-only
       data-operation-state={operationState}
       data-flag-key={flag.key}
       disabled={isBlocked || isThisFlowActive || isAnotherFlowActive || isFeatureFlagOperationExecuting}
       onClick={handleStart}
     >
       <span className="seller-feature-flags-panel__action-label">
-        {isDisabling ? "Desativando..." : "Desativar DEV"}
+        {isDisabling ? "Desativando..." : "Desativar"}
       </span>
-      <span className="seller-feature-flags-panel__action-badge">DEV</span>
     </button>
   );
 }

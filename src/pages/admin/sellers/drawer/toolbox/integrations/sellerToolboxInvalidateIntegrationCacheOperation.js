@@ -1,0 +1,1 @@
+export const SELLER_TOOLBOX_INVALIDATE_INTEGRATION_CACHE_ACTION_ID = "invalidate_integration_cache";
