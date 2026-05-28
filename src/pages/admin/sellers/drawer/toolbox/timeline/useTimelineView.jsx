@@ -1,9 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { devCenterGetSellerOperationalTimeline } from "../../../../../../services/devCenterApi";
+import { useDevCenterOperationalReloadOpcional } from "../../../../../../components/devCenter/operational";
 import { useSellerToolbox } from "../SellerToolboxContext";
 import {
   buildTimelineMockEvents,
   createInitialTimelineFilters,
   filterTimelineEvents,
+  mapApiTimelineEventsToViewModel,
   resolveTimelinePanelState,
   sortTimelineEventsDesc,
 } from "./timelineModel";
@@ -18,12 +21,14 @@ import {
  *   filteredEvents: TimelineEventViewModel[];
  *   filters: TimelineFiltersViewModel;
  *   loading: boolean;
- *   error: string;
+ *   error: boolean;
  *   empty: boolean;
  *   filteredEmpty: boolean;
+ *   loadError: string;
  *   updateFilters: (patch: Partial<TimelineFiltersViewModel>) => void;
  *   resetFilters: () => void;
  *   resetTimeline: () => void;
+ *   reloadTimeline: () => Promise<void>;
  *   setTimelineEvents: (events: TimelineEventViewModel[]) => void;
  * }} TimelineViewValue
  */
@@ -46,20 +51,52 @@ function createInitialTimelineState() {
  */
 export function TimelineViewProvider({ children }) {
   const { sellerId, drawerState, toolboxState, isReady } = useSellerToolbox();
+  const reloadOperacional = useDevCenterOperationalReloadOpcional();
+  const timelineVersion = reloadOperacional?.versoesCategoria?.timeline ?? 0;
+
   const [timelineState, setTimelineState] = useState(createInitialTimelineState);
 
-  const loadMockEvents = useCallback((forceEmpty = false) => {
-    if (forceEmpty) {
+  const reloadTimeline = useCallback(async () => {
+    if (!sellerId) return;
+
+    setTimelineState((current) => ({
+      ...current,
+      loadState: "loading",
+      loadError: "",
+    }));
+
+    const response = await devCenterGetSellerOperationalTimeline(sellerId, { limit: 50 });
+
+    if (!response.ok) {
       setTimelineState((current) => ({
         ...current,
-        events: [],
-        loadState: "loaded",
-        loadError: "",
-        forceEmpty: true,
+        loadState: "error",
+        loadError: response.error ?? "Não foi possível carregar a timeline operacional.",
       }));
       return;
     }
 
+    const apiEvents = response.data?.timeline?.events ?? [];
+    const events = sortTimelineEventsDesc(mapApiTimelineEventsToViewModel(apiEvents));
+
+    setTimelineState((current) => ({
+      ...current,
+      events,
+      loadState: "loaded",
+      loadError: "",
+      forceEmpty: events.length === 0,
+    }));
+  }, [sellerId]);
+
+  useEffect(() => {
+    if (!sellerId || !isReady) {
+      setTimelineState(createInitialTimelineState());
+      return;
+    }
+    void reloadTimeline();
+  }, [sellerId, isReady, timelineVersion, reloadTimeline]);
+
+  const loadMockEvents = useCallback(() => {
     setTimelineState((current) => ({
       ...current,
       events: sortTimelineEventsDesc(buildTimelineMockEvents()),
@@ -68,26 +105,6 @@ export function TimelineViewProvider({ children }) {
       forceEmpty: false,
     }));
   }, []);
-
-  useEffect(() => {
-    if (!sellerId) {
-      setTimelineState(createInitialTimelineState());
-      return;
-    }
-
-    setTimelineState((current) => ({
-      ...current,
-      loadState: "loading",
-      loadError: "",
-      filters: createInitialTimelineFilters(),
-    }));
-
-    const timer = window.setTimeout(() => {
-      loadMockEvents(false);
-    }, 120);
-
-    return () => window.clearTimeout(timer);
-  }, [sellerId, loadMockEvents]);
 
   const panelState = useMemo(
     () =>
@@ -124,20 +141,15 @@ export function TimelineViewProvider({ children }) {
   }, []);
 
   const resetTimeline = useCallback(() => {
-    setTimelineState((current) => ({
-      ...current,
-      filters: createInitialTimelineFilters(),
-    }));
-    loadMockEvents(false);
-  }, [loadMockEvents]);
+    void reloadTimeline();
+  }, [reloadTimeline]);
 
   const setTimelineEvents = useCallback((events) => {
     setTimelineState((current) => ({
       ...current,
       events: sortTimelineEventsDesc(events),
       loadState: "loaded",
-      loadError: "",
-      forceEmpty: events.length === 0,
+      forceEmpty: !events?.length,
     }));
   }, []);
 
@@ -149,16 +161,14 @@ export function TimelineViewProvider({ children }) {
 
     window.__S7_TOOLBOX_TIMELINE__ = {
       get: () => stateRef.current,
-      reset: () => resetTimeline(),
-      empty: () => loadMockEvents(true),
-      setFilters: (patch) => updateFilters(patch),
+      reload: () => reloadTimeline(),
+      loadMock: () => loadMockEvents(),
+      updateFilters,
     };
-  }, [resetTimeline, loadMockEvents, updateFilters]);
+  }, [reloadTimeline, loadMockEvents, updateFilters]);
 
   const loading = panelState === "loading" || timelineState.loadState === "loading";
-  const error =
-    timelineState.loadError ||
-    (timelineState.loadState === "error" ? "Não foi possível carregar a timeline." : "");
+  const error = panelState === "error" || timelineState.loadState === "error";
   const empty =
     timelineState.forceEmpty ||
     (timelineState.loadState === "loaded" && timelineState.events.length === 0);
@@ -175,15 +185,18 @@ export function TimelineViewProvider({ children }) {
       error,
       empty,
       filteredEmpty,
+      loadError: timelineState.loadError,
       updateFilters,
       resetFilters,
       resetTimeline,
+      reloadTimeline,
       setTimelineEvents,
     }),
     [
       panelState,
       timelineState.events,
       timelineState.filters,
+      timelineState.loadError,
       filteredEvents,
       loading,
       error,
@@ -192,6 +205,7 @@ export function TimelineViewProvider({ children }) {
       updateFilters,
       resetFilters,
       resetTimeline,
+      reloadTimeline,
       setTimelineEvents,
     ],
   );
@@ -204,5 +218,6 @@ export function useTimelineView() {
   if (!context) {
     throw new Error("useTimelineView must be used within TimelineViewProvider");
   }
+
   return context;
 }

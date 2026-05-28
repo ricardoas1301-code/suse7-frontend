@@ -1,6 +1,6 @@
 /** @typedef {"normal" | "warning" | "critical"} TimelineEventSeverity */
 
-/** @typedef {"sale" | "listing" | "product" | "customer" | "marketplace_account"} TimelineEntityType */
+/** @typedef {"sale" | "listing" | "product" | "customer" | "marketplace_account" | "subscription" | "feature_flag" | "general"} TimelineEntityType */
 
 /** @typedef {"all" | TimelineEntityType} TimelineEntityFilterValue */
 
@@ -63,11 +63,13 @@
 /** @type {readonly { value: TimelineEntityFilterValue; label: string }[]} */
 export const TIMELINE_ENTITY_FILTER_OPTIONS = [
   { value: "all", label: "Todas" },
+  { value: "subscription", label: "Assinatura" },
+  { value: "feature_flag", label: "Feature flag" },
+  { value: "marketplace_account", label: "Conta marketplace" },
   { value: "sale", label: "Venda" },
   { value: "listing", label: "Anúncio" },
   { value: "product", label: "Produto" },
   { value: "customer", label: "Cliente" },
-  { value: "marketplace_account", label: "Conta marketplace" },
 ];
 
 /** @type {readonly { value: TimelineSeverityFilterValue; label: string }[]} */
@@ -248,6 +250,12 @@ export function resolveTimelineEntityLabel(entityType) {
       return "Cliente";
     case "marketplace_account":
       return "Conta marketplace";
+    case "subscription":
+      return "Assinatura";
+    case "feature_flag":
+      return "Feature flag";
+    case "general":
+      return "Operação geral";
     default:
       return "Entidade";
   }
@@ -595,6 +603,44 @@ export function groupTimelineEventsByDay(events, nowMs = Date.now()) {
   }
 
   return result;
+}
+
+/**
+ * @param {unknown} apiEvents
+ * @returns {TimelineEventViewModel[]}
+ */
+export function mapApiTimelineEventsToViewModel(apiEvents) {
+  if (!Array.isArray(apiEvents)) return [];
+
+  return apiEvents
+    .map((row) => {
+      if (!row || typeof row !== "object") return null;
+      const before = row.beforeAfter?.before ?? row.before_state ?? null;
+      const after = row.beforeAfter?.after ?? row.after_state ?? null;
+      const hasBeforeAfter =
+        before &&
+        after &&
+        typeof before === "object" &&
+        typeof after === "object" &&
+        (Object.keys(before).length > 0 || Object.keys(after).length > 0);
+
+      return {
+        eventId: String(row.eventId ?? row.id ?? ""),
+        eventType: String(row.eventType ?? row.operation_type ?? ""),
+        eventLabel: String(row.eventLabel ?? row.event_label ?? row.operation_type ?? "Operação"),
+        entityType: /** @type {TimelineEntityType} */ (
+          row.entityType ?? row.entity_type ?? "general"
+        ),
+        entityId: String(row.entityId ?? row.entity_id ?? "—"),
+        adminName: String(row.adminName ?? row.admin_name ?? "Admin"),
+        adminEmail: String(row.adminEmail ?? row.admin_email ?? ""),
+        createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
+        reason: String(row.reason ?? ""),
+        severity: /** @type {TimelineEventSeverity} */ (row.severity ?? "normal"),
+        beforeAfter: hasBeforeAfter ? { before, after } : null,
+      };
+    })
+    .filter(Boolean);
 }
 
 /**

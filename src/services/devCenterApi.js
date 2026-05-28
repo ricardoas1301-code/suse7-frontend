@@ -189,6 +189,36 @@ export async function devCenterExecutarOperacaoIntegracaoSeller(sellerId, body) 
   return apiFetch(url, { method: "POST", body });
 }
 
+/**
+ * @param {string} sellerId
+ * @param {{ limit?: number }} [opts]
+ */
+export async function devCenterGetSellerOperationalTimeline(sellerId, opts = {}) {
+  const safeId = String(sellerId ?? "").trim();
+  if (!safeId) return { ok: false, status: 400, error: "Seller inválido" };
+  const limit = Number.isFinite(Number(opts.limit)) ? Number(opts.limit) : 50;
+  const url = buildApiUrl(
+    `/api/dev-center/sellers/${encodeURIComponent(safeId)}/operational-timeline?limit=${limit}`,
+  );
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
+/**
+ * @param {string} sellerId
+ * @param {{ limit?: number }} [opts]
+ */
+export async function devCenterGetSellerOperationalHistory(sellerId, opts = {}) {
+  const safeId = String(sellerId ?? "").trim();
+  if (!safeId) return { ok: false, status: 400, error: "Seller inválido" };
+  const limit = Number.isFinite(Number(opts.limit)) ? Number(opts.limit) : 50;
+  const url = buildApiUrl(
+    `/api/dev-center/sellers/${encodeURIComponent(safeId)}/operational-history?limit=${limit}`,
+  );
+  if (!url) return { ok: false, status: 0, error: "API não configurada" };
+  return apiFetch(url, { method: "GET" });
+}
+
 export async function devCenterGetSubscriptions() {
   const url = buildApiUrl("/api/dev-center/subscriptions");
   if (!url) return { ok: false, status: 0, error: "API não configurada" };

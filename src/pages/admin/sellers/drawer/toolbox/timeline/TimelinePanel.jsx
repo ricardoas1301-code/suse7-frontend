@@ -55,7 +55,6 @@ function TimelinePanel({ category }) {
             <h4 id="timeline-panel-title" className="timeline-panel__title">
               {category.label}
             </h4>
-            {import.meta.env.DEV ? <span className="timeline-panel__dev-badge">DEV</span> : null}
           </div>
           <p className="timeline-panel__desc">{category.description}</p>
         </div>
@@ -110,11 +109,7 @@ function TimelinePanel({ category }) {
       </div>
 
       <footer className="timeline-panel__foot">
-        <span className="timeline-panel__seal">
-          {import.meta.env.DEV
-            ? "Simulação local — Timeline sem backend"
-            : "Somente leitura"}
-        </span>
+        <span className="timeline-panel__seal">Auditoria operacional — backend</span>
       </footer>
     </section>
   );
