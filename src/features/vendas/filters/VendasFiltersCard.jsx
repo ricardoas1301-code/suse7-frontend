@@ -2,11 +2,17 @@
 // Card premium de busca e filtros — página Vendas (P_2.2).
 // ======================================================================
 
+import { useState } from "react";
 import S7Icon from "../../../components/ui/S7Icon";
 import S7Input from "../../../components/ui/S7Input";
 import { SALES_FILTER_CHIPS } from "../../../utils/salesToolbarFilters";
 import { useVendasFilters } from "./VendasFiltersContext";
-import { getVendasMarketplaceOptionsForUi } from "./vendasFiltersConstants";
+import {
+  getVendasMarketplaceOptionsForUi,
+  VENDAS_ORIGEM_VENDA_OPTIONS,
+  VENDAS_STATUS_VENDA_OPTIONS,
+  VENDAS_TIPO_ENTREGA_OPTIONS,
+} from "./vendasFiltersConstants";
 import VendasPeriodRangePicker from "./VendasPeriodRangePicker";
 import "./VendasFiltersCard.css";
 
@@ -40,6 +46,11 @@ export default function VendasFiltersCard({
   } = useVendasFilters();
 
   const expanded = filters.expanded;
+
+  // P_2.2 — filtros operacionais visuais (estado local; sem integração backend nesta fase).
+  const [statusVenda, setStatusVenda] = useState("");
+  const [tipoEntrega, setTipoEntrega] = useState("");
+  const [origemVenda, setOrigemVenda] = useState("");
 
   return (
     <section
@@ -95,31 +106,91 @@ export default function VendasFiltersCard({
               />
             </div>
 
-            <div className="vendas-filters-card__field vendas-filters-card__field--account">
-              <label className="vendas-filters-card__label" htmlFor="vendas-filters-account">
-                Conta
-              </label>
-              <select
-                id="vendas-filters-account"
-                className="vendas-filters-card__select"
-                value={filters.marketplaceAccountId}
-                disabled={!accountsReady}
-                onChange={(e) => setMarketplaceAccountId(e.target.value)}
-              >
-                <option value="">Todas as contas</option>
-                {accounts.map((a) => {
-                  const id = a.id != null ? String(a.id).trim() : "";
-                  if (!id) return null;
-                  return (
-                    <option key={id} value={id}>
-                      {accountLabel(a)}
+            <div className="vendas-filters-card__selects">
+              <div className="vendas-filters-card__field vendas-filters-card__field--account">
+                <label className="vendas-filters-card__label" htmlFor="vendas-filters-account">
+                  Conta
+                </label>
+                <select
+                  id="vendas-filters-account"
+                  className="vendas-filters-card__select"
+                  value={filters.marketplaceAccountId}
+                  disabled={!accountsReady}
+                  onChange={(e) => setMarketplaceAccountId(e.target.value)}
+                >
+                  <option value="">Todas as contas</option>
+                  {accounts.map((a) => {
+                    const id = a.id != null ? String(a.id).trim() : "";
+                    if (!id) return null;
+                    return (
+                      <option key={id} value={id}>
+                        {accountLabel(a)}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {/* P_2.2 hotfix final — filtros sem integração backend ocultos temporariamente.
+                  Reativar removendo o atributo hidden + a regra CSS --future[hidden]. */}
+              <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
+                <label className="vendas-filters-card__label" htmlFor="vendas-filters-status">
+                  Status da venda
+                </label>
+                <select
+                  id="vendas-filters-status"
+                  className="vendas-filters-card__select"
+                  value={statusVenda}
+                  onChange={(e) => setStatusVenda(e.target.value)}
+                >
+                  {VENDAS_STATUS_VENDA_OPTIONS.map((o) => (
+                    <option key={o.id || "all"} value={o.id}>
+                      {o.label}
                     </option>
-                  );
-                })}
-              </select>
+                  ))}
+                </select>
+              </div>
+
+              <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
+                <label className="vendas-filters-card__label" htmlFor="vendas-filters-delivery">
+                  Tipo de entrega
+                </label>
+                <select
+                  id="vendas-filters-delivery"
+                  className="vendas-filters-card__select"
+                  value={tipoEntrega}
+                  onChange={(e) => setTipoEntrega(e.target.value)}
+                >
+                  {VENDAS_TIPO_ENTREGA_OPTIONS.map((o) => (
+                    <option key={o.id || "all"} value={o.id}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
+                <label className="vendas-filters-card__label" htmlFor="vendas-filters-origin">
+                  Origem da venda
+                </label>
+                <select
+                  id="vendas-filters-origin"
+                  className="vendas-filters-card__select"
+                  value={origemVenda}
+                  onChange={(e) => setOrigemVenda(e.target.value)}
+                >
+                  {VENDAS_ORIGEM_VENDA_OPTIONS.map((o) => (
+                    <option key={o.id || "all"} value={o.id}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="vendas-filters-card__field vendas-filters-card__field--marketplace">
+            {/* P_2.2 M02 — Marketplace oculto temporariamente (somente ML ativo).
+                Código e lógica preservados; retornará com Shopee/Amazon/Shein. */}
+            <div className="vendas-filters-card__field vendas-filters-card__field--marketplace" hidden>
               <span className="vendas-filters-card__label">Marketplace</span>
               <div className="vendas-filters-card__marketplaces" role="group" aria-label="Marketplace">
                 {getVendasMarketplaceOptionsForUi().map((m) => {

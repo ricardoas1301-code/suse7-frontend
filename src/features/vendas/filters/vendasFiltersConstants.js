@@ -18,6 +18,41 @@ export function getVendasMarketplaceOptionsForUi() {
   return VENDAS_MARKETPLACE_OPTIONS.filter((o) => o.enabled);
 }
 
+// ----------------------------------------------------------------------
+// Filtros operacionais (P_2.2) — apenas UX/UI + estado local.
+// Sem integração de backend nesta fase; estrutura pronta para conexão futura.
+// ----------------------------------------------------------------------
+
+/** @typedef {{ id: string; label: string }} VendasOperacionalFilterOption */
+
+/** @type {readonly VendasOperacionalFilterOption[]} */
+export const VENDAS_STATUS_VENDA_OPTIONS = [
+  { id: "", label: "Todos" },
+  { id: "a_enviar", label: "A enviar" },
+  { id: "em_transito", label: "Em trânsito" },
+  { id: "entregue", label: "Entregue" },
+  { id: "cancelada", label: "Cancelada" },
+  { id: "devolvida", label: "Devolvida" },
+];
+
+/** @type {readonly VendasOperacionalFilterOption[]} */
+export const VENDAS_TIPO_ENTREGA_OPTIONS = [
+  { id: "", label: "Todos" },
+  { id: "full", label: "Full" },
+  { id: "flex", label: "Flex" },
+  { id: "padrao", label: "Padrão" },
+  { id: "a_combinar", label: "A combinar" },
+];
+
+/** @type {readonly VendasOperacionalFilterOption[]} */
+export const VENDAS_ORIGEM_VENDA_OPTIONS = [
+  { id: "", label: "Todos" },
+  { id: "organica", label: "Orgânica" },
+  { id: "publicidade", label: "Publicidade" },
+  { id: "promocao", label: "Promoção" },
+  { id: "afiliado", label: "Afiliado" },
+];
+
 /** @type {readonly { id: import("./vendasFiltersPeriod.js").VendasPeriodPresetUi; label: string }[]} */
 export const VENDAS_PERIOD_PRESETS = [
   { id: "today", label: "Hoje" },

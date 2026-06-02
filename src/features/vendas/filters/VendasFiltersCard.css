@@ -145,7 +145,17 @@
 }
 
 .vendas-filters-card__row--primary {
-  grid-template-columns: auto minmax(0, 0.9fr) minmax(0, 1.2fr);
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+}
+
+/* Container dos selects operacionais (Conta, Status, Tipo de entrega, Origem).
+   4 colunas iguais → Conta fica ~60% da largura anterior (M01). */
+.vendas-filters-card__selects {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
   align-items: end;
 }
 
@@ -256,6 +266,20 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
+/* P_2.2 M02 — Marketplace oculto (somente ML ativo). O atributo [hidden] sozinho
+   não vence o `display: flex` do .vendas-filters-card__field; força aqui sem
+   remover JSX/estado/lógica. Reativar removendo esta regra + o atributo hidden. */
+.vendas-filters-card__field--marketplace[hidden] {
+  display: none;
+}
+
+/* P_2.2 hotfix final — filtros sem integração (Status / Tipo de entrega / Origem)
+   ocultos temporariamente. Mesma estratégia do Marketplace; remover esta regra +
+   o atributo hidden no JSX para reativar. */
+.vendas-filters-card__field--future[hidden] {
+  display: none;
+}
+
 .vendas-filters-card__marketplaces {
   display: flex;
   flex-wrap: wrap;
@@ -314,20 +338,20 @@
 
 @media (max-width: 1180px) {
   .vendas-filters-card__row--primary {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .vendas-filters-card__field--period {
     grid-column: 1 / -1;
   }
 
-  .vendas-filters-card__field--marketplace {
-    grid-column: 1 / -1;
+  .vendas-filters-card__selects {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 768px) {
-  .vendas-filters-card__row--primary {
+  .vendas-filters-card__selects {
     grid-template-columns: minmax(0, 1fr);
   }
 

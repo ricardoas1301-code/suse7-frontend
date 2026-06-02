@@ -139,7 +139,12 @@ function VendasProductIdSkuLine({ listingId, sku }) {
   return (
     <div className="vendas-page__product-meta">
       {lid ? (
-        <span className="s7-copy-group vendas-page__product-meta-ad">
+        <span
+          className="s7-copy-group vendas-page__product-meta-ad"
+          role="presentation"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <span className="vendas-page__meta-value vendas-page__meta-value--listing">{lid}</span>
           <S7CopyButton
             value={lid}
@@ -157,7 +162,12 @@ function VendasProductIdSkuLine({ listingId, sku }) {
         </span>
       ) : null}
       {sk ? (
-        <span className="s7-copy-group vendas-page__product-meta-sku">
+        <span
+          className="s7-copy-group vendas-page__product-meta-sku"
+          role="presentation"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <span className="anuncios-ad-sku-label">SKU</span>
           <span className="anuncios-ad-sku-value">{sk}</span>
           <S7CopyButton
@@ -185,6 +195,37 @@ function formatBrlApi(s) {
   const n = Number(String(s).replace(",", "."));
   if (!Number.isFinite(n)) return DASH;
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+/**
+ * Tom visual de valores com sinal (lucro/margem) — apenas leitura do dado já calculado.
+ * Positivo = saudável, negativo = alerta, zero = neutro, ausente = estado incompleto.
+ * @param {string | null | undefined} s
+ */
+function financialSignToneClass(s) {
+  if (s == null || String(s).trim() === "") return "vendas-page__fin--empty";
+  const n = Number(String(s).replace(",", "."));
+  if (!Number.isFinite(n)) return "vendas-page__fin--empty";
+  if (n > 0) return "vendas-page__fin--positive";
+  if (n < 0) return "vendas-page__fin--negative";
+  return "vendas-page__fin--zero";
+}
+
+/**
+ * Célula de valor BRL com tratamento de estado incompleto (dado ausente vira `—`
+ * discreto com dica, sem parecer erro). Não inventa valores: R$ 0,00 segue como zero real.
+ * @param {string | null | undefined} s
+ */
+function renderBrlValueCell(s) {
+  const text = formatBrlApi(s);
+  if (text === DASH) {
+    return (
+      <span className="vendas-page__fin-missing" title="Sem dado informado">
+        {DASH}
+      </span>
+    );
+  }
+  return text;
 }
 
 /** @param {number | string | null | undefined} value */
@@ -690,14 +731,14 @@ function VendasPageContent() {
                   <th className="vendas-page__col-account">Conta</th>
                   <th className="vendas-page__col-channel">Canal</th>
                   <th className="vendas-page__col-buyer">Comprador</th>
-                  <VendasThStack line1="Valor" line2="da venda" />
-                  <VendasThStack line1="Custo" line2="do produto" />
-                  <th>Comissão</th>
-                  <th>Frete</th>
-                  <th>Impostos</th>
-                  <VendasThStack line1="Valor" line2="recebido" />
-                  <VendasThStack line1="Lucro" line2="(R$)" />
-                  <VendasThStack line1="Margem" line2="(%)" />
+                  <VendasThStack className="vendas-page__num-col" line1="Valor" line2="da venda" />
+                  <VendasThStack className="vendas-page__num-col" line1="Custo" line2="do produto" />
+                  <th className="vendas-page__num-col">Comissão</th>
+                  <th className="vendas-page__num-col">Frete</th>
+                  <th className="vendas-page__num-col">Impostos</th>
+                  <VendasThStack className="vendas-page__num-col" line1="Valor" line2="recebido" />
+                  <VendasThStack className="vendas-page__num-col" line1="Lucro" line2="(R$)" />
+                  <VendasThStack className="vendas-page__num-col" line1="Margem" line2="(%)" />
                   <VendasThStack line1="Saúde" line2="da venda" />
                 </tr>
               </thead>
@@ -741,6 +782,11 @@ function VendasPageContent() {
                     return (
                       <tr
                         key={hid}
+                        className={
+                          healthUi.badgeClass === "vendas-health-badge--critical"
+                            ? "vendas-page__row--alert"
+                            : undefined
+                        }
                         tabIndex={0}
                         onClick={() => detailItemId && openDetail(detailItemId)}
                         onKeyDown={(e) => {
@@ -754,7 +800,12 @@ function VendasPageContent() {
                           <div className="vendas-page__venda-cell">
                             <div className="vendas-page__venda-id">
                               {r.sale_display_code != null && String(r.sale_display_code).trim() !== "" ? (
-                                <span className="s7-copy-group vendas-page__sale-code-group">
+                                <span
+                                  className="s7-copy-group vendas-page__sale-code-group"
+                                  role="presentation"
+                                  onClick={(e) => e.stopPropagation()}
+                                  onKeyDown={(e) => e.stopPropagation()}
+                                >
                                   <span className="vendas-page__sale-code">{String(r.sale_display_code).trim()}</span>
                                   <S7CopyButton
                                     value={String(r.sale_display_code).trim()}
@@ -857,14 +908,22 @@ function VendasPageContent() {
                             <span className="vendas-page__buyer-name">{buyerName || DASH}</span>
                           </div>
                         </td>
-                        <td>{formatBrlApi(f.sale_price)}</td>
-                        <td>{formatBrlApi(r.product_cost_only_brl)}</td>
-                        <td>{formatBrlApi(f.commission)}</td>
-                        <td>{formatBrlApi(f.shipping_cost)}</td>
-                        <td>{formatBrlApi(f.taxes)}</td>
-                        <td>{formatBrlApi(f.net_received)}</td>
-                        <td>{formatBrlApi(f.profit_brl)}</td>
-                        <td>{formatPctApi(f.margin_percent)}</td>
+                        <td className="vendas-page__num-cell vendas-page__num-cell--sale">
+                          {formatBrlApi(f.sale_price)}
+                        </td>
+                        <td className="vendas-page__num-cell">{renderBrlValueCell(r.product_cost_only_brl)}</td>
+                        <td className="vendas-page__num-cell">{renderBrlValueCell(f.commission)}</td>
+                        <td className="vendas-page__num-cell">{renderBrlValueCell(f.shipping_cost)}</td>
+                        <td className="vendas-page__num-cell">{renderBrlValueCell(f.taxes)}</td>
+                        <td className="vendas-page__num-cell vendas-page__num-cell--received">
+                          {renderBrlValueCell(f.net_received)}
+                        </td>
+                        <td className={`vendas-page__num-cell vendas-page__num-cell--profit ${financialSignToneClass(f.profit_brl)}`}>
+                          {renderBrlValueCell(f.profit_brl)}
+                        </td>
+                        <td className={`vendas-page__num-cell ${financialSignToneClass(f.margin_percent)}`}>
+                          {formatPctApi(f.margin_percent)}
+                        </td>
                         <td>
                           <span className={`vendas-health-badge ${healthUi.badgeClass}`}>
                             {healthUi.showDot ? <span className="vendas-health-badge-dot" aria-hidden /> : null}

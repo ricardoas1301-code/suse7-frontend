@@ -17,6 +17,8 @@ export function getSaleHealthUi(f) {
     f.margin_percent != null && String(f.margin_percent).trim() !== ""
       ? Number(String(f.margin_percent).replace(",", "."))
       : NaN;
+  const profitN = !profitMissing ? Number(String(f.profit_brl).replace(",", ".")) : NaN;
+  const isZeroProfit = Number.isFinite(profitN) && profitN === 0;
 
   if (h === "healthy") {
     if (Number.isFinite(marginN) && marginN >= 20) {
@@ -31,10 +33,14 @@ export function getSaleHealthUi(f) {
     return { badgeClass: "vendas-health-badge--unknown", label: "Sem dados", showDot: false };
   }
   if (h === "attention") {
+    // Lucro exatamente zero: estado neutro "Sem lucro" (usa dado já calculado, sem inventar).
+    if (isZeroProfit) {
+      return { badgeClass: "vendas-health-badge--neutral", label: "Sem lucro", showDot: true };
+    }
     if (Number.isFinite(marginN) && marginN < 5) {
       return { badgeClass: "vendas-health-badge--warn", label: "Margem baixa", showDot: true };
     }
-    return { badgeClass: "vendas-health-badge--warn", label: "Atenção", showDot: true };
+    return { badgeClass: "vendas-health-badge--warn", label: "Precisa atenção", showDot: true };
   }
   return { badgeClass: "vendas-health-badge--unknown", label: "Sem dados", showDot: false };
 }
