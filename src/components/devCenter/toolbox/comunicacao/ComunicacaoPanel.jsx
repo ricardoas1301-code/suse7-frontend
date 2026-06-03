@@ -2,16 +2,18 @@ import { useState } from "react";
 import { Radio } from "lucide-react";
 import { COMUNICACAO_SECOES, COMUNICACAO_SECAO_PADRAO } from "./comunicacaoModel";
 import PreferenciasComunicacaoPanel from "./PreferenciasComunicacaoPanel";
+import ObservabilidadeComunicacaoPanel from "./ObservabilidadeComunicacaoPanel";
 import "./comunicacao.css";
 
 // ======================================================
-// COMUNICAÇÃO — PAINEL (S5.8 + S5.9)
+// COMUNICAÇÃO — PAINEL (S5.8 + S5.9 + S5.10)
 // ------------------------------------------------------
-// Canais oficiais + Preferências de Comunicação (read-only).
+// Canais, Preferências e Observabilidade (read-only).
 // ======================================================
 
 const AREA_CANAIS = "canais";
 const AREA_PREFERENCIAS = "preferencias";
+const AREA_OBSERVABILIDADE = "observabilidade";
 
 function SecaoCanal({ secao }) {
   const Icon = secao.icon;
@@ -51,11 +53,11 @@ export default function ComunicacaoPanel() {
           <Radio size={18} aria-hidden /> Comunicação
         </h2>
         <p className="s7-com__subtitle">
-          Governança do Motor Central de Comunicação do Suse7 — canais oficiais, preferências,
-          destinatários e integração com o Dispatcher. Estrutura preparada para administração
+          Governança do Motor Central de Comunicação do Suse7 — canais, preferências,
+          observabilidade e integração com o Dispatcher. Estrutura preparada para administração
           completa nas próximas fases.
         </p>
-        <span className="s7-com__badge">S5.9 — Motor Central (somente leitura)</span>
+        <span className="s7-com__badge">S5.10 — Motor Central (somente leitura)</span>
       </header>
 
       <nav className="s7-com__area-nav" role="tablist" aria-label="Áreas de Comunicação">
@@ -77,9 +79,20 @@ export default function ComunicacaoPanel() {
         >
           Preferências de Comunicação
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={areaAtiva === AREA_OBSERVABILIDADE}
+          className={`s7-com__area-btn ${areaAtiva === AREA_OBSERVABILIDADE ? "s7-com__area-btn--active" : ""}`}
+          onClick={() => setAreaAtiva(AREA_OBSERVABILIDADE)}
+        >
+          Observabilidade
+        </button>
       </nav>
 
-      {areaAtiva === AREA_PREFERENCIAS ? (
+      {areaAtiva === AREA_OBSERVABILIDADE ? (
+        <ObservabilidadeComunicacaoPanel />
+      ) : areaAtiva === AREA_PREFERENCIAS ? (
         <PreferenciasComunicacaoPanel />
       ) : (
         <div className="s7-com__layout">
