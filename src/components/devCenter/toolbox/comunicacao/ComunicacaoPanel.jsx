@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Radio } from "lucide-react";
 import { COMUNICACAO_SECOES, COMUNICACAO_SECAO_PADRAO } from "./comunicacaoModel";
+import PreferenciasComunicacaoPanel from "./PreferenciasComunicacaoPanel";
 import "./comunicacao.css";
 
 // ======================================================
-// COMUNICAÇÃO — PAINEL (S5.8)
+// COMUNICAÇÃO — PAINEL (S5.8 + S5.9)
 // ------------------------------------------------------
-// Estrutura inicial read-only do Motor Central de Comunicação.
-// Sem CRUD / edição / telas completas nesta fase.
+// Canais oficiais + Preferências de Comunicação (read-only).
 // ======================================================
+
+const AREA_CANAIS = "canais";
+const AREA_PREFERENCIAS = "preferencias";
 
 function SecaoCanal({ secao }) {
   const Icon = secao.icon;
@@ -37,6 +40,7 @@ function SecaoCanal({ secao }) {
 }
 
 export default function ComunicacaoPanel() {
+  const [areaAtiva, setAreaAtiva] = useState(AREA_CANAIS);
   const [secaoAtiva, setSecaoAtiva] = useState(COMUNICACAO_SECAO_PADRAO);
   const secao = COMUNICACAO_SECOES.find((s) => s.id === secaoAtiva) ?? COMUNICACAO_SECOES[0];
 
@@ -47,36 +51,61 @@ export default function ComunicacaoPanel() {
           <Radio size={18} aria-hidden /> Comunicação
         </h2>
         <p className="s7-com__subtitle">
-          Governança do Motor Central de Comunicação do Suse7 — canais oficiais, integração com
-          Dispatcher, Registro de Canais e Central de Templates. Estrutura preparada para
-          administração completa nas próximas fases.
+          Governança do Motor Central de Comunicação do Suse7 — canais oficiais, preferências,
+          destinatários e integração com o Dispatcher. Estrutura preparada para administração
+          completa nas próximas fases.
         </p>
-        <span className="s7-com__badge">S5.8 — Módulo Comunicação (somente leitura)</span>
+        <span className="s7-com__badge">S5.9 — Motor Central (somente leitura)</span>
       </header>
 
-      <div className="s7-com__layout">
-        <nav className="s7-com__nav" role="tablist" aria-label="Canais do Motor Central">
-          {COMUNICACAO_SECOES.map((item) => {
-            const Icon = item.icon;
-            const ativa = item.id === secaoAtiva;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={ativa}
-                className={`s7-com__nav-btn ${ativa ? "s7-com__nav-btn--active" : ""}`}
-                onClick={() => setSecaoAtiva(item.id)}
-              >
-                <Icon size={16} aria-hidden /> {item.label}
-                {item.canalOficial ? <span className="s7-com__nav-tag">oficial</span> : null}
-              </button>
-            );
-          })}
-        </nav>
+      <nav className="s7-com__area-nav" role="tablist" aria-label="Áreas de Comunicação">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={areaAtiva === AREA_CANAIS}
+          className={`s7-com__area-btn ${areaAtiva === AREA_CANAIS ? "s7-com__area-btn--active" : ""}`}
+          onClick={() => setAreaAtiva(AREA_CANAIS)}
+        >
+          Canais oficiais
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={areaAtiva === AREA_PREFERENCIAS}
+          className={`s7-com__area-btn ${areaAtiva === AREA_PREFERENCIAS ? "s7-com__area-btn--active" : ""}`}
+          onClick={() => setAreaAtiva(AREA_PREFERENCIAS)}
+        >
+          Preferências de Comunicação
+        </button>
+      </nav>
 
-        <SecaoCanal secao={secao} />
-      </div>
+      {areaAtiva === AREA_PREFERENCIAS ? (
+        <PreferenciasComunicacaoPanel />
+      ) : (
+        <div className="s7-com__layout">
+          <nav className="s7-com__nav" role="tablist" aria-label="Canais do Motor Central">
+            {COMUNICACAO_SECOES.map((item) => {
+              const Icon = item.icon;
+              const ativa = item.id === secaoAtiva;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={ativa}
+                  className={`s7-com__nav-btn ${ativa ? "s7-com__nav-btn--active" : ""}`}
+                  onClick={() => setSecaoAtiva(item.id)}
+                >
+                  <Icon size={16} aria-hidden /> {item.label}
+                  {item.canalOficial ? <span className="s7-com__nav-tag">oficial</span> : null}
+                </button>
+              );
+            })}
+          </nav>
+
+          <SecaoCanal secao={secao} />
+        </div>
+      )}
     </section>
   );
 }
