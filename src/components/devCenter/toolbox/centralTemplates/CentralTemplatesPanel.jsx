@@ -16,7 +16,7 @@ import "./centralTemplates.css";
 
 function SecaoReservada({ secao }) {
   const Icon = secao.icon;
-  const ehPopupOficial = secao.id === "popup" && secao.canalOficial === true;
+  const ehCanalOficial = secao.canalOficial === true && secao.motorPhase;
   return (
     <div className="s7-tpl__content" role="tabpanel" aria-label={secao.label}>
       <span className="s7-tpl__content-icon" aria-hidden>
@@ -24,10 +24,10 @@ function SecaoReservada({ secao }) {
       </span>
       <h3>{secao.label}</h3>
       <p>{secao.descricao}</p>
-      {ehPopupOficial ? (
+      {ehCanalOficial ? (
         <p>
           Canal reconhecido oficialmente pelo Motor Central ({secao.motorPhase}). Estrutura preparada
-          para templates de Pop-up, preview visual e versionamento — sem cadastro nesta fase.
+          para templates, preview e versionamento — sem cadastro nesta fase.
         </p>
       ) : (
         <p>
@@ -36,7 +36,7 @@ function SecaoReservada({ secao }) {
         </p>
       )}
       <span className="s7-tpl__reserved">
-        {ehPopupOficial ? `Canal oficial ${secao.motorPhase} — CRUD em breve` : "Reservado para futuras fases"}
+        {ehCanalOficial ? `Canal oficial ${secao.motorPhase} — CRUD em breve` : "Reservado para futuras fases"}
       </span>
     </div>
   );

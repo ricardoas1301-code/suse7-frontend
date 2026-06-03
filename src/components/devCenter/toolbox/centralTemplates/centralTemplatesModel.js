@@ -44,8 +44,12 @@ export const CENTRAL_TEMPLATES_SECOES = Object.freeze([
     channelCode: "in_app",
     label: "Templates da Central Sininho",
     icon: Bell,
-    descricao: "Modelos das notificações internas (Sininho).",
+    descricao:
+      "Central Sininho oficial do Motor Central (S5.8): modelos do inbox in-app com severidade e deep-link.",
     enabled: false,
+    canalOficial: true,
+    motorPhase: "S5.8",
+    futuro: ["cadastro", "versionamento", "preview"],
   },
   {
     id: "popup",

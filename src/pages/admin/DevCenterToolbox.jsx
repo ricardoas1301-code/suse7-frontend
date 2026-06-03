@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { S7Button } from "../../components/ui";
 import {
   DEV_CENTER_CATEGORIAS_RELOAD,
@@ -14,6 +14,16 @@ import {
   useDevCenterOperationalFeedback,
 } from "../../components/devCenter/operational";
 import "../../components/devCenter/operational/devCenterOperational.css";
+import {
+  TOOLBOX_TABS,
+  TOOLBOX_TAB_PADRAO,
+  TOOLBOX_GROUPS,
+} from "../../components/devCenter/toolbox/devCenterToolboxTabs";
+import DocumentacaoVivaPanel from "../../components/devCenter/toolbox/documentacaoViva/DocumentacaoVivaPanel";
+import AdminGlobalPanel from "../../components/devCenter/toolbox/adminGlobal/AdminGlobalPanel";
+import CentralTemplatesPanel from "../../components/devCenter/toolbox/centralTemplates/CentralTemplatesPanel";
+import ComunicacaoPanel from "../../components/devCenter/toolbox/comunicacao/ComunicacaoPanel";
+import "../../components/devCenter/toolbox/devCenterToolbox.css";
 
 function DevCenterToolboxFoundationDemo() {
   const { abrirConfirmacao } = useDevCenterOperationalConfirm();
@@ -49,7 +59,7 @@ function DevCenterToolboxFoundationDemo() {
   return (
     <section className="dc-module dc-operacional-foundation">
       <header className="dc-module__head">
-        <h2>Caixa de Ferramentas</h2>
+        <h2>Operacional</h2>
         <p className="dc-module__desc">
           S1 — Fundação operacional: reload granular, confirmação padronizada e feedback administrativo
           reutilizável.
@@ -131,11 +141,88 @@ function DevCenterToolboxFoundationDemo() {
   );
 }
 
+/** Placeholder para abas ainda não implementadas (padrão atual do projeto). */
+function ToolboxTabPlaceholder({ label }) {
+  return (
+    <div className="s7-toolbox__placeholder">
+      <h3>{label}</h3>
+      <p>Área prevista na Caixa de Ferramentas. Será habilitada em uma próxima fase.</p>
+    </div>
+  );
+}
+
+/** Resolve o conteúdo da aba ativa. */
+function ToolboxTabContent({ tabId }) {
+  if (tabId === "operacional") {
+    return <DevCenterToolboxFoundationDemo />;
+  }
+  if (tabId === "comunicacao") {
+    return <ComunicacaoPanel />;
+  }
+  if (tabId === "central_templates") {
+    return <CentralTemplatesPanel />;
+  }
+  if (tabId === "documentacao_viva") {
+    return <DocumentacaoVivaPanel />;
+  }
+  if (tabId === "admin_global") {
+    return <AdminGlobalPanel />;
+  }
+  const tab = TOOLBOX_TABS.find((item) => item.id === tabId);
+  return <ToolboxTabPlaceholder label={tab?.label ?? "Em breve"} />;
+}
+
 export default function DevCenterToolbox() {
+  const [tabAtiva, setTabAtiva] = useState(TOOLBOX_TAB_PADRAO);
+
   return (
     <DevCenterOperationalConfirmProvider>
       <DevCenterOperationalFeedbackProvider>
-        <DevCenterToolboxFoundationDemo />
+        <div className="s7-toolbox">
+          <header className="s7-toolbox__header">
+            <h1 className="s7-toolbox__title">Caixa de Ferramentas</h1>
+            <p className="s7-toolbox__subtitle">
+              Centro de governança viva do Suse7 — operação, documentação viva e infraestrutura em
+              um só lugar.
+            </p>
+          </header>
+
+          <nav className="s7-toolbox__nav" role="tablist" aria-label="Áreas da Caixa de Ferramentas">
+            {TOOLBOX_GROUPS.map((grupo) => {
+              const tabsDoGrupo = TOOLBOX_TABS.filter((tab) => tab.group === grupo.id);
+              if (tabsDoGrupo.length === 0) return null;
+              return (
+                <div key={grupo.id} className="s7-toolbox__nav-group">
+                  <span className="s7-toolbox__nav-group-label" title={grupo.hint}>
+                    {grupo.label}
+                  </span>
+                  <div className="s7-toolbox__nav-group-tabs">
+                    {tabsDoGrupo.map((tab) => {
+                      const Icon = tab.icon;
+                      const ativa = tab.id === tabAtiva;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={ativa}
+                          disabled={!tab.enabled}
+                          className={`s7-toolbox__nav-btn ${ativa ? "s7-toolbox__nav-btn--active" : ""}`}
+                          onClick={() => tab.enabled && setTabAtiva(tab.id)}
+                        >
+                          <Icon size={16} aria-hidden /> {tab.label}
+                          {!tab.enabled ? <span className="s7-toolbox__nav-soon">em breve</span> : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+
+          <ToolboxTabContent tabId={tabAtiva} />
+        </div>
       </DevCenterOperationalFeedbackProvider>
     </DevCenterOperationalConfirmProvider>
   );
