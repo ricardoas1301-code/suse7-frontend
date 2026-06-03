@@ -202,3 +202,18 @@
   color: #475569;
   line-height: 1.55;
 }
+
+.s7-com__inline-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.s7-com__inline-codes code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+}

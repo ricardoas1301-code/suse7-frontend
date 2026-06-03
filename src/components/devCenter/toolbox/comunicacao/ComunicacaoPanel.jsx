@@ -3,17 +3,19 @@ import { Radio } from "lucide-react";
 import { COMUNICACAO_SECOES, COMUNICACAO_SECAO_PADRAO } from "./comunicacaoModel";
 import PreferenciasComunicacaoPanel from "./PreferenciasComunicacaoPanel";
 import ObservabilidadeComunicacaoPanel from "./ObservabilidadeComunicacaoPanel";
+import CatalogoNotificacoesPanel from "./CatalogoNotificacoesPanel";
 import "./comunicacao.css";
 
 // ======================================================
-// COMUNICAÇÃO — PAINEL (S5.8 + S5.9 + S5.10)
+// COMUNICAÇÃO — PAINEL (S5.8–S5.11)
 // ------------------------------------------------------
-// Canais, Preferências e Observabilidade (read-only).
+// Canais, Preferências, Observabilidade e Catálogo (read-only).
 // ======================================================
 
 const AREA_CANAIS = "canais";
 const AREA_PREFERENCIAS = "preferencias";
 const AREA_OBSERVABILIDADE = "observabilidade";
+const AREA_CATALOGO = "catalogo";
 
 function SecaoCanal({ secao }) {
   const Icon = secao.icon;
@@ -57,7 +59,7 @@ export default function ComunicacaoPanel() {
           observabilidade e integração com o Dispatcher. Estrutura preparada para administração
           completa nas próximas fases.
         </p>
-        <span className="s7-com__badge">S5.10 — Motor Central (somente leitura)</span>
+        <span className="s7-com__badge">S5.11 — Motor Central (somente leitura)</span>
       </header>
 
       <nav className="s7-com__area-nav" role="tablist" aria-label="Áreas de Comunicação">
@@ -88,9 +90,20 @@ export default function ComunicacaoPanel() {
         >
           Observabilidade
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={areaAtiva === AREA_CATALOGO}
+          className={`s7-com__area-btn ${areaAtiva === AREA_CATALOGO ? "s7-com__area-btn--active" : ""}`}
+          onClick={() => setAreaAtiva(AREA_CATALOGO)}
+        >
+          Catálogo de Notificações
+        </button>
       </nav>
 
-      {areaAtiva === AREA_OBSERVABILIDADE ? (
+      {areaAtiva === AREA_CATALOGO ? (
+        <CatalogoNotificacoesPanel />
+      ) : areaAtiva === AREA_OBSERVABILIDADE ? (
         <ObservabilidadeComunicacaoPanel />
       ) : areaAtiva === AREA_PREFERENCIAS ? (
         <PreferenciasComunicacaoPanel />
