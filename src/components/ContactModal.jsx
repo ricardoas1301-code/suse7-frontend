@@ -1,10 +1,19 @@
 import "./ContactModal.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { postFaleConoscoContact } from "../services/faleConoscoContactApi.js";
 
 export default function ContactModal({ onClose }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -22,16 +31,7 @@ export default function ContactModal({ onClose }) {
     };
 
     try {
-      const res = await fetch(
-        "https://bazibzquasbdgjwdcwbz.supabase.co/functions/v1/send-contact-email",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await res.json();
+      const data = await postFaleConoscoContact(payload);
       setLoading(false);
 
       if (data.success) {
@@ -54,10 +54,16 @@ export default function ContactModal({ onClose }) {
   }
 
   return (
-    <div className="modal-bg">
-      <div className="modal-box">
+    <div className="modal-bg" onClick={onClose} role="presentation">
+      <div
+        className="modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
 
-        <h2>Fale Conosco!</h2>
+        <h2 id="contact-modal-title">Fale Conosco!</h2>
         <p>Envie sua mensagem</p>
 
         <form onSubmit={handleSubmit}>
@@ -79,7 +85,7 @@ export default function ContactModal({ onClose }) {
           </select>
 
           <label className="label">Mensagem</label>
-          <textarea name="message" placeholder="Digite sua mensagem" rows="4" required></textarea>
+          <textarea name="message" placeholder="Digite sua mensagem" required></textarea>
 
           <button type="submit" disabled={loading}>
             {loading ? "Enviando..." : "Enviar mensagem"}
@@ -88,8 +94,6 @@ export default function ContactModal({ onClose }) {
 
         {success && <p className="msg-success">Mensagem enviada com sucesso! 🎉</p>}
         {error && <p className="msg-error">{error}</p>}
-
-        <span className="close-btn" onClick={onClose}>Fechar</span>
       </div>
     </div>
   );
