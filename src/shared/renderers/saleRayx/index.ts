@@ -17,6 +17,7 @@ export { buildShareLayoutPlan, SaleRayXShareLayout } from "./SaleRayXShareLayout
 export { copySaleRayxShare } from "./SaleRayXCopyAdapter.js";
 export { printSaleRayxShare } from "./SaleRayXPrintAdapter.js";
 export { sendSaleRayxWhatsAppShare } from "./SaleRayXWhatsappAdapter.js";
+export { sendSaleRayxEmailShare } from "./SaleRayXEmailAdapter.js";
 
 export type { SaleRayXShareInput } from "./SaleRayXShareRenderer.js";
 export type { SaleRayXShareOutputMode, SaleRayXSharePayload } from "./SaleRayXShareLayout.js";

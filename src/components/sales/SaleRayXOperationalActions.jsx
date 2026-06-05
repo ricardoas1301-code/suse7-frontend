@@ -8,7 +8,7 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import { Copy, Mail, Printer, Share2 } from "lucide-react";
+import { Copy, FileSpreadsheet, Mail, Printer, Share2 } from "lucide-react";
 
 import { useNotifications } from "../../contexts/NotificationContext";
 
@@ -19,11 +19,14 @@ import {
   fetchCentralEventDeliveryRules,
 } from "../../services/centralNotificationsApi";
 import { pickRayxManualWhatsAppRecipients } from "../../services/pickRayxManualWhatsAppRecipient";
+import { pickRayxManualEmailRecipients } from "../../services/pickRayxManualEmailRecipient.js";
 import {
   copySaleRayxShare,
   printSaleRayxShare,
   sendSaleRayxWhatsAppShare,
+  sendSaleRayxEmailShare,
 } from "../../shared/renderers/saleRayx";
+import { downloadSaleRayxXlsx } from "./buildSaleRayxXlsxExport.js";
 
 import S7Tooltip from "../ui/S7Tooltip";
 
@@ -287,7 +290,28 @@ export default function SaleRayXOperationalActions({
 
     const mockHint = data?.mocked ? "Modo seguro (mock) — sem envio real." : "";
 
-    notifyToast("E-mail enfileirado com sucesso.", mockHint);
+    if (channel === "email") {
+      const sent =
+        data?.real_send_executed === true ||
+        (data?.status === "sent" && data?.mocked === false && data?.skipped !== true);
+      if (sent) {
+        notifyToast(
+          "E-mail enviado com sucesso.",
+          data?.provider_message_id ? `ID: ${data.provider_message_id}` : "Entrega confirmada pelo provedor.",
+        );
+        return;
+      }
+      if (data?.status === "failed") {
+        notifyToast(
+          "Não foi possível enviar o e-mail.",
+          data?.last_error ?? data?.message ?? "",
+          NOTIFICATION_SEVERITY.WARNING,
+        );
+        return;
+      }
+      notifyToast("E-mail enfileirado com sucesso.", mockHint);
+      return;
+    }
 
   }, [notifyToast]);
 
@@ -358,6 +382,75 @@ export default function SaleRayXOperationalActions({
           });
 
           finishMotorNotify(channel, sendRes.apiResponse);
+          return;
+        }
+
+        if (channel === "email") {
+          const [listed, rulesRes] = await Promise.all([
+            fetchCentralNotificationRecipients(),
+            fetchCentralEventDeliveryRules(),
+          ]);
+          if (!listed.ok) {
+            notifyToast(
+              "Não foi possível acionar o e-mail agora.",
+              listed.error ?? "Destinatários indisponíveis.",
+              NOTIFICATION_SEVERITY.WARNING,
+            );
+            return;
+          }
+          const picked = pickRayxManualEmailRecipients({
+            recipients: listed.recipients,
+            groups: listed.groups,
+            rules: rulesRes.ok ? rulesRes.rules : [],
+          });
+          const targets = picked.targets;
+          if (!targets.length) {
+            notifyToast(
+              "E-mail sem destinatário",
+              "Marque destinatários de e-mail ativos em Notificações → Raio-X da venda.",
+              NOTIFICATION_SEVERITY.WARNING,
+            );
+            return;
+          }
+          if (import.meta.env.DEV) {
+            console.info("[S7 Raio-X manual] destinatários e-mail selecionados", {
+              selected_targets_source: picked.selected_targets_source,
+              enabled_group_ids: picked.enabled_group_ids,
+              final_recipient_targets: targets.map((t) => t.recipientEmail),
+            });
+          }
+
+          const sendRes = await sendSaleRayxEmailShare({
+            ...shareInput,
+            saleId: String(saleId),
+            recipientTargets: targets,
+          });
+
+          const successResults = sendRes.apiResponses.filter(
+            (res) => res.ok && res.data?.success === true,
+          );
+          if (successResults.length === 0) {
+            const firstFail = sendRes.apiResponses.find((res) => !res.ok || res.data?.success !== true);
+            finishMotorNotify(channel, firstFail ?? { ok: false, data: { success: false } });
+            return;
+          }
+
+          if (successResults.length === 1) {
+            finishMotorNotify(channel, successResults[0]);
+            return;
+          }
+
+          const anySent = successResults.some(
+            (res) =>
+              res.data?.real_send_executed === true ||
+              (res.data?.status === "sent" && res.data?.mocked === false),
+          );
+          notifyToast(
+            anySent
+              ? `E-mail enviado para ${successResults.length} destinatários.`
+              : `E-mail enfileirado para ${successResults.length} destinatários.`,
+            anySent ? "Entrega confirmada pelo provedor." : "",
+          );
           return;
         }
 
@@ -503,6 +596,19 @@ export default function SaleRayXOperationalActions({
 
 
 
+  const handleXlsx = useCallback(async () => {
+    try {
+      await downloadSaleRayxXlsx(shareInput);
+      notifyToast("Excel baixado com sucesso.");
+    } catch {
+      notifyToast(
+        "Não foi possível exportar o Excel.",
+        "Tente novamente ou use Copiar resumo.",
+        NOTIFICATION_SEVERITY.WARNING,
+      );
+    }
+  }, [notifyToast, shareInput]);
+
   const opsClass = [
 
     "vendas-sale-rayx__ops-actions",
@@ -563,18 +669,6 @@ export default function SaleRayXOperationalActions({
 
     {
 
-      key: "share",
-
-      label: "Compartilhar",
-
-      onClick: () => void handleNativeShare(),
-
-      icon: <Share2 size={17} strokeWidth={2} aria-hidden />,
-
-    },
-
-    {
-
       key: "print",
 
       label: "Imprimir",
@@ -582,6 +676,30 @@ export default function SaleRayXOperationalActions({
       onClick: handlePrint,
 
       icon: <Printer size={17} strokeWidth={2} aria-hidden />,
+
+    },
+
+    {
+
+      key: "xlsx",
+
+      label: "Exportar Excel",
+
+      onClick: () => void handleXlsx(),
+
+      icon: <FileSpreadsheet size={17} strokeWidth={2} aria-hidden />,
+
+    },
+
+    {
+
+      key: "share",
+
+      label: "Compartilhar",
+
+      onClick: () => void handleNativeShare(),
+
+      icon: <Share2 size={17} strokeWidth={2} aria-hidden />,
 
     },
 
@@ -625,7 +743,7 @@ export default function SaleRayXOperationalActions({
 
               aria-busy={isLoading}
 
-              disabled={isLoading || (isNotify && notifyBusy && !isLoading)}
+              disabled={isLoading || action.stub || (isNotify && notifyBusy && !isLoading)}
 
               onClick={action.onClick}
 

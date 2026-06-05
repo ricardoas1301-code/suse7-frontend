@@ -24,6 +24,8 @@ import { buildApiUrl, apiFetch } from "../config/api";
 
  *   recipientId?: string;
 
+ *   recipientName?: string;
+
  *   recipientTargets?: Array<{ recipientId?: string | null; recipientPhone: string }>;
 
  *   useSmokeDestination?: boolean;
@@ -35,7 +37,7 @@ import { buildApiUrl, apiFetch } from "../config/api";
  *   deliveryFormat?: "image" | "text";
 
  *   shareCacheKey?: string;
-
+ *   shareTextFallback?: string;
  * }} input
 
  */
@@ -86,6 +88,8 @@ export async function postSaleRayxManualNotification(input) {
 
       recipient_id: input.recipientId,
 
+      recipient_name: input.recipientName,
+
       recipient_targets:
 
         Array.isArray(input.recipientTargets) && input.recipientTargets.length > 0
@@ -109,6 +113,7 @@ export async function postSaleRayxManualNotification(input) {
       delivery_format: input.deliveryFormat,
 
       share_cache_key: input.shareCacheKey,
+      share_text_fallback: input.shareTextFallback,
 
     }),
 
