@@ -1,0 +1,957 @@
+/* ======================================================
+   DOCUMENTAÇÃO VIVA — ESTILOS
+   Padrão Suse7: cards brancos, fundo suave, azul principal,
+   layout limpo, espaçamento premium e responsivo.
+   ====================================================== */
+
+.s7-docviva {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.s7-docviva__intro {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.s7-docviva__intro h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva__intro p {
+  margin: 0;
+  color: var(--s7-text-muted, #64748b);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
+/* -------- Sub-navegação interna (Source Of Truth / DB Diagram) -------- */
+.s7-docviva__subnav {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border-radius: 0.7rem;
+  background: var(--s7-surface-muted, #f1f5f9);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  flex-wrap: wrap;
+}
+
+.s7-docviva__subnav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  background: transparent;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--s7-text-muted, #64748b);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.s7-docviva__subnav-btn:hover {
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva__subnav-btn--active {
+  background: var(--s7-surface-elevated, #fff);
+  color: var(--s7-color-info, #2563eb);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+}
+
+/* -------- Grid de cards de domínio -------- */
+.s7-docviva__grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.s7-docviva-card {
+  display: grid;
+  gap: 0.6rem;
+  text-align: left;
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  border-radius: 0.85rem;
+  background: var(--s7-surface-elevated, #fff);
+  padding: 1rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.s7-docviva-card:hover {
+  border-color: color-mix(in srgb, var(--s7-color-info, #2563eb) 45%, transparent);
+  box-shadow: 0 10px 28px rgb(15 23 42 / 0.1);
+  transform: translateY(-2px);
+}
+
+.s7-docviva-card:focus-visible {
+  outline: 2px solid var(--s7-color-info, #2563eb);
+  outline-offset: 2px;
+}
+
+.s7-docviva-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.s7-docviva-card__icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--s7-color-info, #2563eb) 10%, transparent);
+  color: var(--s7-color-info, #2563eb);
+  flex-shrink: 0;
+}
+
+.s7-docviva-card__title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva-card__desc {
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.45;
+  color: var(--s7-text-muted, #64748b);
+}
+
+.s7-docviva-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--s7-text-muted, #64748b);
+}
+
+/* -------- Status badges -------- */
+.s7-docviva-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.s7-docviva-badge--sucesso {
+  background: color-mix(in srgb, var(--s7-color-success, #16a34a) 12%, transparent);
+  color: var(--s7-color-success, #16a34a);
+}
+
+.s7-docviva-badge--info {
+  background: color-mix(in srgb, var(--s7-color-info, #2563eb) 12%, transparent);
+  color: var(--s7-color-info, #2563eb);
+}
+
+.s7-docviva-badge--alerta {
+  background: color-mix(in srgb, var(--s7-color-warning, #d97706) 14%, transparent);
+  color: var(--s7-color-warning, #d97706);
+}
+
+.s7-docviva-badge--neutro {
+  background: var(--s7-surface-muted, #f1f5f9);
+  color: var(--s7-text-muted, #64748b);
+}
+
+/* -------- Detalhe do domínio -------- */
+.s7-docviva-detail {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.s7-docviva-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--s7-color-info, #2563eb);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  width: fit-content;
+}
+
+.s7-docviva-detail__back:hover {
+  text-decoration: underline;
+}
+
+.s7-docviva-detail__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.s7-docviva-detail__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva-detail__subtitle {
+  margin: 0;
+  color: var(--s7-text-muted, #64748b);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
+.s7-docviva-section {
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  border-radius: 0.8rem;
+  background: var(--s7-surface-elevated, #fff);
+  padding: 1rem 1.1rem;
+}
+
+.s7-docviva-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.s7-docviva-section__title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva-section__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--s7-text-muted, #94a3b8);
+}
+
+.s7-docviva-section__items {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.s7-docviva-item {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.6rem;
+  background: var(--s7-surface-muted, #f8fafc);
+  border: 1px solid var(--s7-border-subtle, #eef2f7);
+}
+
+.s7-docviva-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.s7-docviva-item__title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva-item__content {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--s7-text-muted, #475569);
+  white-space: pre-wrap;
+}
+
+.s7-docviva-item__meta {
+  font-size: 0.72rem;
+  color: var(--s7-text-muted, #94a3b8);
+}
+
+.s7-docviva-empty {
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--s7-border-subtle, #cbd5e1);
+  border-radius: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--s7-text-muted, #64748b);
+  background: var(--s7-surface-muted, #f8fafc);
+}
+
+/* -------- DB Diagram Repository -------- */
+.s7-dbdiagram__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.s7-dbdiagram__filter {
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  background: var(--s7-surface-elevated, #fff);
+  color: var(--s7-text-muted, #64748b);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.s7-dbdiagram__filter:hover {
+  border-color: color-mix(in srgb, var(--s7-color-info, #2563eb) 40%, transparent);
+}
+
+.s7-dbdiagram__filter--active {
+  background: var(--s7-color-info, #2563eb);
+  border-color: var(--s7-color-info, #2563eb);
+  color: #fff;
+}
+
+.s7-dbdiagram__grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.s7-dbdiagram-card {
+  display: grid;
+  gap: 0.55rem;
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  border-radius: 0.8rem;
+  background: var(--s7-surface-elevated, #fff);
+  padding: 0.9rem 1rem;
+}
+
+.s7-dbdiagram-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.s7-dbdiagram-card__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-dbdiagram-card__category {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--s7-color-info, #2563eb);
+}
+
+.s7-dbdiagram-card__code {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.s7-dbdiagram-card__notes {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--s7-text-muted, #64748b);
+}
+
+.s7-dbdiagram-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--s7-text-muted, #94a3b8);
+}
+
+/* -------- Intro com ação (Novo domínio) -------- */
+.s7-docviva__intro-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* -------- Indicador de fonte (local / Supabase) -------- */
+.s7-docviva__fonte {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  background: var(--s7-surface-muted, #f1f5f9);
+  color: var(--s7-text-muted, #94a3b8);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+}
+
+.s7-docviva__fonte--remote {
+  background: color-mix(in srgb, var(--s7-color-success, #16a34a) 12%, transparent);
+  color: var(--s7-color-success, #16a34a);
+  border-color: transparent;
+}
+
+/* -------- Cards operacionais (leitura escaneável — S1_1.9A.8) -------- */
+.s7-docviva-opcard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.65rem;
+  background: var(--s7-surface-elevated, #fff);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  border-left: 3px solid color-mix(in srgb, var(--s7-color-info, #2563eb) 55%, transparent);
+}
+
+.s7-docviva-opcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.s7-docviva-opcard__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva-opcard__content {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--s7-text-muted, #475569);
+  white-space: pre-wrap;
+}
+
+.s7-docviva-opcard__content--vazio {
+  color: var(--s7-text-muted, #94a3b8);
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.s7-docviva-opcard__notes {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--s7-text-muted, #94a3b8);
+  font-style: italic;
+}
+
+/* -------- Header de detalhe com ações -------- */
+.s7-docviva-detail__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* -------- Editor de domínio -------- */
+.s7-docviva-detail__editor,
+.s7-docviva-create {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--s7-color-info, #2563eb) 30%, transparent);
+  border-radius: 0.8rem;
+  background: var(--s7-surface-elevated, #fff);
+}
+
+.s7-docviva-detail__editor-actions,
+.s7-docviva-create__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* -------- Fluxo de homologação -------- */
+.s7-docviva-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.7rem;
+  background: var(--s7-surface-muted, #f8fafc);
+  border: 1px solid var(--s7-border-subtle, #eef2f7);
+}
+
+.s7-docviva-flow__steps {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.s7-docviva-flow__step-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.s7-docviva-flow__step {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--s7-surface-elevated, #fff);
+  color: var(--s7-text-muted, #94a3b8);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  white-space: nowrap;
+}
+
+.s7-docviva-flow__step--active {
+  background: var(--s7-color-info, #2563eb);
+  border-color: var(--s7-color-info, #2563eb);
+  color: #fff;
+}
+
+.s7-docviva-flow__arrow {
+  color: var(--s7-text-muted, #cbd5e1);
+}
+
+/* -------- Editor de seção -------- */
+.s7-docviva-section__editor {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.s7-docviva-section__editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--s7-border-subtle, #e2e8f0);
+}
+
+.s7-docviva-section__editor-commit {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* -------- Card de edição de item -------- */
+.s7-docviva-item-edit {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 0.65rem;
+  background: var(--s7-surface-muted, #f8fafc);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+}
+
+.s7-docviva-item-edit__row {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+}
+
+.s7-docviva-item-edit__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* -------- Criação de domínio -------- */
+.s7-docviva-create__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.s7-docviva-create__title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva-create__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--s7-text-muted, #64748b);
+}
+
+/* -------- Governança no card -------- */
+.s7-docviva-card__badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+}
+
+.s7-docviva-card__gov {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--s7-border-subtle, #eef2f7);
+}
+
+.s7-docviva-card__owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--s7-text-muted, #64748b);
+}
+
+/* -------- Dashboard documental (S1_1.9B.6) -------- */
+.s7-docviva-dash {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+}
+
+.s7-docviva-dash__card {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.75rem;
+  background: var(--s7-surface-elevated, #fff);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  border-left: 3px solid var(--s7-border-subtle, #e2e8f0);
+}
+
+.s7-docviva-dash__icon {
+  display: inline-flex;
+  color: var(--s7-text-muted, #94a3b8);
+}
+
+.s7-docviva-dash__valor {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva-dash__label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--s7-text-muted, #64748b);
+}
+
+.s7-docviva-dash__card--info {
+  border-left-color: var(--s7-color-info, #2563eb);
+}
+.s7-docviva-dash__card--info .s7-docviva-dash__icon {
+  color: var(--s7-color-info, #2563eb);
+}
+
+.s7-docviva-dash__card--sucesso {
+  border-left-color: var(--s7-color-success, #16a34a);
+}
+.s7-docviva-dash__card--sucesso .s7-docviva-dash__icon {
+  color: var(--s7-color-success, #16a34a);
+}
+
+.s7-docviva-dash__card--alerta {
+  border-left-color: var(--s7-color-warning, #d97706);
+}
+.s7-docviva-dash__card--alerta .s7-docviva-dash__icon {
+  color: var(--s7-color-warning, #d97706);
+}
+
+/* -------- Toolbar (busca + filtros) -------- */
+.s7-docviva-toolbar {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 0.75rem;
+  background: var(--s7-surface-muted, #f8fafc);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+}
+
+.s7-docviva-toolbar__search {
+  width: 100%;
+}
+
+.s7-docviva-toolbar__filters {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.s7-docviva-toolbar__filters > * {
+  min-width: 11rem;
+  flex: 1 1 11rem;
+}
+
+.s7-docviva-toolbar__filters .s7-btn {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+/* -------- Barra de metadados (detalhe) -------- */
+.s7-docviva-meta {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--s7-surface-muted, #f8fafc);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+}
+
+.s7-docviva-meta__item {
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+}
+
+.s7-docviva-meta__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--s7-text-muted, #94a3b8);
+}
+
+.s7-docviva-meta__value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--s7-text, #0f172a);
+}
+
+/* -------- Grid de campos no editor de domínio -------- */
+.s7-docviva-detail__editor-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+/* ======================================================
+   GOVERNANÇA + HISTÓRICO (S1_1.11A)
+   ====================================================== */
+
+/* -------- Painel de governança -------- */
+.s7-docviva-gov {
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  border-radius: 0.75rem;
+  background: var(--s7-surface-elevated, #fff);
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.s7-docviva-gov__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--s7-color-info, #2563eb);
+  margin-bottom: 0.8rem;
+}
+
+.s7-docviva-gov__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--s7-text, #0f172a);
+  flex: 1;
+}
+
+.s7-docviva-gov__grid {
+  display: grid;
+  gap: 0.75rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.s7-docviva-gov__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.s7-docviva-gov__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--s7-text-muted, #94a3b8);
+}
+
+.s7-docviva-gov__value {
+  font-size: 0.85rem;
+  color: var(--s7-text, #0f172a);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* -------- Timeline de alterações -------- */
+.s7-docviva-timeline {
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  border-radius: 0.75rem;
+  background: var(--s7-surface-elevated, #fff);
+  padding: 0.9rem 1rem;
+  margin-top: 1rem;
+}
+
+.s7-docviva-timeline__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.s7-docviva-timeline__title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--s7-text, #0f172a);
+  flex: 1;
+}
+
+.s7-docviva-timeline__count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--s7-surface-muted, #f1f5f9);
+  color: var(--s7-text-muted, #64748b);
+}
+
+.s7-docviva-timeline__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.s7-docviva-timeline__item {
+  display: flex;
+  gap: 0.7rem;
+  padding-bottom: 0.85rem;
+  position: relative;
+}
+
+/* Linha vertical conectando os pontos */
+.s7-docviva-timeline__item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 0.72rem;
+  top: 1.6rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--s7-border-subtle, #e2e8f0);
+}
+
+.s7-docviva-timeline__dot {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.s7-docviva-timeline__dot--sucesso {
+  background: color-mix(in srgb, var(--s7-color-success, #16a34a) 14%, transparent);
+  color: var(--s7-color-success, #16a34a);
+}
+
+.s7-docviva-timeline__dot--info {
+  background: color-mix(in srgb, var(--s7-color-info, #2563eb) 14%, transparent);
+  color: var(--s7-color-info, #2563eb);
+}
+
+.s7-docviva-timeline__dot--alerta {
+  background: color-mix(in srgb, var(--s7-color-warning, #d97706) 16%, transparent);
+  color: var(--s7-color-warning, #d97706);
+}
+
+.s7-docviva-timeline__dot--neutro {
+  background: var(--s7-surface-muted, #f1f5f9);
+  color: var(--s7-text-muted, #64748b);
+}
+
+.s7-docviva-timeline__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.s7-docviva-timeline__label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-docviva-timeline__meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  color: var(--s7-text-muted, #94a3b8);
+}
+
+/* -------- Responsivo -------- */
+@media (max-width: 640px) {
+  .s7-docviva__grid,
+  .s7-dbdiagram__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .s7-docviva-detail__head {
+    flex-direction: column;
+  }
+
+  .s7-docviva-item-edit__row {
+    grid-template-columns: 1fr;
+  }
+
+  .s7-docviva-section__editor-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .s7-docviva-toolbar__filters > * {
+    flex-basis: 100%;
+  }
+
+  .s7-docviva-gov__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
