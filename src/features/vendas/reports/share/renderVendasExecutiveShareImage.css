@@ -1,0 +1,214 @@
+/* ====================================================================
+   Render visual compartilhável do Relatório de Vendas (P_2.8.12F.C).
+   Base premium reutilizável (Copiar imagem / WhatsApp / PDF).
+   ==================================================================== */
+
+.vendas-share-card {
+  box-sizing: border-box;
+  width: 420px;
+  max-width: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #0f172a;
+}
+
+.vendas-share-card * {
+  box-sizing: border-box;
+}
+
+/* Header */
+.vendas-share-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.vendas-share-card__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: contain;
+  flex: none;
+}
+
+.vendas-share-card__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.vendas-share-card__brand-name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.vendas-share-card__brand-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f97316;
+  letter-spacing: 0.02em;
+}
+
+/* Meta */
+.vendas-share-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vendas-share-card__meta-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.vendas-share-card__meta-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.vendas-share-card__meta-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  word-break: break-word;
+}
+
+.vendas-share-card__meta-value--count {
+  color: #f97316;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Distribuição */
+.vendas-share-card__section-title {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.vendas-share-card__dist-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vendas-share-card__dist-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.vendas-share-card__dist-name {
+  color: #334155;
+  font-weight: 600;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.vendas-share-card__dist-count {
+  flex: none;
+  color: #f97316;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* KPIs */
+.vendas-share-card__kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.vendas-share-card__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  min-width: 0;
+}
+
+.vendas-share-card__kpi-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.vendas-share-card__kpi-value {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Operacional */
+.vendas-share-card__ops {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.vendas-share-card__ops-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.vendas-share-card__ops-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.vendas-share-card__ops-value {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Footer */
+.vendas-share-card__footer {
+  margin-top: 2px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}

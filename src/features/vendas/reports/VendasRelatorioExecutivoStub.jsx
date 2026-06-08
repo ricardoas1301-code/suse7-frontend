@@ -2,13 +2,18 @@
 // Template executivo (stub) — mesmos valores exibidos nos KPIs da página.
 // ======================================================================
 
-import { DollarSign, Percent, Users, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { DollarSign, Percent, Users, AlertTriangle, TrendingUp, TrendingDown, Info } from "lucide-react";
+import S7Tooltip from "../../../components/ui/S7Tooltip";
 import {
   EXECUTIVE_PANEL_EMPTY_KPI_VALUE,
   EXECUTIVE_PANEL_ERROR_MESSAGE,
 } from "../../../components/sales/vendasExecutivePanelUx";
 import { resolveVendasReportMetricAccent } from "./vendasReportMetricTone.js";
 import "./VendasRelatorioExecutivoStub.css";
+
+// Tooltip oficial do card Lucro (margem de contribuição) — P_2.8.12F.C.
+const LUCRO_TOOLTIP =
+  "Valor referente à margem de contribuição da venda/período, considerando receitas do marketplace, custos internos, impostos e custos operacionais cadastrados.";
 
 // Ícone de status (acento) — preserva o conjunto aprovado: tendência +, alerta, tendência -.
 const STATUS_ICON = {
@@ -122,10 +127,11 @@ export default function VendasRelatorioExecutivoStub({
     },
     {
       id: "netProfit",
-      label: "Lucro líquido",
+      label: "Lucro",
       value: netProfitValue,
       icon: DollarSign,
       hint: null,
+      tooltip: LUCRO_TOOLTIP,
     },
     {
       id: "margin",
@@ -182,7 +188,21 @@ export default function VendasRelatorioExecutivoStub({
               ].join(" ")}
             >
               <span className="vendas-relatorio-exec__metric-top">
-                <span className="vendas-relatorio-exec__metric-label">{m.label}</span>
+                <span className="vendas-relatorio-exec__metric-label-wrap">
+                  <span className="vendas-relatorio-exec__metric-label">{m.label}</span>
+                  {m.tooltip ? (
+                    <S7Tooltip content={m.tooltip} placement="top-start" offset={6} wrap>
+                      <span
+                        className="vendas-relatorio-exec__metric-info"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Sobre ${m.label}`}
+                      >
+                        <Info size={12} strokeWidth={2} aria-hidden />
+                      </span>
+                    </S7Tooltip>
+                  ) : null}
+                </span>
                 {MetricIcon ? (
                   <MetricIcon className="vendas-relatorio-exec__metric-icon" size={16} aria-hidden />
                 ) : null}

@@ -37,6 +37,13 @@
   gap: 6px;
 }
 
+.vendas-relatorio-exec__metric-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
 .vendas-relatorio-exec__metric-label {
   font-size: 10px;
   font-weight: 700;
@@ -48,6 +55,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.vendas-relatorio-exec__metric-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: #94a3b8;
+  cursor: help;
+}
+
+.vendas-relatorio-exec__metric-info:hover,
+.vendas-relatorio-exec__metric-info:focus-visible {
+  color: #2563eb;
+  outline: none;
 }
 
 .vendas-relatorio-exec__metric-icon {
