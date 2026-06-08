@@ -12,11 +12,13 @@
 // ======================================================================
 
 import { buildVendasReportImageBlob } from "./copyVendasReportImage.jsx";
-import { buildVendasReportXlsxBlob } from "./buildVendasReportXlsx.js";
+import {
+  buildVendasReportXlsxBlob,
+  resolveVendasReportBaseName,
+} from "./buildVendasReportXlsx.js";
 import { renderVendasShareExecutiveText } from "./renderVendasShareExecutiveText.js";
 
 const SHARE_TITLE = "Relatório de Vendas";
-const IMAGE_FILENAME = "relatorio-vendas.png";
 
 /**
  * @param {unknown} err
@@ -71,6 +73,8 @@ export async function shareVendasReportWhatsApp(payload) {
   if (!payload) return "noop";
 
   const caption = renderVendasShareExecutiveText(payload);
+  const baseName = resolveVendasReportBaseName(payload);
+  const imageFilename = `${baseName}.png`;
 
   const [imageBlob, xlsx] = await Promise.all([
     buildVendasReportImageBlob(payload),
@@ -78,7 +82,7 @@ export async function shareVendasReportWhatsApp(payload) {
   ]);
 
   const imageFile = imageBlob
-    ? new File([imageBlob], IMAGE_FILENAME, { type: imageBlob.type || "image/png" })
+    ? new File([imageBlob], imageFilename, { type: imageBlob.type || "image/png" })
     : null;
   const xlsxFile = xlsx ? new File([xlsx.blob], xlsx.filename, { type: xlsx.blob.type }) : null;
 
@@ -107,7 +111,7 @@ export async function shareVendasReportWhatsApp(payload) {
   }
 
   // 3) Fallback: baixa os arquivos e abre o WhatsApp com a legenda textual.
-  if (imageBlob) downloadBlob(imageBlob, IMAGE_FILENAME);
+  if (imageBlob) downloadBlob(imageBlob, imageFilename);
   if (xlsx) downloadBlob(xlsx.blob, xlsx.filename);
   if (typeof window !== "undefined") {
     const url = caption

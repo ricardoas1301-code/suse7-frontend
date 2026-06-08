@@ -15,17 +15,37 @@ const XLSX_MIME =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 /**
- * @param {string} raw
+ * Converte data ISO (yyyy-mm-dd) para dd-mm-yyyy (amigável em nome de arquivo).
+ * @param {string | null | undefined} iso
+ * @returns {string | null}
+ */
+function isoToFriendlyDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso ?? ""));
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+}
+
+/**
+ * Período legível para nome de arquivo: "01-06-2026 a 08-06-2026".
+ * @param {import("./buildVendasSharePayload.js").VendasSharePayload} payload
  * @returns {string}
  */
-function sanitizeFilenamePart(raw) {
-  return String(raw ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9-_]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .toLowerCase();
+function resolvePeriodoLabel(payload) {
+  const ini = isoToFriendlyDate(payload.periodo?.dataInicial);
+  const fim = isoToFriendlyDate(payload.periodo?.dataFinal);
+  if (ini && fim) return `${ini} a ${fim}`;
+  const label = String(payload.periodo?.label ?? "").trim();
+  if (label) return label.replace(/\//g, "-").replace(/\s*at[ée]\s*/i, " a ");
+  return "periodo";
+}
+
+/**
+ * Nome base oficial e amigável dos arquivos do Relatório de Vendas.
+ * Ex.: "Suse7 - Relatório de Vendas 01-06-2026 a 08-06-2026"
+ * @param {import("./buildVendasSharePayload.js").VendasSharePayload} payload
+ * @returns {string}
+ */
+export function resolveVendasReportBaseName(payload) {
+  return `Suse7 - Relatório de Vendas ${resolvePeriodoLabel(payload)}`;
 }
 
 /**
@@ -33,11 +53,7 @@ function sanitizeFilenamePart(raw) {
  * @returns {string}
  */
 function resolveFilename(payload) {
-  const ini = payload.periodo?.dataInicial;
-  const fim = payload.periodo?.dataFinal;
-  const periodPart =
-    ini && fim ? `${ini}_a_${fim}` : sanitizeFilenamePart(payload.periodo?.label ?? "periodo");
-  return `relatorio-vendas-${sanitizeFilenamePart(periodPart) || "periodo"}.xlsx`;
+  return `${resolveVendasReportBaseName(payload)}.xlsx`;
 }
 
 /**
