@@ -81,6 +81,11 @@
   flex: 0 0 auto;
 }
 
+/* Feedback visual do canal Copiar (P_2.8.12F.B) */
+.vendas-sale-rayx__ops-icon-btn--copied {
+  color: #059669;
+}
+
 /* Card interno — moldura laranja S7 */
 .vendas-relatorio-modal__inner-card {
   --vendas-relatorio-orange-frame: color-mix(in srgb, var(--s7-orange, #ff8533) 42%, transparent);

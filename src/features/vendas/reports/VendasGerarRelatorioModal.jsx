@@ -100,7 +100,7 @@ export default function VendasGerarRelatorioModal({
                 {modalTitle}
               </h2>
             </div>
-            <VendasRelatorioCanais />
+            <VendasRelatorioCanais aggregatedReport={aggregatedReport} />
           </div>
 
           <div className="vendas-relatorio-modal__inner-card">
