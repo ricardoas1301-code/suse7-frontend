@@ -2,7 +2,7 @@
 // Página Vendas — cards via GET /api/sales/executive-summary; lista via GET /api/sales.
 // ======================================================================
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildApiUrl, apiFetch } from "../config/api";
 import { useSalesExecutiveSummary } from "../hooks/useSalesExecutiveSummary";
 import { formatBrlFromApiString, formatPercentFromApiString } from "../features/listings/utils/catalogFormatters";
@@ -18,7 +18,14 @@ import {
 } from "../components/sales/vendasExecutivePanelUx";
 import { isSaleRayxDetailItemId, pickSaleRayxDetailItemId } from "../components/sales/saleRayxDetailItemId";
 import S7Icon from "../components/ui/S7Icon";
-import { getSaleHealthUi } from "../utils/saleHealthUi";
+import { getVendasTableFinancialHealthToneClass } from "../utils/saleHealthUi";
+import {
+  pickSaleCommissionSecondaryLabel,
+  pickSaleInternalTaxBrl,
+  pickSaleInternalTaxPercentLabel,
+  pickSaleMarketplaceFeeBrl,
+  pickSaleOperationalStatusLabel,
+} from "../components/sales/saleRayxFinancialPickers";
 import S7CatalogAccountCell, {
   S7CatalogChannelCell,
   pickCatalogAccountFields,
@@ -26,16 +33,39 @@ import S7CatalogAccountCell, {
 import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../components/ui/S7CopyButton";
 import S7Button from "../components/ui/S7Button";
 import QuickProductCostsModal from "../features/listings/components/QuickProductCostsModal.jsx";
+import { formatVendasTableTitleCase } from "../features/vendas/utils/vendasTableDisplayFormat.js";
 import { resolveSalesRowProductThumbUrl, salesRowThumbCacheKey } from "../utils/resolveSalesRowProductThumbUrl.js";
+import { getSaleStatusToneClass } from "../features/vendas/utils/saleStatusToneClass.js";
 import VendasFiltersCard from "../features/vendas/filters/VendasFiltersCard.jsx";
 import { VendasFiltersProvider, useVendasFilters } from "../features/vendas/filters/VendasFiltersContext.jsx";
 import { buildVendasSalesListPeriodQuery } from "../features/vendas/filters/vendasFiltersPeriod.js";
+import VendasMobileSaleCard from "../features/vendas/mobile/VendasMobileSaleCard.jsx";
+import {
+  formatVendasBuyerNameShort,
+  pickVendasListingMercadoLivreUrl,
+} from "../features/vendas/utils/vendasListRowDisplay.js";
 import "../components/Products.css";
 import "../components/Anuncios.css";
 import "../styles/VendasPage.css";
+import "../features/vendas/mobile/VendasMobileSaleCard.css";
+import {
+  buildVendasReportContext,
+  canOfferVendasReport,
+} from "../features/vendas/reports/buildVendasReportContext.js";
+import { buildVendasAggregatedReport } from "../features/vendas/reports/buildVendasAggregatedReport.js";
+import VendasGerarRelatorioModal from "../features/vendas/reports/VendasGerarRelatorioModal.jsx";
+import { useVendasListSelection } from "../features/vendas/selection/useVendasListSelection.js";
+import {
+  resolveVendasSelectionAccountLabel,
+  buildVendasSelectionAccountDistribution,
+} from "../features/vendas/selection/resolveVendasSelectionAccountLabel.js";
+import { pickVendasSaleRowId } from "../features/vendas/selection/pickVendasSaleRowId.js";
+import { aggregateVendasSelectedSalesMetrics } from "../features/vendas/selection/aggregateVendasSelectedSalesMetrics.js";
+import { buildVendasSelectedReportExecutivePreview } from "../features/vendas/selection/buildVendasSelectedReportExecutivePreview.js";
+import VendasRowSelectCheckbox from "../features/vendas/selection/VendasRowSelectCheckbox.jsx";
 
 const DASH = "—";
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 99;
 
 /** @returns {{ date: string; time: string } | null} */
 function formatSaleDateParts(iso) {
@@ -49,41 +79,10 @@ function formatSaleDateParts(iso) {
   };
 }
 
-/** @param {string | undefined} name */
-function buyerInitials(name) {
-  const s = name != null ? String(name).trim() : "";
-  if (!s) return "?";
-  const parts = s.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-/** Avatar comprador: foto ML ou iniciais; se a URL falhar, cai para iniciais. */
-function VendasBuyerAvatarStack({ photoUrl, displayName }) {
-  const [broken, setBroken] = useState(false);
-  const photo = photoUrl != null && String(photoUrl).trim() !== "" ? String(photoUrl).trim() : "";
-  useEffect(() => {
-    setBroken(false);
-  }, [photo]);
-  const showPhoto = photo !== "" && !broken;
-  if (showPhoto) {
-    return (
-      <img
-        className="vendas-page__buyer-avatar"
-        src={photo}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        referrerPolicy="no-referrer"
-        onError={() => setBroken(true)}
-      />
-    );
-  }
-  return (
-    <span className="vendas-page__buyer-avatar vendas-page__buyer-avatar--initials" aria-hidden>
-      {buyerInitials(displayName || undefined)}
-    </span>
-  );
+/** @param {{ date: string; time: string } | null} parts */
+function formatSaleDateTimeLine(parts) {
+  if (!parts) return null;
+  return `${parts.date} ${parts.time}`;
 }
 
 /** Thumbnail do produto — mesma resolução que catálogo (https + galeria + links + raw ML). */
@@ -112,79 +111,113 @@ function VendasSalesProductThumb({ row }) {
   const showImg = src !== "" && !broken;
   if (showImg) {
     return (
-      <img
-        className="vendas-page__product-thumb"
-        src={src}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        referrerPolicy="no-referrer"
-        onError={() => setBroken(true)}
-      />
+      <span
+        className="vendas-page__product-thumb-wrap s7-operational-thumb-frame s7-operational-thumb-frame--circle"
+        aria-hidden
+      >
+        <img
+          className="vendas-page__product-thumb s7-operational-thumb"
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setBroken(true)}
+        />
+      </span>
     );
   }
   return <span className="vendas-page__product-thumb-slot" aria-hidden />;
 }
 
 /**
- * Segunda linha: [copiar] número do anúncio · SKU valor [copiar] — hover no trecho revela o botão.
- * @param {{ listingId: string; sku: string }} props
+ * Título (até 2 linhas) + MLB/SKU na mesma faixa, alinhados à esquerda.
+ * @param {{
+ *   title: string;
+ *   listingMercadoLivreUrl: string | null;
+ *   listingId: string;
+ *   sku: string;
+ * }} props
  */
-function VendasProductIdSkuLine({ listingId, sku }) {
+function VendasProductHeadline({ title, listingMercadoLivreUrl, listingId, sku }) {
   const lid = listingId != null && String(listingId).trim() !== "" ? String(listingId).trim() : "";
   const sk = sku != null && String(sku).trim() !== "" ? String(sku).trim() : "";
-  if (!lid && !sk) {
-    return <span className="vendas-page__product-meta--muted">—</span>;
-  }
+  const hasMeta = Boolean(lid || sk);
+
+  const titleNode = listingMercadoLivreUrl ? (
+    <a
+      href={listingMercadoLivreUrl}
+      className="anuncios-ad-title-link vendas-page__product-title-link vendas-page__product-title"
+      target="_blank"
+      rel="noreferrer noopener"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {title}
+    </a>
+  ) : (
+    <span className="vendas-page__product-title">{title}</span>
+  );
+
   return (
-    <div className="vendas-page__product-meta">
-      {lid ? (
-        <span
-          className="s7-copy-group vendas-page__product-meta-ad"
-          role="presentation"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <span className="vendas-page__meta-value vendas-page__meta-value--listing">{lid}</span>
-          <S7CopyButton
-            value={lid}
-            ariaLabel="Copiar ID do anúncio"
-            tooltipText="Copiar ID do anúncio"
-            toastLabel="ID do anúncio"
-            showToast={true}
-            iconMode="unicode"
-            flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-            flashKey={`vendas-list-listing-${lid}`}
-            toastEventType="LISTING_ID_COPIED"
-            toastFailEventType="LISTING_ID_COPY_FAILED"
-            toastEntityType="marketplace_listing"
-          />
-        </span>
-      ) : null}
-      {sk ? (
-        <span
-          className="s7-copy-group vendas-page__product-meta-sku"
-          role="presentation"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <span className="anuncios-ad-sku-label">SKU</span>
-          <span className="anuncios-ad-sku-value">{sk}</span>
-          <S7CopyButton
-            value={sk}
-            ariaLabel="Copiar SKU"
-            tooltipText="Copiar SKU"
-            toastLabel="SKU"
-            showToast={true}
-            iconMode="unicode"
-            flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-            flashKey={`vendas-list-sku-${sk}`}
-            toastEventType="LISTING_SKU_COPIED"
-            toastFailEventType="LISTING_SKU_COPY_FAILED"
-            toastEntityType="marketplace_listing"
-          />
-        </span>
-      ) : null}
+    <div className="vendas-page__product-headline">
+      <span className="vendas-page__product-title-slot">{titleNode}</span>
+      {hasMeta ? (
+        <div className="vendas-page__product-meta">
+          {lid ? (
+            <>
+              <span
+                className="s7-copy-group vendas-page__product-meta-ad"
+                role="presentation"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                <span className="vendas-page__meta-value vendas-page__meta-value--listing">{lid}</span>
+                <S7CopyButton
+                  value={lid}
+                  ariaLabel="Copiar ID do anúncio"
+                  tooltipText=""
+                  copiedTooltipText=""
+                  toastLabel="ID do anúncio"
+                  showToast={true}
+                  iconMode="unicode"
+                  flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                  flashKey={`vendas-list-listing-${lid}`}
+                  toastEventType="LISTING_ID_COPIED"
+                  toastFailEventType="LISTING_ID_COPY_FAILED"
+                  toastEntityType="marketplace_listing"
+                />
+              </span>
+              {sk ? <span className="vendas-page__product-meta-sep" aria-hidden /> : null}
+            </>
+          ) : null}
+          {sk ? (
+            <span
+              className="s7-copy-group vendas-page__product-meta-sku"
+              role="presentation"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <span className="anuncios-ad-sku-label">SKU</span>
+              <span className="anuncios-ad-sku-value">{sk}</span>
+              <S7CopyButton
+                value={sk}
+                ariaLabel="Copiar SKU"
+                tooltipText="Copiar SKU"
+                toastLabel="SKU"
+                showToast={true}
+                iconMode="unicode"
+                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                flashKey={`vendas-list-sku-${sk}`}
+                toastEventType="LISTING_SKU_COPIED"
+                toastFailEventType="LISTING_SKU_COPY_FAILED"
+                toastEntityType="marketplace_listing"
+              />
+            </span>
+          ) : null}
+        </div>
+      ) : (
+        <span className="vendas-page__product-meta--muted">—</span>
+      )}
     </div>
   );
 }
@@ -195,20 +228,6 @@ function formatBrlApi(s) {
   const n = Number(String(s).replace(",", "."));
   if (!Number.isFinite(n)) return DASH;
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-/**
- * Tom visual de valores com sinal (lucro/margem) — apenas leitura do dado já calculado.
- * Positivo = saudável, negativo = alerta, zero = neutro, ausente = estado incompleto.
- * @param {string | null | undefined} s
- */
-function financialSignToneClass(s) {
-  if (s == null || String(s).trim() === "") return "vendas-page__fin--empty";
-  const n = Number(String(s).replace(",", "."));
-  if (!Number.isFinite(n)) return "vendas-page__fin--empty";
-  if (n > 0) return "vendas-page__fin--positive";
-  if (n < 0) return "vendas-page__fin--negative";
-  return "vendas-page__fin--zero";
 }
 
 /**
@@ -236,16 +255,6 @@ function formatExecutiveCount(value) {
   return n.toLocaleString("pt-BR");
 }
 
-/** @param {Record<string, unknown> | null | undefined} summary */
-function formatExecutiveConversion(summary) {
-  if (!summary) return DASH;
-  const status = summary.conversion_data_status != null ? String(summary.conversion_data_status) : "unavailable";
-  if (status === "unavailable") return DASH;
-  return formatPercentFromApiString(
-    summary.sales_conversion_rate_percent != null ? String(summary.sales_conversion_rate_percent) : null,
-  );
-}
-
 /** @param {string | null | undefined} s */
 function formatPctApi(s) {
   if (s == null || String(s).trim() === "") return DASH;
@@ -254,16 +263,84 @@ function formatPctApi(s) {
   return `${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
 }
 
-/** Cabeçalho em duas linhas (título composto) — reduz largura da coluna. */
-function VendasThStack({ className = "", line1, line2 }) {
+/** @type {typeof formatVendasBuyerNameShort} */
+const formatBuyerNameShort = formatVendasBuyerNameShort;
+
+/**
+ * Célula numérica em duas linhas (valor + detalhe abaixo, sem deslocar a linha principal).
+ * @param {{ primary: import("react").ReactNode; secondary?: string | null }} props
+ */
+function VendasTableNumStack({ primary, secondary }) {
+  const sub = secondary != null && String(secondary).trim() !== "" ? String(secondary).trim() : null;
   return (
-    <th className={className}>
-      <span className="vendas-page__th-stack">
-        <span className="vendas-page__th-stack-row">{line1}</span>
-        <span className="vendas-page__th-stack-row vendas-page__th-stack-row--sub">{line2}</span>
+    <div className="vendas-page__num-stack">
+      <span className="vendas-page__num-stack-primary">{primary}</span>
+      <span className="vendas-page__num-stack-secondary-slot" aria-hidden={sub ? undefined : true}>
+        {sub ? <span className="vendas-page__num-stack-secondary">{sub}</span> : null}
       </span>
-    </th>
+    </div>
   );
+}
+
+/** @param {{ children: import("react").ReactNode }} props */
+function VendasTableNumSingle({ children }) {
+  return (
+    <div className="vendas-page__num-stack">
+      <span className="vendas-page__num-stack-primary">{children}</span>
+      <span className="vendas-page__num-stack-secondary-slot" aria-hidden="true" />
+    </div>
+  );
+}
+
+/** @param {string | null | undefined} pctLabel */
+function formatVendasTaxSecondaryLabel(pctLabel) {
+  const pct = pctLabel != null && String(pctLabel).trim() !== "" ? String(pctLabel).trim() : "";
+  if (!pct) return null;
+  return `Imposto ${pct}`;
+}
+
+/** @param {string} toneClass */
+function vendasFinHealthValueClass(toneClass) {
+  if (toneClass === "vendas-page__fin--health-critical") return "vendas-page__fin-value--health-critical";
+  if (toneClass === "vendas-page__fin--health-warn") return "vendas-page__fin-value--health-warn";
+  if (toneClass === "vendas-page__fin--health-healthy") return "vendas-page__fin-value--health-healthy";
+  if (toneClass === "vendas-page__fin--empty") return "vendas-page__fin-value--empty";
+  return "";
+}
+
+/**
+ * Indicador compacto de saúde na coluna Lucro (R$): seta ↓ prejuízo, bolinha margem crítica, seta ↑ saudável.
+ * @param {{ toneClass: string }} props
+ */
+function VendasProfitHealthHint({ toneClass }) {
+  if (toneClass === "vendas-page__fin--health-critical") {
+    return (
+      <span
+        className="vendas-page__profit-hint vendas-page__profit-hint--down"
+        title="Prejuízo"
+        aria-label="Prejuízo"
+      />
+    );
+  }
+  if (toneClass === "vendas-page__fin--health-warn") {
+    return (
+      <span
+        className="vendas-page__profit-hint vendas-page__profit-hint--dot"
+        title="Margem crítica"
+        aria-label="Margem crítica"
+      />
+    );
+  }
+  if (toneClass === "vendas-page__fin--health-healthy") {
+    return (
+      <span
+        className="vendas-page__profit-hint vendas-page__profit-hint--up"
+        title="Saudável"
+        aria-label="Saudável"
+      />
+    );
+  }
+  return null;
 }
 
 /** @param {Record<string, unknown> | null | undefined} a */
@@ -287,6 +364,7 @@ function VendasPageContent() {
   const {
     filters: vendasFilters,
     executiveApiParams,
+    periodSummaryLabel,
   } = useVendasFilters();
 
   /** Contas marketplace para o filtro “Conta”. */
@@ -307,6 +385,39 @@ function VendasPageContent() {
   const [selectedItemId, setSelectedItemId] = useState(/** @type {string | null} */ (null));
   /** @type {[null | { productId: string; sku: string | null; productTitle: string; productImageUrl: string | null }, (v: null | { productId: string; sku: string | null; productTitle: string; productImageUrl: string | null }) => void]} */
   const [costsModal, setCostsModal] = useState(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportModalMode, setReportModalMode] = useState(/** @type {"filters" | "selected"} */ ("filters"));
+  const selectAllPageRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+
+  const {
+    selectedCount,
+    selectedSales,
+    isSelected,
+    toggle: toggleSaleSelection,
+    toggleAllOnPage,
+    clearSelection,
+    allPageSelected,
+    somePageSelected,
+  } = useVendasListSelection(rows);
+
+  useEffect(() => {
+    const el = selectAllPageRef.current;
+    if (el) el.indeterminate = somePageSelected;
+  }, [somePageSelected]);
+
+  useEffect(() => {
+    clearSelection();
+  }, [
+    page,
+    filter,
+    debouncedSearch,
+    vendasFilters.periodPreset,
+    vendasFilters.startDate,
+    vendasFilters.endDate,
+    vendasFilters.marketplace,
+    vendasFilters.marketplaceAccountId,
+    clearSelection,
+  ]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 220);
@@ -330,11 +441,13 @@ function VendasPageContent() {
   const {
     data: executiveData,
     summary: executiveSummary,
+    health: executiveHealth,
     topListings,
     topListingsByQuantity,
     topListingsByGrossRevenue,
     topListingsByNetProfit,
     topProducts,
+    distributionByAccount,
     dataQuality,
     period: executivePeriod,
     truncatedScan: executiveTruncated,
@@ -591,27 +704,190 @@ function VendasPageContent() {
     return { value: formatBrlFromApiString(raw), subtitle: null };
   }, [executivePanelEmpty, executiveSummary]);
 
-  const conversionKpi = useMemo(() => {
+  // Porcentagem de Lucro % — o backend já entrega `contribution_margin_percent`
+  // (lucro/receita × 100) calculado no executive-summary. Aqui é só exibição;
+  // nenhum cálculo financeiro é feito no frontend.
+  const profitPercentKpi = useMemo(() => {
     if (executivePanelEmpty) {
       return { value: EXECUTIVE_PANEL_EMPTY_KPI_VALUE, subtitle: null, unavailable: false };
     }
-    const status =
-      executiveSummary?.conversion_data_status != null
-        ? String(executiveSummary.conversion_data_status)
-        : "unavailable";
-    if (status === "unavailable") {
-      return {
-        value: "—",
-        subtitle: "Visitas ainda indisponíveis",
-        unavailable: true,
-      };
+    const raw =
+      executiveSummary?.contribution_margin_percent != null
+        ? String(executiveSummary.contribution_margin_percent).trim()
+        : "";
+    if (raw === "") {
+      // Fallback: backend não forneceu o percentual neste payload.
+      // TODO: integrar campo dedicado de percentual de lucro quando disponível.
+      return { value: "—", subtitle: "Percentual indisponível", unavailable: true };
     }
     return {
-      value: formatExecutiveConversion(executiveSummary),
+      value: formatPercentFromApiString(raw),
       subtitle: null,
       unavailable: false,
     };
   }, [executivePanelEmpty, executiveSummary]);
+
+  const reportAccountLabel = useMemo(() => {
+    const accountId = vendasFilters.marketplaceAccountId
+      ? String(vendasFilters.marketplaceAccountId).trim()
+      : "";
+    if (!accountId) return "Todas as contas";
+    const account = mlAccounts.find((a) => (a?.id != null ? String(a.id).trim() : "") === accountId);
+    return account ? vendasMlAccountLabel(account) : "Conta selecionada";
+  }, [vendasFilters.marketplaceAccountId, mlAccounts]);
+
+  const reportScopeOrdersCount = useMemo(() => {
+    if (executivePanelEmpty || !executiveSummary) return 0;
+    const qty =
+      executiveSummary.items_quantity_sold != null
+        ? executiveSummary.items_quantity_sold
+        : executiveSummary.orders_count;
+    const n = typeof qty === "number" ? qty : Number.parseInt(String(qty ?? ""), 10);
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  }, [executivePanelEmpty, executiveSummary]);
+
+  const reportExecutivePreview = useMemo(
+    () => ({
+      quantityValue: quantityKpi.value,
+      revenueValue: revenueKpi.value,
+      netProfitValue: netProfitKpi.value,
+      marginValue: profitPercentKpi.value,
+      marginUnavailable: profitPercentKpi.unavailable,
+      lowMarginCount: executiveHealth?.low_margin_count ?? 0,
+      negativeCount: executiveHealth?.negative_sales_count ?? 0,
+      loading: executiveLoading,
+      empty: executivePanelEmpty,
+      error: executiveError,
+    }),
+    [
+      quantityKpi,
+      revenueKpi,
+      netProfitKpi,
+      profitPercentKpi,
+      executiveHealth,
+      executiveLoading,
+      executivePanelEmpty,
+      executiveError,
+    ],
+  );
+
+  const selectedSalesMetrics = useMemo(
+    () => aggregateVendasSelectedSalesMetrics(selectedSales),
+    [selectedSales],
+  );
+
+  const selectedReportExecutivePreview = useMemo(
+    () => buildVendasSelectedReportExecutivePreview(selectedSalesMetrics),
+    [selectedSalesMetrics],
+  );
+
+  const selectedReportAccountLabel = useMemo(
+    () =>
+      resolveVendasSelectionAccountLabel(
+        selectedSales,
+        mlAccounts,
+        vendasMlAccountLabel,
+        vendasFilters.marketplaceAccountId,
+      ),
+    [selectedSales, mlAccounts, vendasFilters.marketplaceAccountId],
+  );
+
+  const reportContext = useMemo(
+    () =>
+      buildVendasReportContext({
+        periodPreset: vendasFilters.periodPreset,
+        startDate: vendasFilters.startDate,
+        endDate: vendasFilters.endDate,
+        periodSummaryLabel,
+        marketplaceAccountId: vendasFilters.marketplaceAccountId,
+        accountLabel: reportAccountLabel,
+        listFilterId: filter,
+        searchQuery: debouncedSearch,
+        scopeOrdersCount:
+          reportModalMode === "selected" ? selectedSalesMetrics.ordersCount : reportScopeOrdersCount,
+        truncatedScan: truncatedList || executiveTruncated,
+        rows,
+        selectedSaleIds: selectedSalesMetrics.selectedSalesIds,
+        reportScope: reportModalMode,
+        selectedSalesMetrics,
+        selectedAccountLabel: selectedReportAccountLabel,
+      }),
+    [
+      vendasFilters.periodPreset,
+      vendasFilters.startDate,
+      vendasFilters.endDate,
+      vendasFilters.marketplaceAccountId,
+      periodSummaryLabel,
+      reportAccountLabel,
+      filter,
+      debouncedSearch,
+      reportScopeOrdersCount,
+      truncatedList,
+      executiveTruncated,
+      rows,
+      reportModalMode,
+      selectedSalesMetrics,
+      selectedReportAccountLabel,
+    ],
+  );
+
+  // Mapa contaId → rótulo (resolução de nome de conta fica só no frontend).
+  const accountLabelById = useMemo(() => {
+    /** @type {Map<string, string>} */
+    const map = new Map();
+    for (const account of mlAccounts) {
+      const id = account?.id != null ? String(account.id).trim() : "";
+      if (id) map.set(id, vendasMlAccountLabel(account));
+    }
+    return map;
+  }, [mlAccounts]);
+
+  // Distribuição por conta da seleção manual (apenas contagem de linhas).
+  const selectedAccountDistribution = useMemo(
+    () => buildVendasSelectionAccountDistribution(selectedSales, mlAccounts, vendasMlAccountLabel),
+    [selectedSales, mlAccounts],
+  );
+
+  // Contrato agregado oficial — fonte única consumida pelo modal e pelos
+  // futuros canais (WhatsApp, E-mail, Copiar, Imprimir/PDF, Excel/CSV).
+  const aggregatedReport = useMemo(
+    () =>
+      buildVendasAggregatedReport({
+        context: reportContext,
+        executiveSummary,
+        executiveHealth,
+        rankingProducts: topProducts,
+        selectedMetrics: selectedSalesMetrics,
+        distributionByAccount,
+        accountLabelById,
+        selectedDistribution: selectedAccountDistribution,
+      }),
+    [
+      reportContext,
+      executiveSummary,
+      executiveHealth,
+      topProducts,
+      selectedSalesMetrics,
+      distributionByAccount,
+      accountLabelById,
+      selectedAccountDistribution,
+    ],
+  );
+
+  const reportModalTitle =
+    reportModalMode === "selected" ? "Relatório de vendas selecionadas" : "Relatório de vendas";
+
+  const activeReportExecutivePreview =
+    reportModalMode === "selected" ? selectedReportExecutivePreview : reportExecutivePreview;
+
+  const openReportModal = useCallback(() => {
+    setReportModalMode(selectedCount > 0 ? "selected" : "filters");
+    setReportModalOpen(true);
+  }, [selectedCount]);
+
+  const showGerarRelatorio = canOfferVendasReport(vendasFilters);
+  const gerarRelatorioDisabled =
+    selectedCount <= 0 && executiveLoading && reportScopeOrdersCount === 0;
 
   return (
     <div className="vendas-page">
@@ -686,11 +962,11 @@ function VendasPageContent() {
             empty={executivePanelEmpty}
           />
           <VendasExecutiveKpiCard
-            title="Conversão"
+            title="Porcentagem de Lucro %"
             tone="conversion"
-            value={conversionKpi.value}
-            subtitle={conversionKpi.subtitle}
-            unavailable={conversionKpi.unavailable}
+            value={profitPercentKpi.value}
+            subtitle={profitPercentKpi.subtitle}
+            unavailable={profitPercentKpi.unavailable}
             loading={executiveLoading}
             error={executivePanelError}
             empty={executivePanelEmpty}
@@ -706,6 +982,10 @@ function VendasPageContent() {
         onListFilterChange={setFilter}
         searchInput={searchInput}
         onSearchInputChange={setSearchInput}
+        showGerarRelatorio={showGerarRelatorio}
+        gerarRelatorioDisabled={gerarRelatorioDisabled}
+        onGerarRelatorioClick={openReportModal}
+        selectedCount={selectedCount}
       />
 
       {truncatedList || executiveTruncated ? (
@@ -720,26 +1000,45 @@ function VendasPageContent() {
         </p>
       ) : null}
 
-      <div className="vendas-page__table-block">
+      <div className="vendas-page__table-block vendas-page__table-block--desktop">
         <div className="vendas-page__table-card">
           <div className="vendas-page__table-hscroll">
             <table className="vendas-page__table">
               <thead>
                 <tr>
+                  <th className="vendas-page__col-select" scope="col">
+                    <label
+                      className="vendas-page__row-select vendas-page__row-select--head"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        ref={selectAllPageRef}
+                        type="checkbox"
+                        className="anuncios-catalog__select-checkbox vendas-page__row-select-checkbox"
+                        checked={allPageSelected}
+                        disabled={loading || rows.length === 0}
+                        aria-label="Selecionar todas as vendas da página"
+                        onChange={toggleAllOnPage}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </label>
+                  </th>
                   <th className="vendas-page__col-venda">Venda</th>
-                  <th className="vendas-page__col-product">Produto</th>
+                  <th className="vendas-page__col-product">Anúncio</th>
                   <th className="vendas-page__col-account">Conta</th>
                   <th className="vendas-page__col-channel">Canal</th>
-                  <th className="vendas-page__col-buyer">Comprador</th>
-                  <VendasThStack className="vendas-page__num-col" line1="Valor" line2="da venda" />
-                  <VendasThStack className="vendas-page__num-col" line1="Custo" line2="do produto" />
-                  <th className="vendas-page__num-col">Comissão</th>
-                  <th className="vendas-page__num-col">Frete</th>
-                  <th className="vendas-page__num-col">Impostos</th>
-                  <VendasThStack className="vendas-page__num-col" line1="Valor" line2="recebido" />
-                  <VendasThStack className="vendas-page__num-col" line1="Lucro" line2="(R$)" />
-                  <VendasThStack className="vendas-page__num-col" line1="Margem" line2="(%)" />
-                  <VendasThStack line1="Saúde" line2="da venda" />
+                  <th className="vendas-page__num-col vendas-page__th-nowrap">Lucro (R$)</th>
+                  <th className="vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--margin">
+                    Margem (%)
+                  </th>
+                  <th className="vendas-page__num-col vendas-page__num-col--sale">Valor venda</th>
+                  <th className="vendas-page__num-col vendas-page__num-col--commission">Comissão</th>
+                  <th className="vendas-page__num-col vendas-page__num-col--shipping">Frete</th>
+                  <th className="vendas-page__num-col vendas-page__num-col--received">Repasse</th>
+                  <th className="vendas-page__num-col vendas-page__num-col--product-cost">Custo produto</th>
+                  <th className="vendas-page__num-col vendas-page__num-col--tax">Imposto</th>
+                  <th className="vendas-page__col-sale-status">Status da venda</th>
                 </tr>
               </thead>
               <tbody>
@@ -762,16 +1061,31 @@ function VendasPageContent() {
                     const hid =
                       detailItemId ||
                       `${String(r.external_order_id ?? r.sale_display_code ?? "ord")}-${String(r.external_order_item_id ?? r.external_item_id ?? "line")}-${rowIndex}`;
-                    const healthUi = getSaleHealthUi(f);
+                    const financialHealthTone = getVendasTableFinancialHealthToneClass(f.margin_percent);
+                    const financialHealthValueClass = vendasFinHealthValueClass(financialHealthTone);
+                    const internalTaxBrl = pickSaleInternalTaxBrl(f);
+                    const internalTaxPct = pickSaleInternalTaxPercentLabel(f);
+                    const commissionBrl = pickSaleMarketplaceFeeBrl(f);
+                    const commissionDetail = pickSaleCommissionSecondaryLabel(f);
+                    const saleStatusLabel = pickSaleOperationalStatusLabel(r);
                     const dateParts = formatSaleDateParts(r.sale_date);
                     const buyerName =
                       r.buyer_display_name != null && String(r.buyer_display_name).trim() !== ""
                         ? String(r.buyer_display_name).trim()
                         : "";
+                    const buyerNameShort = buyerName ? formatBuyerNameShort(buyerName) : "";
                     const listingIdForMeta =
                       r.listing_id_display != null && String(r.listing_id_display).trim() !== ""
                         ? String(r.listing_id_display).trim()
                         : "";
+                    const listingMercadoLivreUrl = pickVendasListingMercadoLivreUrl(
+                      /** @type {Record<string, unknown>} */ (r),
+                      listingIdForMeta,
+                    );
+                    const productTitleDisplay =
+                      r.product_display_title != null && String(r.product_display_title).trim() !== ""
+                        ? String(r.product_display_title).trim()
+                        : "Produto não identificado";
                     const skuForMeta =
                       r.sku_display != null && String(r.sku_display).trim() !== ""
                         ? String(r.sku_display).trim()
@@ -779,14 +1093,30 @@ function VendasPageContent() {
                           ? String(r.product_sku_line).trim()
                           : "";
                     const accountFields = pickCatalogAccountFields(r);
+                    const accountAliasRaw =
+                      accountFields.accountAlias != null ? String(accountFields.accountAlias).trim() : "";
+                    const accountAliasDisplay = accountAliasRaw
+                      ? formatVendasTableTitleCase(accountAliasRaw)
+                      : null;
+                    const channelLabelRaw =
+                      r.marketplace_label != null && String(r.marketplace_label).trim() !== ""
+                        ? String(r.marketplace_label).trim()
+                        : "";
+                    const channelLabelDisplay = channelLabelRaw
+                      ? formatVendasTableTitleCase(channelLabelRaw)
+                      : null;
+                    const buyerNameDisplay = buyerNameShort ? buyerNameShort : "";
+                    const selectionId = pickVendasSaleRowId(/** @type {Record<string, unknown>} */ (r));
+                    const rowSelected = selectionId ? isSelected(selectionId) : false;
+                    const selectionAriaLabel = selectionId
+                      ? rowSelected
+                        ? `Desmarcar venda ${String(r.sale_display_code ?? selectionId).trim()}`
+                        : `Selecionar venda ${String(r.sale_display_code ?? selectionId).trim()}`
+                      : "Seleção indisponível";
                     return (
                       <tr
                         key={hid}
-                        className={
-                          healthUi.badgeClass === "vendas-health-badge--critical"
-                            ? "vendas-page__row--alert"
-                            : undefined
-                        }
+                        className={rowSelected ? "vendas-page__row--selected" : undefined}
                         tabIndex={0}
                         onClick={() => detailItemId && openDetail(detailItemId)}
                         onKeyDown={(e) => {
@@ -796,7 +1126,17 @@ function VendasPageContent() {
                           }
                         }}
                       >
-                        <td className="vendas-page__col-venda">
+                        <td className="vendas-page__col-select">
+                          <VendasRowSelectCheckbox
+                            checked={rowSelected}
+                            disabled={!selectionId}
+                            onChange={() => {
+                              if (selectionId) toggleSaleSelection(selectionId);
+                            }}
+                            ariaLabel={selectionAriaLabel}
+                          />
+                        </td>
+                        <td className="vendas-page__col-venda vendas-page__cell-align-stack">
                           <div className="vendas-page__venda-cell">
                             <div className="vendas-page__venda-id">
                               {r.sale_display_code != null && String(r.sale_display_code).trim() !== "" ? (
@@ -827,26 +1167,52 @@ function VendasPageContent() {
                             </div>
                             {dateParts ? (
                               <div className="vendas-page__venda-datetime">
-                                <span className="vendas-page__venda-date">{dateParts.date}</span>
-                                <span className="vendas-page__venda-time">{dateParts.time}</span>
+                                <span className="vendas-page__venda-datetime-line">
+                                  {formatSaleDateTimeLine(dateParts)}
+                                </span>
                               </div>
                             ) : (
                               <div className="vendas-page__venda-datetime vendas-page__venda-datetime--empty">
-                                <span className="vendas-page__venda-date">{DASH}</span>
+                                <span className="vendas-page__venda-datetime-line">{DASH}</span>
                               </div>
+                            )}
+                            {buyerName ? (
+                              <span
+                                className="s7-copy-group vendas-page__buyer-copy-group"
+                                role="presentation"
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                              >
+                                <span className="vendas-page__venda-buyer">{buyerNameDisplay}</span>
+                                <S7CopyButton
+                                  value={buyerName}
+                                  ariaLabel="Copiar nome do comprador"
+                                  tooltipText="Copiar nome do comprador"
+                                  toastLabel="Comprador"
+                                  showToast={true}
+                                  iconMode="unicode"
+                                  flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                                  flashKey={`vendas-list-buyer-${buyerName}`}
+                                  toastEventType="SALE_BUYER_COPIED"
+                                  toastFailEventType="SALE_BUYER_COPY_FAILED"
+                                  toastEntityType="sale"
+                                />
+                              </span>
+                            ) : (
+                              <span className="vendas-page__venda-buyer vendas-page__venda-buyer--empty">{DASH}</span>
                             )}
                           </div>
                         </td>
-                        <td className="vendas-page__col-product">
+                        <td className="vendas-page__col-product vendas-page__cell-align-stack">
                           <div className="vendas-page__product-cell">
                             <VendasSalesProductThumb row={r} />
                             <div className="vendas-page__product-text">
-                              <span className="vendas-page__product-title">
-                                {r.product_display_title != null && String(r.product_display_title).trim() !== ""
-                                  ? String(r.product_display_title)
-                                  : "Produto não identificado"}
-                              </span>
-                              <VendasProductIdSkuLine listingId={listingIdForMeta} sku={skuForMeta} />
+                              <VendasProductHeadline
+                                title={productTitleDisplay}
+                                listingMercadoLivreUrl={listingMercadoLivreUrl}
+                                listingId={listingIdForMeta}
+                                sku={skuForMeta}
+                              />
                               {r.needs_product_completion === true &&
                               r.product_id != null &&
                               String(r.product_id).trim() !== "" ? (
@@ -884,51 +1250,81 @@ function VendasPageContent() {
                             </div>
                           </div>
                         </td>
-                        <td className="vendas-page__col-account">
+                        <td className="vendas-page__col-account vendas-page__cell-align-stack">
                           <S7CatalogAccountCell
                             variant="stacked"
+                            stackedAvatarPx={28}
                             marketplaceAccountId={accountFields.marketplaceAccountId}
-                            accountAlias={accountFields.accountAlias}
+                            accountAlias={accountAliasDisplay}
                             accountLogoUrl={accountFields.accountLogoUrl}
                           />
                         </td>
-                        <td className="vendas-page__col-channel">
+                        <td className="vendas-page__col-channel vendas-page__cell-align-stack">
                           <S7CatalogChannelCell
                             variant="stacked"
+                            stackedBadgePx={33}
                             marketplace={r.marketplace}
-                            marketplaceLabel={r.marketplace_label != null && String(r.marketplace_label).trim() !== "" ? String(r.marketplace_label) : null}
+                            marketplaceLabel={channelLabelDisplay}
                           />
                         </td>
-                        <td className="vendas-page__col-buyer">
-                          <div className="vendas-page__buyer-cell vendas-page__buyer-cell--stacked">
-                            <VendasBuyerAvatarStack
-                              photoUrl={r.buyer_thumbnail_url}
-                              displayName={buyerName || undefined}
-                            />
-                            <span className="vendas-page__buyer-name">{buyerName || DASH}</span>
-                          </div>
+                        <td
+                          className={`vendas-page__num-cell vendas-page__num-cell--profit vendas-page__cell-align-main ${financialHealthTone}`}
+                        >
+                          <VendasTableNumSingle>
+                            <span className="vendas-page__fin-value-row">
+                              <span className={`vendas-page__fin-value ${financialHealthValueClass}`}>
+                                {renderBrlValueCell(f.profit_brl)}
+                              </span>
+                              <VendasProfitHealthHint toneClass={financialHealthTone} />
+                            </span>
+                          </VendasTableNumSingle>
                         </td>
-                        <td className="vendas-page__num-cell vendas-page__num-cell--sale">
-                          {formatBrlApi(f.sale_price)}
+                        <td
+                          className={`vendas-page__num-cell vendas-page__num-cell--margin vendas-page__cell-align-main ${financialHealthTone}`}
+                        >
+                          <VendasTableNumSingle>
+                            <span className="vendas-page__fin-value-row">
+                              <span className={`vendas-page__fin-value ${financialHealthValueClass}`}>
+                                {formatPctApi(f.margin_percent)}
+                              </span>
+                              <VendasProfitHealthHint toneClass={financialHealthTone} />
+                            </span>
+                          </VendasTableNumSingle>
                         </td>
-                        <td className="vendas-page__num-cell">{renderBrlValueCell(r.product_cost_only_brl)}</td>
-                        <td className="vendas-page__num-cell">{renderBrlValueCell(f.commission)}</td>
-                        <td className="vendas-page__num-cell">{renderBrlValueCell(f.shipping_cost)}</td>
-                        <td className="vendas-page__num-cell">{renderBrlValueCell(f.taxes)}</td>
-                        <td className="vendas-page__num-cell vendas-page__num-cell--received">
-                          {renderBrlValueCell(f.net_received)}
+                        <td className="vendas-page__num-cell vendas-page__num-cell--sale vendas-page__cell-align-main">
+                          <VendasTableNumSingle>{formatBrlApi(f.sale_price)}</VendasTableNumSingle>
                         </td>
-                        <td className={`vendas-page__num-cell vendas-page__num-cell--profit ${financialSignToneClass(f.profit_brl)}`}>
-                          {renderBrlValueCell(f.profit_brl)}
+                        <td className="vendas-page__num-cell vendas-page__num-cell--commission vendas-page__cell-align-main">
+                          <VendasTableNumStack
+                            primary={renderBrlValueCell(commissionBrl ?? f.commission)}
+                            secondary={commissionDetail}
+                          />
                         </td>
-                        <td className={`vendas-page__num-cell ${financialSignToneClass(f.margin_percent)}`}>
-                          {formatPctApi(f.margin_percent)}
+                        <td className="vendas-page__num-cell vendas-page__num-cell--shipping vendas-page__cell-align-main">
+                          <VendasTableNumSingle>{renderBrlValueCell(f.shipping_cost)}</VendasTableNumSingle>
                         </td>
-                        <td>
-                          <span className={`vendas-health-badge ${healthUi.badgeClass}`}>
-                            {healthUi.showDot ? <span className="vendas-health-badge-dot" aria-hidden /> : null}
-                            <span className="vendas-health-badge-text">{healthUi.label}</span>
-                          </span>
+                        <td className="vendas-page__num-cell vendas-page__num-cell--received vendas-page__cell-align-main">
+                          <VendasTableNumSingle>{renderBrlValueCell(f.net_received)}</VendasTableNumSingle>
+                        </td>
+                        <td className="vendas-page__num-cell vendas-page__num-cell--product-cost vendas-page__cell-align-main">
+                          <VendasTableNumSingle>{renderBrlValueCell(r.product_cost_only_brl)}</VendasTableNumSingle>
+                        </td>
+                        <td className="vendas-page__num-cell vendas-page__num-cell--tax vendas-page__cell-align-main">
+                          <VendasTableNumStack
+                            primary={renderBrlValueCell(internalTaxBrl)}
+                            secondary={formatVendasTaxSecondaryLabel(internalTaxPct)}
+                          />
+                        </td>
+                        <td className="vendas-page__col-sale-status vendas-page__cell-align-main">
+                          <VendasTableNumSingle>
+                            <span
+                              className={`vendas-page__sale-status-label ${getSaleStatusToneClass(
+                                saleStatusLabel,
+                              )}`}
+                            >
+                              {saleStatusLabel ?? "Sem dados"}
+                            </span>
+                          </VendasTableNumSingle>
                         </td>
                       </tr>
                     );
@@ -940,10 +1336,47 @@ function VendasPageContent() {
         </div>
       </div>
 
+      <div className="vendas-page__mobile-list" aria-label="Lista de vendas compacta">
+        <div className="vendas-page__mobile-list-card">
+          {loading ? (
+            <p className="vendas-page__mobile-empty">Carregando…</p>
+          ) : rows.length === 0 ? (
+            <p className="vendas-page__mobile-empty">Nenhuma venda encontrada para os filtros atuais.</p>
+          ) : (
+            rows.map((r, rowIndex) => {
+              const selectionId = pickVendasSaleRowId(/** @type {Record<string, unknown>} */ (r));
+              const rowSelected = selectionId ? isSelected(selectionId) : false;
+              const saleCode =
+                r.sale_display_code != null && String(r.sale_display_code).trim() !== ""
+                  ? String(r.sale_display_code).trim()
+                  : selectionId ?? "venda";
+              return (
+              <VendasMobileSaleCard
+                key={
+                  pickSaleRayxDetailItemId(r) ||
+                  `${String(r.external_order_id ?? r.sale_display_code ?? "ord")}-${String(r.external_order_item_id ?? r.external_item_id ?? "line")}-${rowIndex}`
+                }
+                row={/** @type {Record<string, unknown>} */ (r)}
+                onOpenRayx={openDetail}
+                selected={rowSelected}
+                onToggleSelect={() => {
+                  if (selectionId) toggleSaleSelection(selectionId);
+                }}
+                selectionDisabled={!selectionId}
+                selectionAriaLabel={
+                  rowSelected ? `Desmarcar venda ${saleCode}` : `Selecionar venda ${saleCode}`
+                }
+              />
+              );
+            })
+          )}
+        </div>
+      </div>
+
       <div className="vendas-page__pagination">
-        <span>
+        <span className="vendas-page__pagination-summary">
           Página {page} de {totalPages}
-          {total > 0 ? ` · ${total} linha(s)` : ""}
+          {total > 0 ? ` · ${total.toLocaleString("pt-BR")} vendas no total` : ""}
         </span>
         <button
           type="button"
@@ -973,6 +1406,15 @@ function VendasPageContent() {
         onSaved={async () => {
           await load();
         }}
+      />
+
+      <VendasGerarRelatorioModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        reportContext={reportContext}
+        aggregatedReport={aggregatedReport}
+        modalTitle={reportModalTitle}
+        executivePreview={activeReportExecutivePreview}
       />
     </div>
   );

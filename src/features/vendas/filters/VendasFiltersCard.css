@@ -99,6 +99,23 @@
   text-overflow: ellipsis;
 }
 
+/* Vendas selecionadas — mesmo padrão visual da antiga barra (azul, negrito). */
+.vendas-filters-card__summary-selected {
+  color: #1e40af;
+  font-weight: 700;
+}
+
+.vendas-filters-card__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.vendas-filters-card__report-btn {
+  flex-shrink: 0;
+}
+
 .vendas-filters-card__chevron {
   display: inline-flex;
   align-items: center;
@@ -332,8 +349,15 @@
 
 .vendas-filters-card__search-wrap {
   width: 100%;
-  max-width: 100%;
+  /* P_2.X — largura equilibrada (referência: card de Precificações), menos campo esticado. */
+  max-width: 420px;
   min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .vendas-filters-card__search-wrap {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 1180px) {
@@ -351,15 +375,39 @@
 }
 
 @media (max-width: 768px) {
+  .vendas-filters-card {
+    overflow: hidden;
+    max-width: 100%;
+  }
+
   .vendas-filters-card__selects {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vendas-filters-card__row,
+  .vendas-filters-card__row--primary,
+  .vendas-filters-card__row--search,
+  .vendas-filters-card__row--chips {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+  }
+
+  .vendas-filters-card__field,
+  .vendas-filters-card__search-wrap,
+  .vendas-filters-card__chip-row {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .vendas-filters-card__summary {
     white-space: normal;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
   }
 }
 
@@ -369,6 +417,17 @@
   .vendas-filters-card__field--period .vendas-period-picker__trigger {
     width: 100%;
     max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .vendas-filters-card__report-btn .s7-btn__label {
+    display: none;
+  }
+
+  .vendas-filters-card__report-btn {
+    min-width: 36px;
+    padding-inline: 8px;
   }
 }
 

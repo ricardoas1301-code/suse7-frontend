@@ -9,7 +9,7 @@
 export const SALES_FILTER_CHIPS = [
   { id: "all", label: "Todos", icon: "catalog_filter_all", iconTone: "neutral" },
   { id: "profit_high", label: "Mais lucrativos", icon: "catalog_filter_top_profit", iconTone: "success" },
-  { id: "margin_low", label: "Margem baixa", icon: "catalog_filter_low_margin", iconTone: "warning" },
+  { id: "margin_low", label: "Margem crítica", icon: "catalog_filter_low_margin", iconTone: "warning" },
   { id: "loss", label: "Prejuízo", icon: "catalog_filter_loss", iconTone: "danger" },
   { id: "no_profit", label: "Sem lucro", icon: "catalog_filter_no_sales", iconTone: "slate" },
   { id: "ticket_high", label: "Ticket alto", icon: "catalog_filter_top_sales", iconTone: "fire" },

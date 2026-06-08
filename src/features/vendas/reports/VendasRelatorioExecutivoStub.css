@@ -1,0 +1,119 @@
+.vendas-relatorio-exec {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vendas-relatorio-exec__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.vendas-relatorio-exec__metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 4px;
+  min-height: 78px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.vendas-relatorio-exec__metric--loading {
+  min-height: 78px;
+  background: #f1f5f9;
+  animation: vendas-relatorio-exec-pulse 1.2s ease-in-out infinite;
+}
+
+.vendas-relatorio-exec__metric-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+.vendas-relatorio-exec__metric-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.vendas-relatorio-exec__metric-hint {
+  min-height: 13px;
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.vendas-relatorio-exec__metric-hint--placeholder {
+  visibility: hidden;
+}
+
+/* Tons semânticos — alinhados à saúde financeira S7 */
+.vendas-relatorio-exec__metric--tone-neutral .vendas-relatorio-exec__metric-value {
+  color: #0f172a;
+}
+
+.vendas-relatorio-exec__metric--tone-orange .vendas-relatorio-exec__metric-value {
+  color: var(--s7-orange, #ff8533);
+  font-weight: 800;
+}
+
+.vendas-relatorio-exec__metric--tone-positive .vendas-relatorio-exec__metric-value {
+  color: #10b981;
+}
+
+.vendas-relatorio-exec__metric--tone-positive-soft .vendas-relatorio-exec__metric-value {
+  color: #059669;
+  opacity: 0.82;
+}
+
+.vendas-relatorio-exec__metric--tone-critical .vendas-relatorio-exec__metric-value {
+  color: #b91c1c;
+}
+
+.vendas-relatorio-exec__metric--tone-warning .vendas-relatorio-exec__metric-value {
+  color: #c2410c;
+}
+
+.vendas-relatorio-exec__note {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.vendas-relatorio-exec__note--error {
+  color: #b91c1c;
+}
+
+@keyframes vendas-relatorio-exec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (max-width: 520px) {
+  .vendas-relatorio-exec__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .vendas-relatorio-exec__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

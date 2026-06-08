@@ -29,6 +29,7 @@ export function pickCatalogAccountFields(row) {
  *   accountLogoUrl?: string | null;
  *   compact?: boolean;
  *   variant?: "inline" | "stacked"; — stacked: avatar acima, nome abaixo (Vendas)
+ *   stackedAvatarPx?: number; — override do avatar em stacked (ex.: densidade Vendas)
  * }} props
  */
 export default function S7CatalogAccountCell({
@@ -37,6 +38,7 @@ export default function S7CatalogAccountCell({
   accountLogoUrl,
   compact = false,
   variant = "inline",
+  stackedAvatarPx,
 }) {
   const alias = accountAlias != null && String(accountAlias).trim() !== "" ? String(accountAlias).trim() : null;
   const logo = accountLogoUrl != null && String(accountLogoUrl).trim() !== "" ? String(accountLogoUrl).trim() : null;
@@ -57,12 +59,16 @@ export default function S7CatalogAccountCell({
   }
 
   const stacked = variant === "stacked";
+  const avatarStyle =
+    stacked && stackedAvatarPx != null && Number.isFinite(Number(stackedAvatarPx))
+      ? { width: Number(stackedAvatarPx), height: Number(stackedAvatarPx) }
+      : undefined;
   return (
     <span
       className={`s7-catalog-account${compact ? " s7-catalog-account--compact" : ""}${stacked ? " s7-catalog-account--stacked" : ""}`}
       title={title}
     >
-      <span className="s7-catalog-account__avatar">
+      <span className="s7-catalog-account__avatar" style={avatarStyle}>
         {logo ? (
           <img src={logo} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
         ) : (
@@ -87,9 +93,10 @@ const S7_CHANNEL_STACKED_BADGE_PX = Math.round(34 * 1.15);
  *   marketplace?: string | null;
  *   marketplaceLabel?: string | null;
  *   variant?: "inline" | "stacked";
+ *   stackedBadgePx?: number; — override do logo em stacked (ex.: densidade Vendas)
  * }} props
  */
-export function S7CatalogChannelCell({ marketplace, marketplaceLabel, variant = "inline" }) {
+export function S7CatalogChannelCell({ marketplace, marketplaceLabel, variant = "inline", stackedBadgePx }) {
   const lb =
     marketplaceLabel != null && String(marketplaceLabel).trim() !== "" ? String(marketplaceLabel).trim() : null;
   const fallbackTitle = (() => {
@@ -99,7 +106,12 @@ export function S7CatalogChannelCell({ marketplace, marketplaceLabel, variant = 
   })();
   const displayLabel = lb || fallbackTitle || null;
   const stacked = variant === "stacked";
-  const badgeSize = stacked ? S7_CHANNEL_STACKED_BADGE_PX : 22;
+  const badgeSize =
+    stacked && stackedBadgePx != null && Number.isFinite(Number(stackedBadgePx))
+      ? Number(stackedBadgePx)
+      : stacked
+        ? S7_CHANNEL_STACKED_BADGE_PX
+        : 22;
   const title = displayLabel || undefined;
 
   return (

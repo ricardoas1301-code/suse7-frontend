@@ -174,6 +174,12 @@ export function useSalesExecutiveSummary(params, options = {}) {
     return h != null && typeof h === "object" ? /** @type {Record<string, unknown>} */ (h) : null;
   }, [data]);
 
+  const distributionByAccount = useMemo(() => {
+    const dist = data?.distribution != null && typeof data.distribution === "object" ? data.distribution : null;
+    const byAccount = dist?.by_account;
+    return Array.isArray(byAccount) ? byAccount : [];
+  }, [data]);
+
   const dataQuality = useMemo(() => {
     const dq = data?.data_quality;
     return dq != null && typeof dq === "object" ? /** @type {Record<string, unknown>} */ (dq) : null;
@@ -200,6 +206,7 @@ export function useSalesExecutiveSummary(params, options = {}) {
     topListingsByNetProfit,
     topProducts,
     health,
+    distributionByAccount,
     dataQuality,
     period,
     filtersApplied,

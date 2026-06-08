@@ -2,10 +2,11 @@
 // Card premium de busca e filtros — página Vendas (P_2.2).
 // ======================================================================
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import S7Icon from "../../../components/ui/S7Icon";
 import S7Input from "../../../components/ui/S7Input";
 import { SALES_FILTER_CHIPS } from "../../../utils/salesToolbarFilters";
+import { formatVendasSelectionCountLabel } from "../selection/aggregateVendasSelectedSalesMetrics.js";
 import { useVendasFilters } from "./VendasFiltersContext";
 import {
   getVendasMarketplaceOptionsForUi,
@@ -14,6 +15,7 @@ import {
   VENDAS_TIPO_ENTREGA_OPTIONS,
 } from "./vendasFiltersConstants";
 import VendasPeriodRangePicker from "./VendasPeriodRangePicker";
+import S7Button from "../../../components/ui/S7Button";
 import "./VendasFiltersCard.css";
 
 /**
@@ -25,6 +27,10 @@ import "./VendasFiltersCard.css";
  *   onListFilterChange?: (filterId: string) => void;
  *   searchInput?: string;
  *   onSearchInputChange?: (value: string) => void;
+ *   showGerarRelatorio?: boolean;
+ *   gerarRelatorioDisabled?: boolean;
+ *   onGerarRelatorioClick?: () => void;
+ *   selectedCount?: number;
  * }} props
  */
 export default function VendasFiltersCard({
@@ -35,10 +41,14 @@ export default function VendasFiltersCard({
   onListFilterChange,
   searchInput = "",
   onSearchInputChange,
+  showGerarRelatorio = false,
+  gerarRelatorioDisabled = false,
+  onGerarRelatorioClick,
+  selectedCount = 0,
 }) {
   const {
     filters,
-    filtersSummaryLabel,
+    periodSummaryLabel,
     toggleExpanded,
     applyPeriod,
     setMarketplace,
@@ -51,6 +61,31 @@ export default function VendasFiltersCard({
   const [statusVenda, setStatusVenda] = useState("");
   const [tipoEntrega, setTipoEntrega] = useState("");
   const [origemVenda, setOrigemVenda] = useState("");
+
+  // P_2.X M08 — resumo do card recolhido: Período · Conta · Filtro · Busca.
+  // Não inclui filtros ocultos/futuros (Marketplace, Status, Tipo de entrega, Origem).
+  const collapsedSummary = useMemo(() => {
+    const parts = [periodSummaryLabel];
+
+    const accountId = filters.marketplaceAccountId
+      ? String(filters.marketplaceAccountId).trim()
+      : "";
+    if (accountId) {
+      const account = accounts.find((a) => (a?.id != null ? String(a.id).trim() : "") === accountId);
+      const name = account ? accountLabel(account) : "Conta selecionada";
+      parts.push(`Conta: ${name}`);
+    } else {
+      parts.push("Todas as contas");
+    }
+
+    const activeChip = SALES_FILTER_CHIPS.find((c) => c.id === listFilter);
+    parts.push(`Filtro: ${activeChip?.label ?? "Todos"}`);
+
+    const query = String(searchInput ?? "").trim();
+    if (query) parts.push(`Busca: "${query}"`);
+
+    return parts.filter(Boolean).join(" · ");
+  }, [periodSummaryLabel, filters.marketplaceAccountId, accounts, accountLabel, listFilter, searchInput]);
 
   return (
     <section
@@ -77,20 +112,49 @@ export default function VendasFiltersCard({
           <span className="vendas-filters-card__header-text">
             <span className="vendas-filters-card__title">Busca e filtros</span>
             {!expanded ? (
-              <span className="vendas-filters-card__summary">{filtersSummaryLabel}</span>
+              <span className="vendas-filters-card__summary">
+                {collapsedSummary}
+                {selectedCount > 0 ? (
+                  <>
+                    {" · "}
+                    <span className="vendas-filters-card__summary-selected">
+                      {formatVendasSelectionCountLabel(selectedCount)}
+                    </span>
+                  </>
+                ) : null}
+              </span>
             ) : null}
           </span>
         </span>
-        <span
-          className={[
-            "vendas-filters-card__chevron",
-            expanded ? "vendas-filters-card__chevron--open" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          aria-hidden
-        >
-          <S7Icon name="chevron_down" size={18} strokeWidth={2} />
+        <span className="vendas-filters-card__header-actions">
+          {showGerarRelatorio ? (
+            <S7Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              iconName="reports"
+              className="vendas-filters-card__report-btn"
+              disabled={gerarRelatorioDisabled}
+              title="Gerar relatório com os filtros atuais"
+              onClick={(e) => {
+                e.stopPropagation();
+                onGerarRelatorioClick?.();
+              }}
+            >
+              Gerar relatório
+            </S7Button>
+          ) : null}
+          <span
+            className={[
+              "vendas-filters-card__chevron",
+              expanded ? "vendas-filters-card__chevron--open" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-hidden
+          >
+            <S7Icon name="chevron_down" size={18} strokeWidth={2} />
+          </span>
         </span>
       </button>
 
@@ -220,7 +284,8 @@ export default function VendasFiltersCard({
           <div className="vendas-filters-card__row vendas-filters-card__row--chips">
             <span className="vendas-filters-card__label">Filtros operacionais</span>
             <div className="vendas-filters-card__chip-row" role="toolbar" aria-label="Filtros de vendas">
-              {SALES_FILTER_CHIPS.map((c) => (
+              {/* "Todos" removido — a ação oficial de zerar filtros é o botão "Limpar filtros". */}
+              {SALES_FILTER_CHIPS.filter((c) => c.id !== "all").map((c) => (
                 <button
                   key={c.id}
                   type="button"
@@ -236,6 +301,16 @@ export default function VendasFiltersCard({
                   <span className="products-catalog__filter-chip-label">{c.label}</span>
                 </button>
               ))}
+              <button
+                type="button"
+                className="products-catalog__filter-clear"
+                disabled={!listFilter || listFilter === "all"}
+                title="Remove os filtros aplicados"
+                onClick={() => onListFilterChange?.("all")}
+              >
+                <S7Icon name="filter_clear" size={14} strokeWidth={1.75} className="products-catalog__filter-clear-icon" />
+                <span>Limpar filtros</span>
+              </button>
             </div>
           </div>
 

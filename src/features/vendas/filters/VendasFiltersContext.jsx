@@ -77,17 +77,18 @@ const VendasFiltersContext = createContext(null);
 
 
 function readExpandedFromSession() {
-
   try {
-
     return sessionStorage.getItem(VENDAS_FILTERS_EXPANDED_STORAGE_KEY) === "1";
-
   } catch {
-
     return false;
-
   }
+}
 
+function readInitialFiltersExpanded() {
+  if (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) {
+    return false;
+  }
+  return readExpandedFromSession();
 }
 
 
@@ -116,7 +117,7 @@ const defaultMonthRange = resolveVendasPeriodRange("this_month");
 
 export function VendasFiltersProvider({ children }) {
 
-  const [expanded, setExpandedState] = useState(() => readExpandedFromSession());
+  const [expanded, setExpandedState] = useState(() => readInitialFiltersExpanded());
 
   const [periodPreset, setPeriodPresetState] = useState(/** @type {VendasPeriodPresetUi} */ ("this_month"));
 
