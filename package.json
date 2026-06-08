@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.84.0",
     "decimal.js": "^10.6.0",
     "exceljs": "^4.4.0",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

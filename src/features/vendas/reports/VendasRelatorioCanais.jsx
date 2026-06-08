@@ -1,9 +1,10 @@
 // ======================================================================
 // Barra de canais do relatório — padrão global S7 (Raio-X).
-// Canal Copiar ativo (P_2.8.12F.B); demais canais em fase futura.
+// Canal Copiar = cópia VISUAL do relatório (P_2.8.12F.C) com fallback texto.
+// Demais canais em fase futura.
 // ======================================================================
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import S7Tooltip from "../../../components/ui/S7Tooltip";
 import S7ModalShareActionIcon from "../../../shared/modalActions/S7ModalShareActionIcon.jsx";
@@ -11,11 +12,11 @@ import {
   S7_MODAL_SHARE_ACTION_LABELS,
   S7_MODAL_SHARE_ACTION_ORDER,
 } from "../../../shared/modalActions/s7ModalShareActions.js";
-import { useCopyToClipboard } from "../../../hooks/useCopyToClipboard";
 import { buildVendasSharePayload } from "./share/buildVendasSharePayload.js";
 import { renderVendasShareExecutiveText } from "./share/renderVendasShareExecutiveText.js";
+import { copyVendasReportImageToClipboard } from "./share/copyVendasReportImage.jsx";
 
-const COPY_FLASH_KEY = "vendas-relatorio-copy";
+const COPY_FEEDBACK_MS = 2000;
 
 /**
  * @param {{
@@ -23,16 +24,64 @@ const COPY_FLASH_KEY = "vendas-relatorio-copy";
  * }} props
  */
 export default function VendasRelatorioCanais({ aggregatedReport = null }) {
-  const { copy, isFlashing } = useCopyToClipboard();
   const canCopy = Boolean(aggregatedReport);
-  const copied = isFlashing(COPY_FLASH_KEY);
+  // null | "image" | "text"
+  const [copyFeedback, setCopyFeedback] = useState(null);
+  const [copying, setCopying] = useState(false);
+  const timeoutRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const flashFeedback = useCallback((kind) => {
+    if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+    setCopyFeedback(kind);
+    timeoutRef.current = setTimeout(() => setCopyFeedback(null), COPY_FEEDBACK_MS);
+  }, []);
 
   const handleCopy = useCallback(async () => {
+    if (copying) return;
     const payload = buildVendasSharePayload(aggregatedReport);
-    const text = renderVendasShareExecutiveText(payload);
-    if (!text) return;
-    await copy({ text, flashKey: COPY_FLASH_KEY });
-  }, [aggregatedReport, copy]);
+    if (!payload) return;
+
+    setCopying(true);
+    try {
+      // 1) Tenta copiar a imagem visual do relatório.
+      try {
+        const copiedImage = await copyVendasReportImageToClipboard(payload);
+        if (copiedImage) {
+          flashFeedback("image");
+          return;
+        }
+      } catch {
+        // Cai no fallback textual abaixo.
+      }
+
+      // 2) Fallback: copia o resumo executivo textual.
+      try {
+        const text = renderVendasShareExecutiveText(payload);
+        if (text && navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          flashFeedback("text");
+        }
+      } catch {
+        // Silencioso: sem clipboard disponível.
+      }
+    } finally {
+      setCopying(false);
+    }
+  }, [aggregatedReport, copying, flashFeedback]);
+
+  const copied = copyFeedback != null;
+  const copyTooltip =
+    copyFeedback === "image"
+      ? "Copiado!"
+      : copyFeedback === "text"
+        ? "Copiado como texto"
+        : S7_MODAL_SHARE_ACTION_LABELS.copy;
 
   return (
     <div
@@ -45,12 +94,7 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
 
         if (actionId === "copy" && canCopy) {
           return (
-            <S7Tooltip
-              key={actionId}
-              content={copied ? "Copiado!" : label}
-              placement="bottom-start"
-              offset={6}
-            >
+            <S7Tooltip key={actionId} content={copyTooltip} placement="bottom-start" offset={6}>
               <button
                 type="button"
                 className={[
