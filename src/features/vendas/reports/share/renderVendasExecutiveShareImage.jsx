@@ -10,6 +10,7 @@
 // pelos canais futuros (Copiar imagem, WhatsApp, Imprimir/PDF).
 // ======================================================================
 
+import { Users, AlertTriangle, TrendingDown } from "lucide-react";
 import suse7Logo from "../../../../assets/suse7-logo-redonda.png";
 import { resolveVendasReportMetricAccent } from "../vendasReportMetricTone.js";
 import "./renderVendasExecutiveShareImage.css";
@@ -65,9 +66,24 @@ export default function VendasExecutiveShareCard({ payload }) {
   ];
 
   const operacionais = [
-    { label: "Saudáveis", value: r.saudaveis ? r.saudaveis.label : "—", color: ACCENT_COLOR.green },
-    { label: "Margem crítica", value: r.margemCritica.label, color: ACCENT_COLOR.orange },
-    { label: "Prejuízo", value: r.prejuizo.label, color: ACCENT_COLOR.red },
+    {
+      label: "Saudáveis",
+      value: r.saudaveis ? r.saudaveis.label : "—",
+      color: ACCENT_COLOR.green,
+      icon: Users,
+    },
+    {
+      label: "Margem crítica",
+      value: r.margemCritica.label,
+      color: ACCENT_COLOR.orange,
+      icon: AlertTriangle,
+    },
+    {
+      label: "Prejuízo",
+      value: r.prejuizo.label,
+      color: ACCENT_COLOR.red,
+      icon: TrendingDown,
+    },
   ];
 
   return (
@@ -123,14 +139,27 @@ export default function VendasExecutiveShareCard({ payload }) {
       </section>
 
       <section className="vendas-share-card__ops">
-        {operacionais.map((op) => (
-          <div key={op.label} className="vendas-share-card__ops-row">
-            <span className="vendas-share-card__ops-label">{op.label}</span>
-            <span className="vendas-share-card__ops-value" style={{ color: op.color }}>
-              {op.value}
-            </span>
-          </div>
-        ))}
+        {operacionais.map((op) => {
+          const OpIcon = op.icon;
+          return (
+            <div key={op.label} className="vendas-share-card__ops-row">
+              <span className="vendas-share-card__ops-label-wrap">
+                {OpIcon ? (
+                  <OpIcon
+                    className="vendas-share-card__ops-icon"
+                    size={16}
+                    aria-hidden
+                    style={{ color: op.color }}
+                  />
+                ) : null}
+                <span className="vendas-share-card__ops-label">{op.label}</span>
+              </span>
+              <span className="vendas-share-card__ops-value" style={{ color: op.color }}>
+                {op.value}
+              </span>
+            </div>
+          );
+        })}
       </section>
 
       <footer className="vendas-share-card__footer">

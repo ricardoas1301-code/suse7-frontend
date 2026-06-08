@@ -23,13 +23,13 @@ const STATUS_ICON = {
 };
 
 /**
+ * Label "X vendas" igual ao render compartilhável (buildVendasSharePayload).
  * @param {number | string | null | undefined} value
  */
-function formatCount(value) {
-  if (value == null) return "0";
-  const n = typeof value === "number" ? value : Number.parseInt(String(value), 10);
-  if (!Number.isFinite(n)) return "0";
-  return n.toLocaleString("pt-BR");
+function formatVendasCountLabel(value) {
+  const n = typeof value === "number" ? value : Number.parseInt(String(value ?? ""), 10);
+  const safe = Number.isFinite(n) ? Math.max(0, n) : 0;
+  return `${safe.toLocaleString("pt-BR")} ${safe === 1 ? "venda" : "vendas"}`;
 }
 
 /**
@@ -93,8 +93,13 @@ export default function VendasRelatorioExecutivoStub({
     return (
       <div className="vendas-relatorio-exec" aria-busy="true" aria-label="Resumo executivo do relatório">
         <div className="vendas-relatorio-exec__grid">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="vendas-relatorio-exec__metric vendas-relatorio-exec__metric--loading" />
+          ))}
+        </div>
+        <div className="vendas-relatorio-exec__ops">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="vendas-relatorio-exec__ops-row vendas-relatorio-exec__ops-row--loading" />
           ))}
         </div>
       </div>
@@ -117,7 +122,8 @@ export default function VendasRelatorioExecutivoStub({
     );
   }
 
-  const metrics = [
+  // BLOCO 1 — KPIs financeiros (cards). Identidade visual preservada.
+  const financialMetrics = [
     {
       id: "revenue",
       label: "Faturamento",
@@ -141,40 +147,37 @@ export default function VendasRelatorioExecutivoStub({
       hint: marginUnavailable ? "Disponível em fase futura" : null,
       unavailable: marginUnavailable,
     },
+  ];
+
+  // BLOCO 2 — Indicadores operacionais (linhas executivas), iguais ao render
+  // compartilhável: ícone + label à esquerda, quantidade à direita.
+  const operationalMetrics = [
     {
       id: "healthy",
       label: "Saudáveis",
-      value: healthyUnavailable ? "—" : healthyValue,
+      value: healthyUnavailable ? healthyValue : formatVendasCountLabel(healthyCount),
       icon: Users,
-      numericCount: healthyCount,
-      hint: healthyUnavailable ? "Disponível em fase futura" : null,
-      unavailable: healthyUnavailable,
     },
     {
       id: "lowMargin",
       label: "Margem crítica",
-      value: formatCount(lowMarginCount),
+      value: formatVendasCountLabel(lowMarginCount),
       icon: AlertTriangle,
-      numericCount: lowMarginCount,
-      hint: null,
     },
     {
       id: "loss",
       label: "Prejuízo",
-      value: formatCount(negativeCount),
+      value: formatVendasCountLabel(negativeCount),
       icon: TrendingDown,
-      numericCount: negativeCount,
-      hint: null,
     },
   ];
 
   return (
     <section className="vendas-relatorio-exec" aria-label="Resumo executivo do relatório">
       <div className="vendas-relatorio-exec__grid">
-        {metrics.map((m) => {
+        {financialMetrics.map((m) => {
           const { accent, status } = resolveVendasReportMetricAccent(m.id, {
             displayValue: m.value,
-            numericCount: m.numericCount,
             unavailable: m.unavailable,
           });
           const MetricIcon = m.icon;
@@ -231,6 +234,30 @@ export default function VendasRelatorioExecutivoStub({
                 </span>
               )}
             </article>
+          );
+        })}
+      </div>
+
+      <div className="vendas-relatorio-exec__ops">
+        {operationalMetrics.map((op) => {
+          const { accent } = resolveVendasReportMetricAccent(op.id, { displayValue: op.value });
+          const OpIcon = op.icon;
+          return (
+            <div
+              key={op.id}
+              className={[
+                "vendas-relatorio-exec__ops-row",
+                `vendas-relatorio-exec__ops-row--accent-${accent}`,
+              ].join(" ")}
+            >
+              <span className="vendas-relatorio-exec__ops-label-wrap">
+                {OpIcon ? (
+                  <OpIcon className="vendas-relatorio-exec__ops-icon" size={16} aria-hidden />
+                ) : null}
+                <span className="vendas-relatorio-exec__ops-label">{op.label}</span>
+              </span>
+              <span className="vendas-relatorio-exec__ops-value">{op.value}</span>
+            </div>
           );
         })}
       </div>

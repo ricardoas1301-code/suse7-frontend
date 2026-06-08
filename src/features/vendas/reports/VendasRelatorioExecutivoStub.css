@@ -148,6 +148,77 @@
   color: #0f172a;
 }
 
+/* BLOCO 2 — Indicadores operacionais (linhas executivas) — espelha o render
+   compartilhável: ícone + label à esquerda, quantidade à direita. */
+.vendas-relatorio-exec__ops {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.vendas-relatorio-exec__ops-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.vendas-relatorio-exec__ops-row--loading {
+  min-height: 36px;
+  background: #f1f5f9;
+  animation: vendas-relatorio-exec-pulse 1.2s ease-in-out infinite;
+}
+
+.vendas-relatorio-exec__ops-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vendas-relatorio-exec__ops-icon {
+  flex: none;
+  color: #94a3b8;
+}
+
+.vendas-relatorio-exec__ops-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vendas-relatorio-exec__ops-value {
+  flex: none;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Acentos fixos das linhas operacionais (Saudáveis/Crítica/Prejuízo) */
+.vendas-relatorio-exec__ops-row--accent-green .vendas-relatorio-exec__ops-icon,
+.vendas-relatorio-exec__ops-row--accent-green .vendas-relatorio-exec__ops-value {
+  color: #059669;
+}
+
+.vendas-relatorio-exec__ops-row--accent-orange .vendas-relatorio-exec__ops-icon,
+.vendas-relatorio-exec__ops-row--accent-orange .vendas-relatorio-exec__ops-value {
+  color: #f97316;
+}
+
+.vendas-relatorio-exec__ops-row--accent-red .vendas-relatorio-exec__ops-icon,
+.vendas-relatorio-exec__ops-row--accent-red .vendas-relatorio-exec__ops-value {
+  color: #dc2626;
+}
+
 .vendas-relatorio-exec__note {
   margin: 0;
   font-size: 12px;
