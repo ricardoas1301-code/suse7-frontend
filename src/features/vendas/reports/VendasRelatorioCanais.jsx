@@ -16,6 +16,7 @@ import { buildVendasSharePayload } from "./share/buildVendasSharePayload.js";
 import { renderVendasShareExecutiveText } from "./share/renderVendasShareExecutiveText.js";
 import { copyVendasReportImageToClipboard } from "./share/copyVendasReportImage.jsx";
 import { printVendasReport } from "./share/printVendasReport.js";
+import { shareVendasReportWhatsApp } from "./share/shareVendasReportWhatsApp.js";
 
 const COPY_FEEDBACK_MS = 2000;
 
@@ -27,15 +28,21 @@ const COPY_FEEDBACK_MS = 2000;
 export default function VendasRelatorioCanais({ aggregatedReport = null }) {
   const canCopy = Boolean(aggregatedReport);
   const canPrint = Boolean(aggregatedReport);
+  const canWhatsApp = Boolean(aggregatedReport);
   // null | "image" | "text"
   const [copyFeedback, setCopyFeedback] = useState(null);
   const [copying, setCopying] = useState(false);
   const [printing, setPrinting] = useState(false);
+  const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
+  // null | "shared" | "download"
+  const [whatsappFeedback, setWhatsappFeedback] = useState(null);
   const timeoutRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
+  const whatsappTimeoutRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+      if (whatsappTimeoutRef.current != null) clearTimeout(whatsappTimeoutRef.current);
     };
   }, []);
 
@@ -43,6 +50,12 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
     if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
     setCopyFeedback(kind);
     timeoutRef.current = setTimeout(() => setCopyFeedback(null), COPY_FEEDBACK_MS);
+  }, []);
+
+  const flashWhatsAppFeedback = useCallback((kind) => {
+    if (whatsappTimeoutRef.current != null) clearTimeout(whatsappTimeoutRef.current);
+    setWhatsappFeedback(kind);
+    whatsappTimeoutRef.current = setTimeout(() => setWhatsappFeedback(null), COPY_FEEDBACK_MS);
   }, []);
 
   const handleCopy = useCallback(async () => {
@@ -93,6 +106,26 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
     }
   }, [aggregatedReport, printing]);
 
+  const handleWhatsApp = useCallback(async () => {
+    if (sharingWhatsApp) return;
+    const payload = buildVendasSharePayload(aggregatedReport);
+    if (!payload) return;
+
+    setSharingWhatsApp(true);
+    try {
+      const status = await shareVendasReportWhatsApp(payload);
+      if (status === "shared-files" || status === "shared-image") {
+        flashWhatsAppFeedback("shared");
+      } else if (status === "fallback-download") {
+        flashWhatsAppFeedback("download");
+      }
+    } catch {
+      // Fallback seguro: compartilhamento indisponível.
+    } finally {
+      setSharingWhatsApp(false);
+    }
+  }, [aggregatedReport, sharingWhatsApp, flashWhatsAppFeedback]);
+
   const copied = copyFeedback != null;
   const copyTooltip =
     copyFeedback === "image"
@@ -109,6 +142,38 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
     >
       {S7_MODAL_SHARE_ACTION_ORDER.map((actionId) => {
         const label = S7_MODAL_SHARE_ACTION_LABELS[actionId];
+
+        if (actionId === "whatsapp" && canWhatsApp) {
+          const waCopied = whatsappFeedback != null;
+          const waTooltip =
+            whatsappFeedback === "shared"
+              ? "Compartilhado!"
+              : whatsappFeedback === "download"
+                ? "Arquivos baixados para anexar"
+                : label;
+          return (
+            <S7Tooltip key={actionId} content={waTooltip} placement="bottom-start" offset={6}>
+              <button
+                type="button"
+                className={[
+                  "vendas-sale-rayx__ops-icon-btn",
+                  waCopied ? "vendas-sale-rayx__ops-icon-btn--copied" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                aria-label={label}
+                onClick={handleWhatsApp}
+                disabled={sharingWhatsApp}
+              >
+                {waCopied ? (
+                  <Check size={17} strokeWidth={2} aria-hidden />
+                ) : (
+                  <S7ModalShareActionIcon actionId={actionId} />
+                )}
+              </button>
+            </S7Tooltip>
+          );
+        }
 
         if (actionId === "copy" && canCopy) {
           return (
