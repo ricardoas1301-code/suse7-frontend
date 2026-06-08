@@ -387,7 +387,7 @@ export function buildSaleRayxSummaryRenderModel(ctx) {
   lines.push({ kind: "money", label: "Valor recebido", value: fmtBrl(snap.netReceived), tone: "key" });
 
   if (contingencyLines.length > 0) {
-    lines.push({ kind: "blank" }, { kind: "text", text: "Margem de contingência" });
+    lines.push({ kind: "blank" }, { kind: "text", text: "Custos operacionais" });
     for (const row of contingencyLines) {
       lines.push({
         kind: "money",
@@ -438,7 +438,8 @@ export function buildSaleRayxSummaryRenderModel(ctx) {
     { kind: "health", value: healthDisplay },
     { kind: "blank" },
     { kind: "text", text: "Gerado por Suse7 Precifica" },
-    { kind: "text", text: "Inteligência para vendas saudáveis" },
+    // Rodapé oficial Suse7 (P_2.8.12F): tagline curta padronizada.
+    { kind: "text", text: "Inteligência em Vendas" },
   );
 
   return { marginPercentRaw: marginValue, lines };
