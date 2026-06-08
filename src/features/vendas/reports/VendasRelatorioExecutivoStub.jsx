@@ -28,19 +28,27 @@ function formatCount(value) {
 }
 
 /**
- * Escala automática (P_2.8.12F): valores curtos ficam maiores, valores longos
- * reduzem gradualmente para nunca quebrar linha — sem alterar o tamanho do card.
+ * Escala automática (P_2.8.12F): "maior tamanho possível sem quebra".
+ * Os valores ocupam o máximo da largura útil do card e só reduzem quando
+ * realmente necessário. Tabela calibrada pelo pior caso de largura (string
+ * monetária com "R$ "), garantindo nowrap sem overflow e sem alterar o card.
  * @param {string | number | null | undefined} value
  * @returns {number} font-size em px
  */
 function resolveMetricValueFontSize(value) {
   const len = String(value ?? "").length;
-  if (len <= 5) return 20;
-  if (len <= 8) return 18;
-  if (len <= 11) return 16;
-  if (len <= 13) return 14;
-  if (len <= 15) return 12.5;
-  return 11.5;
+  if (len <= 3) return 24;
+  if (len <= 6) return 23;
+  if (len <= 8) return 22;
+  if (len <= 10) return 21;
+  if (len === 11) return 20;
+  if (len === 12) return 19;
+  if (len === 13) return 18;
+  if (len === 14) return 16.5;
+  if (len === 15) return 15.5;
+  if (len === 16) return 14.5;
+  if (len === 17) return 13.5;
+  return 12.5;
 }
 
 /**
