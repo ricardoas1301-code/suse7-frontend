@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:env": "node ../scripts/print_vite_supabase_env.mjs",
+    "dev:login-probe": "node ../scripts/dev_login_probe.mjs",
+    "dev:clean": "node -e \"import('node:fs').then(fs=>{try{fs.rmSync('node_modules/.vite',{recursive:true,force:true})}catch(e){};try{fs.rmSync('dist',{recursive:true,force:true})}catch(e){};console.log('cache .vite e dist removidos')})\"",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -15,6 +18,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.84.0",
     "decimal.js": "^10.6.0",
+    "exceljs": "^4.4.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
