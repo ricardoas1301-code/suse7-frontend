@@ -20,7 +20,13 @@ import {
   TOOLBOX_GROUPS,
 } from "../../components/devCenter/toolbox/devCenterToolboxTabs";
 import DocumentacaoVivaPanel from "../../components/devCenter/toolbox/documentacaoViva/DocumentacaoVivaPanel";
-import AdminGlobalPanel from "../../components/devCenter/toolbox/adminGlobal/AdminGlobalPanel";
+// [S7-DEV-PREVIEW-STUB — TEMPORÁRIO / NÃO MERGEAR EM main]
+// Import estático de AdminGlobalPanel removido apenas no branch DEV (tmp-vendas-relatorio-dev)
+// porque a pasta adminGlobal/ e os services adminPlansApi/adminFeaturesApi/adminAuditApi ainda
+// NÃO estão versionados no origin/main e quebravam o build do Preview da Página Vendas.
+// Substituído pelo stub local AdminGlobalPanel (abaixo). Restaurar este import quando a frente
+// Admin Global do DevCenter for commitada no origin/main.
+// import AdminGlobalPanel from "../../components/devCenter/toolbox/adminGlobal/AdminGlobalPanel";
 import CentralTemplatesPanel from "../../components/devCenter/toolbox/centralTemplates/CentralTemplatesPanel";
 import ComunicacaoPanel from "../../components/devCenter/toolbox/comunicacao/ComunicacaoPanel";
 import "../../components/devCenter/toolbox/devCenterToolbox.css";
@@ -149,6 +155,15 @@ function ToolboxTabPlaceholder({ label }) {
       <p>Área prevista na Caixa de Ferramentas. Será habilitada em uma próxima fase.</p>
     </div>
   );
+}
+
+// [S7-DEV-PREVIEW-STUB — TEMPORÁRIO / NÃO MERGEAR EM main]
+// Stub local do Admin Global usado SOMENTE no branch DEV (tmp-vendas-relatorio-dev) para
+// destravar o build do Preview enquanto a frente Admin Global (pasta adminGlobal/ + services)
+// não está versionada no origin/main. Remover este stub e restaurar o import real do
+// AdminGlobalPanel quando a frente Admin Global for commitada.
+function AdminGlobalPanel() {
+  return <ToolboxTabPlaceholder label="Admin Global (em preparação)" />;
 }
 
 /** Resolve o conteúdo da aba ativa. */

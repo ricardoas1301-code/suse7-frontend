@@ -1,0 +1,135 @@
+/* ======================================================
+   CAIXA DE FERRAMENTAS — SHELL + NAVEGAÇÃO INTERNA
+   ====================================================== */
+
+.s7-toolbox {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.s7-toolbox__header {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.s7-toolbox__title {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-toolbox__subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--s7-text-muted, #64748b);
+  max-width: 64ch;
+}
+
+/* -------- Navegação interna (abas) -------- */
+.s7-toolbox__nav {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--s7-border-subtle, #e2e8f0);
+  padding-bottom: 0.1rem;
+}
+
+.s7-toolbox__nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.s7-toolbox__nav-group-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--s7-text-muted, #94a3b8);
+  padding-left: 0.5rem;
+}
+
+.s7-toolbox__nav-group-tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.s7-toolbox__nav-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 0;
+  background: transparent;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--s7-text-muted, #64748b);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.s7-toolbox__nav-btn:hover:not(:disabled) {
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-toolbox__nav-btn--active {
+  color: var(--s7-color-info, #2563eb);
+  border-bottom-color: var(--s7-color-info, #2563eb);
+}
+
+.s7-toolbox__nav-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.s7-toolbox__nav-soon {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: var(--s7-surface-muted, #f1f5f9);
+  color: var(--s7-text-muted, #94a3b8);
+}
+
+/* -------- Placeholder de aba futura -------- */
+.s7-toolbox__placeholder {
+  display: grid;
+  gap: 0.4rem;
+  place-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--s7-border-subtle, #cbd5e1);
+  border-radius: 0.85rem;
+  background: var(--s7-surface-muted, #f8fafc);
+}
+
+.s7-toolbox__placeholder h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-toolbox__placeholder p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--s7-text-muted, #64748b);
+  max-width: 42ch;
+}
+
+@media (max-width: 640px) {
+  .s7-toolbox__nav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .s7-toolbox__nav-btn {
+    white-space: nowrap;
+  }
+}
