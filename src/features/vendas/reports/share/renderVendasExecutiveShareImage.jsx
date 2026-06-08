@@ -133,7 +133,12 @@ export default function VendasExecutiveShareCard({ payload }) {
         ))}
       </section>
 
-      <footer className="vendas-share-card__footer">Gerado por Suse7 Precifica</footer>
+      <footer className="vendas-share-card__footer">
+        <span className="vendas-share-card__footer-line">Gerado por Suse7 Precifica</span>
+        <span className="vendas-share-card__footer-line">
+          Inteligência para vendas em marketplaces
+        </span>
+      </footer>
     </article>
   );
 }
