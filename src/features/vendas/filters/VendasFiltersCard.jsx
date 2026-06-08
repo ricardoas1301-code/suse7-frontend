@@ -127,6 +127,12 @@ export default function VendasFiltersCard({
           </span>
         </span>
         <span className="vendas-filters-card__header-actions">
+          {/* P_2.8.12F — contador também no header expandido (recolhido já exibe no resumo). */}
+          {expanded && selectedCount > 0 ? (
+            <span className="vendas-filters-card__header-selected">
+              {formatVendasSelectionCountLabel(selectedCount)}
+            </span>
+          ) : null}
           {showGerarRelatorio ? (
             <S7Button
               type="button"

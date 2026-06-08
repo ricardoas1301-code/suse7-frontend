@@ -112,6 +112,14 @@
   flex: 0 0 auto;
 }
 
+/* P_2.8.12F — contador de selecionadas no header expandido (azul/negrito, sem nova linha) */
+.vendas-filters-card__header-selected {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e40af;
+  white-space: nowrap;
+}
+
 .vendas-filters-card__report-btn {
   flex-shrink: 0;
 }

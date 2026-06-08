@@ -28,6 +28,22 @@ function formatCount(value) {
 }
 
 /**
+ * Escala automática (P_2.8.12F): valores curtos ficam maiores, valores longos
+ * reduzem gradualmente para nunca quebrar linha — sem alterar o tamanho do card.
+ * @param {string | number | null | undefined} value
+ * @returns {number} font-size em px
+ */
+function resolveMetricValueFontSize(value) {
+  const len = String(value ?? "").length;
+  if (len <= 5) return 20;
+  if (len <= 8) return 18;
+  if (len <= 11) return 16;
+  if (len <= 13) return 14;
+  if (len <= 15) return 12.5;
+  return 11.5;
+}
+
+/**
  * Grid executivo padronizado em 6 cards (2 linhas de 3). A quantidade de vendas
  * deixou de ser card e passou a ser contexto textual acima do grid (P_2.8.12B).
  *
@@ -163,7 +179,12 @@ export default function VendasRelatorioExecutivoStub({
                   <MetricIcon className="vendas-relatorio-exec__metric-icon" size={16} aria-hidden />
                 ) : null}
               </span>
-              <span className="vendas-relatorio-exec__metric-value">{m.value}</span>
+              <span
+                className="vendas-relatorio-exec__metric-value"
+                style={{ fontSize: `${resolveMetricValueFontSize(m.value)}px` }}
+              >
+                {m.value}
+              </span>
               {status ? (
                 <span className="vendas-relatorio-exec__metric-status">
                   {StatusIcon ? <StatusIcon size={12} aria-hidden /> : null}
