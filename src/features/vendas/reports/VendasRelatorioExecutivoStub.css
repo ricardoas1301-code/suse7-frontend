@@ -15,19 +15,26 @@
   flex-direction: column;
   justify-content: flex-start;
   gap: 4px;
-  min-height: 78px;
-  padding: 10px 12px;
+  min-height: 84px;
+  padding: 10px 12px 11px;
   border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1.5px solid rgba(15, 23, 42, 0.1);
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   min-width: 0;
   box-sizing: border-box;
 }
 
 .vendas-relatorio-exec__metric--loading {
-  min-height: 78px;
+  min-height: 84px;
   background: #f1f5f9;
   animation: vendas-relatorio-exec-pulse 1.2s ease-in-out infinite;
+}
+
+.vendas-relatorio-exec__metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .vendas-relatorio-exec__metric-label {
@@ -37,14 +44,38 @@
   text-transform: uppercase;
   color: #64748b;
   line-height: 1.25;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vendas-relatorio-exec__metric-icon {
+  flex: none;
+  color: #94a3b8;
 }
 
 .vendas-relatorio-exec__metric-value {
-  font-size: 15px;
+  font-size: 19px;
   font-weight: 800;
   color: #0f172a;
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+
+.vendas-relatorio-exec__metric-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 13px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: #64748b;
 }
 
 .vendas-relatorio-exec__metric-hint {
@@ -58,31 +89,39 @@
   visibility: hidden;
 }
 
-/* Tons semânticos — alinhados à saúde financeira S7 */
-.vendas-relatorio-exec__metric--tone-neutral .vendas-relatorio-exec__metric-value {
-  color: #0f172a;
+/* Acentos semânticos — borda + ícone + valor + status (saúde financeira S7) */
+.vendas-relatorio-exec__metric--accent-green {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
 }
-
-.vendas-relatorio-exec__metric--tone-orange .vendas-relatorio-exec__metric-value {
-  color: var(--s7-orange, #ff8533);
-  font-weight: 800;
-}
-
-.vendas-relatorio-exec__metric--tone-positive .vendas-relatorio-exec__metric-value {
-  color: #10b981;
-}
-
-.vendas-relatorio-exec__metric--tone-positive-soft .vendas-relatorio-exec__metric-value {
+.vendas-relatorio-exec__metric--accent-green .vendas-relatorio-exec__metric-value,
+.vendas-relatorio-exec__metric--accent-green .vendas-relatorio-exec__metric-icon,
+.vendas-relatorio-exec__metric--accent-green .vendas-relatorio-exec__metric-status {
   color: #059669;
-  opacity: 0.82;
 }
 
-.vendas-relatorio-exec__metric--tone-critical .vendas-relatorio-exec__metric-value {
-  color: #b91c1c;
+.vendas-relatorio-exec__metric--accent-orange {
+  border-color: rgba(249, 115, 22, 0.6);
+  background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
+}
+.vendas-relatorio-exec__metric--accent-orange .vendas-relatorio-exec__metric-value,
+.vendas-relatorio-exec__metric--accent-orange .vendas-relatorio-exec__metric-icon,
+.vendas-relatorio-exec__metric--accent-orange .vendas-relatorio-exec__metric-status {
+  color: #f97316;
 }
 
-.vendas-relatorio-exec__metric--tone-warning .vendas-relatorio-exec__metric-value {
-  color: #c2410c;
+.vendas-relatorio-exec__metric--accent-red {
+  border-color: rgba(220, 38, 38, 0.55);
+  background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%);
+}
+.vendas-relatorio-exec__metric--accent-red .vendas-relatorio-exec__metric-value,
+.vendas-relatorio-exec__metric--accent-red .vendas-relatorio-exec__metric-icon,
+.vendas-relatorio-exec__metric--accent-red .vendas-relatorio-exec__metric-status {
+  color: #dc2626;
+}
+
+.vendas-relatorio-exec__metric--accent-neutral .vendas-relatorio-exec__metric-value {
+  color: #0f172a;
 }
 
 .vendas-relatorio-exec__note {

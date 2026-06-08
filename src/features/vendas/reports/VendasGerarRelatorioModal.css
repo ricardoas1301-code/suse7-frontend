@@ -132,6 +132,13 @@
   word-break: break-word;
 }
 
+/* Destaque da quantidade de vendas — laranja Suse7 (#F97316) */
+.vendas-relatorio-modal__summary-value--count {
+  color: #f97316;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .vendas-relatorio-modal__filter-tags {
   margin: 0;
   padding: 0;
@@ -182,8 +189,8 @@
 
 .vendas-relatorio-modal__accounts-count {
   flex: none;
-  color: #64748b;
-  font-weight: 700;
+  color: #f97316;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 

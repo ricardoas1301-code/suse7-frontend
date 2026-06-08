@@ -2,12 +2,20 @@
 // Template executivo (stub) — mesmos valores exibidos nos KPIs da página.
 // ======================================================================
 
+import { DollarSign, Percent, Users, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import {
   EXECUTIVE_PANEL_EMPTY_KPI_VALUE,
   EXECUTIVE_PANEL_ERROR_MESSAGE,
 } from "../../../components/sales/vendasExecutivePanelUx";
-import { resolveVendasReportMetricTone } from "./vendasReportMetricTone.js";
+import { resolveVendasReportMetricAccent } from "./vendasReportMetricTone.js";
 import "./VendasRelatorioExecutivoStub.css";
+
+// Ícone de status (acento) — preserva o conjunto aprovado: tendência +, alerta, tendência -.
+const STATUS_ICON = {
+  Saudável: TrendingUp,
+  Crítico: AlertTriangle,
+  Prejuízo: TrendingDown,
+};
 
 /**
  * @param {number | string | null | undefined} value
@@ -85,18 +93,21 @@ export default function VendasRelatorioExecutivoStub({
       id: "revenue",
       label: "Faturamento",
       value: revenueValue,
+      icon: DollarSign,
       hint: null,
     },
     {
       id: "netProfit",
       label: "Lucro líquido",
       value: netProfitValue,
+      icon: DollarSign,
       hint: null,
     },
     {
       id: "margin",
       label: "Margem",
       value: marginUnavailable ? "—" : marginValue,
+      icon: Percent,
       hint: marginUnavailable ? "Disponível em fase futura" : null,
       unavailable: marginUnavailable,
     },
@@ -104,6 +115,7 @@ export default function VendasRelatorioExecutivoStub({
       id: "healthy",
       label: "Saudáveis",
       value: healthyUnavailable ? "—" : healthyValue,
+      icon: Users,
       numericCount: healthyCount,
       hint: healthyUnavailable ? "Disponível em fase futura" : null,
       unavailable: healthyUnavailable,
@@ -112,6 +124,7 @@ export default function VendasRelatorioExecutivoStub({
       id: "lowMargin",
       label: "Margem crítica",
       value: formatCount(lowMarginCount),
+      icon: AlertTriangle,
       numericCount: lowMarginCount,
       hint: null,
     },
@@ -119,6 +132,7 @@ export default function VendasRelatorioExecutivoStub({
       id: "loss",
       label: "Prejuízo",
       value: formatCount(negativeCount),
+      icon: TrendingDown,
       numericCount: negativeCount,
       hint: null,
     },
@@ -128,31 +142,45 @@ export default function VendasRelatorioExecutivoStub({
     <section className="vendas-relatorio-exec" aria-label="Resumo executivo do relatório">
       <div className="vendas-relatorio-exec__grid">
         {metrics.map((m) => {
-          const tone = resolveVendasReportMetricTone(m.id, {
+          const { accent, status } = resolveVendasReportMetricAccent(m.id, {
             displayValue: m.value,
             numericCount: m.numericCount,
             unavailable: m.unavailable,
           });
+          const MetricIcon = m.icon;
+          const StatusIcon = status ? STATUS_ICON[status] : null;
           return (
             <article
               key={m.id}
               className={[
                 "vendas-relatorio-exec__metric",
-                `vendas-relatorio-exec__metric--tone-${tone}`,
+                `vendas-relatorio-exec__metric--accent-${accent}`,
               ].join(" ")}
             >
-              <span className="vendas-relatorio-exec__metric-label">{m.label}</span>
-              <span className="vendas-relatorio-exec__metric-value">{m.value}</span>
-              <span
-                className={[
-                  "vendas-relatorio-exec__metric-hint",
-                  m.hint ? "" : "vendas-relatorio-exec__metric-hint--placeholder",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {m.hint ?? "\u00a0"}
+              <span className="vendas-relatorio-exec__metric-top">
+                <span className="vendas-relatorio-exec__metric-label">{m.label}</span>
+                {MetricIcon ? (
+                  <MetricIcon className="vendas-relatorio-exec__metric-icon" size={16} aria-hidden />
+                ) : null}
               </span>
+              <span className="vendas-relatorio-exec__metric-value">{m.value}</span>
+              {status ? (
+                <span className="vendas-relatorio-exec__metric-status">
+                  {StatusIcon ? <StatusIcon size={12} aria-hidden /> : null}
+                  {status}
+                </span>
+              ) : (
+                <span
+                  className={[
+                    "vendas-relatorio-exec__metric-hint",
+                    m.hint ? "" : "vendas-relatorio-exec__metric-hint--placeholder",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  {m.hint ?? "\u00a0"}
+                </span>
+              )}
             </article>
           );
         })}

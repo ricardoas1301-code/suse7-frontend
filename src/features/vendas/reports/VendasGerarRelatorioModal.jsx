@@ -115,7 +115,9 @@ export default function VendasGerarRelatorioModal({
               </div>
               <div className="vendas-relatorio-modal__summary-row">
                 <dt className="vendas-relatorio-modal__summary-label">Vendas</dt>
-                <dd className="vendas-relatorio-modal__summary-value">{analyzedLabel}</dd>
+                <dd className="vendas-relatorio-modal__summary-value vendas-relatorio-modal__summary-value--count">
+                  {analyzedLabel}
+                </dd>
               </div>
               <div className="vendas-relatorio-modal__summary-row">
                 <dt className="vendas-relatorio-modal__summary-label">Filtros</dt>
@@ -133,7 +135,8 @@ export default function VendasGerarRelatorioModal({
               </div>
             </dl>
 
-            {distribuicaoPorConta.length > 0 ? (
+            {/* Distribuição só faz sentido com 2+ contas (P_2.8.12E); com 1 conta é redundante. */}
+            {distribuicaoPorConta.length > 1 ? (
               <section
                 className="vendas-relatorio-modal__accounts"
                 aria-label="Distribuição por conta"

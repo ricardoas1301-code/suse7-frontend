@@ -79,3 +79,54 @@ export function resolveVendasReportMetricTone(metricId, input = {}) {
       return "neutral";
   }
 }
+
+/** @typedef {'green' | 'orange' | 'red' | 'neutral'} VendasReportMetricAccent */
+
+/**
+ * Acento visual (borda + ícone + status) de cada card do resumo executivo.
+ * Somente exibição — não altera cálculos nem contratos. Regras de saúde S7:
+ *   - monetário: > 0 saudável (verde) · = 0 crítico (laranja) · < 0 prejuízo (vermelho)
+ *   - margem: > 5% saudável (verde) · 0%–5% crítico (laranja) · < 0% prejuízo (vermelho)
+ *   - cards de categoria têm identidade fixa: Saudáveis (verde), Margem crítica (laranja), Prejuízo (vermelho)
+ *
+ * @param {string} metricId
+ * @param {{ displayValue?: string; numericCount?: number | string | null; unavailable?: boolean }} input
+ * @returns {{ accent: VendasReportMetricAccent, status: ('Saudável' | 'Crítico' | 'Prejuízo' | null) }}
+ */
+export function resolveVendasReportMetricAccent(metricId, input = {}) {
+  const { displayValue, numericCount, unavailable = false } = input;
+
+  const monetary = () => {
+    const n = parsePtBrDisplayNumber(displayValue);
+    if (n == null) return { accent: "neutral", status: null };
+    if (n > 0) return { accent: "green", status: "Saudável" };
+    if (n < 0) return { accent: "red", status: "Prejuízo" };
+    return { accent: "orange", status: "Crítico" };
+  };
+
+  switch (metricId) {
+    case "revenue":
+    case "netProfit":
+      return monetary();
+    case "margin": {
+      if (unavailable) return { accent: "neutral", status: null };
+      const n = parsePtBrDisplayNumber(displayValue);
+      if (n == null) return { accent: "neutral", status: null };
+      if (n > 5) return { accent: "green", status: "Saudável" };
+      if (n < 0) return { accent: "red", status: "Prejuízo" };
+      return { accent: "orange", status: "Crítico" };
+    }
+    case "healthy": {
+      if (unavailable) return { accent: "neutral", status: null };
+      return parseCount(numericCount) > 0
+        ? { accent: "green", status: "Saudável" }
+        : { accent: "neutral", status: null };
+    }
+    case "lowMargin":
+      return { accent: "orange", status: null };
+    case "loss":
+      return { accent: "red", status: null };
+    default:
+      return { accent: "neutral", status: null };
+  }
+}
