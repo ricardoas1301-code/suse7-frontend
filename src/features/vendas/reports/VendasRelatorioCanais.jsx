@@ -15,6 +15,7 @@ import {
 import { buildVendasSharePayload } from "./share/buildVendasSharePayload.js";
 import { renderVendasShareExecutiveText } from "./share/renderVendasShareExecutiveText.js";
 import { copyVendasReportImageToClipboard } from "./share/copyVendasReportImage.jsx";
+import { printVendasReport } from "./share/printVendasReport.js";
 
 const COPY_FEEDBACK_MS = 2000;
 
@@ -25,9 +26,11 @@ const COPY_FEEDBACK_MS = 2000;
  */
 export default function VendasRelatorioCanais({ aggregatedReport = null }) {
   const canCopy = Boolean(aggregatedReport);
+  const canPrint = Boolean(aggregatedReport);
   // null | "image" | "text"
   const [copyFeedback, setCopyFeedback] = useState(null);
   const [copying, setCopying] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const timeoutRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
 
   useEffect(() => {
@@ -75,6 +78,21 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
     }
   }, [aggregatedReport, copying, flashFeedback]);
 
+  const handlePrint = useCallback(async () => {
+    if (printing) return;
+    const payload = buildVendasSharePayload(aggregatedReport);
+    if (!payload) return;
+
+    setPrinting(true);
+    try {
+      await printVendasReport(payload);
+    } catch {
+      // Fallback seguro: impressão indisponível (pop-up/iframe bloqueado).
+    } finally {
+      setPrinting(false);
+    }
+  }, [aggregatedReport, printing]);
+
   const copied = copyFeedback != null;
   const copyTooltip =
     copyFeedback === "image"
@@ -111,6 +129,22 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
                 ) : (
                   <S7ModalShareActionIcon actionId={actionId} />
                 )}
+              </button>
+            </S7Tooltip>
+          );
+        }
+
+        if (actionId === "print" && canPrint) {
+          return (
+            <S7Tooltip key={actionId} content={label} placement="bottom-start" offset={6}>
+              <button
+                type="button"
+                className="vendas-sale-rayx__ops-icon-btn"
+                aria-label={label}
+                onClick={handlePrint}
+                disabled={printing}
+              >
+                <S7ModalShareActionIcon actionId={actionId} />
               </button>
             </S7Tooltip>
           );
