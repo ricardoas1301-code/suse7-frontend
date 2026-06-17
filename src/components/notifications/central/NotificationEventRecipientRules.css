@@ -81,3 +81,9 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+.s7-nevent-rules__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--s7-muted, #64748b);
+}

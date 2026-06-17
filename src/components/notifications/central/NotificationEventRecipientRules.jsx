@@ -7,6 +7,9 @@ import "./NotificationEventRecipientRules.css";
  * @param {Array<Record<string, unknown>>} groups
  * @param {Array<Record<string, unknown>>} rules
  * @param {boolean} saving
+ * @param {string} [expandLabel]
+ * @param {boolean} [hideStatusBadge]
+ * @param {import("react").ReactNode} [scheduleSlot]
  * @param {(updates: Array<Record<string, unknown>>) => void | Promise<void>} onChange
  */
 export default function NotificationEventRecipientRules({
@@ -15,6 +18,9 @@ export default function NotificationEventRecipientRules({
   groups,
   rules,
   saving,
+  expandLabel = "Destinatários",
+  hideStatusBadge = false,
+  scheduleSlot = null,
   onChange,
 }) {
   const [open, setOpen] = useState(false);
@@ -38,8 +44,9 @@ export default function NotificationEventRecipientRules({
   );
 
   const activeGroups = (groups ?? []).filter((g) => g.is_active !== false);
+  const showRecipients = activeGroups.length > 0;
 
-  if (activeGroups.length === 0) {
+  if (!showRecipients && !scheduleSlot) {
     return (
       <div className="s7-nevent-rules s7-nevent-rules--empty">
         <p>Cadastre destinatários na aba Destinatários para escolher quem recebe este evento.</p>
@@ -75,51 +82,62 @@ export default function NotificationEventRecipientRules({
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
         >
-          {open ? "▼" : "▶"} Destinatários
+          {open ? "▼" : "▶"} {expandLabel}
         </button>
-        {saving ? (
+        {!hideStatusBadge && saving ? (
           <span className="s7-nevent-rules__status s7-nevent-rules__status--saving">Salvando...</span>
-        ) : !hasSavedRules ? (
+        ) : !hideStatusBadge && !hasSavedRules ? (
           <span className="s7-nevent-rules__status s7-nevent-rules__status--muted">Sem regras salvas</span>
-        ) : (
+        ) : !hideStatusBadge ? (
           <span className="s7-nevent-rules__status">Regras salvas</span>
-        )}
+        ) : saving ? (
+          <span className="s7-nevent-rules__status s7-nevent-rules__status--saving">Salvando...</span>
+        ) : null}
       </div>
 
       {open ? (
-        <div className="s7-nevent-rules__table" role="group" aria-label="Destinatários por canal">
-          {activeGroups.map((g) => {
-            const gid = String(g.group_id);
-            const hasEmail = Boolean(g.channels?.email?.destination);
-            const hasWa = Boolean(g.channels?.whatsapp?.destination);
-            return (
-              <div key={gid} className="s7-nevent-rules__row">
-                <span className="s7-nevent-rules__name">{g.label}</span>
-                <label
-                  className={`s7-nevent-rules__chip ${!hasEmail ? "s7-nevent-rules__chip--disabled" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    disabled={saving || !hasEmail}
-                    checked={isEnabled(gid, "email", hasEmail)}
-                    onChange={(e) => toggle(gid, "email", e.target.checked)}
-                  />
-                  E-mail
-                </label>
-                <label
-                  className={`s7-nevent-rules__chip ${!hasWa ? "s7-nevent-rules__chip--disabled" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    disabled={saving || !hasWa}
-                    checked={isEnabled(gid, "whatsapp", hasWa)}
-                    onChange={(e) => toggle(gid, "whatsapp", e.target.checked)}
-                  />
-                  WhatsApp
-                </label>
-              </div>
-            );
-          })}
+        <div role="group" aria-label={expandLabel}>
+          {scheduleSlot}
+          {!showRecipients ? (
+            <p className="s7-nevent-rules__hint">
+              Cadastre destinatários na aba Destinatários para escolher quem recebe e-mail e WhatsApp.
+            </p>
+          ) : (
+            <div className="s7-nevent-rules__table" aria-label="Destinatários por canal">
+              {activeGroups.map((g) => {
+                const gid = String(g.group_id);
+                const hasEmail = Boolean(g.channels?.email?.destination);
+                const hasWa = Boolean(g.channels?.whatsapp?.destination);
+                return (
+                  <div key={gid} className="s7-nevent-rules__row">
+                    <span className="s7-nevent-rules__name">{g.label}</span>
+                    <label
+                      className={`s7-nevent-rules__chip ${!hasEmail ? "s7-nevent-rules__chip--disabled" : ""}`}
+                    >
+                      <input
+                        type="checkbox"
+                        disabled={saving || !hasEmail}
+                        checked={isEnabled(gid, "email", hasEmail)}
+                        onChange={(e) => toggle(gid, "email", e.target.checked)}
+                      />
+                      E-mail
+                    </label>
+                    <label
+                      className={`s7-nevent-rules__chip ${!hasWa ? "s7-nevent-rules__chip--disabled" : ""}`}
+                    >
+                      <input
+                        type="checkbox"
+                        disabled={saving || !hasWa}
+                        checked={isEnabled(gid, "whatsapp", hasWa)}
+                        onChange={(e) => toggle(gid, "whatsapp", e.target.checked)}
+                      />
+                      WhatsApp
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : null}
     </div>

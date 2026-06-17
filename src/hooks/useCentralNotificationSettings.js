@@ -9,6 +9,8 @@ import {
   deleteCentralNotificationRecipient,
   fetchCentralEventDeliveryRules,
   patchCentralEventDeliveryRules,
+  fetchDailySalesSummaryAutomationRule,
+  patchDailySalesSummaryAutomationRule,
 } from "../services/centralNotificationsApi";
 
 /**
@@ -20,19 +22,23 @@ export function useCentralNotificationSettings() {
   const [preferences, setPreferences] = useState([]);
   const [recipientGroups, setRecipientGroups] = useState([]);
   const [deliveryRules, setDeliveryRules] = useState([]);
+  const [dailySalesSummaryRule, setDailySalesSummaryRule] = useState(null);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingPreferences, setLoadingPreferences] = useState(true);
   const [loadingRecipients, setLoadingRecipients] = useState(true);
   const [loadingRules, setLoadingRules] = useState(true);
+  const [loadingDailySalesRule, setLoadingDailySalesRule] = useState(true);
 
   const [errorCategories, setErrorCategories] = useState(null);
   const [errorPreferences, setErrorPreferences] = useState(null);
   const [errorRecipients, setErrorRecipients] = useState(null);
   const [errorRules, setErrorRules] = useState(null);
+  const [errorDailySalesRule, setErrorDailySalesRule] = useState(null);
 
   const [savingPrefKey, setSavingPrefKey] = useState(null);
   const [savingRuleKey, setSavingRuleKey] = useState(null);
+  const [savingAutomationRule, setSavingAutomationRule] = useState(false);
   const [savingRecipient, setSavingRecipient] = useState(false);
 
   const prefLookup = useMemo(() => {
@@ -97,14 +103,27 @@ export function useCentralNotificationSettings() {
     setDeliveryRules(res.rules ?? []);
   }, []);
 
+  const loadDailySalesSummaryRule = useCallback(async () => {
+    setLoadingDailySalesRule(true);
+    setErrorDailySalesRule(null);
+    const res = await fetchDailySalesSummaryAutomationRule();
+    setLoadingDailySalesRule(false);
+    if (!res.ok) {
+      setErrorDailySalesRule(res.error ?? "Erro ao carregar agendamento do resumo diário");
+      return;
+    }
+    setDailySalesSummaryRule(res.rule ?? null);
+  }, []);
+
   const reloadAll = useCallback(async () => {
     await Promise.all([
       loadCategories(),
       loadPreferences(),
       loadRecipients(),
       loadDeliveryRules(),
+      loadDailySalesSummaryRule(),
     ]);
-  }, [loadCategories, loadPreferences, loadRecipients, loadDeliveryRules]);
+  }, [loadCategories, loadPreferences, loadRecipients, loadDeliveryRules, loadDailySalesSummaryRule]);
 
   useEffect(() => {
     reloadAll();
@@ -220,6 +239,33 @@ export function useCentralNotificationSettings() {
     [deliveryRules]
   );
 
+  const saveDailySalesSummaryRule = useCallback(
+    async (patch) => {
+      setSavingAutomationRule(true);
+      const prev = dailySalesSummaryRule;
+      setDailySalesSummaryRule((current) => ({
+        ...(current ?? {}),
+        ...patch,
+        config:
+          patch?.config && typeof patch.config === "object"
+            ? { ...(current?.config ?? {}), ...patch.config }
+            : current?.config,
+      }));
+
+      const res = await patchDailySalesSummaryAutomationRule(patch);
+      setSavingAutomationRule(false);
+
+      if (!res.ok) {
+        setDailySalesSummaryRule(prev);
+        return { ok: false, message: res.message ?? res.error ?? "Não foi possível salvar agendamento." };
+      }
+
+      setDailySalesSummaryRule(res.rule ?? null);
+      return { ok: true, rule: res.rule };
+    },
+    [dailySalesSummaryRule]
+  );
+
   const saveRecipient = useCallback(
     async (payload, editingGroupId = null) => {
       setSavingRecipient(true);
@@ -262,25 +308,31 @@ export function useCentralNotificationSettings() {
     preferences,
     recipientGroups,
     deliveryRules,
+    dailySalesSummaryRule,
     prefLookup,
     loadingCategories,
     loadingPreferences,
     loadingRecipients,
     loadingRules,
+    loadingDailySalesRule,
     errorCategories,
     errorPreferences,
     errorRecipients,
     errorRules,
+    errorDailySalesRule,
     savingPrefKey,
     savingRuleKey,
+    savingAutomationRule,
     savingRecipient,
     reloadAll,
     loadCategories,
     loadPreferences,
     loadRecipients,
     loadDeliveryRules,
+    loadDailySalesSummaryRule,
     setChannelEnabled,
     setEventDeliveryRule,
+    saveDailySalesSummaryRule,
     saveRecipient,
     removeRecipient,
   };

@@ -59,24 +59,30 @@ export default function CentralNotificacoesHub() {
     preferences,
     recipientGroups,
     deliveryRules,
+    dailySalesSummaryRule,
     prefLookup,
     loadingCategories,
     loadingPreferences,
     loadingRecipients,
     loadingRules,
+    loadingDailySalesRule,
     errorCategories,
     errorPreferences,
     errorRecipients,
     errorRules,
+    errorDailySalesRule,
     savingPrefKey,
     savingRuleKey,
+    savingAutomationRule,
     savingRecipient,
     loadCategories,
     loadPreferences,
     loadRecipients,
     loadDeliveryRules,
+    loadDailySalesSummaryRule,
     setChannelEnabled,
     setEventDeliveryRule,
+    saveDailySalesSummaryRule,
     saveRecipient,
     removeRecipient,
   } = useCentralNotificationSettings();
@@ -127,6 +133,23 @@ export default function CentralNotificacoesHub() {
       type: "success",
       title: "Destinatários do evento",
       message: "Destinatários atualizados",
+    });
+  };
+
+  const handleDailySalesSummaryRuleChange = async (patch) => {
+    const res = await saveDailySalesSummaryRule(patch);
+    if (!res.ok) {
+      addNotification({
+        type: "error",
+        title: "Resumo de vendas do dia",
+        message: res.message ?? "Não foi possível salvar o agendamento.",
+      });
+      return;
+    }
+    addNotification({
+      type: "success",
+      title: "Resumo de vendas do dia",
+      message: "Agendamento atualizado",
     });
   };
 
@@ -187,9 +210,11 @@ export default function CentralNotificacoesHub() {
     !loadingCategories &&
     !loadingPreferences &&
     !loadingRules &&
+    !loadingDailySalesRule &&
     !errorCategories &&
     !errorPreferences &&
-    !errorRules;
+    !errorRules &&
+    !errorDailySalesRule;
 
   return (
     <div className="profile-section s7-cnhub">
@@ -225,12 +250,17 @@ export default function CentralNotificacoesHub() {
 
       {tab === "preferences" ? (
         <section className="s7-cnhub__panel">
-          {(loadingCategories || loadingPreferences || loadingRules) && <BlockSkeleton lines={4} />}
+          {(loadingCategories || loadingPreferences || loadingRules || loadingDailySalesRule) && (
+            <BlockSkeleton lines={4} />
+          )}
           {errorCategories ? <ErrorBlock message={errorCategories} onRetry={loadCategories} /> : null}
           {errorPreferences ? (
             <ErrorBlock message={errorPreferences} onRetry={loadPreferences} />
           ) : null}
           {errorRules ? <ErrorBlock message={errorRules} onRetry={loadDeliveryRules} /> : null}
+          {errorDailySalesRule ? (
+            <ErrorBlock message={errorDailySalesRule} onRetry={loadDailySalesSummaryRule} />
+          ) : null}
 
           {prefsReady ? (
             <div className="s7-cnhub__categories">
@@ -245,11 +275,14 @@ export default function CentralNotificacoesHub() {
                     prefLookup={prefLookup}
                     savingPrefKey={savingPrefKey}
                     savingRuleKey={savingRuleKey}
+                    savingAutomationRule={savingAutomationRule}
                     recipientGroups={recipientGroups}
                     deliveryRules={deliveryRules}
+                    dailySalesSummaryRule={dailySalesSummaryRule}
                     highlighted={focusCodes.has(cat.code)}
                     onChannelChange={handleChannelChange}
                     onEventRuleChange={handleEventRuleChange}
+                    onDailySalesSummaryRuleChange={handleDailySalesSummaryRuleChange}
                   />
                 ))
               )}

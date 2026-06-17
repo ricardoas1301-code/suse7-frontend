@@ -151,3 +151,27 @@ export async function patchCentralEventDeliveryRules(updates) {
     rules_version: result.data?.rules_version ?? null,
   };
 }
+
+export async function fetchDailySalesSummaryAutomationRule() {
+  const baseError = ensureApiBase();
+  if (baseError) return baseError;
+  const url = buildApiUrl("/api/notifications/automation-rules/daily-sales-summary");
+  const result = await apiFetch(url, { method: "GET" });
+  if (!result.ok) return { ok: false, error: result.error, message: result.data?.message };
+  return { ok: true, rule: result.data?.rule ?? null };
+}
+
+export async function patchDailySalesSummaryAutomationRule(patch) {
+  const baseError = ensureApiBase();
+  if (baseError) return baseError;
+  const url = buildApiUrl("/api/notifications/automation-rules/daily-sales-summary");
+  const result = await apiFetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: patch,
+  });
+  if (!result.ok) {
+    return { ok: false, error: result.error, message: result.data?.message ?? result.error };
+  }
+  return { ok: true, rule: result.data?.rule ?? null };
+}
