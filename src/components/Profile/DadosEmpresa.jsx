@@ -104,6 +104,9 @@ export default function DadosEmpresa() {
     await syncPrimaryProfile();
   };
 
+  const primaryCompanyId =
+    companies.find((c) => c.is_primary)?.id ?? (companies.length === 1 ? companies[0]?.id ?? null : null);
+
   if (loading) {
     return (
       <div className="dados-empresa-container profile-content">
@@ -177,6 +180,7 @@ export default function DadosEmpresa() {
         onClose={() => setModalOpen(false)}
         mode={modalMode}
         companyId={modalMode === "create" ? null : modalCompanyId}
+        primaryCompanyId={primaryCompanyId}
         profileEmail={profileEmail}
         onSaved={handleModalSaved}
       />

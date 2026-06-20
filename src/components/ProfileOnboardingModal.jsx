@@ -163,6 +163,7 @@ const ProfileOnboardingModal = () => {
     estado: "",                                             // UF (estado, ex: SP)
     cpf_cnpj: "",                                           // Documento (CPF ou CNPJ)
     imposto_percentual: "",                                 // Percentual de imposto (em %)
+    operational_day_closes_at: "18:00",
   });
 
   /* -----------------------------------------------------------
@@ -418,6 +419,22 @@ const handleSubmit = async (e) => {
     <label>
       Imposto (%) *
       <input type="number" name="imposto_percentual" value={form.imposto_percentual} onChange={handleChange} required />
+    </label>
+  </div>
+
+  <div className="profile-grid">
+    <label>
+      Hora de encerramento operacional
+      <input
+        type="time"
+        name="operational_day_closes_at"
+        value={form.operational_day_closes_at}
+        onChange={handleChange}
+      />
+      <small>
+        Usaremos esse horário para calcular seu Resumo Diário no Dashboard. Exemplo: se você encerra
+        às 18:00, o resumo mostra as vendas desde 18:00 até agora.
+      </small>
     </label>
   </div>
 

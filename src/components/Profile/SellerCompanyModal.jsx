@@ -15,6 +15,10 @@ import {
   sanitizeTaxPercentCommaInput,
 } from "../../utils/profileInputMasks";
 import { isValidCnpjInput, normalizeCnpjDigits } from "../../utils/cnpjValidation";
+import {
+  DEFAULT_OPERATIONAL_DAY_CLOSES_AT,
+  normalizeOperationalDayClosesAt,
+} from "../../features/dashboard/operationalDayCycle.js";
 import "../CompleteProfileModal.css";
 import suse7Logo from "../../assets/suse7-logo-redonda.png";
 import "./SellerCompanyModal.css";
@@ -58,16 +62,44 @@ function sanitizeLogoFileName(originalName, ext) {
  *   onClose: () => void;
  *   mode: "create" | "edit";
  *   companyId: string | null;
+ *   primaryCompanyId?: string | null;
  *   profileEmail?: string;
  *   onSaved?: (p: { id: string; isCreate: boolean }) => void;
  * }} props
  */
-export default function SellerCompanyModal({ open, onClose, mode, companyId, profileEmail, onSaved }) {
+export default function SellerCompanyModal({ open, onClose, mode, companyId, primaryCompanyId, profileEmail, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [operationalDayClosesAt, setOperationalDayClosesAt] = useState(DEFAULT_OPERATIONAL_DAY_CLOSES_AT);
   const { addNotification } = useNotifications();
+
+  const showOperationalCloseField =
+    mode === "edit" &&
+    companyId != null &&
+    primaryCompanyId != null &&
+    String(companyId) === String(primaryCompanyId);
+
+  const loadProfileOperationalClose = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      setOperationalDayClosesAt(DEFAULT_OPERATIONAL_DAY_CLOSES_AT);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("operational_day_closes_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (error) {
+      setOperationalDayClosesAt(DEFAULT_OPERATIONAL_DAY_CLOSES_AT);
+      return;
+    }
+    setOperationalDayClosesAt(normalizeOperationalDayClosesAt(data?.operational_day_closes_at));
+  }, []);
 
   const loadOne = useCallback(async () => {
     const url = buildApiUrl(`/api/seller/companies/${companyId}`);
@@ -112,10 +144,19 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
         logo_url: c.logo_url ?? "",
         active: c.active !== false,
       });
+      if (
+        primaryCompanyId != null &&
+        companyId != null &&
+        String(companyId) === String(primaryCompanyId)
+      ) {
+        await loadProfileOperationalClose();
+      } else {
+        setOperationalDayClosesAt(DEFAULT_OPERATIONAL_DAY_CLOSES_AT);
+      }
     } finally {
       setLoading(false);
     }
-  }, [companyId, onClose, addNotification]);
+  }, [companyId, onClose, addNotification, primaryCompanyId, loadProfileOperationalClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -123,6 +164,7 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
       loadOne();
     } else {
       setForm(emptyForm());
+      setOperationalDayClosesAt(DEFAULT_OPERATIONAL_DAY_CLOSES_AT);
     }
   }, [open, mode, companyId, loadOne]);
 
@@ -358,6 +400,33 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
         });
         return;
       }
+
+      if (showOperationalCloseField) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user?.id) {
+          const { error: profileErr } = await supabase
+            .from("profiles")
+            .update({
+              operational_day_closes_at: operationalDayClosesAt || DEFAULT_OPERATIONAL_DAY_CLOSES_AT,
+            })
+            .eq("id", user.id);
+          if (profileErr) {
+            addNotification({
+              event_type: "SELLER_PROFILE_OPERATIONAL_CLOSE_ERR",
+              entity_type: "profile",
+              entity_id: user.id,
+              title: "Empresa salva, horário operacional não atualizado",
+              message: profileErr.message || "Tente novamente em Meu perfil.",
+              severity: NOTIFICATION_SEVERITY.WARNING,
+            });
+          } else {
+            window.dispatchEvent(new Event("s7OperationalDayClosesAtUpdated"));
+          }
+        }
+      }
+
       addNotification({
         event_type: "SELLER_COMPANY_UPDATED",
         entity_type: "seller_company",
@@ -540,6 +609,24 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pro
                 <input name="address_city" value={form.address_city} onChange={handleChange} />
               </label>
             </div>
+
+            {showOperationalCloseField ? (
+              <div className="profile-grid">
+                <label className="s7-co-field-full">
+                  Hora de encerramento operacional
+                  <input
+                    type="time"
+                    name="operational_day_closes_at"
+                    value={operationalDayClosesAt}
+                    onChange={(e) => setOperationalDayClosesAt(e.target.value || DEFAULT_OPERATIONAL_DAY_CLOSES_AT)}
+                  />
+                  <small className="field-help">
+                    Usaremos esse horário para calcular seu Resumo Diário no Dashboard. Exemplo: se você encerra às
+                    18:00, o resumo mostra as vendas desde 18:00 até agora.
+                  </small>
+                </label>
+              </div>
+            ) : null}
 
             {mode === "edit" ? (
               <div className="profile-grid">

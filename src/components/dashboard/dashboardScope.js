@@ -6,9 +6,16 @@
 
 import {
   buildVendasExecutiveApiParams,
+  buildOperationalCycleExecutiveApiParams,
   formatIsoToBrDate,
   resolveVendasPeriodRange,
 } from "../../features/vendas/filters/vendasFiltersPeriod.js";
+import {
+  DEFAULT_OPERATIONAL_DAY_CLOSES_AT,
+  DEFAULT_SELLER_TIMEZONE,
+  normalizeOperationalDayClosesAt,
+  resolveOperationalDayCycle,
+} from "../../features/dashboard/operationalDayCycle.js";
 
 /**
  * Conta do filtro global — vazio = todas as contas do seller (sem enviar ID na API).
@@ -67,8 +74,13 @@ export function formatDashboardPeriodRangeLabel(startIso, endIso) {
  *   marketplace?: string;
  *   marketplaceAccountId?: string;
  * }} filters
+ * @param {{
+ *   closesAt?: string;
+ *   timezone?: string;
+ *   loaded?: boolean;
+ * }} [operationalConfig]
  */
-export function resolveDashboardScope(filters) {
+export function resolveDashboardScope(filters, operationalConfig = {}) {
   const filterActive = isDashboardSellerFilterActive(filters);
   const todayRange = resolveVendasPeriodRange("today");
   const monthRange = resolveVendasPeriodRange("this_month");
@@ -78,18 +90,37 @@ export function resolveDashboardScope(filters) {
     filters.endDate,
   );
 
+  const closesAt = normalizeOperationalDayClosesAt(
+    operationalConfig.closesAt ?? DEFAULT_OPERATIONAL_DAY_CLOSES_AT,
+  );
+  const timezone =
+    operationalConfig.timezone != null && String(operationalConfig.timezone).trim() !== ""
+      ? String(operationalConfig.timezone).trim()
+      : DEFAULT_SELLER_TIMEZONE;
+
+  const operationalCycle = filterActive
+    ? null
+    : resolveOperationalDayCycle({ closesAt, timezone });
+
   const resumoRange = filterActive ? appliedRange : todayRange;
   const executiveRange = filterActive ? appliedRange : monthRange;
   const accountIdForApi = resolveDashboardMarketplaceAccountId(filters, filterActive);
 
-  const resumoParams = buildVendasExecutiveApiParams({
-    periodPreset: filterActive ? filters.periodPreset : "today",
-    startDate: resumoRange.startDate,
-    endDate: resumoRange.endDate,
-    marketplace: filters.marketplace,
-    marketplaceAccountId: accountIdForApi,
-    rankingLimit: 10,
-  });
+  const resumoParams = filterActive
+    ? buildVendasExecutiveApiParams({
+        periodPreset: filters.periodPreset,
+        startDate: resumoRange.startDate,
+        endDate: resumoRange.endDate,
+        marketplace: filters.marketplace,
+        marketplaceAccountId: accountIdForApi,
+        rankingLimit: 10,
+      })
+    : buildOperationalCycleExecutiveApiParams({
+        cycle: operationalCycle,
+        marketplace: filters.marketplace,
+        marketplaceAccountId: accountIdForApi,
+        rankingLimit: 10,
+      });
 
   const executiveParams = buildVendasExecutiveApiParams({
     periodPreset: filterActive ? filters.periodPreset : "this_month",
@@ -106,11 +137,13 @@ export function resolveDashboardScope(filters) {
 
   const resumoPeriodLabel = filterActive
     ? formatDashboardPeriodRangeLabel(resumoRange.startDate, resumoRange.endDate)
-    : "Hoje";
+    : "Ciclo operacional";
 
   const resumoDateLabel = filterActive
-    ? formatDashboardPeriodRangeLabel(resumoRange.startDate, resumoRange.endDate)
-    : formatIsoToBrDate(resumoRange.startDate);
+    ? ""
+    : operationalCycle?.labelCompact ?? formatIsoToBrDate(resumoRange.startDate);
+
+  const resumoBadgeLabel = filterActive ? null : "Parcial";
 
   const unifiedFilterParams = filterActive
     ? {
@@ -134,12 +167,27 @@ export function resolveDashboardScope(filters) {
     top10PeriodLabel,
     resumoPeriodLabel,
     resumoDateLabel,
+    resumoBadgeLabel,
+    operationalCycle,
+    operationalConfig: { closesAt, timezone },
     unifiedFilterParams,
-    resumoFilterParams: {
-      periodStart: resumoRange.startDate,
-      periodEnd: resumoRange.endDate,
-      marketplaceAccountId: filterActive ? accountIdForApi || null : null,
-    },
+    resumoFilterParams: filterActive
+      ? {
+          periodStart: resumoRange.startDate,
+          periodEnd: resumoRange.endDate,
+          marketplaceAccountId: accountIdForApi || null,
+        }
+      : operationalCycle
+        ? {
+            periodStart: operationalCycle.startDatetimeIso,
+            periodEnd: operationalCycle.endDatetimeIso,
+            marketplaceAccountId: null,
+          }
+        : {
+            periodStart: resumoRange.startDate,
+            periodEnd: resumoRange.endDate,
+            marketplaceAccountId: null,
+          },
     executiveFilterParams: {
       periodStart: executiveRange.startDate,
       periodEnd: executiveRange.endDate,

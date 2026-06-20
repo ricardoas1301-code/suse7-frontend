@@ -210,6 +210,7 @@ export default function Signup() {
     cidade: "",
     estado: "",
     imposto_percentual: "",
+    operational_day_closes_at: "18:00",
     senha: "",
     senha2: "",
     termos: false,
@@ -473,6 +474,7 @@ export default function Signup() {
         cidade: form.cidade,
         estado: form.estado,
         imposto_percentual: Number(form.imposto_percentual.replace("%", "")),
+        operational_day_closes_at: form.operational_day_closes_at || "18:00",
         primeiro_login: false,
         created_at: new Date(),
         last_login: new Date(),
@@ -748,6 +750,22 @@ export default function Signup() {
                 maxLength={3}
               />
               {errors.imposto_percentual && <p className="err">{errors.imposto_percentual}</p>}
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="field field--operational-close">
+              <label htmlFor="signup-operational-close">Hora de encerramento operacional</label>
+              <input
+                id="signup-operational-close"
+                type="time"
+                value={form.operational_day_closes_at}
+                onChange={(e) => update("operational_day_closes_at", e.target.value)}
+              />
+              <p className="field-help">
+                Usaremos esse horário para calcular seu Resumo Diário no Dashboard. Exemplo: se você
+                encerra às 18:00, o resumo mostra as vendas desde 18:00 até agora.
+              </p>
             </div>
           </div>
 

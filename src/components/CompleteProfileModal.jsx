@@ -28,6 +28,7 @@ export default function CompleteProfileModal({ show, profileId, onClose }) {
     cidade: "",
     estado: "",
     imposto_percentual: "",
+    operational_day_closes_at: "18:00",
   });
 
   const [errors, setErrors] = useState({});
@@ -250,7 +251,8 @@ const validateForm = () => {
         .from("profiles")
         .update({
           ...form,
-          imposto_percentual: impostoNumerico, // 👈 AQUI
+          imposto_percentual: impostoNumerico,
+          operational_day_closes_at: form.operational_day_closes_at || "18:00",
           primeiro_login: false,
           last_login: new Date(),
         })
@@ -446,6 +448,22 @@ const formatCpfCnpj = (value) => {
               )}
             </label>
 
+          </div>
+
+          <div className="profile-grid">
+            <label>
+              Hora de encerramento operacional
+              <input
+                type="time"
+                name="operational_day_closes_at"
+                value={form.operational_day_closes_at}
+                onChange={handleChange}
+              />
+              <small className="field-help">
+                Usaremos esse horário para calcular seu Resumo Diário no Dashboard. Exemplo: se você
+                encerra às 18:00, o resumo mostra as vendas desde 18:00 até agora.
+              </small>
+            </label>
           </div>
 
           {/* ============================================================= */}

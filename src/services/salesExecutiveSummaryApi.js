@@ -14,6 +14,8 @@ import { buildApiUrl, apiFetch } from "../config/api";
  *   period_preset?: string;
  *   start_date?: string;
  *   end_date?: string;
+ *   start_datetime?: string;
+ *   end_datetime?: string;
  *   period_start?: string;
  *   period_end?: string;
  *   ranking_limit?: number;
@@ -60,6 +62,16 @@ export function buildSalesExecutiveSummaryQuery(params) {
         : null;
   if (startDate) qs.set("start_date", startDate);
   if (endDate) qs.set("end_date", endDate);
+  const startDatetime =
+    p.start_datetime != null && String(p.start_datetime).trim() !== ""
+      ? String(p.start_datetime).trim()
+      : null;
+  const endDatetime =
+    p.end_datetime != null && String(p.end_datetime).trim() !== ""
+      ? String(p.end_datetime).trim()
+      : null;
+  if (startDatetime) qs.set("start_datetime", startDatetime);
+  if (endDatetime) qs.set("end_datetime", endDatetime);
   if (p.ranking_limit != null && Number.isFinite(Number(p.ranking_limit))) {
     qs.set("ranking_limit", String(Math.min(10, Math.max(1, Math.floor(Number(p.ranking_limit))))));
   }

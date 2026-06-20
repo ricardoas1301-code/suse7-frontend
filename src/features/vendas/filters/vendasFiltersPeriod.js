@@ -156,6 +156,31 @@ export function buildVendasExecutiveApiParams(filters) {
 }
 
 /**
+ * Params de API para ciclo operacional parcial (Resumo Diário sem filtro — DASH.5).
+ * @param {{
+ *   cycle: import("../../features/dashboard/operationalDayCycle.js").ReturnType<typeof import("../../features/dashboard/operationalDayCycle.js").resolveOperationalDayCycle> | null;
+ *   marketplace?: string;
+ *   marketplaceAccountId?: string;
+ *   rankingLimit?: number;
+ * }} input
+ */
+export function buildOperationalCycleExecutiveApiParams(input) {
+  const cycle = input.cycle;
+  /** @type {import("../../../services/salesExecutiveSummaryApi.js").SalesExecutiveSummaryParams} */
+  const params = {
+    marketplace: input.marketplace?.trim() || undefined,
+    marketplace_account_id: input.marketplaceAccountId?.trim() || undefined,
+    ranking_limit: input.rankingLimit ?? 10,
+    period_preset: "operational_cycle",
+  };
+
+  if (cycle?.startDatetimeIso) params.start_datetime = cycle.startDatetimeIso;
+  if (cycle?.endDatetimeIso) params.end_datetime = cycle.endDatetimeIso;
+
+  return params;
+}
+
+/**
  * @param {{
  *   periodPreset: VendasPeriodPresetUi;
  *   startDate: string;
