@@ -79,7 +79,16 @@ export function mapGridApiToCatalogRow(g) {
   const picN = g.pictures_count != null ? Number(g.pictures_count) : null;
   const varN = g.variations_count != null ? Number(g.variations_count) : null;
 
-  const salesCount = g.sold_quantity != null ? Math.trunc(Number(g.sold_quantity)) || 0 : 0;
+  const legacyMetrics =
+    g.legacy_imported_orders_metrics != null && typeof g.legacy_imported_orders_metrics === "object"
+      ? /** @type {{ qty_sold_total?: unknown; gross_revenue_brl?: unknown }} */ (g.legacy_imported_orders_metrics)
+      : null;
+  const salesCount =
+    legacyMetrics?.qty_sold_total != null && Number.isFinite(Number(legacyMetrics.qty_sold_total))
+      ? Math.trunc(Number(legacyMetrics.qty_sold_total))
+      : g.sold_quantity != null && Number.isFinite(Number(g.sold_quantity))
+        ? Math.trunc(Number(g.sold_quantity))
+        : null;
   const soldQtyMl =
     g.sold_quantity_ml_listing != null && Number.isFinite(Number(g.sold_quantity_ml_listing))
       ? Math.trunc(Number(g.sold_quantity_ml_listing))
@@ -97,8 +106,8 @@ export function mapGridApiToCatalogRow(g) {
   if ((healthNum != null && healthNum < 40) || /basic|bajo|baix/i.test(qStatus || "")) {
     uiFlags.needs_attention = true;
   }
-  if (Boolean(g.needs_attention)) uiFlags.needs_attention = true;
-  if (Boolean(g.sku_pending)) uiFlags.needs_attention = true;
+  if (g.needs_attention) uiFlags.needs_attention = true;
+  if (g.sku_pending) uiFlags.needs_attention = true;
 
   const attentionReason = g.attention_reason != null ? String(g.attention_reason) : null;
 
@@ -124,6 +133,30 @@ export function mapGridApiToCatalogRow(g) {
       : g.marketplace_account_logo_url != null && String(g.marketplace_account_logo_url).trim() !== ""
         ? String(g.marketplace_account_logo_url).trim()
         : null;
+  const accountAvatarUrl =
+    g.account_avatar_url != null && String(g.account_avatar_url).trim() !== ""
+      ? String(g.account_avatar_url).trim()
+      : null;
+  const profileImageUrl =
+    g.profile_image != null && String(g.profile_image).trim() !== ""
+      ? String(g.profile_image).trim()
+      : null;
+  const sellerLogoUrl =
+    g.seller_logo_url != null && String(g.seller_logo_url).trim() !== ""
+      ? String(g.seller_logo_url).trim()
+      : null;
+  const storeLogoUrl =
+    g.store_logo != null && String(g.store_logo).trim() !== ""
+      ? String(g.store_logo).trim()
+      : null;
+  const companyLogoUrl =
+    g.company_logo_url != null && String(g.company_logo_url).trim() !== ""
+      ? String(g.company_logo_url).trim()
+      : null;
+  const sellerCompanyLogoUrl =
+    g.seller_company_logo_url != null && String(g.seller_company_logo_url).trim() !== ""
+      ? String(g.seller_company_logo_url).trim()
+      : null;
   const marketplaceLabelDisplay =
     g.marketplace_label != null && String(g.marketplace_label).trim() !== ""
       ? String(g.marketplace_label).trim()
@@ -163,6 +196,17 @@ export function mapGridApiToCatalogRow(g) {
     marketplaceAccountId,
     accountAlias,
     accountLogoUrl,
+    account_logo_url: accountLogoUrl,
+    marketplace_account_logo_url:
+      g.marketplace_account_logo_url != null && String(g.marketplace_account_logo_url).trim() !== ""
+        ? String(g.marketplace_account_logo_url).trim()
+        : null,
+    account_avatar_url: accountAvatarUrl,
+    profile_image: profileImageUrl,
+    seller_logo_url: sellerLogoUrl,
+    store_logo: storeLogoUrl,
+    company_logo_url: companyLogoUrl,
+    seller_company_logo_url: sellerCompanyLogoUrl,
     sellerCompanyId,
     companyName,
     companyDocumentMasked,
@@ -353,6 +397,10 @@ export function mapGridApiToCatalogRow(g) {
     product_card_metrics:
       g.product_card_metrics != null && typeof g.product_card_metrics === "object"
         ? /** @type {Record<string, unknown>} */ (g.product_card_metrics)
+        : null,
+    mlAccountAlias:
+      g.ml_account_alias != null && String(g.ml_account_alias).trim() !== ""
+        ? String(g.ml_account_alias).trim()
         : null,
   };
 }

@@ -22,6 +22,8 @@ const RAYX_Z = 200110;
  *   children: import("react").ReactNode;
  *   ariaLabelledBy?: string;
  *   maxWidth?: number;
+ *   layout?: "portal" | "compact";
+ *   hideChannelBadge?: boolean;
  *   shellClassName?: string;
  * }} props
  */
@@ -32,9 +34,12 @@ export default function MarketplaceRayXShell({
   children,
   ariaLabelledBy,
   maxWidth = 960,
+  layout = "portal",
+  hideChannelBadge = false,
   shellClassName = "",
 }) {
   const theme = getMarketplaceTheme(marketplace);
+  const isCompact = layout === "compact";
 
   const [shellMetrics, setShellMetrics] = useState(() => {
     if (typeof window === "undefined") return { height: 800, centerYOffset: 0 };
@@ -82,6 +87,7 @@ export default function MarketplaceRayXShell({
           "anuncios-raiox-shell--open",
           "anuncios-pricing-modal__shell",
           "anuncios-pricing-modal__shell--compare-fill",
+          isCompact ? "anuncios-raiox-shell--compact" : "",
           shellClassName,
           theme.shellModifierClass,
         ]
@@ -92,7 +98,7 @@ export default function MarketplaceRayXShell({
             width: shellWidth,
             height: shellMetrics.height,
             centerYOffset: shellMetrics.centerYOffset,
-            fixedHeight: true,
+            fixedHeight: !isCompact,
           }),
           zIndex: RAYX_Z,
           ...getMarketplaceThemeCssVars(theme),
@@ -102,7 +108,7 @@ export default function MarketplaceRayXShell({
         aria-labelledby={ariaLabelledBy}
       >
         <div className="anuncios-raiox-shell__frame" aria-hidden />
-        {theme.logoSrc ? (
+        {hideChannelBadge ? null : theme.logoSrc ? (
           <div className="anuncios-raiox-shell__badge">
             <img
               src={theme.logoSrc}

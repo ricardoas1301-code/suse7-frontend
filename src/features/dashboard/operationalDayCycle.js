@@ -1,10 +1,16 @@
 // ======================================================================
 // Ciclo operacional do Resumo Diário (DASH.5)
 // Calcula intervalo parcial desde o último encerramento operacional até agora.
+// DASH.5.1: considera dias de operação configurados no profile.
 // ======================================================================
+
+import { normalizeOperationalWorkingDays } from "./operationalWorkingDays.js";
 
 /** Fallback seguro quando o campo ainda não existe no profile. */
 export const DEFAULT_OPERATIONAL_DAY_CLOSES_AT = "18:00";
+
+/** Máximo de dias calendário para buscar o último encerramento operacional válido. */
+const MAX_OPERATIONAL_LOOKBACK_DAYS = 21;
 
 /** Timezone padrão para sellers BR quando não houver configuração. */
 export const DEFAULT_SELLER_TIMEZONE = "America/Sao_Paulo";
@@ -97,10 +103,67 @@ export function formatCompactOperationalLabel(date, timeZone) {
 }
 
 /**
+ * @param {{ year: number; month: number; day: number }} dateParts
+ * @param {string} timeZone
+ * @returns {number} 0=domingo … 6=sábado
+ */
+export function getWeekdayInTimeZone(dateParts, timeZone) {
+  const anchor = zonedDateTimeToUtc({ ...dateParts, hour: 12, minute: 0, second: 0 }, timeZone);
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" }).format(anchor);
+  const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return map[weekday] ?? 0;
+}
+
+/**
+ * Último encerramento operacional válido (<= agora) em dia de operação.
+ * @param {Date} now
+ * @param {string} closesAt
+ * @param {string} timezone
+ * @param {unknown} workingDays
+ */
+export function resolveLastOperationalCloseAt(now, closesAt, timezone, workingDays) {
+  const activeDays = new Set(normalizeOperationalWorkingDays(workingDays));
+  const [closeHour, closeMinute] = closesAt.split(":").map(Number);
+  const nowParts = getZonedParts(now, timezone);
+  const todayParts = { year: nowParts.year, month: nowParts.month, day: nowParts.day };
+
+  for (let offset = 0; offset <= MAX_OPERATIONAL_LOOKBACK_DAYS; offset += 1) {
+    const dateParts = offset === 0 ? todayParts : addDaysInTimeZone(todayParts, -offset, timezone);
+    if (!activeDays.has(getWeekdayInTimeZone(dateParts, timezone))) continue;
+
+    const closeInstant = zonedDateTimeToUtc(
+      {
+        ...dateParts,
+        hour: closeHour,
+        minute: closeMinute,
+        second: 0,
+      },
+      timezone,
+    );
+
+    if (closeInstant.getTime() <= now.getTime()) {
+      return closeInstant;
+    }
+  }
+
+  const yesterday = addDaysInTimeZone(todayParts, -1, timezone);
+  return zonedDateTimeToUtc(
+    {
+      ...yesterday,
+      hour: closeHour,
+      minute: closeMinute,
+      second: 0,
+    },
+    timezone,
+  );
+}
+
+/**
  * @param {{
  *   now?: Date;
  *   closesAt?: string;
  *   timezone?: string;
+ *   workingDays?: unknown;
  * }} [input]
  */
 export function resolveOperationalDayCycle(input = {}) {
@@ -110,42 +173,9 @@ export function resolveOperationalDayCycle(input = {}) {
     input.timezone != null && String(input.timezone).trim() !== ""
       ? String(input.timezone).trim()
       : DEFAULT_SELLER_TIMEZONE;
+  const workingDays = normalizeOperationalWorkingDays(input.workingDays);
 
-  const [closeHour, closeMinute] = closesAt.split(":").map(Number);
-  const nowParts = getZonedParts(now, timezone);
-
-  const todayClose = zonedDateTimeToUtc(
-    {
-      year: nowParts.year,
-      month: nowParts.month,
-      day: nowParts.day,
-      hour: closeHour,
-      minute: closeMinute,
-      second: 0,
-    },
-    timezone,
-  );
-
-  let cycleStart;
-  if (now.getTime() >= todayClose.getTime()) {
-    cycleStart = todayClose;
-  } else {
-    const yesterday = addDaysInTimeZone(
-      { year: nowParts.year, month: nowParts.month, day: nowParts.day },
-      -1,
-      timezone,
-    );
-    cycleStart = zonedDateTimeToUtc(
-      {
-        ...yesterday,
-        hour: closeHour,
-        minute: closeMinute,
-        second: 0,
-      },
-      timezone,
-    );
-  }
-
+  const cycleStart = resolveLastOperationalCloseAt(now, closesAt, timezone, workingDays);
   const cycleEnd = now;
   const labelCompact = `${formatCompactOperationalLabel(cycleStart, timezone)} – ${formatCompactOperationalLabel(cycleEnd, timezone)}`;
 
@@ -153,6 +183,7 @@ export function resolveOperationalDayCycle(input = {}) {
     mode: "operational_cycle",
     timezone,
     closesAt,
+    workingDays,
     startAt: cycleStart,
     endAt: cycleEnd,
     startDatetimeIso: cycleStart.toISOString(),

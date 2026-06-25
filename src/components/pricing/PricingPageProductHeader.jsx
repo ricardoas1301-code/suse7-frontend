@@ -3,122 +3,11 @@
 // Consolida identidade do anúncio dentro do card principal.
 // ======================================================
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import S7Icon from "../ui/S7Icon.jsx";
 import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../ui/S7CopyButton.jsx";
-import S7Tooltip from "../ui/S7Tooltip.jsx";
-
-const DASH = "—";
-
-/**
- * @param {unknown} value
- * @returns {string}
- */
-function formatIntegerBR(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return DASH;
-  return n.toLocaleString("pt-BR");
-}
-
-/**
- * @param {unknown} value
- * @returns {string}
- */
-function formatCurrencyBRL(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return DASH;
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-/**
- * @param {unknown} value
- * @returns {string}
- */
-function formatPercentBR(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return DASH;
-  return `${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
-}
-
-/**
- * @param {unknown} raw
- * @returns {number | null}
- */
-function parseMoneyOrNumber(raw) {
-  if (raw == null || String(raw).trim() === "") return null;
-  const n = Number(String(raw).trim().replace(",", "."));
-  return Number.isFinite(n) ? n : null;
-}
-
-/**
- * @param {Record<string, unknown>} row
- * @returns {{
- *   listingType: string;
- *   listingVisits: string;
- *   listingSalesCount: string;
- *   listingSalesAmount: string;
- *   listingConversionRate: string;
- *   listingOpinion: string;
- *   listingOpinionRating: number | null;
- *   listingOpinionCount: number | null;
- *   listingOpinionUrl: string | null;
- *   listingOpinionHasRating: boolean;
- *   productSalesCount: string;
- *   productSalesAmount: string;
- *   productListingsCount: string;
- *   productStock: string;
- * }}
- */
-function buildMetricsViewModel(row) {
-  const cardMetrics =
-    row.product_card_metrics != null && typeof row.product_card_metrics === "object"
-      ? /** @type {Record<string, unknown>} */ (row.product_card_metrics)
-      : null;
-  const cm = cardMetrics;
-  const rawType = cm?.listingType ?? null;
-  const listingType =
-    rawType == null || String(rawType).trim() === ""
-      ? DASH
-      : String(rawType).toLowerCase().includes("premium")
-        ? "Premium"
-        : String(rawType).toLowerCase().includes("class")
-          ? "Clássico"
-          : String(rawType);
-
-  const ratingN = parseMoneyOrNumber(cm?.listingOpinionRating);
-  const countN =
-    cm?.listingOpinionCount != null && String(cm.listingOpinionCount).trim() !== ""
-      ? Math.trunc(Number(cm.listingOpinionCount))
-      : null;
-  const urlStr =
-    cm?.listingOpinionUrl != null && String(cm.listingOpinionUrl).trim() !== ""
-      ? String(cm.listingOpinionUrl).trim()
-      : null;
-  const listingOpinionHasRating =
-    ratingN != null && Number.isFinite(ratingN) && ratingN > 0 && countN != null && Number.isFinite(countN) && countN >= 0;
-
-  const listingSalesBrl = parseMoneyOrNumber(cm?.listingSalesAmountBrl);
-  const listingSalesAmountFormatted =
-    listingSalesBrl != null ? listingSalesBrl.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : DASH;
-
-  return {
-    listingType,
-    listingVisits: formatIntegerBR(cm?.listingVisits),
-    listingSalesCount: formatIntegerBR(cm?.listingSalesCount),
-    listingSalesAmount: listingSalesAmountFormatted,
-    listingConversionRate: formatPercentBR(cm?.listingConversionRate),
-    listingOpinion:
-      cm?.listingOpinion != null && String(cm.listingOpinion).trim() !== "" ? String(cm.listingOpinion) : DASH,
-    listingOpinionRating: listingOpinionHasRating ? ratingN : null,
-    listingOpinionCount: listingOpinionHasRating ? countN : null,
-    listingOpinionUrl: listingOpinionHasRating ? urlStr : null,
-    listingOpinionHasRating,
-    productSalesCount: formatIntegerBR(cm?.productSalesCount),
-    productSalesAmount: formatCurrencyBRL(cm?.productSalesAmountBrl),
-    productListingsCount: formatIntegerBR(cm?.productListingsCount),
-    productStock: formatIntegerBR(cm?.productStock),
-  };
-}
+import { buildPricingIntelligenceSidebarMetrics } from "../../features/listings/pricing-intelligence/buildPricingIntelligenceSidebarMetrics.js";
+import { DASH } from "../../features/listings/utils/catalogFormatters.js";
 
 function MetricRow({ label, value, loading = false }) {
   return (
@@ -131,71 +20,6 @@ function MetricRow({ label, value, loading = false }) {
       )}
     </div>
   );
-}
-
-/**
- * @param {{ metrics: ReturnType<typeof buildMetricsViewModel>; loading: boolean }} props
- */
-function ListingOpinionMetricRow({ metrics, loading }) {
-  if (loading) {
-    return (
-      <div className="pricing-intelligence-page__product-metrics-row">
-        <span className="pricing-intelligence-page__product-metrics-label">Opinião do Produto:</span>
-        <span className="pricing-intelligence-page__product-metrics-skeleton" aria-hidden />
-      </div>
-    );
-  }
-
-  if (metrics.listingOpinionHasRating && metrics.listingOpinionRating != null && metrics.listingOpinionCount != null) {
-    const rLabel = metrics.listingOpinionRating.toLocaleString("pt-BR", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    });
-    const inner = (
-      <>
-        <span className="pricing-intelligence-page__product-metrics-opinion-rating">{rLabel}</span>
-        <span className="pricing-intelligence-page__product-metrics-stars" aria-hidden>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <span
-              key={i}
-              className={
-                i <= Math.round(metrics.listingOpinionRating)
-                  ? "pricing-intelligence-page__product-metrics-star pricing-intelligence-page__product-metrics-star--on"
-                  : "pricing-intelligence-page__product-metrics-star"
-              }
-            >
-              ★
-            </span>
-          ))}
-        </span>
-        <span className="pricing-intelligence-page__product-metrics-opinion-count">
-          ({metrics.listingOpinionCount.toLocaleString("pt-BR")})
-        </span>
-      </>
-    );
-
-    return (
-      <div className="pricing-intelligence-page__product-metrics-row">
-        <span className="pricing-intelligence-page__product-metrics-label">Opinião do Produto:</span>
-        <span className="pricing-intelligence-page__product-metrics-value pricing-intelligence-page__product-metrics-value--opinion">
-          {metrics.listingOpinionUrl ? (
-            <a
-              href={metrics.listingOpinionUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pricing-intelligence-page__product-metrics-opinion-link"
-            >
-              {inner}
-            </a>
-          ) : (
-            inner
-          )}
-        </span>
-      </div>
-    );
-  }
-
-  return <MetricRow label="Opinião do Produto:" value={metrics.listingOpinion} loading={false} />;
 }
 
 /**
@@ -213,6 +37,26 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
       : "";
 
   const title = row?.adTitle != null && String(row.adTitle).trim() !== "" ? String(row.adTitle).trim() : "—";
+  const listingPermalink =
+    row?.listingPermalink != null && String(row.listingPermalink).trim() !== ""
+      ? String(row.listingPermalink).trim()
+      : "";
+  const hasTitle = title !== "—";
+  const titleNode =
+    hasTitle && listingPermalink !== "" ? (
+      <a
+        href={listingPermalink}
+        className="pricing-intelligence-page__product-header-title-link"
+        target="_blank"
+        rel="noreferrer noopener"
+        title={`Abrir no ${theme?.displayName ?? "marketplace"} — ${title}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {title}
+      </a>
+    ) : (
+      title
+    );
   const listingIdRaw =
     row?.externalId != null && String(row.externalId).trim() !== "" ? String(row.externalId).trim() : "—";
   const listingId = listingIdRaw.replace(/^MLB\s*/i, "");
@@ -221,12 +65,7 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
   const isMercadoLivreTheme = String(theme?.key ?? theme?.resolvedKey ?? "").trim().toLowerCase() === "mercado_livre";
   const metricsLoading = listingsMetricsLoading === true;
 
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    // eslint-disable-next-line no-console -- diagnóstico contrato product_card_metrics (DEV only)
-    console.log("[S7_PRODUCT_CARD_METRICS]", row?.id, row?.product_card_metrics);
-  }, [row?.id, row?.product_card_metrics]);
-  const metrics = buildMetricsViewModel(row);
+  const metrics = buildPricingIntelligenceSidebarMetrics(row);
 
   return (
     <section
@@ -275,7 +114,7 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
           </div>
 
           <p className="pricing-intelligence-page__product-header-title" title={title}>
-            {title}
+            {titleNode}
           </p>
           <p className="pricing-intelligence-page__product-header-meta pricing-intelligence-page__product-header-meta--copy">
             <span className="pricing-intelligence-page__product-header-meta-item s7-copy-group">
@@ -297,7 +136,7 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
               |
             </span>
             <span className="pricing-intelligence-page__product-header-meta-item s7-copy-group">
-              <span className="anuncios-ad-sku-label">SKU</span>
+              <span className="anuncios-ad-sku-label">SKU:</span>
               <span className="anuncios-ad-sku-value">{sku}</span>
               <S7CopyButton
                 value={sku}
@@ -311,6 +150,18 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
                 toastFailEventType="LISTING_SKU_COPY_FAILED"
                 toastEntityType="marketplace_listing"
               />
+            </span>
+          </p>
+          <p className="pricing-intelligence-page__product-header-meta pricing-intelligence-page__product-header-meta--copy pricing-intelligence-page__product-header-meta--account">
+            <span className="pricing-intelligence-page__product-header-meta-item">
+              <span className="anuncios-ad-sku-label">Conta:</span>
+              {metricsLoading ? (
+                <span className="pricing-intelligence-page__product-metrics-skeleton" aria-hidden />
+              ) : (
+                <span className="anuncios-ad-sku-value" title={metrics.marketplaceAccount}>
+                  {metrics.marketplaceAccount}
+                </span>
+              )}
             </span>
           </p>
           <div className="pricing-intelligence-page__product-metrics">
@@ -328,31 +179,19 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
             </div>
 
             <section className="pricing-intelligence-page__product-metrics-section">
-              <h5 className="pricing-intelligence-page__product-metrics-title pricing-intelligence-page__product-metrics-title--with-tip">
-                <span>Indicadores do Anúncio</span>
-                <S7Tooltip
-                  content="Esses dados são sincronizados automaticamente com o marketplace e armazenados pelo Suse7 para manter histórico mesmo quando o marketplace não fornece mais essas informações."
-                  placement="bottom-start"
-                  offset={6}
-                >
-                  <span className="pricing-intelligence-page__product-metrics-tip" aria-label="Informação sobre sincronização">
-                    <S7Icon name="info" size={12} strokeWidth={2} />
-                  </span>
-                </S7Tooltip>
-              </h5>
-              <MetricRow label="Visitas:" value={metrics.listingVisits} loading={metricsLoading} />
+              <h5 className="pricing-intelligence-page__product-metrics-title">Indicadores do Anúncio</h5>
               <MetricRow label="Vendas Qtd:" value={metrics.listingSalesCount} loading={metricsLoading} />
               <MetricRow label="Vendas R$:" value={metrics.listingSalesAmount} loading={metricsLoading} />
-              <MetricRow label="Conversão:" value={metrics.listingConversionRate} loading={metricsLoading} />
-              <ListingOpinionMetricRow metrics={metrics} loading={metricsLoading} />
+              <MetricRow label="Lucro R$:" value={metrics.listingProfitAmount} loading={metricsLoading} />
+              <MetricRow label="Lucro %:" value={metrics.listingProfitPercent} loading={metricsLoading} />
             </section>
 
             <section className="pricing-intelligence-page__product-metrics-section">
               <h5 className="pricing-intelligence-page__product-metrics-title">Indicadores do Produto</h5>
               <MetricRow label="Vendas Qtd:" value={metrics.productSalesCount} loading={metricsLoading} />
               <MetricRow label="Vendas R$:" value={metrics.productSalesAmount} loading={metricsLoading} />
-              <MetricRow label="Qtd. de Anúncios:" value={metrics.productListingsCount} loading={metricsLoading} />
-              <MetricRow label="Estoque:" value={metrics.productStock} loading={metricsLoading} />
+              <MetricRow label="Lucro R$:" value={metrics.productProfitAmount} loading={metricsLoading} />
+              <MetricRow label="Lucro %:" value={metrics.productProfitPercent} loading={metricsLoading} />
             </section>
           </div>
         </>
@@ -394,7 +233,7 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
 
             <div className="pricing-intelligence-page__product-header-copy">
               <p className="pricing-intelligence-page__product-header-title" title={title}>
-                {title}
+                {titleNode}
               </p>
               <p className="pricing-intelligence-page__product-header-meta pricing-intelligence-page__product-header-meta--copy">
                 <span className="pricing-intelligence-page__product-header-meta-item s7-copy-group">
@@ -416,7 +255,7 @@ export function PricingPageProductHeader({ row, theme, compactVertical = false, 
                   |
                 </span>
                 <span className="pricing-intelligence-page__product-header-meta-item s7-copy-group">
-                  <span className="anuncios-ad-sku-label">SKU</span>
+                  <span className="anuncios-ad-sku-label">SKU:</span>
                   <span className="anuncios-ad-sku-value">{sku}</span>
                   <S7CopyButton
                 value={sku}

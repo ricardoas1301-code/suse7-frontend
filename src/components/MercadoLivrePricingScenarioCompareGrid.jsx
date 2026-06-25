@@ -9,6 +9,7 @@ import {
   MercadoLivrePricingScenarioRevenueSection,
   resolveMlScenarioTabId,
 } from "./MercadoLivrePricingScenarioRaiox.jsx";
+import { PricingScenarioContingencySection } from "./pricing/PricingScenarioContingencySection.jsx";
 import {
   buildOrderedScenarioRows,
   cardHeadingLabel,
@@ -28,32 +29,63 @@ import {
  *   scenario: unknown;
  *   group: string;
  *   baselineHeadingOverride?: string | null;
+ *   baselineListingTypeBadge?: string | null; // ex.: CLÁSSICO / PREMIUM (pill ML após "Anúncio")
  *   hideBreakEvenInResult?: boolean;
  *   showBaselineListingStatusBadge?: boolean;
  *   resultProfitLineLabel?: string | null;
  *   listingHintForAudit?: string;
  *   scheduledPromoBadgeAsAvailable?: boolean;
  *   baselineListingSaleDisplayOverride?: string | null;
+ *   inlineEditSale?: {
+ *     displayValue: string;
+ *     onCommit: (raw: string) => void;
+ *   } | null;
+ *   inlineEditMargin?: {
+ *     displayValue: string;
+ *     onCommit: (raw: string) => void;
+ *   } | null;
+ *   contingencyLines?: { label: string; subtitlePct?: string | null; amountBrl: string }[];
+ *   strategicReserveLines?: { label: string; subtitlePct?: string | null; amountBrl: string }[];
+ *   listingUnitSaleDisplayOverride?: string | null;
+ *   listingTypeSelectionBadge?: "Vendendo" | "Alternativa" | null;
+ *   cardFooterNotice?: string | null;
+ *   layoutPiFixo?: boolean;
  * }} props
  */
 export function MercadoLivrePricingScenarioCompareCard({
   scenario,
   group,
   baselineHeadingOverride = null,
+  baselineListingTypeBadge = null,
   hideBreakEvenInResult = false,
   showBaselineListingStatusBadge = false,
   resultProfitLineLabel = null,
   listingHintForAudit = "",
   scheduledPromoBadgeAsAvailable = false,
   baselineListingSaleDisplayOverride = null,
+  inlineEditSale = null,
+  inlineEditMargin = null,
+  salePriceEditControl = null,
+  contingencyLines = [],
+  strategicReserveLines = [],
+  listingUnitSaleDisplayOverride = null,
+  listingTypeSelectionBadge = null,
+  cardFooterNotice = null,
+  layoutPiFixo = false,
 }) {
+  if (scenario == null || typeof scenario !== "object") {
+    return (
+      <article className="s7-ml-scenario-compare__card" role="status">
+        <p className="anuncios-sell-popover__muted">Cenário indisponível para exibição.</p>
+      </article>
+    );
+  }
+
   const badgeInfo = resolveRaioxListingBadge(scenario);
+  const scenarioRec = /** @type {Record<string, unknown>} */ (scenario);
   const res =
-    /** @type {Record<string, unknown>} */ (scenario).result != null &&
-    typeof /** @type {Record<string, unknown>} */ (scenario).result === "object"
-      ? /** @type {Record<string, unknown>} */ (
-          /** @type {Record<string, unknown>} */ (scenario).result
-        )
+    scenarioRec.result != null && typeof scenarioRec.result === "object"
+      ? /** @type {Record<string, unknown>} */ (scenarioRec.result)
       : null;
   const profitRaw = res?.profit_brl != null ? String(res.profit_brl).trim() : "";
   const vigenciaResolved = resolveRaioxCardVigenciaLine(scenario);
@@ -92,6 +124,44 @@ export function MercadoLivrePricingScenarioCompareCard({
   const participatingBadgeText =
     participatingBadgeLabelRaw !== "" ? participatingBadgeLabelRaw : "Ativa";
 
+  const listingTypeBadgeRaw =
+    baselineListingTypeBadge != null ? String(baselineListingTypeBadge).trim() : "";
+  const listingTypeSelectionRaw =
+    listingTypeSelectionBadge === "Vendendo" || listingTypeSelectionBadge === "Alternativa"
+      ? listingTypeSelectionBadge
+      : "";
+  const listingTypeSelectionClass =
+    listingTypeSelectionBadge === "Alternativa"
+      ? "pricing-intelligence-page__listing-type-selection-pill--alternativa"
+      : "pricing-intelligence-page__listing-type-selection-pill--vendendo";
+  const showListingTypeBadgeTitle = listingTypeBadgeRaw !== "";
+
+  const cardTitleNode = showListingTypeBadgeTitle ? (
+    <>
+      <span className="s7-ml-scenario-compare__card-title-prefix">Anúncio</span>
+      <span className="s7-ml-scenario-compare__badge s7-ml-scenario-compare__badge--available pricing-intelligence-page__listing-type-pill">
+        {listingTypeBadgeRaw}
+      </span>
+      {listingTypeSelectionRaw !== "" ? (
+        <span
+          className={[
+            "s7-ml-scenario-compare__badge",
+            "pricing-intelligence-page__listing-type-selection-pill",
+            listingTypeSelectionClass,
+          ].join(" ")}
+        >
+          {listingTypeSelectionRaw}
+        </span>
+      ) : null}
+    </>
+  ) : group === "baseline" &&
+    baselineHeadingOverride != null &&
+    String(baselineHeadingOverride).trim() !== "" ? (
+    String(baselineHeadingOverride).trim()
+  ) : (
+    cardHeadingLabel(scenario)
+  );
+
   return (
     <article
       className={cardClass}
@@ -102,12 +172,15 @@ export function MercadoLivrePricingScenarioCompareCard({
       <header className="s7-ml-scenario-compare__card-head">
         <div className="s7-ml-scenario-compare__card-head-line">
           <div className="s7-ml-scenario-compare__card-title-stack">
-            <span className="s7-ml-scenario-compare__card-title">
-              {group === "baseline" &&
-              baselineHeadingOverride != null &&
-              String(baselineHeadingOverride).trim() !== ""
-                ? String(baselineHeadingOverride).trim()
-                : cardHeadingLabel(scenario)}
+            <span
+              className={[
+                "s7-ml-scenario-compare__card-title",
+                showListingTypeBadgeTitle ? "s7-ml-scenario-compare__card-title--listing-type" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              {cardTitleNode}
             </span>
             {baselineAdStatus ? (
               <span className="s7-ml-scenario-compare__card-vigencia s7-ml-scenario-compare__card-vigencia--baseline-badge">
@@ -135,19 +208,50 @@ export function MercadoLivrePricingScenarioCompareCard({
           ) : null}
         </div>
       </header>
-      <div className="s7-ml-scenario-compare__card-body">
+      <div
+        className={[
+          "s7-ml-scenario-compare__card-body",
+          layoutPiFixo ? "s7-ml-scenario-compare__card-body--pi-layout-fixo" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <MercadoLivrePricingScenarioRevenueSection
           scenario={scenario}
           showSubsidy={false}
           showShippingSubsidyMlLine={false}
-          baselineListingSaleDisplayOverride={baselineListingSaleDisplayOverride}
+          baselineListingSaleDisplayOverride={
+            inlineEditSale != null || salePriceEditControl != null
+              ? null
+              : baselineListingSaleDisplayOverride
+          }
+          listingUnitSaleDisplayOverride={listingUnitSaleDisplayOverride}
+          inlineEditSale={inlineEditSale}
+          salePriceEditControl={salePriceEditControl}
         />
+        {layoutPiFixo || (Array.isArray(strategicReserveLines) && strategicReserveLines.length > 0) ? (
+          <PricingScenarioContingencySection
+            title="Reserva estratégica"
+            lines={strategicReserveLines}
+            sectionClassName="anuncios-sell-popover__section--strategic-reserve"
+          />
+        ) : null}
+        {layoutPiFixo || (Array.isArray(contingencyLines) && contingencyLines.length > 0) ? (
+          <PricingScenarioContingencySection lines={contingencyLines} />
+        ) : null}
         <MercadoLivrePricingScenarioInternalAndResultSection
           scenario={scenario}
           hideBreakEvenRow={hideBreakEvenInResult}
           profitLineLabel={resultProfitLineLabel}
+          inlineEditMargin={inlineEditMargin}
+          layoutPiFixo={layoutPiFixo}
         />
       </div>
+      {cardFooterNotice != null && String(cardFooterNotice).trim() !== "" ? (
+        <p className="pricing-listing-type-compare__card-footnote anuncios-sell-popover__muted" role="note">
+          {cardFooterNotice}
+        </p>
+      ) : null}
     </article>
   );
 }

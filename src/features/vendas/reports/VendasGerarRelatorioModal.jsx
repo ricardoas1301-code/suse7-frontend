@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import VendasRelatorioCanais from "./VendasRelatorioCanais";
 import VendasRelatorioExecutivoStub from "./VendasRelatorioExecutivoStub";
+import { buildVendasSharePayload } from "./share/buildVendasSharePayload.js";
 import "./VendasGerarRelatorioModal.css";
 
 /**
@@ -14,7 +15,9 @@ import "./VendasGerarRelatorioModal.css";
  *   onClose: () => void;
  *   reportContext: import("./buildVendasReportContext.js").VendasReportContext | null;
  *   modalTitle?: string;
+ *   modalSubtitle?: string;
  *   aggregatedReport?: import("./buildVendasAggregatedReport.js").VendasAggregatedReport | null;
+ *   visibleActions?: readonly import("../../../shared/modalActions/s7ModalShareActions.js").S7ModalShareActionId[];
  *   executivePreview: {
  *     revenueValue: string;
  *     netProfitValue: string;
@@ -36,7 +39,9 @@ export default function VendasGerarRelatorioModal({
   onClose,
   reportContext,
   modalTitle = "Relatório de vendas",
+  modalSubtitle = "",
   aggregatedReport = null,
+  visibleActions,
   executivePreview,
 }) {
   useEffect(() => {
@@ -59,18 +64,9 @@ export default function VendasGerarRelatorioModal({
 
   if (!open || !reportContext) return null;
 
-  const activeFilters = [
-    reportContext.reportScope === "selected"
-      ? `${reportContext.sales.totalCount.toLocaleString("pt-BR")} vendas selecionadas`
-      : null,
-    reportContext.operationalFilter.id !== "all" && reportContext.reportScope !== "selected"
-      ? reportContext.operationalFilter.label
-      : null,
-    reportContext.search.hasQuery && reportContext.reportScope !== "selected"
-      ? `Busca: "${reportContext.search.query}"`
-      : null,
-    reportContext.sales.truncatedScan ? "Análise limitada por volume" : null,
-  ].filter(Boolean);
+  const sharePayload = buildVendasSharePayload(aggregatedReport, reportContext);
+
+  const activeFilters = Array.isArray(sharePayload?.filtrosAtivos) ? sharePayload.filtrosAtivos : [];
 
   // Quantidade de vendas deixou de ser card e passou a ser contexto textual
   // (P_2.8.12B). Consome o contrato agregado oficial quando disponível.
@@ -93,30 +89,49 @@ export default function VendasGerarRelatorioModal({
         aria-labelledby="vendas-relatorio-modal-title"
         onClick={(e) => e.stopPropagation()}
       >
+        <div
+          className="vendas-relatorio-modal-shell__decor vendas-relatorio-modal-shell__decor--left"
+          aria-hidden
+        />
+        <div
+          className="vendas-relatorio-modal-shell__decor vendas-relatorio-modal-shell__decor--right"
+          aria-hidden
+        />
         <div className="vendas-relatorio-modal-shell__panel">
           <div className="anuncios-pricing-modal__head-row vendas-sale-rayx__modal-head-row vendas-relatorio-modal__head-row">
             <div className="vendas-sale-rayx__modal-title-stack">
               <h2 id="vendas-relatorio-modal-title" className="anuncios-sell-popover__title">
                 {modalTitle}
               </h2>
+              {modalSubtitle ? (
+                <p className="vendas-relatorio-modal__subtitle">{modalSubtitle}</p>
+              ) : null}
             </div>
-            <VendasRelatorioCanais aggregatedReport={aggregatedReport} />
+            <VendasRelatorioCanais
+              aggregatedReport={aggregatedReport}
+              reportContext={reportContext}
+              visibleActions={visibleActions}
+            />
           </div>
 
           <div className="vendas-relatorio-modal__inner-card">
             <dl className="vendas-relatorio-modal__summary-list">
               <div className="vendas-relatorio-modal__summary-row">
                 <dt className="vendas-relatorio-modal__summary-label">Período</dt>
-                <dd className="vendas-relatorio-modal__summary-value">{reportContext.period.rangeDisplay}</dd>
+                <dd className="vendas-relatorio-modal__summary-value">
+                  {sharePayload?.cabecalhoExecutivo?.periodo ?? reportContext.period.rangeDisplay}
+                </dd>
               </div>
               <div className="vendas-relatorio-modal__summary-row">
                 <dt className="vendas-relatorio-modal__summary-label">Conta</dt>
-                <dd className="vendas-relatorio-modal__summary-value">{reportContext.account.label}</dd>
+                <dd className="vendas-relatorio-modal__summary-value">
+                  {sharePayload?.cabecalhoExecutivo?.contas ?? reportContext.account.label}
+                </dd>
               </div>
               <div className="vendas-relatorio-modal__summary-row">
                 <dt className="vendas-relatorio-modal__summary-label">Vendas</dt>
                 <dd className="vendas-relatorio-modal__summary-value vendas-relatorio-modal__summary-value--count">
-                  {analyzedLabel}
+                  {sharePayload?.cabecalhoExecutivo?.vendas ?? analyzedLabel}
                 </dd>
               </div>
               <div className="vendas-relatorio-modal__summary-row">
@@ -162,7 +177,10 @@ export default function VendasGerarRelatorioModal({
 
             <section className="vendas-relatorio-modal__exec-section" aria-label="Resumo executivo">
               <h3 className="vendas-relatorio-modal__section-title">Resumo executivo</h3>
-              <VendasRelatorioExecutivoStub {...executivePreview} />
+              <VendasRelatorioExecutivoStub
+                {...executivePreview}
+                executiveSchema={sharePayload?.resumoExecutivoSchema ?? executivePreview?.schema ?? null}
+              />
             </section>
           </div>
         </div>

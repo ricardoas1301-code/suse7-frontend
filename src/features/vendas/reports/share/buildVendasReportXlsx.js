@@ -10,6 +10,9 @@ import {
   applyS7ExcelInstitutionalHeader,
   styleS7ExcelTableHeaderRow,
 } from "../../../../shared/exports/s7ExcelInstitutionalHeader.js";
+import { buildSaleRayxExportRows } from "../../../../components/sales/buildSaleRayxExportRows.js";
+import { resolveVendasReportDetailRows } from "./fetchVendasReportDetailRows.js";
+import { mapVendasListRowToRayxExportContext } from "./mapVendasListRowToRayxExportContext.js";
 
 const XLSX_MIME =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -59,9 +62,8 @@ function resolveFilename(payload) {
 /**
  * @param {import("exceljs").Worksheet} sheet
  * @param {string[][]} rows
- * @param {number} startRowIndex
  */
-function applyColumnWidths(sheet, rows) {
+function applyExecutiveColumnWidths(sheet, rows) {
   for (let col = 0; col < 2; col += 1) {
     let max = col === 0 ? 22 : 18;
     for (const row of rows) {
@@ -72,6 +74,60 @@ function applyColumnWidths(sheet, rows) {
 }
 
 /**
+ * @param {import("./buildVendasSharePayload.js").VendasSharePayload} payload
+ * @returns {[string, string][]}
+ */
+function buildResumoExecutivoRows(payload) {
+  const cabecalho = payload.cabecalhoExecutivo ?? {};
+  const fallbackResumo = payload.resumoExecutivo;
+  const custos = Array.isArray(fallbackResumo?.custos) ? fallbackResumo.custos : [];
+
+  /** @type {[string, string][]} */
+  const rows = [
+    ["Período", cabecalho.periodo ?? payload.periodo.label],
+    ["Conta(s)", cabecalho.contas ?? payload.contas.label],
+    ["Quantidade de vendas", cabecalho.vendas ?? payload.quantidadeVendas.label],
+    ["Filtros", cabecalho.filtros ?? "Nenhum filtro operacional ou busca adicional"],
+    ["", ""],
+    ["Resumo executivo", ""],
+    ["Faturamento", fallbackResumo.faturamento.display],
+    ["Lucro", fallbackResumo.lucroLiquido.display],
+    ["Margem", fallbackResumo.margem.display],
+    ["Pedidos", fallbackResumo.pedidos?.label ?? "0"],
+    ["Ticket médio", fallbackResumo.ticketMedio?.display ?? "R$ 0,00"],
+    ["Repasse Marketplace", fallbackResumo.repasseMarketplace?.display ?? "R$ 0,00"],
+    ["Saudáveis", fallbackResumo.saudaveis ? fallbackResumo.saudaveis.label : "—"],
+    ["Margem crítica", fallbackResumo.margemCritica.label],
+    ["Prejuízo", fallbackResumo.prejuizo.label],
+    ["", ""],
+    ["Custos", ""],
+  ];
+
+  for (const custo of custos) {
+    rows.push([`${custo.label} (R$)`, custo.display]);
+    rows.push([`${custo.label} (%)`, custo.sharePercent]);
+  }
+
+  return rows;
+}
+
+/**
+ * @param {import("exceljs").Worksheet} sheet
+ * @param {string[]} headers
+ * @param {string[][]} dataRows
+ */
+function applyDetailColumnWidths(sheet, headers, dataRows) {
+  headers.forEach((header, index) => {
+    const colIndex = index + 1;
+    let max = Math.max(12, String(header).length + 2);
+    for (const row of dataRows) {
+      max = Math.max(max, String(row[index] ?? "").length + 2);
+    }
+    sheet.getColumn(colIndex).width = Math.min(48, max);
+  });
+}
+
+/**
  * Gera o workbook do relatório de vendas em buffer + nome de arquivo.
  *
  * @param {import("./buildVendasSharePayload.js").VendasSharePayload | null | undefined} payload
@@ -79,65 +135,105 @@ function applyColumnWidths(sheet, rows) {
  */
 export async function buildVendasReportXlsx(payload) {
   if (!payload) return null;
+  const startedAt = performance.now();
 
   const { default: ExcelJS } = await import("exceljs");
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Suse7 Precifica";
   workbook.created = new Date();
 
-  const sheet = workbook.addWorksheet("Relatório de Vendas");
-
-  const headerRowIndex = await applyS7ExcelInstitutionalHeader(sheet, workbook, {
-    reportTitle: "Relatório de Vendas",
+  const resumoSheet = workbook.addWorksheet("Resumo Executivo");
+  const resumoHeaderRowIndex = await applyS7ExcelInstitutionalHeader(resumoSheet, workbook, {
+    reportTitle: "Resumo Executivo",
     columnCount: 2,
   });
+  const resumoHeaderRow = resumoSheet.getRow(resumoHeaderRowIndex);
+  resumoHeaderRow.values = ["Indicador", "Valor"];
+  styleS7ExcelTableHeaderRow(resumoHeaderRow);
 
-  const headerRow = sheet.getRow(headerRowIndex);
-  headerRow.values = ["Indicador", "Valor"];
-  styleS7ExcelTableHeaderRow(headerRow);
-
-  const r = payload.resumoExecutivo;
-  /** @type {[string, string][]} */
-  const rows = [];
-  rows.push(["Período", payload.periodo.label]);
-  rows.push(["Conta", payload.contas.label]);
-  rows.push(["Vendas", payload.quantidadeVendas.label]);
-
-  if (payload.mostrarDistribuicao && payload.distribuicaoPorConta.length > 0) {
-    rows.push(["", ""]);
-    rows.push(["Distribuição por conta", ""]);
-    for (const conta of payload.distribuicaoPorConta) {
-      rows.push([conta.conta, conta.quantidadeLabel]);
-    }
-  }
-
-  rows.push(["", ""]);
-  rows.push(["Resumo executivo", ""]);
-  rows.push(["Faturamento", r.faturamento.display]);
-  rows.push(["Lucro", r.lucroLiquido.display]);
-  rows.push(["Margem", r.margem.display]);
-  rows.push(["Saudáveis", r.saudaveis ? r.saudaveis.label : "—"]);
-  rows.push(["Margem crítica", r.margemCritica.label]);
-  rows.push(["Prejuízo", r.prejuizo.label]);
-
-  let rowIndex = headerRowIndex + 1;
-  for (const [indicador, valor] of rows) {
-    const row = sheet.getRow(rowIndex);
+  const resumoRows = buildResumoExecutivoRows(payload);
+  let resumoRowIndex = resumoHeaderRowIndex + 1;
+  for (const [indicador, valor] of resumoRows) {
+    const row = resumoSheet.getRow(resumoRowIndex);
     row.values = [indicador, valor];
     const isSection = valor === "" && indicador !== "";
     row.getCell(1).font = { bold: isSection, size: 11 };
     row.getCell(1).alignment = { vertical: "middle", wrapText: true };
     row.getCell(2).font = { bold: false, size: 11 };
     row.getCell(2).alignment = { vertical: "middle", horizontal: "left", wrapText: true };
-    rowIndex += 1;
+    resumoRowIndex += 1;
+  }
+  applyExecutiveColumnWidths(resumoSheet, resumoRows);
+  resumoSheet.views = [
+    { state: "frozen", ySplit: resumoHeaderRowIndex, activeCell: `A${resumoHeaderRowIndex + 1}` },
+  ];
+
+  const detailSheet = workbook.addWorksheet("Vendas Detalhadas");
+  const detailStartedAt = performance.now();
+  const detailSalesRows = await resolveVendasReportDetailRows(payload);
+  /** @type {string[] | null} */
+  let detailHeaders = null;
+  /** @type {string[][]} */
+  const detailDataRows = [];
+
+  for (const saleRow of detailSalesRows) {
+    const exportCtx = mapVendasListRowToRayxExportContext(
+      /** @type {Record<string, unknown>} */ (saleRow),
+    );
+    const { headers, row } = buildSaleRayxExportRows(exportCtx);
+    if (!detailHeaders) detailHeaders = headers;
+    detailDataRows.push(row);
   }
 
-  applyColumnWidths(sheet, rows);
-  sheet.views = [
-    { state: "frozen", ySplit: headerRowIndex, activeCell: `A${headerRowIndex + 1}` },
+  const detailColumnCount = detailHeaders?.length || 2;
+  const detailHeaderRowIndex = await applyS7ExcelInstitutionalHeader(detailSheet, workbook, {
+    reportTitle: "Vendas Detalhadas",
+    columnCount: detailColumnCount,
+  });
+
+  if (detailHeaders && detailDataRows.length > 0) {
+    const detailHeaderRow = detailSheet.getRow(detailHeaderRowIndex);
+    detailHeaderRow.values = detailHeaders;
+    styleS7ExcelTableHeaderRow(detailHeaderRow);
+
+    let detailRowIndex = detailHeaderRowIndex + 1;
+    for (const detailRow of detailDataRows) {
+      const dataRow = detailSheet.getRow(detailRowIndex);
+      dataRow.values = detailRow;
+      dataRow.eachCell((cell) => {
+        cell.alignment = { vertical: "middle", wrapText: true };
+      });
+      detailRowIndex += 1;
+    }
+    applyDetailColumnWidths(detailSheet, detailHeaders, detailDataRows);
+  } else {
+    const headerRow = detailSheet.getRow(detailHeaderRowIndex);
+    headerRow.values = ["Mensagem"];
+    styleS7ExcelTableHeaderRow(headerRow);
+    const row = detailSheet.getRow(detailHeaderRowIndex + 1);
+    row.values = ["Nenhuma venda detalhada encontrada para o recorte selecionado."];
+    row.getCell(1).alignment = { vertical: "middle", wrapText: true };
+    detailSheet.getColumn(1).width = 72;
+  }
+  detailSheet.views = [
+    { state: "frozen", ySplit: detailHeaderRowIndex, activeCell: `A${detailHeaderRowIndex + 1}` },
   ];
 
   const buffer = await workbook.xlsx.writeBuffer();
+  if (import.meta.env.DEV) {
+    const durationMs = Math.round(performance.now() - startedAt);
+    const detailDurationMs = Math.round(performance.now() - detailStartedAt);
+    const firstRow =
+      Array.isArray(detailSalesRows) && detailSalesRows.length > 0 ? detailSalesRows[0] : null;
+    console.info("[S7][VendasXlsx][debug]", {
+      duration_ms: durationMs,
+      detail_fetch_and_map_ms: detailDurationMs,
+      resumo_vendas_count: payload.quantidadeVendas?.valor ?? 0,
+      detail_rows_count: detailSalesRows.length,
+      first_detail_row_keys: firstRow ? Object.keys(firstRow).slice(0, 20) : [],
+      custos_resumo: payload?.resumoExecutivo?.custos ?? null,
+    });
+  }
   return { buffer, filename: resolveFilename(payload) };
 }
 

@@ -7,7 +7,7 @@ import { fetchSubscriptionStatus } from "../services/billingApi";
 const BillingAccessContext = createContext(null);
 
 export function BillingAccessProvider({ children }) {
-  const { ready: authReady } = useAuthBootstrap();
+  const { ready: authReady, loading: authLoading } = useAuthBootstrap();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -97,7 +97,15 @@ export function BillingAccessProvider({ children }) {
   );
 
   useEffect(() => {
-    if (!authReady) return;
+    if (authLoading) return;
+
+    if (!authReady) {
+      setLoading(false);
+      setRefreshing(false);
+      setError("");
+      setConnectionError(false);
+      return;
+    }
 
     let active = true;
     (async () => {
@@ -112,7 +120,7 @@ export function BillingAccessProvider({ children }) {
     return () => {
       active = false;
     };
-  }, [authReady, applyStatusPayload]);
+  }, [authLoading, authReady, applyStatusPayload]);
 
   const ux = useMemo(
     () => resolveBillingUx(access, subscriptions, statusExtras),

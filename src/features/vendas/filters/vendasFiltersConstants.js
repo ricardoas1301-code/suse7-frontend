@@ -55,6 +55,7 @@ export const VENDAS_ORIGEM_VENDA_OPTIONS = [
 
 /** @type {readonly { id: import("./vendasFiltersPeriod.js").VendasPeriodPresetUi; label: string }[]} */
 export const VENDAS_PERIOD_PRESETS = [
+  { id: "last_30_days", label: "Últimos 30 dias" },
   { id: "today", label: "Hoje" },
   { id: "this_week", label: "Esta semana" },
   { id: "last_week", label: "Semana passada" },
@@ -64,5 +65,8 @@ export const VENDAS_PERIOD_PRESETS = [
 ];
 
 export const VENDAS_FILTERS_EXPANDED_STORAGE_KEY = "s7:vendas:filters:expanded";
+
+/** Sessão separada — card recolhido por padrão no Dashboard. */
+export const DASHBOARD_FILTERS_EXPANDED_STORAGE_KEY = "s7:dashboard:filters:expanded";
 
 export const VENDAS_CALENDAR_WEEKDAYS_PT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];

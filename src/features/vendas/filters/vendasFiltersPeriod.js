@@ -3,7 +3,7 @@
 // Somente formatação de datas; sem cálculos financeiros.
 // ======================================================================
 
-/** @typedef {'today' | 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'custom'} VendasPeriodPresetUi */
+/** @typedef {'last_30_days' | 'today' | 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'custom'} VendasPeriodPresetUi */
 
 /**
  * @param {Date} d
@@ -43,6 +43,41 @@ export function utcTodayDateOnly(base = new Date()) {
 }
 
 /**
+ * Faixa padrão oficial S7 para Vendas/Top 10.
+ * Ex.: hoje 23/06 => início 24/05.
+ *
+ * @param {Date} [now]
+ * @returns {{ preset: "last_30_days"; label: "Últimos 30 dias"; startDate: string; endDate: string }}
+ */
+export function getDefaultLast30DaysRange(now = new Date()) {
+  const today = utcTodayDateOnly(now);
+  const start = new Date(today);
+  start.setUTCDate(start.getUTCDate() - 30);
+  return {
+    preset: "last_30_days",
+    label: "Últimos 30 dias",
+    startDate: formatIsoDateOnlyUtc(start),
+    endDate: formatIsoDateOnlyUtc(today),
+  };
+}
+
+/**
+ * @param {VendasPeriodPresetUi} presetUi
+ */
+export function getVendasPeriodPresetLabel(presetUi) {
+  const labels = {
+    last_30_days: "Últimos 30 dias",
+    today: "Hoje",
+    this_week: "Esta semana",
+    last_week: "Semana passada",
+    this_month: "Este mês",
+    last_month: "Mês passado",
+    custom: "Período customizado",
+  };
+  return labels[presetUi] ?? "Período";
+}
+
+/**
  * Segunda-feira da semana UTC da data.
  * @param {Date} date
  */
@@ -62,6 +97,16 @@ function utcMondayOfWeek(date) {
  */
 export function resolveVendasPeriodRange(presetUi, customStart = "", customEnd = "") {
   const today = utcTodayDateOnly();
+
+  if (presetUi === "last_30_days") {
+    const last30 = getDefaultLast30DaysRange(today);
+    return {
+      presetUi,
+      apiPreset: "custom",
+      startDate: last30.startDate,
+      endDate: last30.endDate,
+    };
+  }
 
   if (presetUi === "custom") {
     const start = String(customStart ?? "").trim();
@@ -215,20 +260,13 @@ export function buildVendasSalesListPeriodQuery(filters) {
  * @param {string} endDate
  */
 export function formatVendasPeriodSummaryLabel(presetUi, startDate, endDate) {
-  const labels = {
-    today: "Hoje",
-    this_week: "Esta semana",
-    last_week: "Semana passada",
-    this_month: "Este mês",
-    last_month: "Mês passado",
-    custom: "Período customizado",
-  };
-  const presetLabel = labels[presetUi] ?? "Período";
+  const presetLabel = getVendasPeriodPresetLabel(presetUi);
+  const prefix = presetUi === "last_30_days" ? "Período · últimos 30 dias" : presetLabel;
   if (startDate && endDate) {
-    if (startDate === endDate) return `${presetLabel} · ${formatIsoToBrDate(startDate)}`;
-    return `${presetLabel} · ${formatIsoToBrDate(startDate)} – ${formatIsoToBrDate(endDate)}`;
+    if (startDate === endDate) return `${prefix} · ${formatIsoToBrDate(startDate)}`;
+    return `${prefix} · ${formatIsoToBrDate(startDate)} – ${formatIsoToBrDate(endDate)}`;
   }
-  return presetLabel;
+  return prefix;
 }
 
 /**

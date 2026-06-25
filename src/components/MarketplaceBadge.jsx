@@ -1,4 +1,6 @@
-import { getMarketplaceBadgeAsset } from "../utils/marketplaceBadge";
+import S7Icon from "./ui/S7Icon";
+import { getMarketplaceBrand } from "../utils/marketplaceBadge";
+import { useState } from "react";
 
 /**
  * Logo discreta por marketplace (extensível).
@@ -10,32 +12,33 @@ import { getMarketplaceBadgeAsset } from "../utils/marketplaceBadge";
  * }} props
  */
 export default function MarketplaceBadge({ marketplace, label, size = 22, className = "" }) {
-  const cfg = getMarketplaceBadgeAsset(marketplace);
+  const brand = getMarketplaceBrand(marketplace);
+  const px = Number(size);
+  const wh = Number.isFinite(px) && px > 0 ? Math.round(px) : 22;
+  const [failedSrc, setFailedSrc] = useState(null);
+  const imgFailed = Boolean(brand.logoSrc) && failedSrc === brand.logoSrc;
   const labelTrim = label != null && String(label).trim() !== "" ? String(label).trim() : "";
-  const title = labelTrim || cfg?.alt || (marketplace ? String(marketplace) : undefined);
+  const title = labelTrim || brand.label || (marketplace ? String(marketplace) : undefined);
 
-  if (!cfg) {
-    const text =
-      labelTrim ||
-      (marketplace && String(marketplace).trim() !== "" ? String(marketplace).slice(0, 3).toUpperCase() : "—");
+  if (!brand.logoSrc || imgFailed) {
+    const iconSize = Math.max(12, Math.round(wh * 0.75));
     return (
       <span className={`anuncios-catalog__mkt-fallback ${className}`.trim()} title={title}>
-        {text}
+        <S7Icon name={brand.fallbackIcon} size={iconSize} strokeWidth={1.85} />
       </span>
     );
   }
-  const px = Number(size);
-  const wh = Number.isFinite(px) && px > 0 ? Math.round(px) : 22;
   return (
     <span className={`anuncios-catalog__mkt-badge-wrap ${className}`.trim()} title={title}>
       <img
-        src={cfg.src}
+        src={brand.logoSrc}
         alt=""
         className="anuncios-catalog__mkt-logo"
         width={wh}
         height={wh}
         style={{ width: wh, height: wh }}
         loading="lazy"
+        onError={() => setFailedSrc(brand.logoSrc)}
       />
     </span>
   );

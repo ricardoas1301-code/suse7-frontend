@@ -3,6 +3,7 @@
 // ======================================================
 
 import { apiFetch, buildApiUrl } from "../config/api";
+import { formatarPercentualParaInput } from "../components/pricing/pricingPercentInputUi.js";
 
 /**
  * @param {string} listingId
@@ -114,7 +115,7 @@ export function applyPricingSimulationConfigToState(config, setters) {
     const n = /** @type {Record<string, unknown>} */ (node);
     return {
       enabled: n.enabled === true || String(n.enabled ?? "").toLowerCase() === "true",
-      percent: n.percent != null ? String(n.percent) : "",
+      percent: formatarPercentualParaInput(n.percent),
     };
   };
 

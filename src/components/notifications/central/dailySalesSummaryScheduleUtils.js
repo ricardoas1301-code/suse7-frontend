@@ -4,6 +4,7 @@
 // =============================================================================
 
 const HH_MM_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const DAILY_SALES_SUMMARY_MIN_INTERVAL_MINUTES = 4 * 60;
 
 export const DAILY_SALES_SUMMARY_TIMEZONE = "America/Sao_Paulo";
 
@@ -63,6 +64,15 @@ export function normalizeDailySalesSummaryTimes(raw) {
     if (!normalized.includes(t)) normalized.push(t);
   }
   return normalized.sort();
+}
+
+/**
+ * @param {string} time
+ */
+function parseDailySalesSummaryTimeToMinutes(time) {
+  if (!isValidDailySalesSummaryTime(time)) return null;
+  const [hour, minute] = String(time).split(":").map(Number);
+  return hour * 60 + minute;
 }
 
 /**
@@ -152,6 +162,25 @@ export function validateDailySalesSummaryDraft(draft) {
   const time2 = String(rawTimes[1] ?? "").trim();
   if (time1 && time2 && time1 === time2) {
     return { ok: false, message: "Os horários não podem ser duplicados." };
+  }
+
+  if (times.length > 2) {
+    return { ok: false, message: "Máximo de 2 horários por dia." };
+  }
+
+  if (times.length === 2) {
+    const first = parseDailySalesSummaryTimeToMinutes(times[0]);
+    const second = parseDailySalesSummaryTimeToMinutes(times[1]);
+    if (
+      Number.isInteger(first) &&
+      Number.isInteger(second) &&
+      Math.abs(second - first) < DAILY_SALES_SUMMARY_MIN_INTERVAL_MINUTES
+    ) {
+      return {
+        ok: false,
+        message: "Use no máximo 2 horários com intervalo mínimo de 4 horas entre eles.",
+      };
+    }
   }
 
   return { ok: true, config: { ...config, weekdays, times } };

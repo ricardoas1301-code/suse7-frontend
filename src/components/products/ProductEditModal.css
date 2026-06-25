@@ -1,0 +1,242 @@
+/* ======================================================================
+   Modal — editar produto (página Produtos)
+   Refino visual: cards alinhados, gap entre colunas, ações no rodapé do card.
+   ====================================================================== */
+
+.product-edit-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  box-sizing: border-box;
+}
+
+.product-edit-modal__panel {
+  --pem-gap: calc(24px * 0.9);
+  --pem-inset-inline: 18px;
+  --pem-inset-block: 18px;
+  --pem-modal-btn-scale: 0.85;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(1220px, 97vw);
+  height: min(94vh, 920px);
+  max-width: 97vw;
+  max-height: 94vh;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background: var(--s7-bg-page, #f2f7ff);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 24px 48px rgba(15, 23, 42, 0.18),
+    0 8px 16px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.product-edit-modal__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-edit-content--modal {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 16%) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: var(--pem-gap);
+  row-gap: 8px;
+  align-items: stretch;
+  padding: var(--pem-inset-block) var(--pem-inset-inline);
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.product-edit-content--modal > .product-edit-share-bar {
+  grid-column: 2;
+  grid-row: 1;
+  margin-bottom: 0;
+  align-self: start;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.product-edit-content--modal .pf-page.pf-page--in-modal {
+  display: contents;
+}
+
+.product-edit-content--modal .pf-wrap {
+  display: contents;
+}
+
+.product-edit-modal .pf-layout {
+  display: contents;
+}
+
+.product-edit-modal .pf-right-panel {
+  position: static;
+  top: auto;
+  margin-bottom: 0;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  height: auto;
+  min-height: 0;
+  max-height: 100%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding-bottom: 20px;
+  overflow: hidden;
+}
+
+.product-edit-modal .pf-right-header {
+  margin-bottom: 4px;
+}
+
+.product-edit-modal .pf-right-progress-row {
+  margin-top: 0;
+}
+
+.product-edit-modal .pf-right-steps {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: 8px;
+  overflow: visible;
+}
+
+.product-edit-modal .pf-right-steps-list {
+  gap: 4px;
+}
+
+.product-edit-modal .pf-card.pf-card--primary {
+  grid-column: 2;
+  grid-row: 2;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.product-edit-content--modal .product-edit-loading-card,
+.product-edit-content--modal .product-loading {
+  grid-column: 1 / -1;
+  min-height: min(48vh, 360px);
+  max-width: none;
+  width: 100%;
+}
+
+.product-edit-modal .pf-page.pf-page--in-modal {
+  background: transparent;
+  padding: 0;
+}
+
+.product-edit-modal .pf-wrap {
+  max-width: none;
+}
+
+.product-edit-modal .pf-form-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-edit-modal .pf-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.product-edit-modal .pf-body-footer {
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.product-edit-modal .pf-body-footer .s7-btn,
+.product-edit-modal .pf-body-footer .pf-body-footer-btn {
+  font-size: calc(14px * var(--pem-modal-btn-scale));
+  padding:
+    calc(10px * var(--pem-modal-btn-scale))
+    calc(16px * var(--pem-modal-btn-scale));
+  min-height: calc(40px * var(--pem-modal-btn-scale));
+  min-width: calc(104px * var(--pem-modal-btn-scale));
+}
+
+@media (max-width: 960px) {
+  .product-edit-content--modal {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    grid-template-rows: none;
+  }
+
+  .product-edit-content--modal > .product-edit-share-bar {
+    grid-column: auto;
+    grid-row: auto;
+    width: 100%;
+  }
+
+  .product-edit-content--modal .pf-page.pf-page--in-modal {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .product-edit-content--modal .pf-wrap {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .product-edit-modal .pf-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .product-edit-modal .pf-right-panel,
+  .product-edit-modal .pf-card.pf-card--primary {
+    grid-column: auto;
+    grid-row: auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .product-edit-modal__scroll {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 640px) {
+  .product-edit-modal__backdrop {
+    padding: 0;
+  }
+
+  .product-edit-modal__panel {
+    --pem-inset-inline: 12px;
+    --pem-inset-block: 14px;
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+}

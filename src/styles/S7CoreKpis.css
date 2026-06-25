@@ -6,7 +6,7 @@
 .s7-core-kpis.anuncios-catalog__kpis {
   --s7-top-kpi-large-h: 264px;
   --s7-top-kpi-right-h: 264px;
-  margin-bottom: 20px;
+  margin-bottom: var(--s7-catalog-block-gap, 12px);
   gap: 16px;
 }
 
@@ -47,7 +47,7 @@
 
 .anuncios-catalog__kpi-mini-hint {
   margin: 6px 0 0;
-  font-size: 11px;
+  font-size: var(--s7-text-caption);
   font-weight: 600;
   line-height: 1.35;
   color: rgba(100, 116, 139, 0.95);

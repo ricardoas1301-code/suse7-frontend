@@ -11,6 +11,7 @@ import {
   fetchListingPricingSimulationConfig,
   savePricingFinancialSettings,
 } from "../utils/listingPricingSimulationConfig";
+import { S7_CUSTOS_OPERACIONAIS_LABEL } from "../utils/s7CustosOperacionaisLabel.js";
 import { useNotifications } from "../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import { getMarketplaceTheme, getMarketplaceThemeCssVars } from "../theme/marketplaceTheme.js";
@@ -25,6 +26,7 @@ import {
   buildOrderedScenarioRows,
   buildRaioxScenariosFromSaleXrayModalContract,
   enrichRaioxScenariosWithListingPromotionMetadata,
+  extractCanonicalMlScenarios,
   mergeListingGridRowIntoMlScenarios,
   saleXrayListingHintFromScenarios,
   shouldSaleXrayDebugTrace,
@@ -33,12 +35,27 @@ import {
 import { PricingPageProductHeader } from "./pricing/PricingPageProductHeader.jsx";
 import { PricingScenarioBestSummary } from "./pricing/PricingScenarioBestSummary.jsx";
 import { pickDefaultPricingScenarioTabId } from "./pricing/pickDefaultPricingScenarioTabId.js";
+import { ROTULO_LUCRO_RESULTADO } from "./pricing/pricingLucroMargemContribuicaoUi.js";
 import { PricingIntelligenceWorkspaceTabs } from "./pricing/PricingIntelligenceWorkspaceTabs.jsx";
+import { PricingIntelligenceTabRail } from "./pricing/PricingIntelligenceTabRail.jsx";
+import { PricingIntelligenceCompetitorsPanel } from "./pricing/PricingIntelligenceCompetitorsPanel.jsx";
+import { PricingIntelligenceCompetitorsCompareCards } from "./pricing/PricingIntelligenceCompetitorsCompareCards.jsx";
+import { PricingIntelligenceLoadingState } from "./pricing/PricingIntelligenceLoadingState.jsx";
+import { PricingIntelligenceSectionErrorBoundary } from "./pricing/PricingIntelligenceSectionErrorBoundary.jsx";
+import { resolverPrecoRealAnuncioPrecificacao } from "./pricing/precoInicialAnuncioPrecificacao.js";
 import { PricingPageSalePriceSimulator } from "./pricing/PricingPageSalePriceSimulator.jsx";
 import { PricingPageSimulationInputs } from "./pricing/PricingPageSimulationInputs.jsx";
+import { logDiagnosticoPayloadIncompletoPrecificacao } from "./pricing/diagnosticoCenarioClassicoPrecificacao.js";
 import { PricingScenarioDetail } from "./pricing/PricingScenarioDetail.jsx";
-import { PricingScenarioRail } from "./pricing/PricingScenarioRail.jsx";
+import { PricingIntelligencePromotionsPanel } from "./pricing/PricingIntelligencePromotionsPanel.jsx";
 import { splitPricingPageScenarioRows } from "./pricing/pricingPageScenarioSplit.js";
+import {
+  logPiPromosAuditRaw,
+  logPiPromosAuditRows,
+  logPiPromosAuditPipeline,
+} from "./pricing/pricingPromotionsAudit.js";
+import { buildPiPromoFlowAuditFromScenario, logPiPromoFlowAudit } from "./pricing/piPromoFlowAudit.js";
+import { normalizarErroPrecificacaoInteligente } from "../features/listings/pricing-intelligence/precificacaoInteligenteErros.js";
 import {
   getBestScenarioId,
   scenarioHeadingForUi,
@@ -229,10 +246,21 @@ function formatBrlTypingInput(raw) {
  *   panelStyle?: import("react").CSSProperties | null;
  *   caretTrailing?: boolean;
  *   onMlCompareWideChange?: (wide: boolean) => void;
+ *   catalogRefreshing?: boolean;
  * }} props
  */
 export const PricingIntelligenceContent = forwardRef(function PricingIntelligenceContent(
-  { row, active, onClose, onApplied, variant = "modal", panelStyle = null, caretTrailing = false, onMlCompareWideChange },
+  {
+    row,
+    active,
+    onClose,
+    onApplied,
+    variant = "modal",
+    panelStyle = null,
+    caretTrailing = false,
+    onMlCompareWideChange,
+    catalogRefreshing = false,
+  },
   ref,
 ) {
   const { addNotification } = useNotifications();
@@ -277,8 +305,16 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
   const [mlScenariosPayload, setMlScenariosPayload] = useState(/** @type {Record<string, unknown> | null} */ (null));
   const [mlScenariosLoading, setMlScenariosLoading] = useState(false);
   const [mlScenariosError, setMlScenariosError] = useState(/** @type {string | null} */ (null));
+  const [cardsIniciaisProntos, setCardsIniciaisProntos] = useState(false);
+  const [concorrentesCenariosProntos, setConcorrentesCenariosProntos] = useState(false);
+  const [concorrentesListaPronta, setConcorrentesListaPronta] = useState(false);
+  const [precoVendendoComparacao, setPrecoVendendoComparacao] = useState(
+    /** @type {number | null} */ (null),
+  );
   const [selectedScenarioTabId, setSelectedScenarioTabId] = useState(/** @type {string | null} */ (null));
-  const [pricingWorkspaceTab, setPricingWorkspaceTab] = useState(/** @type {"simulator" | "promotions"} */ ("simulator"));
+  const [pricingWorkspaceTab, setPricingWorkspaceTab] = useState(
+    /** @type {"simulator" | "promotions" | "competitors"} */ ("simulator"),
+  );
 
   const handleSaleInputChange = useCallback((nextRaw) => {
     setSaleInput(formatBrlTypingInput(nextRaw));
@@ -412,97 +448,184 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     }
   }, [active]);
 
-  useEffect(() => {
+  const carregarCenariosMl = useCallback(async () => {
     if (!active) return;
-    // Evita flash de cenários anteriores ao trocar de anúncio no modal.
-    setMlScenariosPayload(null);
-    setMlScenariosError(null);
     if (row.marketplaceRaw !== "mercado_livre" || !row.externalId || String(row.externalId).trim() === "") {
+      setMlScenariosError("Anúncio sem código MLB — sincronize a conta do Mercado Livre e tente novamente.");
+      setMlScenariosPayload(null);
+      setMlScenariosLoading(false);
       return;
     }
-    let cancelled = false;
-    (async () => {
-      setMlScenariosLoading(true);
-      setMlScenariosError(null);
-      try {
-        const url = buildApiUrl("/api/ml/listings/pricing-scenarios");
-        if (shouldSaleXrayDebugTrace(row.externalId)) {
-          console.log("[SALE_XRAY] calling pricing-scenarios (Raio-x ML)", {
+    setMlScenariosLoading(true);
+    setMlScenariosError(null);
+    try {
+      const url = buildApiUrl("/api/ml/listings/pricing-scenarios");
+      if (shouldSaleXrayDebugTrace(row.externalId)) {
+        console.log("[SALE_XRAY] calling pricing-scenarios (Raio-x ML)", {
+          listingExternalId: row.externalId,
+          url: url ?? null,
+        });
+      }
+      if (!url) {
+        setMlScenariosError("API não configurada (VITE_API_BASE_URL).");
+        setMlScenariosPayload(null);
+        return;
+      }
+      // Página PI: escopo completo de oportunidades (fluxo homologado antes do redesenho da aba).
+      const saleXrayBody = isPage
+        ? { listingExternalId: row.externalId, scenarioScope: "pricing_opportunities" }
+        : { listingExternalId: row.externalId };
+      const result = await apiFetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(saleXrayBody),
+      });
+      const data = /** @type {Record<string, unknown> | undefined} */ (result.data);
+      if (!result.ok) {
+        const msg = normalizarErroPrecificacaoInteligente(
+          result.error != null ? String(result.error) : "Não foi possível carregar os cenários.",
+        );
+        setMlScenariosError(msg);
+        setMlScenariosPayload(null);
+        if (import.meta.env.DEV) {
+          console.warn("[S7 Precificação Inteligente] POST /api/ml/listings/pricing-scenarios falhou", {
+            status: result.status,
+            error: result.error,
             listingExternalId: row.externalId,
-            url: url ?? null,
           });
         }
-        if (!url) {
-          if (!cancelled) {
-            setMlScenariosError("API não configurada (VITE_API_BASE_URL).");
-            setMlScenariosPayload(null);
-          }
-          return;
-        }
-        const saleXrayBody =
-          variant === "page"
-            ? { listingExternalId: row.externalId, scenarioScope: "pricing_opportunities" }
-            : { listingExternalId: row.externalId };
-        const result = await apiFetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(saleXrayBody),
-        });
-        const data = /** @type {Record<string, unknown> | undefined} */ (result.data);
-        if (!result.ok) {
-          if (!cancelled) {
-            setMlScenariosError(
-              result.error != null ? String(result.error) : "Não foi possível carregar os cenários.",
-            );
-            setMlScenariosPayload(null);
-          }
-          return;
-        }
-        if (!data || data.ok !== true) {
-          if (!cancelled) {
-            setMlScenariosError(
-              data?.error != null ? String(data.error) : "Não foi possível carregar os cenários.",
-            );
-            setMlScenariosPayload(null);
-          }
-          return;
-        }
-        const normalized = wrapPricingScenariosApiAsSaleXrayModalPayload(data);
-        if (
-          normalized == null ||
-          normalized.from_sale_xray_modal !== true ||
-          normalized.sale_xray_modal == null ||
-          typeof normalized.sale_xray_modal !== "object"
-        ) {
-          if (!cancelled) {
-            setMlScenariosError(
-              "Não foi possível montar o Raio-x a partir dos cenários deste anúncio. Sincronize o anúncio e tente de novo.",
-            );
-            setMlScenariosPayload(null);
-          }
-          return;
-        }
-        if (shouldSaleXrayDebugTrace(normalized)) {
-          console.log("[SALE_XRAY] response", normalized);
-        }
-        if (!cancelled) {
-          setMlScenariosPayload(normalized);
-        }
-      } catch {
-        if (!cancelled) {
-          setMlScenariosError("Não foi possível carregar os cenários.");
-          setMlScenariosPayload(null);
-        }
-      } finally {
-        if (!cancelled) setMlScenariosLoading(false);
+        return;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [active, row.externalId, row.marketplaceRaw, variant]);
+      if (!data || data.ok !== true) {
+        const msg = normalizarErroPrecificacaoInteligente(
+          data?.error != null ? String(data.error) : "Não foi possível carregar os cenários.",
+        );
+        setMlScenariosError(msg);
+        setMlScenariosPayload(null);
+        if (import.meta.env.DEV) {
+          console.warn("[S7 Precificação Inteligente] pricing-scenarios respondeu ok=false", {
+            error: data?.error,
+            listingExternalId: row.externalId,
+          });
+        }
+        return;
+      }
+      const normalized = wrapPricingScenariosApiAsSaleXrayModalPayload(data);
+      if (import.meta.env.DEV && data && typeof data === "object") {
+        const promosApi = Array.isArray(data.promotion_scenarios) ? data.promotion_scenarios : [];
+        for (const promo of promosApi) {
+          if (!promo || typeof promo !== "object") continue;
+          const r = /** @type {Record<string, unknown>} */ (promo);
+          const name = r.promotion_name != null ? String(r.promotion_name) : "";
+          if (!name.toLowerCase().includes("aumente") || !name.toLowerCase().includes("vendas")) continue;
+          logPiPromoFlowAudit("frontend_after_pricing_scenarios_api", buildPiPromoFlowAuditFromScenario(r));
+        }
+      }
+      if (import.meta.env.DEV && normalized && typeof normalized === "object") {
+        const promosWrapped = Array.isArray(normalized.promotion_scenarios)
+          ? normalized.promotion_scenarios
+          : [];
+        for (const promo of promosWrapped) {
+          if (!promo || typeof promo !== "object") continue;
+          const r = /** @type {Record<string, unknown>} */ (promo);
+          const prom =
+            r.promotion != null && typeof r.promotion === "object"
+              ? /** @type {Record<string, unknown>} */ (r.promotion)
+              : r;
+          const name = prom.promotion_name != null ? String(prom.promotion_name) : "";
+          if (!name.toLowerCase().includes("aumente") || !name.toLowerCase().includes("vendas")) continue;
+          logPiPromoFlowAudit("frontend_after_wrapPricingScenariosApiAsSaleXrayModalPayload", {
+            promotion_name: name,
+            promotion_id: prom.promotion_id ?? null,
+            type: prom.type ?? null,
+            ref_id: prom.offer_id ?? null,
+            promotion_price:
+              r.pricing != null &&
+              typeof r.pricing === "object" &&
+              /** @type {Record<string, unknown>} */ (r.pricing).sale_price_brl != null
+                ? /** @type {Record<string, unknown>} */ (r.pricing).sale_price_brl
+                : null,
+            payout:
+              r.pricing != null &&
+              typeof r.pricing === "object" &&
+              /** @type {Record<string, unknown>} */ (r.pricing).net_receivable_brl != null
+                ? /** @type {Record<string, unknown>} */ (r.pricing).net_receivable_brl
+                : null,
+            source_field_used: "sale_xray_modal_contract",
+          });
+        }
+      }
+      if (
+        normalized == null ||
+        normalized.from_sale_xray_modal !== true ||
+        normalized.sale_xray_modal == null ||
+        typeof normalized.sale_xray_modal !== "object"
+      ) {
+        setMlScenariosError(
+          "Não foi possível montar o Raio-x a partir dos cenários deste anúncio. Sincronize o anúncio e tente de novo.",
+        );
+        setMlScenariosPayload(null);
+        return;
+      }
+      if (shouldSaleXrayDebugTrace(normalized)) {
+        console.log("[SALE_XRAY] response", normalized);
+      }
+      setMlScenariosPayload(normalized);
+    } catch {
+      setMlScenariosError(
+        normalizarErroPrecificacaoInteligente("Não foi possível carregar os cenários."),
+      );
+      setMlScenariosPayload(null);
+    } finally {
+      setMlScenariosLoading(false);
+    }
+  }, [active, row.externalId, row.marketplaceRaw, isPage]);
+
+  useEffect(() => {
+    if (!active) return;
+    setMlScenariosPayload(null);
+    setMlScenariosError(null);
+    setCardsIniciaisProntos(false);
+    setConcorrentesCenariosProntos(false);
+    setConcorrentesListaPronta(false);
+    setPrecoVendendoComparacao(null);
+    void carregarCenariosMl();
+  }, [active, row.id, carregarCenariosMl]);
+
+  const handleCardsIniciaisProntosChange = useCallback((pronto) => {
+    setCardsIniciaisProntos(pronto === true);
+  }, []);
+
+  const handleConcorrentesCenariosProntosChange = useCallback((pronto) => {
+    setConcorrentesCenariosProntos(pronto === true);
+  }, []);
+
+  const handleConcorrentesListaProntaChange = useCallback((pronto) => {
+    setConcorrentesListaPronta(pronto === true);
+  }, []);
+
+  const handlePrecoVendendoComparacaoChange = useCallback((preco) => {
+    setPrecoVendendoComparacao(
+      preco != null && Number.isFinite(preco) && preco > 0 ? preco : null,
+    );
+  }, []);
+
+  useEffect(() => {
+    if (pricingWorkspaceTab === "competitors") {
+      setConcorrentesCenariosProntos(false);
+      setConcorrentesListaPronta(false);
+    }
+  }, [pricingWorkspaceTab, row.id]);
+
+  useEffect(() => {
+    setPrecoVendendoComparacao(null);
+  }, [row.id]);
 
   const runSimulate = useCallback(async () => {
+    // Página cheia usa cenários ML (pricing-scenarios) como fonte do raio-x — simulate não é necessário
+    // e evita alerta global quando o endpoint retorna erro interno sem impactar o layout carregado.
+    if (isPage) return;
+
     const url = buildApiUrl("/api/pricing/simulate");
     if (!url) {
       setSimError("API não configurada.");
@@ -532,14 +655,28 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     setLoading(false);
     if (!res.ok) {
       setSim(null);
-      setSimError(res.error ?? "Falha na simulação");
+      const msg = normalizarErroPrecificacaoInteligente(res.error ?? "Falha na simulação");
+      setSimError(msg);
+      if (import.meta.env.DEV) {
+        console.warn("[S7 Precificação Inteligente] POST /api/pricing/simulate falhou", {
+          status: res.status,
+          error: res.error,
+          listingId: row.id,
+        });
+      }
       return;
     }
     setSim(res.data);
-  }, [row.id, row.marketplaceRaw, saleInput, minMarginInput, minProfitInput]);
+  }, [isPage, row.id, row.marketplaceRaw, saleInput, minMarginInput, minProfitInput]);
 
   useEffect(() => {
     if (!active) return;
+    if (isPage) {
+      setSimError(null);
+      setSim(null);
+      setLoading(false);
+      return undefined;
+    }
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
       debounceRef.current = null;
@@ -548,7 +685,7 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
-  }, [active, saleInput, minMarginInput, minProfitInput, runSimulate]);
+  }, [active, isPage, saleInput, minMarginInput, minProfitInput, runSimulate]);
 
   const handleSuggestHealthy = () => {
     const s = sim?.suggested_price_brl ?? sim?.current?.pricing_context?.result?.break_even_price_brl;
@@ -597,7 +734,7 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     });
     setApplyLoading(false);
     if (!res.ok) {
-      const msg = res.error ?? "Não foi possível atualizar o preço.";
+      const msg = normalizarErroPrecificacaoInteligente(res.error ?? "Não foi possível atualizar o preço.");
       setSimError(msg);
       addNotification({
         event_type: "LISTING_PRICE_APPLY_FAILED",
@@ -632,10 +769,36 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
   const mlScenariosForCompare = useMemo(() => {
     if (!scenarioMode || !mlScenariosPayload || typeof mlScenariosPayload !== "object") return [];
     if (mlScenariosPayload.from_sale_xray_modal !== true) return [];
-    const fromContract = buildRaioxScenariosFromSaleXrayModalContract(mlScenariosPayload);
-    if (fromContract == null || fromContract.length === 0) return [];
-    const merged = mergeListingGridRowIntoMlScenarios(fromContract, row);
-    return enrichRaioxScenariosWithListingPromotionMetadata(merged, mlScenariosPayload, row);
+    try {
+      const fromContract = buildRaioxScenariosFromSaleXrayModalContract(mlScenariosPayload);
+      if (fromContract == null || fromContract.length === 0) {
+        if (import.meta.env.DEV) {
+          logDiagnosticoPayloadIncompletoPrecificacao({
+            externalListingId: row.externalId != null ? String(row.externalId) : null,
+            motivo: "buildRaioxScenariosFromSaleXrayModalContract retornou vazio",
+            detalhe: {
+              from_sale_xray_modal: mlScenariosPayload.from_sale_xray_modal === true,
+              scenarios_count: Array.isArray(mlScenariosPayload.scenarios)
+                ? mlScenariosPayload.scenarios.length
+                : 0,
+            },
+          });
+        }
+        return [];
+      }
+      const merged = mergeListingGridRowIntoMlScenarios(fromContract, row);
+      return enrichRaioxScenariosWithListingPromotionMetadata(merged, mlScenariosPayload, row);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error("[S7 PI][Payload] falha ao montar cenários para compare", err);
+        logDiagnosticoPayloadIncompletoPrecificacao({
+          externalListingId: row.externalId != null ? String(row.externalId) : null,
+          motivo: "excecao_em_buildRaioxScenariosFromSaleXrayModalContract",
+          detalhe: { message: err instanceof Error ? err.message : String(err) },
+        });
+      }
+      return [];
+    }
   }, [scenarioMode, mlScenariosPayload, row]);
 
   /** Cenários ML já trazem “Receita do marketplace”; não duplicar com o raio-x da simulação (`sim`). */
@@ -658,72 +821,87 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
   }, [hasMlScenarioCompare, isPage, baseOrderedMlScenarioRows]);
 
   /** Página: baseline (simulador) vs promoções ML — ver `pricingPageScenarioSplit.js`. */
-  const { pricingPageBaselineRow, pricingPagePromotionRows } = useMemo(
+  const { pricingPageBaselineRow, pricingPagePromotionRows: pricingPagePromotionRowsFromCompare } = useMemo(
     () => (isPage ? splitPricingPageScenarioRows(mlCompareDisplayRows) : { pricingPageBaselineRow: null, pricingPagePromotionRows: [] }),
     [isPage, mlCompareDisplayRows],
   );
 
-  const pricingPageSimulationInputs = useMemo(() => {
-    if (!isPage) return null;
-    return (
-      <PricingPageSimulationInputs
-        salePrice={saleInput}
-        onSalePriceChange={handleSaleInputChange}
-        desiredMarginPct={minMarginInput}
-        onDesiredMarginPctChange={setMinMarginInput}
-        plannedPromoPct={pageSimPlannedPromoPct}
-        onPlannedPromoPctChange={setPageSimPlannedPromoPct}
-        plannedPromoEnabled={pageSimPlannedPromoEnabled}
-        onPlannedPromoEnabledChange={handleTogglePlannedPromo}
-        mlAdsPct={pageSimMlAdsPct}
-        onMlAdsPctChange={setPageSimMlAdsPct}
-        mlAdsEnabled={pageSimMlAdsEnabled}
-        onMlAdsEnabledChange={handleToggleMlAds}
-        affiliatesPct={pageSimAffiliatesPct}
-        onAffiliatesPctChange={setPageSimAffiliatesPct}
-        affiliatesEnabled={pageSimAffiliatesEnabled}
-        onAffiliatesEnabledChange={handleToggleAffiliates}
-        safetyReservePct={pageSimSafetyReservePct}
-        onSafetyReservePctChange={setPageSimSafetyReservePct}
-        safetyReserveEnabled={pageSimSafetyReserveEnabled}
-        onSafetyReserveEnabledChange={handleToggleSafetyReserve}
-        onSaveFinancialSettings={handleSaveFinancialSettings}
-        saveFinancialSettingsLoading={financialSettingsSaving}
-        mode="simulator"
-      />
-    );
+  /** Aba Promoções: cenários completos do backend (`promotion_scenarios` / `scenarios`), sem rebuild sale-xray. */
+  const pricingPagePromotionRows = useMemo(() => {
+    if (!isPage || !mlScenariosPayload || typeof mlScenariosPayload !== "object") return [];
+    const rec = /** @type {Record<string, unknown>} */ (mlScenariosPayload);
+    /** @type {unknown[]} */
+    let promos = [];
+    if (Array.isArray(rec.promotion_scenarios) && rec.promotion_scenarios.length > 0) {
+      promos = rec.promotion_scenarios;
+    } else {
+      promos = extractCanonicalMlScenarios(rec).filter((s) => {
+        if (!s || typeof s !== "object") return false;
+        const r = /** @type {Record<string, unknown>} */ (s);
+        return r.is_baseline !== true && String(r.scenario_id ?? "").toLowerCase() !== "baseline";
+      });
+    }
+    if (promos.length === 0) return pricingPagePromotionRowsFromCompare;
+    return sortPricingScenariosForUi(buildOrderedScenarioRows(promos));
+  }, [isPage, mlScenariosPayload, pricingPagePromotionRowsFromCompare]);
+
+  useEffect(() => {
+    if (!isPage || !scenarioMode) return;
+    const listingId = row.externalId != null ? String(row.externalId) : null;
+    logPiPromosAuditRaw(mlScenariosPayload, listingId);
+    logPiPromosAuditPipeline({
+      listingExternalId: listingId,
+      afterBuildRaiox: mlScenariosForCompare.filter((s) => {
+        if (!s || typeof s !== "object") return false;
+        const r = /** @type {Record<string, unknown>} */ (s);
+        return r.is_baseline !== true && String(r.scenario_id ?? "").toLowerCase() !== "baseline";
+      }).length,
+      afterOrdered: baseOrderedMlScenarioRows.filter((r) => r.group !== "baseline").length,
+      afterSplit: pricingPagePromotionRows.length,
+    });
+    logPiPromosAuditRows(pricingPagePromotionRows, listingId);
   }, [
     isPage,
-    saleInput,
-    minMarginInput,
-    pageSimPlannedPromoPct,
-    pageSimMlAdsPct,
-    pageSimAffiliatesPct,
-    pageSimSafetyReservePct,
-    pageSimPlannedPromoEnabled,
-    pageSimMlAdsEnabled,
-    pageSimAffiliatesEnabled,
-    pageSimSafetyReserveEnabled,
-    handleTogglePlannedPromo,
-    handleToggleMlAds,
-    handleToggleAffiliates,
-    handleToggleSafetyReserve,
-    handleSaleInputChange,
-    handleSaveFinancialSettings,
-    financialSettingsSaving,
+    scenarioMode,
+    mlScenariosPayload,
+    mlScenariosForCompare,
+    baseOrderedMlScenarioRows,
+    pricingPagePromotionRows,
+    row.externalId,
   ]);
 
-  // ======================================================
-  // Promoções: bloco enxuto apenas com desconto promocional.
-  // ======================================================
-  const pricingPagePromotionsInputs = useMemo(() => {
+  const configuracaoFinanceiraSimulacao = useMemo(
+    () => ({
+      mlAdsEnabled: pageSimMlAdsEnabled,
+      mlAdsPct: pageSimMlAdsPct,
+      mlAdsLabel: "ML Ads",
+      reserveEnabled: pageSimSafetyReserveEnabled,
+      reservePct: pageSimSafetyReservePct,
+      reserveLabel: S7_CUSTOS_OPERACIONAIS_LABEL,
+      plannedPromoEnabled: pageSimPlannedPromoEnabled,
+      plannedPromoPct: pageSimPlannedPromoPct,
+      plannedPromoLabel: "Promoção",
+      affiliatesEnabled: pageSimAffiliatesEnabled,
+      affiliatesPct: pageSimAffiliatesPct,
+      affiliatesLabel: "Afiliados",
+    }),
+    [
+      pageSimMlAdsEnabled,
+      pageSimMlAdsPct,
+      pageSimSafetyReserveEnabled,
+      pageSimSafetyReservePct,
+      pageSimPlannedPromoEnabled,
+      pageSimPlannedPromoPct,
+      pageSimAffiliatesEnabled,
+      pageSimAffiliatesPct,
+    ],
+  );
+
+  /** Inputs de % — sem useMemo: evita remount a cada keystroke (valor sumia visualmente). */
+  const renderPricingPageSimulationInputs = (/** @type {"simulator" | "promotions"} */ mode) => {
     if (!isPage) return null;
     return (
       <PricingPageSimulationInputs
-        salePrice={saleInput}
-        onSalePriceChange={handleSaleInputChange}
-        desiredMarginPct={minMarginInput}
-        onDesiredMarginPctChange={setMinMarginInput}
         plannedPromoPct={pageSimPlannedPromoPct}
         onPlannedPromoPctChange={setPageSimPlannedPromoPct}
         plannedPromoEnabled={pageSimPlannedPromoEnabled}
@@ -740,27 +918,12 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
         onSafetyReservePctChange={setPageSimSafetyReservePct}
         safetyReserveEnabled={pageSimSafetyReserveEnabled}
         onSafetyReserveEnabledChange={handleToggleSafetyReserve}
-        mode="promotions"
+        onSaveFinancialSettings={mode === "simulator" ? handleSaveFinancialSettings : undefined}
+        saveFinancialSettingsLoading={financialSettingsSaving}
+        mode={mode}
       />
     );
-  }, [
-    isPage,
-    saleInput,
-    minMarginInput,
-    pageSimPlannedPromoPct,
-    pageSimMlAdsPct,
-    pageSimAffiliatesPct,
-    pageSimSafetyReservePct,
-    pageSimPlannedPromoEnabled,
-    pageSimMlAdsEnabled,
-    pageSimAffiliatesEnabled,
-    pageSimSafetyReserveEnabled,
-    handleTogglePlannedPromo,
-    handleToggleMlAds,
-    handleToggleAffiliates,
-    handleToggleSafetyReserve,
-    handleSaleInputChange,
-  ]);
+  };
 
   const mlScenarioRowsForTabsAndSelection = useMemo(
     () => (isPage ? pricingPagePromotionRows : mlCompareDisplayRows),
@@ -812,21 +975,6 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     [hasMlScenarioCompare, mlScenariosForCompare],
   );
 
-  /** Alinha “Preço de venda” do card ML ao preço do catálogo (mesmo critério do card esquerdo). */
-  const pageBaselineListingSaleDisplayOverride = useMemo(() => {
-    if (!isPage) return null;
-    if (row?.price != null && Number.isFinite(Number(row.price))) {
-      return formatBrlLoose(Number(row.price));
-    }
-    if (row?.listingSalePriceBrl != null && String(row.listingSalePriceBrl).trim() !== "") {
-      return formatBrlFromApiString(String(row.listingSalePriceBrl).trim());
-    }
-    if (row?.effectiveSalePriceBrl != null && String(row.effectiveSalePriceBrl).trim() !== "") {
-      return formatBrlFromApiString(String(row.effectiveSalePriceBrl).trim());
-    }
-    return null;
-  }, [isPage, row.price, row.listingSalePriceBrl, row.effectiveSalePriceBrl]);
-
   const mlScenarioTabIdsKey = useMemo(
     () =>
       mlScenarioRowsForTabsAndSelection
@@ -848,15 +996,6 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     if (selectedScenarioTabId != null && tabIdSet.has(selectedScenarioTabId)) return selectedScenarioTabId;
     return pickDefaultPricingScenarioTabId(mlScenarioRowsForTabsAndSelection);
   }, [mlScenarioRowsForTabsAndSelection, selectedScenarioTabId, tabIdSet]);
-
-  const selectedMlScenarioRowBundle = useMemo(() => {
-    if (!hasMlScenarioCompare || mlScenarioRowsForTabsAndSelection.length === 0) return null;
-    const tid = effectiveSelectedScenarioTabId;
-    const idx = mlScenarioRowsForTabsAndSelection.findIndex(
-      ({ scenario }) => (resolveMlScenarioTabId(scenario) || "baseline") === tid,
-    );
-    return mlScenarioRowsForTabsAndSelection[idx >= 0 ? idx : 0] ?? null;
-  }, [hasMlScenarioCompare, mlScenarioRowsForTabsAndSelection, effectiveSelectedScenarioTabId]);
 
   useEffect(() => {
     if (!isPage || !hasMlScenarioCompare || mlScenarioRowsForTabsAndSelection.length === 0) return;
@@ -949,9 +1088,99 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
       (sim?.comparison?.profit_delta_brl != null ||
         (Array.isArray(sim?.warnings) && sim.warnings.length > 0)));
 
+  const productIdConcorrentes =
+    row?.productId != null && String(row.productId).trim() !== ""
+      ? String(row.productId).trim()
+      : null;
+
+  const precoNossoConcorrentes = useMemo(() => {
+    if (!isPage) return null;
+    const preco = resolverPrecoRealAnuncioPrecificacao({
+      catalogRow: row,
+      payload: mlScenariosPayload,
+      baselineRow: pricingPageBaselineRow,
+    });
+    return preco.valor != null && preco.valor > 0 ? preco.valor : null;
+  }, [isPage, row, mlScenariosPayload, pricingPageBaselineRow]);
+
+  const precoReferenciaConcorrentes = useMemo(() => {
+    if (precoVendendoComparacao != null && precoVendendoComparacao > 0) {
+      return precoVendendoComparacao;
+    }
+    return precoNossoConcorrentes;
+  }, [precoVendendoComparacao, precoNossoConcorrentes]);
+
+  const renderListingTypeCompareCards = useCallback(
+    (
+      /** @type {{
+       *   onCenariosProntosChange?: (pronto: boolean) => void;
+       *   onPrecoVendendoComparacaoChange?: (preco: number | null) => void;
+       *   permitirEdicaoPreco?: boolean;
+       * }} */ opts = {},
+    ) => {
+      if (pricingPageBaselineRow == null) return null;
+      return (
+        <PricingIntelligenceCompetitorsCompareCards
+          baselineRow={pricingPageBaselineRow}
+          mlScenariosPayload={mlScenariosPayload}
+          catalogRow={row}
+          listingHintForAudit={mlListingHintForAudit}
+          configuracaoFinanceira={configuracaoFinanceiraSimulacao}
+          mlScenariosLoading={mlScenariosLoading}
+          onCenariosProntosChange={opts.onCenariosProntosChange}
+          onPrecoVendendoComparacaoChange={opts.onPrecoVendendoComparacaoChange}
+          permitirEdicaoPreco={opts.permitirEdicaoPreco ?? true}
+        />
+      );
+    },
+    [
+      pricingPageBaselineRow,
+      mlScenariosPayload,
+      row,
+      mlListingHintForAudit,
+      configuracaoFinanceiraSimulacao,
+      mlScenariosLoading,
+    ],
+  );
+
+  const pricingTabRail =
+    isPage && hasMlScenarioCompare ? (
+      <div className="pricing-intelligence-page__workspace-tab-rail-row">
+        <PricingIntelligenceTabRail activeTab={pricingWorkspaceTab} onTabChange={setPricingWorkspaceTab} />
+        <button
+          type="button"
+          className="pricing-intelligence-page__workspace-tab pricing-intelligence-page__workspace-tab--horizontal pricing-intelligence-page__workspace-tab-rail-save"
+          disabled={financialSettingsSaving}
+          aria-busy={financialSettingsSaving || undefined}
+          onClick={handleSaveFinancialSettings}
+        >
+          {financialSettingsSaving ? "Salvando…" : "Salvar"}
+        </button>
+      </div>
+    ) : null;
+
+  const aguardandoHydratacaoCards =
+    isPage &&
+    hasMlScenarioCompare &&
+    pricingPageBaselineRow != null &&
+    !cardsIniciaisProntos;
+
+  const aguardandoConcorrentesTab =
+    isPage &&
+    hasMlScenarioCompare &&
+    pricingWorkspaceTab === "competitors" &&
+    pricingPageBaselineRow != null &&
+    (!concorrentesCenariosProntos || !concorrentesListaPronta);
+
+  const aguardandoPromocoesTab =
+    isPage && pricingWorkspaceTab === "promotions" && mlScenariosLoading === true;
+
+  const aguardandoWorkspacePreparacao =
+    aguardandoHydratacaoCards || aguardandoConcorrentesTab || aguardandoPromocoesTab;
+
   const pricingModalResultsStack = (
     <>
-      {hasMlScenarioCompare ? (
+      {hasMlScenarioCompare || (isPage && requireMlScenarioContract) ? (
         <div className="anuncios-pricing-modal__current-scenarios">
           {isPage ? (
             <>
@@ -962,86 +1191,181 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
                   marginLabel={mlBestKpiPayload.marginLabel}
                 />
               ) : null}
+              {mlScenariosLoading && !hasMlScenarioCompare ? (
+                <div className="pricing-intelligence-page__workspace-shell pricing-intelligence-page__workspace-shell--tabs-horizontal pricing-intelligence-page__workspace-shell--tabs-in-right-col pricing-intelligence-page__workspace-shell--initial-loading">
+                  <div className="pricing-intelligence-page__workspace-product-col">
+                    <PricingPageProductHeader
+                      row={row}
+                      theme={theme}
+                      compactVertical
+                      listingsMetricsLoading={catalogRefreshing}
+                    />
+                  </div>
+                  <div className="pricing-intelligence-page__workspace-main-col">
+                    <PricingIntelligenceLoadingState />
+                  </div>
+                </div>
+              ) : null}
+              {mlScenariosError != null && String(mlScenariosError).trim() !== "" && !mlScenariosLoading ? (
+                <div
+                  className="pricing-intelligence-page__block-alert pricing-intelligence-page__block-alert--scenarios"
+                  role="alert"
+                >
+                  <p>{String(mlScenariosError)}</p>
+                  <S7Button type="button" variant="secondary" size="sm" onClick={() => void carregarCenariosMl()}>
+                    Tentar novamente
+                  </S7Button>
+                </div>
+              ) : null}
+              {hasMlScenarioCompare ? (
+              <>
+                {aguardandoHydratacaoCards ? (
+                  <div className="pricing-intelligence-page__workspace-shell pricing-intelligence-page__workspace-shell--tabs-horizontal pricing-intelligence-page__workspace-shell--tabs-in-right-col pricing-intelligence-page__workspace-shell--initial-loading">
+                    <div className="pricing-intelligence-page__workspace-product-col">
+                      <PricingPageProductHeader
+                        row={row}
+                        theme={theme}
+                        compactVertical
+                        listingsMetricsLoading={catalogRefreshing}
+                      />
+                    </div>
+                    <div className="pricing-intelligence-page__workspace-main-col">
+                      <PricingIntelligenceLoadingState />
+                    </div>
+                  </div>
+                ) : null}
+                {aguardandoConcorrentesTab ? (
+                  <div className="pricing-intelligence-page__workspace-shell pricing-intelligence-page__workspace-shell--tabs-horizontal pricing-intelligence-page__workspace-shell--tabs-in-right-col pricing-intelligence-page__workspace-shell--competitors-tab pricing-intelligence-page__workspace-shell--competitors-initial-loading">
+                    <div className="pricing-intelligence-page__workspace-product-col">
+                      <PricingPageProductHeader
+                        row={row}
+                        theme={theme}
+                        compactVertical
+                        listingsMetricsLoading={catalogRefreshing}
+                      />
+                    </div>
+                    <div className="pricing-intelligence-page__workspace-competitors-loading-span">
+                      <PricingIntelligenceLoadingState
+                        title="Carregando Concorrentes Inteligentes"
+                        subtitle="Estamos comparando seu anúncio com os concorrentes do marketplace."
+                      />
+                    </div>
+                  </div>
+                ) : null}
+                {aguardandoPromocoesTab ? (
+                  <div className="pricing-intelligence-page__workspace-shell pricing-intelligence-page__workspace-shell--tabs-horizontal pricing-intelligence-page__workspace-shell--tabs-in-right-col pricing-intelligence-page__workspace-shell--promotions-tab pricing-intelligence-page__workspace-shell--promotions-initial-loading">
+                    <div className="pricing-intelligence-page__workspace-product-col">
+                      <PricingPageProductHeader
+                        row={row}
+                        theme={theme}
+                        compactVertical
+                        listingsMetricsLoading={catalogRefreshing}
+                      />
+                    </div>
+                    <div className="pricing-intelligence-page__workspace-promotions-loading-span">
+                      <PricingIntelligenceLoadingState
+                        title="Carregando Promoções Inteligentes"
+                        subtitle="Estamos carregando os cenários de promoção deste anúncio."
+                      />
+                    </div>
+                  </div>
+                ) : null}
+                <div
+                  className={[
+                    "pricing-intelligence-page__workspace-mount",
+                    aguardandoWorkspacePreparacao ? "pricing-intelligence-page__workspace-mount--preparing" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-hidden={aguardandoWorkspacePreparacao ? true : undefined}
+                >
               <PricingIntelligenceWorkspaceTabs
                 activeTab={pricingWorkspaceTab}
-                onTabChange={setPricingWorkspaceTab}
-                railHeader={isPage ? <PricingPageProductHeader row={row} theme={theme} compactVertical /> : null}
+                railHeader={
+                  isPage ? (
+                    <PricingPageProductHeader
+                      row={row}
+                      theme={theme}
+                      compactVertical
+                      listingsMetricsLoading={catalogRefreshing}
+                    />
+                  ) : null
+                }
                 simulatorPanel={
-                  pricingPageBaselineRow != null ? (
-                    <PricingPageSalePriceSimulator
-                      embedded
-                      baselineRow={pricingPageBaselineRow}
-                      listingHintForAudit={mlListingHintForAudit}
-                      baselineListingSaleDisplayOverride={pageBaselineListingSaleDisplayOverride}
-                    >
-                      {pricingPageSimulationInputs}
-                    </PricingPageSalePriceSimulator>
-                  ) : (
-                    <p className="anuncios-sell-popover__muted" role="status">
-                      Cenário de preço de venda (baseline) indisponível para este anúncio.
-                    </p>
-                  )
+                  <PricingIntelligenceSectionErrorBoundary
+                    sectionLabel="comparativo de preço de venda"
+                    externalListingId={row.externalId != null ? String(row.externalId) : null}
+                  >
+                    {pricingPageBaselineRow != null ? (
+                      <PricingPageSalePriceSimulator
+                        embedded
+                        baselineRow={pricingPageBaselineRow}
+                        mlScenariosPayload={mlScenariosPayload}
+                        catalogRow={row}
+                        listingHintForAudit={mlListingHintForAudit}
+                        configuracaoFinanceira={configuracaoFinanceiraSimulacao}
+                        tabRailSlot={pricingTabRail}
+                        mlScenariosLoading={mlScenariosLoading}
+                        onCardsIniciaisProntosChange={
+                          isPage ? handleCardsIniciaisProntosChange : undefined
+                        }
+                      >
+                        {renderPricingPageSimulationInputs("simulator")}
+                      </PricingPageSalePriceSimulator>
+                    ) : (
+                      <p className="anuncios-sell-popover__muted" role="status">
+                        Cenário de preço de venda (baseline) indisponível para este anúncio.
+                      </p>
+                    )}
+                  </PricingIntelligenceSectionErrorBoundary>
                 }
                 promotionsPanel={
-                  <div
-                    className={[
-                      "pricing-intelligence-page__scenario-workspace",
-                      "pricing-intelligence-page__scenario-workspace--promotions-only",
-                      pricingPagePromotionRows.length === 0
-                        ? "pricing-intelligence-page__scenario-workspace--no-promotions"
-                        : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
+                  <PricingIntelligenceSectionErrorBoundary
+                    sectionLabel="promoções do anúncio"
+                    externalListingId={row.externalId != null ? String(row.externalId) : null}
                   >
-                    {pricingPagePromotionRows.length > 0 ? (
-                      <>
-                        <PricingScenarioRail
-                          workspaceSidebar
-                          rows={pricingPagePromotionRows}
-                          selectedTabId={effectiveSelectedScenarioTabId}
-                          onSelectTabId={handleSelectMlScenarioTabId}
-                          baselineHeadingOverride="Preço de venda"
-                          bestScenarioTabId={mlBestScenarioTabId}
-                        />
-                        <div className="pricing-intelligence-page__scenario-main">
-                          {selectedMlScenarioRowBundle != null ? (
-                            <div className="pricing-intelligence-page__scenario-detail-col">
-                              <PricingScenarioDetail
-                                key={effectiveSelectedScenarioTabId}
-                                scenario={selectedMlScenarioRowBundle.scenario}
-                                group={selectedMlScenarioRowBundle.group}
-                                baselineHeadingOverride="Preço de venda"
-                                hideBreakEvenInResult={isPage}
-                                listingHintForAudit={mlListingHintForAudit}
-                                baselineListingSaleDisplayOverride={pageBaselineListingSaleDisplayOverride}
-                              />
-                            </div>
-                          ) : null}
-                          <div className="pricing-intelligence-page__scenario-right-stack">
-                            {pricingPagePromotionsInputs}
-                            <div className="pricing-intelligence-page__chart-slot anuncios-pricing-modal__ml-chart-slot pricing-intelligence-page__chart-slot--page-vertical-compact">
-                              <MercadoLivrePricingScenarioCompareChart
-                                scenarios={mlChartScenarios}
-                                selectedScenarioTabId={effectiveSelectedScenarioTabId}
-                                preserveScenarioDisplayOrder
-                                enablePagePositiveCompact={isPage}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="pricing-intelligence-page__promotions-empty" role="status">
-                        <p className="anuncios-sell-popover__muted">
-                          Nenhuma promoção retornada para este anúncio. Use a aba <strong>Simulador</strong> para o
-                          preço de venda atual.
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                    <PricingIntelligencePromotionsPanel
+                      rows={pricingPagePromotionRows}
+                      listingHintForAudit={mlListingHintForAudit}
+                    />
+                  </PricingIntelligenceSectionErrorBoundary>
+                }
+                promotionsTabRailSlot={pricingTabRail}
+                promotionsCompareCards={renderListingTypeCompareCards({
+                  permitirEdicaoPreco: false,
+                })}
+                competitorsTabRailSlot={pricingTabRail}
+                competitorsCompareCards={renderListingTypeCompareCards({
+                  onCenariosProntosChange: handleConcorrentesCenariosProntosChange,
+                  onPrecoVendendoComparacaoChange: handlePrecoVendendoComparacaoChange,
+                })}
+                competitorsPanel={
+                  <PricingIntelligenceCompetitorsPanel
+                    productId={productIdConcorrentes}
+                    active={pricingWorkspaceTab === "competitors"}
+                    precoNosso={precoReferenciaConcorrentes}
+                    onListaProntaChange={handleConcorrentesListaProntaChange}
+                  />
                 }
               />
+                </div>
+              </>
+              ) : !mlScenariosLoading ? (
+                <div className="pricing-intelligence-page__workspace-fallback">
+                  <PricingPageProductHeader
+                    row={row}
+                    theme={theme}
+                    compactVertical
+                    listingsMetricsLoading={catalogRefreshing}
+                  />
+                  {!mlScenariosError ? (
+                    <p className="anuncios-sell-popover__muted" role="status">
+                      Cenários do Mercado Livre indisponíveis. Use &quot;Tentar novamente&quot; acima ou sincronize o
+                      anúncio.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : (
             <MercadoLivrePricingScenarioCompareGrid
@@ -1051,13 +1375,13 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
           )}
         </div>
       ) : null}
-      {loading ? <p className="anuncios-pricing-modal__loading">Calculando…</p> : null}
-      {!loading && !sim ? (
+      {!isPage && loading ? <p className="anuncios-pricing-modal__loading">Calculando…</p> : null}
+      {!isPage && !loading && !sim ? (
         <p className="anuncios-sell-popover__result-placeholder">
           Ajuste o preço à esquerda para ver o raio-x simulado.
         </p>
       ) : null}
-      {!loading && sim ? (
+      {!isPage && !loading && sim ? (
         <>
           {!hideSimulatedMarketplaceRevenue && !requireMlScenarioContract ? (
             <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block">
@@ -1248,7 +1572,7 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
                   <>
                     <div className="anuncios-sell-popover__block">
                       <div className="anuncios-sell-popover__line">
-                        <span>Lucro líquido</span>
+                        <span>{ROTULO_LUCRO_RESULTADO}</span>
                         <strong className={offerSemClass || undefined}>
                           {simRes?.profit_brl != null ? formatBrlFromApiString(simRes.profit_brl) : DASH}
                         </strong>
@@ -1405,17 +1729,17 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
       ) : null}
 
       <div className="anuncios-pricing-modal__col anuncios-pricing-modal__col--results">
-              {isPage && simError ? (
-                <p className="anuncios-pricing-modal__error" role="alert">
-                  {simError}
-                </p>
-              ) : null}
-              {mlScenariosLoading ? (
+              {!isPage && mlScenariosLoading ? (
                 <p className="anuncios-pricing-modal__loading" role="status">
                   Carregando cenários atuais (ML)…
                 </p>
               ) : null}
-              {mlScenariosError != null && String(mlScenariosError).trim() !== "" ? (
+              {!isPage && simError ? (
+                <p className="anuncios-pricing-modal__error" role="alert">
+                  {simError}
+                </p>
+              ) : null}
+              {!isPage && mlScenariosError != null && String(mlScenariosError).trim() !== "" ? (
                 <p className="anuncios-pricing-modal__error" role="alert">
                   {String(mlScenariosError)}
                 </p>

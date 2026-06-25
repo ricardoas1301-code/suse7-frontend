@@ -149,14 +149,17 @@ export default function QuickProductCostsModal({
     }
 
     const { error: saveError } = await updateQuery;
-    setSaving(false);
     if (saveError) {
+      setSaving(false);
       setError(saveError.message || "Não foi possível salvar os custos.");
       return;
     }
 
-    await onSaved?.();
+    setSaving(false);
+    // Fecha imediatamente após sucesso. O recarregamento da lista roda em
+    // background (não bloqueamos o fechamento, que antes travava ~10s).
     onClose();
+    void onSaved?.();
   };
 
   const handleCopySku = async () => {
@@ -182,15 +185,6 @@ export default function QuickProductCostsModal({
       >
         <div className="anuncios-quick-cost-modal__header">
           <h3 className="anuncios-quick-cost-modal__title">Cadastrar os custos do produto</h3>
-          <button
-            type="button"
-            className="anuncios-quick-cost-modal__close"
-            onClick={onClose}
-            aria-label="Fechar"
-            disabled={saving}
-          >
-            Fechar
-          </button>
         </div>
         <div className="anuncios-quick-cost-modal__footer-summary">
           <div className="anuncios-quick-cost-modal__product anuncios-quick-cost-modal__product--footer">

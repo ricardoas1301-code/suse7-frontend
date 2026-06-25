@@ -70,6 +70,22 @@ function resolveMetricValueFontSize(value) {
  *   healthyCount?: number | string | null;
  *   lowMarginCount?: number | string | null;
  *   negativeCount?: number | string | null;
+ *   executiveSchema?: {
+ *     metricasUi?: {
+ *       revenueValue?: string;
+ *       netProfitValue?: string;
+ *       marginValue?: string;
+ *       marginUnavailable?: boolean;
+ *       healthyValue?: string;
+ *       healthyUnavailable?: boolean;
+ *       healthyCount?: number | string | null;
+ *       lowMarginCount?: number | string | null;
+ *       negativeCount?: number | string | null;
+ *       loading?: boolean;
+ *       empty?: boolean;
+ *       error?: string | null;
+ *     };
+ *   } | null;
  *   loading?: boolean;
  *   empty?: boolean;
  *   error?: string | null;
@@ -85,11 +101,33 @@ export default function VendasRelatorioExecutivoStub({
   healthyCount = 0,
   lowMarginCount = 0,
   negativeCount = 0,
+  executiveSchema = null,
   loading = false,
   empty = false,
   error = null,
 }) {
-  if (loading) {
+  const metricasUi =
+    executiveSchema?.metricasUi && typeof executiveSchema.metricasUi === "object"
+      ? executiveSchema.metricasUi
+      : null;
+  const resolvedRevenueValue = metricasUi?.revenueValue ?? revenueValue;
+  const resolvedNetProfitValue = metricasUi?.netProfitValue ?? netProfitValue;
+  const resolvedMarginValue = metricasUi?.marginValue ?? marginValue;
+  const resolvedMarginUnavailable = metricasUi?.marginUnavailable ?? marginUnavailable;
+  const resolvedHealthyCount = metricasUi?.healthyCount ?? healthyCount;
+  const resolvedHealthyUnavailable = metricasUi?.healthyUnavailable ?? healthyUnavailable;
+  const resolvedHealthyValue = metricasUi?.healthyValue ?? healthyValue;
+  const resolvedLowMarginCount = metricasUi?.lowMarginCount ?? lowMarginCount;
+  const resolvedNegativeCount = metricasUi?.negativeCount ?? negativeCount;
+  const resolvedLoading = metricasUi?.loading ?? loading;
+  const resolvedEmpty = metricasUi?.empty ?? empty;
+  const resolvedError = metricasUi?.error ?? error;
+  const custosSection = Array.isArray(executiveSchema?.secoes)
+    ? executiveSchema.secoes.find((secao) => secao?.id === "custos")
+    : null;
+  const custosItems = Array.isArray(custosSection?.itens) ? custosSection.itens : [];
+
+  if (resolvedLoading) {
     return (
       <div className="vendas-relatorio-exec" aria-busy="true" aria-label="Resumo executivo do relatório">
         <div className="vendas-relatorio-exec__grid">
@@ -106,7 +144,7 @@ export default function VendasRelatorioExecutivoStub({
     );
   }
 
-  if (error) {
+  if (resolvedError) {
     return (
       <p className="vendas-relatorio-exec__note vendas-relatorio-exec__note--error" role="status">
         {EXECUTIVE_PANEL_ERROR_MESSAGE}
@@ -114,7 +152,7 @@ export default function VendasRelatorioExecutivoStub({
     );
   }
 
-  if (empty) {
+  if (resolvedEmpty) {
     return (
       <p className="vendas-relatorio-exec__note" role="status">
         Nenhuma venda no recorte atual para compor o resumo executivo.
@@ -127,14 +165,14 @@ export default function VendasRelatorioExecutivoStub({
     {
       id: "revenue",
       label: "Faturamento",
-      value: revenueValue,
+      value: resolvedRevenueValue,
       icon: DollarSign,
       hint: null,
     },
     {
       id: "netProfit",
       label: "Lucro",
-      value: netProfitValue,
+      value: resolvedNetProfitValue,
       icon: DollarSign,
       hint: null,
       tooltip: LUCRO_TOOLTIP,
@@ -142,10 +180,10 @@ export default function VendasRelatorioExecutivoStub({
     {
       id: "margin",
       label: "Margem",
-      value: marginUnavailable ? "—" : marginValue,
+      value: resolvedMarginUnavailable ? "—" : resolvedMarginValue,
       icon: Percent,
-      hint: marginUnavailable ? "Disponível em fase futura" : null,
-      unavailable: marginUnavailable,
+      hint: resolvedMarginUnavailable ? "Disponível em fase futura" : null,
+      unavailable: resolvedMarginUnavailable,
     },
   ];
 
@@ -155,19 +193,21 @@ export default function VendasRelatorioExecutivoStub({
     {
       id: "healthy",
       label: "Saudáveis",
-      value: healthyUnavailable ? healthyValue : formatVendasCountLabel(healthyCount),
+      value: resolvedHealthyUnavailable
+        ? resolvedHealthyValue
+        : formatVendasCountLabel(resolvedHealthyCount),
       icon: Users,
     },
     {
       id: "lowMargin",
       label: "Margem crítica",
-      value: formatVendasCountLabel(lowMarginCount),
+      value: formatVendasCountLabel(resolvedLowMarginCount),
       icon: AlertTriangle,
     },
     {
       id: "loss",
       label: "Prejuízo",
-      value: formatVendasCountLabel(negativeCount),
+      value: formatVendasCountLabel(resolvedNegativeCount),
       icon: TrendingDown,
     },
   ];
@@ -261,6 +301,21 @@ export default function VendasRelatorioExecutivoStub({
           );
         })}
       </div>
+
+      {custosItems.length > 0 ? (
+        <section className="vendas-relatorio-exec__costs" aria-label="Custos">
+          <h4 className="vendas-relatorio-exec__costs-title">Custos</h4>
+          <div className="vendas-relatorio-exec__costs-grid">
+            {custosItems.map((custo) => (
+              <article key={custo.id} className="vendas-relatorio-exec__cost-card">
+                <span className="vendas-relatorio-exec__cost-card-label">{custo.rotulo}</span>
+                <span className="vendas-relatorio-exec__cost-card-value">{custo.valor}</span>
+                <span className="vendas-relatorio-exec__cost-card-percent">{custo.percentual ?? "0,00%"}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </section>
   );
 }

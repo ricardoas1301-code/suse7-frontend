@@ -12,10 +12,11 @@ import {
 import "./NotificationDailySalesSchedule.css";
 import "./DailySalesTimeWheelPicker.css";
 
-const INTERNAL_CHANNEL_DEFS = [
-  { key: "in_app", label: "Sininho", description: "Alerta dentro do Suse7." },
-  { key: "popup", label: "Pop-up", description: "Modal com resumo executivo." },
-];
+const POPUP_CHANNEL_DEF = {
+  key: "popup",
+  label: "Pop-up",
+  description: "Modal com resumo executivo.",
+};
 
 /**
  * @param {{
@@ -129,6 +130,23 @@ export default function NotificationDailySalesSchedule({ rule, saving, onChange 
     if (time2) setShowSecondTime(true);
   }, [time2]);
 
+  const validateSecondTimeInterval = (a, b) => {
+    if (!a || !b) return { ok: true };
+    if (!isValidDailySalesSummaryTime(a) || !isValidDailySalesSummaryTime(b)) {
+      return { ok: true };
+    }
+    const [ha, ma] = a.split(":").map(Number);
+    const [hb, mb] = b.split(":").map(Number);
+    const deltaMin = Math.abs(hb * 60 + mb - (ha * 60 + ma));
+    if (deltaMin < 4 * 60) {
+      return {
+        ok: false,
+        message: "Use no máximo 2 horários com intervalo mínimo de 4 horas entre eles.",
+      };
+    }
+    return { ok: true };
+  };
+
   const emitPatch = (partialConfig) => {
     const next = {
       enabled: rule?.enabled !== false,
@@ -140,13 +158,17 @@ export default function NotificationDailySalesSchedule({ rule, saving, onChange 
           ...DEFAULT_DAILY_SALES_SUMMARY_CONFIG.channels,
           ...channels,
           ...(partialConfig?.channels ?? {}),
+          // Regra de produto: sininho sempre ativo para resumo diário.
+          in_app: true,
         },
       },
     };
     const validated = validateDailySalesSummaryDraft(next);
-    if (!validated.ok) return false;
+    if (!validated.ok) {
+      return { ok: false, message: validated.message ?? "Não foi possível salvar a regra." };
+    }
     onChange?.(next);
-    return true;
+    return { ok: true };
   };
 
   const toggleWeekday = (value, checked) => {
@@ -173,8 +195,12 @@ export default function NotificationDailySalesSchedule({ rule, saving, onChange 
     }
 
     const nextTimes = index === 0 ? [trimmed, time2].filter(Boolean) : [time1, trimmed].filter(Boolean);
+    const spacingValidation = validateSecondTimeInterval(nextTimes[0] ?? "", nextTimes[1] ?? "");
+    if (!spacingValidation.ok) return spacingValidation;
+
     const saved = emitPatch({ times: nextTimes });
-    return saved ? { ok: true } : { ok: false, message: "Não foi possível salvar o horário." };
+    if (!saved.ok) return saved;
+    return { ok: true };
   };
 
   const addSecondTime = () => {
@@ -189,6 +215,7 @@ export default function NotificationDailySalesSchedule({ rule, saving, onChange 
   };
 
   const toggleChannel = (key, enabled) => {
+    if (key === "in_app") return;
     emitPatch({ channels: { ...channels, [key]: enabled } });
   };
 
@@ -202,17 +229,24 @@ export default function NotificationDailySalesSchedule({ rule, saving, onChange 
       <fieldset className="s7-ndaily-schedule__block" disabled={saving}>
         <legend>Alertas no Suse7</legend>
         <div className="s7-ndaily-schedule__channels">
-          {INTERNAL_CHANNEL_DEFS.map((ch) => (
-            <NotificationChannelToggle
-              key={ch.key}
-              channelKey={ch.key}
-              label={ch.label}
-              description={ch.description}
-              enabled={channels[ch.key] !== false}
-              saving={saving}
-              onChange={toggleChannel}
-            />
-          ))}
+          <div className="s7-ndaily-schedule__channel-card s7-ndaily-schedule__channel-card--locked">
+            <div className="s7-ndaily-schedule__channel-copy">
+              <strong>Sininho</strong>
+              <p>Obrigatório para este alerta. O histórico continua disponível no sino.</p>
+            </div>
+            <span className="s7-ndaily-schedule__channel-lock-badge">Sempre ativo</span>
+          </div>
+        </div>
+        <div className="s7-ndaily-schedule__channels">
+          <NotificationChannelToggle
+            key={POPUP_CHANNEL_DEF.key}
+            channelKey={POPUP_CHANNEL_DEF.key}
+            label={POPUP_CHANNEL_DEF.label}
+            description={POPUP_CHANNEL_DEF.description}
+            enabled={channels[POPUP_CHANNEL_DEF.key] !== false}
+            saving={saving}
+            onChange={toggleChannel}
+          />
         </div>
       </fieldset>
 

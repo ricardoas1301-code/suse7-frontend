@@ -29,6 +29,146 @@
   margin-bottom: 20px;
 }
 
+/* Dashboard — alinhado ao grid principal (KPIs / Resumo Diário), recolhível */
+.s7-import-intel--dashboard {
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 calc(var(--s7-space-5, 20px) + 10px);
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.s7-import-intel--dashboard.s7-import-intel--collapsed {
+  padding-bottom: 0;
+}
+
+.s7-import-intel--dashboard.s7-import-intel--loading {
+  min-height: 0;
+  padding: 12px 16px;
+  align-items: stretch;
+}
+
+.s7-import-intel--dashboard.s7-import-intel--success {
+  background: linear-gradient(145deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.s7-import-intel--dashboard.s7-import-intel--success::before {
+  background: linear-gradient(90deg, #16a34a 0%, #22c55e 50%, #86efac 100%);
+}
+
+.s7-import-intel__dashboard-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 14px 18px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.s7-import-intel__dashboard-toggle:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+.s7-import-intel__dashboard-chevron {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #64748b;
+}
+
+.s7-import-intel__dashboard-toggle-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.s7-import-intel__title--toggle {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.s7-import-intel--dashboard.s7-import-intel--success .s7-import-intel__title--toggle {
+  color: #166534;
+}
+
+.s7-import-intel__compact-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.s7-import-intel__compact-line {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: #475569;
+  font-weight: 500;
+}
+
+.s7-import-intel__compact-line--secondary {
+  color: #64748b;
+  font-weight: 400;
+}
+
+.s7-import-intel__dashboard-body {
+  padding: 0 18px 16px;
+}
+
+.s7-import-intel__dashboard-body .s7-import-intel__head--dashboard-expanded {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.s7-import-intel__sub--dashboard-expanded {
+  margin: 0;
+}
+
+.s7-import-intel__dashboard-complete {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0 2px;
+}
+
+.s7-import-intel__dashboard-complete .s7-import-intel__success-icon {
+  margin-top: 1px;
+}
+
+.s7-import-intel__dashboard-complete .s7-import-intel__sub {
+  margin: 0;
+}
+
+.s7-import-intel__shimmer--compact {
+  height: 36px;
+}
+
+.s7-import-intel--dashboard .s7-import-intel__reassure {
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+}
+
+.s7-import-intel--dashboard .s7-import-intel__accounts {
+  gap: 12px;
+}
+
+.s7-import-intel--dashboard .s7-import-intel__account {
+  padding: 14px 14px 12px;
+}
+
 /* Dentro do modal operacional (pai define borda/sombra externa) */
 .s7-import-intel--modal {
   max-width: none;
@@ -474,5 +614,17 @@
   .s7-import-intel {
     padding: 18px 16px;
     border-radius: 14px;
+  }
+
+  .s7-import-intel--dashboard {
+    padding: 0;
+  }
+
+  .s7-import-intel__dashboard-toggle {
+    padding: 12px 14px;
+  }
+
+  .s7-import-intel__dashboard-body {
+    padding: 0 14px 14px;
   }
 }

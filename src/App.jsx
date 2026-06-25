@@ -17,6 +17,7 @@ import "./global.css";
 import "./styles/Suse7-Design-System.css";
 import "./styles/S7CoreKpis.css";
 import "./styles/s7-sticky-filters.css";
+import "./styles/s7-catalog-page-rhythm.css";
 
 import { useAuthBootstrap } from "./contexts/AuthBootstrapContext";
 

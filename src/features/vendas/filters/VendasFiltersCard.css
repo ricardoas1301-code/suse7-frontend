@@ -8,14 +8,18 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  margin: 14px 0 14px;
+  margin: 0;
   border-radius: var(--vfc-radius);
   border: 1px solid var(--vfc-border);
   background: #ffffff;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
     0 8px 22px rgba(15, 23, 42, 0.05);
-  overflow: visible;
+  overflow: hidden;
+}
+
+.vendas-filters-card--collapsed {
+  overflow: hidden;
 }
 
 /* Sticky abaixo da navbar — scroll em .page-content (ver s7-sticky-filters.css) */
@@ -24,6 +28,7 @@
   top: var(--s7-sticky-filters-top, 0px);
   z-index: 28;
   background: #ffffff;
+  border-radius: var(--vfc-radius);
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
     0 8px 22px rgba(15, 23, 42, 0.05),
@@ -40,9 +45,15 @@
   padding: 11px 14px;
   border: none;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: var(--vfc-radius) var(--vfc-radius) 0 0;
   cursor: pointer;
   text-align: left;
+  font-family: inherit;
   transition: background 0.18s ease;
+}
+
+.vendas-filters-card--collapsed .vendas-filters-card__header {
+  border-radius: var(--vfc-radius);
 }
 
 .vendas-filters-card__header:hover {
@@ -81,6 +92,7 @@
   min-width: 0;
 }
 
+/* Título / resumo — paridade Precificações · Produtos · Anúncios (13px / 11px) */
 .vendas-filters-card__title {
   font-size: 13px;
   font-weight: 800;
@@ -114,7 +126,7 @@
 
 /* P_2.8.12F — contador de selecionadas no header expandido (azul/negrito, sem nova linha) */
 .vendas-filters-card__header-selected {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #1e40af;
   white-space: nowrap;
@@ -128,13 +140,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 4px;
+  border-radius: 8px;
   color: #64748b;
   flex: 0 0 auto;
-  transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .vendas-filters-card__chevron--open {
   transform: rotate(180deg);
+}
+
+.vendas-filters-card__chevron:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--s7-primary, #2563eb);
 }
 
 .vendas-filters-card__collapse {
@@ -158,9 +180,17 @@
   gap: 10px;
 }
 
+.vendas-filters-card--expanded .vendas-filters-card__body {
+  padding-top: 8px;
+}
+
 .vendas-filters-card--collapsed .vendas-filters-card__body {
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.vendas-filters-card--collapsed .vendas-filters-card__header:hover .vendas-filters-card__title {
+  color: #c2410c;
 }
 
 .vendas-filters-card__row {
@@ -170,23 +200,28 @@
 }
 
 .vendas-filters-card__row--primary {
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: end;
-}
-
-/* Container dos selects operacionais (Conta, Status, Tipo de entrega, Origem).
-   4 colunas iguais → Conta fica ~60% da largura anterior (M01). */
-.vendas-filters-card__selects {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  grid-template-columns: none;
   gap: 12px;
-  min-width: 0;
-  align-items: end;
 }
 
 .vendas-filters-card__field--period {
-  width: fit-content;
-  max-width: 100%;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: min(100%, 460px);
+}
+
+.vendas-filters-card__field--search {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.vendas-filters-card__field--account {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .vendas-filters-card__field {
@@ -197,7 +232,7 @@
 }
 
 .vendas-filters-card__label {
-  font-size: 11px;
+  font-size: var(--s7-text-caption);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -221,7 +256,7 @@
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.45);
   background: #ffffff;
-  font-size: 12px;
+  font-size: var(--s7-text-caption);
   font-weight: 500;
   color: #0f172a;
   box-sizing: border-box;
@@ -234,7 +269,7 @@
 }
 
 .vendas-filters-card__date-sep {
-  font-size: 11px;
+  font-size: var(--s7-text-caption);
   color: #94a3b8;
   flex: 0 0 auto;
 }
@@ -251,7 +286,7 @@
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: #ffffff;
-  font-size: 12px;
+  font-size: var(--s7-text-caption);
   font-weight: 600;
   color: #475569;
   cursor: pointer;
@@ -280,7 +315,7 @@
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.45);
   background: #ffffff;
-  font-size: 12px;
+  font-size: var(--s7-text-caption);
   font-weight: 500;
   color: #0f172a;
 }
@@ -317,7 +352,7 @@
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: #ffffff;
-  font-size: 11px;
+  font-size: var(--s7-text-caption);
   font-weight: 600;
   color: #475569;
   cursor: pointer;
@@ -357,28 +392,29 @@
 
 .vendas-filters-card__search-wrap {
   width: 100%;
-  /* P_2.X — largura equilibrada (referência: card de Precificações), menos campo esticado. */
-  max-width: 420px;
+  /* Mantém o mesmo tamanho padrão de busca das outras páginas. */
+  max-width: 363px;
   min-width: 0;
 }
 
-@media (max-width: 640px) {
-  .vendas-filters-card__search-wrap {
-    max-width: 100%;
-  }
+.vendas-filters-card__field--account .vendas-filters-card__select {
+  width: min(242px, 100%);
+  max-width: 242px;
 }
 
 @media (max-width: 1180px) {
   .vendas-filters-card__row--primary {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: none;
   }
 
-  .vendas-filters-card__field--period {
-    grid-column: 1 / -1;
+  .vendas-filters-card__field--search .vendas-filters-card__search-wrap {
+    width: 100%;
+    max-width: 363px;
   }
 
-  .vendas-filters-card__selects {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .vendas-filters-card__field--account .vendas-filters-card__select {
+    width: 100%;
+    max-width: 242px;
   }
 }
 
@@ -386,10 +422,6 @@
   .vendas-filters-card {
     overflow: hidden;
     max-width: 100%;
-  }
-
-  .vendas-filters-card__selects {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .vendas-filters-card__row,
@@ -407,6 +439,11 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
+  }
+
+  .vendas-filters-card__field--search .vendas-filters-card__search-wrap,
+  .vendas-filters-card__field--account .vendas-filters-card__select {
+    max-width: 100%;
   }
 
   .vendas-filters-card__summary {
@@ -449,7 +486,7 @@
   }
 
   .vendas-filters-card__marketplace-chip {
-    font-size: 10px;
+    font-size: var(--s7-text-caption);
     padding: 0 8px;
   }
 }

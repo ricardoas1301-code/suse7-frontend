@@ -22,7 +22,6 @@ import {
   topRankingThumbCacheKey,
 } from "./salesTopRankingUtils";
 import S7Icon from "../ui/S7Icon";
-import podiumStarUrl from "../../assets/rankings/podium-star.png";
 import {
   EXECUTIVE_PANEL_EMPTY_RANKING_MESSAGE,
   EXECUTIVE_PANEL_ERROR_MESSAGE,
@@ -200,15 +199,6 @@ export function SalesTopRankingPodium({ item, metric }) {
         <div className="sales-top-ranking__podium-pedestal">
           <div className="sales-top-ranking__podium-hero">
             <div className="sales-top-ranking__podium-photo-stack">
-              <img
-                className="sales-top-ranking__podium-star"
-                src={podiumStarUrl}
-                alt=""
-                width={22}
-                height={22}
-                decoding="async"
-                draggable={false}
-              />
               <div className="sales-top-ranking__podium-bubble-inner">
                 <TopRankingThumbFromItem
                   item={item}
@@ -242,6 +232,13 @@ export function SalesTopRankingPodium({ item, metric }) {
                 <p className="sales-top-ranking__podium-value">{podiumLines.valueLine}</p>
               )}
             </div>
+            <span className="sales-top-ranking__podium-prize" aria-hidden="true">
+              {rank === 1 ? (
+                <S7Icon name="podium_trophy" size={28} strokeWidth={1.85} />
+              ) : (
+                <S7Icon name="podium_medal" size={rank === 2 ? 24 : 22} strokeWidth={1.85} />
+              )}
+            </span>
           </div>
         </div>
       </article>
@@ -295,9 +292,18 @@ export function SalesTopRankingList({ items, metric }) {
   );
 }
 
-function TopRankingSkeletonHeader() {
+function TopRankingSkeletonHeader({ external = false } = {}) {
   return (
-    <div className="sales-top-ranking__head sales-top-ranking__head--skeleton" aria-hidden>
+    <div
+      className={[
+        "sales-top-ranking__head",
+        "sales-top-ranking__head--skeleton",
+        external ? "sales-top-ranking__head--external" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-hidden
+    >
       <span className="sales-top-ranking__skeleton-head-title" />
       <span className="sales-top-ranking__skeleton-head-badge" />
     </div>
@@ -371,6 +377,7 @@ export default function SalesTopRankingCard({
   loading = false,
   error = null,
   periodLabel = null,
+  tituloExterno = false,
 }) {
   const { user } = useAuthBootstrap();
   const [thumbByListingId, setThumbByListingId] = useState(/** @type {Record<string, string>} */ ({}));
@@ -420,7 +427,24 @@ export default function SalesTopRankingCard({
         ? "sales-top-ranking--tone-profit"
         : "sales-top-ranking--tone-quantity";
 
-  return (
+  const headerNode =
+    showLoading ? (
+      <TopRankingSkeletonHeader external={tituloExterno} />
+    ) : (
+      <header
+        className={[
+          "sales-top-ranking__head",
+          tituloExterno ? "sales-top-ranking__head--external" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <h2 className="sales-top-ranking__title">{title}</h2>
+        {periodLabel ? <span className="sales-top-ranking__period-badge">{periodLabel}</span> : null}
+      </header>
+    );
+
+  const cardShell = (
     <div
       className={[
         "sales-top-ranking",
@@ -430,14 +454,7 @@ export default function SalesTopRankingCard({
         .filter(Boolean)
         .join(" ")}
     >
-      {showLoading ? (
-        <TopRankingSkeletonHeader />
-      ) : (
-        <header className="sales-top-ranking__head">
-          <h2 className="sales-top-ranking__title">{title}</h2>
-          {periodLabel ? <span className="sales-top-ranking__period-badge">{periodLabel}</span> : null}
-        </header>
-      )}
+      {!tituloExterno ? headerNode : null}
 
       <div className="sales-top-ranking__stage">
         {showLoading ? <TopRankingSkeleton /> : null}
@@ -460,4 +477,15 @@ export default function SalesTopRankingCard({
       </div>
     </div>
   );
+
+  if (tituloExterno) {
+    return (
+      <div className="sales-top-ranking-stack sales-top-ranking-stack--titulo-externo">
+        {headerNode}
+        {cardShell}
+      </div>
+    );
+  }
+
+  return cardShell;
 }

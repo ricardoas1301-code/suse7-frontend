@@ -1,0 +1,302 @@
+/* ======================================================================
+   Card Busca e Filtros — Concorrência (padrão Vendas)
+   ====================================================================== */
+
+.concorrencia-filters-card {
+  --cfc-radius: 14px;
+  --cfc-border: rgba(15, 23, 42, 0.08);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border-radius: var(--cfc-radius);
+  border: 1px solid var(--cfc-border);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 22px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.page-content .concorrencia-filters-card.s7-sticky-filters {
+  position: sticky;
+  top: var(--s7-sticky-filters-top, 0px);
+  z-index: 28;
+  border-radius: var(--cfc-radius);
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 22px rgba(15, 23, 42, 0.05),
+    0 1px 0 rgba(15, 23, 42, 0.06);
+}
+
+.concorrencia-filters-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 11px 14px;
+  border: none;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.concorrencia-filters-card--expanded .concorrencia-filters-card__header {
+  border-radius: var(--cfc-radius) var(--cfc-radius) 0 0;
+}
+
+.concorrencia-filters-card--collapsed .concorrencia-filters-card__header {
+  border-radius: var(--cfc-radius);
+}
+
+.concorrencia-filters-card__header:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+.concorrencia-filters-card__header:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: -2px;
+}
+
+.concorrencia-filters-card__header-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.concorrencia-filters-card__header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 133, 51, 0.12);
+  color: var(--s7-orange, #ff8533);
+  flex: 0 0 auto;
+}
+
+.concorrencia-filters-card__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.concorrencia-filters-card__title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.concorrencia-filters-card__summary {
+  font-size: var(--s7-text-caption);
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.concorrencia-filters-card__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.concorrencia-filters-card__header-selected {
+  font-size: var(--s7-text-caption);
+  font-weight: 700;
+  color: #1e40af;
+  white-space: nowrap;
+}
+
+.concorrencia-filters-card__summary-selected {
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.concorrencia-filters-card__report-btn,
+.concorrencia-filters-card__include-btn {
+  flex-shrink: 0;
+}
+
+.concorrencia-filters-card__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 8px;
+  color: #64748b;
+  flex: 0 0 auto;
+  transition:
+    transform 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.concorrencia-filters-card__chevron--open {
+  transform: rotate(180deg);
+}
+
+.concorrencia-filters-card__chevron:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--s7-primary, #2563eb);
+}
+
+.concorrencia-filters-card__collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  border-radius: 0 0 var(--cfc-radius) var(--cfc-radius);
+}
+
+.concorrencia-filters-card--expanded .concorrencia-filters-card__collapse {
+  grid-template-rows: 1fr;
+}
+
+.concorrencia-filters-card__body {
+  overflow: hidden;
+  min-height: 0;
+  padding: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.concorrencia-filters-card--expanded .concorrencia-filters-card__body {
+  padding-top: 8px;
+}
+
+.concorrencia-filters-card--collapsed .concorrencia-filters-card__body {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.concorrencia-filters-card--collapsed .concorrencia-filters-card__header:hover .concorrencia-filters-card__title {
+  color: #c2410c;
+}
+
+.concorrencia-filters-card__row {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.concorrencia-filters-card__row--search-account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.concorrencia-filters-card__field--search {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.concorrencia-filters-card__field--search .concorrencia-filters-card__search-wrap {
+  width: min(363px, 100%);
+  max-width: 363px;
+}
+
+.concorrencia-filters-card__field--account {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.concorrencia-filters-card__field--account .concorrencia-filters-card__select {
+  width: min(242px, 100%);
+  max-width: 242px;
+}
+
+.concorrencia-filters-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.concorrencia-filters-card__field--hidden {
+  display: none !important;
+}
+
+.concorrencia-filters-card__label {
+  font-size: var(--s7-text-caption);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.concorrencia-filters-card__select {
+  height: 34px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #ffffff;
+  font-size: var(--s7-text-caption);
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.concorrencia-filters-card__select:focus {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.concorrencia-filters-card__select option:disabled {
+  color: #94a3b8;
+}
+
+.concorrencia-filters-card__row--chips {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.concorrencia-filters-card__chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.concorrencia-filters-card__search-wrap {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .concorrencia-filters-card__row--search-account {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .concorrencia-filters-card__field--search .concorrencia-filters-card__search-wrap,
+  .concorrencia-filters-card__field--account .concorrencia-filters-card__select {
+    width: 100%;
+    max-width: 100%;
+  }
+}

@@ -19,6 +19,11 @@ import {
   DEFAULT_OPERATIONAL_DAY_CLOSES_AT,
   normalizeOperationalDayClosesAt,
 } from "../../features/dashboard/operationalDayCycle.js";
+import {
+  DEFAULT_OPERATIONAL_WORKING_DAYS,
+  normalizeOperationalWorkingDays,
+} from "../../features/dashboard/operationalWorkingDays.js";
+import OperationalWorkingDaysField from "./OperationalWorkingDaysField.jsx";
 import "../CompleteProfileModal.css";
 import suse7Logo from "../../assets/suse7-logo-redonda.png";
 import "./SellerCompanyModal.css";
@@ -73,6 +78,7 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pri
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [operationalDayClosesAt, setOperationalDayClosesAt] = useState(DEFAULT_OPERATIONAL_DAY_CLOSES_AT);
+  const [operationalWorkingDays, setOperationalWorkingDays] = useState(DEFAULT_OPERATIONAL_WORKING_DAYS);
   const { addNotification } = useNotifications();
 
   const showOperationalCloseField =
@@ -87,18 +93,21 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pri
     } = await supabase.auth.getUser();
     if (!user?.id) {
       setOperationalDayClosesAt(DEFAULT_OPERATIONAL_DAY_CLOSES_AT);
+      setOperationalWorkingDays(DEFAULT_OPERATIONAL_WORKING_DAYS);
       return;
     }
     const { data, error } = await supabase
       .from("profiles")
-      .select("operational_day_closes_at")
+      .select("operational_day_closes_at, operational_working_days")
       .eq("id", user.id)
       .maybeSingle();
     if (error) {
       setOperationalDayClosesAt(DEFAULT_OPERATIONAL_DAY_CLOSES_AT);
+      setOperationalWorkingDays(DEFAULT_OPERATIONAL_WORKING_DAYS);
       return;
     }
     setOperationalDayClosesAt(normalizeOperationalDayClosesAt(data?.operational_day_closes_at));
+    setOperationalWorkingDays(normalizeOperationalWorkingDays(data?.operational_working_days));
   }, []);
 
   const loadOne = useCallback(async () => {
@@ -410,6 +419,7 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pri
             .from("profiles")
             .update({
               operational_day_closes_at: operationalDayClosesAt || DEFAULT_OPERATIONAL_DAY_CLOSES_AT,
+              operational_working_days: normalizeOperationalWorkingDays(operationalWorkingDays),
             })
             .eq("id", user.id);
           if (profileErr) {
@@ -611,21 +621,30 @@ export default function SellerCompanyModal({ open, onClose, mode, companyId, pri
             </div>
 
             {showOperationalCloseField ? (
-              <div className="profile-grid">
-                <label className="s7-co-field-full">
-                  Hora de encerramento operacional
-                  <input
-                    type="time"
-                    name="operational_day_closes_at"
-                    value={operationalDayClosesAt}
-                    onChange={(e) => setOperationalDayClosesAt(e.target.value || DEFAULT_OPERATIONAL_DAY_CLOSES_AT)}
+              <>
+                <div className="profile-grid">
+                  <label className="s7-co-field-full">
+                    Hora de encerramento operacional
+                    <input
+                      type="time"
+                      name="operational_day_closes_at"
+                      value={operationalDayClosesAt}
+                      onChange={(e) => setOperationalDayClosesAt(e.target.value || DEFAULT_OPERATIONAL_DAY_CLOSES_AT)}
+                    />
+                    <small className="field-help">
+                      Usaremos esse horário junto com os dias de operação para calcular seu Resumo Diário no
+                      Dashboard.
+                    </small>
+                  </label>
+                </div>
+                <div className="profile-grid">
+                  <OperationalWorkingDaysField
+                    className="s7-co-field-full"
+                    value={operationalWorkingDays}
+                    onChange={setOperationalWorkingDays}
                   />
-                  <small className="field-help">
-                    Usaremos esse horário para calcular seu Resumo Diário no Dashboard. Exemplo: se você encerra às
-                    18:00, o resumo mostra as vendas desde 18:00 até agora.
-                  </small>
-                </label>
-              </div>
+                </div>
+              </>
             ) : null}
 
             {mode === "edit" ? (

@@ -3,24 +3,25 @@
 // Linha clicável → edição; colunas preparadas para anúncios, vendas e MKP.
 // ======================================================================
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useNotifications } from "../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import S7Button from "./ui/S7Button";
-import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "./ui/S7CopyButton";
 import S7ConfirmModal from "./ui/S7ConfirmModal";
 import S7EmptyState from "./ui/S7EmptyState";
 import S7Icon from "./ui/S7Icon";
-import S7Input from "./ui/S7Input";
+import S7Pagination from "./ui/S7Pagination";
+import { S7CatalogProductHeadline } from "./catalog/S7CatalogListingHeadline.jsx";
 import { applyCatalogFilter, getCatalogFilterChipsForToolbar } from "../utils/catalogFilterRegistry";
 import { filterProductsByCatalogSearch } from "../utils/catalogSearch";
 import {
+  fetchProductCatalogFinancial,
+  mergeProductCatalogFinancialRow,
+} from "../services/productCatalogFinancialApi";
+import {
   formatCatalogBRL,
-  formatCatalogProfitPercentLabel,
-  getCatalogFinancialToneClass,
-  getCatalogHealthPresentation,
   getCatalogProfitSemanticBand,
   getContributionMarginPercent,
   getProductCatalogMetrics,
@@ -28,50 +29,55 @@ import {
   marketplaceChipLabel,
 } from "../utils/productCatalogRow";
 import { useProductMainImageSrc } from "../utils/productImageDisplayUrl";
+import { calcCatalogFormProgressPercentFromProductRow } from "../utils/formProgress";
 import { computeCatalogProductReadiness } from "../utils/productReadiness";
+import ProductHealthProgress from "./ProductHealthProgress.jsx";
+import { rotuloCabecalhoListaUnicaLinha } from "../utils/rotuloCabecalhoLista.js";
+import ProductsFiltersCard from "../features/products/filters/ProductsFiltersCard.jsx";
+import ProdutosGerarRelatorioModal from "../features/products/reports/ProdutosGerarRelatorioModal.jsx";
+import {
+  buildProdutosReportContext,
+  canOfferProdutosReport,
+} from "../features/products/reports/buildProdutosReportContext.js";
+import { buildProdutosAggregatedReport } from "../features/products/reports/buildProdutosAggregatedReport.js";
+import ProductEditModal from "./products/ProductEditModal.jsx";
 import "./Products.css";
 import "./Anuncios.css";
+import "../styles/VendasPage.css";
+import "./ProductsCatalogGridAlign.css";
 
 /** Coluna Marketplaces: dados seguem em `getProductCatalogMetrics`; UI oculta até a visão MKP amadurecer. */
 const SHOW_CATALOG_MARKETPLACES_COLUMN = false;
 
 /** Itens por página na listagem paginada. */
-const CATALOG_PAGE_SIZE = 33;
+const CATALOG_PAGE_SIZE = 100;
 
 /** Textos dos tooltips dos cabeçalhos financeiros / métricas (catálogo). */
 const CATALOG_COLUMN_TOOLTIPS = {
   ads: "Quantidade de anúncios vinculados ao produto.",
-  sales: "Quantidade total de vendas deste produto.",
-  revenue: "Valor total vendido deste produto.",
-  cost: "Custo total das vendas deste produto, incluindo custo do produto, taxas, impostos e outros custos da venda.",
-  grossProfit:
-    "Lucro bruto ou margem de contribuição total deste produto, calculado pelo valor total vendido menos o custo das vendas.",
-  profitPct: "Percentual total de lucro deste produto.",
+  sales: "Quantidade total vendida (soma das unidades de todos os anúncios vinculados).",
+  revenue: "Faturamento histórico consolidado do produto (SSOT vendas).",
+  ticket: "Ticket médio histórico: faturamento total ÷ quantidade vendida.",
+  profitBrl: "Lucro histórico consolidado (margem de contribuição agregada, SSOT).",
+  profitPct: "Margem consolidada do produto sobre o faturamento (SSOT).",
 };
 
 /**
  * Cabeçalho de coluna: célula com layout original; tooltip só no rótulo (CSS local, sem S7Tooltip).
- * `lines` = duas linhas como “Saúde do produto” (ex.: Valor / vendido).
+ * `lines` = rótulo estreito ex.: ["Valor","vendido"] → "Valor vendido" (1 linha, fonte compacta).
  * @param {{ columnClass: string; tip?: string; tipWrap?: boolean; lines?: [string, string]; children?: import("react").ReactNode }} props
  */
 function CatalogHeadCell({ columnClass, tip, tipWrap = false, lines, children = null }) {
+  const tituloCompacto = lines && lines.length === 2 ? rotuloCabecalhoListaUnicaLinha(lines) : null;
   const triggerClass = [
     "products-catalog__head-tooltip",
-    lines && lines.length === 2 ? "products-catalog__head-tooltip--stacked" : "",
+    tituloCompacto ? "products-catalog__head-tooltip--compact" : "",
     tipWrap ? "products-catalog__head-tooltip--wide" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  const label =
-    lines && lines.length === 2 ? (
-      <>
-        <span className="products-catalog__col-head-line">{lines[0]}</span>
-        <span className="products-catalog__col-head-line">{lines[1]}</span>
-      </>
-    ) : (
-      children
-    );
+  const label = tituloCompacto ?? children;
 
   return (
     <div className={`products-catalog__cell ${columnClass} products-catalog__col-head`} role="columnheader">
@@ -86,30 +92,154 @@ function CatalogHeadCell({ columnClass, tip, tipWrap = false, lines, children = 
   );
 }
 
+/** @typedef {import("../utils/productCatalogRow.js").CatalogProfitBand} CatalogProfitBand */
+
+/**
+ * Paridade visual com VendasPage — valor ausente discreto (UI-only).
+ * @param {{ children?: import("react").ReactNode }} props
+ */
+function CatalogMetricMissing({ children = "—" }) {
+  return (
+    <span className="vendas-page__fin-missing" title="Sem dado informado">
+      {children}
+    </span>
+  );
+}
+
+/** @param {{ children: import("react").ReactNode }} props */
+function CatalogMetricNumSingle({ children }) {
+  return (
+    <div className="vendas-page__num-stack">
+      <span className="vendas-page__num-stack-primary">{children}</span>
+      <span className="vendas-page__num-stack-secondary-slot" aria-hidden="true" />
+    </div>
+  );
+}
+
+/**
+ * Banda SSOT do catálogo → classes de saúde financeira da Vendas (somente visual).
+ * @param {CatalogProfitBand} band
+ */
+function catalogBandToVendasFinTone(band) {
+  switch (band) {
+    case "healthy":
+      return "vendas-page__fin--health-healthy";
+    case "warn":
+      return "vendas-page__fin--health-warn";
+    case "loss":
+      return "vendas-page__fin--health-critical";
+    default:
+      return "vendas-page__fin--empty";
+  }
+}
+
+/** @param {string} toneClass */
+function catalogVendasFinValueClass(toneClass) {
+  if (toneClass === "vendas-page__fin--health-critical") return "vendas-page__fin-value--health-critical";
+  if (toneClass === "vendas-page__fin--health-warn") return "vendas-page__fin-value--health-warn";
+  if (toneClass === "vendas-page__fin--health-healthy") return "vendas-page__fin-value--health-healthy";
+  if (toneClass === "vendas-page__fin--empty") return "vendas-page__fin-value--empty";
+  return "";
+}
+
+/**
+ * Indicador compacto de saúde (paridade Vendas): ▲ saudável, ● margem crítica, ▼ prejuízo.
+ * @param {{ toneClass: string }} props
+ */
+function CatalogProfitHealthHint({ toneClass }) {
+  if (toneClass === "vendas-page__fin--health-critical") {
+    return (
+      <span
+        className="vendas-page__profit-hint vendas-page__profit-hint--down"
+        title="Prejuízo"
+        aria-label="Prejuízo"
+      />
+    );
+  }
+  if (toneClass === "vendas-page__fin--health-warn") {
+    return (
+      <span
+        className="vendas-page__profit-hint vendas-page__profit-hint--dot"
+        title="Margem crítica"
+        aria-label="Margem crítica"
+      />
+    );
+  }
+  if (toneClass === "vendas-page__fin--health-healthy") {
+    return (
+      <span
+        className="vendas-page__profit-hint vendas-page__profit-hint--up"
+        title="Saudável"
+        aria-label="Saudável"
+      />
+    );
+  }
+  return null;
+}
+
+/**
+ * Célula métrica do catálogo com tokens visuais da página Vendas.
+ * @param {{
+ *   columnClass: string;
+ *   variant?: "neutral" | "money" | "profit" | "margin";
+ *   toneClass?: string;
+ *   children: import("react").ReactNode;
+ * }} props
+ */
+function CatalogMetricCell({ columnClass, variant = "neutral", toneClass = "", children }) {
+  const variantClass =
+    variant === "money"
+      ? "vendas-page__num-cell--sale"
+      : variant === "profit"
+        ? "vendas-page__num-cell--profit"
+        : variant === "margin"
+          ? "vendas-page__num-cell--margin"
+          : "";
+  return (
+    <div
+      className={[
+        "products-catalog__cell",
+        columnClass,
+        "products-catalog__cell--metric-vendas",
+        "vendas-page__num-cell",
+        variantClass,
+        toneClass,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** @param {string} display */
+function renderCatalogMoneyDisplay(display) {
+  if (display === "—") return <CatalogMetricMissing />;
+  return display;
+}
+
+/**
+ * Rótulo % com tipografia da Vendas (UI-only; não altera cálculo SSOT).
+ * @param {number | null | undefined} marginPct
+ */
+function formatCatalogPctVendasStyle(marginPct) {
+  if (marginPct == null || !Number.isFinite(marginPct)) return null;
+  return `${marginPct.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
+}
+
 /**
  * Lista de páginas com null = reticências entre saltos.
  * @param {number} current
  * @param {number} total
  * @returns {(number | null)[]}
  */
-function buildPaginationItems(current, total) {
-  if (total <= 1) return [1];
-  const set = new Set([1, total, current, current - 1, current + 1]);
-  const sorted = [...set].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
-  const out = [];
-  for (let i = 0; i < sorted.length; i += 1) {
-    const p = sorted[i];
-    if (i > 0 && p - sorted[i - 1] > 1) out.push(null);
-    out.push(p);
-  }
-  return out;
-}
-
 function ProductCatalogRow({
   product,
   onOpenEdit,
   onRequestDelete,
   showMarketplacesColumn = false,
+  catalogFinancialReady = false,
 }) {
   const id = product?.id;
   const name = String(product?.product_name || "Sem nome").trim() || "Sem nome";
@@ -117,10 +247,25 @@ function ProductCatalogRow({
   const imgUrl = useProductMainImageSrc(product);
   const metrics = getProductCatalogMetrics(product);
   const stock = getProductStockDisplay(product);
+  const hasSalesHistory = metrics.salesCount > 0;
   const marginPct = getContributionMarginPercent(product, metrics);
   const profitBand = getCatalogProfitSemanticBand(product, metrics);
-  const financialToneClass = getCatalogFinancialToneClass(profitBand);
-  const health = getCatalogHealthPresentation(product, metrics);
+  const financialToneClass =
+    catalogFinancialReady && hasSalesHistory ? catalogBandToVendasFinTone(profitBand) : "vendas-page__fin--empty";
+  const financialValueClass = catalogVendasFinValueClass(financialToneClass);
+
+  const revenueDisplay =
+    catalogFinancialReady && hasSalesHistory ? formatCatalogBRL(metrics.revenue) : "—";
+  const ticketDisplay =
+    catalogFinancialReady && hasSalesHistory && metrics.averageTicket != null
+      ? formatCatalogBRL(metrics.averageTicket)
+      : "—";
+  const profitDisplay =
+    catalogFinancialReady && hasSalesHistory && metrics.grossProfit != null
+      ? formatCatalogBRL(metrics.grossProfit)
+      : "—";
+  const marginDisplay =
+    catalogFinancialReady && hasSalesHistory ? formatCatalogPctVendasStyle(marginPct) : null;
 
   const handleRowActivate = useCallback(() => {
     if (id) onOpenEdit(id);
@@ -150,6 +295,12 @@ function ProductCatalogRow({
       ? !product.is_product_ready
       : product?.catalog_completeness != null && product.catalog_completeness !== "complete";
 
+  const cadastroProgressPercent =
+    typeof product?.catalog_form_progress_percent === "number" &&
+    Number.isFinite(product.catalog_form_progress_percent)
+      ? Math.max(0, Math.min(100, Math.round(product.catalog_form_progress_percent)))
+      : 0;
+
   return (
     <div
       className={`products-catalog__row${showMarketplacesColumn ? " products-catalog__row--with-marketplaces" : ""}${catalogIncomplete ? " products-catalog__row--incomplete-catalog" : ""}`}
@@ -161,80 +312,115 @@ function ProductCatalogRow({
       data-product-id={id ?? ""}
     >
       <div className="products-catalog__cell products-catalog__cell--thumb" aria-hidden={false}>
-        <div className="products-catalog__thumb-wrap">
-          {imgUrl ? (
-            <img src={imgUrl} alt="" className="products-catalog__thumb-img" loading="lazy" />
-          ) : (
-            <div className="products-catalog__thumb-placeholder" title="Sem imagem">
-              <S7Icon name="image" size={22} />
-            </div>
-          )}
-        </div>
+        {imgUrl ? (
+          <span
+            className="products-catalog__thumb-wrap s7-operational-thumb-frame s7-operational-thumb-frame--circle"
+            aria-hidden
+          >
+            <img
+              src={imgUrl}
+              alt=""
+              className="products-catalog__thumb-img s7-operational-thumb"
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
+          </span>
+        ) : (
+          <span className="products-catalog__thumb-slot" aria-hidden />
+        )}
       </div>
 
       <div className="products-catalog__cell products-catalog__cell--product">
-        <div className="products-catalog__name-row">
-          <span
-            className={`products-catalog__product-name${catalogIncomplete ? " products-catalog__product-name--incomplete" : ""}`}
-          >
-            {name}
-          </span>
-          <S7CopyButton
-            value={name}
-            ariaLabel={`Copiar nome ${name}`}
-            tooltipText="Copiar nome"
-            toastLabel="Nome do produto"
-            showToast={true}
-            iconMode="unicode"
-            flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-            flashKey={`product-name-${id}`}
-            toastEntityType="product"
-          />
-        </div>
-        <div className="products-catalog__sku-row">
-          <span className="anuncios-ad-sku-label">SKU</span>
-          <span className="anuncios-ad-sku-value">{sku || "—"}</span>
-          {sku ? (
-            <S7CopyButton
-              value={sku}
-              ariaLabel={`Copiar SKU ${sku}`}
-              tooltipText="Copiar SKU"
-              toastLabel="SKU"
-              showToast={true}
-              iconMode="unicode"
-              flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-              flashKey={`product-sku-${id}`}
-              toastEventType="LISTING_SKU_COPIED"
-              toastFailEventType="LISTING_SKU_COPY_FAILED"
-              toastEntityType="product"
-            />
-          ) : null}
-        </div>
+        <S7CatalogProductHeadline
+          title={name}
+          sku={sku}
+          incomplete={catalogIncomplete}
+          titleTooltip={name}
+          copyNameFlashKey={`product-name-${id}`}
+          copySkuFlashKey={`product-sku-${id}`}
+          actions={
+            catalogIncomplete ? (
+              <div role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                <S7Button
+                  type="button"
+                  variant="warning"
+                  size="sm"
+                  className="products-catalog__complete-product-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (id) onOpenEdit(id);
+                  }}
+                >
+                  Completar cadastro
+                </S7Button>
+              </div>
+            ) : null
+          }
+        />
       </div>
 
-      <div className="products-catalog__cell products-catalog__cell--num">{metrics.adsCount}</div>
-      <div className="products-catalog__cell products-catalog__cell--num">{metrics.salesCount}</div>
-      <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(metrics.revenue)}</div>
-      <div className="products-catalog__cell products-catalog__cell--money">{formatCatalogBRL(metrics.costTotal)}</div>
-      <div
-        className={`products-catalog__cell products-catalog__cell--money products-catalog__cell--profit ${financialToneClass}`}
-      >
-        {formatCatalogBRL(metrics.grossProfit)}
-      </div>
-      <div
-        className={`products-catalog__cell products-catalog__cell--pct products-catalog__cell--profit ${financialToneClass}`}
-      >
-        {formatCatalogProfitPercentLabel(marginPct)}
-      </div>
-      <div className="products-catalog__cell products-catalog__cell--health">
-        <span className={`products-catalog__health-badge ${health.badgeClass}`} data-health-band={health.band}>
-          {health.band !== "unknown" ? <span className="products-catalog__health-badge-dot" aria-hidden /> : null}
-          <span className="products-catalog__health-badge-text">
-            {health.displayPercent ? `${health.label} · ${health.displayPercent}` : health.label}
+      <CatalogMetricCell columnClass="products-catalog__cell--num" variant="money">
+        <CatalogMetricNumSingle>{metrics.adsCount}</CatalogMetricNumSingle>
+      </CatalogMetricCell>
+      <CatalogMetricCell columnClass="products-catalog__cell--num" variant="money">
+        <CatalogMetricNumSingle>{metrics.salesCount}</CatalogMetricNumSingle>
+      </CatalogMetricCell>
+      <CatalogMetricCell columnClass="products-catalog__cell--money" variant="money">
+        <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(revenueDisplay)}</CatalogMetricNumSingle>
+      </CatalogMetricCell>
+      <CatalogMetricCell columnClass="products-catalog__cell--money" variant="money">
+        <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(ticketDisplay)}</CatalogMetricNumSingle>
+      </CatalogMetricCell>
+      <CatalogMetricCell columnClass="products-catalog__cell--money" variant="profit" toneClass={financialToneClass}>
+        <CatalogMetricNumSingle>
+          <span className="vendas-page__fin-value-row">
+            <span className={`vendas-page__fin-value ${financialValueClass}`}>
+              {renderCatalogMoneyDisplay(profitDisplay)}
+            </span>
+            {catalogFinancialReady && hasSalesHistory ? (
+              <CatalogProfitHealthHint toneClass={financialToneClass} />
+            ) : null}
           </span>
-        </span>
+        </CatalogMetricNumSingle>
+      </CatalogMetricCell>
+      <CatalogMetricCell columnClass="products-catalog__cell--pct" variant="margin" toneClass={financialToneClass}>
+        <CatalogMetricNumSingle>
+          <span className="vendas-page__fin-value-row">
+            <span className={`vendas-page__fin-value ${financialValueClass}`}>
+              {marginDisplay != null ? marginDisplay : <CatalogMetricMissing />}
+            </span>
+            {catalogFinancialReady && hasSalesHistory ? (
+              <CatalogProfitHealthHint toneClass={financialToneClass} />
+            ) : null}
+          </span>
+        </CatalogMetricNumSingle>
+      </CatalogMetricCell>
+      <CatalogMetricCell columnClass="products-catalog__cell--num" variant="money">
+        <CatalogMetricNumSingle>
+          {stock === 0 ? (
+            <span className="products-catalog__stock-zero-value" title="Sem estoque">
+              {stock}
+            </span>
+          ) : (
+            stock
+          )}
+        </CatalogMetricNumSingle>
+      </CatalogMetricCell>
+      <div
+        className="products-catalog__cell products-catalog__cell--progress"
+        role="presentation"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <div className="products-catalog__progress-compact" title={`Cadastro ${cadastroProgressPercent}%`}>
+          <ProductHealthProgress
+            percent={cadastroProgressPercent}
+            showLabel={false}
+            variant="semi"
+          />
+        </div>
       </div>
-      <div className="products-catalog__cell products-catalog__cell--num">{stock}</div>
       {showMarketplacesColumn ? (
         <div className="products-catalog__cell products-catalog__cell--mkts" title="Marketplaces vinculados">
           {metrics.marketplaces.length === 0 ? (
@@ -270,18 +456,36 @@ function ProductCatalogRow({
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [catalogFinancialById, setCatalogFinancialById] = useState(
+    /** @type {Record<string, Record<string, unknown>>} */ ({}),
+  );
+  const [catalogFinancialAdsCounts, setCatalogFinancialAdsCounts] = useState(
+    /** @type {Record<string, number>} */ ({}),
+  );
+  const [catalogFinancialLoading, setCatalogFinancialLoading] = useState(true);
   const [catalogFilterId, setCatalogFilterId] = useState("all");
   const [catalogSearchQuery, setCatalogSearchQuery] = useState("");
   const [catalogPage, setCatalogPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [editModalProductId, setEditModalProductId] = useState(/** @type {string | null} */ (null));
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const addNotificationRef = useRef(addNotification);
   const catalogFilterChips = useMemo(() => getCatalogFilterChipsForToolbar(), []);
 
+  const productsWithFinancial = useMemo(
+    () =>
+      products.map((product) =>
+        mergeProductCatalogFinancialRow(product, catalogFinancialById, catalogFinancialAdsCounts),
+      ),
+    [products, catalogFinancialById, catalogFinancialAdsCounts],
+  );
+
   const searchFilteredProducts = useMemo(
-    () => filterProductsByCatalogSearch(products, catalogSearchQuery),
-    [products, catalogSearchQuery]
+    () => filterProductsByCatalogSearch(productsWithFinancial, catalogSearchQuery),
+    [productsWithFinancial, catalogSearchQuery],
   );
 
   const displayProducts = useMemo(
@@ -305,16 +509,176 @@ export default function Products() {
     return displayProducts.slice(start, start + CATALOG_PAGE_SIZE);
   }, [displayProducts, catalogPage]);
 
-  const paginationItems = useMemo(() => buildPaginationItems(catalogPage, totalPages), [catalogPage, totalPages]);
+  const reportContext = useMemo(
+    () =>
+      buildProdutosReportContext({
+        listFilterId: catalogFilterId,
+        searchQuery: catalogSearchQuery,
+        scopeProductsCount: displayProducts.length,
+        pageProducts: paginatedProducts,
+      }),
+    [catalogFilterId, catalogSearchQuery, displayProducts.length, paginatedProducts],
+  );
 
-  const rangeStart = totalFiltered === 0 ? 0 : (catalogPage - 1) * CATALOG_PAGE_SIZE + 1;
-  const rangeEnd = Math.min(catalogPage * CATALOG_PAGE_SIZE, totalFiltered);
+  const aggregatedReport = useMemo(
+    () => buildProdutosAggregatedReport(reportContext, { products: displayProducts }),
+    [displayProducts, reportContext],
+  );
 
-  const onOpenEdit = useCallback(
-    (productId) => {
-      navigate(`/produtos/${productId}/editar`);
+  const catalogFinancialReady = !catalogFinancialLoading;
+
+  useEffect(() => {
+    addNotificationRef.current = addNotification;
+  }, [addNotification]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        setCatalogFinancialLoading(true);
+        const res = await fetchProductCatalogFinancial();
+        if (cancelled) {
+          if (import.meta.env.DEV) {
+            console.warn("[S7][Products] catalog-financial cancelado (unmount/strict mode)", {
+              ok: res.ok,
+              status: res.status,
+              elapsedMs: res.elapsedMs ?? null,
+            });
+          }
+          return;
+        }
+        if (res.ok) {
+          setCatalogFinancialById(res.byProductId);
+          setCatalogFinancialAdsCounts(res.adsLinkedCountByProductId);
+
+          if (import.meta.env.DEV) {
+            const finIds = Object.keys(res.byProductId ?? {});
+            const adsIds = Object.keys(res.adsLinkedCountByProductId ?? {});
+            console.info("[S7][Products] catalog-financial merge", {
+              elapsedMs: res.elapsedMs ?? null,
+              financialCount: finIds.length,
+              adsCount: adsIds.length,
+              withSalesCount: finIds.filter(
+                (id) => Number(res.byProductId?.[id]?.quantity_sold) > 0,
+              ).length,
+            });
+          }
+          return;
+        }
+        setCatalogFinancialById({});
+        setCatalogFinancialAdsCounts({});
+        if (import.meta.env.DEV) {
+          console.warn("[S7][Products] catalog-financial falhou", {
+            status: res.status,
+            error: res.error,
+            timedOut: res.timedOut ?? false,
+          });
+        }
+        addNotificationRef.current?.({
+          severity: NOTIFICATION_SEVERITY.warning,
+          title: "Métricas do catálogo indisponíveis",
+          message:
+            res.error ??
+            "Não foi possível carregar vendas e lucro da lista de produtos. Tente recarregar a página.",
+          dedupeKey: "catalog-financial-fetch-failed",
+        });
+      } catch (err) {
+        if (!cancelled) {
+          setCatalogFinancialById({});
+          setCatalogFinancialAdsCounts({});
+          if (import.meta.env.DEV) {
+            console.error("[S7][Products] catalog-financial exception", err);
+          }
+          addNotificationRef.current?.({
+            severity: NOTIFICATION_SEVERITY.warning,
+            title: "Métricas do catálogo indisponíveis",
+            message: "Não foi possível carregar vendas e lucro da lista de produtos. Tente recarregar a página.",
+            dedupeKey: "catalog-financial-fetch-exception",
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setCatalogFinancialLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const canShowRelatorios = canOfferProdutosReport(displayProducts.length);
+  const relatoriosDisabled = productsLoading || !canShowRelatorios;
+
+  const openReportModal = useCallback(() => {
+    setReportModalOpen(true);
+  }, []);
+
+  const onOpenEdit = useCallback((productId) => {
+    if (!productId) return;
+    setEditModalProductId(String(productId));
+  }, []);
+
+  const refreshCatalogProductRow = useCallback(async (productId) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id || !productId) return;
+
+    let { data, error } = await supabase
+      .from("products")
+      .select(
+        `
+          *,
+          product_variants ( id, stock_quantity, attributes, sort_order, cost_price ),
+          product_image_links ( storage_path, variant_key, sort_order, is_primary )
+        `
+      )
+      .eq("id", productId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      const fallback = await supabase
+        .from("products")
+        .select("*, product_variants ( id, stock_quantity, attributes, sort_order, cost_price )")
+        .eq("id", productId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      data = fallback.data;
+      error = fallback.error;
+    }
+
+    if (error || !data) return;
+
+    const readiness = computeCatalogProductReadiness(data);
+    const nextRow = {
+      ...data,
+      is_product_ready: readiness.is_product_ready,
+      missing_fields: readiness.missing_fields,
+      product_completeness_score: readiness.product_completeness_score,
+      catalog_form_progress_percent: calcCatalogFormProgressPercentFromProductRow(data),
+    };
+
+    setProducts((prev) => {
+      const idx = prev.findIndex((p) => String(p.id) === String(productId));
+      if (idx === -1) return prev;
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], ...nextRow };
+      return copy;
+    });
+  }, []);
+
+  const handleEditModalClose = useCallback(() => {
+    setEditModalProductId(null);
+  }, []);
+
+  const handleEditModalSaved = useCallback(
+    async (productId) => {
+      await refreshCatalogProductRow(productId);
+      setEditModalProductId(null);
     },
-    [navigate]
+    [refreshCatalogProductRow],
   );
 
   /**
@@ -439,6 +803,7 @@ export default function Products() {
             is_product_ready: r.is_product_ready,
             missing_fields: r.missing_fields,
             product_completeness_score: r.product_completeness_score,
+            catalog_form_progress_percent: calcCatalogFormProgressPercentFromProductRow(row),
           };
         });
         setProducts(rows);
@@ -457,139 +822,22 @@ export default function Products() {
     <div className="products-catalog">
       <h1 className="products-catalog__sr-title">Produtos</h1>
 
-      <section className="s7-core-kpis anuncios-catalog__kpis" aria-label="Ranking Top 10 do catálogo">
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
-          <header className="anuncios-catalog__kpi-head">
-            <h2 className="anuncios-catalog__kpi-title">Top 10 — Vendas</h2>
-          </header>
-          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
-        </article>
-
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
-          <header className="anuncios-catalog__kpi-head">
-            <h2 className="anuncios-catalog__kpi-title">Top 10 — Faturamento</h2>
-          </header>
-          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
-        </article>
-
-        <div className="anuncios-catalog__kpi-minis" aria-label="Indicadores do catálogo">
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--profit">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Top 10 — Lucro bruto</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--warn">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Sem vendas</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Precisam atenção</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--sales">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Em queda</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-        </div>
-      </section>
-
-      <div className="products-catalog__controls s7-sticky-filters s7-catalog-filter-card">
-        <div className="products-catalog__controls-top">
-          <div className="products-catalog__search-wrap">
-            <div className="products-catalog__search-field">
-              <span className="products-catalog__search-icon" aria-hidden>
-                <S7Icon name="search" size={18} strokeWidth={1.85} />
-              </span>
-              <S7Input
-                label=""
-                name="catalog-search"
-                value={catalogSearchQuery}
-                onChange={(e) => setCatalogSearchQuery(e.target.value)}
-                placeholder="Buscar por nome, SKU, EAN, marca ou modelo"
-                className="products-catalog__search-s7"
-                inputClassName="products-catalog__search-input-field"
-                autoComplete="off"
-                aria-label="Buscar produtos por nome, SKU, EAN, marca ou modelo"
-                rightElement={
-                  catalogSearchQuery ? (
-                    <button
-                      type="button"
-                      className="products-catalog__search-clear"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCatalogSearchQuery("");
-                      }}
-                      aria-label="Limpar busca"
-                    >
-                      <S7Icon name="close" size={16} strokeWidth={2} />
-                    </button>
-                  ) : null
-                }
-              />
-            </div>
-          </div>
-        </div>
-        <div className="products-catalog__controls-main">
-          <div className="products-catalog__filter-row products-catalog__filter-row--spread" role="toolbar" aria-label="Filtros rápidos do catálogo">
-            <div className="products-catalog__filter-row-chips">
-              {catalogFilterChips.map((def) => {
-                const isActive = catalogFilterId === def.id;
-                const chipTitle = def.enabled ? def.description : `${def.description} Em breve.`;
-                return (
-                  <button
-                    key={def.id}
-                    type="button"
-                    className={`products-catalog__filter-chip${isActive ? " products-catalog__filter-chip--active" : ""}${def.enabled ? "" : " products-catalog__filter-chip--disabled"}`}
-                    aria-pressed={def.enabled ? isActive : undefined}
-                    disabled={!def.enabled}
-                    title={chipTitle}
-                    data-phase={def.phase}
-                    onClick={() => {
-                      if (!def.enabled) return;
-                      setCatalogFilterId(def.id);
-                    }}
-                  >
-                    <span
-                      className={`products-catalog__filter-chip-icon products-catalog__filter-chip-icon--${def.iconTone}`}
-                      aria-hidden
-                    >
-                      <S7Icon name={def.icon} size={15} strokeWidth={1.65} />
-                    </span>
-                    <span className="products-catalog__filter-chip-label">{def.label}</span>
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                className="products-catalog__filter-clear"
-                disabled={catalogFilterId === "all"}
-                title="Remove filtros e volta à listagem padrão"
-                onClick={() => setCatalogFilterId("all")}
-              >
-                <S7Icon name="filter_clear" size={14} strokeWidth={1.75} className="products-catalog__filter-clear-icon" />
-                <span>Limpar filtros</span>
-              </button>
-            </div>
-            <div className="products-catalog__filter-row-end">
-              <S7Button
-                variant="primary"
-                iconName="plus"
-                className="products-catalog__new-product-btn"
-                onClick={() => navigate("/produtos/novo")}
-              >
-                Novo produto
-              </S7Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ProductsFiltersCard
+        filterChips={catalogFilterChips}
+        listFilter={catalogFilterId}
+        onListFilterChange={setCatalogFilterId}
+        searchInput={catalogSearchQuery}
+        onSearchInputChange={setCatalogSearchQuery}
+        hasActiveFilters={catalogFilterId !== "all" || catalogSearchQuery.trim().length > 0}
+        onClearAll={() => {
+          setCatalogFilterId("all");
+          setCatalogSearchQuery("");
+        }}
+        onNewProductClick={() => navigate("/produtos/novo")}
+        showRelatorios={canShowRelatorios}
+        relatoriosDisabled={relatoriosDisabled}
+        onRelatoriosClick={openReportModal}
+      />
 
       {productsLoading ? (
         <p className="products-catalog__loading">Carregando produtos...</p>
@@ -643,33 +891,29 @@ export default function Products() {
                 <CatalogHeadCell columnClass="products-catalog__cell--num" tip={CATALOG_COLUMN_TOOLTIPS.sales}>
                   Vendas
                 </CatalogHeadCell>
+                <CatalogHeadCell columnClass="products-catalog__cell--money" tip={CATALOG_COLUMN_TOOLTIPS.revenue}>
+                  Faturamento
+                </CatalogHeadCell>
                 <CatalogHeadCell
                   columnClass="products-catalog__cell--money"
-                  tip={CATALOG_COLUMN_TOOLTIPS.revenue}
-                  lines={["Valor", "vendido"]}
+                  tip={CATALOG_COLUMN_TOOLTIPS.ticket}
+                  tipWrap
+                  lines={["Ticket", "Médio"]}
                 />
                 <CatalogHeadCell
                   columnClass="products-catalog__cell--money"
-                  tip={CATALOG_COLUMN_TOOLTIPS.cost}
+                  tip={CATALOG_COLUMN_TOOLTIPS.profitBrl}
                   tipWrap
-                  lines={["Custo", "vendas"]}
-                />
-                <CatalogHeadCell
-                  columnClass="products-catalog__cell--money"
-                  tip={CATALOG_COLUMN_TOOLTIPS.grossProfit}
-                  tipWrap
-                  lines={["Lucro", "bruto"]}
+                  lines={["Lucro", "(R$)"]}
                 />
                 <CatalogHeadCell columnClass="products-catalog__cell--pct" tip={CATALOG_COLUMN_TOOLTIPS.profitPct}>
-                  Lucro %
+                  Lucro (%)
                 </CatalogHeadCell>
-                <div
-                  className="products-catalog__cell products-catalog__cell--health products-catalog__col-head"
-                  title="Margem de contribuição e faixa de saúde"
-                >
-                  Saúde do produto
-                </div>
                 <div className="products-catalog__cell products-catalog__cell--num products-catalog__col-head">Estoque</div>
+                <div
+                  className="products-catalog__cell products-catalog__cell--progress products-catalog__col-head"
+                  aria-hidden="true"
+                />
                 {SHOW_CATALOG_MARKETPLACES_COLUMN ? (
                   <div className="products-catalog__cell products-catalog__cell--mkts products-catalog__col-head">Marketplaces</div>
                 ) : null}
@@ -686,59 +930,32 @@ export default function Products() {
                     onOpenEdit={onOpenEdit}
                     onRequestDelete={handleRequestDeleteProduct}
                     showMarketplacesColumn={SHOW_CATALOG_MARKETPLACES_COLUMN}
+                    catalogFinancialReady={catalogFinancialReady}
                   />
                 ))}
               </div>
             </div>
           </div>
 
-          <footer className="products-catalog__pagination" aria-label="Paginação do catálogo">
-            <p className="products-catalog__pagination-meta">
-              Mostrando <strong>{rangeStart}</strong>–<strong>{rangeEnd}</strong> de <strong>{totalFiltered}</strong>{" "}
-              {totalFiltered === 1 ? "produto" : "produtos"}
-            </p>
-            {totalPages > 1 ? (
-              <nav className="products-catalog__pagination-nav" aria-label="Páginas">
-                <button
-                  type="button"
-                  className="products-catalog__pagination-btn"
-                  disabled={catalogPage <= 1}
-                  onClick={() => setCatalogPage((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </button>
-                <div className="products-catalog__pagination-pages">
-                  {paginationItems.map((item, idx) =>
-                    item == null ? (
-                      <span key={`e-${idx}`} className="products-catalog__pagination-ellipsis" aria-hidden>
-                        …
-                      </span>
-                    ) : (
-                      <button
-                        key={item}
-                        type="button"
-                        className={`products-catalog__pagination-page${item === catalogPage ? " products-catalog__pagination-page--current" : ""}`}
-                        aria-current={item === catalogPage ? "page" : undefined}
-                        onClick={() => setCatalogPage(item)}
-                      >
-                        {item}
-                      </button>
-                    )
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="products-catalog__pagination-btn products-catalog__pagination-btn--next"
-                  disabled={catalogPage >= totalPages}
-                  onClick={() => setCatalogPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  Próximo
-                </button>
-              </nav>
-            ) : null}
-          </footer>
+          {/* Paginação padrão Suse7 (modelo Vendas): "Página X de Y · Z produtos no total" */}
+          <S7Pagination
+            page={catalogPage}
+            totalPages={totalPages}
+            total={totalFiltered}
+            noun="produtos"
+            ariaLabel="Paginação do catálogo"
+            onPrevious={() => setCatalogPage((p) => Math.max(1, p - 1))}
+            onNext={() => setCatalogPage((p) => Math.min(totalPages, p + 1))}
+          />
         </div>
       )}
+
+      <ProductEditModal
+        open={editModalProductId != null}
+        productId={editModalProductId}
+        onClose={handleEditModalClose}
+        onSaved={handleEditModalSaved}
+      />
 
       <S7ConfirmModal
         open={deleteTarget != null}
@@ -758,6 +975,13 @@ export default function Products() {
         }}
         onConfirm={handleConfirmDeleteProduct}
         titleId="products-catalog-delete-modal-title"
+      />
+
+      <ProdutosGerarRelatorioModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        reportContext={reportContext}
+        aggregatedReport={aggregatedReport}
       />
     </div>
   );

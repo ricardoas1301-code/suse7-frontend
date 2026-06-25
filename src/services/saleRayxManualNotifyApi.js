@@ -38,6 +38,9 @@ import { buildApiUrl, apiFetch } from "../config/api";
 
  *   shareCacheKey?: string;
  *   shareTextFallback?: string;
+ *   shareDocumentBase64?: string;
+ *   shareDocumentFilename?: string;
+ *   shareDocumentMimeType?: string;
  * }} input
 
  */
@@ -114,6 +117,9 @@ export async function postSaleRayxManualNotification(input) {
 
       share_cache_key: input.shareCacheKey,
       share_text_fallback: input.shareTextFallback,
+      share_document_base64: input.shareDocumentBase64,
+      share_document_filename: input.shareDocumentFilename,
+      share_document_mime_type: input.shareDocumentMimeType,
 
     }),
 

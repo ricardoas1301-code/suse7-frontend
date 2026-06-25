@@ -13,12 +13,17 @@ import {
   buildVendasExecutiveApiParams,
 
   formatVendasPeriodSummaryLabel,
+  getDefaultLast30DaysRange,
 
   resolveVendasPeriodRange,
 
 } from "./vendasFiltersPeriod";
 
-import { VENDAS_FILTERS_EXPANDED_STORAGE_KEY, VENDAS_MARKETPLACE_OPTIONS } from "./vendasFiltersConstants";
+import {
+  DASHBOARD_FILTERS_EXPANDED_STORAGE_KEY,
+  VENDAS_FILTERS_EXPANDED_STORAGE_KEY,
+  VENDAS_MARKETPLACE_OPTIONS,
+} from "./vendasFiltersConstants";
 
 
 
@@ -67,93 +72,86 @@ import { VENDAS_FILTERS_EXPANDED_STORAGE_KEY, VENDAS_MARKETPLACE_OPTIONS } from 
  *   applyPeriod: (payload: { preset: VendasPeriodPresetUi; startDate: string; endDate: string }) => void;
 
  *   setMarketplace: (marketplace: string) => void;
-
  *   setMarketplaceAccountId: (accountId: string) => void;
-
+ *   dashboardFilterParams: { periodStart: string; periodEnd: string; marketplaceAccountId: string | null };
+ *   dashboardFilterTouched: boolean;
  * }>} */
-
 const VendasFiltersContext = createContext(null);
 
+/** @typedef {"vendas" | "dashboard"} VendasFiltersScope */
 
-
-function readExpandedFromSession() {
+function readExpandedFromSession(storageKey) {
   try {
-    return sessionStorage.getItem(VENDAS_FILTERS_EXPANDED_STORAGE_KEY) === "1";
+    return sessionStorage.getItem(storageKey) === "1";
   } catch {
     return false;
   }
 }
 
-function readInitialFiltersExpanded() {
+function readInitialFiltersExpanded(scope) {
+  if (scope === "dashboard") {
+    return readExpandedFromSession(DASHBOARD_FILTERS_EXPANDED_STORAGE_KEY);
+  }
   if (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) {
     return false;
   }
-  return readExpandedFromSession();
+  return readExpandedFromSession(VENDAS_FILTERS_EXPANDED_STORAGE_KEY);
 }
 
-
-
-function writeExpandedToSession(expanded) {
-
+function writeExpandedToSession(storageKey, expanded) {
   try {
-
-    sessionStorage.setItem(VENDAS_FILTERS_EXPANDED_STORAGE_KEY, expanded ? "1" : "0");
-
+    sessionStorage.setItem(storageKey, expanded ? "1" : "0");
   } catch {
-
     /* ignore */
-
   }
-
 }
 
 
 
-const defaultMonthRange = resolveVendasPeriodRange("this_month");
+const defaultLast30Range = getDefaultLast30DaysRange();
 
 
 
-/** @param {{ children: import("react").ReactNode }} props */
+/** @param {{ children: import("react").ReactNode; scope?: VendasFiltersScope }} props */
+export function VendasFiltersProvider({ children, scope = "vendas" }) {
+  const expandedStorageKey =
+    scope === "dashboard" ? DASHBOARD_FILTERS_EXPANDED_STORAGE_KEY : VENDAS_FILTERS_EXPANDED_STORAGE_KEY;
 
-export function VendasFiltersProvider({ children }) {
+  const [expanded, setExpandedState] = useState(() => readInitialFiltersExpanded(scope));
 
-  const [expanded, setExpandedState] = useState(() => readInitialFiltersExpanded());
+  const [periodPreset, setPeriodPresetState] = useState(/** @type {VendasPeriodPresetUi} */ ("last_30_days"));
 
-  const [periodPreset, setPeriodPresetState] = useState(/** @type {VendasPeriodPresetUi} */ ("this_month"));
+  const [startDate, setStartDate] = useState(defaultLast30Range.startDate);
 
-  const [startDate, setStartDate] = useState(defaultMonthRange.startDate);
+  const [endDate, setEndDate] = useState(defaultLast30Range.endDate);
 
-  const [endDate, setEndDate] = useState(defaultMonthRange.endDate);
+  const [marketplace, setMarketplaceState] = useState("");
 
-  const [marketplace, setMarketplace] = useState("");
+  const [marketplaceAccountId, setMarketplaceAccountIdState] = useState("");
 
-  const [marketplaceAccountId, setMarketplaceAccountId] = useState("");
+  /** DASH.6B — distingue estado inicial automático vs filtro aplicado manualmente no Dashboard. */
+  const [dashboardFilterTouched, setDashboardFilterTouched] = useState(false);
+
+  const markDashboardFilterTouched = useCallback(() => {
+    if (scope === "dashboard") {
+      setDashboardFilterTouched(true);
+    }
+  }, [scope]);
 
 
 
   const setExpanded = useCallback((value) => {
-
     setExpandedState(Boolean(value));
-
-    writeExpandedToSession(Boolean(value));
-
-  }, []);
-
-
+    writeExpandedToSession(expandedStorageKey, Boolean(value));
+  }, [expandedStorageKey]);
 
   const toggleExpanded = useCallback(() => {
-
     setExpandedState((prev) => {
-
       const next = !prev;
-
-      writeExpandedToSession(next);
-
+      writeExpandedToSession(expandedStorageKey, next);
       return next;
-
     });
-
-  }, []);
+  }, [expandedStorageKey]);
 
 
 
@@ -175,12 +173,32 @@ export function VendasFiltersProvider({ children }) {
 
       setStartDate(start);
 
+      setStartDate(start);
+
       setEndDate(end);
+
+      markDashboardFilterTouched();
 
     },
 
-    [],
+    [markDashboardFilterTouched],
 
+  );
+
+  const setMarketplaceAccountId = useCallback(
+    (accountId) => {
+      setMarketplaceAccountIdState(String(accountId ?? ""));
+      markDashboardFilterTouched();
+    },
+    [markDashboardFilterTouched],
+  );
+
+  const setMarketplace = useCallback(
+    (value) => {
+      setMarketplaceState(String(value ?? ""));
+      markDashboardFilterTouched();
+    },
+    [markDashboardFilterTouched],
   );
 
 
@@ -267,54 +285,44 @@ export function VendasFiltersProvider({ children }) {
 
   }, [periodSummaryLabel, marketplaceAccountId, marketplace]);
 
-
+  const dashboardFilterParams = useMemo(
+    () => ({
+      periodStart: periodRange.startDate,
+      periodEnd: periodRange.endDate,
+      marketplaceAccountId: marketplaceAccountId ? String(marketplaceAccountId).trim() : null,
+    }),
+    [periodRange.startDate, periodRange.endDate, marketplaceAccountId],
+  );
 
   const value = useMemo(
-
     () => ({
-
       filters,
-
       periodRange,
-
       executiveApiParams,
-
       periodSummaryLabel,
-
       filtersSummaryLabel,
-
+      dashboardFilterParams,
+      dashboardFilterTouched,
       setExpanded,
-
       toggleExpanded,
-
       applyPeriod,
-
       setMarketplace,
-
       setMarketplaceAccountId,
-
     }),
-
     [
-
       filters,
-
       periodRange,
-
       executiveApiParams,
-
       periodSummaryLabel,
-
       filtersSummaryLabel,
-
+      dashboardFilterParams,
+      dashboardFilterTouched,
       setExpanded,
-
       toggleExpanded,
-
       applyPeriod,
-
+      setMarketplace,
+      setMarketplaceAccountId,
     ],
-
   );
 
 

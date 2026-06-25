@@ -1,36 +1,25 @@
 // ======================================================================
 // DASHBOARD — SUSE7
-// Layout e placeholders de métricas (dados reais virão em etapas futuras).
+// Central executiva do seller: KPIs de vendas + importação inteligente.
 // Regras: sem lógica financeira aqui; modal de perfil / Supabase inalterados.
 // ======================================================================
 
 import "./Dashboard.css";
-import "./Anuncios.css";
 import "../styles/S7CoreKpis.css";
 import "../styles/VendasPage.css";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import CompleteProfileModal from "./CompleteProfileModal";
+import S7DailySummarySection from "./dashboard/S7DailySummarySection";
+import { DashboardBlockFiltersProvider } from "./dashboard/DashboardBlockFiltersContext.jsx";
 import S7ImportIntelligencePanel from "./import/S7ImportIntelligencePanel";
+import S7Top10BlockSection from "./dashboard/S7Top10BlockSection";
+import { VendasFiltersProvider } from "../features/vendas/filters/VendasFiltersContext.jsx";
 
-// ---------------------------------------------------------------------
-// Blocos placeholder (rótulos alinhados às futuras métricas do produto)
-// ---------------------------------------------------------------------
-// Ordem de cores alinhada à página Vendas: azul → laranja → verde → vermelho (grade 2×2).
-const PLACEHOLDER_SMALL = [
-  { key: "margem", title: "Margem", accent: "green" },
-  { key: "faturamento", title: "Faturamento", accent: "orange" },
-  { key: "alertas", title: "Alertas", accent: "red" },
-  { key: "vendas", title: "Vendas", accent: "blue" },
-];
-
-export default function Dashboard() {
+function DashboardContent() {
   const [perfilIncompleto, setPerfilIncompleto] = useState(false);
   const [userId, setUserId] = useState(null);
 
-  // -------------------------------------------------------------------
-  // EFFECT — auth + profile (primeiro login / modal completar cadastro)
-  // -------------------------------------------------------------------
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
@@ -81,9 +70,6 @@ export default function Dashboard() {
 
   return (
     <div className="vendas-page dashboard-page">
-      {/* ----------------------------------------------------------------
-          Modal de perfil (fluxo existente — primeiro login social etc.)
-         ---------------------------------------------------------------- */}
       {perfilIncompleto && (
         <CompleteProfileModal
           show={true}
@@ -92,36 +78,23 @@ export default function Dashboard() {
         />
       )}
 
-      <S7ImportIntelligencePanel pollSeconds={45} layout="dashboard" />
+      <S7DailySummarySection className="dashboard-page__daily-summary" />
 
-      {/* ----------------------------------------------------------------
-          Faixa superior: 2 cards grandes lado a lado + grade 2×2 (dir.)
-          Cores: grandes = laranja + azul (igual referência Vendas).
-         ---------------------------------------------------------------- */}
-      <section className="s7-core-kpis anuncios-catalog__kpis" aria-label="Principais indicadores">
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
-          <header className="anuncios-catalog__kpi-head">
-            <h2 className="anuncios-catalog__kpi-title">Conta</h2>
-          </header>
-          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
-        </article>
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
-          <header className="anuncios-catalog__kpi-head">
-            <h2 className="anuncios-catalog__kpi-title">Catálogo</h2>
-          </header>
-          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
-        </article>
-        <div className="anuncios-catalog__kpi-minis" aria-label="Indicadores rápidos">
-          {PLACEHOLDER_SMALL.map((item) => (
-            <article key={item.key} className={`anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--${item.accent}`}>
-              <div className="anuncios-catalog__kpi-mini-head">
-                <h3 className="anuncios-catalog__kpi-mini-title">{item.title}</h3>
-              </div>
-              <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-            </article>
-          ))}
-        </div>
-      </section>
+      <S7Top10BlockSection className="dashboard-page__top10-block" />
+
+      <div className="dashboard-page__import-panel">
+        <S7ImportIntelligencePanel pollSeconds={45} layout="dashboard" />
+      </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <VendasFiltersProvider scope="dashboard">
+      <DashboardBlockFiltersProvider>
+        <DashboardContent />
+      </DashboardBlockFiltersProvider>
+    </VendasFiltersProvider>
   );
 }

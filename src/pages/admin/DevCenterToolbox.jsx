@@ -20,6 +20,7 @@ import {
   TOOLBOX_GROUPS,
 } from "../../components/devCenter/toolbox/devCenterToolboxTabs";
 import DocumentacaoVivaPanel from "../../components/devCenter/toolbox/documentacaoViva/DocumentacaoVivaPanel";
+import OperationalDocsLibrary from "../../features/devCenter/toolbox/docs/OperationalDocsLibrary";
 // [S7-DEV-PREVIEW-STUB — TEMPORÁRIO / NÃO MERGEAR EM main]
 // Import estático de AdminGlobalPanel removido apenas no branch DEV (tmp-vendas-relatorio-dev)
 // porque a pasta adminGlobal/ e os services adminPlansApi/adminFeaturesApi/adminAuditApi ainda
@@ -179,6 +180,9 @@ function ToolboxTabContent({ tabId }) {
   }
   if (tabId === "documentacao_viva") {
     return <DocumentacaoVivaPanel />;
+  }
+  if (tabId === "docs_operacionais") {
+    return <OperationalDocsLibrary />;
   }
   if (tabId === "admin_global") {
     return <AdminGlobalPanel />;

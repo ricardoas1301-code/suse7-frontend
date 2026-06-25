@@ -3,10 +3,12 @@
 // Estrutura fiel à build original + assets locais
 // ======================================================================
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ContactModal from "./ContactModal";
-import { supabase } from "../supabaseClient";
+import { mapSupabaseAuthErrorMessage } from "../lib/supabaseEnv.js";
+import { getSupabaseLoginDebug, supabase, supabaseProjectRef } from "../supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
+import S7LoginIntroSplash from "./S7LoginIntroSplash.jsx";
 import "./Login.css";
 
 function IconEye({ className }) {
@@ -45,14 +47,18 @@ import googleLogo from "../assets/google.png";
 
 
 export default function Login() {
+  const INTRO_PENDING_KEY = "s7_login_intro_pending";
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [showContactModal, setShowContactModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showIntroSplash, setShowIntroSplash] = useState(false);
 
-
+  useEffect(() => {
+    console.info("[Suse7][Login] mount", getSupabaseLoginDebug());
+  }, []);
 
   // --------------------------------------------------------
   // Login com e-mail e senha
@@ -60,17 +66,44 @@ export default function Login() {
   const handleLogin = async () => {
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    });
-
-    if (error) {
-      setError("E-mail ou senha inválidos");
+    const authDebug = getSupabaseLoginDebug();
+    console.info("[Suse7][Login] antes do signIn", authDebug);
+    if (authDebug.usesLocalhost) {
+      setError(
+        "Configuração inválida: Supabase apontando para localhost. Pare o Vite, apague node_modules/.vite, confira .env.development e suba npm run dev de novo."
+      );
       return;
     }
 
-    navigate("/");
+    let authError = null;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha,
+      });
+      authError = error;
+    } catch (err) {
+      authError = err;
+    }
+
+    if (authError) {
+      console.warn("[Suse7][Login] signIn erro", {
+        message: authError?.message,
+        name: authError?.name,
+        status: authError?.status,
+        authDebug,
+      });
+      setError(
+        mapSupabaseAuthErrorMessage(authError, {
+          projectRef: supabaseProjectRef,
+        })
+      );
+      return;
+    }
+
+    console.info("[Suse7][Login] signIn ok", { projectRef: supabaseProjectRef });
+    sessionStorage.setItem(INTRO_PENDING_KEY, "1");
+    setShowIntroSplash(true);
   };
 
   // --------------------------------------------------------
@@ -89,9 +122,22 @@ export default function Login() {
     });
 
     if (error) {
-      setError("Erro ao entrar com Google");
+      setError(
+        mapSupabaseAuthErrorMessage(error, {
+          projectRef: supabaseProjectRef,
+        })
+      );
     }
   };
+
+  const handleIntroFinished = () => {
+    sessionStorage.removeItem(INTRO_PENDING_KEY);
+    navigate("/", { replace: true });
+  };
+
+  if (showIntroSplash) {
+    return <S7LoginIntroSplash onFinish={handleIntroFinished} />;
+  }
 
   return (
     <div className="login-bg">

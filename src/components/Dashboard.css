@@ -12,12 +12,81 @@
 .dashboard-wrapper{
   padding: 30px 40px;
   min-height: 100vh;
-  background: #f5f6fa;
+  background: transparent;
 }
 
 /* Dashboard agora usa o mesmo "frame" visual da página Vendas */
 .dashboard-page {
   min-height: auto;
+}
+
+.dashboard-page__daily-summary {
+  margin-bottom: calc(var(--s7-space-5, 20px) + 10px);
+}
+
+.dashboard-page__top10-block {
+  margin-bottom: calc(var(--s7-space-5, 20px) + 10px);
+}
+
+.dashboard-page__import-panel {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.dashboard-page__executive-kpis {
+  margin-bottom: calc(var(--s7-space-5, 20px) + 10px);
+}
+
+/* Refino executivo — títulos externos, cards limpos, respiro entre blocos */
+.dashboard-page .s7-core-kpis.vendas-page__kpis--executive {
+  margin-top: 0;
+}
+
+.dashboard-page .vendas-page__executive-kpi-row {
+  margin-top: 12px;
+}
+
+.dashboard-page .s7-core-kpis.vendas-page__kpis--executive .sales-top-ranking__head--external,
+.dashboard-page .s7-core-kpis.vendas-page__kpis--executive .vendas-executive-kpi__head--external {
+  border-bottom: none !important;
+  box-shadow: none;
+}
+
+.dashboard-page .vendas-page__executive-rank-slot {
+  --s7-top-ranking-external-head-chrome: 38px;
+  height: auto;
+  min-height: calc(var(--s7-top-kpi-large-h) + var(--s7-top-ranking-external-head-chrome));
+  max-height: none;
+}
+
+.dashboard-page .vendas-page__executive-rank-slot .sales-top-ranking-stack--titulo-externo > .sales-top-ranking {
+  height: var(--s7-top-kpi-large-h);
+  min-height: var(--s7-top-kpi-large-h);
+  max-height: var(--s7-top-kpi-large-h);
+  border-top: 1px solid #e2e8f0;
+}
+
+.dashboard-page .vendas-page__executive-kpi-row {
+  --s7-executive-kpi-external-head-chrome: 38px;
+}
+
+.dashboard-page .vendas-page__executive-kpi-row > .vendas-executive-kpi-stack--titulo-externo {
+  height: auto;
+  min-height: calc(var(--s7-executive-kpi-h) + var(--s7-executive-kpi-external-head-chrome));
+}
+
+.dashboard-page .vendas-page__executive-kpi-row > .vendas-executive-kpi-stack--titulo-externo > .vendas-executive-kpi {
+  height: var(--s7-executive-kpi-h);
+  min-height: var(--s7-executive-kpi-h);
+  max-height: var(--s7-executive-kpi-h);
+  border-top: 1px solid #e2e8f0;
+}
+
+@media (min-width: 769px) and (max-width: 1180px) {
+  .dashboard-page .vendas-page__executive-rank-slot {
+    min-height: calc(var(--s7-top-kpi-large-h) + var(--s7-top-ranking-external-head-chrome));
+  }
 }
 
 /* HEADER (se você usar futuramente) */

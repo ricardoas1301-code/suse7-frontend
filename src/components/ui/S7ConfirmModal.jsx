@@ -16,6 +16,7 @@ import "./S7ConfirmModal.css";
  * @param {string} [props.confirmLabel]
  * @param {'danger' | 'primary'} [props.confirmVariant]
  * @param {boolean} [props.loading]
+ * @param {boolean} [props.confirmDisabled]
  * @param {string} [props.loadingLabel] — texto do botão de confirmação enquanto loading
  * @param {() => void} props.onCancel
  * @param {() => void} props.onConfirm
@@ -30,6 +31,7 @@ export default function S7ConfirmModal({
   confirmLabel = "Confirmar",
   confirmVariant = "danger",
   loading = false,
+  confirmDisabled = false,
   loadingLabel = "Aguarde…",
   onCancel,
   onConfirm,
@@ -94,7 +96,7 @@ export default function S7ConfirmModal({
                 ? "s7-confirm-modal-btn s7-confirm-modal-btn--primary"
                 : "s7-confirm-modal-btn s7-confirm-modal-btn--danger"
             }
-            disabled={loading}
+            disabled={loading || confirmDisabled}
             onClick={() => onConfirm?.()}
           >
             {loading ? loadingLabel : confirmLabel}

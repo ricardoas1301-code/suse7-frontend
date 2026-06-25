@@ -1,21 +1,187 @@
 // ======================================================
-// Precificação Inteligente (página) — bloco "Simulação de preço".
-// Estado controlado pelo pai; sem cálculo financeiro local.
-// Campos opcionais reservados para parâmetros futuros de simulação no backend.
+// Precificação Inteligente (página) — bloco "Precificação do produto".
+// Centro de comando: preço de venda + margem desejada (campos e sliders).
 // ======================================================
 
-import { useCallback, useState } from "react";
-import S7Button from "../ui/S7Button.jsx";
+import { useEffect, useRef, useState } from "react";
 import S7Input from "../ui/S7Input.jsx";
 import S7Icon from "../ui/S7Icon.jsx";
 import S7Tooltip from "../ui/S7Tooltip.jsx";
+import { PricingOptionalPercentInput } from "./PricingOptionalPercentInput.jsx";
+import { PricingPercentInput } from "./PricingPercentInput.jsx";
+import { formatarBrlExibicao } from "./pricingScenarioLocalSimulation.js";
+import { formatarPercentualParaInput } from "./pricingPercentInputUi.js";
+
+const SAFETY_MARGIN_TOOLTIP =
+  "Defina uma margem mínima para proteger sua venda. Futuramente, o Suse7 poderá alertar ou agir quando taxas, frete ou custos deixarem o anúncio abaixo desse limite.";
+
+const STRATEGIC_RESERVE_GROUP_TOOLTIP =
+  "Margem de segurança programada para cenários como promoções e programas de afiliados.";
+
+const OPERATIONAL_COSTS_GROUP_TOOLTIP =
+  "Orçamento destinado a campanhas de tráfego (ML Ads) e despesas operacionais como por exemplo devoluções.";
+
+/**
+ * @param {{ id: string; checked: boolean; onChange: (v: boolean) => void; label: string }} props
+ */
+function OptionalCheckbox({ id, checked, onChange, label }) {
+  return (
+    <label className="pricing-intelligence-page__simulation-price__checkbox" htmlFor={id}>
+      <input
+        id={id}
+        type="checkbox"
+        className="pricing-intelligence-page__simulation-price__checkbox-input"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        aria-label={checked ? `Desativar ${label}` : `Ativar ${label}`}
+      />
+      <span className="pricing-intelligence-page__simulation-price__checkbox-mark" aria-hidden="true" />
+    </label>
+  );
+}
+
+/** @param {{ text: string }} props */
+function OptionalLabel({ text }) {
+  return <span className="pricing-intelligence-page__simulation-price__optional-label">{text}</span>;
+}
+
+/** @param {{ text: string; tooltip: string }} props */
+function OptionalLabelWithInfo({ text, tooltip }) {
+  return (
+    <span className="pricing-intelligence-page__simulation-price__optional-label-wrap">
+      <span className="pricing-intelligence-page__simulation-price__optional-label">{text}</span>
+      <S7Tooltip content={tooltip} placement="bottom-start" offset={6} wrap>
+        <button
+          type="button"
+          className="pricing-intelligence-page__simulation-price__optional-info"
+          aria-label={`Informações sobre ${text}`}
+        >
+          <S7Icon name="info" size={12} strokeWidth={2} />
+        </button>
+      </S7Tooltip>
+    </span>
+  );
+}
 
 /**
  * @param {{
- *   salePrice: string;
- *   onSalePriceChange: (v: string) => void;
- *   desiredMarginPct: string;
- *   onDesiredMarginPctChange: (v: string) => void;
+ *   title: string;
+ *   tooltip: string;
+ * }} props
+ */
+function ParamGroupHeading({ title, tooltip }) {
+  return (
+    <div className="pricing-intelligence-page__simulation-price__param-group-head">
+      <span className="pricing-intelligence-page__simulation-price__param-group-title">{title}</span>
+      <S7Tooltip content={tooltip} placement="bottom-start" offset={6} wrap>
+        <button
+          type="button"
+          className="pricing-intelligence-page__simulation-price__optional-info"
+          aria-label={`Informações sobre ${title}`}
+        >
+          <S7Icon name="info" size={12} strokeWidth={2} />
+        </button>
+      </S7Tooltip>
+    </div>
+  );
+}
+
+/**
+ * @param {{
+ *   id: string;
+ *   label: import("react").ReactNode;
+ *   value: string;
+ *   onChange: (v: string) => void;
+ *   enabled: boolean;
+ *   onEnabledChange: (v: boolean) => void;
+ *   ariaLabel: string;
+ * }} props
+ */
+function ParametroOpcional({ id, label, value, onChange, enabled, onEnabledChange, ariaLabel }) {
+  return (
+    <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--optional">
+      <div className="pricing-intelligence-page__simulation-price__optional-head">{label}</div>
+      <div className="pricing-intelligence-page__simulation-price__optional-control">
+        <PricingOptionalPercentInput id={id} name={id} value={value} onChange={onChange} disabled={!enabled} />
+        <OptionalCheckbox id={`${id}-toggle`} checked={enabled} onChange={onEnabledChange} label={ariaLabel} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * @param {{
+ *   precoFormatado: string;
+ *   onPrecoVendaTextoChange?: (raw: string) => void;
+ * }} props
+ */
+function CommandSaleInput({ precoFormatado, onPrecoVendaTextoChange }) {
+  const focadoRef = useRef(false);
+  const [rascunho, setRascunho] = useState(precoFormatado);
+
+  useEffect(() => {
+    if (!focadoRef.current) {
+      setRascunho(precoFormatado);
+    }
+  }, [precoFormatado]);
+
+  return (
+    <S7Input
+      label="Preço de Venda"
+      name="pricing-page-sim-sale-price"
+      value={rascunho}
+      onChange={(e) => {
+        const next = e.target.value;
+        setRascunho(next);
+        onPrecoVendaTextoChange?.(next);
+      }}
+      onFocus={() => {
+        focadoRef.current = true;
+        setRascunho(precoFormatado);
+      }}
+      onBlur={() => {
+        focadoRef.current = false;
+        setRascunho(precoFormatado);
+      }}
+      placeholder="R$ 0,00"
+      autoComplete="off"
+      inputMode="decimal"
+      className="pricing-intelligence-page__simulation-price__input pricing-intelligence-page__simulation-price__input--primary"
+      inputClassName="pricing-intelligence-page__simulation-price__sale-field"
+    />
+  );
+}
+
+/**
+ * @param {{
+ *   margemFormatada: string;
+ *   onMargemPctTextoChange?: (raw: string) => void;
+ * }} props
+ */
+function CommandMarginInput({ margemFormatada, onMargemPctTextoChange }) {
+  return (
+    <div className="pricing-intelligence-page__simulation-price__margin-field">
+      <label
+        className="s7-input__label pricing-intelligence-page__simulation-price__margin-label"
+        htmlFor="pricing-page-sim-margin"
+      >
+        Margem Desejada
+      </label>
+      <div className="pricing-intelligence-page__simulation-price__margin-control">
+        <PricingPercentInput
+          id="pricing-page-sim-margin"
+          name="pricing-page-sim-margin"
+          value={margemFormatada}
+          onChange={(next) => onMargemPctTextoChange?.(next)}
+          aria-label="Margem desejada"
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * @param {{
  *   plannedPromoPct: string;
  *   onPlannedPromoPctChange: (v: string) => void;
  *   plannedPromoEnabled: boolean;
@@ -35,13 +201,18 @@ import S7Tooltip from "../ui/S7Tooltip.jsx";
  *   onSaveFinancialSettings?: () => void;
  *   saveFinancialSettingsLoading?: boolean;
  *   mode?: "simulator" | "promotions";
+ *   precoVendaNum?: number;
+ *   onPrecoVendaChange?: (v: number) => void;
+ *   onPrecoVendaTextoChange?: (raw: string) => void;
+ *   precoSliderMin?: number;
+ *   precoSliderMax?: number;
+ *   margemPctNum?: number;
+ *   onMargemPctChange?: (v: number) => void;
+ *   onMargemPctTextoChange?: (raw: string) => void;
+ *   margemSliderMax?: number;
  * }} props
  */
 export function PricingPageSimulationInputs({
-  salePrice,
-  onSalePriceChange,
-  desiredMarginPct,
-  onDesiredMarginPctChange,
   plannedPromoPct,
   onPlannedPromoPctChange,
   plannedPromoEnabled,
@@ -61,132 +232,35 @@ export function PricingPageSimulationInputs({
   onSaveFinancialSettings,
   saveFinancialSettingsLoading = false,
   mode = "simulator",
+  precoVendaNum,
+  onPrecoVendaChange,
+  onPrecoVendaTextoChange,
+  precoSliderMin = 1,
+  precoSliderMax = 1000,
+  margemPctNum = 0,
+  onMargemPctChange,
+  onMargemPctTextoChange,
+  margemSliderMax = 60,
 }) {
-  // ======================================================
-  // Labels opcionais editáveis (estado local).
-  // Fallback para rótulo padrão quando valor ficar vazio.
-  // ======================================================
-  const defaultOptionalLabels = {
-    plannedPromo: "Desc. / promo",
-    mlAds: "ML Ads",
-    affiliates: "Afiliados",
-    reserve: "Reserva",
-  };
-  const [optionalLabels, setOptionalLabels] = useState(defaultOptionalLabels);
-  const [editingFieldKey, setEditingFieldKey] = useState(/** @type {"plannedPromo" | "mlAds" | "affiliates" | "reserve" | null} */ (null));
-  const [editingDraft, setEditingDraft] = useState("");
+  const [safetyMarginPct, setSafetyMarginPct] = useState("");
+  const [safetyMarginEnabled, setSafetyMarginEnabled] = useState(false);
 
-  const FIELD_EDIT_TOOLTIP =
-    "Personalize este campo para representar um desconto, custo adicional ou KPI interno da sua operação. Quando ativado, o percentual informado será considerado na precificação.";
-
-  // ======================================================
-  // Sanitização de percentual (apenas inteiros 0-9).
-  // Não faz cálculo; apenas valida entrada visual.
-  // ======================================================
-  const sanitizePercentInput = useCallback((raw) => {
-    const s = String(raw ?? "").replace(/[^\d,.]/g, "");
-    const normalized = s.replace(",", ".");
-    const parts = normalized.split(".");
-    if (parts.length <= 1) return s.replace(".", ",");
-    return `${parts[0].replace(".", ",")},${parts.slice(1).join("")}`;
-  }, []);
-  const percentSuffix = <span className="pricing-intelligence-page__simulation-price__percent-suffix">%</span>;
-
-  // ======================================================
-  // Toggle de campo opcional: liga/desliga e deixa o input
-  // habilitado somente quando ativo.
-  // ======================================================
-  const OptionalToggle = ({ id, enabled, onToggle, label }) => (
-    <button
-      type="button"
-      id={id}
-      className={[
-        "pricing-intelligence-page__simulation-price__toggle",
-        enabled ? "pricing-intelligence-page__simulation-price__toggle--on" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      role="switch"
-      aria-checked={enabled}
-      onClick={() => onToggle(!enabled)}
-      aria-label={enabled ? `Desativar ${label}` : `Ativar ${label}`}
-    >
-      <span className="pricing-intelligence-page__simulation-price__toggle-knob" aria-hidden="true" />
-      <span className="pricing-intelligence-page__simulation-price__toggle-text">{enabled ? "On" : "Off"}</span>
-    </button>
+  const precoFormatado =
+    precoVendaNum != null && Number.isFinite(precoVendaNum)
+      ? formatarBrlExibicao(precoVendaNum)
+      : "—";
+  const margemFormatada = formatarPercentualParaInput(
+    margemPctNum != null && Number.isFinite(margemPctNum) ? margemPctNum.toFixed(2) : "",
   );
 
-  // ======================================================
-  // Fluxo de edição de label (Enter/blur confirma; Esc cancela).
-  // ======================================================
-  const beginEditOptionalLabel = useCallback(
-    (fieldKey) => {
-      const current = optionalLabels[fieldKey] ?? defaultOptionalLabels[fieldKey];
-      setEditingFieldKey(fieldKey);
-      setEditingDraft(String(current));
-    },
-    [optionalLabels],
-  );
-
-  const commitOptionalLabelEdit = useCallback(() => {
-    if (editingFieldKey == null) return;
-    const fallback = defaultOptionalLabels[editingFieldKey];
-    const next = String(editingDraft ?? "").trim();
-    setOptionalLabels((prev) => ({
-      ...prev,
-      [editingFieldKey]: next !== "" ? next : fallback,
-    }));
-    setEditingFieldKey(null);
-    setEditingDraft("");
-  }, [editingFieldKey, editingDraft]);
-
-  const cancelOptionalLabelEdit = useCallback(() => {
-    setEditingFieldKey(null);
-    setEditingDraft("");
-  }, []);
-
-  // ======================================================
-  // Label opcional com ícone de lápis (preparo para edição
-  // de nomenclatura por seller no futuro).
-  // ======================================================
-  const OptionalLabel = ({ fieldKey, text }) => (
-    <span className="pricing-intelligence-page__simulation-price__optional-label-wrap">
-      {editingFieldKey === fieldKey ? (
-        <input
-          type="text"
-          className="pricing-intelligence-page__simulation-price__optional-label-input"
-          value={editingDraft}
-          onChange={(e) => setEditingDraft(e.target.value)}
-          onBlur={commitOptionalLabelEdit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              commitOptionalLabelEdit();
-              return;
-            }
-            if (e.key === "Escape") {
-              e.preventDefault();
-              cancelOptionalLabelEdit();
-            }
-          }}
-          autoFocus
-          aria-label={`Editar nome do campo ${text}`}
-        />
-      ) : (
-        <span className="pricing-intelligence-page__simulation-price__optional-label">{text}</span>
-      )}
-      <S7Tooltip content={FIELD_EDIT_TOOLTIP} placement="bottom-start" offset={6} wrap>
-        <button
-          type="button"
-          className="pricing-intelligence-page__simulation-price__optional-edit"
-          aria-label={`Personalizar nome do campo ${text}`}
-          onClick={() => beginEditOptionalLabel(fieldKey)}
-        >
-          <S7Icon name="edit" size={12} strokeWidth={2} />
-        </button>
-      </S7Tooltip>
-    </span>
-  );
+  const sliderPrecoValor =
+    precoVendaNum != null && Number.isFinite(precoVendaNum)
+      ? Math.min(precoSliderMax, Math.max(precoSliderMin, precoVendaNum))
+      : precoSliderMin;
+  const sliderMargemValor =
+    margemPctNum != null && Number.isFinite(margemPctNum)
+      ? Math.min(margemSliderMax, Math.max(0, margemPctNum))
+      : 0;
 
   return (
     <section
@@ -199,185 +273,140 @@ export function PricingPageSimulationInputs({
       aria-labelledby="pricing-intelligence-page-simulation-price-title"
     >
       <h3 className="pricing-intelligence-page__simulation-price__title" id="pricing-intelligence-page-simulation-price-title">
-        {mode === "promotions" ? "Promoção" : "Precificação do produto"}
+        {mode === "promotions" ? "Promoção" : "Ajustes de custo e reserva"}
       </h3>
-      <div className="pricing-intelligence-page__simulation-price__grid">
+      <div
+        className={[
+          "pricing-intelligence-page__simulation-price__grid",
+          mode === "simulator" ? "pricing-intelligence-page__simulation-price__grid--config-only" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         {mode === "promotions" ? (
-          // ======================================================
-          // Promoções: apenas desconto promocional (UI preparada).
-          // Sem simulação completa de preço nesta aba.
-          // ======================================================
           <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--promotion-only">
-            <S7Input
-              label="Desconto da promoção"
+            <label className="s7-input__label" htmlFor="pricing-page-sim-promo-discount">
+              Desconto da promoção
+            </label>
+            <PricingPercentInput
+              id="pricing-page-sim-promo-discount"
               name="pricing-page-sim-promo"
               value={plannedPromoPct}
-              onChange={(e) => onPlannedPromoPctChange(sanitizePercentInput(e.target.value))}
-              placeholder="0"
-              autoComplete="off"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              rightElement={percentSuffix}
-              className="pricing-intelligence-page__simulation-price__input pricing-intelligence-page__simulation-price__input--promotion"
-              hint="Preparado para habilitação por contrato do marketplace."
+              onChange={onPlannedPromoPctChange}
+              className="pricing-intelligence-page__simulation-price__promo-percent"
+              fieldClassName="pricing-intelligence-page__simulation-price__promo-percent-field"
+              aria-label="Desconto da promoção"
             />
+            <p className="pricing-intelligence-page__simulation-price__promo-hint">
+              Preparado para habilitação por contrato do marketplace.
+            </p>
           </div>
         ) : (
           <>
-            {/* Linha 1: preço + margem na horizontal (sem aumentar o card). */}
-            <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--sale">
-              <S7Input
-                label="Preço de venda (R$)"
-                name="pricing-page-sim-sale-price"
-                value={salePrice}
-                onChange={(e) => onSalePriceChange(e.target.value)}
-                placeholder="0,00"
-                autoComplete="off"
-                inputMode="decimal"
-                className="pricing-intelligence-page__simulation-price__input pricing-intelligence-page__simulation-price__input--primary"
-              />
-            </div>
-            <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--margin">
-              <S7Input
-                label="Margem desejada"
-                name="pricing-page-sim-margin"
-                value={desiredMarginPct}
-                onChange={(e) => onDesiredMarginPctChange(sanitizePercentInput(e.target.value))}
-                placeholder="0"
-                autoComplete="off"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                rightElement={percentSuffix}
-                className="pricing-intelligence-page__simulation-price__input"
-              />
-            </div>
-            {/* Linha 2: opcionais em uma única linha (4 colunas). */}
-            <div className="pricing-intelligence-page__simulation-price__optional-row">
-              <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--optional">
-                <div className="pricing-intelligence-page__simulation-price__optional-head">
-                  <OptionalLabel fieldKey="plannedPromo" text={optionalLabels.plannedPromo} />
+            {typeof onPrecoVendaChange === "function" ? (
+              <div className="pricing-intelligence-page__simulation-price__command">
+                <div className="pricing-intelligence-page__simulation-price__command-block">
+                  <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--sale">
+                    <CommandSaleInput
+                      precoFormatado={precoFormatado}
+                      onPrecoVendaTextoChange={onPrecoVendaTextoChange}
+                    />
+                  </div>
+                  <input
+                    type="range"
+                    className="pricing-intelligence-page__simulation-price__slider"
+                    min={precoSliderMin}
+                    max={precoSliderMax}
+                    step={0.01}
+                    value={sliderPrecoValor}
+                    onChange={(e) => onPrecoVendaChange?.(Number(e.target.value))}
+                    aria-label="Ajustar preço de venda"
+                  />
                 </div>
-                <div className="pricing-intelligence-page__simulation-price__optional-control">
-                  <S7Input
-                    label=""
-                    name="pricing-page-sim-promo"
+                <div className="pricing-intelligence-page__simulation-price__command-block">
+                  <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--margin">
+                    <CommandMarginInput
+                      margemFormatada={margemFormatada}
+                      onMargemPctTextoChange={onMargemPctTextoChange}
+                    />
+                  </div>
+                  <input
+                    type="range"
+                    className="pricing-intelligence-page__simulation-price__slider"
+                    min={0}
+                    max={margemSliderMax}
+                    step={0.01}
+                    value={sliderMargemValor}
+                    onChange={(e) => onMargemPctChange?.(Number(e.target.value))}
+                    aria-label="Ajustar margem desejada"
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            <div className="pricing-intelligence-page__simulation-price__params-main pricing-intelligence-page__simulation-price__params-main--split">
+              <div className="pricing-intelligence-page__simulation-price__param-group">
+                <ParamGroupHeading title="Reserva Estratégica" tooltip={STRATEGIC_RESERVE_GROUP_TOOLTIP} />
+                <div className="pricing-intelligence-page__simulation-price__optional-row pricing-intelligence-page__simulation-price__optional-row--pair">
+                  <ParametroOpcional
+                    id="pricing-page-sim-promo"
+                    label={<OptionalLabel text="Promoção" />}
                     value={plannedPromoPct}
-                    onChange={(e) => onPlannedPromoPctChange(sanitizePercentInput(e.target.value))}
-                    placeholder="0"
-                    autoComplete="off"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    rightElement={percentSuffix}
-                    className="pricing-intelligence-page__simulation-price__input pricing-intelligence-page__simulation-price__input--optional"
-                    disabled={!plannedPromoEnabled}
-                  />
-                  <OptionalToggle
-                    id="pricing-page-sim-toggle-promo"
-                    label="desconto/promo"
+                    onChange={onPlannedPromoPctChange}
                     enabled={plannedPromoEnabled}
-                    onToggle={onPlannedPromoEnabledChange}
+                    onEnabledChange={onPlannedPromoEnabledChange}
+                    ariaLabel="promoção"
                   />
-                </div>
-              </div>
-
-              <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--optional">
-                <div className="pricing-intelligence-page__simulation-price__optional-head">
-                  <OptionalLabel fieldKey="mlAds" text={optionalLabels.mlAds} />
-                </div>
-                <div className="pricing-intelligence-page__simulation-price__optional-control">
-                  <S7Input
-                    label=""
-                    name="pricing-page-sim-ml-ads"
-                    value={mlAdsPct}
-                    onChange={(e) => onMlAdsPctChange(sanitizePercentInput(e.target.value))}
-                    placeholder="0"
-                    autoComplete="off"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    rightElement={percentSuffix}
-                    className="pricing-intelligence-page__simulation-price__input pricing-intelligence-page__simulation-price__input--optional"
-                    disabled={!mlAdsEnabled}
-                  />
-                  <OptionalToggle
-                    id="pricing-page-sim-toggle-ml-ads"
-                    label="ML Ads"
-                    enabled={mlAdsEnabled}
-                    onToggle={onMlAdsEnabledChange}
-                  />
-                </div>
-              </div>
-
-              <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--optional">
-                <div className="pricing-intelligence-page__simulation-price__optional-head">
-                  <OptionalLabel fieldKey="affiliates" text={optionalLabels.affiliates} />
-                </div>
-                <div className="pricing-intelligence-page__simulation-price__optional-control">
-                  <S7Input
-                    label=""
-                    name="pricing-page-sim-affiliates"
+                  <ParametroOpcional
+                    id="pricing-page-sim-affiliates"
+                    label={<OptionalLabel text="Afiliados" />}
                     value={affiliatesPct}
-                    onChange={(e) => onAffiliatesPctChange(sanitizePercentInput(e.target.value))}
-                    placeholder="0"
-                    autoComplete="off"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    rightElement={percentSuffix}
-                    className="pricing-intelligence-page__simulation-price__input pricing-intelligence-page__simulation-price__input--optional"
-                    disabled={!affiliatesEnabled}
-                  />
-                  <OptionalToggle
-                    id="pricing-page-sim-toggle-affiliates"
-                    label="afiliados"
+                    onChange={onAffiliatesPctChange}
                     enabled={affiliatesEnabled}
-                    onToggle={onAffiliatesEnabledChange}
+                    onEnabledChange={onAffiliatesEnabledChange}
+                    ariaLabel="afiliados"
                   />
                 </div>
               </div>
 
-              <div className="pricing-intelligence-page__simulation-price__cell pricing-intelligence-page__simulation-price__cell--optional">
-                <div className="pricing-intelligence-page__simulation-price__optional-head">
-                  <OptionalLabel fieldKey="reserve" text={optionalLabels.reserve} />
-                </div>
-                <div className="pricing-intelligence-page__simulation-price__optional-control">
-                  <S7Input
-                    label=""
-                    name="pricing-page-sim-reserve"
-                    value={safetyReservePct}
-                    onChange={(e) => onSafetyReservePctChange(sanitizePercentInput(e.target.value))}
-                    placeholder="0"
-                    autoComplete="off"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    rightElement={percentSuffix}
-                    className="pricing-intelligence-page__simulation-price__input pricing-intelligence-page__simulation-price__input--optional"
-                    disabled={!safetyReserveEnabled}
+              <div
+                className="pricing-intelligence-page__simulation-price__param-divider pricing-intelligence-page__simulation-price__param-divider--vertical"
+                role="separator"
+                aria-orientation="vertical"
+              />
+
+              <div className="pricing-intelligence-page__simulation-price__param-group">
+                <ParamGroupHeading title="Investimentos e Custos" tooltip={OPERATIONAL_COSTS_GROUP_TOOLTIP} />
+                <div className="pricing-intelligence-page__simulation-price__optional-row pricing-intelligence-page__simulation-price__optional-row--pair">
+                  <ParametroOpcional
+                    id="pricing-page-sim-ml-ads"
+                    label={<OptionalLabel text="ML Ads" />}
+                    value={mlAdsPct}
+                    onChange={onMlAdsPctChange}
+                    enabled={mlAdsEnabled}
+                    onEnabledChange={onMlAdsEnabledChange}
+                    ariaLabel="ML Ads"
                   />
-                  <OptionalToggle
-                    id="pricing-page-sim-toggle-reserve"
-                    label="reserva"
+                  <ParametroOpcional
+                    id="pricing-page-sim-reserve"
+                    label={<OptionalLabel text="Custos Operacionais" />}
+                    value={safetyReservePct}
+                    onChange={onSafetyReservePctChange}
                     enabled={safetyReserveEnabled}
-                    onToggle={onSafetyReserveEnabledChange}
+                    onEnabledChange={onSafetyReserveEnabledChange}
+                    ariaLabel="custos operacionais"
                   />
                 </div>
               </div>
+              {/* Margem de Segurança: ocultada temporariamente da UI.
+                  Estado/lógica preservados (safetyMarginPct/safetyMarginEnabled)
+                  para reativação futura na regra de preço mínimo/limite de segurança. */}
             </div>
           </>
         )}
       </div>
-      {mode === "simulator" && onSaveFinancialSettings ? (
-        <div className="pricing-intelligence-page__simulation-price__actions">
-          <S7Button
-            type="button"
-            variant="primary"
-            size="sm"
-            loading={saveFinancialSettingsLoading}
-            disabled={saveFinancialSettingsLoading}
-            onClick={onSaveFinancialSettings}
-          >
-            Salvar configurações
-          </S7Button>
-        </div>
-      ) : null}
+      {/* Botão "Salvar configurações" movido para baixo dos gráficos (UX),
+          renderizado via footerSlot do PricingPageSalePriceSimulator. */}
     </section>
   );
 }

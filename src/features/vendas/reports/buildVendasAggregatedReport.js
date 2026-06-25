@@ -52,12 +52,24 @@ export const VENDAS_AGGREGATED_REPORT_VERSION = 1;
 /**
  * @typedef {{
  *   quantidadeVendas: number;
+ *   pedidos: number;
  *   faturamentoBruto: string;
  *   lucroLiquido: string;
  *   margemPercentual: string | null;
+ *   ticketMedio: string | null;
+ *   repasseMarketplace: string | null;
  *   vendasSaudaveis: number | null;
  *   vendasMargemCritica: number;
  *   vendasPrejuizo: number;
+ *   custos: {
+ *     custoProduto: string | null;
+ *     comissaoMarketplace: string | null;
+ *     frete: string | null;
+ *     impostos: string | null;
+ *     operacaoEmbalagem: string | null;
+ *     mlAds: string | null;
+ *     custosOperacionais: string | null;
+ *   };
  * }} VendasAggregatedReportResumoExecutivo
  */
 
@@ -139,6 +151,21 @@ function toInt(value, fallback = 0) {
   if (value == null) return fallback;
   const n = typeof value === "number" ? value : Number.parseInt(String(value), 10);
   return Number.isFinite(n) ? Math.max(0, n) : fallback;
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} source
+ * @param {string[]} keys
+ * @returns {string | null}
+ */
+function pickFirstString(source, keys) {
+  if (!source || typeof source !== "object") return null;
+  for (const key of keys) {
+    const value = source[key];
+    const s = toStringOrNull(value);
+    if (s != null) return s;
+  }
+  return null;
 }
 
 /**
@@ -266,36 +293,98 @@ export function buildVendasAggregatedReport(input) {
     fonteResumo = "selecao-manual";
     resumoExecutivo = {
       quantidadeVendas,
+      pedidos: quantidadeVendas,
       faturamentoBruto: toMoneyString(selected.grossSalesBrl),
       lucroLiquido: toMoneyString(selected.netProfitBrl),
       margemPercentual: toStringOrNull(selected.marginPercent),
+      ticketMedio: null,
+      repasseMarketplace: null,
       vendasSaudaveis: toInt(selected.healthyCount, 0),
       vendasMargemCritica: toInt(selected.lowMarginCount, 0),
       vendasPrejuizo: toInt(selected.negativeCount, 0),
+      custos: {
+        custoProduto: null,
+        comissaoMarketplace: null,
+        frete: null,
+        impostos: null,
+        operacaoEmbalagem: null,
+        mlAds: null,
+        custosOperacionais: null,
+      },
     };
   } else if (summary) {
     fonteResumo = "executive-summary";
     resumoExecutivo = {
       quantidadeVendas,
-      faturamentoBruto: toMoneyString(summary.gross_sales_brl),
-      lucroLiquido: toMoneyString(summary.contribution_profit_brl ?? summary.net_profit_brl),
+      pedidos: toInt(summary.orders_count, quantidadeVendas),
+      faturamentoBruto: toMoneyString(
+        pickFirstString(summary, ["gross_sales_brl", "gross_sales", "gross_amount_brl", "gross_amount"]),
+      ),
+      lucroLiquido: toMoneyString(
+        pickFirstString(summary, ["contribution_profit_brl", "net_profit_brl", "profit_brl"]),
+      ),
       margemPercentual: toStringOrNull(summary.contribution_margin_percent),
+      ticketMedio: pickFirstString(summary, ["average_ticket_brl", "ticket_medio_brl"]),
+      repasseMarketplace: pickFirstString(summary, ["you_receive_brl", "net_received_brl"]),
       // Backend ainda não entrega contagem de vendas saudáveis no escopo de filtros.
       vendasSaudaveis:
         health?.healthy_count != null ? toInt(health.healthy_count, 0) : null,
       vendasMargemCritica: toInt(health?.low_margin_count, 0),
       vendasPrejuizo: toInt(health?.negative_sales_count, 0),
+      custos: {
+        custoProduto: pickFirstString(summary, ["product_cost_only_brl", "product_cost_brl"]),
+        comissaoMarketplace: pickFirstString(summary, [
+          "marketplace_fee_brl",
+          "commission_brl",
+          "marketplace_commission_brl",
+        ]),
+        frete: pickFirstString(summary, ["shipping_cost_brl", "freight_cost_brl"]),
+        impostos: pickFirstString(summary, ["tax_cost_brl", "internal_tax_brl"]),
+        operacaoEmbalagem: pickFirstString(summary, [
+          "operation_packaging_cost_brl",
+          "operation_cost_brl",
+          "packaging_cost_brl",
+        ]),
+        mlAds: pickFirstString(summary, ["ads_cost_brl", "ml_ads_cost_brl"]),
+        custosOperacionais: pickFirstString(summary, ["operational_costs_brl", "operational_cost_brl"]),
+      },
     };
   } else {
     fonteResumo = "vazio";
     resumoExecutivo = {
       quantidadeVendas,
+      pedidos: quantidadeVendas,
       faturamentoBruto: "0.00",
       lucroLiquido: "0.00",
       margemPercentual: null,
+      ticketMedio: null,
+      repasseMarketplace: null,
       vendasSaudaveis: null,
       vendasMargemCritica: 0,
       vendasPrejuizo: 0,
+      custos: {
+        custoProduto: null,
+        comissaoMarketplace: null,
+        frete: null,
+        impostos: null,
+        operacaoEmbalagem: null,
+        mlAds: null,
+        custosOperacionais: null,
+      },
+    };
+  }
+
+  if (escopo === "selected" && selected) {
+    resumoExecutivo.ticketMedio = toStringOrNull(selected.avgTicketBrl);
+    resumoExecutivo.repasseMarketplace = toStringOrNull(selected.marketplacePayoutBrl);
+    resumoExecutivo.custos = {
+      custoProduto: toStringOrNull(selected?.costs?.custoProduto),
+      comissaoMarketplace: toStringOrNull(selected?.costs?.comissaoMarketplace),
+      frete: toStringOrNull(selected?.costs?.frete),
+      impostos: toStringOrNull(selected?.costs?.impostos),
+      operacaoEmbalagem: toStringOrNull(selected?.costs?.operacaoEmbalagem),
+      mlAds: toStringOrNull(selected?.costs?.mlAds),
+      custosOperacionais: toStringOrNull(selected?.costs?.custosOperacionais),
     };
   }
 
@@ -328,7 +417,11 @@ export function buildVendasAggregatedReport(input) {
   });
 
   const vendas =
-    escopo === "selected" && Array.isArray(context.selectedSales) ? context.selectedSales : [];
+    escopo === "selected" && Array.isArray(context.selectedSales)
+      ? context.selectedSales
+      : escopo === "filters" && Array.isArray(context.listSalesRows)
+        ? context.listSalesRows
+        : [];
 
   return {
     versao: VENDAS_AGGREGATED_REPORT_VERSION,
@@ -345,6 +438,7 @@ export function buildVendasAggregatedReport(input) {
       marketplace: null,
       contas,
       busca: context.search?.hasQuery ? toStringOrNull(context.search?.query) : null,
+      filtroOperacionalId: toStringOrNull(context.operationalFilter?.id) ?? "all",
       filtrosOperacionais,
       vendasSelecionadas: Array.isArray(context.selectedSalesIds) ? [...context.selectedSalesIds] : [],
     },
@@ -361,6 +455,7 @@ export function buildVendasAggregatedReport(input) {
     vendas,
     _meta: {
       analiseLimitada: Boolean(context.sales?.truncatedScan),
+      listRowsTotal: Math.max(0, Number(context.sales?.listRowsTotal) || 0),
       fonteResumo,
     },
   };

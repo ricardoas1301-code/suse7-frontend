@@ -5,6 +5,12 @@
 
 import { useId, useState } from "react";
 import { formatCatalogBRL } from "../utils/productCatalogRow";
+import { PricingInlineEditableMetric } from "./pricing/PricingInlineEditableMetric.jsx";
+import {
+  ROTULO_LUCRO_RESULTADO,
+  TOOLTIP_LUCRO_MARGEM_CONTRIBUICAO,
+} from "./pricing/pricingLucroMargemContribuicaoUi.js";
+import { PricingScenarioSalePriceControl } from "./pricing/PricingScenarioSalePriceControl.jsx";
 import S7Icon from "./ui/S7Icon";
 import S7Tooltip from "./ui/S7Tooltip";
 import {
@@ -14,11 +20,38 @@ import {
   offerSemanticSuffixToCssClass,
   pickPricingShippingCostContext,
   pickSaleXrayShippingRawString,
-  pickSaleXrayYouReceiveRawString,
+  resolveVoceRecebeExibicaoRaw,
   shouldSaleXrayShippingAuditTrace,
 } from "./mercadoLivrePricingScenarioCompareShared.js";
+import { logPiPromoFlowAudit } from "./pricing/piPromoFlowAudit.js";
 
 const DASH = "—";
+
+/**
+ * Rótulo "Lucro" com tooltip opcional (margem de contribuição).
+ * @param {{ label: string; tooltip?: string | null }} props
+ */
+function RotuloLucroResultado({ label, tooltip = null }) {
+  const texto = label != null && String(label).trim() !== "" ? String(label).trim() : ROTULO_LUCRO_RESULTADO;
+  if (tooltip == null || String(tooltip).trim() === "") {
+    return texto;
+  }
+
+  return (
+    <span className="anuncios-sell-popover__status-line-head">
+      <span className="anuncios-sell-popover__status-line-label">{texto}</span>
+      <S7Tooltip content={tooltip} placement="top-start" offset={6} wrap>
+        <button
+          type="button"
+          className="anuncios-sell-popover__status-tip"
+          aria-label={`Sobre ${texto}`}
+        >
+          <S7Icon name="info" size={12} strokeWidth={2} />
+        </button>
+      </S7Tooltip>
+    </span>
+  );
+}
 
 /**
  * Chave estável do cenário (scenario_id da API, com fallbacks) — tabs e `data-scenario-key`.
@@ -56,6 +89,13 @@ function formatNegativeBrlFromApiString(s) {
   return `-${formatCatalogBRL(Math.abs(n))}`;
 }
 
+/** Custos internos no layout PI — sempre negativo na exibição. */
+function formatCustoInternoPiDisplay(raw) {
+  if (raw == null || String(raw).trim() === "") return DASH;
+  const limpo = String(raw).trim().replace(/^-/, "");
+  return formatNegativeBrlFromApiString(limpo) ?? DASH;
+}
+
 /** @param {string | null | undefined} pct */
 function formatCommissionPctForModal(pct) {
   if (pct == null || pct === "") return null;
@@ -86,6 +126,14 @@ function buildTariffSubtitleFromScenarioMarketplace(m) {
   if (label) return `${label} ${DASH}`;
   if (pct) return pct;
   return null;
+}
+
+/** @param {{ sellerDiscountPercent?: string | null }} m */
+function buildSellerDiscountSubtitleFromMarketplace(m) {
+  if (m.sellerDiscountPercent == null || String(m.sellerDiscountPercent).trim() === "") return null;
+  const n = Number(String(m.sellerDiscountPercent).trim().replace(",", "."));
+  if (!Number.isFinite(n)) return null;
+  return `Desconto ${Math.round(n).toLocaleString("pt-BR")}%`;
 }
 
 /**
@@ -331,6 +379,11 @@ export function MercadoLivrePricingScenarioSubsidyCollapsible({ scenario }) {
  *   showSubsidy?: boolean;
  *   showShippingSubsidyMlLine?: boolean;
  *   baselineListingSaleDisplayOverride?: string | null;
+ *   listingUnitSaleDisplayOverride?: string | null;
+ *   inlineEditSale?: {
+ *     displayValue: string;
+ *     onCommit: (raw: string) => void;
+ *   } | null;
  * }} props
  */
 export function MercadoLivrePricingScenarioRevenueSection({
@@ -338,6 +391,9 @@ export function MercadoLivrePricingScenarioRevenueSection({
   showSubsidy = true,
   showShippingSubsidyMlLine = true,
   baselineListingSaleDisplayOverride = null,
+  listingUnitSaleDisplayOverride = null,
+  inlineEditSale = null,
+  salePriceEditControl = null,
 }) {
   const m =
     scenario.marketplace != null && typeof scenario.marketplace === "object"
@@ -449,13 +505,21 @@ export function MercadoLivrePricingScenarioRevenueSection({
     m.sale_price_brl != null && String(m.sale_price_brl).trim() !== ""
       ? formatBrlFromApiString(String(m.sale_price_brl))
       : DASH;
+  const unitSaleOverride =
+    listingUnitSaleDisplayOverride != null && String(listingUnitSaleDisplayOverride).trim() !== ""
+      ? String(listingUnitSaleDisplayOverride).trim()
+      : null;
   const saleBaselineDisplay =
     scenario.is_baseline === true &&
     baselineListingSaleDisplayOverride != null &&
     String(baselineListingSaleDisplayOverride).trim() !== ""
       ? String(baselineListingSaleDisplayOverride).trim()
       : sale;
-  const receivePick = pickSaleXrayYouReceiveRawString(m, sx, /** @type {Record<string, unknown>} */ (scenario));
+  const useListingSalePriceLine =
+    scenario.is_baseline === true ||
+    (unitSaleOverride != null && String(unitSaleOverride).trim() !== "");
+  const saleLineDisplay = unitSaleOverride ?? (scenario.is_baseline === true ? saleBaselineDisplay : sale);
+  const receivePick = resolveVoceRecebeExibicaoRaw(m, sx, /** @type {Record<string, unknown>} */ (scenario));
   const receive =
     receivePick.raw != null && String(receivePick.raw).trim() !== ""
       ? formatBrlFromApiString(String(receivePick.raw))
@@ -524,6 +588,33 @@ export function MercadoLivrePricingScenarioRevenueSection({
     m.seller_discount_amount_brl != null && String(m.seller_discount_amount_brl).trim() !== ""
       ? formatBrlFromApiString(String(m.seller_discount_amount_brl))
       : null;
+  const sellerDiscSub = buildSellerDiscountSubtitleFromMarketplace({
+    sellerDiscountPercent: m.seller_discount_percent != null ? String(m.seller_discount_percent) : null,
+  });
+  if (import.meta.env.DEV && scenario.is_baseline !== true) {
+    const promoName =
+      scenario.promotion_name != null
+        ? String(scenario.promotion_name)
+        : scenario.label != null
+          ? String(scenario.label)
+          : "";
+    if (promoName.toLowerCase().includes("aumente") && promoName.toLowerCase().includes("vendas")) {
+      logPiPromoFlowAudit("frontend_PricingScenarioDetail_render_fields", {
+        promotion_name: promoName,
+        promotion_id: scenario.promotion_id ?? null,
+        type: scenario.promotion_type ?? null,
+        ref_id: scenario.offer_id ?? null,
+        discount_seller_brl: m.seller_discount_amount_brl ?? null,
+        discount_seller_pct: m.seller_discount_percent ?? null,
+        discount_meli_brl: m.promotion_subsidy_amount_brl ?? null,
+        fee_before_subsidy: m.fee_amount_before_promo_subsidy_brl ?? m.sale_fee_amount_brl ?? null,
+        fee_after_subsidy: m.fee_amount_after_promo_subsidy_brl ?? null,
+        shipping_brl: m.shipping_cost_amount_brl ?? null,
+        payout: receivePick.raw ?? m.marketplace_payout_amount_brl ?? null,
+        source_field_used: receivePick.source ?? "marketplace_fields",
+      });
+    }
+  }
 
   const saleXrayDisc =
     scenario._sale_xray_discount_text != null && String(scenario._sale_xray_discount_text).trim() !== ""
@@ -572,15 +663,28 @@ export function MercadoLivrePricingScenarioRevenueSection({
     <div className="anuncios-sell-popover__section">
         <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
         <div className="anuncios-sell-popover__block">
-          {scenario.is_baseline === true ? (
-            <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key anuncios-sell-popover__line--promo-sale">
-              <span className="anuncios-sell-popover__promo-sale-label">
-                <span className="anuncios-sell-popover__promo-sale-title-inline">
-                  <span className="anuncios-sell-popover__promo-sale-title-text">Valor de venda</span>
+          {useListingSalePriceLine ? (
+            salePriceEditControl != null ? (
+              <PricingScenarioSalePriceControl control={salePriceEditControl} />
+            ) : inlineEditSale != null ? (
+              <PricingInlineEditableMetric
+                label="Valor de venda"
+                displayValue={inlineEditSale.displayValue}
+                onCommit={inlineEditSale.onCommit}
+                prefix="R$"
+                inputMode="decimal"
+                ariaLabelEdit="Editar valor de venda"
+              />
+            ) : (
+              <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key anuncios-sell-popover__line--promo-sale">
+                <span className="anuncios-sell-popover__promo-sale-label">
+                  <span className="anuncios-sell-popover__promo-sale-title-inline">
+                    <span className="anuncios-sell-popover__promo-sale-title-text">Valor de venda</span>
+                  </span>
                 </span>
-              </span>
-              <strong>{saleBaselineDisplay}</strong>
-            </div>
+                <strong>{saleLineDisplay}</strong>
+              </div>
+            )
           ) : (
             <div className="anuncios-sell-popover__line anuncios-sell-popover__line--key anuncios-sell-popover__line--promo-sale">
               <span className="anuncios-sell-popover__promo-sale-label">
@@ -736,20 +840,25 @@ export function MercadoLivrePricingScenarioRevenueSection({
             </div>
           </div>
         ) : null}
-        {(!saleXraySimple && promoSubMl != null) || sellerDisc != null ? (
+        {sellerDisc != null ? (
           <div className="anuncios-sell-popover__block">
-            {!saleXraySimple && promoSubMl != null ? (
-              <div className="anuncios-sell-popover__line">
-                <span>Subsídio promocional (ML)</span>
-                <strong>{promoSubMl}</strong>
-              </div>
+            <div className="anuncios-sell-popover__line">
+              <span>Desconto bancado pelo seller</span>
+              <strong>{sellerDisc}</strong>
+            </div>
+            {sellerDiscSub != null ? (
+              <div className="anuncios-sell-popover__muted">{sellerDiscSub}</div>
             ) : null}
-            {sellerDisc != null ? (
-              <div className="anuncios-sell-popover__line">
-                <span>Desconto bancado pelo seller</span>
-                <strong>{sellerDisc}</strong>
-              </div>
-            ) : null}
+          </div>
+        ) : null}
+        {!saleXraySimple && promoSubMl != null ? (
+          <div className="anuncios-sell-popover__block">
+            <div className="anuncios-sell-popover__line">
+              <span>Subsídio promocional (ML)</span>
+              <strong className="anuncios-sell-popover__value--positive">
+                + {promoSubMl}
+              </strong>
+            </div>
           </div>
         ) : null}
         <div className="anuncios-sell-popover__block">
@@ -795,12 +904,18 @@ export function MercadoLivrePricingScenarioRevenueSection({
  *   scenario: Record<string, unknown>;
  *   hideBreakEvenRow?: boolean;
  *   profitLineLabel?: string | null;
+ *   inlineEditMargin?: {
+ *     displayValue: string;
+ *     onCommit: (raw: string) => void;
+ *   } | null;
  * }} props
  */
 export function MercadoLivrePricingScenarioInternalAndResultSection({
   scenario,
   hideBreakEvenRow = false,
   profitLineLabel = null,
+  inlineEditMargin = null,
+  layoutPiFixo = false,
 }) {
   const ic =
     scenario.internal_costs != null && typeof scenario.internal_costs === "object"
@@ -834,6 +949,15 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
           ? String(simRes.offer_status)
           : DASH;
 
+  const formatarCustoInterno =
+    layoutPiFixo === true ? formatCustoInternoPiDisplay : formatBrlFromApiString;
+
+  const rotuloLucroPersonalizado =
+    profitLineLabel != null && String(profitLineLabel).trim() !== "" ? String(profitLineLabel).trim() : null;
+  const rotuloLucroExibicao = rotuloLucroPersonalizado ?? ROTULO_LUCRO_RESULTADO;
+  const tooltipLucroMargemContribuicao =
+    layoutPiFixo && rotuloLucroPersonalizado == null ? TOOLTIP_LUCRO_MARGEM_CONTRIBUICAO : null;
+
   return (
     <>
       <div className="anuncios-sell-popover__section anuncios-sell-popover__section--future anuncios-pricing-modal__raiox-block">
@@ -855,7 +979,7 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
                   }
                 >
                   {ic?.product_cost_brl != null && String(ic.product_cost_brl).trim() !== ""
-                    ? formatBrlFromApiString(String(ic.product_cost_brl))
+                    ? formatarCustoInterno(String(ic.product_cost_brl))
                     : DASH}
                 </strong>
               </div>
@@ -871,7 +995,7 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
                   }
                 >
                   {ic?.tax_amount_brl != null && String(ic.tax_amount_brl).trim() !== ""
-                    ? formatBrlFromApiString(String(ic.tax_amount_brl))
+                    ? formatarCustoInterno(String(ic.tax_amount_brl))
                     : DASH}
                 </strong>
               </div>
@@ -892,7 +1016,7 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
                 >
                   {ic?.operational_packaging_total_brl != null &&
                   String(ic.operational_packaging_total_brl).trim() !== ""
-                    ? formatBrlFromApiString(String(ic.operational_packaging_total_brl))
+                    ? formatarCustoInterno(String(ic.operational_packaging_total_brl))
                     : DASH}
                 </strong>
               </div>
@@ -913,9 +1037,10 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
             <div className="anuncios-sell-popover__block">
               <div className="anuncios-sell-popover__line anuncios-sell-popover__line--raiox-result-metric">
                 <span className={offerSemClass || undefined}>
-                  {profitLineLabel != null && String(profitLineLabel).trim() !== ""
-                    ? String(profitLineLabel).trim()
-                    : "Lucro líquido"}
+                  <RotuloLucroResultado
+                    label={rotuloLucroExibicao}
+                    tooltip={tooltipLucroMargemContribuicao}
+                  />
                 </span>
                 <strong className={offerSemClass || undefined}>
                   {simRes?.profit_brl != null ? formatBrlFromApiString(String(simRes.profit_brl)) : DASH}
@@ -923,14 +1048,25 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
               </div>
             </div>
             <div className="anuncios-sell-popover__block">
-              <div className="anuncios-sell-popover__line anuncios-sell-popover__line--raiox-result-metric">
-                <span className={offerSemClass || undefined}>Margem</span>
-                <strong className={offerSemClass || undefined}>
-                  {simRes?.margin_pct != null && String(simRes.margin_pct).trim() !== ""
-                    ? `${String(simRes.margin_pct).replace(".", ",")} %`
-                    : DASH}
-                </strong>
-              </div>
+              {inlineEditMargin != null ? (
+                <PricingInlineEditableMetric
+                  label="Margem"
+                  displayValue={inlineEditMargin.displayValue}
+                  onCommit={inlineEditMargin.onCommit}
+                  suffix="%"
+                  inputMode="decimal"
+                  ariaLabelEdit="Editar margem"
+                />
+              ) : (
+                <div className="anuncios-sell-popover__line anuncios-sell-popover__line--raiox-result-metric">
+                  <span className={offerSemClass || undefined}>Margem</span>
+                  <strong className={offerSemClass || undefined}>
+                    {simRes?.margin_pct != null && String(simRes.margin_pct).trim() !== ""
+                      ? `${String(simRes.margin_pct).replace(".", ",")} %`
+                      : DASH}
+                  </strong>
+                </div>
+              )}
             </div>
             {!hideBreakEvenRow ? (
               <div className="anuncios-sell-popover__block">

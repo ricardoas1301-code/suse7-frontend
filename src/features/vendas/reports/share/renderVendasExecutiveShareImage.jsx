@@ -43,6 +43,8 @@ export default function VendasExecutiveShareCard({ payload }) {
   if (!payload) return null;
 
   const r = payload.resumoExecutivo;
+  const cabecalho = payload.cabecalhoExecutivo ?? {};
+  const custos = Array.isArray(r.custos) ? r.custos : [];
 
   const kpis = [
     {
@@ -86,6 +88,19 @@ export default function VendasExecutiveShareCard({ payload }) {
     },
   ];
 
+  if (import.meta.env.DEV) {
+    const firstRow =
+      Array.isArray(payload.vendasDetalhe) && payload.vendasDetalhe.length > 0
+        ? payload.vendasDetalhe[0]
+        : null;
+    console.info("[S7][VendasShareCard][debug]", {
+      vendas_count: payload.quantidadeVendas?.valor ?? 0,
+      detail_rows_count: Array.isArray(payload.vendasDetalhe) ? payload.vendasDetalhe.length : 0,
+      first_row_keys: firstRow ? Object.keys(firstRow).slice(0, 20) : [],
+      custos_final: r.custos,
+    });
+  }
+
   return (
     <article className="vendas-share-card" aria-label="Relatório de vendas (compartilhável)">
       <header className="vendas-share-card__header">
@@ -99,17 +114,21 @@ export default function VendasExecutiveShareCard({ payload }) {
       <section className="vendas-share-card__meta">
         <div className="vendas-share-card__meta-row">
           <span className="vendas-share-card__meta-label">Período</span>
-          <span className="vendas-share-card__meta-value">{payload.periodo.label}</span>
+          <span className="vendas-share-card__meta-value">{cabecalho.periodo ?? payload.periodo.label}</span>
         </div>
         <div className="vendas-share-card__meta-row">
-          <span className="vendas-share-card__meta-label">Conta</span>
-          <span className="vendas-share-card__meta-value">{payload.contas.label}</span>
+          <span className="vendas-share-card__meta-label">Conta(s)</span>
+          <span className="vendas-share-card__meta-value">{cabecalho.contas ?? payload.contas.label}</span>
         </div>
         <div className="vendas-share-card__meta-row">
           <span className="vendas-share-card__meta-label">Vendas</span>
           <span className="vendas-share-card__meta-value vendas-share-card__meta-value--count">
-            {payload.quantidadeVendas.label}
+            {cabecalho.vendas ?? payload.quantidadeVendas.label}
           </span>
+        </div>
+        <div className="vendas-share-card__meta-row">
+          <span className="vendas-share-card__meta-label">Filtros</span>
+          <span className="vendas-share-card__meta-value">{cabecalho.filtros ?? "Nenhum filtro operacional ou busca adicional"}</span>
         </div>
       </section>
 
@@ -160,6 +179,19 @@ export default function VendasExecutiveShareCard({ payload }) {
             </div>
           );
         })}
+      </section>
+
+      <section className="vendas-share-card__costs" aria-label="Custos">
+        <h3 className="vendas-share-card__section-title">Custos</h3>
+        <div className="vendas-share-card__costs-grid">
+          {custos.map((custo) => (
+            <article key={custo.id} className="vendas-share-card__cost-card">
+              <span className="vendas-share-card__cost-card-label">{custo.label}</span>
+              <span className="vendas-share-card__cost-card-value">{custo.display}</span>
+              <span className="vendas-share-card__cost-card-percent">{custo.sharePercent}</span>
+            </article>
+          ))}
+        </div>
       </section>
 
       <footer className="vendas-share-card__footer">

@@ -1,8 +1,8 @@
 // ======================================================================
 // SUSE7 — Helpers da listagem operacional de produtos (catálogo)
 // Sem regra de negócio pesada: apenas leitura/normalização para exibição.
-// Agregados financeiros: ler campos opcionais do row; fallback 0 até API evoluir.
-// Margem: preferir contribution_margin_percent do backend; senão lucro/receita quando receita > 0.
+// Agregados financeiros: ler campos opcionais do row.
+// SSOT: sem recalcular lucro/margem localmente para evitar motor paralelo.
 //
 // Faixa “Saudável / Atenção / Prejuízo / Sem histórico”:
 // - Prioriza banda vinda da API (catalog_health_band, catalog_profit_band, margin_health_band) quando existir.
@@ -103,6 +103,12 @@ export function getProductCatalogMetrics(product) {
     p.total_sold_brl
   );
 
+  const averageTicket = firstDefinedNumber(
+    p.average_ticket_brl,
+    p.avg_ticket_brl,
+    p.average_ticket
+  );
+
   const costTotal = firstDefinedNumber(
     p.sales_cost_total_brl,
     p.cost_total_brl,
@@ -113,11 +119,7 @@ export function getProductCatalogMetrics(product) {
     p.gross_profit_brl,
     p.contribution_margin_brl
   );
-  let grossProfit = explicitProfit;
-  if (grossProfit == null && revenue != null && costTotal != null) {
-    grossProfit = revenue - costTotal;
-  }
-  if (grossProfit == null) grossProfit = 0;
+  const grossProfit = explicitProfit;
 
   const marketplaces = normalizeMarketplaceSlugs(p);
 
@@ -125,34 +127,28 @@ export function getProductCatalogMetrics(product) {
     adsCount: Math.max(0, Math.floor(adsCount ?? 0)),
     salesCount: Math.max(0, Math.floor(salesCount ?? 0)),
     revenue: revenue ?? 0,
+    averageTicket: averageTicket ?? null,
     costTotal: costTotal ?? 0,
-    grossProfit,
+    grossProfit: grossProfit ?? null,
     marketplaces,
   };
 }
 
 /**
- * Margem de contribuição (%). Fonte preferencial: colunas do backend;
- * fallback: (lucro / receita) * 100 quando receita > 0.
+ * Margem de contribuição (%): somente valor enviado pelo backend.
  * @param {Record<string, unknown>} product
  * @param {ReturnType<typeof getProductCatalogMetrics>} metrics
  * @returns {number | null}
  */
 export function getContributionMarginPercent(product, metrics) {
+  void metrics;
   const p = product || {};
   const explicit = firstDefinedNumber(
     p.contribution_margin_percent,
     p.margin_percent,
     p.contribution_margin_pct
   );
-  if (explicit != null) return explicit;
-
-  const rev = metrics?.revenue ?? 0;
-  if (rev > 0) {
-    const profit = metrics?.grossProfit ?? 0;
-    return (profit / rev) * 100;
-  }
-  return null;
+  return explicit != null ? explicit : null;
 }
 
 /**

@@ -17,16 +17,16 @@ export function classifyScenarioUxGroup(scenario) {
   if (kind === "base") return "baseline";
   const sid = String(r.scenario_id ?? "").toLowerCase();
   if (sid === "baseline") return "baseline";
-  /** Mesma prioridade do badge: backend envia após GET /seller-promotions/items */
+
+  const rawMl = r.ml_promotion_raw_status ?? r.raw_status ?? "";
+  const rawLower = String(rawMl).trim().toLowerCase();
+  if (rawLower === "started") return "participating";
+
   const eff =
     r._raiox_listing_effective_api_state != null ? String(r._raiox_listing_effective_api_state).trim().toLowerCase() : "";
   if (eff === "active") return "participating";
   if (eff === "scheduled" || eff === "participate" || eff === "expired") return "available";
 
-  if (r.seller_participates === true) return "participating";
-  if (r.seller_participates === false) return "available";
-
-  if (r.promotion_active === true) return "participating";
   const st = String(r.status ?? "").toLowerCase();
   if (st === "active") return "participating";
   if (st === "scheduled") return "available";
@@ -77,6 +77,12 @@ export function resolveRaioxListingBadge(scenario) {
   if (r.is_baseline === true) return { label: null, uxGroup: "baseline" };
   if (String(r.scenario_id ?? "").toLowerCase() === "baseline") return { label: null, uxGroup: "baseline" };
 
+  const rawMl = r.ml_promotion_raw_status ?? r.raw_status ?? "";
+  const rawLower = String(rawMl).trim().toLowerCase();
+  if (rawLower === "started") return { label: "Ativa", uxGroup: "participating" };
+  if (rawLower === "pending") return { label: "Programada", uxGroup: "available" };
+  if (rawLower === "candidate") return { label: "Disponível", uxGroup: "available" };
+
   const eff =
     r._raiox_listing_effective_api_state != null ? String(r._raiox_listing_effective_api_state).trim().toLowerCase() : "";
   if (eff === "active") return { label: "Ativa", uxGroup: "participating" };
@@ -88,11 +94,11 @@ export function resolveRaioxListingBadge(scenario) {
   if (pst === "candidate" || pst === "eligible" || pst === "available") {
     return { label: "Disponível", uxGroup: "available" };
   }
+  if (pst === "scheduled" || pst === "pending") return { label: "Programada", uxGroup: "available" };
 
   const g = classifyScenarioUxGroup(scenario);
-  const st = String(r.status ?? "").toLowerCase();
   if (g === "participating") return { label: "Ativa", uxGroup: "participating" };
-  if (g === "available") return { label: st === "scheduled" ? "Programada" : "Disponível", uxGroup: "available" };
+  if (g === "available") return { label: "Disponível", uxGroup: "available" };
   return { label: null, uxGroup: g };
 }
 
@@ -406,53 +412,102 @@ export function isMlCardContractPayoutSource(src) {
  * @returns {{ raw: string | null; source: string }}
  */
 export function pickSaleXrayYouReceiveRawString(m, sx, scenario) {
-  const payoutSrc = String(m.marketplace_payout_source ?? sx?.marketplace_payout_source ?? "").trim();
+  const mSafe = m != null && typeof m === "object" ? m : {};
+  const sxSafe = sx != null && typeof sx === "object" ? sx : null;
+  const scenarioSafe =
+    scenario != null && typeof scenario === "object"
+      ? /** @type {Record<string, unknown>} */ (scenario)
+      : {};
+
+  const payoutSrc = String(mSafe.marketplace_payout_source ?? sxSafe?.marketplace_payout_source ?? "").trim();
   /** Motor isolado por card (Raio-x): não misturar com card ML / preview. */
   if (payoutSrc === "suse7_sale_xray_simple") {
-    const mp = firstNonEmptyBrlString(m.marketplace_payout_amount_brl);
+    const mp = firstNonEmptyBrlString(mSafe.marketplace_payout_amount_brl);
     if (mp != null) return { raw: mp, source: "marketplace_payout_amount_brl" };
-    const netRec = firstNonEmptyBrlString(sx?.net_receivable_brl);
+    const netRec = firstNonEmptyBrlString(sxSafe?.net_receivable_brl);
     if (netRec != null) return { raw: netRec, source: "net_receivable_brl" };
     const prFlat =
-      scenario.pricing != null && typeof scenario.pricing === "object"
-        ? /** @type {Record<string, unknown>} */ (scenario.pricing)
+      scenarioSafe.pricing != null && typeof scenarioSafe.pricing === "object"
+        ? /** @type {Record<string, unknown>} */ (scenarioSafe.pricing)
         : null;
     const fromPr = firstNonEmptyBrlString(prFlat?.net_receivable_brl);
     if (fromPr != null) return { raw: fromPr, source: "pricing.net_receivable_brl" };
   }
-  const previewYou = firstNonEmptyBrlString(m.preview_you_receive_brl);
-  if (previewYou != null && m.preview_is_estimated === true && !isMlCardContractPayoutSource(payoutSrc)) {
+  const previewYou = firstNonEmptyBrlString(mSafe.preview_you_receive_brl);
+  if (previewYou != null && mSafe.preview_is_estimated === true && !isMlCardContractPayoutSource(payoutSrc)) {
     return { raw: previewYou, source: "preview_you_receive_brl" };
   }
   if (payoutSrc === "ml_card_unavailable") {
     return { raw: null, source: "ml_card_unavailable" };
   }
-  const cardAmt = firstNonEmptyBrlString(m.ml_card_payout_amount_brl, sx?.ml_card_payout_amount_brl);
-  const cardLegacy = firstNonEmptyBrlString(m.ml_card_payout_brl, sx?.ml_card_payout_brl);
+  const cardAmt = firstNonEmptyBrlString(mSafe.ml_card_payout_amount_brl, sxSafe?.ml_card_payout_amount_brl);
+  const cardLegacy = firstNonEmptyBrlString(mSafe.ml_card_payout_brl, sxSafe?.ml_card_payout_brl);
   if (isMlCardContractPayoutSource(payoutSrc)) {
     if (cardAmt != null) return { raw: cardAmt, source: "ml_card_payout_amount_brl" };
     if (cardLegacy != null) return { raw: cardLegacy, source: "ml_card_payout_brl" };
     return { raw: null, source: "ml_card_breakdown_no_card_payout" };
   }
-  const mp = firstNonEmptyBrlString(m.marketplace_payout_amount_brl);
+  const mp = firstNonEmptyBrlString(mSafe.marketplace_payout_amount_brl);
   if (cardAmt != null) return { raw: cardAmt, source: "ml_card_payout_amount_brl" };
   if (cardLegacy != null) return { raw: cardLegacy, source: "ml_card_payout_brl" };
   if (mp != null) return { raw: mp, source: "marketplace_payout_amount_brl" };
-  const netRec = firstNonEmptyBrlString(sx?.net_receivable_brl);
+  const netRec = firstNonEmptyBrlString(sxSafe?.net_receivable_brl);
   if (netRec != null) return { raw: netRec, source: "net_receivable_brl" };
   const prFlat =
-    scenario.pricing != null && typeof scenario.pricing === "object"
-      ? /** @type {Record<string, unknown>} */ (scenario.pricing)
+    scenarioSafe.pricing != null && typeof scenarioSafe.pricing === "object"
+      ? /** @type {Record<string, unknown>} */ (scenarioSafe.pricing)
       : null;
   const fromPr = firstNonEmptyBrlString(prFlat?.net_receivable_brl);
   if (fromPr != null) return { raw: fromPr, source: "pricing.net_receivable_brl" };
   const res =
-    scenario.result != null && typeof scenario.result === "object"
-      ? /** @type {Record<string, unknown>} */ (scenario.result)
+    scenarioSafe.result != null && typeof scenarioSafe.result === "object"
+      ? /** @type {Record<string, unknown>} */ (scenarioSafe.result)
       : null;
   const fromRes = firstNonEmptyBrlString(res?.net_receivable_brl, res?.marketplace_payout_amount_brl);
   if (fromRes != null) return { raw: fromRes, source: "result_fallback" };
   return { raw: null, source: "none" };
+}
+
+/**
+ * Repasse “Você recebe” para cards e gráfico PI — paridade com `financial.payout_brl`
+ * (`marketplace_payout_amount_brl` / `net_receivable_brl` do motor oficial).
+ * Card ML (`ml_card_breakdown`) mantém o pick Raio-x.
+ *
+ * @param {Record<string, unknown>} m — `scenario.marketplace`
+ * @param {Record<string, unknown> | null} sx — `scenario.sale_xray_pricing`
+ * @param {Record<string, unknown>} scenario — cenário completo
+ * @returns {{ raw: string | null; source: string }}
+ */
+export function resolveVoceRecebeExibicaoRaw(m, sx, scenario) {
+  const mSafe = m != null && typeof m === "object" ? m : {};
+  const sxSafe = sx != null && typeof sx === "object" ? sx : null;
+  const scenarioSafe =
+    scenario != null && typeof scenario === "object"
+      ? /** @type {Record<string, unknown>} */ (scenario)
+      : {};
+
+  const payoutSrc = String(mSafe.marketplace_payout_source ?? sxSafe?.marketplace_payout_source ?? "").trim();
+  const pick = pickSaleXrayYouReceiveRawString(mSafe, sxSafe, scenarioSafe);
+
+  if (isMlCardContractPayoutSource(payoutSrc)) {
+    return pick;
+  }
+
+  const repasseMotor = firstNonEmptyBrlString(
+    mSafe.payout_after_promo_subsidy_brl,
+    scenarioSafe.net_receivable_brl,
+    mSafe.marketplace_payout_amount_brl,
+    mSafe.net_receivable_brl,
+    sxSafe?.payout_after_promo_subsidy_brl,
+    sxSafe?.marketplace_payout_amount_brl,
+    sxSafe?.net_receivable_brl,
+  );
+
+  if (repasseMotor != null) {
+    return { raw: repasseMotor, source: "motor_marketplace_payout" };
+  }
+
+  return pick;
 }
 
 /**
@@ -525,12 +580,27 @@ export function logSaleXrayPayoutPickInRender(scenario, m, sx, picked, forceTrac
  */
 export function resolveSaleXrayArticleKey(scenario, index) {
   const r = scenario && typeof scenario === "object" ? /** @type {Record<string, unknown>} */ (scenario) : {};
+  const m =
+    r.marketplace != null && typeof r.marketplace === "object"
+      ? /** @type {Record<string, unknown>} */ (r.marketplace)
+      : /** @type {Record<string, unknown>} */ ({});
   const id = r.scenario_id != null ? String(r.scenario_id).trim() : "";
   const pk = r.promotion_stable_key != null ? String(r.promotion_stable_key).trim() : "";
+  const offerId = r.offer_id != null ? String(r.offer_id).trim() : m.offer_id != null ? String(m.offer_id).trim() : "";
+  const campaignId =
+    r.campaign_id != null ? String(r.campaign_id).trim() : m.campaign_id != null ? String(m.campaign_id).trim() : "";
+  const dealId = r.deal_id != null ? String(r.deal_id).trim() : m.deal_id != null ? String(m.deal_id).trim() : "";
+  const sale =
+    m.sale_price_brl != null
+      ? String(m.sale_price_brl).trim()
+      : r.sale_price_brl != null
+        ? String(r.sale_price_brl).trim()
+        : "";
   const st = r.starts_at != null ? String(r.starts_at).trim() : "";
   const ed = r.ends_at != null ? String(r.ends_at).trim() : "";
+  const stNorm = String(r.status ?? "").trim().toLowerCase();
   const base = id !== "" && id !== "undefined" ? id : pk !== "" ? pk : `row-${index}`;
-  return `${base}::${st}::${ed}::i${index}`;
+  return `${base}::${offerId}::${campaignId}::${dealId}::${sale}::${stNorm}::${st}::${ed}::i${index}`;
 }
 
 /**
@@ -676,7 +746,242 @@ function legacyMlScenarioRowToSaleXrayPricing(row) {
     marketplace_participation_label: m.marketplace_participation_label ?? null,
     marketplace_participation_source: m.marketplace_participation_source ?? null,
     marketplace_participation_resolution: m.marketplace_participation_resolution ?? null,
+    seller_discount_amount_brl: m.seller_discount_amount_brl ?? null,
+    seller_discount_percent: m.seller_discount_percent ?? null,
+    promotion_subsidy_amount_brl: m.promotion_subsidy_amount_brl ?? null,
+    original_price_brl: m.original_price_brl ?? null,
+    fee_amount_before_promo_subsidy_brl: m.fee_amount_before_promo_subsidy_brl ?? null,
+    fee_amount_after_promo_subsidy_brl: m.fee_amount_after_promo_subsidy_brl ?? null,
+    payout_before_promo_subsidy_brl: m.payout_before_promo_subsidy_brl ?? null,
+    payout_after_promo_subsidy_brl: m.payout_after_promo_subsidy_brl ?? null,
+    promotion_source: m.promotion_source ?? null,
   };
+}
+
+/**
+ * @param {Record<string, unknown>} contract
+ * @returns {string}
+ */
+export function buildPromotionContractIdentityKey(contract) {
+  const prom =
+    contract.promotion != null && typeof contract.promotion === "object"
+      ? /** @type {Record<string, unknown>} */ (contract.promotion)
+      : /** @type {Record<string, unknown>} */ ({});
+  const pricing =
+    contract.pricing != null && typeof contract.pricing === "object"
+      ? /** @type {Record<string, unknown>} */ (contract.pricing)
+      : /** @type {Record<string, unknown>} */ ({});
+  const id = prom.promotion_id ?? prom.id ?? "";
+  const type = prom.type ?? prom.promotion_type ?? "";
+  const refId = prom.offer_id ?? prom.ref_id ?? "";
+  if (String(id).trim() !== "" || String(type).trim() !== "" || String(refId).trim() !== "") {
+    return [id, type, refId].map((v) => (v != null ? String(v).trim() : "")).join("|");
+  }
+  return [
+    id || prom.promotion_id || "",
+    type,
+    refId || prom.offer_id || "",
+    prom.raw_status ?? prom.status ?? "",
+    prom.promotion_start_date ?? "",
+    prom.promotion_end_date ?? "",
+    pricing.sale_price_brl ?? "",
+  ]
+    .map((v) => (v != null ? String(v).trim() : ""))
+    .join("|");
+}
+
+/**
+ * Identidade composta para auditoria UI (cenário já montado pelo contrato sale-xray).
+ *
+ * @param {unknown} scenario
+ * @param {number} index
+ * @param {string | null | undefined} selectionId
+ */
+export function buildPromotionScenarioIdentityFromRow(scenario, index, selectionId = null) {
+  const r = scenario && typeof scenario === "object" ? /** @type {Record<string, unknown>} */ (scenario) : {};
+  const m =
+    r.marketplace != null && typeof r.marketplace === "object"
+      ? /** @type {Record<string, unknown>} */ (r.marketplace)
+      : /** @type {Record<string, unknown>} */ ({});
+  const dedupeKey = [
+    r.ml_official_identity_key ?? "",
+    r.promotion_id ?? "",
+    r.promotion_type ?? r.scenario_type ?? "",
+    r.offer_id ?? m.offer_id ?? "",
+    r.ml_promotion_raw_status ?? r.raw_status ?? r.status ?? "",
+  ]
+    .map((v) => (v != null ? String(v).trim() : ""))
+    .join("|");
+  return {
+    index,
+    title: cardHeadingLabel(scenario),
+    offer_id: r.offer_id ?? m.offer_id ?? null,
+    promotion_id: r.promotion_id ?? null,
+    campaign_id: r.campaign_id ?? m.campaign_id ?? null,
+    deal_id: r.deal_id ?? m.deal_id ?? null,
+    type: r.scenario_type ?? r.kind ?? null,
+    status: r.status ?? null,
+    effective_api_state: r._raiox_listing_effective_api_state ?? null,
+    discount: r._sale_xray_discount_text ?? null,
+    final_price: m.sale_price_brl ?? r.sale_price_brl ?? null,
+    start_date: r.starts_at ?? null,
+    finish_date: r.ends_at ?? null,
+    selectionId: selectionId ?? resolveSaleXrayArticleKey(scenario, index),
+    dedupeKey,
+  };
+}
+
+/**
+ * @param {unknown} row
+ * @param {number} index
+ * @returns {Record<string, unknown>}
+ */
+function normalizeScenarioRowToPromotionContract(row, index) {
+  if (!row || typeof row !== "object") {
+    return {
+      scenario_key: `promo-${index}`,
+      pricing: {},
+      promotion: {},
+    };
+  }
+  const r = /** @type {Record<string, unknown>} */ (row);
+  if (r.promotion != null && typeof r.promotion === "object" && r.pricing != null && typeof r.pricing === "object") {
+    const contract = { ...r };
+    if (contract.scenario_key == null || String(contract.scenario_key).trim() === "") {
+      const prom = /** @type {Record<string, unknown>} */ (r.promotion);
+      const sid = prom.promotion_id != null ? String(prom.promotion_id).trim() : "";
+      contract.scenario_key = sid !== "" ? sid : `promo-contract-${index}`;
+    }
+    return contract;
+  }
+  const sid = r.scenario_id != null ? String(r.scenario_id).trim() : "";
+  const pk = r.promotion_stable_key != null ? String(r.promotion_stable_key).trim() : "";
+  const key = sid !== "" ? sid : pk !== "" ? pk : String(r.key ?? `promo-${index}`).trim() || `promo-${index}`;
+  const startIso = r.starts_at != null ? String(r.starts_at) : "";
+  const endIso = r.ends_at != null ? String(r.ends_at) : "";
+  const vigencia = formatRaioxVigenciaPtBrRange(startIso || null, endIso || null);
+  const m =
+    r.marketplace != null && typeof r.marketplace === "object"
+      ? /** @type {Record<string, unknown>} */ (r.marketplace)
+      : /** @type {Record<string, unknown>} */ ({});
+  return {
+    scenario_key: key,
+    pricing: legacyMlScenarioRowToSaleXrayPricing(r),
+    promotion: {
+      promotion_id: r.promotion_id ?? null,
+      offer_id: r.offer_id ?? m.offer_id ?? null,
+      campaign_id: r.campaign_id ?? m.campaign_id ?? null,
+      deal_id: r.deal_id ?? m.deal_id ?? null,
+      type: r.promotion_type ?? r.scenario_type ?? r.kind ?? null,
+      promotion_name: r.promotion_name ?? r.label ?? null,
+      status: r.status ?? null,
+      raw_status: r.ml_promotion_raw_status ?? r.raw_status ?? null,
+      promotion_start_date: r.starts_at ?? null,
+      promotion_end_date: r.ends_at ?? null,
+      promotion_vigencia_text: vigencia,
+      discount_text: r._sale_xray_discount_text ?? null,
+      ml_official_identity_key: r.ml_official_identity_key ?? null,
+    },
+    result: r.result ?? null,
+    internal_costs: r.internal_costs ?? null,
+  };
+}
+
+/**
+ * União de todas as fontes de promoção do payload — dedupe só com identidade composta idêntica.
+ *
+ * @param {unknown[][]} lists
+ * @returns {Record<string, unknown>[]}
+ */
+function mergePromotionScenarioContractsUnique(...lists) {
+  /** @type {Record<string, unknown>[]} */
+  const out = [];
+  const seen = new Set();
+  let seq = 0;
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue;
+    for (let i = 0; i < list.length; i += 1) {
+      const contract = normalizeScenarioRowToPromotionContract(list[i], seq);
+      const key = buildPromotionContractIdentityKey(contract);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(contract);
+      seq += 1;
+    }
+  }
+  return out;
+}
+
+/**
+ * Fonte soberana para PI: `promotion_scenarios` do backend (sem somar scenarios[] duplicado).
+ *
+ * @param {Record<string, unknown>} rec
+ * @returns {Record<string, unknown>[]}
+ */
+function collectPromotionContractsFromPricingScenariosResponse(rec) {
+  const topPromo = Array.isArray(rec.promotion_scenarios)
+    ? /** @type {Record<string, unknown>[]} */ (rec.promotion_scenarios)
+    : [];
+  if (topPromo.length > 0) {
+    return mergePromotionScenarioContractsUnique(topPromo);
+  }
+  return mergePromotionScenarioContractsUnique(buildPromotionScenariosFromTopLevelScenarios(rec));
+}
+
+/**
+ * @param {Record<string, unknown>} rec
+ * @returns {Record<string, unknown>[]}
+ */
+function collectAllPromotionContractsFromPayload(rec) {
+  const sx =
+    rec.sale_xray_modal != null && typeof rec.sale_xray_modal === "object"
+      ? /** @type {Record<string, unknown>} */ (rec.sale_xray_modal)
+      : null;
+  const promosModal =
+    sx != null && Array.isArray(sx.promotion_scenarios)
+      ? /** @type {Record<string, unknown>[]} */ (sx.promotion_scenarios)
+      : [];
+  if (promosModal.length > 0) {
+    return mergePromotionScenarioContractsUnique(promosModal);
+  }
+  return collectPromotionContractsFromPricingScenariosResponse(rec);
+}
+
+/**
+ * Linha de `scenarios[]` que representa promoção ML (exclui baseline e comparativo Clássico/Premium).
+ *
+ * @param {unknown} row
+ * @param {unknown} baselineTop
+ */
+function isPricingPromotionScenarioRow(row, baselineTop) {
+  if (!row || typeof row !== "object" || row === baselineTop) return false;
+  const r = /** @type {Record<string, unknown>} */ (row);
+  if (r.is_baseline === true) return false;
+  const st = String(r.scenario_type ?? r.kind ?? "").toLowerCase();
+  if (st.includes("listing") && st.includes("type")) return false;
+  const sid = String(r.scenario_id ?? r.scenario_key ?? "").toLowerCase();
+  if (sid === "gold_special" || sid === "gold_pro" || sid.includes("listing_type")) return false;
+  return true;
+}
+
+/**
+ * Monta `promotion_scenarios` a partir de `scenarios[]` top-level (fonte completa da API).
+ *
+ * @param {Record<string, unknown>} rec
+ * @returns {Record<string, unknown>[]}
+ */
+function buildPromotionScenariosFromTopLevelScenarios(rec) {
+  const scenariosTop = Array.isArray(rec.scenarios)
+    ? /** @type {Record<string, unknown>[]} */ (rec.scenarios.slice())
+    : [];
+  if (scenariosTop.length === 0) return [];
+  const baselineTop =
+    rec.baseline != null && typeof rec.baseline === "object"
+      ? /** @type {Record<string, unknown>} */ (rec.baseline)
+      : scenariosTop.find((s) => s && typeof s === "object" && s.is_baseline === true) ?? null;
+  return scenariosTop
+    .filter((s) => isPricingPromotionScenarioRow(s, baselineTop))
+    .map((row, i) => normalizeScenarioRowToPromotionContract(row, i));
 }
 
 /**
@@ -690,7 +995,24 @@ export function wrapPricingScenariosApiAsSaleXrayModalPayload(apiData) {
   if (!apiData || typeof apiData !== "object") return null;
   const rec = /** @type {Record<string, unknown>} */ (apiData);
   if (rec.from_sale_xray_modal === true && rec.sale_xray_modal != null && typeof rec.sale_xray_modal === "object") {
-    return { ...rec };
+    const sx0 = /** @type {Record<string, unknown>} */ (rec.sale_xray_modal);
+    const promosMerged = collectAllPromotionContractsFromPayload(rec);
+    if (import.meta.env.DEV) {
+      const sx = /** @type {Record<string, unknown>} */ (rec.sale_xray_modal);
+      console.info("[S7_PI_PROMOS_AUDIT] wrap_merge", {
+        modal_total: Array.isArray(sx.promotion_scenarios) ? sx.promotion_scenarios.length : 0,
+        top_total: Array.isArray(rec.promotion_scenarios) ? rec.promotion_scenarios.length : 0,
+        scenarios_total: buildPromotionScenariosFromTopLevelScenarios(rec).length,
+        merged_total: promosMerged.length,
+      });
+    }
+    return {
+      ...rec,
+      sale_xray_modal: {
+        ...sx0,
+        promotion_scenarios: promosMerged,
+      },
+    };
   }
   const scenarios = Array.isArray(rec.scenarios) ? /** @type {Record<string, unknown>[]} */ (rec.scenarios.slice()) : [];
   let baseline =
@@ -706,33 +1028,15 @@ export function wrapPricingScenariosApiAsSaleXrayModalPayload(apiData) {
   }
   if (baseline == null) return null;
 
-  const promos = scenarios.filter((s) => s && typeof s === "object" && s.is_baseline !== true);
+  const promotion_scenarios = collectPromotionContractsFromPricingScenariosResponse(rec);
 
-  const promotion_scenarios = promos.map((row, i) => {
-    const r = /** @type {Record<string, unknown>} */ (row);
-    const sid = r.scenario_id != null ? String(r.scenario_id).trim() : "";
-    const pk = r.promotion_stable_key != null ? String(r.promotion_stable_key).trim() : "";
-    const key =
-      sid !== "" ? sid : pk !== "" ? pk : String(r.key ?? `promo-${i}`).trim() || `promo-${i}`;
-    const startIso = r.starts_at != null ? String(r.starts_at) : "";
-    const endIso = r.ends_at != null ? String(r.ends_at) : "";
-    const vigencia = formatRaioxVigenciaPtBrRange(startIso || null, endIso || null);
-    return {
-      scenario_key: key,
-      pricing: legacyMlScenarioRowToSaleXrayPricing(r),
-      promotion: {
-        promotion_id: r.promotion_id ?? null,
-        promotion_name: r.promotion_name ?? r.label ?? null,
-        status: r.status ?? null,
-        promotion_start_date: r.starts_at ?? null,
-        promotion_end_date: r.ends_at ?? null,
-        promotion_vigencia_text: vigencia,
-        discount_text: null,
-      },
-      result: r.result ?? null,
-      internal_costs: r.internal_costs ?? null,
-    };
-  });
+  if (import.meta.env.DEV) {
+    console.info("[S7_PI_PROMOS_AUDIT] wrap_source", {
+      top_total: Array.isArray(rec.promotion_scenarios) ? rec.promotion_scenarios.length : 0,
+      scenarios_total: buildPromotionScenariosFromTopLevelScenarios(rec).length,
+      sovereign_total: promotion_scenarios.length,
+    });
+  }
 
   return {
     ...rec,
@@ -985,17 +1289,63 @@ export function buildRaioxScenariosFromSaleXrayModalContract(payload) {
       delete m.ml_card_shipping_amount_brl;
       delete m.ml_card_shipping_brl;
     }
+    const legacyM =
+      legacy != null &&
+      legacy.marketplace != null &&
+      typeof legacy.marketplace === "object"
+        ? /** @type {Record<string, unknown>} */ (legacy.marketplace)
+        : null;
+    if (
+      legacyM != null &&
+      (row.ml_official_identity_key != null ||
+        String(legacyM.promotion_source ?? "").includes("ml_seller_promotions_api"))
+    ) {
+      const officialKeys = [
+        "seller_discount_amount_brl",
+        "seller_discount_percent",
+        "promotion_subsidy_amount_brl",
+        "original_price_brl",
+        "fee_amount_before_promo_subsidy_brl",
+        "fee_amount_after_promo_subsidy_brl",
+        "payout_before_promo_subsidy_brl",
+        "payout_after_promo_subsidy_brl",
+        "promotion_source",
+      ];
+      for (const k of officialKeys) {
+        if (legacyM[k] != null && String(legacyM[k]).trim() !== "") m[k] = legacyM[k];
+      }
+      const payoutOfficial = firstNonEmptyBrlString(
+        legacyM.payout_after_promo_subsidy_brl,
+        legacyM.marketplace_payout_amount_brl,
+        legacyM.net_receivable_brl
+      );
+      if (payoutOfficial != null) {
+        m.marketplace_payout_amount_brl = payoutOfficial;
+        m.net_receivable_brl = payoutOfficial;
+      }
+    }
     row.marketplace = m;
     row.sale_xray_pricing = pricing;
     row.scenario_id = key || row.scenario_id;
     row.promotion_stable_key = key || row.promotion_stable_key;
     if (key !== "") row.scenario_key = key;
     if (prom.promotion_id != null) row.promotion_id = prom.promotion_id;
+    if (prom.offer_id != null) row.offer_id = prom.offer_id;
+    if (prom.campaign_id != null) row.campaign_id = prom.campaign_id;
+    if (prom.deal_id != null) row.deal_id = prom.deal_id;
+    if (prom.type != null) row.scenario_type = prom.type;
     if (prom.promotion_name != null) row.promotion_name = prom.promotion_name;
+    if (prom.type != null) row.promotion_type = prom.type;
     if (prom.status != null) row.status = prom.status;
+    if (prom.raw_status != null) row.ml_promotion_raw_status = prom.raw_status;
+    if (prom.ml_official_identity_key != null) row.ml_official_identity_key = prom.ml_official_identity_key;
     if (prom.promotion_start_date != null) row.starts_at = prom.promotion_start_date;
     if (prom.promotion_end_date != null) row.ends_at = prom.promotion_end_date;
-    row.seller_participates = true;
+    const rawMl = prom.raw_status != null ? String(prom.raw_status).trim().toLowerCase() : "";
+    row.promotion_active = rawMl === "started";
+    row.seller_participates = rawMl === "started";
+    row._raiox_listing_effective_api_state =
+      rawMl === "started" ? "active" : rawMl === "pending" ? "scheduled" : rawMl !== "" ? "participate" : null;
     row._sale_xray_vigencia_text =
       prom.promotion_vigencia_text != null ? String(prom.promotion_vigencia_text) : null;
     row._sale_xray_discount_text = prom.discount_text != null ? String(prom.discount_text) : null;
@@ -1094,13 +1444,10 @@ export function enrichRaioxScenariosWithListingPromotionMetadata(scenarios, _mlS
 
     let eff = r._raiox_listing_effective_api_state != null ? String(r._raiox_listing_effective_api_state).trim() : "";
     if (!eff && !isBaseline) {
-      if (r.promotion_active === true) eff = "active";
-      else {
-        const st = String(r.status ?? "").toLowerCase();
-        if (st === "scheduled") eff = "scheduled";
-        else if (st === "active") eff = "active";
-        else if (st === "candidate" || st === "eligible" || st === "available") eff = "participate";
-      }
+      const rawLower = String(r.ml_promotion_raw_status ?? r.raw_status ?? "").trim().toLowerCase();
+      if (rawLower === "started") eff = "active";
+      else if (rawLower === "pending") eff = "scheduled";
+      else if (rawLower === "candidate" || rawLower !== "") eff = "participate";
     }
 
     const out = { ...r };

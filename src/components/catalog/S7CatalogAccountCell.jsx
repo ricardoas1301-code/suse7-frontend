@@ -9,17 +9,43 @@ export function pickCatalogAccountFields(row) {
   if (!row || typeof row !== "object") {
     return { marketplaceAccountId: null, accountAlias: null, accountLogoUrl: null };
   }
+  const rawLogo =
+    row.account_logo_url ??
+    row.accountLogoUrl ??
+    row.marketplace_account_logo_url ??
+    row.account_avatar_url ??
+    row.avatar_url ??
+    row.profile_image ??
+    row.seller_logo_url ??
+    row.store_logo ??
+    row.thumbnail ??
+    row.company_logo_url ??
+    row.seller_company_logo_url ??
+    null;
   return {
     marketplaceAccountId: row.marketplace_account_id ?? row.marketplaceAccountId ?? null,
-    accountAlias: row.account_alias ?? row.accountAlias ?? row.ml_account_alias ?? null,
-    accountLogoUrl:
-      row.account_logo_url ??
-      row.accountLogoUrl ??
-      row.marketplace_account_logo_url ??
-      row.company_logo_url ??
-      row.seller_company_logo_url ??
-      null,
+    accountAlias: row.account_alias ?? row.accountAlias ?? row.ml_account_alias ?? row.account_label ?? null,
+    accountLogoUrl: normalizeCatalogLogoUrl(rawLogo),
   };
+}
+
+/** Normaliza URL de logo de conta (mesma regra básica de /vendas). */
+export function normalizeCatalogLogoUrl(url) {
+  const u = url != null && String(url).trim() !== "" ? String(url).trim() : "";
+  if (!u) return null;
+  if (u.startsWith("//")) return `https:${u}`;
+  if (/^http:\/\//i.test(u)) {
+    const lower = u.toLowerCase();
+    if (
+      lower.includes("mercadolivre") ||
+      lower.includes("mercadolibre") ||
+      lower.includes("mlstatic") ||
+      lower.includes("mlcdn")
+    ) {
+      return `https://${u.slice(7)}`;
+    }
+  }
+  return u;
 }
 
 /**

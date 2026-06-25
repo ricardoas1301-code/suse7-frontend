@@ -1,92 +1,275 @@
 /* ======================================================
+
    S7 TOP NAV — estilos compartilhados (Seller + Dev Center)
+
    Referência: .navbar-premium + .nav-item em Layout.css
+
+   S1.1B: pill compacto (::before) separado da área clicável
+
 ====================================================== */
 
+
+
 .navbar-premium,
+
 .dc-topnav {
+
   height: var(--s7-topnav-bar-height);
+
   box-sizing: border-box;
+
   background: var(--s7-topnav-bar-bg);
+
   border-bottom: 1px solid var(--s7-topnav-bar-border);
+
   box-shadow: none;
+
 }
+
+
 
 .nav-item,
+
 .dc-topnav__link,
+
 .dc-topnav__drawer-link {
+
+  position: relative;
+
+  z-index: 0;
+
   display: flex;
+
   align-items: center;
+
+  justify-content: center;
+
+  min-height: var(--s7-topnav-link-min-height, 36px);
+
   gap: var(--s7-topnav-link-gap);
+
   padding: var(--s7-topnav-link-padding-y) var(--s7-topnav-link-padding-x);
+
   border: none;
-  border-radius: var(--s7-topnav-link-radius);
+
+  border-radius: 0;
+
   text-decoration: none;
+
   font-family: var(--s7-topnav-font-family);
+
   font-size: var(--s7-topnav-font-size);
+
   font-weight: var(--s7-topnav-font-weight);
+
   line-height: var(--s7-topnav-line-height);
+
   letter-spacing: var(--s7-topnav-letter-spacing);
+
   color: var(--s7-topnav-link-color);
+
   background: transparent;
+
   white-space: nowrap;
+
   flex-shrink: 0;
+
+  box-sizing: border-box;
+
   -webkit-font-smoothing: antialiased;
-  transition: background 0.16s ease, color 0.16s ease;
+
+  transition: color 0.16s ease;
+
 }
+
+
+
+/* Fundo visual compacto — não altera a hit area do link */
+
+.nav-item::before,
+
+.dc-topnav__link::before,
+
+.dc-topnav__drawer-link::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+
+  right: 0;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  height: var(--s7-topnav-pill-height, 28px);
+
+  border-radius: var(--s7-topnav-pill-radius, 6px);
+
+  background: transparent;
+
+  z-index: -1;
+
+  pointer-events: none;
+
+  transition: background 0.16s ease;
+
+}
+
+
 
 .nav-item:hover,
+
 .dc-topnav__link:hover,
+
 .dc-topnav__drawer-link:hover {
-  background: var(--s7-topnav-hover-bg);
+
+  background: transparent;
+
   color: var(--s7-topnav-hover-color);
+
 }
+
+
+
+.nav-item:hover::before,
+
+.dc-topnav__link:hover::before,
+
+.dc-topnav__drawer-link:hover::before {
+
+  background: var(--s7-topnav-hover-bg);
+
+}
+
+
 
 .nav-item:hover .nav-icon,
+
 .nav-item:hover .dc-topnav__link-icon,
+
 .dc-topnav__link:hover .dc-topnav__link-icon,
+
 .dc-topnav__drawer-link:hover .dc-topnav__link-icon {
+
   color: var(--s7-topnav-hover-icon-color);
+
 }
+
+
 
 .nav-item.active,
+
 .dc-topnav__link--active,
+
 .dc-topnav__link--active:hover,
+
 .dc-topnav__drawer-link--active,
+
 .dc-topnav__drawer-link--active:hover {
-  background: var(--s7-topnav-active-bg);
+
+  background: transparent;
+
   color: var(--s7-topnav-active-color);
+
   font-weight: var(--s7-topnav-font-weight-active);
+
   box-shadow: none;
+
 }
+
+
+
+.nav-item.active::before,
+
+.dc-topnav__link--active::before,
+
+.dc-topnav__link--active:hover::before,
+
+.dc-topnav__drawer-link--active::before,
+
+.dc-topnav__drawer-link--active:hover::before {
+
+  background: var(--s7-topnav-active-bg);
+
+}
+
+
 
 .nav-icon,
+
 .dc-topnav__link-icon {
+
   width: var(--s7-topnav-icon-size);
+
   height: var(--s7-topnav-icon-size);
+
   color: var(--s7-topnav-icon-color);
+
   flex-shrink: 0;
+
   stroke-width: 2;
+
   transition: color 0.16s ease;
+
 }
+
+
 
 .nav-item.active .nav-icon,
+
 .dc-topnav__link--active .dc-topnav__link-icon,
+
 .dc-topnav__link--active:hover .dc-topnav__link-icon,
+
 .dc-topnav__drawer-link--active .dc-topnav__link-icon,
+
 .dc-topnav__drawer-link--active:hover .dc-topnav__link-icon {
+
   color: var(--s7-topnav-active-icon-color);
+
 }
+
+
 
 .nav-item:focus-visible,
+
 .dc-topnav__link:focus-visible,
+
 .dc-topnav__drawer-link:focus-visible {
+
   outline: 2px solid var(--s7-topnav-active-bg);
+
   outline-offset: 2px;
+
+  border-radius: var(--s7-topnav-pill-radius, 6px);
+
 }
 
+
+
 .dc-topnav__drawer-link {
+
   display: flex;
+
   width: 100%;
+
   min-height: 44px;
+
 }
+
+
+
+@media (max-width: 768px) {
+
+  .nav-item::before {
+
+    height: var(--s7-topnav-pill-height-mobile, 30px);
+
+  }
+
+}
+
+

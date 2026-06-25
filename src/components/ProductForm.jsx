@@ -33,7 +33,6 @@ import { Trash2 } from "lucide-react";
 import { SeoKeywordsInput } from "./SeoKeywordsInput";
 import ProductHealthDetailsModal from "./ProductHealthDetailsModal";
 import { fetchProductMarketplaceListings } from "../services/productListingsService";
-import { fetchProductPerformance } from "../services/productPerformanceService";
 import { getProductHealth } from "../services/productHealthService";
 import { changeStatus } from "../services/productStatusService";
 import { getPreferences, setPreference } from "../services/userPreferencesService";
@@ -66,8 +65,11 @@ import {
   persistProductImagesAfterCreate,
   resolvePrimaryImageFromLinks,
 } from "../utils/productImagesPersistence";
-import { formatMarketplaceListingDisplayId } from "../utils/marketplaceListingId";
-import { formatCatalogBRL, marketplaceChipLabel } from "../utils/productCatalogRow";
+import ProductFinancialRayXPanel from "./products/ProductFinancialRayXPanel.jsx";
+import ProductSalesHistorySection from "./products/ProductSalesHistorySection.jsx";
+import ProductFormRayxCostsStockLayout from "./products/ProductFormRayxCostsStockLayout.jsx";
+import ProductLinkedListingsSection from "./products/ProductLinkedListingsSection.jsx";
+import { useOptionalProductEditFinancial } from "./products/ProductEditFinancialContext.jsx";
 import { computeVariantSkuErrors } from "../utils/variantSkuValidation";
 import {
   PRODUCT_CM_FIELDS,
@@ -186,9 +188,11 @@ export default function ProductForm({
   initialVariants = null, // lista de product_variants (quando edit, ordenada por sort_order)
   initialVariations = null, // alias para initialVariants
   initialTab = null, // ex: "stock" para deep link ?tab=stock
+  presentation = "page", // "page" | "modal"
   onCancel = null,
   onSubmit = null,
-  onSuccess = null, // opcional: após salvar + toast + redirect (ex.: analytics)
+  onSuccess = null, // opcional: após salvar + toast (ex.: fechar modal ou analytics)
+  onBindCloseController = null, // modal: ESC/backdrop delegam ao guard de saída
 }) {
   const navigate = useNavigate();
 
@@ -279,7 +283,9 @@ export default function ProductForm({
   // CONTROLE DE ABAS (nova ordem)
   // Variações só existe quando format=variants
   // ------------------------------------------------------
-  const [activeTab, setActiveTab] = useState(initialTab || "data");
+  const [activeTab, setActiveTab] = useState(
+    initialTab || (presentation === "modal" ? "performance" : "data"),
+  );
   const hasVariations = product?.format === "variants";
 
   // ======================================================
@@ -290,20 +296,34 @@ export default function ProductForm({
   const prevAvailableTabIdsRef = useRef(null);
 
   const availableTabs = useMemo(() => {
+    if (presentation === "modal") {
+      return [
+        { id: "performance", label: "Vendas" },
+        { id: "sales_history", label: "Histórico de vendas" },
+        { id: "ads", label: "Anúncios" },
+        { id: "data", label: "Dados" },
+        ...(hasVariations ? [{ id: "variations", label: "Variações" }] : []),
+        { id: "pricing_stock", label: "Custos e estoque" },
+        { id: "images", label: "Imagens" },
+        { id: "ad_titles", label: "Título do anúncio" },
+        { id: "description", label: "Descrição" },
+        { id: "measures", label: "Pesos & medidas" },
+      ];
+    }
     const base = [
+      { id: "performance", label: "Vendas & desempenho" },
+      { id: "ads", label: "Anúncios" },
       { id: "data", label: "Dados" },
       ...(hasVariations ? [{ id: "variations", label: "Variações" }] : []),
-      { id: "pricing", label: "Custos & precificação" },
+      { id: "pricing", label: "Custos" },
       { id: "stock", label: "Estoque" },
       { id: "images", label: "Imagens" },
       { id: "ad_titles", label: "Título do anúncio" },
       { id: "description", label: "Descrição" },
       { id: "measures", label: "Pesos & medidas" },
-      { id: "ads", label: "Anúncios" },
-      { id: "performance", label: "Vendas & desempenho" },
     ];
     return base;
-  }, [hasVariations]);
+  }, [hasVariations, presentation]);
 
   const availableTabIds = useMemo(() => availableTabs.map((t) => t.id), [availableTabs]);
   const allStepsUnlocked = navigationMode === "free";
@@ -436,6 +456,8 @@ export default function ProductForm({
         return validateVariantsTab();
       case "pricing":
         return validatePricingTab();
+      case "pricing_stock":
+        return validatePricingTab() && validateStockTab();
       case "stock":
         return validateStockTab();
       default:
@@ -668,9 +690,6 @@ const hasAnyVariation = variationAttributes.length > 0;
 const [productAdsListings, setProductAdsListings] = useState(/** @type {unknown[]} */ ([]));
 const [productAdsListingsLoading, setProductAdsListingsLoading] = useState(false);
 const [productAdsListingsError, setProductAdsListingsError] = useState(/** @type {string | null} */ (null));
-const [productPerformance, setProductPerformance] = useState(null);
-const [productPerformanceLoading, setProductPerformanceLoading] = useState(false);
-const [productPerformanceError, setProductPerformanceError] = useState(/** @type {string | null} */ (null));
 
 // ----------------------------------------------------------------------
 // Guard: snapshot determinístico (evitar falso dirty)
@@ -979,6 +998,20 @@ useLayoutEffect(() => {
     }
   };
 
+  const isDirtyRef = useRef(isDirty);
+  isDirtyRef.current = isDirty;
+  const handleCloseRef = useRef(handleClose);
+  handleCloseRef.current = handleClose;
+
+  useEffect(() => {
+    if (typeof onBindCloseController !== "function") return;
+    onBindCloseController({
+      requestClose: () => handleCloseRef.current(),
+      isDirty: () => isDirtyRef.current,
+    });
+    return () => onBindCloseController(null);
+  }, [onBindCloseController]);
+
   const handleExitModalCancel = () => {
     suppressNextBlockerModalRef.current = false;
     skipExitGuardRef.current = false;
@@ -1060,34 +1093,6 @@ useLayoutEffect(() => {
         return;
       }
       setProductAdsListings(Array.isArray(res.listings) ? res.listings : []);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [safeTab, product?.id]);
-
-  useEffect(() => {
-    if (safeTab !== "performance") return;
-    const pid = product?.id != null ? String(product.id).trim() : "";
-    if (!pid) {
-      setProductPerformance(null);
-      setProductPerformanceError(null);
-      setProductPerformanceLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setProductPerformanceLoading(true);
-    setProductPerformanceError(null);
-    void (async () => {
-      const res = await fetchProductPerformance(pid);
-      if (cancelled) return;
-      setProductPerformanceLoading(false);
-      if (!res.ok) {
-        setProductPerformance(null);
-        setProductPerformanceError(res.error ?? "Erro ao carregar desempenho");
-        return;
-      }
-      setProductPerformance(res.data ?? null);
     })();
     return () => {
       cancelled = true;
@@ -1285,6 +1290,7 @@ const FieldLabel = ({
   ]
     .filter(Boolean)
     .join(" ");
+
 
   return (
     <div className={`pf-label-row${showCopy ? " pf-label-row--copyable" : ""}`}>
@@ -2487,7 +2493,7 @@ const validatePricingTab = () => {
   // ------------------------------------------------------
   const okPricing = validatePricingTab();
   if (!okPricing) {
-    navigateToTabWithUnlock("pricing");
+    navigateToTabWithUnlock(pricingTabNavigateId);
     return;
   }
 
@@ -2678,8 +2684,10 @@ const validatePricingTab = () => {
           });
           skipExitGuardRef.current = true;
           suppressNextBlockerModalRef.current = true;
-          navigate("/produtos");
-          if (typeof onSuccess === "function") onSuccess();
+          if (presentation !== "modal") {
+            navigate("/produtos");
+          }
+          if (typeof onSuccess === "function") onSuccess(result);
         } catch (err) {
           const msg = err?.message ?? err?.error ?? "Erro ao salvar produto.";
           addNotification({ type: "error", title: "Erro ao salvar", message: msg });
@@ -2759,6 +2767,23 @@ const validatePricingTab = () => {
     };
   }, [mode, dataTabThumbUrl, product.format, firstVariantThumbUrl]);
 
+  const panelProductHeadline = useMemo(() => {
+    if (presentation !== "modal" || mode !== "edit" || !initialProduct?.id) return null;
+    const productId = String(initialProduct.id).trim();
+    if (!productId) return null;
+    return {
+      productId,
+      productName: String(initialProduct.product_name ?? "").trim(),
+      productSku: String(initialProduct.sku ?? "").trim(),
+    };
+  }, [
+    presentation,
+    mode,
+    initialProduct?.id,
+    initialProduct?.product_name,
+    initialProduct?.sku,
+  ]);
+
   // ------------------------------------------------------
   // Layout: helper para exibir atributos do variant row
   // ------------------------------------------------------
@@ -2801,16 +2826,31 @@ const validatePricingTab = () => {
     variantRows,
   ]);
 
+  const productFinancialCtx = useOptionalProductEditFinancial();
+  const listingMetricsLookup = productFinancialCtx?.listingMetricsLookup ?? null;
+  const isMergedCostsStockTab = safeTab === "pricing_stock";
+  const showPricingTabContent = safeTab === "pricing" || isMergedCostsStockTab;
+  const showStockTabContent = safeTab === "stock" || isMergedCostsStockTab;
+  const pricingTabNavigateId = presentation === "modal" ? "pricing_stock" : "pricing";
+  const stockTabNavigateId = presentation === "modal" ? "pricing_stock" : "stock";
+  const [costsStockMounts, setCostsStockMounts] = useState({ costs: null, stock: null });
+
   return (
     <>
-    <div className="pf-page pf-page--bleed">
+    <div className={`pf-page pf-page--bleed${presentation === "modal" ? " pf-page--in-modal" : ""}`}>
       <div className="pf-wrap">
         {/* ==================================================
            LAYOUT PRINCIPAL: painel à esquerda + formulário à direita (Bling-like)
         ================================================== */}
         <div className="pf-layout">
           <ProductFormRightPanel
-            title={mode === "edit" ? "Editar produto" : "Novo produto"}
+            title={
+              mode === "edit"
+                ? presentation === "modal"
+                  ? "Raio-X do produto"
+                  : "Editar produto"
+                : "Novo produto"
+            }
             steps={availableTabs}
             activeId={safeTab}
             stepsClickable={!isSavingProduct}
@@ -2822,12 +2862,11 @@ const validatePricingTab = () => {
             onStepChange={handlePanelStepChange}
             progressPercent={sidePanelProgressPercent}
             panelProductThumb={panelProductThumb}
+            panelProductHeadline={panelProductHeadline}
           />
 
           <div className="pf-card pf-card--primary">
-      {/* ==================================================
-         HEADER: botão Fechar no topo direito
-      ================================================== */}
+      {presentation !== "modal" ? (
       <div className="pf-header-bar">
         <div className="pf-header-actions">
           <button type="button" className="pf-close" onClick={handleClose}>
@@ -2835,6 +2874,7 @@ const validatePricingTab = () => {
           </button>
         </div>
       </div>
+      ) : null}
 
         <div className="pf-form-area">
       <div
@@ -2848,8 +2888,9 @@ const validatePricingTab = () => {
             ABA: DADOS
         ======================= */}
         {safeTab === "data" && (
-          <div className="pf-container">
+          <div className="pf-container pf-container--data">
             <h2 className="pf-tab-title">Dados</h2>
+            <div className="pf-data-form-column">
             <div className="pf-product-name-fixed pf-product-name-fixed--in-data">
               <div className="pf-product-name-fields">
                 <FieldLabel
@@ -2883,8 +2924,8 @@ const validatePricingTab = () => {
               </div>
             </div>
 
-            {/* Linha 1: Formato + SKU */}
-            <div className="pf-row">
+            {/* Formato — oculto na UI por enquanto (regra e estado permanecem; catálogo simples) */}
+            <div className="pf-row pf-data-format-field" hidden aria-hidden="true">
               <div className="pf-group pf-data-col">
                 <FieldLabel
                   text="Formato"
@@ -2905,14 +2946,18 @@ const validatePricingTab = () => {
                   onChange={(e) => handleFormatChange(e.target.value)}
                   disabled={formatLocked}
                   title={formatLocked ? "Produto com variações não pode voltar para simples após salvo." : undefined}
+                  tabIndex={-1}
                 >
                   <option value="simple">Simples</option>
                   <option value="variants">Com variações</option>
                 </select>
               </div>
+            </div>
 
+            {/* Linha 2: SKU + EAN/GTIN + NCM */}
+            <div className="pf-row pf-row--data-identifiers">
               {product.format === "simple" && (
-                <div className="pf-group pf-data-col">
+                <div className="pf-group pf-data-col pf-data-col--tercio">
                   <FieldLabel
                     text="SKU"
                     required
@@ -2947,12 +2992,9 @@ const validatePricingTab = () => {
                   )}
                 </div>
               )}
-            </div>
 
-            {/* Linha 2: EAN/GTIN + NCM */}
-            <div className="pf-row">
               {product.format === "simple" && (
-                <div className="pf-group pf-data-col">
+                <div className="pf-group pf-data-col pf-data-col--tercio">
                   <FieldLabel
                     text="EAN / GTIN"
                     copyValue={product.gtin}
@@ -2975,7 +3017,7 @@ const validatePricingTab = () => {
                 </div>
               )}
 
-              <div className="pf-group pf-data-col">
+              <div className="pf-group pf-data-col pf-data-col--tercio">
                 <FieldLabel
                   text="NCM"
                   copyValue={product.ncm}
@@ -3022,7 +3064,7 @@ const validatePricingTab = () => {
             </div>
 
             {/* Linha 4: Palavras-chave SEO */}
-            <div className="pf-row">
+            <div className="pf-row pf-row--data-seo">
               <div className="pf-group pf-group--full pf-group--seo">
                 <FieldLabel
                   text="Palavras-chave SEO"
@@ -3045,8 +3087,20 @@ const validatePricingTab = () => {
                 </div>
               </div>
             </div>
+            </div>
           </div>
         )}
+
+        {isMergedCostsStockTab ? (
+          <ProductFormRayxCostsStockLayout
+            onCostsMount={(node) =>
+              setCostsStockMounts((prev) => (prev.costs === node ? prev : { ...prev, costs: node }))
+            }
+            onStockMount={(node) =>
+              setCostsStockMounts((prev) => (prev.stock === node ? prev : { ...prev, stock: node }))
+            }
+          />
+        ) : null}
 
         {/* ==================================================================
             ABA: Custos & precificação (padrão premium)
@@ -3054,9 +3108,9 @@ const validatePricingTab = () => {
             - Mesma pegada visual do “Combinações geradas” (cards)
             - Consistência SaaS premium
         ================================================================== */}
-        {safeTab === "pricing" && (
-          <div className="pf-container">
-            <h2 className="pf-tab-title">Custos & precificação</h2>
+        {showPricingTabContent && (() => {
+          const pricingTabInner = (
+            <>
             {/* SIMPLE: campos em coluna */}
             {product.format === "simple" && (
               <div className="pf-pricing-simple-column">
@@ -3316,8 +3370,20 @@ const validatePricingTab = () => {
                 </div>
               </>
             )}
-          </div>
-        )}
+            </>
+          );
+          if (isMergedCostsStockTab) {
+            return costsStockMounts.costs
+              ? createPortal(pricingTabInner, costsStockMounts.costs)
+              : null;
+          }
+          return (
+            <div className="pf-container pf-container--pricing">
+              <h2 className="pf-tab-title">Custos</h2>
+              {pricingTabInner}
+            </div>
+          );
+        })()}
 
         {/* =======================
             ABA: IMAGENS (mantém)
@@ -3456,9 +3522,9 @@ const validatePricingTab = () => {
           {/* =======================
             ABA: ESTOQUE (v2)
           ======================= */}
-        {safeTab === "stock" && (
-          <div className="pf-container">
-            <h2 className="pf-tab-title">Estoque</h2>
+        {showStockTabContent && (() => {
+          const stockTabInner = (
+            <>
             {/* ===============================
                 ESTOQUE — FORMATO SIMPLES
                =============================== */}
@@ -3692,8 +3758,20 @@ const validatePricingTab = () => {
                 ))}
               </div>
             ) : null}
-          </div>
-        )}
+            </>
+          );
+          if (isMergedCostsStockTab) {
+            return costsStockMounts.stock
+              ? createPortal(stockTabInner, costsStockMounts.stock)
+              : null;
+          }
+          return (
+            <div className="pf-container pf-container--stock">
+              <h2 className="pf-tab-title">Estoque</h2>
+              {stockTabInner}
+            </div>
+          );
+        })()}
 
         {/* =======================
             ABA: PESOS & MEDIDAS (mantém)
@@ -4176,174 +4254,46 @@ const validatePricingTab = () => {
               ABA: ANÚNCIOS (placeholder)
               ======================= */}
               {safeTab === "ads" && (
-                <div className="pf-container">
+                <div className="pf-container pf-container--ads">
                   <h2 className="pf-tab-title">Anúncios</h2>
-                  <div className="section">
-                    <div className="section-header">
-                      <h3>Anúncios vinculados</h3>
-                      <p className="section-subtitle">
-                        Dados consolidados no servidor para cada anúncio associado a este produto (multi-marketplace).
-                      </p>
-                    </div>
-                    {!product?.id ? (
-                      <p className="hint">Salve o produto para listar os anúncios vinculados.</p>
-                    ) : productAdsListingsLoading ? (
-                      <p className="hint">Carregando anúncios…</p>
-                    ) : productAdsListingsError ? (
-                      <p className="hint" role="alert">
-                        {productAdsListingsError}
-                      </p>
-                    ) : productAdsListings.length === 0 ? (
-                      <p className="hint">Nenhum anúncio vinculado a este produto ainda.</p>
-                    ) : (
-                      <div className="pf-product-ads-table-wrap">
-                        <table className="pf-product-ads-table">
-                          <thead>
-                            <tr>
-                              <th scope="col">Marketplace</th>
-                              <th scope="col">Anúncio</th>
-                              <th scope="col">Título</th>
-                              <th scope="col">SKU</th>
-                              <th scope="col">Status</th>
-                              <th scope="col">Preço</th>
-                              <th scope="col">Promoção</th>
-                              <th scope="col">Última sync</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {productAdsListings.map((raw) => {
-                              const L = raw && typeof raw === "object" ? /** @type {Record<string, unknown>} */ (raw) : {};
-                              const m = L.marketplace != null ? String(L.marketplace) : "";
-                              const extRaw = L.external_listing_id != null ? String(L.external_listing_id) : "";
-                              const adNo = formatMarketplaceListingDisplayId(m, extRaw) || extRaw || "—";
-                              const title = L.title != null && String(L.title).trim() !== "" ? String(L.title) : "—";
-                              const sku = L.sku != null && String(L.sku).trim() !== "" ? String(L.sku) : "—";
-                              const status = L.status != null && String(L.status).trim() !== "" ? String(L.status) : "—";
-                              const priceBrl = L.price_brl != null ? String(L.price_brl).trim() : "";
-                              const priceNum = priceBrl !== "" ? Number(priceBrl.replace(",", ".")) : NaN;
-                              const priceDisplay = Number.isFinite(priceNum) ? formatCatalogBRL(priceNum) : "—";
-                              const onPromo = Boolean(L.is_on_promotion);
-                              const syncRaw = L.last_sync_at != null ? String(L.last_sync_at) : "";
-                              let syncDisplay = "—";
-                              if (syncRaw) {
-                                const d = new Date(syncRaw);
-                                syncDisplay = Number.isNaN(d.getTime()) ? syncRaw : d.toLocaleString("pt-BR");
-                              }
-                              const rowKey =
-                                L.id != null && String(L.id).trim() !== ""
-                                  ? String(L.id)
-                                  : `${m || "mkt"}-${extRaw || "ad"}`;
-                              return (
-                                <tr key={rowKey}>
-                                  <td>{marketplaceChipLabel(m || "—")}</td>
-                                  <td>{adNo}</td>
-                                  <td className="pf-product-ads-table__title" title={title}>
-                                    {title}
-                                  </td>
-                                  <td>{sku}</td>
-                                  <td>{status}</td>
-                                  <td>{priceDisplay}</td>
-                                  <td>{onPromo ? "Sim" : "Não"}</td>
-                                  <td>{syncDisplay}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
+                  <ProductLinkedListingsSection
+                    listings={productAdsListings}
+                    listingMetricsLookup={listingMetricsLookup}
+                    loading={productAdsListingsLoading}
+                    error={productAdsListingsError}
+                    hasProduct={Boolean(product?.id)}
+                  />
                 </div>
               )}
 
              {/* =======================
-             ABA: VENDAS & DESEMPENHO (placeholder)
+             ABA: HISTÓRICO DE VENDAS
+             ======================= */}
+             {safeTab === "sales_history" && productFinancialCtx ? (
+               <div className="pf-container pf-container--sales-history">
+                 <ProductSalesHistorySection
+                   rows={productFinancialCtx.salesHistoryRows}
+                   total={productFinancialCtx.salesHistoryTotal}
+                   salesCount={productFinancialCtx.salesCountCanonical}
+                   page={productFinancialCtx.salesHistoryPage}
+                   totalPages={productFinancialCtx.salesHistoryTotalPages}
+                   loading={productFinancialCtx.salesHistoryLoading}
+                   error={productFinancialCtx.salesHistoryError}
+                   onPageChange={productFinancialCtx.goSalesHistoryPage}
+                 />
+               </div>
+             ) : null}
+
+             {/* =======================
+             ABA: VENDAS
              ======================= */}
              {safeTab === "performance" && (
              <div className="pf-container">
-              <h2 className="pf-tab-title">Vendas & desempenho</h2>
-              <div className="section">
-              <div className="section-header">
-                <h3>Vendas & desempenho</h3>
-                <p className="section-subtitle">Painel do produto: histórico de vendas, desempenho por canal e indicadores.</p>
-              </div>
-              {productPerformanceLoading ? (
-                <p className="hint">Carregando desempenho…</p>
-              ) : productPerformanceError ? (
-                <p className="hint pf-performance-error">{productPerformanceError}</p>
-              ) : (
-                <>
-                  <div className="pf-performance-cards">
-                    <div className="pf-performance-card">
-                      <span>Vendas</span>
-                      <strong>{productPerformance?.total_orders ?? 0}</strong>
-                    </div>
-                    <div className="pf-performance-card">
-                      <span>Receita</span>
-                      <strong>{formatCatalogBRL(Number(productPerformance?.total_revenue ?? 0))}</strong>
-                    </div>
-                    <div className="pf-performance-card">
-                      <span>Ticket médio</span>
-                      <strong>{formatCatalogBRL(Number(productPerformance?.avg_ticket ?? 0))}</strong>
-                    </div>
-                  </div>
-
-                  <div className="pf-performance-timeseries">
-                    <h4>Vendas no tempo</h4>
-                    {Array.isArray(productPerformance?.sales_over_time) &&
-                    productPerformance.sales_over_time.length > 0 ? (
-                      <div className="pf-performance-table-wrap">
-                        {(() => {
-                          const series = productPerformance.sales_over_time;
-                          const maxY = Math.max(1, ...series.map((p) => Number(p.value || 0)));
-                          const w = 640;
-                          const h = 180;
-                          const stepX = series.length > 1 ? (w - 24) / (series.length - 1) : 0;
-                          const points = series
-                            .map((p, idx) => {
-                              const x = 12 + idx * stepX;
-                              const y = h - 12 - (Math.max(0, Number(p.value || 0)) / maxY) * (h - 24);
-                              return `${x},${y}`;
-                            })
-                            .join(" ");
-                          return (
-                            <svg className="pf-performance-chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label="Linha temporal de vendas">
-                              <line x1="12" y1={h - 12} x2={w - 12} y2={h - 12} className="pf-performance-chart-axis" />
-                              <polyline points={points} className="pf-performance-chart-line" />
-                            </svg>
-                          );
-                        })()}
-                        <table className="pf-performance-table" aria-label="Série temporal de desempenho">
-                          <thead>
-                            <tr>
-                              <th>Data</th>
-                              <th>Vendas</th>
-                              <th>Receita</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {productPerformance.sales_over_time.map((pt, idx) => {
-                              const rev = Array.isArray(productPerformance?.revenue_over_time)
-                                ? productPerformance.revenue_over_time[idx]
-                                : null;
-                              return (
-                                <tr key={`${pt.date}-${idx}`}>
-                                  <td>{pt.date}</td>
-                                  <td>{pt.value ?? 0}</td>
-                                  <td>{formatCatalogBRL(Number(rev?.value ?? 0))}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="hint">Sem snapshots suficientes para exibir série temporal.</p>
-                    )}
-                  </div>
-                </>
-              )}
-             </div>
+              <ProductFinancialRayXPanel
+                productId={product?.id ?? null}
+                tabTitle={presentation === "modal" ? "Vendas" : "Vendas & desempenho"}
+                showSalesHistory={false}
+              />
              </div>
              )}
 
@@ -4352,10 +4302,37 @@ const validatePricingTab = () => {
         </div>
         <div
           className={
-            allStepsUnlocked ? "pf-body-footer pf-body-footer--save-only" : "pf-body-footer"
+            allStepsUnlocked
+              ? presentation === "modal"
+                ? "pf-body-footer pf-body-footer--save-only pf-body-footer--modal-actions"
+                : "pf-body-footer pf-body-footer--save-only"
+              : "pf-body-footer"
           }
         >
           {allStepsUnlocked ? (
+            presentation === "modal" ? (
+              <div className="pf-body-footer-actions">
+                <button
+                  type="button"
+                  className="s7-btn s7-btn--primary pf-body-footer-btn"
+                  onClick={handleClose}
+                  disabled={isSavingProduct}
+                >
+                  Cancelar
+                </button>
+                <S7Button
+                  type="button"
+                  variant="primary"
+                  className="pf-body-footer-btn"
+                  loading={isSavingProduct}
+                  loadingLabel="Salvando..."
+                  disabled={isSavingProduct}
+                  onClick={handleSubmit}
+                >
+                  {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+                </S7Button>
+              </div>
+            ) : (
             <S7Button
               type="button"
               variant="primary"
@@ -4367,6 +4344,7 @@ const validatePricingTab = () => {
             >
               {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
             </S7Button>
+            )
           ) : (
             <>
               <div>
@@ -4523,7 +4501,7 @@ const validatePricingTab = () => {
                 });
                 setZeroStockAttention(Object.keys(variants).length > 0 ? { simple: false, variants } : null);
               }
-              navigateToTabWithUnlock("stock");
+              navigateToTabWithUnlock(stockTabNavigateId);
             }}
           >
             Voltar e ajustar

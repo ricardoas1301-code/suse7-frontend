@@ -1,0 +1,67 @@
+.s7-login-intro {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 2000;
+  display: block;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7ff 100%);
+  opacity: 1;
+  transition: opacity 280ms ease;
+}
+
+.s7-login-intro--closing {
+  opacity: 0;
+}
+
+.s7-login-intro--reduced {
+  transition: none;
+}
+
+.s7-login-intro__video {
+  width: 100vw;
+  height: 100dvh;
+  object-fit: cover;
+  display: block;
+  background: #fff;
+}
+
+.s7-login-intro__skip,
+.s7-login-intro__continue {
+  position: fixed;
+  right: 24px;
+  z-index: 2002;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(4px);
+  color: #1d4ed8;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  padding: 10px 14px;
+}
+
+.s7-login-intro__skip {
+  top: 24px;
+}
+
+.s7-login-intro__continue {
+  bottom: 24px;
+}
+
+.s7-login-intro__hint {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 2002;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+

@@ -308,6 +308,17 @@ export function shortenListingTitleToTwoWords(title) {
 }
 
 /**
+ * Converte ISO (YYYY-MM-DD) para padrão BR com hífen (DD-MM-YYYY).
+ * @param {unknown} iso
+ */
+function formatIsoToBrDashed(iso) {
+  const s = iso != null ? String(iso).trim() : "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (!m) return s;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+/**
  * @param {Record<string, unknown> | null | undefined} period
  */
 export function formatExecutivePeriodLabel(period) {
@@ -321,9 +332,10 @@ export function formatExecutivePeriodLabel(period) {
   if (preset === "today") return "Hoje";
   if (preset === "month") return "Mês atual";
   if (preset === "custom") {
-    const start = period?.start_date != null ? String(period.start_date) : "";
-    const end = period?.end_date != null ? String(period.end_date) : "";
-    if (start && end) return `${start} — ${end}`;
+    const start = formatIsoToBrDashed(period?.start_date);
+    const end = formatIsoToBrDashed(period?.end_date);
+    if (start && end) return `${start} - ${end}`;
+    if (start) return start;
     return "Período customizado";
   }
   return "60 dias";

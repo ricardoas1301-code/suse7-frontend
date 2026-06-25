@@ -4,6 +4,24 @@
 
 import { buildApiUrl, apiFetch } from "../config/api";
 
+/** Evita corrida quando Resumo Diário e Top 10 disparam juntos no reload do Dashboard. */
+let executiveSummaryFetchChain = Promise.resolve();
+
+/**
+ * Executa fetch do executive-summary em fila (um por vez).
+ * @template T
+ * @param {() => Promise<T>} task
+ * @returns {Promise<T>}
+ */
+export function runExecutiveSummaryFetchSerialized(task) {
+  const next = executiveSummaryFetchChain.then(task, task);
+  executiveSummaryFetchChain = next.then(
+    () => undefined,
+    () => undefined,
+  );
+  return next;
+}
+
 /**
  * @typedef {{
  *   marketplace?: string;
@@ -19,6 +37,7 @@ import { buildApiUrl, apiFetch } from "../config/api";
  *   period_start?: string;
  *   period_end?: string;
  *   ranking_limit?: number;
+ *   product_id?: string;
  * }} SalesExecutiveSummaryParams
  */
 
@@ -74,6 +93,9 @@ export function buildSalesExecutiveSummaryQuery(params) {
   if (endDatetime) qs.set("end_datetime", endDatetime);
   if (p.ranking_limit != null && Number.isFinite(Number(p.ranking_limit))) {
     qs.set("ranking_limit", String(Math.min(10, Math.max(1, Math.floor(Number(p.ranking_limit))))));
+  }
+  if (p.product_id != null && String(p.product_id).trim() !== "") {
+    qs.set("product_id", String(p.product_id).trim());
   }
 
   return qs;

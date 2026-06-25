@@ -1,39 +1,35 @@
 // ======================================================================
 // Resumo Diário — seção do Dashboard com escopo automático (hoje vs filtro).
 // DASH.4: dados reais via /api/sales/executive-summary (fonte única Suse7).
+// DASH.6A/6B: composição executiva + impostos + multi-contas + filtro manual.
+// DASH.6D: bloco Custos detalhado (somente apresentação — motor DASH.6C intacto).
 // ======================================================================
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import S7DailySummaryCard from "./S7DailySummaryCard.jsx";
+import S7DailySummaryAccountDistribution from "./S7DailySummaryAccountDistribution.jsx";
+import S7DailySummaryTopProducts from "./S7DailySummaryTopProducts.jsx";
+import S7BlockFiltersPanel from "./S7BlockFiltersPanel.jsx";
+import { useDashboardBlockFilters } from "./DashboardBlockFiltersContext.jsx";
 import { useDashboardScope } from "./useDashboardScope.js";
+import { useAuthBootstrapReady } from "../../hooks/useAuthBootstrapReady.js";
 import { useSalesExecutiveSummary } from "../../hooks/useSalesExecutiveSummary.js";
-import { formatBrlFromApiString, formatPercentFromApiString } from "../../features/listings/utils/catalogFormatters";
+import { isExecutiveSummaryQueryEnabled } from "./dashboardScope.js";
 import { isExecutiveSummaryEmptyForFilters } from "../sales/vendasExecutivePanelUx.js";
+import { fetchMercadoLivreMarketplaceAccounts } from "../../services/marketplaceAccountsApi.js";
+import {
+  buildDailySummaryBlocks,
+  buildDailySummaryPlaceholderBlocks,
+} from "../../features/sales/executiveSummaryDisplay.js";
+import "./S7BlockFiltersPanel.css";
 
-/**
- * @param {unknown} raw
- */
-function formatCountOrDash(raw) {
-  if (raw == null) return "—";
-  const n = typeof raw === "number" ? raw : Number.parseInt(String(raw), 10);
-  if (!Number.isFinite(n)) return "—";
-  return n.toLocaleString("pt-BR");
-}
-
-/**
- * @param {unknown} raw
- */
-function formatMoneyOrDash(raw) {
-  if (raw == null || String(raw).trim() === "") return "—";
-  return formatBrlFromApiString(String(raw));
-}
-
-/**
- * @param {unknown} raw
- */
-function formatPercentOrDash(raw) {
-  if (raw == null || String(raw).trim() === "") return "—";
-  return formatPercentFromApiString(String(raw));
+/** @param {Record<string, unknown> | null | undefined} a */
+function dashboardMlAccountLabel(a) {
+  if (!a || typeof a !== "object") return "Conta";
+  if (a.ml_nickname != null && String(a.ml_nickname).trim() !== "") return String(a.ml_nickname).trim();
+  if (a.account_alias != null && String(a.account_alias).trim() !== "") return String(a.account_alias).trim();
+  if (a.external_seller_id != null) return String(a.external_seller_id);
+  return "Conta";
 }
 
 /**
@@ -41,9 +37,40 @@ function formatPercentOrDash(raw) {
  */
 export default function S7DailySummarySection({ className = "" }) {
   const scope = useDashboardScope();
-  const { summary, dataQuality, loading, error } = useSalesExecutiveSummary(scope.resumoParams, {
-    enabled: true,
-  });
+  const {
+    dailySummaryFilters,
+    dailySummaryPeriodTouched,
+    dailySummaryFiltersExpanded,
+    applyDailySummaryPeriod,
+    setDailySummaryAccountId,
+    toggleDailySummaryFiltersExpanded,
+  } = useDashboardBlockFilters();
+
+  const authReady = useAuthBootstrapReady();
+
+  const { summary, topListingsByQuantity, distributionByAccount, loading, error } = useSalesExecutiveSummary(
+    scope.resumo.resumoParams,
+    {
+      enabled: authReady && isExecutiveSummaryQueryEnabled(scope.resumo.resumoParams),
+    },
+  );
+  const [mlAccounts, setMlAccounts] = useState(/** @type {Record<string, unknown>[]} */ ([]));
+  const [mlAccountsReady, setMlAccountsReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetchMercadoLivreMarketplaceAccounts();
+      if (cancelled) return;
+      setMlAccountsReady(true);
+      const list =
+        res.ok && Array.isArray(res.data?.accounts) ? /** @type {Record<string, unknown>[]} */ (res.data.accounts) : [];
+      setMlAccounts(list);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const empty = useMemo(
     () => !loading && !error && isExecutiveSummaryEmptyForFilters(summary),
@@ -51,168 +78,83 @@ export default function S7DailySummarySection({ className = "" }) {
   );
 
   const blocks = useMemo(() => {
-    if (loading || error || !summary || empty) {
-      return [
-        {
-          id: "sales",
-          title: "Vendas",
-          columns: 2,
-          metrics: [
-            { id: "orders", label: "Pedidos", value: "—", tone: "default" },
-            { id: "revenue", label: "Faturamento", value: "—", tone: "money" },
-            { id: "avg_ticket", label: "Ticket Médio", value: "—", tone: "money" },
-            { id: "in_progress", label: "Em andamento", value: "—", tone: "warning" },
-          ],
-        },
-        {
-          id: "profitability",
-          title: "Lucratividade",
-          columns: 2,
-          metrics: [
-            { id: "gross_profit", label: "Lucro Bruto", value: "—", tone: "money" },
-            { id: "net_profit", label: "Lucro Líquido", value: "—", tone: "positive" },
-            { id: "avg_margin", label: "Margem Média", value: "—", tone: "positive" },
-            { id: "you_receive", label: "Você Recebe", value: "—", tone: "money" },
-          ],
-        },
-        {
-          id: "costs",
-          title: "Custos",
-          columns: 2,
-          metrics: [
-            { id: "marketplace_fee", label: "Comissão Marketplace", value: "—", tone: "default" },
-            { id: "shipping", label: "Frete", value: "—", tone: "default" },
-            { id: "taxes", label: "Impostos", value: "—", tone: "default" },
-            { id: "ads", label: "Ads", value: "—", tone: "default" },
-          ],
-        },
-      ];
+    if (loading || error || empty) {
+      return buildDailySummaryPlaceholderBlocks();
     }
-
-    return [
-      {
-        id: "sales",
-        title: "Vendas",
-        columns: 2,
-        metrics: [
-          {
-            id: "orders",
-            label: "Pedidos",
-            value: formatCountOrDash(summary.orders_count),
-            tone: "default",
-          },
-          {
-            id: "revenue",
-            label: "Faturamento",
-            value: formatMoneyOrDash(summary.gross_sales_brl),
-            tone: "money",
-          },
-          {
-            id: "avg_ticket",
-            label: "Ticket Médio",
-            value: formatMoneyOrDash(summary.average_ticket_brl),
-            tone: "money",
-          },
-          {
-            id: "in_progress",
-            label: "Em andamento",
-            value: formatCountOrDash(summary.orders_in_progress_count),
-            tone: "warning",
-          },
-        ],
-      },
-      {
-        id: "profitability",
-        title: "Lucratividade",
-        columns: 2,
-        metrics: [
-          {
-            id: "gross_profit",
-            label: "Lucro Bruto",
-            value: formatMoneyOrDash(summary.gross_profit_brl),
-            tone: "money",
-          },
-          {
-            id: "net_profit",
-            label: "Lucro Líquido",
-            value: formatMoneyOrDash(summary.net_profit_brl ?? summary.contribution_profit_brl),
-            tone: "positive",
-          },
-          {
-            id: "avg_margin",
-            label: "Margem Média",
-            value: formatPercentOrDash(summary.contribution_margin_percent),
-            tone: "positive",
-          },
-          {
-            id: "you_receive",
-            label: "Você Recebe",
-            value: formatMoneyOrDash(summary.you_receive_brl ?? summary.net_received_brl),
-            tone: "money",
-          },
-        ],
-      },
-      {
-        id: "costs",
-        title: "Custos",
-        columns: 2,
-        metrics: [
-          {
-            id: "marketplace_fee",
-            label: "Comissão Marketplace",
-            value: formatMoneyOrDash(summary.marketplace_fee_brl),
-            tone: "default",
-          },
-          {
-            id: "shipping",
-            label: "Frete",
-            value: formatMoneyOrDash(summary.shipping_cost_brl),
-            tone: "default",
-          },
-          {
-            id: "taxes",
-            label: "Impostos",
-            value: formatMoneyOrDash(summary.tax_cost_brl),
-            tone: "default",
-          },
-          {
-            id: "ads",
-            label: "Ads",
-            value: formatMoneyOrDash(summary.ads_cost_brl),
-            tone: "default",
-          },
-        ],
-      },
-    ];
+    return buildDailySummaryBlocks(summary);
   }, [loading, error, summary, empty]);
 
-  const lastUpdatedAt = useMemo(() => {
-    if (loading) return "Atualizando...";
-    if (error) return "Falha ao atualizar";
-    return new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  }, [loading, error]);
+  const filtersActive = useMemo(
+    () =>
+      dailySummaryPeriodTouched ||
+      Boolean(String(dailySummaryFilters.marketplaceAccountId ?? "").trim()),
+    [dailySummaryPeriodTouched, dailySummaryFilters.marketplaceAccountId],
+  );
 
-  const statusSuffix = useMemo(() => {
-    if (error) return " (erro)";
-    if (dataQuality?.status === "partial") return " (parcial)";
-    if (empty) return " (sem vendas)";
-    return "";
-  }, [error, dataQuality, empty]);
+  const periodChipLabel = scope.resumo.resumoChipLabel;
+  const periodDateLabel = useMemo(() => {
+    const raw = scope.resumo.resumoDateLabel;
+    if (!raw) return "";
+    return String(raw).replace(/\s[–→]\s/g, " | ");
+  }, [scope.resumo.resumoDateLabel]);
+
+  const salesFooter = useMemo(() => {
+    if (loading || error || empty) return null;
+
+    const topProductsBlock = <S7DailySummaryTopProducts items={topListingsByQuantity} />;
+    const accountDistribution =
+      scope.resumo.allAccountsScope ? (
+        <S7DailySummaryAccountDistribution entries={distributionByAccount} accounts={mlAccounts} />
+      ) : null;
+
+    if (!accountDistribution) {
+      return topProductsBlock;
+    }
+
+    return (
+      <div className="s7-daily-summary__sales-footer-grid">
+        {topProductsBlock}
+        {accountDistribution}
+      </div>
+    );
+  }, [
+    loading,
+    error,
+    empty,
+    scope.resumo.allAccountsScope,
+    topListingsByQuantity,
+    distributionByAccount,
+    mlAccounts,
+  ]);
+
+  const filterPanel = (
+    <S7BlockFiltersPanel
+      idPrefix="s7-daily-summary"
+      expanded={dailySummaryFiltersExpanded}
+      periodPreset={dailySummaryFilters.periodPreset}
+      startDate={dailySummaryFilters.startDate}
+      endDate={dailySummaryFilters.endDate}
+      marketplaceAccountId={dailySummaryFilters.marketplaceAccountId}
+      accounts={mlAccounts}
+      accountLabel={dashboardMlAccountLabel}
+      accountsReady={mlAccountsReady}
+      onApplyPeriod={applyDailySummaryPeriod}
+      onAccountChange={setDailySummaryAccountId}
+    />
+  );
 
   return (
     <S7DailySummaryCard
       title="Resumo Diário"
-      lastUpdatedLabel={`Última atualização${statusSuffix}`}
-      lastUpdatedAt={lastUpdatedAt}
       blocks={blocks}
-      periodLabel={
-        scope.filterActive
-          ? scope.resumoPeriodLabel
-          : scope.resumoBadgeLabel
-            ? `${scope.resumoPeriodLabel} · ${scope.resumoBadgeLabel}`
-            : scope.resumoPeriodLabel
-      }
-      periodDateLabel={scope.resumoDateLabel}
+      periodChipLabel={periodChipLabel}
+      periodLabel={dailySummaryPeriodTouched ? scope.resumo.resumoPeriodLabel : ""}
+      periodDateLabel={periodDateLabel}
+      filtersExpanded={dailySummaryFiltersExpanded}
+      filtersActive={filtersActive}
+      onToggleFilters={toggleDailySummaryFiltersExpanded}
+      filterPanel={filterPanel}
+      slots={{ salesFooter }}
       className={className}
     />
   );

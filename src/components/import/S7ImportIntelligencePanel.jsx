@@ -5,8 +5,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sparkles, CheckCircle2, Layers, History, Clock, Activity } from "lucide-react";
+import { Sparkles, CheckCircle2, Layers, History, Clock, Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { fetchImportIntelligenceSummary } from "../../services/importIntelligenceApi";
+import {
+  buildDashboardImportCompactSummary,
+  readDashboardImportExpanded,
+  writeDashboardImportExpanded,
+} from "./s7ImportIntelligenceDashboardUx.js";
 import "./S7ImportIntelligencePanel.css";
 
 /** @param {number | null | undefined} n */
@@ -79,6 +84,18 @@ export default function S7ImportIntelligencePanel({
   const [payload, setPayload] = useState(/** @type {any} */ (null));
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(/** @type {string | null} */ (null));
+  const isDashboardLayout = layout === "dashboard";
+  const [dashboardExpanded, setDashboardExpanded] = useState(() =>
+    isDashboardLayout ? readDashboardImportExpanded() : true,
+  );
+
+  const toggleDashboardExpanded = useCallback(() => {
+    setDashboardExpanded((prev) => {
+      const next = !prev;
+      if (isDashboardLayout) writeDashboardImportExpanded(next);
+      return next;
+    });
+  }, [isDashboardLayout]);
 
   /** Única chave para filtro + query string: no modal prioriza marketplaceAccountId explícito. */
   const accountId = useMemo(() => {
@@ -147,6 +164,18 @@ export default function S7ImportIntelligencePanel({
   );
 
   if (loading && !payload) {
+    if (isDashboardLayout) {
+      return (
+        <section
+          className="s7-import-intel s7-import-intel--loading s7-import-intel--dashboard s7-import-intel--collapsed"
+          aria-busy="true"
+          aria-label="Importação em segundo plano"
+        >
+          <div className="s7-import-intel__shimmer s7-import-intel__shimmer--compact" />
+        </section>
+      );
+    }
+
     return (
       <section
         className={`s7-import-intel s7-import-intel--loading s7-import-intel--${layout}`}
@@ -241,7 +270,9 @@ export default function S7ImportIntelligencePanel({
     );
   }
 
-  if (allFullySynced && !anyAttention) {
+  const isImportCompleted = allFullySynced && !anyAttention;
+
+  if (isImportCompleted && !isDashboardLayout) {
     return (
       <section className={`s7-import-intel s7-import-intel--success s7-import-intel--${layout}`} aria-label="Sincronização completa">
         <CheckCircle2 className="s7-import-intel__success-icon" size={26} strokeWidth={2} aria-hidden />
@@ -269,15 +300,166 @@ export default function S7ImportIntelligencePanel({
       ? "O Suse7 continuará armazenando automaticamente novas vendas e indicadores históricos. Você pode fechar esta janela e voltar quando quiser."
       : "Você já pode utilizar o Suse7 normalmente enquanto o restante do histórico é sincronizado automaticamente.";
 
-  return (
-    <section
-      className={`s7-import-intel s7-import-intel--active s7-import-intel--${layout}`}
-      aria-label={layout === "modal" ? "Importação inteligente" : "Importação inteligente em andamento"}
-      data-marketplace-account-id={accountId || undefined}
-      data-seller-company-id={trimAccountId(sellerCompanyId) || undefined}
-      data-external-seller-id={externalSellerId != null && String(externalSellerId).trim() !== "" ? String(externalSellerId) : undefined}
-    >
-      {layout !== "modal" ? (
+  const accountsBlock = (
+    <div className="s7-import-intel__accounts">
+      {accounts.map((acc) => {
+        const hot = acc.hot_sync || {};
+        const hist = acc.historical_sync || {};
+        const hs = acc.historical_sales_sync;
+        const hc = acc.historical_customers_sync;
+        const lst = acc.listings;
+        const primaryPct = Number(acc.primary_progress_percent);
+        const mainBar = Number.isFinite(primaryPct) ? Math.min(100, Math.max(0, primaryPct)) : 0;
+        const hotBar = Number.isFinite(Number(hot.progress_percent)) ? Math.min(100, Number(hot.progress_percent)) : 0;
+        const histBar = Number.isFinite(Number(hist.progress_percent)) ? Math.min(100, Number(hist.progress_percent)) : 0;
+        const hotAct = relativeActivity(hot.last_activity_at);
+        const globalAct = relativeActivity(acc.last_job_activity_at);
+        const salesLine =
+          hot.progress_total != null &&
+          Number(hot.progress_total) > 0 &&
+          hot.progress_current != null &&
+          Number.isFinite(Number(hot.progress_current))
+            ? `${fmtInt(hot.progress_current)} / ${fmtInt(hot.progress_total)} vendas recentes`
+            : null;
+
+        const mainLabel = acc.hot_sync_complete ? "Progresso do histórico completo" : "Progresso da camada rápida";
+
+        return (
+          <article key={acc.marketplace_account_id} className="s7-import-intel__account">
+            <div className="s7-import-intel__account-head">
+              <span className="s7-import-intel__account-name">{acc.display_name || acc.account_label}</span>
+              <span className="s7-import-intel__account-status">{acc.status_headline}</span>
+            </div>
+
+            <div className="s7-import-intel__main-progress">
+              <div className="s7-import-intel__progress-label">
+                <span>{mainLabel}</span>
+                <span>{mainBar}%</span>
+              </div>
+              <div className="s7-import-intel__progress-track">
+                <div className="s7-import-intel__progress-fill" style={{ width: `${mainBar}%` }} />
+              </div>
+            </div>
+
+            <div className="s7-import-intel__layer-block s7-import-intel__layer-block--hot">
+              <div className="s7-import-intel__layer-title">
+                <Layers size={17} strokeWidth={2} aria-hidden />
+                <span>Camada rápida</span>
+                <span className={`s7-import-intel__pill ${acc.hot_sync_complete ? "ok" : "run"}`}>
+                  {hotStatusLabelPt(hot.status)}
+                </span>
+              </div>
+              <p className="s7-import-intel__layer-copy">
+                Estamos preparando seus dados principais para uso imediato. Etapa atual:{" "}
+                <strong>{hot.current_step_label || "—"}</strong>.
+              </p>
+              <div className="s7-import-intel__sub-progress">
+                <div className="s7-import-intel__progress-label s7-import-intel__progress-label--sm">
+                  <span>
+                    Etapas {fmtInt(hot.completed_steps)} / {fmtInt(hot.total_steps)}
+                  </span>
+                  <span>{hotBar}%</span>
+                </div>
+                <div className="s7-import-intel__progress-track s7-import-intel__progress-track--sm">
+                  <div className="s7-import-intel__progress-fill s7-import-intel__progress-fill--hot" style={{ width: `${hotBar}%` }} />
+                </div>
+              </div>
+              {salesLine ? <p className="s7-import-intel__sales-line">{salesLine}</p> : null}
+              {hotAct ? (
+                <p className="s7-import-intel__activity s7-import-intel__activity--tight">
+                  <Clock size={14} strokeWidth={2} aria-hidden /> Camada rápida: última atividade {hotAct}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="s7-import-intel__layer-block s7-import-intel__layer-block--hist">
+              <div className="s7-import-intel__layer-title">
+                <History size={17} strokeWidth={2} aria-hidden />
+                <span>Histórico completo</span>
+                <span className={`s7-import-intel__pill ${acc.historical_backfill_active ? "run" : "ok"}`}>
+                  {histStatusLabelPt(hist.status)}
+                </span>
+              </div>
+              <p className="s7-import-intel__layer-copy">{hist.message_pt}</p>
+              <div className="s7-import-intel__sub-progress">
+                <div className="s7-import-intel__progress-label s7-import-intel__progress-label--sm">
+                  <span>Progresso histórico (vendas)</span>
+                  <span>{histBar}%</span>
+                </div>
+                <div className="s7-import-intel__progress-track s7-import-intel__progress-track--sm">
+                  <div
+                    className="s7-import-intel__progress-fill s7-import-intel__progress-fill--hist"
+                    style={{ width: `${histBar}%` }}
+                  />
+                </div>
+              </div>
+              <div className="s7-import-intel__metrics s7-import-intel__metrics--inline">
+                <div className="s7-import-intel__metric">
+                  <span className="s7-import-intel__metric-label">Vendas históricas</span>
+                  <strong className="s7-import-intel__metric-value">
+                    {fmtInt(hs?.progress_current)} / {fmtInt(hs?.progress_total)}
+                  </strong>
+                </div>
+                <div className="s7-import-intel__metric">
+                  <span className="s7-import-intel__metric-label">Anúncios</span>
+                  <strong className="s7-import-intel__metric-value">
+                    {lst?.progress_total != null && Number(lst.progress_total) > 0
+                      ? `${fmtInt(lst.progress_current)} / ${fmtInt(lst.progress_total)}`
+                      : lst?.status === "done"
+                        ? "Sincronizado"
+                        : lst?.status === "running"
+                          ? "Sincronizando…"
+                          : "—"}
+                  </strong>
+                </div>
+                <div className="s7-import-intel__metric">
+                  <span className="s7-import-intel__metric-label">Clientes históricos</span>
+                  <strong className="s7-import-intel__metric-value">
+                    {hc && (Number(hc.progress_total) > 0 || hc.status)
+                      ? `${fmtInt(hc.progress_current)} / ${fmtInt(hc.progress_total)}`
+                      : "—"}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="s7-import-intel__footer-row">
+              <p className="s7-import-intel__forecast">
+                <Activity size={15} strokeWidth={2} className="s7-import-intel__forecast-ico" aria-hidden />
+                {acc.forecast_message_pt}
+              </p>
+              {globalAct ? (
+                <p className="s7-import-intel__activity">
+                  <Clock size={14} strokeWidth={2} aria-hidden /> Última atividade no servidor {globalAct}
+                </p>
+              ) : null}
+            </div>
+
+            <p className="s7-import-intel__hint">
+              Janela inicial de vendas recentes: últimos <strong>{recentDays}</strong> dias — o restante entra no
+              histórico automático.
+            </p>
+
+            {!hidePerAccountNav ? (
+              <div className="s7-import-intel__account-actions">
+                <button
+                  type="button"
+                  className="s7-import-intel__btn"
+                  onClick={() => openTechnicalOrNavigate(acc.marketplace_account_id)}
+                >
+                  Ver sincronização em andamento
+                </button>
+              </div>
+            ) : null}
+          </article>
+        );
+      })}
+    </div>
+  );
+
+  const activeImportBody = (
+    <>
+      {layout !== "modal" && !isDashboardLayout ? (
         <header className="s7-import-intel__head">
           <div className="s7-import-intel__head-icon-wrap" aria-hidden>
             <Sparkles className="s7-import-intel__icon s7-import-intel__icon--pulse" size={22} strokeWidth={1.75} />
@@ -289,164 +471,20 @@ export default function S7ImportIntelligencePanel({
         </header>
       ) : null}
 
+      {isDashboardLayout && dashboardExpanded && !isImportCompleted ? (
+        <header className="s7-import-intel__head s7-import-intel__head--dashboard-expanded">
+          <div className="s7-import-intel__head-icon-wrap" aria-hidden>
+            <Sparkles className="s7-import-intel__icon s7-import-intel__icon--pulse" size={20} strokeWidth={1.75} />
+          </div>
+          <p className="s7-import-intel__sub s7-import-intel__sub--dashboard-expanded">{activeSub}</p>
+        </header>
+      ) : null}
+
       <p className="s7-import-intel__reassure">{activeReassure}</p>
 
       {err ? <p className="s7-import-intel__warn" role="status">{err}</p> : null}
 
-      <div className="s7-import-intel__accounts">
-        {accounts.map((acc) => {
-          const hot = acc.hot_sync || {};
-          const hist = acc.historical_sync || {};
-          const hs = acc.historical_sales_sync;
-          const hc = acc.historical_customers_sync;
-          const lst = acc.listings;
-          const primaryPct = Number(acc.primary_progress_percent);
-          const mainBar = Number.isFinite(primaryPct) ? Math.min(100, Math.max(0, primaryPct)) : 0;
-          const hotBar = Number.isFinite(Number(hot.progress_percent)) ? Math.min(100, Number(hot.progress_percent)) : 0;
-          const histBar = Number.isFinite(Number(hist.progress_percent)) ? Math.min(100, Number(hist.progress_percent)) : 0;
-          const hotAct = relativeActivity(hot.last_activity_at);
-          const globalAct = relativeActivity(acc.last_job_activity_at);
-          const salesLine =
-            hot.progress_total != null &&
-            Number(hot.progress_total) > 0 &&
-            hot.progress_current != null &&
-            Number.isFinite(Number(hot.progress_current))
-              ? `${fmtInt(hot.progress_current)} / ${fmtInt(hot.progress_total)} vendas recentes`
-              : null;
-
-          const mainLabel = acc.hot_sync_complete ? "Progresso do histórico completo" : "Progresso da camada rápida";
-
-          return (
-            <article key={acc.marketplace_account_id} className="s7-import-intel__account">
-              <div className="s7-import-intel__account-head">
-                <span className="s7-import-intel__account-name">{acc.display_name || acc.account_label}</span>
-                <span className="s7-import-intel__account-status">{acc.status_headline}</span>
-              </div>
-
-              <div className="s7-import-intel__main-progress">
-                <div className="s7-import-intel__progress-label">
-                  <span>{mainLabel}</span>
-                  <span>{mainBar}%</span>
-                </div>
-                <div className="s7-import-intel__progress-track">
-                  <div className="s7-import-intel__progress-fill" style={{ width: `${mainBar}%` }} />
-                </div>
-              </div>
-
-              <div className="s7-import-intel__layer-block s7-import-intel__layer-block--hot">
-                <div className="s7-import-intel__layer-title">
-                  <Layers size={17} strokeWidth={2} aria-hidden />
-                  <span>Camada rápida</span>
-                  <span className={`s7-import-intel__pill ${acc.hot_sync_complete ? "ok" : "run"}`}>
-                    {hotStatusLabelPt(hot.status)}
-                  </span>
-                </div>
-                <p className="s7-import-intel__layer-copy">
-                  Estamos preparando seus dados principais para uso imediato. Etapa atual:{" "}
-                  <strong>{hot.current_step_label || "—"}</strong>.
-                </p>
-                <div className="s7-import-intel__sub-progress">
-                  <div className="s7-import-intel__progress-label s7-import-intel__progress-label--sm">
-                    <span>
-                      Etapas {fmtInt(hot.completed_steps)} / {fmtInt(hot.total_steps)}
-                    </span>
-                    <span>{hotBar}%</span>
-                  </div>
-                  <div className="s7-import-intel__progress-track s7-import-intel__progress-track--sm">
-                    <div className="s7-import-intel__progress-fill s7-import-intel__progress-fill--hot" style={{ width: `${hotBar}%` }} />
-                  </div>
-                </div>
-                {salesLine ? <p className="s7-import-intel__sales-line">{salesLine}</p> : null}
-                {hotAct ? (
-                  <p className="s7-import-intel__activity s7-import-intel__activity--tight">
-                    <Clock size={14} strokeWidth={2} aria-hidden /> Camada rápida: última atividade {hotAct}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="s7-import-intel__layer-block s7-import-intel__layer-block--hist">
-                <div className="s7-import-intel__layer-title">
-                  <History size={17} strokeWidth={2} aria-hidden />
-                  <span>Histórico completo</span>
-                  <span className={`s7-import-intel__pill ${acc.historical_backfill_active ? "run" : "ok"}`}>
-                    {histStatusLabelPt(hist.status)}
-                  </span>
-                </div>
-                <p className="s7-import-intel__layer-copy">{hist.message_pt}</p>
-                <div className="s7-import-intel__sub-progress">
-                  <div className="s7-import-intel__progress-label s7-import-intel__progress-label--sm">
-                    <span>Progresso histórico (vendas)</span>
-                    <span>{histBar}%</span>
-                  </div>
-                  <div className="s7-import-intel__progress-track s7-import-intel__progress-track--sm">
-                    <div
-                      className="s7-import-intel__progress-fill s7-import-intel__progress-fill--hist"
-                      style={{ width: `${histBar}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="s7-import-intel__metrics s7-import-intel__metrics--inline">
-                  <div className="s7-import-intel__metric">
-                    <span className="s7-import-intel__metric-label">Vendas históricas</span>
-                    <strong className="s7-import-intel__metric-value">
-                      {fmtInt(hs?.progress_current)} / {fmtInt(hs?.progress_total)}
-                    </strong>
-                  </div>
-                  <div className="s7-import-intel__metric">
-                    <span className="s7-import-intel__metric-label">Anúncios</span>
-                    <strong className="s7-import-intel__metric-value">
-                      {lst?.progress_total != null && Number(lst.progress_total) > 0
-                        ? `${fmtInt(lst.progress_current)} / ${fmtInt(lst.progress_total)}`
-                        : lst?.status === "done"
-                          ? "Sincronizado"
-                          : lst?.status === "running"
-                            ? "Sincronizando…"
-                            : "—"}
-                    </strong>
-                  </div>
-                  <div className="s7-import-intel__metric">
-                    <span className="s7-import-intel__metric-label">Clientes históricos</span>
-                    <strong className="s7-import-intel__metric-value">
-                      {hc && (Number(hc.progress_total) > 0 || hc.status)
-                        ? `${fmtInt(hc.progress_current)} / ${fmtInt(hc.progress_total)}`
-                        : "—"}
-                    </strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="s7-import-intel__footer-row">
-                <p className="s7-import-intel__forecast">
-                  <Activity size={15} strokeWidth={2} className="s7-import-intel__forecast-ico" aria-hidden />
-                  {acc.forecast_message_pt}
-                </p>
-                {globalAct ? (
-                  <p className="s7-import-intel__activity">
-                    <Clock size={14} strokeWidth={2} aria-hidden /> Última atividade no servidor {globalAct}
-                  </p>
-                ) : null}
-              </div>
-
-              <p className="s7-import-intel__hint">
-                Janela inicial de vendas recentes: últimos <strong>{recentDays}</strong> dias — o restante entra no
-                histórico automático.
-              </p>
-
-              {!hidePerAccountNav ? (
-                <div className="s7-import-intel__account-actions">
-                  <button
-                    type="button"
-                    className="s7-import-intel__btn"
-                    onClick={() => openTechnicalOrNavigate(acc.marketplace_account_id)}
-                  >
-                    Ver sincronização em andamento
-                  </button>
-                </div>
-              ) : null}
-            </article>
-          );
-        })}
-      </div>
+      {accountsBlock}
 
       {showModalFooterLink ? (
         <footer className="s7-import-intel__foot">
@@ -455,6 +493,74 @@ export default function S7ImportIntelligencePanel({
           </Link>
         </footer>
       ) : null}
+    </>
+  );
+
+  if (isDashboardLayout) {
+    const compactSummary = buildDashboardImportCompactSummary(accounts, isImportCompleted);
+    const dashboardTitle = isImportCompleted ? "Importação concluída" : "Importação inteligente em andamento";
+    const ToggleChevron = dashboardExpanded ? ChevronUp : ChevronDown;
+
+    return (
+      <section
+        className={[
+          "s7-import-intel",
+          "s7-import-intel--dashboard",
+          isImportCompleted ? "s7-import-intel--success" : "s7-import-intel--active",
+          dashboardExpanded ? "s7-import-intel--expanded" : "s7-import-intel--collapsed",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-label={dashboardTitle}
+      >
+        <button
+          type="button"
+          className="s7-import-intel__dashboard-toggle"
+          onClick={toggleDashboardExpanded}
+          aria-expanded={dashboardExpanded}
+          aria-controls="s7-import-intel-dashboard-body"
+        >
+          <ToggleChevron className="s7-import-intel__dashboard-chevron" size={18} strokeWidth={2.25} aria-hidden />
+          <span className="s7-import-intel__dashboard-toggle-main">
+            <span className="s7-import-intel__title s7-import-intel__title--toggle">{dashboardTitle}</span>
+            {!dashboardExpanded ? (
+              <span className="s7-import-intel__compact-summary">
+                <span className="s7-import-intel__compact-line">{compactSummary.primary}</span>
+                {compactSummary.secondary ? (
+                  <span className="s7-import-intel__compact-line s7-import-intel__compact-line--secondary">
+                    {compactSummary.secondary}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+          </span>
+        </button>
+
+        {dashboardExpanded ? (
+          <div className="s7-import-intel__dashboard-body" id="s7-import-intel-dashboard-body">
+            {isImportCompleted ? (
+              <div className="s7-import-intel__dashboard-complete">
+                <CheckCircle2 className="s7-import-intel__success-icon" size={22} strokeWidth={2} aria-hidden />
+                <p className="s7-import-intel__sub">Seu ambiente Suse7 está totalmente sincronizado.</p>
+              </div>
+            ) : (
+              activeImportBody
+            )}
+          </div>
+        ) : null}
+      </section>
+    );
+  }
+
+  return (
+    <section
+      className={`s7-import-intel s7-import-intel--active s7-import-intel--${layout}`}
+      aria-label={layout === "modal" ? "Importação inteligente" : "Importação inteligente em andamento"}
+      data-marketplace-account-id={accountId || undefined}
+      data-seller-company-id={trimAccountId(sellerCompanyId) || undefined}
+      data-external-seller-id={externalSellerId != null && String(externalSellerId).trim() !== "" ? String(externalSellerId) : undefined}
+    >
+      {activeImportBody}
     </section>
   );
 }

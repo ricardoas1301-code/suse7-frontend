@@ -7,14 +7,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--s7-topnav-action-hit-size, 34px);
+  height: var(--s7-topnav-action-hit-size, 34px);
   border: none;
   background: transparent;
   color: var(--s7-text, #1f2937);
   cursor: pointer;
   border-radius: 8px;
   transition: background 0.15s, color 0.15s;
+}
+
+.s7-nc__bell svg {
+  width: 18px;
+  height: 18px;
 }
 
 .s7-nc__bell:hover,
@@ -228,7 +233,7 @@
 @media (max-width: 640px) {
   .s7-nc__panel {
     position: fixed;
-    top: 56px;
+    top: calc(var(--s7-topnav-bar-height, 48px) + 8px);
     right: 12px;
     left: 12px;
     width: auto;

@@ -199,7 +199,7 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin, de
           className="anuncios-sell-popover__promo-price-tip-btn vendas-sale-rayx__sale-promo-tip-btn"
           aria-label="Detalhes do desconto aplicado nesta venda"
         >
-          <S7Icon name="info" size={13} strokeWidth={2} />
+          <S7Icon name="info" size={12} strokeWidth={2} />
         </button>
       </S7Tooltip>
     ) : null;
@@ -383,7 +383,7 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin, de
 
           <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section vendas-sale-rayx__financial-section--contingency-margin">
 
-            <h4 className="anuncios-sell-popover__section-title">Margem de contingência</h4>
+            <h4 className="anuncios-sell-popover__section-title">Custos operacionais</h4>
 
             <div className="anuncios-sell-popover__block vendas-sale-rayx__fin-lines-group">
 

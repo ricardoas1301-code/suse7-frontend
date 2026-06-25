@@ -1,7 +1,8 @@
 // ======================================================================
 // Barra de canais do relatório — padrão global S7 (Raio-X).
-// Canal Copiar = cópia VISUAL do relatório (P_2.8.12F.C) com fallback texto.
-// Demais canais em fase futura.
+// Canal Copiar = relatório completo (executivo + detalhamento), mesma fonte do Imprimir.
+// WhatsApp + E-mail = motor central (imagem + Excel via buildVendasReportShareAssets).
+// Excel = download via buildVendasReportXlsx (mesma fonte do anexo).
 // ======================================================================
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,37 +13,84 @@ import {
   S7_MODAL_SHARE_ACTION_LABELS,
   S7_MODAL_SHARE_ACTION_ORDER,
 } from "../../../shared/modalActions/s7ModalShareActions.js";
+import { useNotifications } from "../../../contexts/NotificationContext";
+import { NOTIFICATION_SEVERITY } from "../../../services/notificationTypes";
+import {
+  fetchCentralNotificationRecipients,
+  fetchCentralEventDeliveryRules,
+} from "../../../services/centralNotificationsApi";
 import { buildVendasSharePayload } from "./share/buildVendasSharePayload.js";
-import { renderVendasShareExecutiveText } from "./share/renderVendasShareExecutiveText.js";
-import { copyVendasReportImageToClipboard } from "./share/copyVendasReportImage.jsx";
+import { copyVendasReportToClipboard } from "./share/copyVendasReportToClipboard.jsx";
 import { printVendasReport } from "./share/printVendasReport.js";
+import { downloadVendasReportXlsx } from "./share/buildVendasReportXlsx.js";
 import { shareVendasReportWhatsApp } from "./share/shareVendasReportWhatsApp.js";
+import { shareVendasReportEmail } from "./share/shareVendasReportEmail.js";
+import { pickVendasReportWhatsAppRecipients } from "./share/pickVendasReportWhatsAppRecipient.js";
+import { pickVendasReportEmailRecipients } from "./share/pickVendasReportEmailRecipient.js";
+import {
+  finishManualWhatsAppMotorNotify,
+  notifyManualWhatsAppSending,
+} from "../../../shared/notifications/finishManualWhatsAppMotorNotify.js";
+import {
+  finishManualEmailMotorNotify,
+  notifyManualEmailSending,
+} from "../../../shared/notifications/finishManualEmailMotorNotify.js";
 
 const COPY_FEEDBACK_MS = 2000;
 
 /**
  * @param {{
  *   aggregatedReport?: import("./buildVendasAggregatedReport.js").VendasAggregatedReport | null;
+ *   reportContext?: import("./buildVendasReportContext.js").VendasReportContext | null;
+ *   visibleActions?: readonly import("../../../shared/modalActions/s7ModalShareActions.js").S7ModalShareActionId[];
  * }} props
  */
-export default function VendasRelatorioCanais({ aggregatedReport = null }) {
+export default function VendasRelatorioCanais({
+  aggregatedReport = null,
+  reportContext = null,
+  visibleActions = S7_MODAL_SHARE_ACTION_ORDER,
+}) {
+  const { addNotification } = useNotifications();
   const canCopy = Boolean(aggregatedReport);
   const canPrint = Boolean(aggregatedReport);
   const canWhatsApp = Boolean(aggregatedReport);
-  // null | "image" | "text"
+  const canEmail = Boolean(aggregatedReport);
+  const canExcel = Boolean(aggregatedReport);
+  const allowedActions = new Set(Array.isArray(visibleActions) ? visibleActions : S7_MODAL_SHARE_ACTION_ORDER);
+  // null | "rich" | "text"
   const [copyFeedback, setCopyFeedback] = useState(null);
   const [copying, setCopying] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
-  // null | "shared" | "download"
+  const [sharingEmail, setSharingEmail] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const notifyToast = useCallback(
+    (title, message = "", severity = NOTIFICATION_SEVERITY.INFO) => {
+      addNotification({
+        event_type: "VENDAS_REPORT_WHATSAPP_NOTIFY",
+        entity_type: "sales_report",
+        title,
+        message,
+        severity,
+      });
+    },
+    [addNotification],
+  );
+
+  // null | "sent" | "queued" | "skipped"
   const [whatsappFeedback, setWhatsappFeedback] = useState(null);
   const timeoutRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
   const whatsappTimeoutRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
+  const emailTimeoutRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
+
+  // null | "sent" | "queued" | "skipped"
+  const [emailFeedback, setEmailFeedback] = useState(null);
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
       if (whatsappTimeoutRef.current != null) clearTimeout(whatsappTimeoutRef.current);
+      if (emailTimeoutRef.current != null) clearTimeout(emailTimeoutRef.current);
     };
   }, []);
 
@@ -58,42 +106,34 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
     whatsappTimeoutRef.current = setTimeout(() => setWhatsappFeedback(null), COPY_FEEDBACK_MS);
   }, []);
 
+  const flashEmailFeedback = useCallback((kind) => {
+    if (emailTimeoutRef.current != null) clearTimeout(emailTimeoutRef.current);
+    setEmailFeedback(kind);
+    emailTimeoutRef.current = setTimeout(() => setEmailFeedback(null), COPY_FEEDBACK_MS);
+  }, []);
+
+  const buildSharePayload = useCallback(
+    () => buildVendasSharePayload(aggregatedReport, reportContext),
+    [aggregatedReport, reportContext],
+  );
+
   const handleCopy = useCallback(async () => {
     if (copying) return;
-    const payload = buildVendasSharePayload(aggregatedReport);
+    const payload = buildSharePayload();
     if (!payload) return;
 
     setCopying(true);
     try {
-      // 1) Tenta copiar a imagem visual do relatório.
-      try {
-        const copiedImage = await copyVendasReportImageToClipboard(payload);
-        if (copiedImage) {
-          flashFeedback("image");
-          return;
-        }
-      } catch {
-        // Cai no fallback textual abaixo.
-      }
-
-      // 2) Fallback: copia o resumo executivo textual.
-      try {
-        const text = renderVendasShareExecutiveText(payload);
-        if (text && navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(text);
-          flashFeedback("text");
-        }
-      } catch {
-        // Silencioso: sem clipboard disponível.
-      }
+      const outcome = await copyVendasReportToClipboard(payload);
+      if (outcome) flashFeedback(outcome);
     } finally {
       setCopying(false);
     }
-  }, [aggregatedReport, copying, flashFeedback]);
+  }, [buildSharePayload, copying, flashFeedback]);
 
   const handlePrint = useCallback(async () => {
     if (printing) return;
-    const payload = buildVendasSharePayload(aggregatedReport);
+    const payload = buildSharePayload();
     if (!payload) return;
 
     setPrinting(true);
@@ -104,35 +144,117 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
     } finally {
       setPrinting(false);
     }
-  }, [aggregatedReport, printing]);
+  }, [buildSharePayload, printing]);
 
   const handleWhatsApp = useCallback(async () => {
     if (sharingWhatsApp) return;
-    const payload = buildVendasSharePayload(aggregatedReport);
+    const payload = buildSharePayload();
     if (!payload) return;
 
     setSharingWhatsApp(true);
+    notifyManualWhatsAppSending(notifyToast);
     try {
-      const status = await shareVendasReportWhatsApp(payload);
-      if (status === "shared-files" || status === "shared-image") {
-        flashWhatsAppFeedback("shared");
-      } else if (status === "fallback-download") {
-        flashWhatsAppFeedback("download");
+      // Missão 1 — destinatários configurados em SALES:MANUAL_SALES_REPORT (whatsapp).
+      const [recipientsRes, rulesRes] = await Promise.all([
+        fetchCentralNotificationRecipients(),
+        fetchCentralEventDeliveryRules(),
+      ]);
+      const { targets } = pickVendasReportWhatsAppRecipients({
+        groups: recipientsRes?.ok ? recipientsRes.groups : [],
+        rules: rulesRes?.ok ? rulesRes.rules : [],
+      });
+
+      if (!targets.length) {
+        notifyToast(
+          "Nenhum destinatário de WhatsApp configurado para Relatório de Vendas.",
+          "Configure em Perfil → Preferências → Notificações → Vendas.",
+          NOTIFICATION_SEVERITY.WARNING,
+        );
+        return;
       }
-    } catch {
-      // Fallback seguro: compartilhamento indisponível.
+
+      const sendRes = await shareVendasReportWhatsApp(payload, { targets });
+      const outcome = finishManualWhatsAppMotorNotify(notifyToast, sendRes);
+      if (outcome === "sent" || outcome === "queued" || outcome === "skipped") {
+        flashWhatsAppFeedback(outcome === "sent" ? "sent" : "queued");
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn("[S7 Relatório Vendas WhatsApp]", err);
+      }
+      notifyToast(
+        "Não foi possível compartilhar pelo WhatsApp.",
+        "Tente novamente em instantes.",
+        NOTIFICATION_SEVERITY.WARNING,
+      );
     } finally {
       setSharingWhatsApp(false);
     }
-  }, [aggregatedReport, sharingWhatsApp, flashWhatsAppFeedback]);
+  }, [buildSharePayload, sharingWhatsApp, flashWhatsAppFeedback, notifyToast]);
+
+  const handleEmail = useCallback(async () => {
+    if (sharingEmail) return;
+    const payload = buildSharePayload();
+    if (!payload) return;
+
+    setSharingEmail(true);
+    notifyManualEmailSending(notifyToast);
+    try {
+      const [recipientsRes, rulesRes] = await Promise.all([
+        fetchCentralNotificationRecipients(),
+        fetchCentralEventDeliveryRules(),
+      ]);
+      const { targets } = pickVendasReportEmailRecipients({
+        groups: recipientsRes?.ok ? recipientsRes.groups : [],
+        rules: rulesRes?.ok ? rulesRes.rules : [],
+      });
+
+      if (!targets.length) {
+        notifyToast(
+          "Nenhum destinatário de E-mail configurado para Relatório de Vendas.",
+          "Configure em Perfil → Preferências → Notificações → Vendas.",
+          NOTIFICATION_SEVERITY.WARNING,
+        );
+        return;
+      }
+
+      const sendRes = await shareVendasReportEmail(payload, { targets });
+      const outcome = finishManualEmailMotorNotify(notifyToast, sendRes);
+      if (outcome === "sent" || outcome === "queued" || outcome === "skipped") {
+        flashEmailFeedback(outcome === "sent" ? "sent" : "queued");
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn("[S7 Relatório Vendas E-mail]", err);
+      }
+      notifyToast(
+        "Não foi possível enviar por E-mail.",
+        "Tente novamente em instantes.",
+        NOTIFICATION_SEVERITY.WARNING,
+      );
+    } finally {
+      setSharingEmail(false);
+    }
+  }, [buildSharePayload, sharingEmail, flashEmailFeedback, notifyToast]);
+
+  const handleExcel = useCallback(async () => {
+    if (exporting) return;
+    const payload = buildSharePayload();
+    if (!payload) return;
+
+    setExporting(true);
+    try {
+      await downloadVendasReportXlsx(payload);
+    } finally {
+      setExporting(false);
+    }
+  }, [buildSharePayload, exporting]);
 
   const copied = copyFeedback != null;
   const copyTooltip =
     copyFeedback === "image"
       ? "Copiado!"
-      : copyFeedback === "text"
-        ? "Copiado como texto"
-        : S7_MODAL_SHARE_ACTION_LABELS.copy;
+      : S7_MODAL_SHARE_ACTION_LABELS.copy;
 
   return (
     <div
@@ -141,15 +263,16 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
       aria-label="Canais de exportação"
     >
       {S7_MODAL_SHARE_ACTION_ORDER.map((actionId) => {
+        if (!allowedActions.has(actionId)) return null;
         const label = S7_MODAL_SHARE_ACTION_LABELS[actionId];
 
         if (actionId === "whatsapp" && canWhatsApp) {
           const waCopied = whatsappFeedback != null;
           const waTooltip =
-            whatsappFeedback === "shared"
-              ? "Compartilhado!"
-              : whatsappFeedback === "download"
-                ? "Arquivos baixados para anexar"
+            whatsappFeedback === "sent"
+              ? "WhatsApp enviado!"
+              : whatsappFeedback === "queued"
+                ? "WhatsApp enfileirado!"
                 : label;
           return (
             <S7Tooltip key={actionId} content={waTooltip} placement="bottom-start" offset={6}>
@@ -166,6 +289,38 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
                 disabled={sharingWhatsApp}
               >
                 {waCopied ? (
+                  <Check size={17} strokeWidth={2} aria-hidden />
+                ) : (
+                  <S7ModalShareActionIcon actionId={actionId} />
+                )}
+              </button>
+            </S7Tooltip>
+          );
+        }
+
+        if (actionId === "email" && canEmail) {
+          const emCopied = emailFeedback != null;
+          const emTooltip =
+            emailFeedback === "sent"
+              ? "E-mail enviado!"
+              : emailFeedback === "queued"
+                ? "E-mail enfileirado!"
+                : label;
+          return (
+            <S7Tooltip key={actionId} content={emTooltip} placement="bottom-start" offset={6}>
+              <button
+                type="button"
+                className={[
+                  "vendas-sale-rayx__ops-icon-btn",
+                  emCopied ? "vendas-sale-rayx__ops-icon-btn--copied" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                aria-label={label}
+                onClick={handleEmail}
+                disabled={sharingEmail}
+              >
+                {emCopied ? (
                   <Check size={17} strokeWidth={2} aria-hidden />
                 ) : (
                   <S7ModalShareActionIcon actionId={actionId} />
@@ -208,6 +363,22 @@ export default function VendasRelatorioCanais({ aggregatedReport = null }) {
                 aria-label={label}
                 onClick={handlePrint}
                 disabled={printing}
+              >
+                <S7ModalShareActionIcon actionId={actionId} />
+              </button>
+            </S7Tooltip>
+          );
+        }
+
+        if (actionId === "csv" && canExcel) {
+          return (
+            <S7Tooltip key={actionId} content="Exportar Excel" placement="bottom-start" offset={6}>
+              <button
+                type="button"
+                className="vendas-sale-rayx__ops-icon-btn"
+                aria-label="Exportar Excel"
+                onClick={handleExcel}
+                disabled={exporting}
               >
                 <S7ModalShareActionIcon actionId={actionId} />
               </button>

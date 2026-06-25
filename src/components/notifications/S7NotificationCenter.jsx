@@ -11,6 +11,7 @@ import {
   formatRelativeTime,
   severityTone,
 } from "../../billing/notificationInboxUi";
+import { emitOpenDailySalesSummaryModal } from "./central/dailySalesSummaryModalBus";
 import "./S7NotificationCenter.css";
 
 function InboxIcon({ item }) {
@@ -20,6 +21,14 @@ function InboxIcon({ item }) {
   if (tone === "critical" || tone === "warning") return <AlertTriangle size={18} aria-hidden />;
   if (cat === "PRODUCTS" || cat === "INVENTORY") return <Package size={18} aria-hidden />;
   return <Info size={18} aria-hidden />;
+}
+
+function isDailySalesSummaryItem(item) {
+  const eventType = String(item?.event_type_key ?? "").toUpperCase();
+  if (eventType === "SALES:DAILY_SALES_SUMMARY") return true;
+  const category = String(item?.category_code ?? "").toUpperCase();
+  const type = String(item?.type_key ?? "").toUpperCase();
+  return category === "SALES" && type === "DAILY_SALES_SUMMARY";
 }
 
 export default function S7NotificationCenter() {
@@ -54,6 +63,10 @@ export default function S7NotificationCenter() {
   const openItem = async (item) => {
     if (!item?.is_read) await markOneRead(item.id);
     setOpen(false);
+    if (isDailySalesSummaryItem(item)) {
+      emitOpenDailySalesSummaryModal(item, "inbox_click");
+      return;
+    }
     const link = item?.deep_link;
     if (link && String(link).startsWith("/")) navigate(link);
   };

@@ -41,6 +41,7 @@ import { pickVendasSaleRowId } from "../selection/pickVendasSaleRowId.js";
 /**
  * @typedef {{
  *   totalCount: number;
+ *   listRowsTotal: number;
  *   truncatedScan: boolean;
  *   pageItemIds: string[];
  *   selectedIds: string[];
@@ -59,6 +60,7 @@ import { pickVendasSaleRowId } from "../selection/pickVendasSaleRowId.js";
  *   selectedSales: readonly Record<string, unknown>[];
  *   selectedSalesIds: string[];
  *   selectedSalesMetrics: null | Record<string, unknown>;
+ *   listSalesRows: readonly Record<string, unknown>[];
  *   capabilities: readonly string[];
  * }} VendasReportContext
  */
@@ -86,6 +88,7 @@ function pickSaleItemIdFromRow(row) {
  *   listFilterId: string;
  *   searchQuery: string;
  *   scopeOrdersCount: number;
+ *   listRowsTotal?: number;
  *   truncatedScan: boolean;
  *   rows: readonly Record<string, unknown>[];
  *   selectedSaleIds?: readonly string[];
@@ -180,6 +183,7 @@ export function buildVendasReportContext(input) {
     search,
     sales: {
       totalCount: Math.max(0, Number(input.scopeOrdersCount) || 0),
+      listRowsTotal: Math.max(0, Number(input.listRowsTotal) || 0),
       truncatedScan: reportScope === "selected" ? false : Boolean(input.truncatedScan),
       pageItemIds,
       selectedIds,
@@ -188,6 +192,10 @@ export function buildVendasReportContext(input) {
     selectedSales,
     selectedSalesIds: selectedIds,
     selectedSalesMetrics: metrics,
+    listSalesRows:
+      reportScope === "filters" && Array.isArray(input.rows)
+        ? /** @type {readonly Record<string, unknown>[]} */ (input.rows)
+        : [],
     capabilities: ["previewModal", "executiveStub", "multiSelectSales"],
   };
 }

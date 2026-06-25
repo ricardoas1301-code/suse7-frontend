@@ -35,9 +35,11 @@ import {
   TriangleAlert,
   Sparkles,
   LineChart,
+  TrendingUp,
   Clock,
   RotateCcw,
   Search,
+  Filter,
   X,
   Eye,
   Pencil,
@@ -50,6 +52,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarDays,
+  Medal,
+  Trophy,
 } from "lucide-react";
 
 export const iconsMap = {
@@ -88,10 +92,13 @@ export const iconsMap = {
   AlertTriangle: TriangleAlert,
   catalog_filter_opportunity: Sparkles,
   catalog_filter_declining: LineChart,
+  /** Tendência / crescimento — acento visual executivo */
+  trend_up: TrendingUp,
   catalog_filter_new: Clock,
   /** Anúncios — filtro por volume de visitas */
   ads_filter_visits: Eye,
   filter_clear: RotateCcw,
+  filter: Filter,
   search: Search,
   chevron_down: ChevronDown,
   chevron_left: ChevronLeft,
@@ -111,4 +118,11 @@ export const iconsMap = {
   billing_layers: Layers,
   billing_payment: Receipt,
   billing_money: CircleDollarSign,
+
+  /** Mercado Livre — reputação do vendedor (MercadoLíder) */
+  mercado_lider_medal: Medal,
+
+  /** Pódio executivo — Top 10 Vendas */
+  podium_trophy: Trophy,
+  podium_medal: Medal,
 };

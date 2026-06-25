@@ -2,7 +2,7 @@
 // Card premium de busca e filtros — página Vendas (P_2.2).
 // ======================================================================
 
-import { useMemo, useState } from "react";
+import { forwardRef, useCallback, useMemo, useState } from "react";
 import S7Icon from "../../../components/ui/S7Icon";
 import S7Input from "../../../components/ui/S7Input";
 import { SALES_FILTER_CHIPS } from "../../../utils/salesToolbarFilters";
@@ -33,7 +33,8 @@ import "./VendasFiltersCard.css";
  *   selectedCount?: number;
  * }} props
  */
-export default function VendasFiltersCard({
+const VendasFiltersCard = forwardRef(function VendasFiltersCard(
+  {
   accounts = [],
   accountLabel,
   accountsReady = true,
@@ -45,7 +46,9 @@ export default function VendasFiltersCard({
   gerarRelatorioDisabled = false,
   onGerarRelatorioClick,
   selectedCount = 0,
-}) {
+  },
+  ref,
+) {
   const {
     filters,
     periodSummaryLabel,
@@ -54,6 +57,19 @@ export default function VendasFiltersCard({
     setMarketplace,
     setMarketplaceAccountId,
   } = useVendasFilters();
+
+  const hasActiveCatalogFilters = useMemo(() => {
+    const hasChip = listFilter && listFilter !== "all";
+    const hasSearch = String(searchInput ?? "").trim() !== "";
+    const hasAccount = String(filters.marketplaceAccountId ?? "").trim() !== "";
+    return hasChip || hasSearch || hasAccount;
+  }, [listFilter, searchInput, filters.marketplaceAccountId]);
+
+  const limparFiltrosCatalogo = useCallback(() => {
+    onListFilterChange?.("all");
+    onSearchInputChange?.("");
+    setMarketplaceAccountId("");
+  }, [onListFilterChange, onSearchInputChange, setMarketplaceAccountId]);
 
   const expanded = filters.expanded;
 
@@ -89,9 +105,11 @@ export default function VendasFiltersCard({
 
   return (
     <section
+      ref={ref}
       className={[
         "vendas-filters-card",
         "s7-sticky-filters",
+        "s7-catalog-filter-card",
         expanded ? "vendas-filters-card--expanded" : "vendas-filters-card--collapsed",
       ]
         .filter(Boolean)
@@ -176,86 +194,123 @@ export default function VendasFiltersCard({
               />
             </div>
 
-            <div className="vendas-filters-card__selects">
-              <div className="vendas-filters-card__field vendas-filters-card__field--account">
-                <label className="vendas-filters-card__label" htmlFor="vendas-filters-account">
-                  Conta
-                </label>
-                <select
-                  id="vendas-filters-account"
-                  className="vendas-filters-card__select"
-                  value={filters.marketplaceAccountId}
-                  disabled={!accountsReady}
-                  onChange={(e) => setMarketplaceAccountId(e.target.value)}
-                >
-                  <option value="">Todas as contas</option>
-                  {accounts.map((a) => {
-                    const id = a.id != null ? String(a.id).trim() : "";
-                    if (!id) return null;
-                    return (
-                      <option key={id} value={id}>
-                        {accountLabel(a)}
-                      </option>
-                    );
-                  })}
-                </select>
+            <div className="vendas-filters-card__field vendas-filters-card__field--search">
+              <label className="vendas-filters-card__label" htmlFor="vendas-filters-search">
+                Buscar
+              </label>
+              <div className="products-catalog__search-wrap vendas-filters-card__search-wrap">
+                <div className="products-catalog__search-field">
+                  <span className="products-catalog__search-icon" aria-hidden>
+                    <S7Icon name="search" size={18} strokeWidth={1.85} />
+                  </span>
+                  <S7Input
+                    label=""
+                    name="vendas-filters-search"
+                    value={searchInput}
+                    onChange={(e) => onSearchInputChange?.(e.target.value)}
+                    placeholder="Buscar por título, comprador, SKU, código da venda ou rastreio"
+                    className="products-catalog__search-s7"
+                    inputClassName="products-catalog__search-input-field"
+                    autoComplete="off"
+                    aria-label="Buscar vendas por título, comprador, SKU, código ou rastreio"
+                    rightElement={
+                      searchInput ? (
+                        <button
+                          type="button"
+                          className="products-catalog__search-clear"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onSearchInputChange?.("");
+                          }}
+                          aria-label="Limpar busca"
+                        >
+                          <S7Icon name="close" size={16} strokeWidth={2} />
+                        </button>
+                      ) : null
+                    }
+                  />
+                </div>
               </div>
+            </div>
 
-              {/* P_2.2 hotfix final — filtros sem integração backend ocultos temporariamente.
-                  Reativar removendo o atributo hidden + a regra CSS --future[hidden]. */}
-              <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
-                <label className="vendas-filters-card__label" htmlFor="vendas-filters-status">
-                  Status da venda
-                </label>
-                <select
-                  id="vendas-filters-status"
-                  className="vendas-filters-card__select"
-                  value={statusVenda}
-                  onChange={(e) => setStatusVenda(e.target.value)}
-                >
-                  {VENDAS_STATUS_VENDA_OPTIONS.map((o) => (
-                    <option key={o.id || "all"} value={o.id}>
-                      {o.label}
+            <div className="vendas-filters-card__field vendas-filters-card__field--account">
+              <label className="vendas-filters-card__label" htmlFor="vendas-filters-account">
+                Conta
+              </label>
+              <select
+                id="vendas-filters-account"
+                className="vendas-filters-card__select"
+                value={filters.marketplaceAccountId}
+                disabled={!accountsReady}
+                onChange={(e) => setMarketplaceAccountId(e.target.value)}
+              >
+                <option value="">Todas as contas</option>
+                {accounts.map((a) => {
+                  const id = a.id != null ? String(a.id).trim() : "";
+                  if (!id) return null;
+                  return (
+                    <option key={id} value={id}>
+                      {accountLabel(a)}
                     </option>
-                  ))}
-                </select>
-              </div>
+                  );
+                })}
+              </select>
+            </div>
 
-              <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
-                <label className="vendas-filters-card__label" htmlFor="vendas-filters-delivery">
-                  Tipo de entrega
-                </label>
-                <select
-                  id="vendas-filters-delivery"
-                  className="vendas-filters-card__select"
-                  value={tipoEntrega}
-                  onChange={(e) => setTipoEntrega(e.target.value)}
-                >
-                  {VENDAS_TIPO_ENTREGA_OPTIONS.map((o) => (
-                    <option key={o.id || "all"} value={o.id}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* P_2.2 hotfix final — filtros sem integração backend ocultos temporariamente.
+                Reativar removendo o atributo hidden + a regra CSS --future[hidden]. */}
+            <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
+              <label className="vendas-filters-card__label" htmlFor="vendas-filters-status">
+                Status da venda
+              </label>
+              <select
+                id="vendas-filters-status"
+                className="vendas-filters-card__select"
+                value={statusVenda}
+                onChange={(e) => setStatusVenda(e.target.value)}
+              >
+                {VENDAS_STATUS_VENDA_OPTIONS.map((o) => (
+                  <option key={o.id || "all"} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
-                <label className="vendas-filters-card__label" htmlFor="vendas-filters-origin">
-                  Origem da venda
-                </label>
-                <select
-                  id="vendas-filters-origin"
-                  className="vendas-filters-card__select"
-                  value={origemVenda}
-                  onChange={(e) => setOrigemVenda(e.target.value)}
-                >
-                  {VENDAS_ORIGEM_VENDA_OPTIONS.map((o) => (
-                    <option key={o.id || "all"} value={o.id}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
+              <label className="vendas-filters-card__label" htmlFor="vendas-filters-delivery">
+                Tipo de entrega
+              </label>
+              <select
+                id="vendas-filters-delivery"
+                className="vendas-filters-card__select"
+                value={tipoEntrega}
+                onChange={(e) => setTipoEntrega(e.target.value)}
+              >
+                {VENDAS_TIPO_ENTREGA_OPTIONS.map((o) => (
+                  <option key={o.id || "all"} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="vendas-filters-card__field vendas-filters-card__field--future" hidden>
+              <label className="vendas-filters-card__label" htmlFor="vendas-filters-origin">
+                Origem da venda
+              </label>
+              <select
+                id="vendas-filters-origin"
+                className="vendas-filters-card__select"
+                value={origemVenda}
+                onChange={(e) => setOrigemVenda(e.target.value)}
+              >
+                {VENDAS_ORIGEM_VENDA_OPTIONS.map((o) => (
+                  <option key={o.id || "all"} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* P_2.2 M02 — Marketplace oculto temporariamente (somente ML ativo).
@@ -288,7 +343,7 @@ export default function VendasFiltersCard({
           </div>
 
           <div className="vendas-filters-card__row vendas-filters-card__row--chips">
-            <span className="vendas-filters-card__label">Filtros operacionais</span>
+            <span className="vendas-filters-card__label">Filtros rápidos</span>
             <div className="vendas-filters-card__chip-row" role="toolbar" aria-label="Filtros de vendas">
               {/* "Todos" removido — a ação oficial de zerar filtros é o botão "Limpar filtros". */}
               {SALES_FILTER_CHIPS.filter((c) => c.id !== "all").map((c) => (
@@ -310,56 +365,19 @@ export default function VendasFiltersCard({
               <button
                 type="button"
                 className="products-catalog__filter-clear"
-                disabled={!listFilter || listFilter === "all"}
+                disabled={!hasActiveCatalogFilters}
                 title="Remove os filtros aplicados"
-                onClick={() => onListFilterChange?.("all")}
+                onClick={limparFiltrosCatalogo}
               >
                 <S7Icon name="filter_clear" size={14} strokeWidth={1.75} className="products-catalog__filter-clear-icon" />
                 <span>Limpar filtros</span>
               </button>
             </div>
           </div>
-
-          <div className="vendas-filters-card__row vendas-filters-card__row--search">
-            <label className="vendas-filters-card__label" htmlFor="vendas-filters-search">
-              Buscar
-            </label>
-            <div className="products-catalog__search-wrap vendas-filters-card__search-wrap">
-              <div className="products-catalog__search-field">
-                <span className="products-catalog__search-icon" aria-hidden>
-                  <S7Icon name="search" size={18} strokeWidth={1.85} />
-                </span>
-                <S7Input
-                  label=""
-                  name="vendas-filters-search"
-                  value={searchInput}
-                  onChange={(e) => onSearchInputChange?.(e.target.value)}
-                  placeholder="Buscar por título, comprador, SKU, código da venda ou rastreio"
-                  className="products-catalog__search-s7"
-                  inputClassName="products-catalog__search-input-field"
-                  autoComplete="off"
-                  aria-label="Buscar vendas por título, comprador, SKU, código ou rastreio"
-                  rightElement={
-                    searchInput ? (
-                      <button
-                        type="button"
-                        className="products-catalog__search-clear"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onSearchInputChange?.("");
-                        }}
-                        aria-label="Limpar busca"
-                      >
-                        <S7Icon name="close" size={16} strokeWidth={2} />
-                      </button>
-                    ) : null
-                  }
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
   );
-}
+});
+
+export default VendasFiltersCard;

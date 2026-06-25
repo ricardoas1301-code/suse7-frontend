@@ -1,0 +1,61 @@
+/* ======================================================================
+   Ritmo vertical — páginas catálogo (Vendas, Precificações, Anúncios,
+   Produtos, Concorrência). Base: gap Produtos homologado (−20%).
+   - menu → KPIs / filtros: --s7-catalog-block-gap (12px total)
+   - KPIs / filtros → lista: mesmo --s7-catalog-block-gap
+====================================================================== */
+
+:root {
+  --s7-catalog-page-inset-top: 5px;
+  --s7-catalog-block-gap: 12px;
+  --s7-catalog-filter-offset-top: 7px;
+}
+
+/* Shells de rota — padding-top unificado */
+.anuncios-catalog {
+  padding-top: var(--s7-catalog-page-inset-top);
+}
+
+/* KPIs / rankings superiores */
+.anuncios-catalog > .anuncios-catalog__kpis,
+.anuncios-catalog > .s7-core-kpis.anuncios-catalog__kpis {
+  margin-top: 0;
+  margin-bottom: var(--s7-catalog-block-gap);
+}
+
+.s7-core-kpis.anuncios-catalog__kpis {
+  margin-bottom: var(--s7-catalog-block-gap);
+}
+
+/* Card busca + filtros — topo (quando é o 1º bloco visível após o menu) */
+.anuncios-catalog > .products-catalog__controls.s7-catalog-filter-card {
+  margin-top: var(--s7-catalog-filter-offset-top);
+}
+
+/* Sem gap duplo quando KPIs/rankings precedem filtros */
+.anuncios-catalog > .anuncios-catalog__kpis ~ .products-catalog__controls.s7-catalog-filter-card,
+.anuncios-catalog > .s7-core-kpis ~ .products-catalog__controls.s7-catalog-filter-card {
+  margin-top: 0;
+}
+
+/* Card busca + filtros — base antes da lista (Dashboard e rotas legadas) */
+.vendas-filters-card,
+.page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+.page-content .anuncios-catalog > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible {
+  margin-bottom: var(--s7-catalog-block-gap);
+}
+
+/* Sem gap duplo — Precificações / Anúncios (card colapsável) após KPIs */
+.page-content .anuncios-catalog > .anuncios-catalog__kpis ~ .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+.page-content .anuncios-catalog > .s7-core-kpis ~ .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+.page-content .anuncios-catalog > .anuncios-catalog__kpis ~ .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible,
+.page-content .anuncios-catalog > .s7-core-kpis ~ .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+  .page-content .concorrencia-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card {
+    margin-bottom: var(--s7-catalog-block-gap);
+  }
+}

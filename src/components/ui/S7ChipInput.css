@@ -8,7 +8,7 @@
   box-sizing: border-box;
 
   font-family: var(--s7-font, system-ui, sans-serif);
-  font-size: 14px;
+  font-size: var(--s7-text-body);
 
   padding: 6px 8px;
   border-radius: 8px;
@@ -33,7 +33,7 @@
   border-radius: 999px;
   background: #eef2ff;
   color: var(--s7-primary, #2563eb);
-  font-size: 13px;
+  font-size: var(--s7-text-body);
   font-weight: 600;
 }
 
@@ -49,7 +49,7 @@
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  font-size: 10px;
+  font-size: var(--s7-text-caption);
   line-height: 1;
   color: inherit;
 }
@@ -64,7 +64,7 @@
   min-width: 120px;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: var(--s7-text-body);
   outline: none;
   color: var(--s7-text, #0f172a);
 }

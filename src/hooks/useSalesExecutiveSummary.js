@@ -1,8 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchSalesExecutiveSummary } from "../services/salesExecutiveSummaryApi";
+import { ensureAuthSessionBootstrapped } from "../auth/authBootstrapService";
+import {
+  fetchSalesExecutiveSummary,
+  runExecutiveSummaryFetchSerialized,
+} from "../services/salesExecutiveSummaryApi";
 
 /** Evita flicker quando a API responde muito rápido (skeleton some suave). */
 const EXECUTIVE_SUMMARY_MIN_LOADING_MS = 280;
+
+/**
+ * @param {import("../services/salesExecutiveSummaryApi.js").SalesExecutiveSummaryParams} parsedParams
+ */
+async function fetchExecutiveSummaryWithAuthRetry(parsedParams) {
+  return runExecutiveSummaryFetchSerialized(async () => {
+    let res = await fetchSalesExecutiveSummary(parsedParams);
+    const shouldRetry =
+      !res.ok && (res.status === 401 || res.status === 0 || Boolean(res.connectionError));
+    if (shouldRetry) {
+      await ensureAuthSessionBootstrapped();
+      res = await fetchSalesExecutiveSummary(parsedParams);
+    }
+    return res;
+  });
+}
 
 /**
  * @param {import("../services/salesExecutiveSummaryApi.js").SalesExecutiveSummaryParams | null | undefined} params
@@ -41,7 +61,7 @@ export function useSalesExecutiveSummary(params, options = {}) {
 
     const startedAt = Date.now();
     const parsedParams = paramsKey ? JSON.parse(paramsKey) : {};
-    const res = await fetchSalesExecutiveSummary(parsedParams);
+    const res = await fetchExecutiveSummaryWithAuthRetry(parsedParams);
 
     if (seq !== requestSeqRef.current) return null;
 
@@ -65,10 +85,9 @@ export function useSalesExecutiveSummary(params, options = {}) {
 
   useEffect(() => {
     let cancelled = false;
+    const seq = ++requestSeqRef.current;
 
     (async () => {
-      const seq = ++requestSeqRef.current;
-
       if (!enabled) {
         if (!cancelled) {
           setLoading(false);
@@ -85,7 +104,7 @@ export function useSalesExecutiveSummary(params, options = {}) {
 
       const startedAt = Date.now();
       const parsedParams = paramsKey ? JSON.parse(paramsKey) : {};
-      const res = await fetchSalesExecutiveSummary(parsedParams);
+      const res = await fetchExecutiveSummaryWithAuthRetry(parsedParams);
 
       if (cancelled || seq !== requestSeqRef.current) return;
 
@@ -128,7 +147,6 @@ export function useSalesExecutiveSummary(params, options = {}) {
 
     return () => {
       cancelled = true;
-      requestSeqRef.current += 1;
     };
   }, [enabled, finishLoadingAfterMinDelay, paramsKey]);
 

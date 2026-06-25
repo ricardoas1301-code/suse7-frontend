@@ -11,6 +11,8 @@ import { useNavigate, Link } from "react-router-dom";
 import GoogleIcon from "../assets/google.png";
 import "./Signup.css";
 import Suse7Alert from "../components/Suse7Alert";
+import { DEFAULT_OPERATIONAL_WORKING_DAYS, normalizeOperationalWorkingDays } from "../features/dashboard/operationalWorkingDays.js";
+import OperationalWorkingDaysField from "./Profile/OperationalWorkingDaysField.jsx";
 
 
 // --- Funções de Validação de CPF/CNPJ (CNPJ Corrigido Novamente) ---
@@ -211,6 +213,7 @@ export default function Signup() {
     estado: "",
     imposto_percentual: "",
     operational_day_closes_at: "18:00",
+    operational_working_days: DEFAULT_OPERATIONAL_WORKING_DAYS,
     senha: "",
     senha2: "",
     termos: false,
@@ -475,6 +478,7 @@ export default function Signup() {
         estado: form.estado,
         imposto_percentual: Number(form.imposto_percentual.replace("%", "")),
         operational_day_closes_at: form.operational_day_closes_at || "18:00",
+        operational_working_days: normalizeOperationalWorkingDays(form.operational_working_days),
         primeiro_login: false,
         created_at: new Date(),
         last_login: new Date(),
@@ -763,10 +767,16 @@ export default function Signup() {
                 onChange={(e) => update("operational_day_closes_at", e.target.value)}
               />
               <p className="field-help">
-                Usaremos esse horário para calcular seu Resumo Diário no Dashboard. Exemplo: se você
-                encerra às 18:00, o resumo mostra as vendas desde 18:00 até agora.
+                Usaremos esse horário junto com os dias de operação para calcular seu Resumo Diário no Dashboard.
               </p>
             </div>
+          </div>
+
+          <div className="row">
+            <OperationalWorkingDaysField
+              value={form.operational_working_days}
+              onChange={(days) => update("operational_working_days", days)}
+            />
           </div>
 
           {/* SENHA */}

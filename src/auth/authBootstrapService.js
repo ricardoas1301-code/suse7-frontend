@@ -13,6 +13,19 @@ let listenerInstalled = false;
 const sessionListeners = new Set();
 
 /**
+ * @param {import("@supabase/supabase-js").Session | null | undefined} a
+ * @param {import("@supabase/supabase-js").Session | null | undefined} b
+ */
+function sessionsEquivalent(a, b) {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return (
+    String(a.access_token ?? "") === String(b.access_token ?? "") &&
+    String(a.user?.id ?? "") === String(b.user?.id ?? "")
+  );
+}
+
+/**
  * @param {(session: import("@supabase/supabase-js").Session | null) => void} listener
  */
 export function subscribeAuthBootstrapSession(listener) {
@@ -82,6 +95,9 @@ export async function refreshAuthBootstrapSession(source = "refresh") {
   }
 
   const session = data.session ?? null;
+  if (sessionsEquivalent(cachedSession, session)) {
+    return cachedSession;
+  }
   setCachedSession(session);
   logAuthBootstrap("session_updated", {
     source,
@@ -101,11 +117,15 @@ export function installAuthBootstrapListener() {
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange((event, session) => {
-    setCachedSession(session ?? null);
+    const next = session ?? null;
+    if (sessionsEquivalent(cachedSession, next)) {
+      return;
+    }
+    setCachedSession(next);
     logAuthBootstrap("session_updated", {
       event,
-      hasSession: Boolean(session),
-      userId: session?.user?.id ?? null,
+      hasSession: Boolean(next),
+      userId: next?.user?.id ?? null,
     });
   });
 

@@ -1,0 +1,71 @@
+/* ======================================================================
+   Produtos — alinhamento cabeçalho ↔ corpo (Anúncios → Estoque)
+   Importado após VendasPage.css para vencer text-align: right dos KPIs.
+   Paridade geométrica com .products-catalog__grid--head (column-gap: 0).
+   ====================================================================== */
+
+.products-catalog__row > .products-catalog__cell {
+  box-sizing: border-box;
+  padding-left: var(--s7-list-table-head-padding-x, 6px);
+  padding-right: var(--s7-list-table-head-padding-x, 6px);
+}
+
+.products-catalog__grid--head .products-catalog__cell:nth-child(3),
+.products-catalog__grid--head .products-catalog__cell:nth-child(4),
+.products-catalog__grid--head .products-catalog__cell:nth-child(5),
+.products-catalog__grid--head .products-catalog__cell:nth-child(6),
+.products-catalog__grid--head .products-catalog__cell:nth-child(7),
+.products-catalog__grid--head .products-catalog__cell:nth-child(8),
+.products-catalog__grid--head .products-catalog__cell:nth-child(9),
+.products-catalog__grid--head .products-catalog__cell:nth-child(10),
+.products-catalog__row .products-catalog__cell:nth-child(3),
+.products-catalog__row .products-catalog__cell:nth-child(4),
+.products-catalog__row .products-catalog__cell:nth-child(5),
+.products-catalog__row .products-catalog__cell:nth-child(6),
+.products-catalog__row .products-catalog__cell:nth-child(7),
+.products-catalog__row .products-catalog__cell:nth-child(8),
+.products-catalog__row .products-catalog__cell:nth-child(9),
+.products-catalog__row .products-catalog__cell:nth-child(10) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.products-catalog .products-catalog__cell.products-catalog__cell--metric-vendas.vendas-page__num-cell {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.products-catalog .products-catalog__cell--metric-vendas .vendas-page__num-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.products-catalog .products-catalog__cell--metric-vendas .vendas-page__num-stack-primary,
+.products-catalog .products-catalog__cell--metric-vendas .vendas-page__fin-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.products-catalog .products-catalog__cell--metric-vendas .vendas-page__num-stack-secondary-slot {
+  text-align: center;
+}
+
+.products-catalog .products-catalog__cell--metric-vendas .vendas-page__fin-value-row {
+  display: inline-flex;
+  max-width: 100%;
+}

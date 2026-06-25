@@ -11,7 +11,8 @@
 }
 
 .anuncios-catalog {
-  padding: 10px clamp(4px, 0.65vw, 10px) 44px;
+  --products-catalog-table-radius: var(--s7-list-table-radius, 12px);
+  padding: var(--s7-catalog-page-inset-top, 5px) clamp(4px, 0.65vw, 10px) 44px;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -180,6 +181,114 @@
   overflow: hidden;
 }
 
+.anuncios-sku-modal__lookup {
+  margin-top: 10px;
+}
+
+.anuncios-sku-modal__lookup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anuncios-sku-modal__lookup-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.anuncios-sku-modal__lookup-item--selected {
+  border-color: var(--s7-orange, #f97316);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.anuncios-sku-modal__lookup-item input[type="checkbox"] {
+  margin-top: 2px;
+}
+
+.anuncios-sku-modal__lookup-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.06);
+  flex: 0 0 34px;
+  margin-top: 1px;
+}
+
+.anuncios-sku-modal__lookup-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #ffffff;
+  display: block;
+}
+
+.anuncios-sku-modal__lookup-thumb-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(71, 85, 105, 0.7);
+}
+
+.anuncios-sku-modal__lookup-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+  flex: 1;
+}
+
+.anuncios-sku-modal__lookup-text strong {
+  font-size: 12px;
+  line-height: 1.28;
+  color: var(--s7-orange, #f97316);
+  text-align: left;
+  word-break: break-word;
+}
+
+.anuncios-sku-modal__lookup-text span {
+  font-size: 11px;
+  line-height: 1.3;
+  color: #64748b;
+  text-align: left;
+}
+
+.anuncios-sku-modal__lookup-sku {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.anuncios-sku-modal__lookup-state {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.anuncios-sku-modal__lookup-state--error {
+  color: #b91c1c;
+}
+
+.anuncios-sku-modal__confirm-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #475569;
+}
+
 .anuncios-catalog__kpi-mini--stat {
   padding: 0;
   border: none;
@@ -201,7 +310,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(0, 1.08fr) minmax(260px, 0.92fr);
   gap: 18px;
-  margin-bottom: 26px;
+  margin-bottom: var(--s7-catalog-block-gap, 12px);
   align-items: stretch;
 }
 
@@ -413,6 +522,423 @@
   }
 }
 
+/* ======================================================================
+   S1.2 — Cards executivos (Precificações): 3 superiores + 4 inferiores.
+   Estrutura visual no padrão de Vendas. Placeholders sem métrica nesta fase.
+====================================================================== */
+.anuncios-catalog__exec {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.anuncios-catalog__exec-row {
+  display: grid;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.anuncios-catalog__exec-row--top {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.anuncios-catalog__exec-row--bottom {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.anuncios-catalog__exec-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 150px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 12px rgba(15, 23, 42, 0.05),
+    0 16px 40px rgba(15, 23, 42, 0.07);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.anuncios-catalog__exec-card--compact {
+  min-height: 120px;
+  border-radius: 14px;
+}
+
+.anuncios-catalog__exec-card-head {
+  padding: 12px 18px 13px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.anuncios-catalog__exec-card-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--s7-muted, #64748b);
+  line-height: 1.4;
+}
+
+.anuncios-catalog__exec-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px 18px 18px;
+  gap: 8px;
+}
+
+.anuncios-catalog__exec-card-body--empty {
+  padding: 0;
+}
+
+@media (max-width: 1180px) {
+  .anuncios-catalog__exec-row--top {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .anuncios-catalog__exec-row--bottom {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .anuncios-catalog__exec-row--top,
+  .anuncios-catalog__exec-row--bottom {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .anuncios-catalog__exec-row--top,
+  .anuncios-catalog__exec-row--bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ======================================================================
+   S1.3 — Card de busca e filtros recolhível (Precificações abre recolhido).
+   Aplica-se apenas quando o modo marca filtersStartCollapsed (não afeta Anúncios).
+   Painel usa display:contents quando não recolhível → layout idêntico ao atual.
+====================================================================== */
+.anuncios-catalog__filters-panel {
+  display: contents;
+}
+
+.anuncios-catalog__filters--collapsible .anuncios-catalog__filters-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.anuncios-catalog__filters--collapsed .anuncios-catalog__filters-panel {
+  display: none;
+}
+
+.anuncios-catalog__filters-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  /* Barra clicável no padrão do card de Vendas (header com gradiente + padding). */
+  padding: 11px 14px;
+  border: none;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  cursor: pointer;
+  text-align: left;
+  color: var(--s7-text, #0f172a);
+  transition: background 0.18s ease;
+}
+
+.anuncios-catalog__filters-toggle:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+.anuncios-catalog__filters-toggle:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: -2px;
+}
+
+.anuncios-catalog__filters-toggle-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Lupa laranja em caixa arredondada — fonte da verdade: card de filtros da página Vendas. */
+.anuncios-catalog__filters-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 133, 51, 0.12);
+  color: var(--s7-orange, #ff8533);
+  flex: 0 0 auto;
+}
+
+.anuncios-catalog__filters-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Tipografia idêntica ao título "Busca e filtros" da Vendas. */
+.anuncios-catalog__filters-toggle-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.anuncios-catalog__filters-toggle-summary {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anuncios-catalog__filters-toggle-chevron {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 8px;
+  color: #64748b;
+  flex: 0 0 auto;
+  transition:
+    transform 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.anuncios-catalog__filters-toggle-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.anuncios-catalog__filters-toggle-report-btn {
+  flex-shrink: 0;
+}
+
+.anuncios-catalog__filters-toggle-chevron--open {
+  transform: rotate(180deg);
+}
+
+.anuncios-catalog__filters-toggle-chevron:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--s7-primary, #2563eb);
+}
+
+/* Quando recolhido: leve destaque/sombra de componente clicável (padrão Vendas). */
+.anuncios-catalog__filters--collapsed.s7-catalog-filter-card {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 22px rgba(15, 23, 42, 0.05);
+  transition: box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.anuncios-catalog__filters--collapsed .anuncios-catalog__filters-toggle:hover .anuncios-catalog__filters-toggle-title {
+  color: #c2410c;
+}
+
+@media (max-width: 640px) {
+  .anuncios-catalog__filters-toggle-report-btn .s7-btn__label {
+    display: none;
+  }
+
+  .anuncios-catalog__filters-toggle-report-btn {
+    min-width: 36px;
+    padding-inline: 8px;
+  }
+}
+
+.anuncios-catalog__filters--collapsed:hover.s7-catalog-filter-card {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+/* Chrome externo idêntico ao card de Produtos / Vendas — cantos 14px + clip interno.
+   Largura = grade (sem inset lateral do Products.css). */
+.page-content .anuncios-catalog > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible {
+  --anuncios-filters-card-radius: 14px;
+  width: 100%;
+  max-width: 100%;
+  margin-top: var(--s7-catalog-filter-offset-top, 7px);
+  margin-bottom: var(--s7-catalog-block-gap, 12px);
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: var(--anuncios-filters-card-radius);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 22px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.anuncios-catalog__filters--collapsible.anuncios-catalog__filters--collapsed .anuncios-catalog__filters-toggle {
+  border-radius: var(--anuncios-filters-card-radius, 14px);
+}
+
+.anuncios-catalog__filters--collapsible:not(.anuncios-catalog__filters--collapsed) .anuncios-catalog__filters-toggle {
+  border-radius: var(--anuncios-filters-card-radius, 14px) var(--anuncios-filters-card-radius, 14px) 0 0;
+}
+
+/* Corpo (painel) com o mesmo padding/gap do .vendas-filters-card__body. */
+.anuncios-catalog__filters--collapsible .anuncios-catalog__filters-panel {
+  padding: 0 14px 14px;
+  gap: 10px;
+}
+
+.anuncios-catalog__filters--collapsible:not(.anuncios-catalog__filters--collapsed) .anuncios-catalog__filters-panel {
+  padding-top: 8px;
+}
+
+/* —— Layout interno (padrão oficial: Buscar + Conta → Filtros rápidos) —— */
+.anuncios-catalog__filters-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.anuncios-catalog__filters-row {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.anuncios-catalog__filters-row--search-account {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.anuncios-catalog__filters-row--chips {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anuncios-catalog__filters-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.anuncios-catalog__filters-group--search {
+  flex: 0 1 auto;
+}
+
+.anuncios-catalog__filters-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.anuncios-catalog__filters-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  align-items: center;
+}
+
+/* Select de Conta — mesmo visual dos selects da Vendas. */
+.anuncios-catalog__filters-select {
+  height: 34px;
+  width: 100%;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.anuncios-catalog__filters-group--account {
+  flex: 0 1 auto;
+}
+
+.anuncios-catalog__filters-group--search .anuncios-catalog__filters-search {
+  width: min(363px, 100%);
+  max-width: 363px;
+}
+
+.anuncios-catalog__filters-group--account .anuncios-catalog__filters-select {
+  width: min(242px, 100%);
+  max-width: 242px;
+}
+
+.anuncios-catalog__filters-select:focus {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.anuncios-catalog__filters-search {
+  width: 100%;
+  max-width: 420px;
+}
+
+@media (max-width: 720px) {
+  .anuncios-catalog__filters-row--search-account {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .anuncios-catalog__filters-group--search .anuncios-catalog__filters-search,
+  .anuncios-catalog__filters-group--account .anuncios-catalog__filters-select {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .anuncios-catalog__filters-select,
+  .anuncios-catalog__filters-search {
+    max-width: 100%;
+  }
+}
+
+/* Padding mobile espelhando o card de Vendas (≤480px). */
+@media (max-width: 480px) {
+  .anuncios-catalog__filters--collapsible .anuncios-catalog__filters-toggle {
+    padding: 10px 12px;
+  }
+
+  .anuncios-catalog__filters--collapsible .anuncios-catalog__filters-panel {
+    padding: 0 12px 12px;
+  }
+}
+
 /* —— Grade de anúncios (capa + operação + health) —— */
 /* Vista minimal: lista mais estreita no desktop (menos “vácuo” à direita) */
 .products-catalog__table-hscroll:has(.anuncios-catalog__grid--minimal) {
@@ -484,6 +1010,11 @@
   justify-content: center;
 }
 
+.anuncios-catalog__grid--head .anuncios-catalog__select-checkbox {
+  width: 12px;
+  height: 12px;
+}
+
 .anuncios-catalog__select-checkbox {
   width: 18px;
   height: 18px;
@@ -525,10 +1056,16 @@
     minmax(0, 0.72fr);
   column-gap: 10px;
   align-items: center;
+}
+
+.anuncios-catalog__grid:not(.anuncios-catalog__grid--head) {
   padding: 0 clamp(12px, 1.6vw, 18px);
 }
 
-/* Modo Anúncios (S7): sem coluna do atalho Precifica — mesma ordem de células, um trilho a menos. */
+.anuncios-catalog__grid--head {
+  isolation: isolate;
+}
+
 .anuncios-catalog__grid.anuncios-catalog__grid--no-precifica-col,
 .anuncios-catalog__row.anuncios-catalog__row--no-precifica-col {
   min-width: min(1680px, 100%);
@@ -1753,6 +2290,22 @@
   border-radius: 4px;
 }
 
+/* Refino UX (modal Raio-X da Venda): ícone de tooltip do "Valor da venda".
+   Azul Suse7 por padrão, hover laranja, ~10% menor e mais próximo do texto.
+   Escopado ao bloco da linha "Valor da venda" para não afetar outros usos. */
+.vendas-sale-rayx__fin-block--sale-value .s7-tooltip--rich-panel.s7-tooltip-trigger {
+  margin-left: -2px;
+}
+
+.vendas-sale-rayx__fin-block--sale-value .vendas-sale-rayx__sale-promo-tip-btn {
+  color: var(--s7-primary, #2563eb);
+}
+
+.vendas-sale-rayx__fin-block--sale-value .vendas-sale-rayx__sale-promo-tip-btn:hover,
+.vendas-sale-rayx__fin-block--sale-value .vendas-sale-rayx__sale-promo-tip-btn:focus-within {
+  color: var(--s7-tooltip-trigger-hover, #ff8533);
+}
+
 .anuncios-raiox-promo-price-tip {
   display: flex;
   flex-direction: column;
@@ -2039,7 +2592,8 @@
   }
 }
 
-.anuncios-catalog--dense .products-catalog__cell {
+.anuncios-catalog--dense .anuncios-catalog__body .products-catalog__cell,
+.anuncios-catalog--dense .anuncios-catalog__row .products-catalog__cell {
   font-size: 11px;
   line-height: 1.3;
 }
@@ -2050,35 +2604,11 @@
 }
 
 .anuncios-catalog__grid--head {
-  position: sticky;
-  top: 0;
-  z-index: 8;
   isolation: isolate;
-  overflow: visible;
-  padding: 10px clamp(12px, 1.6vw, 18px);
-  background: linear-gradient(180deg, var(--s7-title-bar-bg-from) 0%, var(--s7-title-bar-bg-to) 100%);
-  background-clip: padding-box;
-  border-bottom: 1px solid var(--s7-title-bar-border-bottom);
-  border-radius: var(--products-catalog-table-radius, 16px) var(--products-catalog-table-radius, 16px) 0 0;
-  box-shadow:
-    0 1px 0 var(--s7-title-bar-inset-highlight) inset,
-    0 4px 14px var(--s7-title-bar-shadow);
-}
-
-/* Cabeçalho legível + cor do token (Products.css usa clamp min ~4px nesta combinação) */
-.anuncios-catalog__grid--head .products-catalog__cell.products-catalog__col-head {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  line-height: 1.35;
-  color: var(--s7-title-bar-text, #ffffff);
 }
 
 .anuncios-catalog__grid--head.anuncios-catalog__grid--minimal {
-  align-items: center;
-  min-height: 52px;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  align-items: stretch;
 }
 
 .anuncios-catalog__grid--head.anuncios-catalog__grid--minimal .anuncios-catalog__cell--minimal-mkt {
@@ -2089,7 +2619,8 @@
 /* Tooltips do cabeçalho (mesmo padrão da grade de produtos) */
 .anuncios-catalog__grid--head .products-catalog__head-tooltip {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   vertical-align: baseline;
   max-width: 100%;
   margin: 0;
@@ -2103,27 +2634,6 @@
   line-height: inherit;
   cursor: help;
   outline: none;
-}
-
-.anuncios-catalog__grid--head .products-catalog__head-tooltip:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.85);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-.anuncios-catalog__grid--head .products-catalog__head-tooltip--stacked {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-  line-height: 1.15;
-  gap: 0;
-}
-
-.anuncios-catalog__grid--head .products-catalog__col-head-line {
-  display: block;
-  white-space: nowrap;
 }
 
 .anuncios-catalog__grid--head .products-catalog__head-tooltip[data-tooltip]::after {
@@ -2194,7 +2704,7 @@
 
 .anuncios-catalog__grid--head .anuncios-catalog__cell--title.products-catalog__col-head,
 .anuncios-catalog__grid--head .anuncios-catalog__cell--product.products-catalog__col-head {
-  text-align: left;
+  text-align: center;
 }
 
 .anuncios-catalog__grid--head .anuncios-catalog__cell--account.products-catalog__col-head,
@@ -2232,9 +2742,9 @@
     minmax(0, 0.72fr);
   column-gap: 10px;
   align-items: center;
-  padding: 8px clamp(12px, 1.6vw, 18px);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  transition: background 0.18s ease;
+  padding: var(--s7-list-table-row-padding-y) var(--s7-list-table-row-padding-x);
+  border-bottom: 1px solid var(--s7-list-table-row-border);
+  transition: background 0.16s ease;
 }
 
 .anuncios-catalog__grid.anuncios-catalog__grid--minimal {
@@ -2248,8 +2758,8 @@
   grid-template-columns: 44px 96px 56px minmax(0, 1fr) minmax(168px, 228px);
   column-gap: 14px;
   align-items: start;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 8px;
+  padding-bottom: 8px;
   scroll-margin-top: 56px;
   overflow: visible;
 }
@@ -2259,7 +2769,7 @@
 }
 
 .anuncios-catalog__row:hover:not(.anuncios-catalog__row--pending-product) {
-  background: #f9fafb;
+  background: var(--s7-list-table-row-hover-bg);
 }
 
 .products-catalog__body .anuncios-catalog__row:last-child {
@@ -2839,7 +3349,7 @@
   /* Topo: metade do inset vertical (10px → 5px); laterais inalteradas; base sem padding inferior extra. */
   padding: 5px var(--s7-pricing-page-inset-x) 0;
   /* Refino final: rodapé mínimo, equilibrado com topo sem vazio exagerado. */
-  padding-bottom: 0;
+  padding-bottom: 28px;
   box-sizing: border-box;
   max-width: 100%;
   overflow-x: visible;
@@ -2851,6 +3361,55 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 16px;
+}
+
+.pricing-intelligence-page__status-hint {
+  margin: 0 0 6px;
+  padding: 0 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+/* Alertas só dentro do workspace de cenários (nunca faixa global da página). */
+.pricing-intelligence-page__block-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.pricing-intelligence-page__block-alert p {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.pricing-intelligence-page__block-alert--scenarios {
+  color: #991b1b;
+  background: rgba(254, 226, 226, 0.55);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.pricing-intelligence-page__block-status {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.pricing-intelligence-page__workspace-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
 }
 
 /* Conteúdo da precificação em modo página: herda tipografia do popover, sem painel branco externo. */
@@ -2976,12 +3535,25 @@
   gap: 4px;
 }
 
+.pricing-intelligence-page__product-header-title-link {
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.pricing-intelligence-page__product-header-title-link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
 .pricing-intelligence-page__product-header-title {
   margin: 0;
   font-size: 11.5px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  color: rgba(15, 23, 42, 0.9);
+  color: var(--s7-orange, #ff8533);
   line-height: 1.3;
   white-space: normal;
   overflow: visible;
@@ -3029,6 +3601,10 @@
   justify-content: flex-start;
   padding: 8px 10px 10px;
   gap: 6px;
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0;
 }
 
 .pricing-intelligence-page__product-header--vertical .pricing-intelligence-page__product-header-marketplace {
@@ -3059,10 +3635,46 @@
 
 .pricing-intelligence-page__product-header--vertical .pricing-intelligence-page__product-header-meta {
   margin: 0;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   white-space: nowrap;
-  text-align: center;
+  text-align: left;
+}
+
+.pricing-intelligence-page__product-header--vertical .pricing-intelligence-page__product-header-meta--account {
+  margin-top: 2px;
+}
+
+/* Card lateral PI — SKU/Conta: label em destaque, valor peso normal, mesmo tamanho da linha */
+.pricing-intelligence-page__product-header--vertical .pricing-intelligence-page__product-header-meta--copy,
+.pricing-intelligence-page__product-header--vertical .pricing-intelligence-page__product-header-meta--account {
+  font-weight: 400;
+}
+
+.pricing-intelligence-page__product-header--vertical
+  .pricing-intelligence-page__product-header-meta--copy
+  .anuncios-ad-sku-label,
+.pricing-intelligence-page__product-header--vertical
+  .pricing-intelligence-page__product-header-meta--account
+  .anuncios-ad-sku-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(15, 23, 42, 0.58);
+  margin-right: 0;
+}
+
+.pricing-intelligence-page__product-header--vertical
+  .pricing-intelligence-page__product-header-meta--copy
+  .anuncios-ad-sku-value,
+.pricing-intelligence-page__product-header--vertical
+  .pricing-intelligence-page__product-header-meta--account
+  .anuncios-ad-sku-value {
+  font-size: 11px;
+  font-weight: 400;
+  font-style: normal;
+  color: rgba(15, 23, 42, 0.58);
 }
 
 .pricing-intelligence-page__product-header-meta--copy {
@@ -3108,6 +3720,41 @@
   border-radius: 6px;
 }
 
+.pricing-intelligence-page__listing-type-selection-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+  font-size: calc(11px * 0.81 * 0.84);
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: none;
+}
+
+.pricing-intelligence-page__listing-type-selection-pill--vendendo {
+  background: #ffcc00;
+  color: #fff;
+  border: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+  font-weight: 700;
+  font-size: calc(11px * 0.81 * 0.84);
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.pricing-intelligence-page__listing-type-selection-pill--alternativa {
+  background: rgba(255, 255, 255, 0.98);
+  color: rgba(37, 99, 235, 0.92);
+  border: 1px solid rgba(37, 99, 235, 0.42);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  font-weight: 700;
+  font-size: calc(11px * 0.81 * 0.84);
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
 .pricing-intelligence-page__product-metrics-section {
   padding-top: 7px;
   border-top: 1px dashed rgba(15, 23, 42, 0.12);
@@ -3120,19 +3767,6 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--s7-orange, #ff8533);
-}
-
-.pricing-intelligence-page__product-metrics-title--with-tip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.pricing-intelligence-page__product-metrics-tip {
-  color: rgba(15, 23, 42, 0.42);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .pricing-intelligence-page__product-metrics-row {
@@ -3704,6 +4338,15 @@
 .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare .anuncios-pricing-modal__col--results {
   max-height: none;
   overflow: visible;
+  min-height: 0;
+}
+
+.pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__results-panel,
+.pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__current-scenarios {
+  overflow: visible;
+  max-height: none;
 }
 
 /* Near-full: coluna direita estica à altura do grid (= base do card produto à esquerda). */
@@ -3749,7 +4392,8 @@
   gap: 0;
   /* Altura mínima suave: não força faixa vazia extra sob o workspace. */
   min-height: min(360px, calc(100dvh - var(--s7-pricing-page-viewport-chrome, 104px)));
-  --s7-pricing-product-col-w: 200px;
+  /* Card lateral com a mesma largura fixa dos cards Clássico/Premium. */
+  --s7-pricing-product-col-w: calc(var(--s7-pricing-calc-col-w, 270px) * 0.81 * 1.05 * 1.05 * 1.06);
   --s7-pricing-controls-col-w: calc(156px * var(--s7-pricing-sidebar-card-scale));
   --s7-pricing-calc-col-w: 270px;
 }
@@ -3757,8 +4401,49 @@
 .pricing-intelligence-page__workspace-shell--tabs-horizontal {
   display: grid;
   grid-template-columns: var(--s7-pricing-product-col-w) minmax(0, 1fr);
-  align-items: flex-start;
+  align-items: stretch;
   gap: 16px;
+  /* Respiro inferior dentro do container pai. */
+  padding-bottom: 12px;
+}
+
+.pricing-intelligence-page__workspace-shell--tabs-in-right-col {
+  align-items: stretch;
+}
+
+.pricing-intelligence-page__workspace-shell--initial-loading .pricing-intelligence-page__workspace-main-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(420px, 55vh);
+}
+
+.pricing-intelligence-page__loading-state {
+  width: 100%;
+  min-height: min(360px, 50vh);
+  justify-content: center;
+  padding: 24px 16px 32px;
+}
+
+.pricing-intelligence-page__loading-state--compact {
+  min-height: 220px;
+  padding: 16px 12px 20px;
+}
+
+.pricing-intelligence-page__loading-state-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+.pricing-intelligence-page__loading-state-subtitle {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(15, 23, 42, 0.62);
 }
 
 .pricing-intelligence-page__workspace-product-col {
@@ -3766,16 +4451,22 @@
   width: var(--s7-pricing-product-col-w);
   min-width: var(--s7-pricing-product-col-w);
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
-.pricing-intelligence-page__workspace-content-col {
+.pricing-intelligence-page__workspace-product-col .pricing-intelligence-page__product-header {
+  margin-bottom: 0;
+}
+
+.pricing-intelligence-page__workspace-content-col,
+.pricing-intelligence-page__workspace-main-col {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding-left: 0;
+  align-self: stretch;
 }
 
 .pricing-intelligence-page__workspace-tab-rail {
@@ -3846,6 +4537,730 @@
     0 6px 14px rgba(59, 130, 246, 0.16);
 }
 
+/* Abas Precificação / Promoções — compactas, largura pelo conteúdo (não botões gigantes). */
+.pricing-intelligence-page__workspace-tab-rail--premium {
+  gap: 6px;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+
+.pricing-intelligence-page__workspace-tab-rail--premium .pricing-intelligence-page__workspace-tab--horizontal {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 26px;
+  padding: 5px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  border-width: 1px;
+}
+
+.pricing-intelligence-page__workspace-tab-rail--premium .pricing-intelligence-page__workspace-tab--active {
+  background: var(--s7-orange, #ff8533);
+  border-color: var(--s7-orange, #ff8533);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(255, 133, 51, 0.34);
+}
+
+.pricing-intelligence-page__workspace-tab-rail--premium
+  .pricing-intelligence-page__workspace-tab:not(.pricing-intelligence-page__workspace-tab--active) {
+  background: #fff;
+  border-color: var(--s7-orange, #ff8533);
+  color: var(--s7-orange, #ff8533);
+  box-shadow: none;
+}
+
+.pricing-intelligence-page__workspace-tab-rail--premium
+  .pricing-intelligence-page__workspace-tab:not(.pricing-intelligence-page__workspace-tab--active):hover {
+  background: rgba(255, 133, 51, 0.1);
+  border-color: var(--s7-orange, #ff8533);
+  color: var(--s7-orange, #ff8533);
+}
+
+.pricing-intelligence-page__workspace-tab-rail--premium
+  .pricing-intelligence-page__workspace-tab:not(.pricing-intelligence-page__workspace-tab--active):active {
+  transform: scale(0.98);
+}
+
+/* PI.2.11C — abas + Salvar na mesma linha (gap uniforme). */
+.pricing-intelligence-page__workspace-tab-rail-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.pricing-intelligence-page__workspace-tab-rail-row .pricing-intelligence-page__workspace-tab-rail--in-right-stack {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+
+.pricing-intelligence-page__workspace-tab-rail-save {
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 5px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  border: 1px solid rgb(37, 99, 235);
+  background: rgb(37, 99, 235);
+  color: #fff;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.pricing-intelligence-page__workspace-tab-rail-save:hover:not(:disabled) {
+  background: rgb(29, 78, 216);
+  border-color: rgb(29, 78, 216);
+  color: #fff;
+}
+
+.pricing-intelligence-page__workspace-tab-rail-save:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.pricing-intelligence-page__workspace-tab-rail-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.pricing-intelligence-page__workspace-tab-rail-save:focus-visible {
+  outline: 2px solid rgb(37, 99, 235);
+  outline-offset: 2px;
+}
+
+.pricing-intelligence-page__workspace-tab-rail--in-right-stack {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
+.pricing-listing-type-right-stack__tab-rail {
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.pricing-listing-type-right-stack__tab-rail--promotions-empty {
+  margin-bottom: 8px;
+}
+
+/* PI.2.11C — Aba Concorrentes (somente leitura). */
+.pricing-intelligence-page__competitors-panel {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.pricing-intelligence-page__competitors-compare-card {
+  width: 100%;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.pricing-intelligence-page__competitors-selling-empty {
+  margin: 0;
+  padding: 12px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(15, 23, 42, 0.62);
+  border-radius: 10px;
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  background: rgba(248, 250, 252, 0.85);
+}
+
+.pricing-intelligence-page__competitors-state,
+.pricing-intelligence-page__competitors-empty {
+  margin: 0;
+  padding: 14px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(15, 23, 42, 0.62);
+  border-radius: 10px;
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  background: rgba(248, 250, 252, 0.85);
+}
+
+.pricing-intelligence-page__competitors-state--error {
+  color: rgba(185, 28, 28, 0.92);
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(254, 242, 242, 0.85);
+}
+
+.pricing-intelligence-page__competitors-retry {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(37, 99, 235);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.pricing-intelligence-page__competitors-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto);
+  gap: calc(6px * var(--s7-pi-competitor-card-scale, 0.968));
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  align-content: start;
+  --s7-pi-competitor-card-scale: 0.968;
+  --s7-pi-competitor-thumb-scale: calc(0.7 * var(--s7-pi-competitor-card-scale));
+  --s7-pi-competitor-text-scale: calc(1.3 * var(--s7-pi-competitor-card-scale));
+  --s7-pi-competitor-price-scale: 1.16;
+}
+
+/* Mini-cards — formato vertical original (imagem em cima, dados embaixo), compacto. */
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: calc(5px * var(--s7-pi-competitor-card-scale));
+  min-width: 0;
+  padding: calc(6px * var(--s7-pi-competitor-card-scale));
+  border-radius: calc(9px * var(--s7-pi-competitor-card-scale));
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, #fff 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-thumb {
+  width: calc(100% * var(--s7-pi-competitor-thumb-scale));
+  align-self: center;
+  aspect-ratio: 1 / 1;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-thumb-ph svg {
+  width: calc(18px * var(--s7-pi-competitor-thumb-scale));
+  height: calc(18px * var(--s7-pi-competitor-thumb-scale));
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2px * var(--s7-pi-competitor-text-scale));
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-title {
+  font-size: calc(9.5px * var(--s7-pi-competitor-text-scale));
+  line-height: 1.2;
+  -webkit-line-clamp: 2;
+  color: var(--s7-primary, #2563eb);
+  font-weight: 700;
+}
+
+.pricing-intelligence-page__competitors-grid a.pricing-intelligence-page__competitor-mini-card-title:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(4px * var(--s7-pi-competitor-text-scale));
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-frete {
+  font-size: calc(10px * var(--s7-pi-competitor-text-scale) * 0.82);
+  font-weight: 700;
+  color: #16a34a;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-price {
+  font-size: calc(10px * var(--s7-pi-competitor-text-scale) * var(--s7-pi-competitor-price-scale, 1.16));
+  font-weight: 800;
+  color: var(--s7-orange, #ff8533);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-seller {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(3px * var(--s7-pi-competitor-text-scale));
+  font-size: calc(8.5px * var(--s7-pi-competitor-text-scale));
+  color: rgba(51, 65, 85, 0.82);
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-seller-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(3px * var(--s7-pi-competitor-text-scale));
+  color: #16a34a;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-seller-badge-icon {
+  flex-shrink: 0;
+  color: #16a34a;
+  stroke: #16a34a;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-seller-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-dot {
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+
+.pricing-intelligence-page__competitor-mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, #fff 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.pricing-intelligence-page__competitor-mini-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitor-mini-card-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pricing-intelligence-page__competitor-mini-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pricing-intelligence-page__competitor-mini-card-thumb-ph {
+  color: rgba(100, 116, 139, 0.72);
+}
+
+.pricing-intelligence-page__competitor-mini-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.92);
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pricing-intelligence-page__competitor-mini-card-title:hover {
+  color: rgb(37, 99, 235);
+  text-decoration: underline;
+}
+
+.pricing-intelligence-page__competitor-mini-card-price {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.92);
+}
+
+.pricing-intelligence-page__competitor-mini-card-seller {
+  font-size: 10px;
+  color: rgba(51, 65, 85, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-intelligence-page__competitor-mini-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  color: rgba(100, 116, 139, 0.92);
+}
+
+.pricing-intelligence-page__competitor-mini-card-dot {
+  opacity: 0.65;
+}
+
+/* Abas Concorrentes / Promoções — 3 colunas: produto | Clássico+Premium | abas + conteúdo. */
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--competitors-tab,
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--promotions-tab {
+  display: grid;
+  grid-template-columns: var(--s7-pricing-product-col-w) var(--s7-pricing-listing-type-compare-w) minmax(0, 1fr);
+  grid-template-rows: auto;
+  gap: 10px 16px;
+  align-items: stretch;
+  height: auto;
+  flex: 0 1 auto;
+  width: 100%;
+  min-width: 0;
+  --s7-pricing-listing-type-card-w: calc(var(--s7-pricing-calc-col-w, 270px) * 0.81 * 1.05 * 1.05 * 1.06);
+  --s7-pricing-listing-type-compare-w: calc(
+    2 * var(--s7-pricing-listing-type-card-w) + var(--s7-pricing-workspace-gap, 10px)
+  );
+}
+
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--competitors-tab
+  > .pricing-intelligence-page__workspace-product-col,
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--promotions-tab
+  > .pricing-intelligence-page__workspace-product-col {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: stretch;
+}
+
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--competitors-tab
+  > .pricing-intelligence-page__workspace-dual-scenario-compare-col,
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--promotions-tab
+  > .pricing-intelligence-page__workspace-dual-scenario-compare-col,
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--competitors-tab
+  > .pricing-intelligence-page__workspace-competitors-compare-col,
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--promotions-tab
+  > .pricing-intelligence-page__workspace-competitors-compare-col {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--competitors-tab
+  > .pricing-intelligence-page__workspace-dual-scenario-right-col,
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--promotions-tab
+  > .pricing-intelligence-page__workspace-dual-scenario-right-col,
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--competitors-tab
+  > .pricing-intelligence-page__workspace-competitors-right-col,
+.pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--promotions-tab
+  > .pricing-intelligence-page__workspace-competitors-right-col {
+  grid-column: 3;
+  grid-row: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: stretch;
+}
+
+.pricing-intelligence-page__workspace-shell--competitors-initial-loading
+  > .pricing-intelligence-page__workspace-competitors-loading-span,
+.pricing-intelligence-page__workspace-shell--promotions-initial-loading
+  > .pricing-intelligence-page__workspace-promotions-loading-span {
+  grid-column: 2 / -1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(420px, 55vh);
+  min-width: 0;
+}
+
+.pricing-listing-type-compare--competitors-dual,
+.pricing-listing-type-compare--pi-dual {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: var(--s7-pricing-listing-type-card-w) var(--s7-pricing-listing-type-card-w);
+  align-items: stretch;
+}
+
+.pricing-intelligence-page__workspace-dual-scenario-compare-col .pricing-intelligence-page__competitors-compare-card,
+.pricing-intelligence-page__workspace-dual-scenario-compare-col .pricing-listing-type-compare__col,
+.pricing-intelligence-page__workspace-competitors-compare-col .pricing-intelligence-page__competitors-compare-card,
+.pricing-intelligence-page__workspace-competitors-compare-col .pricing-listing-type-compare__col {
+  min-width: 0;
+  width: var(--s7-pricing-listing-type-card-w);
+  max-width: var(--s7-pricing-listing-type-card-w);
+}
+
+.pricing-intelligence-page__workspace-dual-scenario-right-col .pricing-listing-type-right-stack__tab-rail,
+.pricing-intelligence-page__workspace-dual-scenario-right-col .pricing-intelligence-page__workspace-tab-rail-row,
+.pricing-intelligence-page__workspace-competitors-right-col .pricing-listing-type-right-stack__tab-rail,
+.pricing-intelligence-page__workspace-competitors-right-col .pricing-intelligence-page__workspace-tab-rail-row {
+  width: 100%;
+}
+
+.pricing-intelligence-page__workspace-promotions-content-col,
+.pricing-intelligence-page__workspace-competitors-grid-col {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pricing-intelligence-page__workspace-promotions-content-col .pricing-intelligence-page__workspace-panel--promotions,
+.pricing-intelligence-page__workspace-promotions-content-col .pricing-intelligence-page__promotions-panel,
+.pricing-intelligence-page__workspace-competitors-grid-col .pricing-intelligence-page__workspace-panel--competitors,
+.pricing-intelligence-page__workspace-competitors-grid-col .pricing-intelligence-page__competitors-panel {
+  flex: 0 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
+.pricing-intelligence-page__promotions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
+.pricing-intelligence-page__promotions-carousel {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.pricing-intelligence-page__promotions-carousel-nav {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: rgba(15, 23, 42, 0.72);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.pricing-intelligence-page__promotions-carousel-nav:hover:not(:disabled) {
+  border-color: rgba(249, 115, 22, 0.55);
+  color: rgba(234, 88, 12, 0.95);
+}
+
+.pricing-intelligence-page__promotions-carousel-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pricing-intelligence-page__promotions-carousel-track-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pricing-intelligence-page__promotions-carousel-track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding: 2px 1px 4px;
+}
+
+.pricing-intelligence-page__promotions-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.pricing-intelligence-page__promotion-mini-card {
+  flex: 0 0 auto;
+  width: min(100%, 168px);
+  min-height: 62px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  background: rgba(255, 255, 255, 0.94);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.pricing-intelligence-page__promotion-mini-card:hover {
+  border-color: rgba(249, 115, 22, 0.45);
+}
+
+.pricing-intelligence-page__promotion-mini-card--selected {
+  border-color: rgba(249, 115, 22, 0.82);
+  background: rgba(255, 247, 237, 0.92);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.14);
+}
+
+.pricing-intelligence-page__promotion-mini-card-name {
+  width: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.88);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-intelligence-page__promotion-mini-card-status {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-intelligence-page__promotion-mini-card-status--ativa {
+  color: rgba(21, 128, 61, 0.95);
+  background: rgba(220, 252, 231, 0.95);
+}
+
+.pricing-intelligence-page__promotion-mini-card-status--programada {
+  color: rgba(29, 78, 216, 0.95);
+  background: rgba(219, 234, 254, 0.95);
+}
+
+.pricing-intelligence-page__promotion-mini-card-status--disponivel {
+  color: rgba(180, 83, 9, 0.95);
+  background: rgba(254, 243, 199, 0.95);
+}
+
+.pricing-intelligence-page__promotion-detail-wrap {
+  min-width: 0;
+  width: 100%;
+}
+
+@keyframes pricing-intelligence-promotion-detail-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.pricing-intelligence-page__promotion-detail-wrap--animate {
+  animation: pricing-intelligence-promotion-detail-in 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-intelligence-page__promotion-detail-wrap--animate {
+    animation: none;
+  }
+}
+
+.pricing-intelligence-page__promotions-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  min-height: min(220px, 36vh);
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  background: rgba(248, 250, 252, 0.82);
+}
+
+.pricing-intelligence-page__promotions-empty-state-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.86);
+}
+
+.pricing-intelligence-page__promotions-empty-state-subtitle {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.pricing-intelligence-page__promotions-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.pricing-intelligence-page__workspace-panels[hidden],
+.pricing-intelligence-page__workspace-panel[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 980px) {
+  .pricing-intelligence-page__competitors-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-intelligence-page__competitors-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .pricing-intelligence-page__workspace-tab-rail .pricing-intelligence-page__product-header--vertical {
   margin-bottom: 0;
   width: 100%;
@@ -3881,7 +5296,7 @@
 
 @media (max-width: 1099px) {
   .pricing-intelligence-page__workspace-shell {
-    --s7-pricing-product-col-w: 186px;
+    --s7-pricing-product-col-w: calc(var(--s7-pricing-calc-col-w, 250px) * 0.81 * 1.05 * 1.05 * 1.06);
     --s7-pricing-controls-col-w: calc(148px * var(--s7-pricing-sidebar-card-scale));
     --s7-pricing-calc-col-w: 250px;
   }
@@ -3949,6 +5364,464 @@
   color: rgba(15, 23, 42, 0.62);
 }
 
+/* Comparativo Clássico × Premium — dois cards sempre visíveis (Precificação Inteligente). */
+.pricing-intelligence-page__scenario-workspace--listing-type-dual {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-pricing-workspace-gap, 10px);
+  width: 100%;
+  min-width: 0;
+  /* Uma coluna cheia — não herdar grid 2 colunas do rail de promoções. */
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.pricing-intelligence-page__scenario-main--listing-type-dual {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-pricing-workspace-gap, 12px);
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: visible;
+  max-height: none;
+  min-height: 0;
+}
+
+.pricing-listing-type-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s7-pricing-workspace-gap, 10px);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.pricing-listing-type-compare__col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  align-self: stretch;
+}
+
+.pricing-listing-type-compare__col .pricing-scenario-detail {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pricing-listing-type-compare__col .pricing-scenario-detail,
+.pricing-listing-type-compare__col .s7-ml-scenario-compare__card {
+  overflow: visible;
+  max-height: none;
+}
+
+.pricing-listing-type-compare__col .s7-ml-scenario-compare__card-body {
+  overflow: visible;
+  max-height: none;
+}
+
+.pricing-listing-type-compare__col .s7-ml-scenario-compare__card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tipo atual no ML — destaque azul no card inteiro */
+.pricing-listing-type-compare__col--atual .s7-ml-scenario-compare__card {
+  border-color: rgba(52, 131, 250, 0.55);
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.88) 0%, rgba(255, 255, 255, 0.98) 100%);
+  box-shadow: 0 4px 16px rgba(52, 131, 250, 0.2);
+}
+
+.pricing-listing-type-compare__col--atual .s7-ml-scenario-compare__card-title-prefix {
+  color: rgba(15, 23, 42, 0.95);
+}
+
+/* Tipo alternativo — neutro/cinza */
+.pricing-listing-type-compare__col--alt .s7-ml-scenario-compare__card {
+  border-color: rgba(15, 23, 42, 0.1);
+  background: rgba(248, 250, 252, 0.82);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.pricing-listing-type-compare__col--alt .s7-ml-scenario-compare__card-title-prefix {
+  color: rgba(15, 23, 42, 0.52);
+}
+
+/* Cabeçalho do card: "Anúncio" + pill CLÁSSICO/PREMIUM (igual Tipo do anúncio no card produto). */
+.s7-ml-scenario-compare__card-title.s7-ml-scenario-compare__card-title--listing-type {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+}
+
+.s7-ml-scenario-compare__card-title-prefix {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.92);
+}
+
+.pricing-listing-type-compare__col .pricing-intelligence-page__listing-type-pill {
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.pricing-listing-type-compare__col--alt .s7-ml-scenario-compare__card-body {
+  opacity: 0.94;
+}
+
+.pricing-listing-type-compare__col--simulando .s7-ml-scenario-compare__card {
+  outline: 1px dashed rgba(255, 133, 51, 0.45);
+  outline-offset: 2px;
+}
+
+.pricing-listing-type-compare__col--recalculando .s7-ml-scenario-compare__card {
+  opacity: 0.98;
+  transition: opacity 0.15s ease;
+}
+
+.pricing-listing-type-compare__col--recalculando .s7-ml-scenario-compare__card-body {
+  transition: opacity 0.15s ease;
+}
+
+.pricing-intelligence-page__workspace-mount--preparing {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  pointer-events: none;
+}
+
+.pricing-intelligence-page__content.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__current-scenarios {
+  position: relative;
+}
+
+.pricing-listing-type-compare__unavailable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.pricing-listing-type-compare__unavailable-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.pricing-listing-type-compare__unavailable-text {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(15, 23, 42, 0.52);
+}
+
+.pricing-listing-type-compare__col--loading .s7-ml-scenario-compare__card,
+.pricing-listing-type-compare__col--loading .pricing-scenario-detail {
+  min-height: 100%;
+}
+
+.pricing-listing-type-compare__loading {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 100%;
+  width: 100%;
+  padding: 18px 12px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, #ffffff 100%);
+}
+
+.pricing-listing-type-compare__loading-spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pricing-listing-type-compare__loading-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.52);
+}
+
+.pricing-listing-type-compare__loading-text {
+  margin: 0;
+  max-width: 16rem;
+  font-size: 11.5px;
+  line-height: 1.4;
+  text-align: center;
+  color: rgba(15, 23, 42, 0.62);
+}
+
+/* Edição inline — valor de venda / margem nos cards de cenário. */
+.pricing-inline-editable-metric__display-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.pricing-inline-editable-metric__value {
+  font-weight: 700;
+}
+
+.pricing-inline-editable-metric__edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--s7-orange, #ff8533);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.pricing-inline-editable-metric__edit-btn:hover,
+.pricing-inline-editable-metric__edit-btn:focus-visible {
+  background: transparent;
+  box-shadow: none;
+  color: var(--s7-orange, #ff8533);
+  opacity: 1;
+}
+
+.pricing-inline-editable-metric__edit-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  justify-content: flex-end;
+  font-size: calc(1em * 1.16);
+  color: #0f172a;
+}
+
+.pricing-inline-editable-metric__edit-wrap--with-prefix {
+  gap: 1px;
+  letter-spacing: -0.02em;
+}
+
+.pricing-inline-editable-metric__edit-wrap .pricing-inline-editable-metric__affix--currency {
+  margin: 0;
+  padding: 0;
+  font-size: 1em;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--s7-orange, #ff8533);
+}
+
+.pricing-inline-editable-metric__input {
+  width: 96px;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  font: inherit;
+  font-size: 1em;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: right;
+  color: var(--s7-orange, #ff8533);
+  caret-color: var(--s7-orange, #ff8533);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.pricing-inline-editable-metric__input:focus,
+.pricing-inline-editable-metric__input:focus-visible {
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  color: var(--s7-orange, #ff8533);
+}
+
+.pricing-inline-editable-metric__affix {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.anuncios-sell-popover__line--inline-edit {
+  align-items: center;
+}
+
+.anuncios-sell-popover__section--contingency {
+  padding-top: 10px;
+  border-top: 1px dashed rgba(15, 23, 42, 0.12);
+}
+
+.anuncios-sell-popover__block--contingency .anuncios-sell-popover__contingency-entry + .anuncios-sell-popover__contingency-entry {
+  margin-top: 6px;
+}
+
+.anuncios-sell-popover__contingency-pct {
+  margin-top: 0;
+  line-height: 1.2;
+}
+
+.pricing-listing-type-compare__card-footnote,
+.pricing-listing-type-compare__ml-motor-hint {
+  margin: 8px 12px 0;
+  padding: 0;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.pricing-intelligence-page__section-fallback {
+  padding: 14px 16px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  background: rgba(254, 242, 242, 0.65);
+}
+
+.pricing-intelligence-page__section-fallback-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(127, 29, 29, 0.92);
+}
+
+.pricing-intelligence-page__section-fallback-text {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(71, 85, 105, 0.95);
+}
+
+.pricing-intelligence-page__section-fallback-dev {
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  color: rgba(100, 116, 139, 0.9);
+  word-break: break-word;
+}
+
+/* Coluna direita: Precificação do produto (larga) + gráfico Clássico × Premium abaixo. */
+.pricing-listing-type-right-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-pricing-workspace-gap, 10px);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  --s7-pricing-listing-type-right-col-w: 374px;
+}
+
+.pricing-listing-type-right-stack__config {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Botões Cancelar / Salvar abaixo do card de gráficos (UX). */
+.pricing-listing-type-right-stack__footer {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.pricing-listing-type-right-stack__footer-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.pricing-listing-type-right-stack__config .pricing-intelligence-page__simulation-price {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pricing-listing-type-right-stack__config .pricing-intelligence-page__simulation-price__optional-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  min-height: 2.2em;
+}
+
+@media (min-width: 1100px) {
+.pricing-listing-type-right-stack__config .pricing-intelligence-page__simulation-price__optional-label {
+  font-size: 9px;
+  line-height: 1.15;
+  white-space: normal;
+  text-align: left;
+}
+
+}
+
+.pricing-listing-type-right-stack__chart {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  box-sizing: border-box;
+  padding: 2px 8px 4px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, #ffffff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: var(--s7-listing-type-chart-card-min-h, 148px);
+}
+
+.pricing-listing-type-right-stack__chart.anuncios-pricing-modal__ml-chart-slot {
+  margin-top: 0;
+}
+
+.pricing-listing-type-right-stack__chart .s7-ml-scenario-chart--listing-type-kpi {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+@media (max-width: 1099px) {
+  .pricing-listing-type-compare {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pricing-intelligence-page__promotions-empty {
   padding: 10px 4px 4px;
 }
@@ -3973,6 +5846,14 @@
   color: rgba(37, 99, 235, 0.92);
 }
 
+/* Card simulador (Reserva + Investimentos): título centralizado na linha tracejada. */
+.pricing-intelligence-page__simulation-price:has(.pricing-intelligence-page__simulation-price__grid--config-only)
+  .pricing-intelligence-page__simulation-price__title {
+  width: 100%;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
 .pricing-intelligence-page__simulation-price__actions {
   display: flex;
   justify-content: flex-end;
@@ -3987,9 +5868,275 @@
   justify-content: start;
 }
 
+.pricing-intelligence-page__simulation-price__grid--config-only {
+  display: block;
+  width: 100%;
+}
+
+.pricing-intelligence-page__simulation-price__command {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4px 10px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.pricing-intelligence-page__simulation-price__command-block {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pricing-intelligence-page__simulation-price__slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  margin: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 133, 51, 0.35) 0%,
+    rgba(37, 99, 235, 0.35) 100%
+  );
+  outline: none;
+  cursor: pointer;
+}
+
+.pricing-intelligence-page__simulation-price__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--s7-orange, #ff8533);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.22);
+  cursor: grab;
+}
+
+.pricing-intelligence-page__simulation-price__slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--s7-orange, #ff8533);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.22);
+  cursor: grab;
+}
+
+.pricing-intelligence-page__simulation-price__slider:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.pricing-intelligence-page__simulation-price__margin-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.pricing-intelligence-page__simulation-price__cell--sale .s7-input__label,
+.pricing-intelligence-page__simulation-price__margin-label {
+  white-space: nowrap;
+}
+
+.pricing-intelligence-page__simulation-price__margin-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--s7-orange, #ff8533);
+}
+
+.pricing-intelligence-page__simulation-price__margin-control {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  max-width: 88px;
+  min-height: 34px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.pricing-intelligence-page__simulation-price__margin-control .pricing-percent-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pricing-intelligence-page__simulation-price__margin-control .pricing-percent-input__field {
+  padding: 0;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.pricing-intelligence-page__simulation-price__margin-control .pricing-percent-input__suffix {
+  position: static;
+  transform: none;
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.pricing-intelligence-page__simulation-price__params-main {
+  width: 100%;
+}
+
+.pricing-intelligence-page__simulation-price__param-group + .pricing-intelligence-page__simulation-price__param-group {
+  margin-top: 4px;
+}
+
+.pricing-intelligence-page__simulation-price__param-group-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+
+.pricing-intelligence-page__simulation-price__param-group-title {
+  font-size: 9.5px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.52);
+}
+
+/* Reserva Estratégica e Custos Operacionais lado a lado (ganho horizontal). */
+.pricing-intelligence-page__simulation-price__params-main--split {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  column-gap: 0;
+}
+
+.pricing-intelligence-page__simulation-price__params-main--split
+  > .pricing-intelligence-page__simulation-price__param-group:first-of-type {
+  grid-column: 1;
+  grid-row: 1;
+  padding-right: 9px;
+}
+
+.pricing-intelligence-page__simulation-price__params-main--split
+  > .pricing-intelligence-page__simulation-price__param-group:last-of-type {
+  grid-column: 2;
+  grid-row: 1;
+  padding-left: 9px;
+}
+
+.pricing-intelligence-page__simulation-price__params-main--split
+  .pricing-intelligence-page__simulation-price__param-group {
+  min-width: 0;
+}
+
+.pricing-intelligence-page__simulation-price__params-main--split
+  .pricing-intelligence-page__simulation-price__param-group
+  + .pricing-intelligence-page__simulation-price__param-group {
+  margin-top: 0;
+}
+
+/* Separador tracejado vertical — levemente à esquerda do centro geométrico. */
+.pricing-intelligence-page__simulation-price__params-main--split
+  > .pricing-intelligence-page__simulation-price__param-divider--vertical {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  pointer-events: none;
+}
+
+.pricing-intelligence-page__simulation-price__param-divider--vertical {
+  --s7-pi-params-split-divider-nudge-left: 16px;
+  position: absolute;
+  left: calc(50% - var(--s7-pi-params-split-divider-nudge-left));
+  top: 6px;
+  bottom: 6px;
+  width: 0;
+  margin: 0;
+  border: none;
+  border-left: 1px dashed rgba(15, 23, 42, 0.18);
+}
+
+@media (max-width: 1100px) {
+  .pricing-intelligence-page__simulation-price__params-main--split {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: 8px;
+  }
+
+  .pricing-intelligence-page__simulation-price__param-divider--vertical {
+    position: static;
+    left: auto;
+    top: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    height: 0;
+    align-self: auto;
+    margin: 0;
+    border-left: none;
+    border-top: 1px dashed rgba(15, 23, 42, 0.18);
+  }
+}
+
+.pricing-intelligence-page__simulation-price__optional-row--pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.pricing-intelligence-page__simulation-price__optional-row--triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+@media (max-width: 1280px) {
+  .pricing-intelligence-page__simulation-price__optional-row--triple {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pricing-intelligence-page__simulation-price__params-safety {
+  width: 100%;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.55);
+}
+
+.pricing-intelligence-page__simulation-price__params-safety .pricing-intelligence-page__simulation-price__cell--optional {
+  max-width: 220px;
+}
+
 .pricing-intelligence-page__simulation-price__cell--sale,
 .pricing-intelligence-page__simulation-price__cell--margin {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.pricing-intelligence-page__simulation-price__cell--sale .s7-input__wrapper,
+.pricing-intelligence-page__simulation-price__cell--margin .pricing-intelligence-page__simulation-price__margin-field {
+  width: 100%;
+  max-width: 88px;
+  align-items: center;
+}
+
+.pricing-intelligence-page__simulation-price__cell--sale .s7-input__label,
+.pricing-intelligence-page__simulation-price__margin-label {
+  text-align: center;
+  width: 100%;
 }
 
 .pricing-intelligence-page__simulation-price__cell--optional {
@@ -4000,9 +6147,71 @@
 .pricing-intelligence-page__simulation-price__optional-row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 6px;
   width: 100%;
+}
+
+.pricing-intelligence-page__simulation-price__optional-row--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1280px) {
+  .pricing-intelligence-page__simulation-price__optional-row--four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .pricing-intelligence-page__simulation-price__command {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-intelligence-page__simulation-price__optional-row--four {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pricing-intelligence-page__simulation-price__checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.pricing-intelligence-page__simulation-price__checkbox-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pricing-intelligence-page__simulation-price__checkbox-mark {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(148, 163, 184, 0.85);
+  border-radius: 3px;
+  background: #fff;
+  box-sizing: border-box;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.pricing-intelligence-page__simulation-price__checkbox-input:checked + .pricing-intelligence-page__simulation-price__checkbox-mark {
+  border-color: var(--s7-orange, #ff8533);
+  background: var(--s7-orange, #ff8533);
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+.pricing-intelligence-page__simulation-price__checkbox-input:focus-visible + .pricing-intelligence-page__simulation-price__checkbox-mark {
+  outline: 2px solid rgba(255, 133, 51, 0.45);
+  outline-offset: 1px;
 }
 
 .pricing-intelligence-page__simulation-price--promotions .pricing-intelligence-page__simulation-price__grid {
@@ -4014,7 +6223,18 @@
   min-width: 0;
 }
 
-/* Título da linha opcional + toggle na mesma linha. */
+.pricing-intelligence-page__simulation-price__promo-hint {
+  margin: 4px 0 0;
+  font-size: 9.5px;
+  color: rgba(15, 23, 42, 0.48);
+}
+
+.pricing-intelligence-page__simulation-price__promo-percent {
+  margin-top: 4px;
+  max-width: 120px;
+}
+
+/* Título da linha opcional + checkbox na mesma linha. */
 .pricing-intelligence-page__simulation-price__optional-head {
   display: flex;
   align-items: center;
@@ -4077,6 +6297,25 @@
   background: rgba(37, 99, 235, 0.15);
 }
 
+.pricing-intelligence-page__simulation-price__optional-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: rgba(100, 116, 139, 0.95);
+  cursor: help;
+}
+
+.pricing-intelligence-page__simulation-price__optional-info:hover {
+  color: rgba(15, 23, 42, 0.82);
+  background: rgba(148, 163, 184, 0.22);
+}
+
 /* Toggle compacto no padrão Suse7: knob branco + trilho azul no ON. */
 .pricing-intelligence-page__simulation-price__toggle {
   display: inline-flex;
@@ -4105,11 +6344,112 @@
 
 .pricing-intelligence-page__simulation-price__optional-control .s7-input__wrapper {
   margin: 0;
-  min-width: 0;
+  flex: 1 1 40px;
+  min-width: 36px;
+  max-width: 56px;
+  position: relative;
+  z-index: 1;
 }
 
-.pricing-intelligence-page__simulation-price__optional-control .pricing-intelligence-page__simulation-price__toggle {
+.pricing-intelligence-page__simulation-price__optional-control .s7-input__field:not(:disabled) {
+  color: rgba(15, 23, 42, 0.92);
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.92);
+}
+
+.pricing-intelligence-page__simulation-price__optional-control .s7-input__control {
+  width: 100%;
+  max-width: none;
+}
+
+.pricing-intelligence-page__simulation-price__optional-control .pricing-intelligence-page__simulation-price__checkbox {
   flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.pricing-intelligence-page__simulation-price__optional-control .pricing-optional-percent-input {
+  flex: 1 1 48px;
+  min-width: 44px;
+  max-width: 56px;
+  position: relative;
+  z-index: 1;
+}
+
+.pricing-optional-percent-input,
+.pricing-percent-input,
+.s7-percent-digits-input {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-height: 28px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.pricing-optional-percent-input--disabled,
+.pricing-percent-input--disabled,
+.s7-percent-digits-input--disabled {
+  opacity: 0.55;
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.pricing-optional-percent-input__field,
+.pricing-percent-input__field,
+.s7-percent-digits-input__field {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 18px 4px 6px;
+  border: none;
+  background: transparent;
+  color: rgba(15, 23, 42, 0.92);
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.92);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-indent: 0;
+  opacity: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.pricing-optional-percent-input__field:disabled,
+.pricing-percent-input__field:disabled,
+.s7-percent-digits-input__field:disabled {
+  cursor: not-allowed;
+  color: rgba(100, 116, 139, 0.75);
+  -webkit-text-fill-color: rgba(100, 116, 139, 0.75);
+}
+
+.pricing-optional-percent-input__field:focus,
+.pricing-percent-input__field:focus,
+.s7-percent-digits-input__field:focus {
+  outline: none;
+}
+
+.pricing-optional-percent-input:focus-within,
+.pricing-percent-input:focus-within,
+.s7-percent-digits-input:focus-within {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.pricing-optional-percent-input__suffix,
+.pricing-percent-input__suffix,
+.s7-percent-digits-input__suffix {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 1;
+  color: rgba(15, 23, 42, 0.45);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .pricing-intelligence-page__simulation-price__percent-suffix {
@@ -4168,6 +6508,7 @@
   font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.02em;
+  text-align: center;
 }
 
 /* Campos principais: compactos (~70% da largura anterior), alinhados na mesma linha. */
@@ -4190,10 +6531,11 @@
   padding-bottom: 4px;
 }
 
-/* Campos opcionais: compactos (~69% da largura anterior) para linha única dos 4 inputs. */
+/* Campos opcionais: compactos, mas clicáveis (evitar colapso a 0px no flex). */
 .pricing-intelligence-page__simulation-price__cell--optional .s7-input__control {
   width: 100%;
-  max-width: 52px;
+  min-width: 36px;
+  max-width: 48px;
 }
 
 .pricing-intelligence-page__simulation-price__input--optional .s7-input__message--helper {
@@ -4221,6 +6563,10 @@
   flex: 1 1 auto;
   min-height: 0;
   margin-bottom: 0;
+}
+
+.pricing-listing-type-right-stack__chart.anuncios-pricing-modal__ml-chart-slot .s7-ml-scenario-chart__block {
+  flex: 0 0 auto;
 }
 
 .pricing-intelligence-page__chart-slot.anuncios-pricing-modal__ml-chart-slot .s7-ml-scenario-chart__legend {
@@ -4298,6 +6644,314 @@
   font-size: 10px;
   line-height: 1.35;
   color: rgba(15, 23, 42, 0.48);
+}
+
+/* Comparativo Clássico × Premium — 3 KPIs, trilha com zero, barras ↑/↓. */
+.s7-ml-scenario-chart--listing-type-kpi {
+  --s7-listing-type-kpi-bar-value-fs: 9.23px; /* 7.5px + 23% — valor acima da barra */
+  --s7-listing-type-kpi-bar-tick-fs: 8px; /* Clássico / Premium — tamanho fixo em todos os blocos */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__row-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  align-items: stretch;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/* Coluna de métrica — só layout; sem sub-card (gráfico direto no card principal). */
+.s7-ml-scenario-chart--listing-type-kpi__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0 7px 0;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell:not(:first-child) {
+  border-left: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell--eixo-misto .s7-ml-scenario-chart--listing-type-kpi__plot {
+  justify-content: stretch;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__metric-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  min-height: var(--s7-listing-type-kpi-title-band-h, 22px);
+  padding: 7px 4px;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.52);
+  text-align: center;
+  line-height: 1.1;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  border-top: 1px dashed rgba(148, 163, 184, 0.75);
+}
+
+/* Só positivos: linha zero = borda do título; barras encostam no tracejado. */
+.s7-ml-scenario-chart--listing-type-kpi__cell--so-positivo .s7-ml-scenario-chart__bar-zero-line-global {
+  display: none;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell--eixo-misto .s7-ml-scenario-chart--listing-type-kpi__metric-title {
+  border-top-color: transparent;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell--eixo-misto .s7-ml-scenario-chart__bar-zero-line-global {
+  display: block;
+  z-index: 2;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell--eixo-misto .s7-ml-scenario-chart--listing-type-kpi__bars-columns {
+  align-items: stretch;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell--eixo-misto .s7-ml-scenario-chart--listing-type-kpi__bars-plot-area {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__bars-plot-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  padding-top: 13px;
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__bars-plot-area::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(
+    to top,
+    transparent 0,
+    transparent calc(25% - 1px),
+    rgba(15, 23, 42, 0.04) calc(25% - 1px),
+    rgba(15, 23, 42, 0.04) 25%
+  );
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__bars-columns {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  width: 100%;
+  padding: 0 4px;
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-chart__column-hit--listing-type-kpi {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.s7-ml-scenario-chart__bar-track--listing-type-kpi {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: calc(48px * 1.05);
+  min-height: 0;
+  height: 100%;
+  margin: 0 auto;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.s7-ml-scenario-chart__bar-magnet--listing-type-kpi {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  overflow: visible;
+  border-radius: 4px 4px 0 0;
+}
+
+.s7-ml-scenario-chart__column-hit--listing-type-kpi:not(.s7-ml-scenario-chart__column-hit--listing-type-kpi-neg)
+  .s7-ml-scenario-chart__bar-magnet--listing-type-kpi {
+  border-radius: 4px 4px 0 0;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell--so-positivo
+  .s7-ml-scenario-chart__column-hit--listing-type-kpi:not(.s7-ml-scenario-chart__column-hit--listing-type-kpi-neg)
+  .s7-ml-scenario-chart__bar-magnet--listing-type-kpi {
+  border-radius: 3px 3px 0 0;
+}
+
+.s7-ml-scenario-chart__column-hit--listing-type-kpi-neg .s7-ml-scenario-chart__bar-magnet--listing-type-kpi {
+  border-radius: 0 0 5px 5px;
+}
+
+/* PI.2.11B — baseline inferior: negativos descem a partir da linha tracejada. */
+.s7-ml-scenario-chart__column-hit--listing-type-kpi-neg-base .s7-ml-scenario-chart__bar-magnet--listing-type-kpi {
+  bottom: auto;
+  top: 100%;
+  border-radius: 0 0 5px 5px;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell--base-inferior .s7-ml-scenario-chart__bar-zero-line-global {
+  display: none;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__cell--base-inferior .s7-ml-scenario-chart--listing-type-kpi__bars-plot-area,
+.s7-ml-scenario-chart--listing-type-kpi__cell--base-inferior .s7-ml-scenario-chart__bar-track--listing-type-kpi {
+  overflow: visible;
+}
+
+/* Negativo: rótulo na ponta inferior da barra; valor flutua acima do topo. */
+.s7-ml-scenario-chart__column-hit--listing-type-kpi-neg .s7-ml-scenario-chart--listing-type-kpi__bar-in-tick {
+  top: auto;
+  bottom: 3px;
+}
+
+.s7-ml-scenario-chart__bar-magnet--listing-type-kpi .s7-ml-scenario-chart__bar-fill-inner--listing-type-kpi {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  transform: scaleY(1) !important;
+  animation: none !important;
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-kpi.s7-ml-scenario-chart__bar-fill-inner--grow-up {
+  transform: scaleY(1) !important;
+  transform-origin: 50% 100%;
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-kpi.s7-ml-scenario-chart__bar-fill-inner--grow-down {
+  transform: scaleY(1) !important;
+  transform-origin: 50% 0%;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__bar-out-value,
+.s7-ml-scenario-chart--listing-type-kpi__bar-in-tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 0 3px;
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.1;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__bar-out-value {
+  bottom: 100%;
+  margin-bottom: 2px;
+  color: rgba(15, 23, 42, 0.92);
+  font-size: var(--s7-listing-type-kpi-bar-value-fs);
+  white-space: nowrap;
+  overflow: visible;
+  text-shadow: none;
+}
+
+.s7-ml-scenario-chart--listing-type-kpi__bar-in-tick {
+  bottom: 3px;
+  color: #fff;
+  font-size: var(--s7-listing-type-kpi-bar-tick-fs);
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-kpi {
+  border-radius: 3px 3px 0 0;
+  box-shadow: none;
+  animation: none;
+  transform: scaleY(1);
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-classic {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.94) 0%, rgba(37, 99, 235, 0.76) 100%);
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-premium {
+  background: linear-gradient(180deg, rgba(255, 133, 51, 0.96) 0%, rgba(255, 133, 51, 0.78) 100%);
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-negativo {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.98) 0%, rgba(239, 68, 68, 0.92) 55%, rgba(185, 28, 28, 0.88) 100%);
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-negativo.s7-ml-scenario-chart__bar-fill-inner--grow-down {
+  background: linear-gradient(180deg, rgba(254, 202, 202, 0.96) 0%, rgba(239, 68, 68, 0.94) 45%, rgba(185, 28, 28, 0.9) 100%);
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-kpi.s7-ml-scenario-chart__bar-fill-inner--grow-up {
+  border-radius: 4px 4px 0 0;
+}
+
+.s7-ml-scenario-chart__bar-fill-inner--listing-type-kpi.s7-ml-scenario-chart__bar-fill-inner--grow-down {
+  border-radius: 0 0 4px 4px;
+}
+
+@media (max-width: 520px) {
+  .s7-ml-scenario-chart--listing-type-kpi__row-trio {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .pricing-listing-type-right-stack__chart {
+    min-height: 120px;
+  }
 }
 
 /* Página: KPI + workspace (sidebar cenários + card detalhado) */
@@ -4424,6 +7078,133 @@
   .pricing-intelligence-page__scenario-main .pricing-intelligence-page__scenario-detail-col .s7-ml-scenario-compare__card-body {
     flex: 1 1 auto;
     min-height: 0;
+  }
+
+  .pricing-intelligence-page__scenario-workspace--listing-type-dual {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--s7-pricing-workspace-gap, 12px);
+    /* Altura fixa do card de gráficos — não cresce junto com Clássico/Premium. */
+    --s7-pricing-listing-type-chart-card-h: 300px;
+    /* Largura fixa por card: −19% da coluna de cálculo + ajustes incrementais (+5% +5% +6%). */
+    --s7-pricing-listing-type-card-w: calc(var(--s7-pricing-calc-col-w, 270px) * 0.81 * 1.05 * 1.05 * 1.06);
+    --s7-pricing-listing-type-compare-w: calc(
+      2 * var(--s7-pricing-listing-type-card-w) + var(--s7-pricing-workspace-gap, 10px)
+    );
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual .pricing-listing-type-compare {
+    flex: 0 0 var(--s7-pricing-listing-type-compare-w);
+    width: var(--s7-pricing-listing-type-compare-w);
+    min-width: var(--s7-pricing-listing-type-compare-w);
+    max-width: var(--s7-pricing-listing-type-compare-w);
+    margin-top: 0;
+    grid-template-columns: var(--s7-pricing-listing-type-card-w) var(--s7-pricing-listing-type-card-w);
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual .pricing-listing-type-compare__col {
+    width: var(--s7-pricing-listing-type-card-w);
+    min-width: var(--s7-pricing-listing-type-card-w);
+    max-width: var(--s7-pricing-listing-type-card-w);
+    flex: 0 0 var(--s7-pricing-listing-type-card-w);
+  }
+
+  .pricing-intelligence-page__workspace-content-col,
+  .pricing-intelligence-page__workspace-main-col {
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  .pricing-intelligence-page__workspace-panel:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .pricing-intelligence-page__sale-price-simulator--embedded {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .pricing-intelligence-page__scenario-workspace--listing-type-dual {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual {
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual .pricing-listing-type-right-stack {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: min(100%, var(--s7-pricing-listing-type-right-col-w, 374px));
+    max-width: none;
+    align-self: stretch;
+    min-height: 0;
+    --s7-listing-type-chart-card-min-h: 168px;
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual
+    .pricing-listing-type-right-stack__config
+    .pricing-intelligence-page__simulation-price {
+    margin-top: 0;
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual .pricing-listing-type-right-stack__chart {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: var(--s7-pricing-listing-type-chart-card-h, 300px);
+    max-height: none;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual
+    .pricing-listing-type-right-stack__chart.anuncios-pricing-modal__ml-chart-slot
+    .s7-ml-scenario-chart {
+    flex: 0 0 auto;
+    min-height: 0;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* KPI Clássico×Premium: plot encostado na base (linha tracejada dos rótulos). */
+  .pricing-intelligence-page__scenario-main--listing-type-dual
+    .pricing-listing-type-right-stack__chart.anuncios-pricing-modal__ml-chart-slot
+    .s7-ml-scenario-chart--listing-type-kpi {
+    flex: 1 1 auto;
+    align-self: stretch;
+    justify-content: flex-end;
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual
+    .pricing-listing-type-right-stack__chart.pricing-intelligence-page__chart-slot--page-vertical-compact
+    .s7-ml-scenario-chart--listing-type-stub
+    .s7-ml-scenario-chart__bars-plot-area,
+  .pricing-intelligence-page__scenario-main--listing-type-dual
+    .pricing-listing-type-right-stack__chart.pricing-intelligence-page__chart-slot--page-vertical-compact
+    .s7-ml-scenario-chart__column-hit--listing-type-stub {
+    height: 108px;
+  }
+
+  .pricing-intelligence-page__scenario-main--listing-type-dual
+    .pricing-listing-type-right-stack__chart.pricing-intelligence-page__chart-slot--page-vertical-compact
+    .s7-ml-scenario-chart--listing-type-stub
+    .s7-ml-scenario-chart__bars-wrap {
+    padding-bottom: 26px;
   }
 
   /* Coluna do gráfico: ocupa a altura útil; o plot cresce para baixo (sem alterar dados). */
@@ -7732,4 +10513,397 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ======================================================================
+   S1.5 — Refino estrutural da lista de Precificações (Vista Simples oficial).
+   Escopo restrito ao modo Precificações (.listings-workspace--precificacoes):
+   NÃO afeta Anúncios. Apenas leitura visual/espaçamento — sem dados/cálculos.
+====================================================================== */
+
+/* Respiro e leitura das linhas: altura confortável + separação sutil. */
+.listings-workspace--precificacoes .anuncios-catalog__row.anuncios-catalog__row--minimal {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  column-gap: 16px;
+  align-items: center;
+}
+
+/* Capa um pouco maior e elegante (somente leitura visual). */
+.listings-workspace--precificacoes .anuncios-catalog__row--minimal .anuncios-catalog__cell--thumb .anuncios-ad-thumb {
+  border-radius: 12px;
+}
+
+/* Hierarquia da coluna Precifica S7: ação principal com presença premium. */
+.listings-workspace--precificacoes .anuncios-precifica-s7-btn {
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.10) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.20);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 6px 16px rgba(37, 99, 235, 0.10);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.listings-workspace--precificacoes .anuncios-precifica-s7-btn__icon {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  border-radius: 9px;
+}
+
+.listings-workspace--precificacoes .anuncios-precifica-s7-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.06),
+    0 10px 24px rgba(37, 99, 235, 0.16);
+  filter: brightness(1.03);
+}
+
+/* Separação operacional entre "Anúncio" e a coluna de preço (Você vende por). */
+.listings-workspace--precificacoes .anuncios-catalog__row--minimal .anuncios-catalog__cell--minimal-sell {
+  border-left: 1px solid rgba(15, 23, 42, 0.07);
+  padding-left: 16px;
+}
+
+/* Preço principal com leitura mais forte (apenas tipografia). */
+.listings-workspace--precificacoes .anuncios-sell-minimal__main {
+  font-size: 18px;
+}
+
+/* Garante leitura sem barra horizontal desnecessária na Vista Simples. */
+.listings-workspace--precificacoes .products-catalog__table-hscroll:has(.anuncios-catalog__grid--minimal) {
+  overflow-x: visible;
+}
+
+/* ======================================================
+   Precificação Inteligente — edição independente por card.
+   Lápis na linha "Valor de venda" + popover flutuante de simulação.
+   ====================================================== */
+.pricing-scenario-sale-control {
+  position: relative;
+}
+
+.pricing-scenario-sale-control__value-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.pricing-inline-editable-metric__edit-btn--active {
+  opacity: 1;
+}
+
+.pricing-scenario-edit-popover__portal {
+  position: fixed;
+  z-index: 100050;
+  transform: translateX(-50%);
+  cursor: default;
+  pointer-events: none;
+}
+
+.pricing-scenario-edit-popover__portal .pricing-scenario-edit-popover {
+  pointer-events: auto;
+}
+
+.pricing-scenario-edit-popover {
+  --s7-pi-edit-popover-compact: 0.94; /* −6% — modal Clássico/Premium (preço + margem) */
+  --s7-pi-edit-popover-head-body-gap: 1px; /* pill Clássico/Premium → linha de inputs */
+  --s7-pi-edit-popover-body-stepper-gap: 1px; /* inputs → termômetro ± */
+  position: relative;
+  width: min(calc(200px * var(--s7-pi-edit-popover-compact)), 82vw);
+  padding: 4px 7px 5px;
+  background: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  border-radius: 12px;
+  box-shadow:
+    0 14px 34px rgba(15, 23, 42, 0.18),
+    0 2px 8px rgba(37, 99, 235, 0.12);
+  text-align: left;
+  cursor: default;
+  animation: pricing-scenario-edit-popover-in 0.14s ease-out;
+}
+
+@keyframes pricing-scenario-edit-popover-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pricing-scenario-edit-popover__arrow {
+  position: absolute;
+  top: calc(100% - 5px);
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) rotate(45deg);
+  background: #fff;
+  border-right: 1px solid rgba(37, 99, 235, 0.28);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.28);
+  pointer-events: none;
+}
+
+.pricing-scenario-edit-popover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: var(--s7-pi-edit-popover-head-body-gap, 1px);
+}
+
+.pricing-scenario-edit-popover__head-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pricing-scenario-edit-popover__title {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+/* Pill CLÁSSICO/PREMIUM igual ao cabeçalho do card (fundo azul, texto branco). */
+.pricing-scenario-edit-popover__pill.s7-ml-scenario-compare__badge--available {
+  color: #fff;
+  background: #3483fa;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+/* Loading discreto: cálculo oficial no backend (debounce). */
+.pricing-scenario-edit-popover__loading,
+.pricing-scenario-sale-control__loading {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 4px;
+  border-radius: 50%;
+  border: 2px solid rgba(52, 131, 250, 0.25);
+  border-top-color: #3483fa;
+  animation: s7-pi-sim-spin 0.7s linear infinite;
+  vertical-align: middle;
+  flex: 0 0 auto;
+}
+
+@keyframes s7-pi-sim-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-scenario-edit-popover__loading,
+  .pricing-scenario-sale-control__loading {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* Aviso discreto: manteve último cálculo oficial em caso de erro. */
+.pricing-scenario-edit-popover__notice {
+  margin: 2px 0 0;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #b45309;
+  text-align: center;
+}
+
+.pricing-scenario-edit-popover__close {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #475569;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+  z-index: 1;
+}
+
+.pricing-scenario-edit-popover__close:hover,
+.pricing-scenario-edit-popover__close:focus-visible {
+  background: rgba(255, 133, 51, 0.14);
+  color: var(--s7-orange, #ff8533);
+  outline: none;
+}
+
+.pricing-scenario-edit-popover__body {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.pricing-scenario-edit-popover__block {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.pricing-scenario-edit-popover .s7-input__wrapper,
+.pricing-scenario-edit-popover__field-stack {
+  gap: 6px;
+  width: 100%;
+}
+
+.pricing-scenario-edit-popover .s7-input__label,
+.pricing-scenario-edit-popover__field-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.pricing-scenario-edit-popover__margin-control {
+  width: 100%;
+}
+
+.pricing-scenario-edit-popover__margin-control .s7-percent-digits-input,
+.pricing-scenario-edit-popover__margin-control .pricing-percent-input {
+  width: 100%;
+}
+
+/* Preço de venda e Margem desejada: mesmo tamanho e mesma fonte nos dois cards. */
+.pricing-scenario-edit-popover__sale-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.pricing-scenario-edit-popover .pricing-percent-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.pricing-scenario-edit-popover .s7-input__control {
+  width: 100%;
+}
+
+.pricing-scenario-edit-popover .s7-input__field,
+.pricing-scenario-edit-popover .s7-percent-digits-input {
+  min-height: 24px;
+  height: 24px;
+  box-sizing: border-box;
+}
+
+.pricing-scenario-edit-popover .s7-input__field {
+  padding: 2px 6px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.pricing-scenario-edit-popover .s7-percent-digits-input__field {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Stepper ± compacto — − [slider] + abaixo dos inputs. */
+.pricing-scenario-edit-popover__stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: var(--s7-pi-edit-popover-body-stepper-gap, 1px);
+}
+
+.pricing-scenario-edit-popover__slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  height: 3px;
+  margin: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(22, 163, 74, 0.35) 0%,
+    rgba(37, 99, 235, 0.35) 100%
+  );
+  outline: none;
+  cursor: pointer;
+}
+
+.pricing-scenario-edit-popover__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #16a34a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  cursor: grab;
+}
+
+.pricing-scenario-edit-popover__slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #16a34a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  cursor: grab;
+}
+
+.pricing-scenario-edit-popover__slider:focus-visible {
+  outline: 2px solid rgba(22, 163, 74, 0.45);
+  outline-offset: 2px;
+}
+
+.pricing-scenario-edit-popover__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #16a34a;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.06s ease;
+}
+
+.pricing-scenario-edit-popover__step:hover,
+.pricing-scenario-edit-popover__step:focus-visible {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+  outline: none;
+}
+
+.pricing-scenario-edit-popover__step:active {
+  transform: translateY(1px);
 }

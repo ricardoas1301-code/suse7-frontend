@@ -5,12 +5,12 @@
 
 .vendas-share-card {
   box-sizing: border-box;
-  width: 420px;
+  width: 360px;
   max-width: 100%;
-  padding: 20px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 7px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 18px;
@@ -27,14 +27,14 @@
 .vendas-share-card__header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 12px;
+  gap: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .vendas-share-card__logo {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: contain;
   flex: none;
@@ -48,14 +48,14 @@
 }
 
 .vendas-share-card__brand-name {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: #0f172a;
 }
 
 .vendas-share-card__brand-sub {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
   color: #f97316;
   letter-spacing: 0.02em;
@@ -65,18 +65,18 @@
 .vendas-share-card__meta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .vendas-share-card__meta-row {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 7px;
   align-items: baseline;
 }
 
 .vendas-share-card__meta-label {
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -84,7 +84,7 @@
 }
 
 .vendas-share-card__meta-value {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   color: #334155;
   word-break: break-word;
@@ -99,7 +99,7 @@
 /* Distribuição */
 .vendas-share-card__section-title {
   margin: 0 0 6px;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -112,7 +112,7 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .vendas-share-card__dist-item {
@@ -120,7 +120,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  font-size: 12.5px;
+  font-size: 11px;
 }
 
 .vendas-share-card__dist-name {
@@ -141,22 +141,22 @@
 .vendas-share-card__kpis {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 5px;
 }
 
 .vendas-share-card__kpi {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 10px 12px;
-  border-radius: 12px;
+  gap: 1px;
+  padding: 6px 7px;
+  border-radius: 10px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: #ffffff;
   min-width: 0;
 }
 
 .vendas-share-card__kpi-label {
-  font-size: 9.5px;
+  font-size: 8.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -164,7 +164,7 @@
 }
 
 .vendas-share-card__kpi-value {
-  font-size: 16px;
+  font-size: 12.5px;
   font-weight: 800;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
@@ -175,24 +175,26 @@
 .vendas-share-card__ops {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 2px;
+  gap: 3px;
+  padding-top: 0;
 }
 
 .vendas-share-card__ops-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  gap: 7px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   background: rgba(15, 23, 42, 0.03);
+  box-sizing: border-box;
 }
 
 .vendas-share-card__ops-label-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -201,28 +203,73 @@
 }
 
 .vendas-share-card__ops-label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   color: #475569;
 }
 
 .vendas-share-card__ops-value {
-  font-size: 13px;
+  font-size: 10.5px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custos */
+.vendas-share-card__costs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vendas-share-card__costs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.vendas-share-card__cost-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+}
+
+.vendas-share-card__cost-card-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vendas-share-card__cost-card-value {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #dc2626;
+  font-variant-numeric: tabular-nums;
+}
+
+.vendas-share-card__cost-card-percent {
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
   font-variant-numeric: tabular-nums;
 }
 
 /* Footer */
 .vendas-share-card__footer {
-  margin-top: 2px;
-  padding-top: 12px;
+  margin-top: 0;
+  padding-top: 6px;
   border-top: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   text-align: center;
-  font-size: 11px;
+  font-size: 8.5px;
   font-weight: 600;
   color: #94a3b8;
   letter-spacing: 0.02em;

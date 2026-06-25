@@ -33,6 +33,44 @@
   gap: 8px;
 }
 
+.s7-ndaily-schedule__channel-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 10px 12px;
+}
+
+.s7-ndaily-schedule__channel-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.s7-ndaily-schedule__channel-copy strong {
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.s7-ndaily-schedule__channel-copy p {
+  margin: 0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.s7-ndaily-schedule__channel-lock-badge {
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
 .s7-ndaily-schedule__weekdays {
   display: flex;
   flex-wrap: wrap;

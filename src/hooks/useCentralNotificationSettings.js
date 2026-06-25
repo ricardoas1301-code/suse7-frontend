@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchNotificationCategories,
   fetchCentralNotificationPreferences,
@@ -40,6 +40,7 @@ export function useCentralNotificationSettings() {
   const [savingRuleKey, setSavingRuleKey] = useState(null);
   const [savingAutomationRule, setSavingAutomationRule] = useState(false);
   const [savingRecipient, setSavingRecipient] = useState(false);
+  const dailySalesRuleSaveReqRef = useRef(0);
 
   const prefLookup = useMemo(() => {
     const map = new Map();
@@ -241,6 +242,8 @@ export function useCentralNotificationSettings() {
 
   const saveDailySalesSummaryRule = useCallback(
     async (patch) => {
+      const requestId = dailySalesRuleSaveReqRef.current + 1;
+      dailySalesRuleSaveReqRef.current = requestId;
       setSavingAutomationRule(true);
       const prev = dailySalesSummaryRule;
       setDailySalesSummaryRule((current) => ({
@@ -253,6 +256,11 @@ export function useCentralNotificationSettings() {
       }));
 
       const res = await patchDailySalesSummaryAutomationRule(patch);
+      // Ignora resposta fora de ordem para evitar UI divergente do último save.
+      if (requestId !== dailySalesRuleSaveReqRef.current) {
+        return { ok: false, message: "SAVE_STALE_RESPONSE_IGNORED" };
+      }
+
       setSavingAutomationRule(false);
 
       if (!res.ok) {
@@ -261,6 +269,13 @@ export function useCentralNotificationSettings() {
       }
 
       setDailySalesSummaryRule(res.rule ?? null);
+      // Reconfirma do backend SEM acionar o loading global (loadDailySalesSummaryRule
+      // ligaria loadingDailySalesRule -> prefsReady=false -> remount do painel e
+      // scroll-to-top). O refetch silencioso só atualiza o estado da regra.
+      const confirmRes = await fetchDailySalesSummaryAutomationRule();
+      if (requestId === dailySalesRuleSaveReqRef.current && confirmRes.ok) {
+        setDailySalesSummaryRule(confirmRes.rule ?? null);
+      }
       return { ok: true, rule: res.rule };
     },
     [dailySalesSummaryRule]

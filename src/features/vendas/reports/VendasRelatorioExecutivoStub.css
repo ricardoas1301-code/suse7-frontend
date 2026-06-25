@@ -1,23 +1,23 @@
 .vendas-relatorio-exec {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .vendas-relatorio-exec__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 5px;
 }
 
 .vendas-relatorio-exec__metric {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 4px;
-  min-height: 84px;
-  padding: 10px 12px 11px;
-  border-radius: 12px;
+  gap: 2px;
+  min-height: 64px;
+  padding: 6px 8px;
+  border-radius: 10px;
   border: 1.5px solid rgba(15, 23, 42, 0.1);
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   min-width: 0;
@@ -25,7 +25,7 @@
 }
 
 .vendas-relatorio-exec__metric--loading {
-  min-height: 84px;
+  min-height: 72px;
   background: #f1f5f9;
   animation: vendas-relatorio-exec-pulse 1.2s ease-in-out infinite;
 }
@@ -34,18 +34,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: 4px;
 }
 
 .vendas-relatorio-exec__metric-label-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 
 .vendas-relatorio-exec__metric-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -79,7 +79,7 @@
 
 .vendas-relatorio-exec__metric-value {
   /* font-size é definido inline com escala automática (P_2.8.12F) */
-  font-size: 19px;
+  font-size: 13px;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.15;
@@ -92,9 +92,9 @@
 .vendas-relatorio-exec__metric-status {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  min-height: 13px;
-  font-size: 10px;
+  gap: 3px;
+  min-height: 11px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -103,8 +103,8 @@
 }
 
 .vendas-relatorio-exec__metric-hint {
-  min-height: 13px;
-  font-size: 10px;
+  min-height: 11px;
+  font-size: 9px;
   color: #94a3b8;
   line-height: 1.3;
 }
@@ -153,22 +153,24 @@
 .vendas-relatorio-exec__ops {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 2px;
+  gap: 3px;
+  padding-top: 0;
 }
 
 .vendas-relatorio-exec__ops-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  gap: 7px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   background: rgba(15, 23, 42, 0.03);
+  box-sizing: border-box;
 }
 
 .vendas-relatorio-exec__ops-row--loading {
-  min-height: 36px;
+  min-height: 30px;
   background: #f1f5f9;
   animation: vendas-relatorio-exec-pulse 1.2s ease-in-out infinite;
 }
@@ -176,7 +178,7 @@
 .vendas-relatorio-exec__ops-label-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -186,7 +188,7 @@
 }
 
 .vendas-relatorio-exec__ops-label {
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 700;
   color: #475569;
   min-width: 0;
@@ -197,7 +199,7 @@
 
 .vendas-relatorio-exec__ops-value {
   flex: none;
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -217,6 +219,60 @@
 .vendas-relatorio-exec__ops-row--accent-red .vendas-relatorio-exec__ops-icon,
 .vendas-relatorio-exec__ops-row--accent-red .vendas-relatorio-exec__ops-value {
   color: #dc2626;
+}
+
+.vendas-relatorio-exec__costs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 0;
+}
+
+.vendas-relatorio-exec__costs-title {
+  margin: 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.vendas-relatorio-exec__costs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.vendas-relatorio-exec__cost-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+}
+
+.vendas-relatorio-exec__cost-card-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vendas-relatorio-exec__cost-card-value {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #dc2626;
+  font-variant-numeric: tabular-nums;
+}
+
+.vendas-relatorio-exec__cost-card-percent {
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
 }
 
 .vendas-relatorio-exec__note {
@@ -243,6 +299,10 @@
 @media (max-width: 520px) {
   .vendas-relatorio-exec__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vendas-relatorio-exec__costs-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

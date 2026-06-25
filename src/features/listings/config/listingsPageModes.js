@@ -9,7 +9,7 @@
 
 /** @typedef {"anuncios" | "precificacoes"} ListingsWorkspaceMode */
 
-/** @typedef {"openListingEditor" | "openPricingIntelligence"} ListingsRowClickAction */
+/** @typedef {"openListingEditor" | "openPricingIntelligence" | "openListingRayX"} ListingsRowClickAction */
 
 /** @typedef {"full_catalog" | "pricing_focus"} ListingsColumnLayout */
 
@@ -53,6 +53,11 @@
  * @property {string} marketplaceScopeKey
  * @property {boolean} showPrecificaS7Column
  * @property {"minimal" | "full"} defaultViewMode
+ * @property {boolean} [allowViewModeToggle] — exibe o botão de alternância Vista simples/completa. Default `true`. `false` fixa a visualização oficial (sem toggle).
+ * @property {boolean} [filtersStartCollapsed] — card de busca e filtros abre recolhido por padrão (mesmo comportamento de Vendas). Default `false`.
+ * @property {number} [pageSize] — itens por página na listagem (apenas fatiamento client-side; não altera backend/contratos). Default `25`.
+ * @property {boolean} [showAccountFilter] — exibe o select de Conta no card de filtros (filtro client-side por `marketplaceAccountId`). Default `false`.
+ * @property {boolean} [showReportsCentral] — exibe botão e Central de Relatórios (estrutura visual; sem geração nesta fase). Default `false`.
  * @property {ListingsRowClickAction} rowClickAction
  * @property {"listing_health" | "pricing_financial"} kpiPreset — qual bloco de top cards renderizar
  * @property {string} filtersToolbarKey — id estável (telemetria / futuro)
@@ -63,7 +68,7 @@
  * @property {ListingsPageEmptyStateTitles} emptyStateTitles
  * @property {ListingsPageBulkBarLabels} bulkBarLabels
  * @property {ListingsPageFilterToolbarConfig} filterToolbar
- * @property {"same_tab" | "new_tab"} [pricingIntelligenceOpenTarget] — destino ao abrir `/precificacoes/inteligente/:id` a partir da grade (linha / botão S7). Default `same_tab`.
+ * @property {"same_tab" | "new_tab" | "modal"} [pricingIntelligenceOpenTarget] — destino ao abrir PI a partir da grade. `modal` = modal 95vw (Precificações); `new_tab` = fallback legado; `same_tab` = navega na rota.
  */
 
 /** Modo da rota `/anuncios`. */
@@ -103,7 +108,12 @@ export const listingsPageModes = {
     marketplaceScopeKey: "mercado_livre",
     showPrecificaS7Column: false,
     defaultViewMode: "minimal",
-    rowClickAction: "openListingEditor",
+    allowViewModeToggle: true,
+    filtersStartCollapsed: true,
+    pageSize: 100,
+    showAccountFilter: true,
+    showReportsCentral: true,
+    rowClickAction: "openListingRayX",
     kpiPreset: "listing_health",
     filtersToolbarKey: "anunciosFilters",
     columnsPresetKey: "anunciosColumns",
@@ -145,16 +155,23 @@ export const listingsPageModes = {
     srTitle: "Precificações — inteligência comercial",
     marketplaceScopeKey: "mercado_livre",
     showPrecificaS7Column: true,
-    defaultViewMode: "full",
+    // Vista Simples (minimal) é a visualização oficial: mantém a coluna Precifica S7 (Raio-X),
+    // capa, anúncio e "Você vende por" — clique na linha abre a Precificação Inteligente.
+    defaultViewMode: "minimal",
+    allowViewModeToggle: false,
+    filtersStartCollapsed: true,
+    pageSize: 100,
+    showAccountFilter: true,
+    showReportsCentral: true,
     rowClickAction: "openPricingIntelligence",
-    pricingIntelligenceOpenTarget: "new_tab",
+    pricingIntelligenceOpenTarget: "modal",
     kpiPreset: "pricing_financial",
     filtersToolbarKey: "precificacoesFilters",
     columnsPresetKey: "precificacoesColumns",
     columnLayout: "pricing_focus",
     search: {
-      placeholder: "Buscar oferta por título, SKU ou marketplace",
-      ariaLabel: "Buscar listagens por título, SKU ou marketplace",
+      placeholder: "Buscar oferta, SKU ou anúncio",
+      ariaLabel: "Buscar ofertas por título, SKU ou anúncio",
     },
     emptyStateNouns: { noun: "oferta", nounPlural: "ofertas" },
     emptyStateTitles: {

@@ -7,10 +7,12 @@ export const PREMIUM_MODULE_COPY = {
   produtos: {
     title: "Catálogo e estoque com escala",
     description: "Organize produtos, variações e vínculos com anúncios com limites claros do seu plano.",
+    showUsageNotice: false,
   },
   anuncios: {
     title: "Anúncios e publicações",
     description: "Publique, sincronize e acompanhe performance dos anúncios nos marketplaces conectados.",
+    showUsageNotice: false,
   },
   vendas: {
     title: "Vendas e operação",
@@ -20,10 +22,14 @@ export const PREMIUM_MODULE_COPY = {
   precificacoes: {
     title: "Precificação inteligente",
     description: "Simule margens, regras e ajustes com apoio dos limites do seu plano.",
+    // Card "Consumo do ecossistema" pertence ao contexto de assinatura/plano (ver Assinatura),
+    // não à experiência principal de Precificações — mesmo padrão já adotado em Vendas.
+    showUsageNotice: false,
   },
   concorrencia: {
     title: "Monitoramento de concorrência",
     description: "Compare posicionamento e sinais de mercado para decidir com mais contexto.",
+    showUsageNotice: false,
   },
   relatorios: {
     title: "Relatórios avançados",

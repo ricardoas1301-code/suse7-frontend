@@ -174,14 +174,6 @@ function fmtPercent2(raw) {
 }
 
 /** @param {unknown} raw */
-function fmtQty(raw) {
-  if (raw == null || String(raw).trim() === "") return SALE_RAYX_SUMMARY_NOT_AVAILABLE;
-  const n = Number(String(raw).replace(",", "."));
-  if (!Number.isFinite(n)) return SALE_RAYX_SUMMARY_NOT_AVAILABLE;
-  return Math.trunc(n).toLocaleString("pt-BR");
-}
-
-/** @param {unknown} raw */
 function fmtDate(raw) {
   return orNotAvailable(formatDatePt(raw != null ? String(raw) : null));
 }
@@ -189,6 +181,17 @@ function fmtDate(raw) {
 /** @param {unknown} raw */
 function fmtText(raw) {
   return safeStr(raw) ?? SALE_RAYX_SUMMARY_NOT_AVAILABLE;
+}
+
+/** @param {unknown} raw */
+function fmtMarketplace(raw) {
+  const value = safeStr(raw);
+  if (!value) return SALE_RAYX_SUMMARY_NOT_AVAILABLE;
+  return value
+    .split(/[_-]/g)
+    .filter(Boolean)
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
 }
 
 /**
@@ -313,7 +316,6 @@ export function buildSaleRayxSummaryRenderModel(ctx) {
 
   const listingId = safeStr(p.listing_id_display ?? g.listing_id_display);
   const sku = safeStr(p.sku_display ?? g.sku_display);
-  const listingSkuLine = `${listingId ?? SALE_RAYX_SUMMARY_NOT_AVAILABLE} | SKU ${sku ?? SALE_RAYX_SUMMARY_NOT_AVAILABLE}`;
 
   const orderRaw = pickSaleNumberCopyText(g) ?? safeStr(g.external_order_id);
   const orderValue = orderRaw ? `#${orderRaw.replace(/^#/, "")}` : SALE_RAYX_SUMMARY_NOT_AVAILABLE;
@@ -338,15 +340,16 @@ export function buildSaleRayxSummaryRenderModel(ctx) {
   /** @type {SummaryRenderLine[]} */
   const lines = [
     { kind: "field", label: "Conta marketplace", value: fmtText(g.account_alias) },
-    { kind: "field", label: "Anúncio", value: listingSkuLine },
+    { kind: "field", label: "Marketplace", value: fmtMarketplace(g.marketplace ?? p.marketplace) },
+    { kind: "field", label: "Anúncio", value: listingId ?? SALE_RAYX_SUMMARY_NOT_AVAILABLE },
+    { kind: "field", label: "SKU", value: sku ?? SALE_RAYX_SUMMARY_NOT_AVAILABLE },
     { kind: "field", label: "Produto", value: productTitle },
     { kind: "blank" },
     { kind: "field", label: "Pedido", value: orderValue, colonSpaces: 2 },
-    { kind: "field", label: "Data da venda", value: fmtDate(g.sale_date) },
-    { kind: "field", label: "Quantidade", value: fmtQty(g.quantity) },
+    { kind: "field", label: "Data/Hora", value: fmtDate(g.sale_date) },
     { kind: "field", label: "Cliente", value: fmtText(g.buyer_display_name) },
     { kind: "blank" },
-    { kind: "text", text: "💰 RECEITA DO MARKETPLACE" },
+    { kind: "text", text: "💰 VENDAS" },
     { kind: "money", label: "Valor da venda", value: fmtBrl(snap.salePrice), tone: "key" },
     {
       kind: "money",
@@ -406,7 +409,7 @@ export function buildSaleRayxSummaryRenderModel(ctx) {
   const internalTaxesValue = fmtBrlNegative(snap.internalTaxes);
   const operationPackagingValue = fmtBrlNegative(snap.operationPackaging);
 
-  lines.push({ kind: "blank" }, { kind: "text", text: "🏭 CUSTOS INTERNOS" });
+  lines.push({ kind: "blank" }, { kind: "text", text: "🏭 CUSTOS" });
 
   if (productCostValue !== SALE_RAYX_SUMMARY_NOT_AVAILABLE) {
     lines.push({ kind: "money", label: "Custo do produto", value: productCostValue, tone: "negative" });

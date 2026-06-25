@@ -2,7 +2,7 @@
 // Ícones das ações globais de modais (Raio-X, Relatórios, etc.).
 // ======================================================================
 
-import { Copy, Download, Mail, Printer } from "lucide-react";
+import { Copy, FileSpreadsheet, Mail, Printer } from "lucide-react";
 
 /** @param {{ size?: number }} props */
 export function S7ModalShareWhatsAppIcon({ size = 17 }) {
@@ -34,7 +34,7 @@ export default function S7ModalShareActionIcon({ actionId }) {
     case "print":
       return <Printer size={17} strokeWidth={2} aria-hidden />;
     case "csv":
-      return <Download size={17} strokeWidth={2} aria-hidden />;
+      return <FileSpreadsheet size={17} strokeWidth={2} aria-hidden />;
     default:
       return null;
   }

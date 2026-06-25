@@ -1388,6 +1388,7 @@ function SortableImageCard({
           <img
             src={previewUrls.get(link.id)}
             alt=""
+            referrerPolicy="no-referrer"
             onError={() => onPreviewError?.(link.id)}
           />
         ) : (
