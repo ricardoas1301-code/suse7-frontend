@@ -3,17 +3,6 @@
 // ======================================================================
 
 import { apiFetch, buildApiUrl } from "../../config/api";
-import { getAuthBootstrapAccessToken } from "../../auth/authBootstrapService";
-
-/** @type {Promise<import("../../config/api").ApiFetchResult> | null} */
-let subscriptionStatusInflight = null;
-/** @type {string | null} */
-let subscriptionStatusInflightKey = null;
-
-export function invalidateSubscriptionStatusInflight() {
-  subscriptionStatusInflight = null;
-  subscriptionStatusInflightKey = null;
-}
 
 function billingUrl(path) {
   const base = buildApiUrl(path);
@@ -32,33 +21,7 @@ export async function fetchBillingPlans() {
 export async function fetchSubscriptionStatus() {
   const built = billingUrl("/api/billing/subscription/status");
   if (!built.url) return built;
-
-  const sessionKey = getAuthBootstrapAccessToken() || "__anonymous__";
-  if (subscriptionStatusInflight && subscriptionStatusInflightKey === sessionKey) {
-    if (import.meta.env.DEV) {
-      console.info("[S7_BILLING_SUBSCRIPTION_STATUS_SINGLE_FLIGHT]", { reused: true });
-    }
-    return subscriptionStatusInflight;
-  }
-
-  if (import.meta.env.DEV) {
-    console.info("[S7_BILLING_SUBSCRIPTION_STATUS_SINGLE_FLIGHT]", { reused: false, started: true });
-  }
-
-  const run = apiFetch(built.url, {
-    method: "GET",
-    timeoutMs: 12_000,
-    timeoutErrorMessage:
-      "Tempo esgotado ao carregar as permissões do plano. Verifique o backend e tente novamente.",
-  }).finally(() => {
-    if (subscriptionStatusInflight === run) {
-      subscriptionStatusInflight = null;
-      subscriptionStatusInflightKey = null;
-    }
-  });
-  subscriptionStatusInflight = run;
-  subscriptionStatusInflightKey = sessionKey;
-  return run;
+  return apiFetch(built.url, { method: "GET" });
 }
 
 export async function fetchPaymentMethods() {

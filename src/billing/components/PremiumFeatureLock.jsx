@@ -3,35 +3,18 @@ import { useBillingAccess } from "../hooks/useBillingAccess.jsx";
 import UpgradeCTA from "./UpgradeCTA";
 
 export default function PremiumFeatureLock({ children, title, description, preview = false }) {
-  const { loading, canAccess, error, connectionError, refresh, refreshing, transientRetrying } =
-    useBillingAccess();
+  const { loading, canAccess, error, connectionError, refresh, refreshing } = useBillingAccess();
 
-  if (loading && !refreshing && !transientRetrying) {
+  if (loading && !refreshing) {
     return <div className="s7-billing-lock s7-billing-lock--loading">Carregando permissões do plano…</div>;
   }
 
-  if (transientRetrying && !error) {
-    return (
-      <>
-        <div className="s7-billing-lock s7-billing-lock--loading" role="status">
-          Revalidando permissões do plano…
-        </div>
-        {canAccess ? children : null}
-      </>
-    );
-  }
-
-  if (error && !canAccess) {
+  if (error) {
     const devBypass = import.meta.env.DEV && connectionError;
     return (
       <div className="s7-billing-protected-route">
         <div className="s7-billing-lock s7-billing-lock--error" role="alert">
           <p>{error}</p>
-          {devBypass ? (
-            <p className="s7-billing-lock__dev-hint">
-              DEV: conteúdo liberado para homologação enquanto o plano não carrega.
-            </p>
-          ) : null}
           <S7Button variant="secondary" size="sm" onClick={() => refresh({ silent: false })} disabled={refreshing}>
             {refreshing ? "Tentando…" : "Tentar novamente"}
           </S7Button>
