@@ -306,7 +306,9 @@ export function isExecutiveSummaryQueryEnabled(params) {
   if (params == null || typeof params !== "object") return false;
 
   if (String(params.period_preset ?? "").trim() === "operational_cycle") {
-    return Boolean(String(params.start_datetime ?? "").trim());
+    return Boolean(
+      String(params.start_datetime ?? "").trim() && String(params.end_datetime ?? "").trim(),
+    );
   }
 
   const start =

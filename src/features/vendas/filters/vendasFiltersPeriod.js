@@ -220,7 +220,7 @@ export function buildOperationalCycleExecutiveApiParams(input) {
   };
 
   if (cycle?.startDatetimeIso) params.start_datetime = cycle.startDatetimeIso;
-  // end_datetime omitido — backend usa "agora" (URL estável + dedupe entre abas).
+  if (cycle?.endDatetimeIso) params.end_datetime = cycle.endDatetimeIso;
 
   return params;
 }

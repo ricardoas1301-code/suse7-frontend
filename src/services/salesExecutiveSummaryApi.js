@@ -3,29 +3,23 @@
 // ======================================================================
 
 import { buildApiUrl, apiFetch } from "../config/api";
-/** @type {Map<string, { promise: Promise<unknown>; startedAt: number; reused: number }>} */
-const executiveSummaryInflightByKey = new Map();
+
+/** Evita corrida quando Resumo Diário e Top 10 disparam juntos no reload do Dashboard. */
+let executiveSummaryFetchChain = Promise.resolve();
 
 /**
- * @param {Record<string, unknown>} payload
- */
-function logExecutiveSummarySingleFlight(payload) {
-  if (import.meta.env.DEV) {
-    console.info("[S7_SALES_EXECUTIVE_SUMMARY_SINGLE_FLIGHT]", {
-      active_promises: executiveSummaryInflightByKey.size,
-      ...payload,
-    });
-  }
-}
-
-/**
- * Executa fetch com deduplicação por URL (substitui fila serial global).
+ * Executa fetch do executive-summary em fila (um por vez).
  * @template T
  * @param {() => Promise<T>} task
  * @returns {Promise<T>}
  */
 export function runExecutiveSummaryFetchSerialized(task) {
-  return task();
+  const next = executiveSummaryFetchChain.then(task, task);
+  executiveSummaryFetchChain = next.then(
+    () => undefined,
+    () => undefined,
+  );
+  return next;
 }
 
 /**
@@ -108,138 +102,89 @@ export function buildSalesExecutiveSummaryQuery(params) {
 }
 
 /**
- * Chave canônica (params ordenados) para single-flight.
- * @param {SalesExecutiveSummaryParams | null | undefined} params
- */
-export function buildExecutiveSummarySingleFlightKey(params) {
-  const base = buildApiUrl("/api/sales/executive-summary");
-  if (!base) return null;
-  const qs = buildSalesExecutiveSummaryQuery(params);
-  const entries = [...qs.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  const sorted = new URLSearchParams(entries);
-  const query = sorted.toString();
-  return query ? `${base}?${query}` : base;
-}
-
-/**
  * @param {SalesExecutiveSummaryParams | null | undefined} params
  * @returns {string | null}
  */
 export function buildSalesExecutiveSummaryUrl(params) {
-  return buildExecutiveSummarySingleFlightKey(params);
+  const base = buildApiUrl("/api/sales/executive-summary");
+  if (!base) return null;
+  const qs = buildSalesExecutiveSummaryQuery(params);
+  const query = qs.toString();
+  return query ? `${base}?${query}` : base;
 }
 
 /**
  * @param {SalesExecutiveSummaryParams | null | undefined} [params]
- * @returns {Promise<{ ok: boolean; data?: Record<string, unknown> | null; error?: string; status: number; timedOut?: boolean }>}
+ * @returns {Promise<{ ok: boolean; data?: Record<string, unknown> | null; error?: string; status: number }>}
  */
 export async function fetchSalesExecutiveSummary(params) {
-  const url = buildExecutiveSummarySingleFlightKey(params);
+  const url = buildSalesExecutiveSummaryUrl(params);
   if (!url) {
     return { ok: false, error: "Configure VITE_API_BASE_URL.", status: 0, data: null };
   }
 
-  const requestKey = url;
-  const existing = executiveSummaryInflightByKey.get(requestKey);
-  if (existing) {
-    existing.reused += 1;
-    logExecutiveSummarySingleFlight({
-      request_key: requestKey,
-      full_url: url,
-      period: params?.period_preset ?? null,
-      account_scope: params?.marketplace_account_id ?? null,
-      reused: true,
-      started_at: new Date(existing.startedAt).toISOString(),
+  if (import.meta.env.DEV) {
+    console.info("[Suse7][API sales executive-summary]", {
+      url,
+      period_preset: params?.period_preset ?? null,
+      ranking_limit: params?.ranking_limit ?? null,
+      marketplace: params?.marketplace ?? null,
+      marketplace_account_id: params?.marketplace_account_id ?? null,
+      q: params?.q ?? null,
+      filter: params?.filter ?? null,
     });
-    return /** @type {Promise<{ ok: boolean; data?: Record<string, unknown> | null; error?: string; status: number; timedOut?: boolean }>} */ (
-      existing.promise
-    );
   }
 
-  const startedAt = performance.now();
-  logExecutiveSummarySingleFlight({
-    request_key: requestKey,
-    full_url: url,
-    period: params?.period_preset ?? null,
-    account_scope: params?.marketplace_account_id ?? null,
-    reused: false,
-    started_at: new Date().toISOString(),
-  });
-
-  const run = (async () => {
-    const res = await apiFetch(url, {
-      method: "GET",
-      timeoutMs: 45_000,
-      timeoutErrorMessage: "Tempo esgotado ao carregar o resumo executivo. Tente novamente.",
-    });
-    if (!res.ok) {
-      if (import.meta.env.DEV) {
-        console.warn("[Suse7][API sales executive-summary] failed", {
-          status: res.status,
-          timedOut: Boolean(res.timedOut),
-          error: res.error ?? null,
-        });
-      }
-      return {
-        ok: false,
-        error: res.error ?? "Não foi possível carregar o resumo executivo.",
-        status: res.status,
-        data: res.data ?? null,
-        timedOut: Boolean(res.timedOut),
-      };
-    }
-
-    const data = res.data != null && typeof res.data === "object" ? res.data : null;
-    if (data?.ok !== true) {
-      if (import.meta.env.DEV) {
-        console.warn("[Suse7][API sales executive-summary] invalid payload", {
-          status: res.status,
-          ok: data?.ok ?? null,
-        });
-      }
-      return {
-        ok: false,
-        error:
-          data?.error != null && String(data.error).trim() !== ""
-            ? String(data.error)
-            : "Resposta inválida do resumo executivo.",
-        status: res.status,
-        data,
-        timedOut: Boolean(res.timedOut),
-      };
-    }
-
+  const res = await apiFetch(url, { method: "GET", timeoutMs: 45000 });
+  if (!res.ok) {
     if (import.meta.env.DEV) {
-      console.info("[Suse7][API sales executive-summary] ok", {
+      console.warn("[Suse7][API sales executive-summary] failed", {
         status: res.status,
-        ordersCount: data.summary?.orders_count ?? null,
-        listingsCount: Array.isArray(data.rankings?.listings_by_quantity)
-          ? data.rankings.listings_by_quantity.length
-          : Array.isArray(data.rankings?.listings)
-            ? data.rankings.listings.length
-            : 0,
-        truncatedScan: Boolean(data.truncated_scan),
+        timedOut: Boolean(res.timedOut),
+        error: res.error ?? null,
       });
     }
+    return {
+      ok: false,
+      error: res.error ?? "Não foi possível carregar o resumo executivo.",
+      status: res.status,
+      data: res.data ?? null,
+      timedOut: Boolean(res.timedOut),
+    };
+  }
 
-    return { ok: true, data, status: res.status, timedOut: false };
-  })().finally(() => {
-    const durationMs = Math.round(performance.now() - startedAt);
-    const entry = executiveSummaryInflightByKey.get(requestKey);
-    executiveSummaryInflightByKey.delete(requestKey);
-    logExecutiveSummarySingleFlight({
-      request_key: requestKey,
-      full_url: url,
-      period: params?.period_preset ?? null,
-      account_scope: params?.marketplace_account_id ?? null,
-      reused: false,
-      finished_at: new Date().toISOString(),
-      duration_ms: durationMs,
-      outcome: entry?.reused ? "shared" : "completed",
-      coalesced_waiters: entry?.reused ?? 0,
+  const data = res.data != null && typeof res.data === "object" ? res.data : null;
+  if (data?.ok !== true) {
+    if (import.meta.env.DEV) {
+      console.warn("[Suse7][API sales executive-summary] invalid payload", {
+        status: res.status,
+        data,
+      });
+    }
+    return {
+      ok: false,
+      error:
+        data?.error != null && String(data.error).trim() !== ""
+          ? String(data.error)
+          : "Resposta inválida do resumo executivo.",
+      status: res.status,
+      data,
+      timedOut: Boolean(res.timedOut),
+    };
+  }
+
+  if (import.meta.env.DEV) {
+    console.info("[Suse7][API sales executive-summary] ok", {
+      status: res.status,
+      ordersCount: data.summary?.orders_count ?? null,
+      listingsCount: Array.isArray(data.rankings?.listings_by_quantity)
+        ? data.rankings.listings_by_quantity.length
+        : Array.isArray(data.rankings?.listings)
+          ? data.rankings.listings.length
+          : 0,
+      truncatedScan: Boolean(data.truncated_scan),
     });
-  });
+  }
 
-  executiveSummaryInflightByKey.set(requestKey, { promise: run, startedAt, reused: 0 });
-  return run;
+  return { ok: true, data, status: res.status, timedOut: false };
 }
