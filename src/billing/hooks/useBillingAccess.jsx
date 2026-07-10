@@ -1,5 +1,5 @@
 // ======================================================================
-// useBillingAccess — provider com retry resiliente e hint multiaba (UX)
+// useBillingAccess — provider com retry resiliente (UX)
 // ======================================================================
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -7,13 +7,6 @@ import { getAuthBootstrapAccessToken } from "../../auth/authBootstrapService";
 import { logAuthBootstrap } from "../../auth/authBootstrapDevLog";
 import { useAuthBootstrap } from "../../contexts/AuthBootstrapContext";
 import { resolveBillingUx } from "../billingAccessUx";
-import {
-  buildBillingAccessHint,
-  isRecentValidBillingHint,
-  persistBillingAccessHint,
-  readBillingAccessHint,
-  subscribeBillingAccessBroadcast,
-} from "../services/billingAccessBroadcast";
 import {
   logPlanPermissionsLoadingGuard,
   PLAN_PERMISSIONS_STATUS_ENDPOINT,
@@ -49,23 +42,6 @@ function jitterDelay(baseMs) {
   return Math.round(baseMs + Math.random() * 400);
 }
 
-/**
- * @param {ReturnType<typeof buildBillingAccessHint>} hint
- */
-function applyHintToReactState(hint, setters) {
-  if (!hint) return;
-  setters.setAccess({
-    ...(hint.access ?? {}),
-    can_access: Boolean(hint.can_access),
-  });
-  setters.setLimits(hint.limits ?? null);
-  setters.setUsage(hint.usage ?? null);
-  setters.setBreakdowns(hint.breakdowns ?? null);
-  setters.setPlan(hint.plan ?? null);
-  setters.setSubscriptions(Array.isArray(hint.subscriptions) ? hint.subscriptions : []);
-  setters.setStatusExtras(hint.statusExtras ?? {});
-}
-
 export function BillingAccessProvider({ children }) {
   const { ready: authReady, loading: authLoading } = useAuthBootstrap();
   const [loading, setLoading] = useState(true);
@@ -88,19 +64,6 @@ export function BillingAccessProvider({ children }) {
   const retryTimerRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
   const scheduleTransientRetryRef = useRef(/** @type {(() => void) | null} */ (null));
 
-  const stateSetters = useMemo(
-    () => ({
-      setAccess,
-      setLimits,
-      setUsage,
-      setBreakdowns,
-      setPlan,
-      setSubscriptions,
-      setStatusExtras,
-    }),
-    []
-  );
-
   const clearRetryTimer = useCallback(() => {
     if (retryTimerRef.current) {
       clearTimeout(retryTimerRef.current);
@@ -114,16 +77,10 @@ export function BillingAccessProvider({ children }) {
         res.connectionError || res.status === 0 || res.timedOut || res.status === 408
       );
       if (!res.ok) {
-        const hint = readBillingAccessHint();
         const transient = isTransientBillingFailure(res);
-        const canDeferError =
-          transient &&
-          (isRecentValidBillingHint(hint) || transientRetryCountRef.current < MAX_TRANSIENT_RETRIES);
+        const canDeferError = transient && transientRetryCountRef.current < MAX_TRANSIENT_RETRIES;
 
         if (canDeferError) {
-          if (isRecentValidBillingHint(hint)) {
-            applyHintToReactState(hint, stateSetters);
-          }
           setTransientRetrying(true);
           setConnectionError(isConnectionError);
           setError("");
@@ -216,7 +173,6 @@ export function BillingAccessProvider({ children }) {
       setConnectionError(false);
       if (!silent) setLoading(false);
       setRefreshing(false);
-      persistBillingAccessHint(buildBillingAccessHint(payload));
       logPlanPermissionsLoadingGuard({
         status: res.status ?? 200,
         duration_ms: guardMeta.durationMs ?? null,
@@ -227,7 +183,7 @@ export function BillingAccessProvider({ children }) {
       });
       return payload;
     },
-    [stateSetters]
+    []
   );
 
   const loadSubscriptionStatus = useCallback(
@@ -281,21 +237,6 @@ export function BillingAccessProvider({ children }) {
       clearRetryTimer();
     };
   }, [clearRetryTimer]);
-
-  useEffect(() => {
-    const hint = readBillingAccessHint();
-    if (isRecentValidBillingHint(hint)) {
-      applyHintToReactState(hint, stateSetters);
-    }
-    return subscribeBillingAccessBroadcast((broadcastHint) => {
-      applyHintToReactState(broadcastHint, stateSetters);
-      setError("");
-      setConnectionError(false);
-      setTransientRetrying(false);
-      transientRetryCountRef.current = 0;
-      setLoading(false);
-    });
-  }, [stateSetters]);
 
   const refresh = useCallback(
     async ({ silent = true } = {}) => {

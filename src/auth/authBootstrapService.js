@@ -1,12 +1,6 @@
 import { supabase } from "../supabaseClient";
 import { logAuthBootstrap } from "./authBootstrapDevLog";
 import { clearIntroSessionFlags, logIntroAuthDev } from "./introAuthSession";
-import {
-  broadcastSignOutToOtherTabs,
-  installCrossTabSessionBridge,
-  requestSessionFromOtherTabs,
-  shouldBroadcastSignedOutEvent,
-} from "./authCrossTabSessionBridge";
 
 /** @type {Promise<import("@supabase/supabase-js").Session | null> | null} */
 let bootPromise = null;
@@ -78,19 +72,7 @@ export async function ensureAuthSessionBootstrapped() {
       return null;
     }
 
-    let session = data.session ?? null;
-    if (!session) {
-      const bridgedSession = await requestSessionFromOtherTabs();
-      if (bridgedSession?.accessToken && bridgedSession?.refreshToken) {
-        const setSessionResult = await supabase.auth.setSession({
-          access_token: bridgedSession.accessToken,
-          refresh_token: bridgedSession.refreshToken,
-        });
-        if (!setSessionResult.error) {
-          session = setSessionResult.data.session ?? null;
-        }
-      }
-    }
+    const session = data.session ?? null;
     setCachedSession(session);
     logAuthBootstrap("session_ready", {
       hasSession: Boolean(session),
@@ -133,7 +115,6 @@ export function installAuthBootstrapListener() {
   if (listenerInstalled) return () => {};
 
   listenerInstalled = true;
-  const uninstallCrossTabBridge = installCrossTabSessionBridge(() => cachedSession);
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange((event, session) => {
@@ -154,9 +135,6 @@ export function installAuthBootstrapListener() {
       }
     }
     if (event === "SIGNED_OUT") {
-      if (shouldBroadcastSignedOutEvent()) {
-        broadcastSignOutToOtherTabs();
-      }
       clearIntroSessionFlags("signed_out");
     }
 
@@ -173,7 +151,6 @@ export function installAuthBootstrapListener() {
 
   return () => {
     subscription.unsubscribe();
-    uninstallCrossTabBridge();
     listenerInstalled = false;
   };
 }
