@@ -19,8 +19,6 @@ import {
   PLAN_PERMISSIONS_STATUS_ENDPOINT,
 } from "../dev/planPermissionsLoadingGuardDevLog";
 import { fetchSubscriptionStatus, invalidateSubscriptionStatusInflight } from "../services/billingApi";
-import { logFrontendResourceSnapshot, trackFrontendResource } from "../../utils/s7FrontendResourceSnapshot.js";
-
 const BillingAccessContext = createContext(null);
 
 const AUTH_LOADING_GUARD_MS = import.meta.env.DEV ? 8_000 : 15_000;
@@ -267,9 +265,7 @@ export function BillingAccessProvider({ children }) {
     }
     const delay = jitterDelay(RETRY_DELAYS_MS[transientRetryCountRef.current] ?? 2500);
     transientRetryCountRef.current += 1;
-    trackFrontendResource("billing_retry", 1);
     retryTimerRef.current = setTimeout(() => {
-      trackFrontendResource("billing_retry", -1);
       invalidateSubscriptionStatusInflight();
       loadSubscriptionStatus({
         silent: true,
@@ -283,7 +279,6 @@ export function BillingAccessProvider({ children }) {
   useEffect(() => {
     return () => {
       clearRetryTimer();
-      logFrontendResourceSnapshot({ trigger: "billing_access_unmount" });
     };
   }, [clearRetryTimer]);
 

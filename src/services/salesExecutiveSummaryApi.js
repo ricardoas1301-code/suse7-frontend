@@ -3,8 +3,6 @@
 // ======================================================================
 
 import { buildApiUrl, apiFetch } from "../config/api";
-import { logFrontendResourceSnapshot, trackFrontendResource } from "../utils/s7FrontendResourceSnapshot.js";
-
 /** @type {Map<string, { promise: Promise<unknown>; startedAt: number; reused: number }>} */
 const executiveSummaryInflightByKey = new Map();
 
@@ -168,8 +166,6 @@ export async function fetchSalesExecutiveSummary(params) {
     started_at: new Date().toISOString(),
   });
 
-  trackFrontendResource("executive_request", 1);
-
   const run = (async () => {
     const res = await apiFetch(url, {
       method: "GET",
@@ -231,7 +227,6 @@ export async function fetchSalesExecutiveSummary(params) {
     const durationMs = Math.round(performance.now() - startedAt);
     const entry = executiveSummaryInflightByKey.get(requestKey);
     executiveSummaryInflightByKey.delete(requestKey);
-    trackFrontendResource("executive_request", -1);
     logExecutiveSummarySingleFlight({
       request_key: requestKey,
       full_url: url,
@@ -243,7 +238,6 @@ export async function fetchSalesExecutiveSummary(params) {
       outcome: entry?.reused ? "shared" : "completed",
       coalesced_waiters: entry?.reused ?? 0,
     });
-    logFrontendResourceSnapshot({ trigger: "executive_summary_settled" });
   });
 
   executiveSummaryInflightByKey.set(requestKey, { promise: run, startedAt, reused: 0 });
