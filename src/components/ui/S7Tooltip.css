@@ -133,7 +133,7 @@
 }
 
 .s7-tooltip-portal__bubble--wrap {
-  white-space: normal;
+  white-space: pre-line;
   overflow: visible;
   text-overflow: initial;
   max-width: min(320px, calc(100vw - 16px));

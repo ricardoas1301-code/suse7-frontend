@@ -9,6 +9,7 @@ import {
   formatNegativeBrlFromApiString,
   formatPercentFromApiString,
 } from "../listings/utils/catalogFormatters";
+import { buildExecutiveSummaryRayXCostsMetrics, formatPercentDisplay } from "../listings/rayx/listingFinancialTruthEngine.js";
 import { isExecutiveApiDecimalNegative } from "../../components/sales/vendasExecutivePanelUx.js";
 import Decimal from "decimal.js";
 
@@ -183,9 +184,14 @@ function buildDailySummaryDerivedResult(summary) {
     operacaoEmbalagem;
 
   if (!hasCostBase) {
+    const marginFromApi = parseExecutiveDecimalOrNull(summary?.contribution_margin_percent);
     return {
       netProfitRaw: summary?.net_profit_brl ?? summary?.contribution_profit_brl ?? null,
       marginRaw: summary?.contribution_margin_percent ?? null,
+      marginDecFull:
+        marginFromApi != null
+          ? marginFromApi.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+          : null,
       payoutRaw: summary?.you_receive_brl ?? summary?.net_received_brl ?? null,
     };
   }
@@ -199,16 +205,19 @@ function buildDailySummaryDerivedResult(summary) {
     .minus(mlAds)
     .minus(custosOperacionais);
 
-  const lucroPercentual =
+  const lucroPercentual4 =
     faturamento.isZero()
       ? new Decimal(0)
-      : lucro.div(faturamento).mul(100).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+      : lucro.div(faturamento).mul(100).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
 
   const repasseMarketplace = faturamento.minus(comissaoMarketplace).minus(frete);
 
   return {
     netProfitRaw: decimalToApiStringOrNull(lucro),
-    marginRaw: decimalToApiStringOrNull(lucroPercentual),
+    marginRaw: decimalToApiStringOrNull(
+      lucroPercentual4.toDecimalPlaces(2, Decimal.ROUND_HALF_UP),
+    ),
+    marginDecFull: lucroPercentual4,
     payoutRaw: decimalToApiStringOrNull(repasseMarketplace),
   };
 }
@@ -226,51 +235,47 @@ export function formatExecutiveCostSharePercent(costRaw, grossRaw) {
 }
 
 /**
- * @param {Record<string, unknown> | null | undefined} summary
- * @param {string} id
- * @param {string} label
- * @param {unknown} costRaw
+ * Tooltip do card Lucro (%) — Raio-X produto/anúncio e Resumo Diário.
+ * @param {Decimal | null | undefined} marginDec
  */
-export function buildExecutiveCostMetric(summary, id, label, costRaw, extra = {}) {
-  return {
-    id,
-    label,
-    value: formatExecutiveCostMoneyOrDash(costRaw),
-    sharePercent: formatExecutiveCostSharePercent(costRaw, summary?.gross_sales_brl) ?? "—",
-    tone: "danger",
-    ...extra,
-  };
+export function buildLucroPercentualRayxTooltip(marginDec) {
+  if (marginDec == null || !marginDec.isFinite()) {
+    return "Percentual arredondado para exibição.";
+  }
+  const raw4 = marginDec.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4);
+  const completo4 = formatPercentDisplay(raw4, 4);
+  return `Percentual completo: ${completo4} =\n(lucro líquido ÷ faturamento × 100)`;
 }
+
+const EXECUTIVE_COSTS_PLACEHOLDER_METRICS = [
+  { id: "product_cost", label: "Custo Produto" },
+  { id: "marketplace_fee", label: "Comissão Marketplace" },
+  { id: "shipping", label: "Frete" },
+  { id: "taxes", label: "Impostos" },
+  { id: "operation_packaging", label: "Operação + Embalagem" },
+  { id: "ml_ads", label: "ML Ads", labelTip: ML_ADS_COST_LABEL_TIP },
+  { id: "operational_costs", label: "Custos Operacionais" },
+  { id: "total_costs", label: "Total dos custos" },
+];
 
 /**
  * @param {Record<string, unknown> | null | undefined} summary
  */
 export function buildExecutiveCostsBlockMetrics(summary) {
-  const mlAdsRaw = summary?.ads_cost_brl;
-  const operationalCostsRaw = summary?.operational_costs_brl;
-  const mlAdsResolved =
-    mlAdsRaw == null || String(mlAdsRaw).trim() === "" ? "0.00" : summary?.ads_cost_brl;
-  const operationalCostsResolved =
-    operationalCostsRaw == null || String(operationalCostsRaw).trim() === ""
-      ? "0.00"
-      : summary?.operational_costs_brl;
+  if (!summary) {
+    return EXECUTIVE_COSTS_PLACEHOLDER_METRICS.map(({ id, label, labelTip }) => ({
+      id,
+      label,
+      value: "—",
+      sharePercent: "—",
+      tone: "danger",
+      ...(labelTip ? { labelTip } : {}),
+    }));
+  }
 
-  return [
-    buildExecutiveCostMetric(summary, "product_cost", "Custo Produto", summary?.product_cost_only_brl),
-    buildExecutiveCostMetric(summary, "marketplace_fee", "Comissão Marketplace", summary?.marketplace_fee_brl),
-    buildExecutiveCostMetric(summary, "shipping", "Frete", summary?.shipping_cost_brl),
-    buildExecutiveCostMetric(summary, "taxes", "Impostos", summary?.tax_cost_brl),
-    buildExecutiveCostMetric(
-      summary,
-      "operation_packaging",
-      "Operação + Embalagem",
-      summary?.operation_packaging_cost_brl,
-    ),
-    buildExecutiveCostMetric(summary, "ml_ads", "ML Ads", mlAdsResolved, {
-      labelTip: ML_ADS_COST_LABEL_TIP,
-    }),
-    buildExecutiveCostMetric(summary, "operational_costs", "Custos Operacionais", operationalCostsResolved),
-  ];
+  return buildExecutiveSummaryRayXCostsMetrics(summary).map((metric) =>
+    metric.id === "ml_ads" ? { ...metric, labelTip: ML_ADS_COST_LABEL_TIP } : metric,
+  );
 }
 
 /**
@@ -321,6 +326,7 @@ export function buildDailySummaryBlocks(summary) {
   const {
     netProfitRaw,
     marginRaw,
+    marginDecFull,
     payoutRaw,
   } = buildDailySummaryDerivedResult(summary);
 
@@ -367,6 +373,7 @@ export function buildDailySummaryBlocks(summary) {
           label: "Lucro (%)",
           value: formatExecutiveResultPercentDisplay(marginRaw),
           tone: resolveExecutiveResultMetricTone(marginRaw),
+          valueDica: buildLucroPercentualRayxTooltip(marginDecFull),
         },
         {
           id: "marketplace_payout",

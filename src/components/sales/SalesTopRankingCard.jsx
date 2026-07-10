@@ -183,22 +183,43 @@ function TopRankingThumbFromItem({ item, title, className = "", variant = "squar
   );
 }
 
-/** @param {{ item: Record<string, unknown>; metric: "quantity" | "gross_revenue" | "net_profit" }} props */
-export function SalesTopRankingPodium({ item, metric }) {
+/** @param {{ item: Record<string, unknown>; metric: "quantity" | "gross_revenue" | "net_profit"; isHighlighted?: boolean; isDimmed?: boolean; onHoverStart?: () => void; onHoverEnd?: () => void; }} props */
+export function SalesTopRankingPodium({
+  item,
+  metric,
+  isHighlighted = false,
+  isDimmed = false,
+  onHoverStart,
+  onHoverEnd,
+}) {
   const rank = typeof item.rank === "number" ? item.rank : Number.parseInt(String(item.rank ?? ""), 10) || 0;
   const fullTitle = pickListingTitle(item);
   const podiumLines = getTopRankingPodiumDisplay(item, metric);
   const thumbSize = rank === 1 ? "podium-lg" : "podium-sm";
 
   return (
-    <TopRankingListingPopover item={item} placement="top-start">
-      <article
-        className={`sales-top-ranking__podium-col sales-top-ranking__podium-col--rank-${rank}`}
-        aria-label={`${rank}º lugar — ${fullTitle}`}
-      >
-        <div className="sales-top-ranking__podium-pedestal">
-          <div className="sales-top-ranking__podium-hero">
-            <div className="sales-top-ranking__podium-photo-stack">
+    <article
+      className={[
+        `sales-top-ranking__podium-col sales-top-ranking__podium-col--rank-${rank}`,
+        isHighlighted ? "sales-top-ranking__podium-col--podium-highlight" : "",
+        isDimmed ? "sales-top-ranking__podium-col--dimmed" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-label={`${rank}º lugar — ${fullTitle}`}
+      onMouseEnter={onHoverStart}
+      onMouseLeave={onHoverEnd}
+      onFocus={onHoverStart}
+      onBlur={onHoverEnd}
+      tabIndex={0}
+    >
+      <div className="sales-top-ranking__podium-pedestal">
+        <div className="sales-top-ranking__podium-hero">
+          <TopRankingListingPopover item={item} placement="top-start">
+            <div
+              className="sales-top-ranking__podium-photo-stack"
+              aria-label={`${rank}º lugar — ${fullTitle}`}
+            >
               <div className="sales-top-ranking__podium-bubble-inner">
                 <TopRankingThumbFromItem
                   item={item}
@@ -212,25 +233,12 @@ export function SalesTopRankingPodium({ item, metric }) {
                 </span>
               </div>
             </div>
-          </div>
+          </TopRankingListingPopover>
+        </div>
           <div className="sales-top-ranking__podium-pedestal-inner">
-            <div
-              className={[
-                "sales-top-ranking__podium-stats",
-                metric === "net_profit" ? "sales-top-ranking__podium-stats--profit" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
+            <div className="sales-top-ranking__podium-stats">
               <p className="sales-top-ranking__podium-sales">{podiumLines.salesLine}</p>
-              {podiumLines.showProfitSuffix ? (
-                <div className="sales-top-ranking__podium-value-stack">
-                  <p className="sales-top-ranking__podium-value">{podiumLines.valueAmountLine}</p>
-                  <p className="sales-top-ranking__podium-value-suffix">lucro</p>
-                </div>
-              ) : (
-                <p className="sales-top-ranking__podium-value">{podiumLines.valueLine}</p>
-              )}
+              <p className="sales-top-ranking__podium-value">{podiumLines.valueLine}</p>
             </div>
             <span className="sales-top-ranking__podium-prize" aria-hidden="true">
               {rank === 1 ? (
@@ -239,10 +247,9 @@ export function SalesTopRankingPodium({ item, metric }) {
                 <S7Icon name="podium_medal" size={rank === 2 ? 24 : 22} strokeWidth={1.85} />
               )}
             </span>
-          </div>
         </div>
-      </article>
-    </TopRankingListingPopover>
+      </div>
+    </article>
   );
 }
 
@@ -420,6 +427,7 @@ export default function SalesTopRankingCard({
   const showEmpty = !showLoading && !showError && normalized.length === 0;
   const showContent = !showLoading && !showError && normalized.length > 0;
   const panelErrorMessage = error ? EXECUTIVE_PANEL_ERROR_MESSAGE : null;
+  const [activePodiumRank, setActivePodiumRank] = useState(/** @type {number | null} */ (null));
   const toneClass =
     metric === "gross_revenue"
       ? "sales-top-ranking--tone-revenue"
@@ -467,9 +475,36 @@ export default function SalesTopRankingCard({
         {showContent ? (
           <div className="sales-top-ranking__body vendas-executive-state-fade-in">
             <div className="sales-top-ranking__podium" aria-label="Top 3 anúncios">
-              {second ? <SalesTopRankingPodium item={second} metric={metric} /> : null}
-              {first ? <SalesTopRankingPodium item={first} metric={metric} /> : null}
-              {third ? <SalesTopRankingPodium item={third} metric={metric} /> : null}
+              {second ? (
+                <SalesTopRankingPodium
+                  item={second}
+                  metric={metric}
+                  isHighlighted={activePodiumRank === 2}
+                  isDimmed={activePodiumRank != null && activePodiumRank !== 2}
+                  onHoverStart={() => setActivePodiumRank(2)}
+                  onHoverEnd={() => setActivePodiumRank(null)}
+                />
+              ) : null}
+              {first ? (
+                <SalesTopRankingPodium
+                  item={first}
+                  metric={metric}
+                  isHighlighted={activePodiumRank === 1}
+                  isDimmed={activePodiumRank != null && activePodiumRank !== 1}
+                  onHoverStart={() => setActivePodiumRank(1)}
+                  onHoverEnd={() => setActivePodiumRank(null)}
+                />
+              ) : null}
+              {third ? (
+                <SalesTopRankingPodium
+                  item={third}
+                  metric={metric}
+                  isHighlighted={activePodiumRank === 3}
+                  isDimmed={activePodiumRank != null && activePodiumRank !== 3}
+                  onHoverStart={() => setActivePodiumRank(3)}
+                  onHoverEnd={() => setActivePodiumRank(null)}
+                />
+              ) : null}
             </div>
             <SalesTopRankingList items={rest} metric={metric} />
           </div>

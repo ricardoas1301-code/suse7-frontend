@@ -403,23 +403,59 @@ export function candidateToSavePayload(candidate, product, options = {}) {
 }
 
 /** Rastreio ponta a ponta no frontend (lista/modal/card). */
+const SALES_FRONT_TRACE_SAMPLE_MAX = 3;
+/** @type {{ total: number; byStage: Record<string, number>; samples: Record<string, unknown>[]; flushTimer: ReturnType<typeof setTimeout> | null }} */
+const salesFrontTraceAgg = {
+  total: 0,
+  byStage: {},
+  samples: [],
+  flushTimer: null,
+};
+
+function flushSalesFrontTraceSummaryDev() {
+  if (!import.meta.env.DEV || salesFrontTraceAgg.total === 0) return;
+  console.info("[S7_COMPETITION_FRONT_SUMMARY]", {
+    total_rows: salesFrontTraceAgg.total,
+    traced_samples: salesFrontTraceAgg.samples.length,
+    by_stage: salesFrontTraceAgg.byStage,
+    duration_ms: null,
+    warnings_count: 0,
+  });
+  salesFrontTraceAgg.total = 0;
+  salesFrontTraceAgg.byStage = {};
+  salesFrontTraceAgg.samples = [];
+  salesFrontTraceAgg.flushTimer = null;
+}
+
 export function logSalesFrontTrace(stage, competitor, extra = {}) {
   if (!import.meta.env.DEV) return;
-  const c = competitor && typeof competitor === "object" ? competitor : {};
-  const picked = pickSalesHint(c);
-  console.info("[S7_COMPETITION_SALES_FRONT_TRACE]", {
-    stage,
-    competitor_id: c.id ?? null,
-    item_id: c.competitor_listing_id ?? null,
-    title: c.competitor_title ?? null,
-    price: c.last_seen_price ?? c.competitor_price ?? null,
-    sales_hint: c.sales_hint ?? null,
-    sales_hint_source: c.sales_hint_source ?? null,
-    sales_hint_confidence: c.sales_hint_confidence ?? null,
-    pick_sales_hint_result: picked,
-    will_show_sales: picked != null,
-    ...extra,
-  });
+  if (typeof window !== "undefined" && window.__S7_COMPETITION_TRACE_DETAIL__ === true) {
+    const c = competitor && typeof competitor === "object" ? competitor : {};
+    const picked = pickSalesHint(c);
+    console.info("[S7_COMPETITION_SALES_FRONT_TRACE]", {
+      stage,
+      competitor_id: c.id ?? null,
+      item_id: c.competitor_listing_id ?? null,
+      pick_sales_hint_result: picked,
+      will_show_sales: picked != null,
+      ...extra,
+    });
+    return;
+  }
+
+  salesFrontTraceAgg.total += 1;
+  salesFrontTraceAgg.byStage[stage] = (salesFrontTraceAgg.byStage[stage] ?? 0) + 1;
+  if (salesFrontTraceAgg.samples.length < SALES_FRONT_TRACE_SAMPLE_MAX) {
+    const c = competitor && typeof competitor === "object" ? competitor : {};
+    salesFrontTraceAgg.samples.push({
+      stage,
+      competitor_id: c.id ?? null,
+      item_id: c.competitor_listing_id ?? null,
+    });
+  }
+  if (!salesFrontTraceAgg.flushTimer) {
+    salesFrontTraceAgg.flushTimer = setTimeout(flushSalesFrontTraceSummaryDev, 400);
+  }
 }
 
 /** Auditoria DEV — rastreio de vendas por camada (sem dados sensíveis). */

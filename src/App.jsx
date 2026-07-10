@@ -18,6 +18,8 @@ import "./styles/Suse7-Design-System.css";
 import "./styles/S7CoreKpis.css";
 import "./styles/s7-sticky-filters.css";
 import "./styles/s7-catalog-page-rhythm.css";
+import "./styles/s7-list-sticky-chrome.css";
+import "./styles/s7-list-select-column.css";
 
 import { useAuthBootstrap } from "./contexts/AuthBootstrapContext";
 

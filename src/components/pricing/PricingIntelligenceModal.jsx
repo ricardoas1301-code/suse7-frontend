@@ -1,6 +1,6 @@
 // ======================================================
 // PI.2.11A — Modal espelho da Precificação Inteligente.
-// Fechamento: X no canto superior direito + Escape/backdrop.
+// Fechamento: clique no backdrop + Escape (sem botão X no canto).
 // Renderiza a mesma experiência da rota `/precificacoes/inteligente/:id`
 // (`PricingIntelligenceContent` variant="page") dentro de um modal 95vw × 95vh.
 // Não altera engine, hooks financeiros nem layout interno homologado.
@@ -10,7 +10,6 @@ import { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 import { PricingIntelligenceContent } from "../PricingIntelligenceContent.jsx";
-import S7Icon from "../ui/S7Icon.jsx";
 import "../Anuncios.css";
 import "./PricingIntelligenceModal.css";
 
@@ -70,20 +69,13 @@ export function PricingIntelligenceModal({
         aria-label="Precificação inteligente"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          className="pricing-intelligence-modal__close anuncios-compare-modal__close"
-          onClick={onClose}
-          aria-label="Fechar"
-        >
-          <S7Icon name="close" size={18} strokeWidth={2} />
-        </button>
         <div className="pricing-intelligence-modal__scroll">
           <div className="pricing-intelligence-page pricing-intelligence-page--modal-shell">
             <PricingIntelligenceContent
               row={row}
               active={open}
               variant="page"
+              embeddedInModalShell
               onClose={onClose}
               onApplied={onApplied}
               catalogRefreshing={catalogRefreshing}

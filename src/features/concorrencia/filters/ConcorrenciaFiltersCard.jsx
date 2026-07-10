@@ -7,12 +7,17 @@ import { forwardRef, useCallback, useMemo, useState } from "react";
 import S7Icon from "../../../components/ui/S7Icon";
 import S7Input from "../../../components/ui/S7Input";
 import S7Button from "../../../components/ui/S7Button";
+import S7SectionJumpButton from "../../../components/ui/S7SectionJumpButton.jsx";
 import {
   CONCORRENCIA_FILTERS_EXPANDED_SESSION_KEY,
   CONCORRENCIA_MARKETPLACE_OPTIONS,
   rotuloContaMercadoLivre,
 } from "./concorrenciaFiltersConstants";
 import { formatConcorrenciaSelectionCountLabel } from "../selection/formatConcorrenciaSelectionCountLabel.js";
+import {
+  S7_OPERATIONAL_DEFAULT_SORT_ID,
+  S7_OPERATIONAL_SORT_TOP_SALES_CHIP,
+} from "../../../utils/s7OperationalListSort.js";
 import "./ConcorrenciaFiltersCard.css";
 
 function readExpandedFromSession() {
@@ -52,6 +57,8 @@ function writeExpandedToSession(expanded) {
  *   }[];
  *   listFilter?: string;
  *   onListFilterChange?: (filterId: string) => void;
+ *   listSortId?: string;
+ *   onListSortChange?: (sortId: string) => void;
  *   searchInput?: string;
  *   onSearchInputChange?: (value: string) => void;
  *   onClearAll?: () => void;
@@ -61,6 +68,8 @@ function writeExpandedToSession(expanded) {
  *   onRelatoriosClick?: () => void;
  *   onIncluirAnuncioClick?: () => void;
  *   selectedCount?: number;
+ *   sectionJumpUpTargetRef?: import("react").RefObject<Element | null>;
+ *   sectionJumpUpAriaLabel?: string;
  * }} props
  */
 const ConcorrenciaFiltersCard = forwardRef(function ConcorrenciaFiltersCard(
@@ -74,6 +83,8 @@ const ConcorrenciaFiltersCard = forwardRef(function ConcorrenciaFiltersCard(
   filterChips = [],
   listFilter = "all",
   onListFilterChange,
+  listSortId = S7_OPERATIONAL_DEFAULT_SORT_ID,
+  onListSortChange,
   searchInput = "",
   onSearchInputChange,
   onClearAll,
@@ -83,6 +94,8 @@ const ConcorrenciaFiltersCard = forwardRef(function ConcorrenciaFiltersCard(
   onRelatoriosClick,
   onIncluirAnuncioClick,
   selectedCount = 0,
+  sectionJumpUpTargetRef = null,
+  sectionJumpUpAriaLabel = "Voltar para o resumo da página",
   },
   ref,
 ) {
@@ -110,11 +123,15 @@ const ConcorrenciaFiltersCard = forwardRef(function ConcorrenciaFiltersCard(
     const activeChip = filterChips.find((c) => c.id === listFilter);
     parts.push(`Filtro: ${activeChip?.label ?? "Todos"}`);
 
+    if (listSortId === S7_OPERATIONAL_DEFAULT_SORT_ID) {
+      parts.push(`Ordenação: ${S7_OPERATIONAL_SORT_TOP_SALES_CHIP.label}`);
+    }
+
     const query = String(searchInput ?? "").trim();
     if (query) parts.push(`Busca: "${query}"`);
 
     return parts.filter(Boolean).join(" · ");
-  }, [accountId, accounts, filterChips, listFilter, searchInput]);
+  }, [accountId, accounts, filterChips, listFilter, listSortId, searchInput]);
 
   return (
     <section
@@ -158,6 +175,13 @@ const ConcorrenciaFiltersCard = forwardRef(function ConcorrenciaFiltersCard(
           </span>
         </span>
         <span className="concorrencia-filters-card__header-actions">
+          {sectionJumpUpTargetRef ? (
+            <S7SectionJumpButton
+              direction="up"
+              targetRef={sectionJumpUpTargetRef}
+              ariaLabel={sectionJumpUpAriaLabel}
+            />
+          ) : null}
           {expanded && selectedCount > 0 ? (
             <span className="concorrencia-filters-card__header-selected">
               {formatConcorrenciaSelectionCountLabel(selectedCount)}
@@ -192,7 +216,7 @@ const ConcorrenciaFiltersCard = forwardRef(function ConcorrenciaFiltersCard(
                 onRelatoriosClick?.();
               }}
             >
-              Relatórios
+              Gerar relatório
             </S7Button>
           ) : null}
           <span
@@ -308,6 +332,27 @@ const ConcorrenciaFiltersCard = forwardRef(function ConcorrenciaFiltersCard(
           <div className="concorrencia-filters-card__row concorrencia-filters-card__row--chips">
             <span className="concorrencia-filters-card__label">Filtros rápidos</span>
             <div className="concorrencia-filters-card__chip-row" role="toolbar" aria-label="Filtros de concorrência">
+              <button
+                type="button"
+                className={`products-catalog__filter-chip ${
+                  listSortId === S7_OPERATIONAL_SORT_TOP_SALES_CHIP.id
+                    ? "products-catalog__filter-chip--active"
+                    : ""
+                }`}
+                aria-pressed={listSortId === S7_OPERATIONAL_SORT_TOP_SALES_CHIP.id}
+                title="Ordenar por maior volume de vendas"
+                onClick={() => onListSortChange?.(S7_OPERATIONAL_DEFAULT_SORT_ID)}
+              >
+                <span
+                  className={`products-catalog__filter-chip-icon products-catalog__filter-chip-icon--${S7_OPERATIONAL_SORT_TOP_SALES_CHIP.iconTone}`}
+                  aria-hidden
+                >
+                  <S7Icon name={S7_OPERATIONAL_SORT_TOP_SALES_CHIP.icon} size={15} strokeWidth={1.65} />
+                </span>
+                <span className="products-catalog__filter-chip-label">
+                  {S7_OPERATIONAL_SORT_TOP_SALES_CHIP.label}
+                </span>
+              </button>
               {filterChips
                 .filter((c) => c.id !== "all")
                 .map((c) => (

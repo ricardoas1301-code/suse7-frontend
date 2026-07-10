@@ -155,12 +155,15 @@ export function buildListingFinancialTruthContract(listing, executiveData) {
     costsDec[field] = resolveCostDecimal(summary, field, warnings);
   }
   const totalCosts = COST_ORDER.reduce((acc, field) => acc.plus(costsDec[field]), new Decimal(0));
-  const netProfit = gross.minus(totalCosts);
+  const officialProfit =
+    parseApiDecimal(summary.contribution_profit_brl) ??
+    parseApiDecimal(summary.net_profit_brl) ??
+    new Decimal(0);
   const marginPct = gross.isZero()
     ? new Decimal(0)
-    : netProfit.div(gross).times(100).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
-  const profitPerUnit = unitsSold > 0 ? netProfit.div(unitsSold).toDecimalPlaces(2, Decimal.ROUND_HALF_UP) : null;
-  const ticketAverage = salesCount > 0 ? gross.div(salesCount).toDecimalPlaces(2, Decimal.ROUND_HALF_UP) : null;
+    : officialProfit.div(gross).times(100).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+  const profitPerUnit = unitsSold > 0 ? officialProfit.div(unitsSold).toDecimalPlaces(2, Decimal.ROUND_HALF_UP) : null;
+  const ticketAverage = unitsSold > 0 ? gross.div(unitsSold).toDecimalPlaces(2, Decimal.ROUND_HALF_UP) : null;
 
   const periodObj =
     executiveData?.period != null && typeof executiveData.period === "object"
@@ -211,7 +214,7 @@ export function buildListingFinancialTruthContract(listing, executiveData) {
       total_cost_brl: toApiMoney(totalCosts),
     },
     profit: {
-      net_profit_brl: toApiMoney(netProfit),
+      net_profit_brl: toApiMoney(officialProfit),
       net_margin_pct: marginPct.toFixed(4),
       ticket_average_brl: ticketAverage != null ? toApiMoney(ticketAverage) : null,
       profit_per_unit_brl: profitPerUnit != null ? toApiMoney(profitPerUnit) : null,
@@ -228,30 +231,9 @@ export function buildListingFinancialTruthContract(listing, executiveData) {
  */
 export function buildListingRayXSummaryFromContract(summary, contract) {
   if (!summary || !contract) return summary ?? null;
-  const marketplaceFee = parseApiDecimal(contract.costs.marketplace_fee_brl) ?? new Decimal(0);
-  const shipping = parseApiDecimal(contract.costs.shipping_cost_brl) ?? new Decimal(0);
-  const netReceived = (parseApiDecimal(contract.gross_revenue_brl) ?? new Decimal(0))
-    .minus(marketplaceFee)
-    .minus(shipping);
-
   return {
     ...summary,
-    orders_count: contract.sales_count,
-    items_quantity_sold: contract.units_sold,
-    gross_sales_brl: contract.gross_revenue_brl,
-    product_cost_only_brl: contract.costs.product_cost_brl,
-    marketplace_fee_brl: contract.costs.marketplace_fee_brl,
-    shipping_cost_brl: contract.costs.shipping_cost_brl,
-    tax_cost_brl: contract.costs.tax_brl,
-    operation_packaging_cost_brl: contract.costs.operation_packaging_brl,
-    ads_cost_brl: contract.costs.ads_brl,
-    operational_costs_brl: contract.costs.operational_cost_brl,
-    total_costs_brl: contract.costs.total_cost_brl,
-    net_profit_brl: contract.profit.net_profit_brl,
-    contribution_profit_brl: contract.profit.net_profit_brl,
-    contribution_margin_percent: contract.profit.net_margin_pct,
-    average_ticket_brl: contract.profit.ticket_average_brl,
-    you_receive_brl: toApiMoney(netReceived),
+    // Mantém lucro SSOT do backend (executive-summary), apenas adicionando aliases de display.
     sales_count_display: contract.sales_count,
     units_sold_display: contract.units_sold,
   };

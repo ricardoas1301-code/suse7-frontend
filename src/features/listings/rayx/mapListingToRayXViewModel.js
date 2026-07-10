@@ -187,13 +187,11 @@ export function mapListingToRayXViewModel(listing) {
     secoes: [
       { id: "vendas", label: "Vendas", enabled: true },
       { id: "historico-vendas", label: "Histórico de vendas", enabled: true },
-      { id: "visao-geral", label: "Visão geral", enabled: true },
-      { id: "preco-custos", label: "Preço e custos", enabled: true },
-      { id: "estoque", label: "Estoque", enabled: true },
-      { id: "logistica", label: "Logística", enabled: true },
-      { id: "saude-anuncio", label: "Saúde do anúncio", enabled: true },
-      { id: "metricas-venda", label: "Métricas de venda", enabled: true },
-      { id: "dados-ml", label: "Dados Mercado Livre", enabled: true },
+      { id: "resumo", label: "Resumo", enabled: true },
+      { id: "custos-estoque", label: "Custos e estoque", enabled: true },
+      { id: "conteudo", label: "Imagens", enabled: true },
+      { id: "configuracoes", label: "Descrição", enabled: true },
+      { id: "pesos-medidas", label: "Pesos e medidas", enabled: true },
     ],
     camposVisaoGeral: [
       { label: "Marketplace", value: marketplaceLabel },

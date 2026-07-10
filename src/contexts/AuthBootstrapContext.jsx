@@ -6,6 +6,8 @@ import {
   markAuthBootstrapCompleted,
   subscribeAuthBootstrapSession,
 } from "../auth/authBootstrapService";
+import { logAuthBootstrap } from "../auth/authBootstrapDevLog";
+import { logPlanPermissionsLoadingGuard } from "../billing/dev/planPermissionsLoadingGuardDevLog";
 
 /** @type {import("react").Context<{
  *   session: import("@supabase/supabase-js").Session | null;
@@ -30,9 +32,32 @@ export function AuthBootstrapProvider({ children }) {
       setSession(nextSession);
     });
 
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let authBootstrapTimeout = null;
+
     (async () => {
+      authBootstrapTimeout = setTimeout(() => {
+        if (!mounted) return;
+        setLoading((current) => {
+          if (!current) return current;
+          logAuthBootstrap("boot_timeout", {
+            timeout_ms: import.meta.env.DEV ? 8_000 : 15_000,
+          });
+          logPlanPermissionsLoadingGuard({
+            status: null,
+            duration_ms: import.meta.env.DEV ? 8_000 : 15_000,
+            error_message: "auth_bootstrap_timeout",
+            fallback_applied: import.meta.env.DEV && Boolean(getAuthBootstrapAccessToken()),
+            user_session: getAuthBootstrapAccessToken() ? "present" : "absent",
+            trigger: "auth_bootstrap_timeout",
+          });
+          return false;
+        });
+      }, import.meta.env.DEV ? 8_000 : 15_000);
+
       const bootSession = await ensureAuthSessionBootstrapped();
       if (!mounted) return;
+      if (authBootstrapTimeout != null) clearTimeout(authBootstrapTimeout);
       setSession(bootSession);
       setLoading(false);
       markAuthBootstrapCompleted();
@@ -40,6 +65,7 @@ export function AuthBootstrapProvider({ children }) {
 
     return () => {
       mounted = false;
+      if (authBootstrapTimeout != null) clearTimeout(authBootstrapTimeout);
       unsubscribe();
       uninstallListener();
     };

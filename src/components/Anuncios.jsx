@@ -16,12 +16,17 @@ import S7EmptyState from "./ui/S7EmptyState";
 import S7Icon from "./ui/S7Icon";
 import S7Input from "./ui/S7Input";
 import S7Pagination from "./ui/S7Pagination";
-import S7Tooltip from "./ui/S7Tooltip";
+import S7SectionJumpButton from "./ui/S7SectionJumpButton.jsx";
 import { applyAdsCatalogFilter, getAdsFilterChipsForToolbarOrdered } from "../utils/adsFilterRegistry";
 import { filterAdsByCatalogSearch } from "../utils/adsCatalogSearch";
 import { marketplaceChipLabel } from "../utils/productCatalogRow";
+import { pickCatalogAccountFields } from "./catalog/S7CatalogAccountCell.jsx";
 import "./Products.css";
 import "./Anuncios.css";
+import "../features/listings/layout/AnunciosCatalogGridAlign.css";
+import "../features/listings/layout/PrecificacoesCatalogGridAlign.css";
+import { ANUNCIOS_COL } from "../features/listings/layout/anunciosCatalogColumns.js";
+import { PRECIFICACOES_COL } from "../features/listings/layout/precificacoesCatalogColumns.js";
 import { ListingsTable } from "../features/listings/components/ListingsTable";
 import { listingsViewConfigs } from "../features/listings/config/listingsViewConfigs";
 import { AdsCatalogRow } from "../features/listings/components/AdsCatalogRow.jsx";
@@ -32,6 +37,8 @@ import { rotuloCabecalhoListaUnicaLinha } from "../utils/rotuloCabecalhoLista.js
 import { fetchMercadoLivreMarketplaceAccounts } from "../services/marketplaceAccountsApi";
 import { PricingIntelligenceModal } from "./pricing/PricingIntelligenceModal.jsx";
 import ListingsGerarRelatorioModal from "../features/listings/reports/ListingsGerarRelatorioModal.jsx";
+import { buildPrecificacoesListAuditPayload, buildPrecificacoesListModalParityAuditPayload } from "../features/listings/utils/resolvePrecificacoesListCellMetrics.js";
+import { PRICING_PAGE_MODE } from "../features/listings/config/listingsPageModes.js";
 
 /** Rótulo de exibição de uma conta marketplace (nickname → alias → seller id). */
 function listingsAccountLabel(a) {
@@ -42,60 +49,48 @@ function listingsAccountLabel(a) {
   return "Conta";
 }
 
+/** Contador no card Busca e filtros (paridade Vendas) — lista opera sobre anúncios. */
+function formatListingsFiltersSelectionLabel(count) {
+  if (count <= 0) return "";
+  const n = Number(count).toLocaleString("pt-BR");
+  return count === 1 ? "1 anúncio selecionado" : `${n} anúncios selecionados`;
+}
+
 const ADS_PAGE_SIZE = 25;
 
-const ADS_COLUMN_TOOLTIPS = {
-  cover: "Imagem principal do anúncio importada do marketplace.",
-  listingNo:
-    "Número do anúncio no Mercado Livre (exibido sem o prefixo MLB, como no painel). O id técnico completo continua no banco. Clique para copiar o número exibido.",
-  adTitle: "Título público do anúncio no marketplace.",
-  product: "Produto interno vinculado ao anúncio.",
-  account: "Conta do vendedor no marketplace (alias / logo), vinculada ao CNPJ no Suse7.",
-  channel: "Canal = marketplace (Mercado Livre, Shopee, etc.). Distinto da coluna Conta.",
-  marketplace: "Canal de venda onde o anúncio está publicado.",
-  price: "Preço de catálogo (listing_price_brl) — ver também coluna de promoção e effective_sale_price_brl na API.",
-  sales: "Unidades vendidas via este anúncio (métricas importadas).",
-  revenue: "Faturamento bruto associado ao anúncio.",
-  netReceive:
-    "Repasse líquido unitário do marketplace (campo net_proceeds). Não usar totais de vendas importadas nesta célula.",
-  commissionPct:
-    "Percentual de comissão do marketplace (sale_fee_details no sync). Passe o mouse para ver o tipo do anúncio (Clássico/Premium).",
-  commissionBrl: "Valor monetário estimado da comissão (sale_fee_details), quando informado pelo marketplace.",
-  shipping: "Custo de frete explícito no anúncio, quando a API retornar.",
-  promotion: "Preço promocional efetivo quando há original_price acima do preço atual.",
-  visits: "Total de visitas ao anúncio (API de visitas do ML, quando disponível).",
-  listingQuality: "Nível ou score de qualidade da publicação (endpoint performance/health do ML).",
-  buyingExperience: "Indicador de experiência de compra quando retornado pelo ML.",
-  status: "Status operacional no marketplace.",
-  adHealth: "Indicador de saúde numérica do anúncio no payload do item (ML).",
-  sellPor:
-    "Preço de venda no anúncio (preço de tabela quando há promoção), preço promocional, atacado quando a API expõe, e valor líquido estimado (você recebe) com detalhamento de tarifa e frete.",
-};
+/** Enriquece logo/alias da conta a partir do cadastro ML (sem alterar payload da listagem). */
+function enrichListingRowAccountVisual(row, mlAccounts) {
+  const base = pickCatalogAccountFields(row);
+  if (base.accountLogoUrl) return row;
+  const accountId = base.marketplaceAccountId != null ? String(base.marketplaceAccountId).trim() : "";
+  if (!accountId || !Array.isArray(mlAccounts) || mlAccounts.length === 0) return row;
+  const match = mlAccounts.find((a) => String(a?.id ?? "").trim() === accountId);
+  if (!match) return row;
+  const fromAccount = pickCatalogAccountFields(match);
+  return {
+    ...row,
+    marketplaceAccountId: base.marketplaceAccountId ?? fromAccount.marketplaceAccountId,
+    accountAlias: base.accountAlias ?? fromAccount.accountAlias,
+    accountLogoUrl: fromAccount.accountLogoUrl,
+    account_logo_url: fromAccount.accountLogoUrl,
+  };
+}
 
 /**
- * @param {{ columnClass: string; tip?: string; tipWrap?: boolean; lines?: [string, string]; children?: import("react").ReactNode }} props
+ * Cabeçalho de coluna — rótulo estático (sem tooltip; título já é autoexplicativo).
+ * @param {{ columnClass: string; dataCol?: string; lines?: [string, string]; children?: import("react").ReactNode }} props
  */
-function AdsCatalogHeadCell({ columnClass, tip, tipWrap = false, lines, children = null }) {
+function AdsCatalogHeadCell({ columnClass, dataCol, lines, children = null }) {
   const tituloCompacto = lines && lines.length === 2 ? rotuloCabecalhoListaUnicaLinha(lines) : null;
-  const triggerClass = [
-    "products-catalog__head-tooltip",
-    tituloCompacto ? "products-catalog__head-tooltip--compact" : "",
-    tipWrap ? "products-catalog__head-tooltip--wide" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   const label = tituloCompacto ?? children;
 
   return (
-    <div className={`products-catalog__cell ${columnClass} products-catalog__col-head`} role="columnheader">
-      {tip ? (
-        <span className={triggerClass} data-tooltip={tip} tabIndex={0}>
-          {label}
-        </span>
-      ) : (
-        label
-      )}
+    <div
+      className={`products-catalog__cell ${columnClass} products-catalog__col-head`}
+      data-col={dataCol}
+      role="columnheader"
+    >
+      {label}
     </div>
   );
 }
@@ -107,12 +102,21 @@ function AdsCatalogHeadCell({ columnClass, tip, tipWrap = false, lines, children
  * @param {{
  *   listingsWorkspaceMode?: "anuncios" | "precificacoes";
  *   listingsViewConfig?: (typeof listingsViewConfigs)["anuncios"];
+ *   filtersSectionRef?: import("react").RefObject<HTMLElement | null>;
+ *   sectionJumpUpTargetRef?: import("react").RefObject<Element | null>;
+ *   sectionJumpUpAriaLabel?: string;
  * }} [props]
  */
-export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsViewConfig: listingsViewConfigProp } = {}) {
+export default function Anuncios({
+  listingsWorkspaceMode = "anuncios",
+  listingsViewConfig: listingsViewConfigProp,
+  filtersSectionRef = null,
+  sectionJumpUpTargetRef = null,
+  sectionJumpUpAriaLabel = "Voltar para o resumo da página",
+} = {}) {
   const listingsViewConfig = listingsViewConfigProp ?? listingsViewConfigs[listingsWorkspaceMode];
   const { addNotification } = useNotifications();
-  const [adsFilterId, setAdsFilterId] = useState("all");
+  const [adsFilterId, setAdsFilterId] = useState("top_sales");
   const [adsSearchQuery, setAdsSearchQuery] = useState("");
   const [adsPage, setAdsPage] = useState(1);
   /** Vista simples (default): só capa + nº; vista completa: todas as colunas operacionais. */
@@ -197,12 +201,12 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
   }, [filterChips, isPricingFilters]);
 
   const hasActiveFilters =
-    adsFilterId !== "all" ||
+    adsFilterId !== "top_sales" ||
     adsSearchQuery.trim() !== "" ||
     (showAccountFilter && mlAccountFilter !== "");
 
   const handleClearFilters = useCallback(() => {
-    setAdsFilterId("all");
+    setAdsFilterId("top_sales");
     setAdsSearchQuery("");
     setMlAccountFilter("");
   }, []);
@@ -234,16 +238,23 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
     }
 
     const parts = [];
-    if (adsFilterId !== "all") {
-      const chip = filterChips.find((c) => c.id === adsFilterId);
-      if (chip) parts.push(chip.label);
+    if (showAccountFilter) {
+      const accountId = mlAccountFilter ? String(mlAccountFilter).trim() : "";
+      if (accountId) {
+        const acc = mlAccounts.find((a) => String(a.id ?? "").trim() === accountId);
+        parts.push(`Conta: ${acc ? listingsAccountLabel(acc) : "Conta selecionada"}`);
+      } else {
+        parts.push("Todas as contas");
+      }
     }
-    if (showAccountFilter && mlAccountFilter) {
-      const acc = mlAccounts.find((a) => String(a.id ?? "") === mlAccountFilter);
-      parts.push(acc ? `Conta ${listingsAccountLabel(acc)}` : "Conta selecionada");
-    }
-    if (adsSearchQuery.trim() !== "") parts.push(`"${adsSearchQuery.trim()}"`);
-    return parts.length > 0 ? parts.join(" • ") : "Nenhum filtro ativo";
+
+    const activeChip = filterChips.find((c) => c.id === adsFilterId);
+    parts.push(`Filtro: ${activeChip?.label ?? "Mais vendidos"}`);
+
+    const query = adsSearchQuery.trim();
+    if (query) parts.push(`Busca: "${query}"`);
+
+    return parts.filter(Boolean).join(" · ");
   }, [
     isPricingFilters,
     adsFilterId,
@@ -360,11 +371,14 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
 
   const rowsWithLabels = useMemo(
     () =>
-      catalogRows.map((r) => ({
-        ...r,
-        marketplaceLabel: marketplaceChipLabel(r.marketplaceSlug),
-      })),
-    [catalogRows]
+      catalogRows.map((r) => {
+        const withAccount = showAccountFilter ? enrichListingRowAccountVisual(r, mlAccounts) : r;
+        return {
+          ...withAccount,
+          marketplaceLabel: marketplaceChipLabel(withAccount.marketplaceSlug),
+        };
+      }),
+    [catalogRows, mlAccounts, showAccountFilter],
   );
 
   const searchFiltered = useMemo(
@@ -384,7 +398,7 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
 
   const reportActiveFilters = useMemo(() => {
     const tags = [];
-    if (adsFilterId !== "all") {
+    if (adsFilterId !== "top_sales") {
       const activeChip = filterChips.find((chip) => chip.id === adsFilterId);
       if (activeChip?.label) tags.push(activeChip.label);
     }
@@ -450,6 +464,32 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
     const start = (adsPage - 1) * pageSize;
     return displayRows.slice(start, start + pageSize);
   }, [displayRows, adsPage, pageSize]);
+
+  const pricingListAuditKeyRef = useRef("");
+
+  useEffect(() => {
+    if (listingsWorkspaceMode !== PRICING_PAGE_MODE || catalogRows.length === 0) return;
+    const auditKey = `${catalogRows.length}:${catalogRows[0]?.id ?? ""}:${catalogRows[catalogRows.length - 1]?.id ?? ""}`;
+    if (pricingListAuditKeyRef.current === auditKey) return;
+    pricingListAuditKeyRef.current = auditKey;
+
+    const sample = catalogRows.slice(0, Math.min(25, catalogRows.length));
+    const homologRow = catalogRows.find(
+      (row) =>
+        String(row.listingNumber ?? row.externalId ?? "").trim() === "MLB6415546858" ||
+        String(row.externalId ?? "").trim() === "MLB6415546858" ||
+        String(row.listingNumber ?? row.externalId ?? "").trim() === "MLB6086602390" ||
+        String(row.externalId ?? "").trim() === "MLB6086602390",
+    );
+    const auditRows = homologRow && !sample.some((row) => row.id === homologRow.id)
+      ? [...sample, homologRow]
+      : sample;
+
+    for (const row of auditRows) {
+      console.info("[S7_PRICING_LIST_CURRENT_STATE_AUDIT]", buildPrecificacoesListAuditPayload(row));
+      console.info("[S7_PRICING_LIST_MODAL_PARITY_AUDIT]", buildPrecificacoesListModalParityAuditPayload(row));
+    }
+  }, [catalogRows, listingsWorkspaceMode]);
 
   const toggleRowSelected = useCallback((listingId) => {
     setSelectedListingIds((prev) => {
@@ -641,242 +681,290 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
         />
       ) : null}
 
+      <div className="anuncios-catalog__operacao-stack">
       <h1 className="products-catalog__sr-title">{listingsViewConfig.srTitle}</h1>
 
-      <div
-        className={`products-catalog__controls s7-sticky-filters s7-catalog-filter-card${
-          filtersCollapsible ? " anuncios-catalog__filters--collapsible" : ""
-        }${filtersCollapsible && !filtersExpanded ? " anuncios-catalog__filters--collapsed" : ""}`}
-      >
-        {filtersCollapsible ? (
-          <button
-            type="button"
-            className="anuncios-catalog__filters-toggle"
-            onClick={() => setFiltersExpanded((v) => !v)}
-            aria-expanded={filtersExpanded}
-            aria-controls="anuncios-catalog-filters-panel"
-          >
-            <span className="anuncios-catalog__filters-toggle-main">
-              <span className="anuncios-catalog__filters-toggle-icon" aria-hidden>
-                <S7Icon name="search" size={18} strokeWidth={1.85} />
-              </span>
-              <span className="anuncios-catalog__filters-toggle-text">
-                <span className="anuncios-catalog__filters-toggle-title">Busca e filtros</span>
-                {!filtersExpanded ? (
-                  <span className="anuncios-catalog__filters-toggle-summary">{filtersSummaryText}</span>
-                ) : null}
-              </span>
-            </span>
-            <span className="anuncios-catalog__filters-toggle-actions">
-              {showReportsCentral ? (
-                <S7Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  iconName="reports"
-                  className="anuncios-catalog__filters-toggle-report-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setReportModalOpen(true);
-                  }}
-                >
-                  Relatórios
-                </S7Button>
+      <ListingsTable
+          stickyFilters={
+            <div
+              ref={filtersSectionRef}
+              className={[
+                "products-catalog__controls",
+                "s7-sticky-filters",
+                "s7-catalog-filter-card",
+                filtersCollapsible ? "anuncios-catalog__filters--collapsible" : "",
+                filtersCollapsible && !filtersExpanded ? "anuncios-catalog__filters--collapsed" : "",
+                !filtersCollapsible && sectionJumpUpTargetRef ? "s7-section-jump-host" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              {!filtersCollapsible && sectionJumpUpTargetRef ? (
+                <S7SectionJumpButton
+                  direction="up"
+                  targetRef={sectionJumpUpTargetRef}
+                  ariaLabel={sectionJumpUpAriaLabel}
+                  className="s7-section-jump-button--overlay"
+                />
               ) : null}
-              <span
-                className={`anuncios-catalog__filters-toggle-chevron${
-                  filtersExpanded ? " anuncios-catalog__filters-toggle-chevron--open" : ""
-                }`}
-                aria-hidden
-              >
-                <S7Icon name="chevron_down" size={18} strokeWidth={2} />
-              </span>
-            </span>
-          </button>
-        ) : null}
-        <div
-          id="anuncios-catalog-filters-panel"
-          className="anuncios-catalog__filters-panel"
-          aria-hidden={filtersCollapsible ? !filtersExpanded : undefined}
-        >
-        {isPricingFilters ? (
-          <div className="anuncios-catalog__filters-stack">
-            <div className="anuncios-catalog__filters-row anuncios-catalog__filters-row--search-account">
-              <div className="anuncios-catalog__filters-group anuncios-catalog__filters-group--search">
-                <span className="anuncios-catalog__filters-group-label">Buscar</span>
-                <div className="products-catalog__search-wrap anuncios-catalog__filters-search">
-                  {searchFieldNode}
-                </div>
-              </div>
-
-              {showAccountFilter ? (
-                <div className="anuncios-catalog__filters-group anuncios-catalog__filters-group--account">
-                  <span className="anuncios-catalog__filters-group-label">Conta</span>
-                  <select
-                    className="anuncios-catalog__filters-select"
-                    value={mlAccountFilter}
-                    onChange={(e) => setMlAccountFilter(e.target.value)}
-                    aria-label="Filtrar por conta do marketplace"
+              {filtersCollapsible ? (
+                <div className="anuncios-catalog__filters-toggle-bar">
+                  <button
+                    type="button"
+                    className="anuncios-catalog__filters-toggle"
+                    onClick={() => setFiltersExpanded((v) => !v)}
+                    aria-expanded={filtersExpanded}
+                    aria-controls="anuncios-catalog-filters-panel"
                   >
-                    <option value="">Todas as contas</option>
-                    {mlAccounts.map((a) => {
-                      const id = a.id != null ? String(a.id).trim() : "";
-                      if (!id) return null;
-                      return (
-                        <option key={id} value={id}>
-                          {listingsAccountLabel(a)}
-                        </option>
-                      );
-                    })}
-                  </select>
+                    <span className="anuncios-catalog__filters-toggle-main">
+                      <span className="anuncios-catalog__filters-toggle-icon" aria-hidden>
+                        <S7Icon name="search" size={18} strokeWidth={1.85} />
+                      </span>
+                      <span className="anuncios-catalog__filters-toggle-text">
+                        <span className="anuncios-catalog__filters-toggle-title">Busca e filtros</span>
+                        {!filtersExpanded ? (
+                          <span className="anuncios-catalog__filters-toggle-summary">
+                            {filtersSummaryText}
+                            {selectedCount > 0 ? (
+                              <>
+                                {" · "}
+                                <span className="anuncios-catalog__filters-toggle-summary-selected">
+                                  {formatListingsFiltersSelectionLabel(selectedCount)}
+                                </span>
+                              </>
+                            ) : null}
+                          </span>
+                        ) : null}
+                      </span>
+                    </span>
+                    <span className="anuncios-catalog__filters-toggle-actions">
+                      {sectionJumpUpTargetRef ? (
+                        <S7SectionJumpButton
+                          direction="up"
+                          targetRef={sectionJumpUpTargetRef}
+                          ariaLabel={sectionJumpUpAriaLabel}
+                          element="span"
+                        />
+                      ) : null}
+                      {filtersExpanded && selectedCount > 0 ? (
+                        <span className="anuncios-catalog__filters-toggle-selected">
+                          {formatListingsFiltersSelectionLabel(selectedCount)}
+                        </span>
+                      ) : null}
+                      <span
+                        className={`anuncios-catalog__filters-toggle-chevron${
+                          filtersExpanded ? " anuncios-catalog__filters-toggle-chevron--open" : ""
+                        }`}
+                        aria-hidden
+                      >
+                        <S7Icon name="chevron_down" size={18} strokeWidth={2} />
+                      </span>
+                    </span>
+                  </button>
+                  {showReportsCentral ? (
+                    <S7Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      iconName="reports"
+                      className="anuncios-catalog__filters-toggle-report-btn"
+                      title="Gerar relatório com os filtros atuais"
+                      onClick={() => setReportModalOpen(true)}
+                    >
+                      Gerar relatório
+                    </S7Button>
+                  ) : null}
                 </div>
               ) : null}
-            </div>
+              <div
+                id="anuncios-catalog-filters-panel"
+                className="anuncios-catalog__filters-panel"
+                aria-hidden={filtersCollapsible ? !filtersExpanded : undefined}
+              >
+                {isPricingFilters ? (
+                  <div className="anuncios-catalog__filters-stack">
+                    <div className="anuncios-catalog__filters-row anuncios-catalog__filters-row--search-account">
+                      <div className="anuncios-catalog__filters-group anuncios-catalog__filters-group--search">
+                        <span className="anuncios-catalog__filters-group-label">Buscar</span>
+                        <div className="products-catalog__search-wrap anuncios-catalog__filters-search">
+                          {searchFieldNode}
+                        </div>
+                      </div>
 
-            <div className="anuncios-catalog__filters-row anuncios-catalog__filters-row--chips">
-              <span className="anuncios-catalog__filters-group-label">Filtros rápidos</span>
-              <div
-                className="products-catalog__filter-row-chips anuncios-catalog__filters-chip-row"
-                role="toolbar"
-                aria-label={`Filtros rápidos — ${listingsViewConfig.pageTitle}`}
-                data-listings-filters={listingsViewConfig.filtersToolbarKey}
-              >
-                {visibleFilterChips.map(renderFilterChip)}
-                {clearFiltersButton}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="products-catalog__controls-top">
-              <div className="products-catalog__search-wrap">{searchFieldNode}</div>
-            </div>
-            <div className="products-catalog__controls-main">
-              <div
-                className="products-catalog__filter-row products-catalog__filter-row--spread"
-                role="toolbar"
-                aria-label={`Filtros rápidos — ${listingsViewConfig.pageTitle}`}
-                data-listings-filters={listingsViewConfig.filtersToolbarKey}
-              >
-                <div className="products-catalog__filter-row-chips">
-                  {filterChips.map(renderFilterChip)}
-                  {clearFiltersButton}
-                </div>
-                {listingsViewConfig.allowViewModeToggle !== false ? (
-                  <div className="products-catalog__filter-row-end">
-                    <button
-                      type="button"
-                      className={`products-catalog__filter-chip${adsViewMode === "full" ? " products-catalog__filter-chip--active" : ""}`}
-                      title={
-                        adsViewMode === "minimal"
-                          ? "Mostra preço, vendas, métricas e demais colunas (mesmo endpoint)."
-                          : "Mostra só capa e número do anúncio (diagnóstico)."
-                      }
-                      aria-pressed={adsViewMode === "full"}
-                      onClick={() => setAdsViewMode((m) => (m === "minimal" ? "full" : "minimal"))}
-                    >
-                      <span className="products-catalog__filter-chip-label">
-                        {adsViewMode === "minimal" ? "Vista completa" : "Vista simples"}
-                      </span>
-                    </button>
+                      {showAccountFilter ? (
+                        <div className="anuncios-catalog__filters-group anuncios-catalog__filters-group--account">
+                          <span className="anuncios-catalog__filters-group-label">Conta</span>
+                          <select
+                            className="anuncios-catalog__filters-select"
+                            value={mlAccountFilter}
+                            onChange={(e) => setMlAccountFilter(e.target.value)}
+                            aria-label="Filtrar por conta do marketplace"
+                          >
+                            <option value="">Todas as contas</option>
+                            {mlAccounts.map((a) => {
+                              const id = a.id != null ? String(a.id).trim() : "";
+                              if (!id) return null;
+                              return (
+                                <option key={id} value={id}>
+                                  {listingsAccountLabel(a)}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="anuncios-catalog__filters-row anuncios-catalog__filters-row--chips">
+                      <span className="anuncios-catalog__filters-group-label">Filtros rápidos</span>
+                      <div
+                        className="products-catalog__filter-row-chips anuncios-catalog__filters-chip-row"
+                        role="toolbar"
+                        aria-label={`Filtros rápidos — ${listingsViewConfig.pageTitle}`}
+                        data-listings-filters={listingsViewConfig.filtersToolbarKey}
+                      >
+                        {visibleFilterChips.map(renderFilterChip)}
+                        {clearFiltersButton}
+                      </div>
+                    </div>
                   </div>
-                ) : null}
+                ) : (
+                  <>
+                    <div className="products-catalog__controls-top">
+                      <div className="products-catalog__search-wrap">{searchFieldNode}</div>
+                    </div>
+                    <div className="products-catalog__controls-main">
+                      <div
+                        className="products-catalog__filter-row products-catalog__filter-row--spread"
+                        role="toolbar"
+                        aria-label={`Filtros rápidos — ${listingsViewConfig.pageTitle}`}
+                        data-listings-filters={listingsViewConfig.filtersToolbarKey}
+                      >
+                        <div className="products-catalog__filter-row-chips">
+                          {filterChips.map(renderFilterChip)}
+                          {clearFiltersButton}
+                        </div>
+                        {listingsViewConfig.allowViewModeToggle !== false ? (
+                          <div className="products-catalog__filter-row-end">
+                            <button
+                              type="button"
+                              className={`products-catalog__filter-chip${adsViewMode === "full" ? " products-catalog__filter-chip--active" : ""}`}
+                              title={
+                                adsViewMode === "minimal"
+                                  ? "Mostra preço, vendas, métricas e demais colunas (mesmo endpoint)."
+                                  : "Mostra só capa e número do anúncio (diagnóstico)."
+                              }
+                              aria-pressed={adsViewMode === "full"}
+                              onClick={() => setAdsViewMode((m) => (m === "minimal" ? "full" : "minimal"))}
+                            >
+                              <span className="products-catalog__filter-chip-label">
+                                {adsViewMode === "minimal" ? "Vista completa" : "Vista simples"}
+                              </span>
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-          </>
-        )}
-        </div>
-      </div>
+          }
+          listOperationalPrefix={
+            <>
+              {listSyncWarning ? (
+                <div className="products-catalog__filter-empty-card products-catalog__sync-warning" role="status">
+                  <p>{listSyncWarning}</p>
+                </div>
+              ) : null}
 
-      {listSyncWarning ? (
-        <div className="products-catalog__filter-empty-card products-catalog__sync-warning" role="status">
-          <p>{listSyncWarning}</p>
-        </div>
-      ) : null}
-
-      {listError ? (
-        <div className="products-catalog__filter-empty-card" role="alert">
-          <S7EmptyState title={`Erro ao carregar ${listingsViewConfig.pageTitle.toLowerCase()}`} description={listError} />
-          <button type="button" className="products-catalog__filter-empty-btn" onClick={() => fetchListings()}>
-            Tentar novamente
-          </button>
-        </div>
-      ) : listLoading || authWaiting ? (
-        <div className="products-catalog__filter-empty-card" role="status">
-          <p>Carregando {listingsViewConfig.pageTitle.toLowerCase()}…</p>
-        </div>
-      ) : displayRows.length === 0 ? (
-        <div className="products-catalog__filter-empty-card" role="status">
-          {(() => {
-            const hasSearch = adsSearchQuery.trim().length > 0;
-            const { nounPlural } = listingsViewConfig.emptyStateNouns;
-            const { noneInFilter, noneFound, noneImported } = listingsViewConfig.emptyStateTitles;
-            let title = noneInFilter;
-            let description = "Ajuste os filtros ou limpe para ver a listagem completa.";
-            const trulyEmptyCatalog =
-              catalogRows.length === 0 && !hasSearch && adsFilterId === "all" && !listError;
-            if (trulyEmptyCatalog) {
-              title = noneImported;
-              description =
-                "Importe ou vincule anúncios pelo Mercado Livre. Se já importou, aguarde a sincronização ou tente recarregar.";
-            } else if (hasSearch && searchFiltered.length === 0) {
-              title = noneFound;
-              description = "Nenhum item corresponde à busca. Tente outro termo ou limpe o campo.";
-            } else if (hasSearch && searchFiltered.length > 0) {
-              description = `Nenhum item corresponde à combinação de busca e filtros nesta visão de ${nounPlural}.`;
-            }
-            return (
-              <>
-                <S7EmptyState title={title} description={description} />
-                <button
-                  type="button"
-                  className="products-catalog__filter-empty-btn"
-                  onClick={() => {
-                    setAdsFilterId("all");
-                    setAdsSearchQuery("");
-                  }}
-                >
-                  Mostrar todos
-                </button>
-              </>
-            );
-          })()}
-        </div>
-      ) : (
-        <ListingsTable
+              {listError ? (
+                <div className="products-catalog__filter-empty-card" role="alert">
+                  <S7EmptyState
+                    title={`Erro ao carregar ${listingsViewConfig.pageTitle.toLowerCase()}`}
+                    description={listError}
+                  />
+                  <button type="button" className="products-catalog__filter-empty-btn" onClick={() => fetchListings()}>
+                    Tentar novamente
+                  </button>
+                </div>
+              ) : listLoading || authWaiting ? (
+                <div className="products-catalog__filter-empty-card" role="status">
+                  <p>Carregando {listingsViewConfig.pageTitle.toLowerCase()}…</p>
+                </div>
+              ) : displayRows.length === 0 ? (
+                <div className="products-catalog__filter-empty-card" role="status">
+                  {(() => {
+                    const hasSearch = adsSearchQuery.trim().length > 0;
+                    const { nounPlural } = listingsViewConfig.emptyStateNouns;
+                    const { noneInFilter, noneFound, noneImported } = listingsViewConfig.emptyStateTitles;
+                    let title = noneInFilter;
+                    let description = "Ajuste os filtros ou limpe para ver a listagem completa.";
+                    const trulyEmptyCatalog =
+                      catalogRows.length === 0 && !hasSearch && adsFilterId === "top_sales" && !listError;
+                    if (trulyEmptyCatalog) {
+                      title = noneImported;
+                      description =
+                        "Importe ou vincule anúncios pelo Mercado Livre. Se já importou, aguarde a sincronização ou tente recarregar.";
+                    } else if (hasSearch && searchFiltered.length === 0) {
+                      title = noneFound;
+                      description = "Nenhum item corresponde à busca. Tente outro termo ou limpe o campo.";
+                    } else if (hasSearch && searchFiltered.length > 0) {
+                      description = `Nenhum item corresponde à combinação de busca e filtros nesta visão de ${nounPlural}.`;
+                    }
+                    return (
+                      <>
+                        <S7EmptyState title={title} description={description} />
+                        <button
+                          type="button"
+                          className="products-catalog__filter-empty-btn"
+                          onClick={() => {
+                            setAdsFilterId("top_sales");
+                            setAdsSearchQuery("");
+                          }}
+                        >
+                          Mostrar todos
+                        </button>
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : null}
+            </>
+          }
           bulkSelectionBar={
-            selectedCount > 0 ? (
+            displayRows.length > 0 && selectedCount > 0 ? (
               <div
                 className="anuncios-catalog__bulk-bar"
                 role="region"
                 aria-label={`Seleção em massa — ${listingsViewConfig.pageTitle}`}
               >
-              <span className="anuncios-catalog__bulk-bar-count">
-                <strong>{selectedCount}</strong>{" "}
-                {selectedCount === 1
-                  ? listingsViewConfig.bulkBarLabels.selectedOne
-                  : listingsViewConfig.bulkBarLabels.selectedMany}
-              </span>
-              <div className="anuncios-catalog__bulk-bar-actions">
-                <S7Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  disabled={listLoading}
-                  onClick={() => setBulkSkuModalOpen(true)}
-                >
-                  Vincular selecionados
-                </S7Button>
-                <button
-                  type="button"
-                  className="anuncios-catalog__bulk-bar-clear"
-                  disabled={listLoading}
-                  onClick={() => setSelectedListingIds(new Set())}
-                >
-                  Limpar seleção
-                </button>
+                <span className="anuncios-catalog__bulk-bar-count">
+                  <strong>{selectedCount}</strong>{" "}
+                  {selectedCount === 1
+                    ? listingsViewConfig.bulkBarLabels.selectedOne
+                    : listingsViewConfig.bulkBarLabels.selectedMany}
+                </span>
+                <div className="anuncios-catalog__bulk-bar-actions">
+                  <S7Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    disabled={listLoading}
+                    onClick={() => setBulkSkuModalOpen(true)}
+                  >
+                    Vincular selecionados
+                  </S7Button>
+                  <button
+                    type="button"
+                    className="anuncios-catalog__bulk-bar-clear"
+                    disabled={listLoading}
+                    onClick={() => setSelectedListingIds(new Set())}
+                  >
+                    Limpar seleção
+                  </button>
+                </div>
               </div>
-            </div>
             ) : null
           }
           tableHead={
@@ -884,6 +972,14 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
               className={`anuncios-catalog__grid anuncios-catalog__grid--head anuncios-catalog--dense${
                 effectiveViewMode === "minimal" ? " anuncios-catalog__grid--minimal" : ""
               }${!listingsViewConfig.showPrecificaS7Column ? " anuncios-catalog__grid--no-precifica-col" : ""}${
+                effectiveViewMode === "minimal" && listingsWorkspaceMode === "anuncios"
+                  ? " anuncios-catalog__grid--anuncios-analytic anuncios-catalog__grid--anuncios-analytic--no-scroll"
+                  : ""
+              }${
+                effectiveViewMode === "minimal" && listingsWorkspaceMode === "precificacoes"
+                  ? " anuncios-catalog__grid--precificacoes-minimal anuncios-catalog__grid--precificacoes-analytic--no-scroll"
+                  : ""
+              }${
                 listingsViewConfig.columnLayout === "pricing_focus" && effectiveViewMode === "full"
                   ? " anuncios-catalog__grid--pricing-columns"
                   : ""
@@ -892,6 +988,9 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
             >
                 <div
                   className="products-catalog__cell anuncios-catalog__cell--select products-catalog__col-head"
+                  data-col={
+                    listingsWorkspaceMode === "precificacoes" ? PRECIFICACOES_COL.select : ANUNCIOS_COL.select
+                  }
                   role="columnheader"
                 >
                   <span className="products-catalog__sr-only">Selecionar</span>
@@ -908,98 +1007,200 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
                 {listingsViewConfig.showPrecificaS7Column ? (
                   <AdsCatalogHeadCell
                     columnClass="anuncios-catalog__cell--precifica-s7"
-                    tip="Simular cenário e publicar preço no marketplace (Precificação inteligente S7)."
                     lines={["Precifica", "S7"]}
                   />
                 ) : null}
-                <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--thumb" tip={ADS_COLUMN_TOOLTIPS.cover}>
-                  Capa
+                <AdsCatalogHeadCell
+                  columnClass="anuncios-catalog__cell--thumb"
+                  dataCol={listingsWorkspaceMode === "precificacoes" ? PRECIFICACOES_COL.cover : ANUNCIOS_COL.cover}
+                >
+                  <span className="products-catalog__sr-only">Capa</span>
                 </AdsCatalogHeadCell>
                 {effectiveViewMode === "minimal" ? (
-                  <>
-                    <AdsCatalogHeadCell
-                      columnClass="anuncios-catalog__cell--minimal-listing"
-                      tip="Número do anúncio, título (link ao ML), marketplace, vínculo com produto quando pendente, SKU e vendas/visitas importadas."
-                      tipWrap
-                    >
-                      Anúncio
-                    </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell
-                      columnClass="anuncios-catalog__cell--minimal-sell"
-                      tip={ADS_COLUMN_TOOLTIPS.sellPor}
-                      tipWrap
-                      lines={["Você", "vende por"]}
-                    />
-                  </>
+                  listingsWorkspaceMode === "precificacoes" ? (
+                    <>
+                      <AdsCatalogHeadCell
+                        columnClass="anuncios-catalog__cell--minimal-listing"
+                        dataCol={PRECIFICACOES_COL.listing}
+                      >
+                        Anúncio
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="anuncios-catalog__cell--listing-type"
+                        dataCol={PRECIFICACOES_COL.listingType}
+                      >
+                        Tipo anúncio
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="anuncios-catalog__cell--account"
+                        dataCol={PRECIFICACOES_COL.account}
+                      >
+                        Conta
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="anuncios-catalog__cell--channel"
+                        dataCol={PRECIFICACOES_COL.channel}
+                      >
+                        Canal
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money anuncios-catalog__cell--precificacoes-result"
+                        dataCol={PRECIFICACOES_COL.profitBrl}
+                      >
+                        Lucro R$
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--pct"
+                        dataCol={PRECIFICACOES_COL.profitPercent}
+                      >
+                        Lucro %
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money"
+                        dataCol={PRECIFICACOES_COL.currentPrice}
+                      >
+                        Preço atual
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money"
+                        dataCol={PRECIFICACOES_COL.commission}
+                      >
+                        Comissão
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.shipping}>
+                        Frete
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.payout}>
+                        Repasse
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.cost}>
+                        Custo
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.tax}>
+                        Imposto
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--num"
+                        dataCol={PRECIFICACOES_COL.promotions}
+                      >
+                        Promoções
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--num"
+                        dataCol={PRECIFICACOES_COL.competitors}
+                      >
+                        Concorrentes
+                      </AdsCatalogHeadCell>
+                    </>
+                  ) : (
+                    <>
+                      <AdsCatalogHeadCell
+                        columnClass="anuncios-catalog__cell--minimal-listing"
+                        dataCol={ANUNCIOS_COL.listing}
+                      >
+                        Anúncio
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="anuncios-catalog__cell--listing-type"
+                        dataCol={ANUNCIOS_COL.listingType}
+                        lines={["Tipo", "anúncio"]}
+                      />
+                      <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--account" dataCol={ANUNCIOS_COL.account}>
+                        Conta
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--channel" dataCol={ANUNCIOS_COL.channel}>
+                        Canal
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money"
+                        dataCol={ANUNCIOS_COL.profitBrl}
+                        lines={["Lucro", "(R$)"]}
+                      />
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--pct" dataCol={ANUNCIOS_COL.profitPercent}>
+                        Lucro (%)
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.salePrice}>
+                        Preço
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--num" dataCol={ANUNCIOS_COL.sales}>
+                        Vendas
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money"
+                        dataCol={ANUNCIOS_COL.revenue}
+                        lines={["Fatura-", "mento"]}
+                      />
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money"
+                        dataCol={ANUNCIOS_COL.avgTicket}
+                        lines={["Ticket", "Médio"]}
+                      />
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.payout}>
+                        Repasse
+                      </AdsCatalogHeadCell>
+                    </>
+                  )
                 ) : (
                   <>
-                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--listing-no" tip={ADS_COLUMN_TOOLTIPS.listingNo}>
+                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--listing-no">
                       Nº
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--title" tip={ADS_COLUMN_TOOLTIPS.adTitle}>
+                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--title">
                       Anúncio
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--product" tip={ADS_COLUMN_TOOLTIPS.product}>
+                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--product">
                       Produto
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--account" tip={ADS_COLUMN_TOOLTIPS.account}>
+                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--account">
                       Conta
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--channel" tip={ADS_COLUMN_TOOLTIPS.channel}>
+                    <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--channel">
                       Canal
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.price}>
+                    <AdsCatalogHeadCell columnClass="products-catalog__cell--money">
                       Preço
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="products-catalog__cell--num" tip={ADS_COLUMN_TOOLTIPS.sales}>
+                    <AdsCatalogHeadCell columnClass="products-catalog__cell--num">
                       Vendas
                     </AdsCatalogHeadCell>
                     <AdsCatalogHeadCell
                       columnClass="products-catalog__cell--money"
-                      tip={ADS_COLUMN_TOOLTIPS.revenue}
                       lines={["Fatura-", "mento"]}
                     />
                     <AdsCatalogHeadCell
                       columnClass="products-catalog__cell--money"
-                      tip={ADS_COLUMN_TOOLTIPS.netReceive}
                       lines={["Você", "recebe"]}
                     />
                     <AdsCatalogHeadCell
                       columnClass="products-catalog__cell--pct"
-                      tip={ADS_COLUMN_TOOLTIPS.commissionPct}
                       lines={["Com.", "%"]}
                     />
                     <AdsCatalogHeadCell
                       columnClass="products-catalog__cell--money"
-                      tip={ADS_COLUMN_TOOLTIPS.commissionBrl}
                       lines={["Com.", "R$"]}
                     />
-                    <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.shipping}>
+                    <AdsCatalogHeadCell columnClass="products-catalog__cell--money">
                       Frete
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="products-catalog__cell--money" tip={ADS_COLUMN_TOOLTIPS.promotion}>
+                    <AdsCatalogHeadCell columnClass="products-catalog__cell--money">
                       Promoção
                     </AdsCatalogHeadCell>
-                    <AdsCatalogHeadCell columnClass="products-catalog__cell--num" tip={ADS_COLUMN_TOOLTIPS.visits}>
+                    <AdsCatalogHeadCell columnClass="products-catalog__cell--num">
                       Visitas
                     </AdsCatalogHeadCell>
                     {listingsViewConfig.columnLayout !== "pricing_focus" ? (
                       <>
-                        <AdsCatalogHeadCell
-                          columnClass="anuncios-catalog__cell--metric"
-                          tip={ADS_COLUMN_TOOLTIPS.listingQuality}
-                        >
+                        <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--metric">
                           Qualidade
                         </AdsCatalogHeadCell>
                         <AdsCatalogHeadCell
                           columnClass="anuncios-catalog__cell--metric"
-                          tip={ADS_COLUMN_TOOLTIPS.buyingExperience}
                           lines={["Experi-", "ência"]}
                         />
-                        <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--status" tip={ADS_COLUMN_TOOLTIPS.status}>
+                        <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--status">
                           Status
                         </AdsCatalogHeadCell>
-                        <AdsCatalogHeadCell columnClass="products-catalog__cell--health" tip={ADS_COLUMN_TOOLTIPS.adHealth}>
+                        <AdsCatalogHeadCell columnClass="products-catalog__cell--health">
                           Saúde
                         </AdsCatalogHeadCell>
                       </>
@@ -1008,38 +1209,43 @@ export default function Anuncios({ listingsWorkspaceMode = "anuncios", listingsV
                 )}
               </div>
           }
-          tableBody={paginatedRows.map((row) => (
-            <AdsCatalogRow
-              key={row.id}
-              row={row}
-              minimal={effectiveViewMode === "minimal"}
-              onInformSku={(r) => openSkuModal(r)}
-              onListingsRefresh={fetchListings}
-              onOpenPricingIntelligence={openPricingIntelligenceModal}
-              onOpenListingRayX={openListingRayXModal}
-              selected={selectedListingIds.has(row.id)}
-              onToggleSelected={toggleRowSelected}
-              selectionDisabled={listLoading}
-              listingsWorkspaceMode={listingsWorkspaceMode}
-              rowClickAction={listingsViewConfig.rowClickAction}
-              catalogColumnLayout={listingsViewConfig.columnLayout}
-              showPrecificaS7Column={listingsViewConfig.showPrecificaS7Column}
-            />
-          ))}
+          tableBody={
+            displayRows.length > 0
+              ? paginatedRows.map((row) => (
+                  <AdsCatalogRow
+                    key={row.id}
+                    row={row}
+                    minimal={effectiveViewMode === "minimal"}
+                    onInformSku={(r) => openSkuModal(r)}
+                    onListingsRefresh={fetchListings}
+                    onOpenPricingIntelligence={openPricingIntelligenceModal}
+                    onOpenListingRayX={openListingRayXModal}
+                    selected={selectedListingIds.has(row.id)}
+                    onToggleSelected={toggleRowSelected}
+                    selectionDisabled={listLoading}
+                    listingsWorkspaceMode={listingsWorkspaceMode}
+                    rowClickAction={listingsViewConfig.rowClickAction}
+                    catalogColumnLayout={listingsViewConfig.columnLayout}
+                    showPrecificaS7Column={listingsViewConfig.showPrecificaS7Column}
+                  />
+                ))
+              : null
+          }
           paginationFooter={
-            /* Paginação padrão Suse7 (modelo Vendas): "Página X de Y · Z {anúncios/precificações} no total" */
-            <S7Pagination
-              page={adsPage}
-              totalPages={totalPages}
-              total={totalFiltered}
-              noun={listingsViewConfig.emptyStateNouns.nounPlural}
-              ariaLabel={`Paginação — ${listingsViewConfig.pageTitle}`}
-              onPrevious={() => setAdsPage((p) => Math.max(1, p - 1))}
-              onNext={() => setAdsPage((p) => Math.min(totalPages, p + 1))}
-            />
+            displayRows.length > 0 ? (
+              <S7Pagination
+                page={adsPage}
+                totalPages={totalPages}
+                total={totalFiltered}
+                noun={listingsViewConfig.emptyStateNouns.nounPlural}
+                ariaLabel={`Paginação — ${listingsViewConfig.pageTitle}`}
+                onPrevious={() => setAdsPage((p) => Math.max(1, p - 1))}
+                onNext={() => setAdsPage((p) => Math.min(totalPages, p + 1))}
+              />
+            ) : null
           }
         />
-      )}
+      </div>
     </div>
   );
 }

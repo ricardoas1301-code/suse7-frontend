@@ -61,6 +61,14 @@ import { getScenarioHealthStatus, parseScenarioProfitBrlNumber } from "./pricing
 
  *   layoutPiFixo?: boolean;
 
+ *   promocaoPrecoVendaExibicaoOverride?: string | null;
+
+ *   promocaoNomeExibicao?: string | null;
+
+ *   exibirReservaEstrategica?: boolean;
+
+ *   scheduledPromoBadgeAsAvailable?: boolean;
+
  * }} props
 
  */
@@ -95,6 +103,27 @@ function PricingScenarioDetailInner({
   listingTypeSelectionBadge = null,
   cardFooterNotice = null,
   layoutPiFixo = false,
+  promocaoPrecoVendaExibicaoOverride = null,
+  promocaoNomeExibicao = null,
+  promocaoPrecoOriginalExibicao = null,
+  exibirReservaEstrategica = true,
+  layoutCabecalhoPromocaoPi = false,
+  forcarLinhaDescontoSellerPromocao = false,
+  descontoSellerPromocaoExibicao = null,
+  scheduledPromoBadgeAsAvailable = false,
+  financialScenarioPending = false,
+  promotionFeeDiscountBrl = null,
+  snapshotFeeDiscountBrl = null,
+  promotionOfficialAmountToReceiveBrl = null,
+  promotionRevenueSource = null,
+  promotionSelectedKey = null,
+  promotionSnapshot = null,
+  officialRowContract = null,
+  comparisonModel = null,
+  isCurrentListingType = false,
+  selectedPromotionRequestId = null,
+  listingTypeCard = null,
+  promocaoCardViewModel = null,
 
 }) {
 
@@ -156,8 +185,6 @@ function PricingScenarioDetailInner({
 
         listingHintForAudit={listingHintForAudit}
 
-        scheduledPromoBadgeAsAvailable
-
         baselineListingSaleDisplayOverride={baselineListingSaleDisplayOverride}
 
         inlineEditSale={inlineEditSale}
@@ -172,6 +199,27 @@ function PricingScenarioDetailInner({
         listingTypeSelectionBadge={listingTypeSelectionBadge}
         cardFooterNotice={cardFooterNotice}
         layoutPiFixo={layoutPiFixo}
+        promocaoPrecoVendaExibicaoOverride={promocaoPrecoVendaExibicaoOverride}
+        promocaoNomeExibicao={promocaoNomeExibicao}
+        promocaoPrecoOriginalExibicao={promocaoPrecoOriginalExibicao}
+        exibirReservaEstrategica={exibirReservaEstrategica}
+        layoutCabecalhoPromocaoPi={layoutCabecalhoPromocaoPi}
+        forcarLinhaDescontoSellerPromocao={forcarLinhaDescontoSellerPromocao}
+        descontoSellerPromocaoExibicao={descontoSellerPromocaoExibicao}
+        scheduledPromoBadgeAsAvailable={scheduledPromoBadgeAsAvailable}
+        financialScenarioPending={financialScenarioPending}
+        promotionFeeDiscountBrl={promotionFeeDiscountBrl}
+        snapshotFeeDiscountBrl={snapshotFeeDiscountBrl}
+        promotionOfficialAmountToReceiveBrl={promotionOfficialAmountToReceiveBrl}
+        promotionRevenueSource={promotionRevenueSource}
+        promotionSelectedKey={promotionSelectedKey}
+        promotionSnapshot={promotionSnapshot}
+        officialRowContract={officialRowContract}
+        comparisonModel={comparisonModel}
+        isCurrentListingType={isCurrentListingType}
+        selectedPromotionRequestId={selectedPromotionRequestId}
+        listingTypeCard={listingTypeCard}
+        promocaoCardViewModel={promocaoCardViewModel}
 
       />
 

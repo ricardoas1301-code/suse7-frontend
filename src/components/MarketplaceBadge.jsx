@@ -17,19 +17,17 @@ export default function MarketplaceBadge({ marketplace, label, size = 22, classN
   const wh = Number.isFinite(px) && px > 0 ? Math.round(px) : 22;
   const [failedSrc, setFailedSrc] = useState(null);
   const imgFailed = Boolean(brand.logoSrc) && failedSrc === brand.logoSrc;
-  const labelTrim = label != null && String(label).trim() !== "" ? String(label).trim() : "";
-  const title = labelTrim || brand.label || (marketplace ? String(marketplace) : undefined);
 
   if (!brand.logoSrc || imgFailed) {
     const iconSize = Math.max(12, Math.round(wh * 0.75));
     return (
-      <span className={`anuncios-catalog__mkt-fallback ${className}`.trim()} title={title}>
+      <span className={`anuncios-catalog__mkt-fallback ${className}`.trim()}>
         <S7Icon name={brand.fallbackIcon} size={iconSize} strokeWidth={1.85} />
       </span>
     );
   }
   return (
-    <span className={`anuncios-catalog__mkt-badge-wrap ${className}`.trim()} title={title}>
+    <span className={`anuncios-catalog__mkt-badge-wrap ${className}`.trim()}>
       <img
         src={brand.logoSrc}
         alt=""

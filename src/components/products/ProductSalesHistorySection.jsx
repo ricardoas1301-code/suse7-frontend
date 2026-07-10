@@ -2,11 +2,15 @@
 // Histórico de vendas do produto — lista compacta sempre visível.
 // ======================================================================
 
+import raioxTriggerIcon from "../../assets/raiox-trigger-icon.png";
 import {
   formatBrlFromApiString,
   formatPercentFromApiString,
 } from "../../features/listings/utils/catalogFormatters";
 import { pickSaleOperationalStatusLabel } from "../sales/saleRayxFinancialPickers";
+import { pickSaleRayxDetailItemId } from "../sales/saleRayxDetailItemId";
+import SaleDetailModal from "../sales/SaleDetailModal";
+import { useSaleDetailModal } from "../sales/useSaleDetailModal";
 import { resolveSaleStatusToneKey } from "../../features/vendas/utils/saleStatusToneClass.js";
 import { formatMarketplaceListingDisplayId } from "../../utils/marketplaceListingId";
 import S7CatalogAccountCell, {
@@ -202,6 +206,34 @@ function CopyableIdCell({
 }
 
 /**
+ * @param {{ itemId: string; onOpen: (itemId: string) => void }} props
+ */
+function SaleRayxOpenButton({ itemId, onOpen }) {
+  return (
+    <S7Tooltip content="Abrir Raio-X da venda" placement="top-start" offset={6} wrap>
+      <button
+        type="button"
+        className="pf-product-sales-history__rayx-btn"
+        aria-label="Abrir Raio-X da venda"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpen(itemId);
+        }}
+      >
+        <img
+          src={raioxTriggerIcon}
+          alt=""
+          aria-hidden
+          className="pf-product-sales-history__rayx-btn-icon"
+          loading="lazy"
+          decoding="async"
+        />
+      </button>
+    </S7Tooltip>
+  );
+}
+
+/**
  * @param {{
  *   rows: readonly Record<string, unknown>[];
  *   total: number;
@@ -211,6 +243,9 @@ function CopyableIdCell({
  *   loading: boolean;
  *   error: string | null;
  *   onPageChange: (page: number) => void;
+ *   embedded?: boolean;
+ *   hideSectionTitle?: boolean;
+ *   alwaysShowCount?: boolean;
  * }} props
  */
 export default function ProductSalesHistorySection({
@@ -222,14 +257,31 @@ export default function ProductSalesHistorySection({
   loading,
   error,
   onPageChange,
+  embedded = false,
+  hideSectionTitle = false,
+  alwaysShowCount = false,
 }) {
   const displayTotal = salesCount > 0 ? salesCount : total;
+  const showCountBadge = alwaysShowCount || displayTotal > 0;
+  const { modalOpen, selectedItemId, openDetail, closeDetail } = useSaleDetailModal();
 
   return (
-    <section className="pf-product-sales-history" aria-label="Histórico de vendas">
+    <section
+      className={[
+        "pf-product-sales-history",
+        embedded ? "pf-product-sales-history--embedded" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-label="Histórico de vendas"
+    >
       <header className="pf-product-sales-history__head">
-        <h3 className="pf-product-sales-history__title">Histórico de vendas</h3>
-        {displayTotal > 0 ? (
+        {hideSectionTitle ? (
+          <h3 className="pf-product-sales-history__subtitle">Total de vendas</h3>
+        ) : (
+          <h3 className="pf-product-sales-history__title">Histórico de vendas</h3>
+        )}
+        {showCountBadge ? (
           <span className="pf-product-sales-history__count">
             {displayTotal.toLocaleString("pt-BR")}
           </span>
@@ -253,6 +305,9 @@ export default function ProductSalesHistorySection({
               <table className="pf-product-sales-history__table">
                 <thead>
                   <tr>
+                    <th scope="col" className="pf-product-sales-history__col-rayx">
+                      <span className="pf-product-sales-history__sr-only">Raio-X</span>
+                    </th>
                     <th scope="col">Data</th>
                     <th scope="col">Nº Venda</th>
                     <th scope="col">Anúncio</th>
@@ -282,9 +337,15 @@ export default function ProductSalesHistorySection({
                       row.item_id ??
                       row.sale_item_id ??
                       `${row.external_order_id ?? "ord"}-${index}`;
+                    const detailItemId = pickSaleRayxDetailItemId(row);
 
                     return (
                       <tr key={String(rowKey)}>
+                        <td className="pf-product-sales-history__col-rayx">
+                          {detailItemId ? (
+                            <SaleRayxOpenButton itemId={detailItemId} onOpen={openDetail} />
+                          ) : null}
+                        </td>
                         <td>{formatSaleHistoryDate(row.sale_date ?? row.date_created_marketplace)}</td>
                         <td>
                           <CopyableIdCell
@@ -372,6 +433,8 @@ export default function ProductSalesHistorySection({
           ) : null}
         </div>
       ) : null}
+
+      <SaleDetailModal open={modalOpen} itemId={selectedItemId} onClose={closeDetail} />
     </section>
   );
 }

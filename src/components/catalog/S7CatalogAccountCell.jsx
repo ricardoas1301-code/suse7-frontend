@@ -1,5 +1,6 @@
 // Coluna Conta — logo/inicial + alias (dados já no payload; sem chamadas extras).
 import MarketplaceBadge from "../MarketplaceBadge.jsx";
+import S7Tooltip from "../ui/S7Tooltip.jsx";
 import "./S7CatalogAccountCell.css";
 
 /**
@@ -78,7 +79,7 @@ export default function S7CatalogAccountCell({
 
   if (!defined) {
     return (
-      <span className="s7-catalog-account s7-catalog-account--undefined" title="Conta não definida">
+      <span className="s7-catalog-account s7-catalog-account--undefined">
         <span className="s7-catalog-account__muted">Conta não definida</span>
       </span>
     );
@@ -89,10 +90,9 @@ export default function S7CatalogAccountCell({
     stacked && stackedAvatarPx != null && Number.isFinite(Number(stackedAvatarPx))
       ? { width: Number(stackedAvatarPx), height: Number(stackedAvatarPx) }
       : undefined;
-  return (
+  const content = (
     <span
       className={`s7-catalog-account${compact ? " s7-catalog-account--compact" : ""}${stacked ? " s7-catalog-account--stacked" : ""}`}
-      title={title}
     >
       <span className="s7-catalog-account__avatar" style={avatarStyle}>
         {logo ? (
@@ -107,6 +107,12 @@ export default function S7CatalogAccountCell({
         </span>
       ) : null}
     </span>
+  );
+
+  return (
+    <S7Tooltip content={title} placement="top-start" offset={4} wrap>
+      {content}
+    </S7Tooltip>
   );
 }
 
@@ -140,8 +146,8 @@ export function S7CatalogChannelCell({ marketplace, marketplaceLabel, variant = 
         : 22;
   const title = displayLabel || undefined;
 
-  return (
-    <span className={`s7-catalog-channel${stacked ? " s7-catalog-channel--stacked" : ""}`} title={title}>
+  const content = (
+    <span className={`s7-catalog-channel${stacked ? " s7-catalog-channel--stacked" : ""}`}>
       <MarketplaceBadge
         marketplace={marketplace}
         label={lb}
@@ -152,5 +158,12 @@ export function S7CatalogChannelCell({ marketplace, marketplaceLabel, variant = 
         <span className="s7-catalog-channel__label">{displayLabel}</span>
       ) : null}
     </span>
+  );
+
+  if (!title) return content;
+  return (
+    <S7Tooltip content={title} placement="top-start" offset={4} wrap>
+      {content}
+    </S7Tooltip>
   );
 }

@@ -1,0 +1,45 @@
+/* ======================================================================
+   Anúncios — suspiro 12px entre Central de Saúde e Busca e filtros (/anuncios)
+   Paridade com Precificações: uma única margem entre blocos (sem gap duplo).
+====================================================================== */
+
+.page-content:has(.anuncios-page) {
+  padding: 12px;
+  box-sizing: border-box;
+  --s7-sticky-filters-top: 12px;
+  --s7-listings-filters-list-gap: 12px;
+}
+
+.anuncios-page {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Central de saúde → Busca e filtros: exatamente 12px */
+.anuncios-page > .s7-operational-executive-block {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.anuncios-page > .listings-workspace--anuncios {
+  margin: 0;
+}
+
+.anuncios-page .anuncios-catalog {
+  padding: 0;
+}
+
+.anuncios-page,
+.anuncios-page > .listings-workspace--anuncios,
+.anuncios-page .anuncios-catalog {
+  overflow: visible;
+}
+
+@media (max-width: 768px) {
+  .page-content:has(.anuncios-page) {
+    padding: 12px;
+  }
+}

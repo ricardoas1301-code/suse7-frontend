@@ -16,6 +16,7 @@ import {
 } from "./vendasFiltersConstants";
 import VendasPeriodRangePicker from "./VendasPeriodRangePicker";
 import S7Button from "../../../components/ui/S7Button";
+import S7SectionJumpButton from "../../../components/ui/S7SectionJumpButton.jsx";
 import "./VendasFiltersCard.css";
 
 /**
@@ -31,6 +32,8 @@ import "./VendasFiltersCard.css";
  *   gerarRelatorioDisabled?: boolean;
  *   onGerarRelatorioClick?: () => void;
  *   selectedCount?: number;
+ *   sectionJumpUpTargetRef?: import("react").RefObject<Element | null>;
+ *   sectionJumpUpAriaLabel?: string;
  * }} props
  */
 const VendasFiltersCard = forwardRef(function VendasFiltersCard(
@@ -46,6 +49,8 @@ const VendasFiltersCard = forwardRef(function VendasFiltersCard(
   gerarRelatorioDisabled = false,
   onGerarRelatorioClick,
   selectedCount = 0,
+  sectionJumpUpTargetRef = null,
+  sectionJumpUpAriaLabel = "Voltar para o resumo da página",
   },
   ref,
 ) {
@@ -145,6 +150,13 @@ const VendasFiltersCard = forwardRef(function VendasFiltersCard(
           </span>
         </span>
         <span className="vendas-filters-card__header-actions">
+          {sectionJumpUpTargetRef ? (
+            <S7SectionJumpButton
+              direction="up"
+              targetRef={sectionJumpUpTargetRef}
+              ariaLabel={sectionJumpUpAriaLabel}
+            />
+          ) : null}
           {/* P_2.8.12F — contador também no header expandido (recolhido já exibe no resumo). */}
           {expanded && selectedCount > 0 ? (
             <span className="vendas-filters-card__header-selected">

@@ -121,6 +121,13 @@ export function getProductCatalogMetrics(product) {
   );
   const grossProfit = explicitProfit;
 
+  const repasse = firstDefinedNumber(
+    p.you_receive_brl,
+    p.net_received_brl,
+    p.repasse_brl,
+    p.marketplace_payout_brl
+  );
+
   const marketplaces = normalizeMarketplaceSlugs(p);
 
   return {
@@ -130,6 +137,7 @@ export function getProductCatalogMetrics(product) {
     averageTicket: averageTicket ?? null,
     costTotal: costTotal ?? 0,
     grossProfit: grossProfit ?? null,
+    repasse: repasse ?? null,
     marketplaces,
   };
 }

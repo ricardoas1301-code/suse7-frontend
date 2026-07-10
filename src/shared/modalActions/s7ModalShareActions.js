@@ -16,3 +16,12 @@ export const S7_MODAL_SHARE_ACTION_LABELS = {
   print: "Imprimir",
   csv: "Exportar CSV",
 };
+
+/** Labels de acessibilidade — Modal Precificação Inteligente. */
+export const S7_PRICING_MODAL_SHARE_ACTION_LABELS = {
+  whatsapp: "Enviar precificação por WhatsApp",
+  email: "Enviar precificação por e-mail",
+  copy: "Copiar precificação",
+  print: "Imprimir precificação",
+  csv: "Exportar precificação para Excel",
+};

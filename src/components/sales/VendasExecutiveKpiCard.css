@@ -13,8 +13,10 @@
   display: flex;
   flex-direction: column;
   border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  border-top: 3px solid var(--vek-accent);
+  border: 1px solid var(--vek-border, #e2e8f0);
+  border-top-width: 3px;
+  border-top-style: solid;
+  border-top-color: var(--vek-accent);
   background: #ffffff;
   overflow: hidden;
   box-shadow:
@@ -234,6 +236,11 @@
   color: #0f172a;
   font-variant-numeric: tabular-nums;
   word-break: break-word;
+}
+
+.vendas-executive-kpi__value-row .s7-tooltip-trigger.vendas-executive-kpi__value {
+  cursor: help;
+  min-width: 0;
 }
 
 .vendas-executive-kpi__value-row {

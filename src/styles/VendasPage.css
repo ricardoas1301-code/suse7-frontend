@@ -6,32 +6,24 @@
 
 .vendas-page {
   --vendas-table-radius: var(--s7-list-table-head-radius, 10px);
-  --s7-vendas-chrome-gap: calc(
-    var(--s7-catalog-page-inset-top, 5px) + var(--s7-catalog-filter-offset-top, 7px)
-  );
-  padding: var(--s7-catalog-page-inset-top, 5px) clamp(8px, 0.85vw, 14px) 44px;
+  --s7-vendas-chrome-gap: var(--s7-page-rhythm, var(--s7-catalog-block-gap, 12px));
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   max-width: 100%;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
   color: var(--s7-text, #0f172a);
   background: transparent;
-  /* overflow visible — sticky thead + sync abaixo do card de filtros (paridade Products.css) */
+  overflow: visible;
 }
 
-/* Ritmo vertical — menu ↔ filtros = filtros ↔ lista (homologação Vendas) */
-.vendas-page > .vendas-filters-card.s7-sticky-filters {
-  margin-top: var(--s7-catalog-filter-offset-top, 7px);
-  margin-bottom: var(--s7-vendas-chrome-gap, 12px);
-}
-
-.vendas-page > .s7-core-kpis ~ .vendas-filters-card.s7-sticky-filters {
+/* Top 10 → lista: respiro via .vendas-page__sticky-top-spacer dentro do list-sticky-chrome */
+.vendas-page > .s7-operational-executive-block,
+.vendas-page > .vendas-page__operacao-shell {
   margin-top: 0;
-}
-
-.vendas-page > .vendas-page__table-block,
-.vendas-page > .vendas-page__mobile-list {
-  margin-top: 0;
+  margin-bottom: 0;
 }
 
 /* Grid superior — 3 rankings + linha de minis (P_2.1.4) */
@@ -303,8 +295,8 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-top: 2px;
-  margin-bottom: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
   min-width: 0;
   width: 100%;
   max-width: 100%;
@@ -383,28 +375,23 @@
 
 .vendas-page__table th.vendas-page__col-select,
 .vendas-page__table td.vendas-page__col-select {
-  width: 36px;
-  min-width: 36px;
-  max-width: 36px;
   text-align: center;
   vertical-align: middle;
 }
 
 .vendas-page__table td.vendas-page__col-select {
-  padding: 0 6px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .vendas-page__table thead th.vendas-page__col-select {
-  padding: var(--s7-list-table-head-padding-y) var(--s7-list-table-head-padding-x);
+  padding-top: var(--s7-list-table-head-padding-y);
+  padding-bottom: var(--s7-list-table-head-padding-y);
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .vendas-page__row-select {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  min-height: 28px;
-  margin: 0;
   cursor: pointer;
 }
 
@@ -412,11 +399,8 @@
   margin-inline: auto;
 }
 
-.vendas-page__row-select-checkbox {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  flex-shrink: 0;
+.concorrencia-catalog .vendas-page__row-select {
+  cursor: pointer;
 }
 
 .vendas-page__table tbody tr.vendas-page__row--selected {
@@ -890,7 +874,6 @@
    tratamento discreto de estados incompletos.
    ---------------------------------------------------------------------- */
 .vendas-page__num-cell {
-  text-align: right;
   font-variant-numeric: tabular-nums;
   font-size: 12px;
   font-weight: 600;
@@ -1022,7 +1005,10 @@
 }
 
 .vendas-page__num-cell--commission .vendas-page__num-stack-primary,
-.vendas-page__num-cell--tax .vendas-page__num-stack-primary {
+.vendas-page__num-cell--tax .vendas-page__num-stack-primary,
+.vendas-page__num-cell--shipping .vendas-page__num-stack-primary,
+.vendas-page__num-cell--received .vendas-page__num-stack-primary,
+.vendas-page__num-cell--product-cost .vendas-page__num-stack-primary {
   justify-content: center;
   width: 100%;
 }
@@ -1030,7 +1016,13 @@
 .vendas-page__num-cell--commission .vendas-page__num-stack-secondary-slot,
 .vendas-page__num-cell--commission .vendas-page__num-stack-secondary,
 .vendas-page__num-cell--tax .vendas-page__num-stack-secondary-slot,
-.vendas-page__num-cell--tax .vendas-page__num-stack-secondary {
+.vendas-page__num-cell--tax .vendas-page__num-stack-secondary,
+.vendas-page__num-cell--shipping .vendas-page__num-stack-secondary-slot,
+.vendas-page__num-cell--shipping .vendas-page__num-stack-secondary,
+.vendas-page__num-cell--received .vendas-page__num-stack-secondary-slot,
+.vendas-page__num-cell--received .vendas-page__num-stack-secondary,
+.vendas-page__num-cell--product-cost .vendas-page__num-stack-secondary-slot,
+.vendas-page__num-cell--product-cost .vendas-page__num-stack-secondary {
   text-align: center;
 }
 
@@ -1069,6 +1061,17 @@
 
 .vendas-page__table .s7-catalog-account--stacked .s7-catalog-account__initial {
   font-size: 12px;
+}
+
+.vendas-page__table .s7-catalog-account--compact .s7-catalog-account__avatar {
+  border-radius: 50%;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.vendas-page__table .s7-catalog-account--compact .s7-catalog-account__avatar img {
+  border-radius: 50%;
 }
 
 .vendas-page__table .s7-catalog-channel--stacked .anuncios-catalog__mkt-badge-wrap {
@@ -1131,6 +1134,27 @@
 
 .vendas-page__profit-hint--down {
   border-top: 6px solid #b91c1c;
+}
+
+/* Tooltip DS (S7Tooltip portal) nos indicadores de lucro das listas Produtos/Anúncios */
+.catalog-profit-hint-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  cursor: default;
+}
+
+.catalog-profit-hint-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.catalog-profit-hint-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: inherit;
+}
+
+.catalog-profit-hint-tip__anchor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 0;
 }
 
 .vendas-page__fin-value--health-critical {
@@ -1852,6 +1876,16 @@
   border-top: 1px dashed rgba(15, 23, 42, 0.12);
 }
 
+.vendas-sale-rayx__financial-card-body {
+  min-height: calc(380px * var(--raiox-ml-calc-scale, 0.87));
+  box-sizing: border-box;
+}
+
+.vendas-sale-rayx__financial-section--contingency-margin .vendas-sale-rayx__fin-lines-group,
+.vendas-sale-rayx__financial-section--internal-costs .vendas-sale-rayx__fin-lines-group {
+  gap: 0;
+}
+
 .vendas-sale-rayx__accumulated-performance {
   grid-column: 1 / -1;
   margin-top: 6px;
@@ -2052,6 +2086,17 @@
 .vendas-sale-rayx__fin-value--negative {
   color: #dc2626;
   font-weight: 700;
+}
+
+.vendas-sale-rayx__operational-cost-line--empty,
+.vendas-sale-rayx__operational-cost-line--empty .vendas-sale-rayx__fin-line-label > span:first-child,
+.vendas-sale-rayx__operational-cost-line--empty .vendas-sale-rayx__fin-line-detail,
+.vendas-sale-rayx__operational-cost-line--empty > strong {
+  color: var(--s7-text-secondary, #94a3b8);
+}
+
+.vendas-sale-rayx__operational-cost-line--empty > strong {
+  font-weight: 600;
 }
 
 .vendas-sale-rayx__fin-value--positive {
@@ -2821,8 +2866,8 @@
 }
 
 @media (max-width: 768px) {
-  .vendas-page {
-    padding: var(--s7-catalog-page-inset-top, 5px) clamp(4px, 0.65vw, 10px) 24px;
+  .vendas-page:not(.dashboard-page) {
+    padding: 0;
   }
 
   .vendas-page .products-catalog__controls.vendas-page__controls {
@@ -2875,8 +2920,8 @@
 
 @media (max-width: 430px) {
   .vendas-page {
-    padding-left: clamp(4px, 0.65vw, 10px);
-    padding-right: clamp(4px, 0.65vw, 10px);
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 
@@ -3328,94 +3373,328 @@
   text-align: center;
 }
 
-/* Homologação Vendas — colunas financeiras + Frete: título + conteúdo centralizados */
-.vendas-page__table thead th.vendas-page__num-col--profit,
-.vendas-page__table thead th.vendas-page__num-col--margin,
-.vendas-page__table thead th.vendas-page__num-col--sale,
-.vendas-page__table thead th.vendas-page__num-col--commission,
-.vendas-page__table thead th.vendas-page__num-col--shipping,
-.vendas-page__table thead th.vendas-page__num-col--received,
-.vendas-page__table thead th.vendas-page__num-col--product-cost,
-.vendas-page__table tbody td.vendas-page__num-cell--profit,
-.vendas-page__table tbody td.vendas-page__num-cell--margin,
-.vendas-page__table tbody td.vendas-page__num-cell--sale,
-.vendas-page__table tbody td.vendas-page__num-cell--commission,
-.vendas-page__table tbody td.vendas-page__num-cell--shipping,
-.vendas-page__table tbody td.vendas-page__num-cell--received,
-.vendas-page__table tbody td.vendas-page__num-cell--product-cost {
-  text-align: center;
+/* Homologação Vendas — eixo central (Conta → Imposto); ver bloco final `.vendas-page__operacao-shell` */
+
+/* ======================================================================
+   VENDAS — List Sticky Chrome S7 (ritmo 12px, scroll em .page-content)
+   ====================================================================== */
+
+.page-content:has(.vendas-page:not(.dashboard-page)) {
+  --s7-page-rhythm: 12px;
+  min-height: 0;
+  padding-bottom: calc(var(--s7-page-rhythm, 12px) * 2);
+  box-sizing: border-box;
+  background-color: var(--s7-bg-page, #f2f7ff);
 }
 
-.vendas-page__table thead th.vendas-page__num-col--profit,
-.vendas-page__table thead th.vendas-page__num-col--margin,
-.vendas-page__table thead th.vendas-page__num-col--sale,
-.vendas-page__table thead th.vendas-page__num-col--commission,
-.vendas-page__table thead th.vendas-page__num-col--shipping,
-.vendas-page__table thead th.vendas-page__num-col--received,
-.vendas-page__table thead th.vendas-page__num-col--product-cost {
+.vendas-page__operacao-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s7-page-rhythm, 12px);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  margin-top: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: visible;
+  position: static;
+  max-height: none;
+  background: transparent;
+}
+
+.vendas-page__operacao-shell > .vendas-page__scan-note,
+.vendas-page__operacao-shell > .vendas-page__error,
+.vendas-page__operacao-shell > .vendas-page__table-block,
+.vendas-page__operacao-shell > .vendas-page__pagination {
+  margin: 0;
+}
+
+.vendas-page__operacao-shell,
+.vendas-page__operacao-shell > .vendas-page__table-block,
+.vendas-page__operacao-shell .vendas-page__list-sticky-chrome {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+  box-shadow: none;
+}
+
+.vendas-page__operacao-shell > .vendas-page__table-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+/* top negativo compensa padding-top da .page-content — chrome gruda no menu; respiro só no spacer interno */
+.vendas-page__operacao-shell .vendas-page__list-sticky-chrome {
+  position: sticky;
+  top: calc(-1 * var(--s7-page-rhythm, 12px));
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background-color: var(--s7-bg-page, #f2f7ff);
+  overflow: visible;
+  isolation: isolate;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.vendas-page__operacao-shell .vendas-page__sticky-top-spacer {
+  height: var(--s7-page-rhythm, 12px);
+  min-height: var(--s7-page-rhythm, 12px);
+  flex: 0 0 var(--s7-page-rhythm, 12px);
+  background-color: var(--s7-bg-page, #f2f7ff);
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* List Sticky Chrome S7 — thead no slot do chrome; sticky só no bloco externo */
+.vendas-page__list-sticky-chrome .vendas-page__table-thead-slot .vendas-page__table--head thead th {
+  position: relative;
+  top: auto;
+  z-index: auto;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell {
+  --s7-list-table-card-shadow: none;
+}
+
+.vendas-page__operacao-shell .vendas-page__list-sticky-chrome > .vendas-filters-card.s7-sticky-filters {
+  position: relative;
+  top: auto;
+  z-index: 3;
+  margin: 0;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: var(--vfc-radius, 14px);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.vendas-page__operacao-shell .vendas-page__table-thead-slot {
+  position: relative;
+  top: auto;
+  z-index: 3;
+  flex-shrink: 0;
+  margin-top: var(--s7-page-rhythm, 12px);
+  border-radius: var(--vendas-table-radius, 12px) var(--vendas-table-radius, 12px) 0 0;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    var(--s7-list-title-bar-bg-from) 0%,
+    var(--s7-list-title-bar-bg-to) 100%
+  );
+  box-shadow: var(--s7-list-table-head-shadow);
+}
+
+.vendas-page__operacao-shell .vendas-page__list-operational {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
+}
+
+.vendas-page__operacao-shell .vendas-page__list-operational .vendas-page__table-card,
+.vendas-page__operacao-shell .vendas-page__list-operational .vendas-page__table-card--scroll-viewport {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  overflow: visible;
+  border-top: none;
+  border-radius: 0 0 var(--vendas-table-radius, 12px) var(--vendas-table-radius, 12px);
+  box-shadow: none;
+}
+
+.vendas-page__operacao-shell .vendas-page__table-body-scroll {
+  position: relative;
+  z-index: 1;
+  height: auto;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  background: #ffffff;
+}
+
+.vendas-page__operacao-shell .vendas-page__table-body-scroll .vendas-page__table tbody,
+.vendas-page__operacao-shell .vendas-page__table-body-scroll .vendas-page__table tbody tr {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 769px) {
+  .vendas-page__operacao-shell .vendas-page__table-body-scroll .vendas-page__table-hscroll,
+  .vendas-page__operacao-shell .vendas-page__table-thead-slot .vendas-page__table-hscroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.vendas-page__operacao-shell > .vendas-page__pagination {
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+  flex: 0 0 auto;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell > .vendas-page__pagination button {
+  box-shadow: none;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell > .vendas-page__pagination button:hover:not(:disabled) {
+  box-shadow: none;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__mobile-list-card {
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .vendas-page__operacao-shell .vendas-page__list-sticky-chrome > .vendas-page__table-thead-slot {
+    display: none;
+  }
+}
+
+/* ======================================================================
+   VENDAS — colunas centralizadas Conta → Imposto (estrutural)
+   colgroup compartilhado (--head / --body) + classes pareadas th/td + .col-center
+   ====================================================================== */
+
+.vendas-page__operacao-shell .vendas-page__table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-select {
+  width: 40px;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-venda {
+  width: 8.5%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-product {
+  width: 19%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-account,
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-channel {
+  width: 5.85%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-profit,
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-margin,
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-sale-value,
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-shipping,
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-payout,
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-cost {
+  width: 5.75%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-fee,
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-tax {
+  width: 6.75%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-sale-status {
+  width: 9.5%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table :is(th, td).vendas-page__col-center {
+  box-sizing: border-box;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.vendas-page__operacao-shell .vendas-page__table thead th.vendas-page__col-center {
   padding-left: var(--s7-list-table-head-padding-x);
   padding-right: var(--s7-list-table-head-padding-x);
 }
 
-.vendas-page__table tbody td.vendas-page__num-cell--profit .vendas-page__num-stack,
-.vendas-page__table tbody td.vendas-page__num-cell--margin .vendas-page__num-stack,
-.vendas-page__table tbody td.vendas-page__num-cell--sale .vendas-page__num-stack,
-.vendas-page__table tbody td.vendas-page__num-cell--commission .vendas-page__num-stack,
-.vendas-page__table tbody td.vendas-page__num-cell--shipping .vendas-page__num-stack,
-.vendas-page__table tbody td.vendas-page__num-cell--received .vendas-page__num-stack,
-.vendas-page__table tbody td.vendas-page__num-cell--product-cost .vendas-page__num-stack {
-  align-items: center;
+.vendas-page__operacao-shell .vendas-page__table tbody td.vendas-page__col-center {
+  padding-left: var(--vendas-table-px-num, 6px);
+  padding-right: var(--vendas-table-px-num, 6px);
 }
 
-.vendas-page__table tbody td.vendas-page__num-cell--profit .vendas-page__num-stack-primary,
-.vendas-page__table tbody td.vendas-page__num-cell--margin .vendas-page__num-stack-primary,
-.vendas-page__table tbody td.vendas-page__num-cell--sale .vendas-page__num-stack-primary,
-.vendas-page__table tbody td.vendas-page__num-cell--commission .vendas-page__num-stack-primary,
-.vendas-page__table tbody td.vendas-page__num-cell--shipping .vendas-page__num-stack-primary,
-.vendas-page__table tbody td.vendas-page__num-cell--received .vendas-page__num-stack-primary,
-.vendas-page__table tbody td.vendas-page__num-cell--product-cost .vendas-page__num-stack-primary {
-  justify-content: center;
-  width: 100%;
+.vendas-page__operacao-shell .vendas-page__table tbody td.vendas-page__col-account.vendas-page__col-center,
+.vendas-page__operacao-shell .vendas-page__table tbody td.vendas-page__col-channel.vendas-page__col-center {
+  padding-left: var(--vendas-table-px, 8px);
+  padding-right: var(--vendas-table-px, 8px);
 }
 
-.vendas-page__table tbody td.vendas-page__num-cell--profit .vendas-page__fin-value-row,
-.vendas-page__table tbody td.vendas-page__num-cell--margin .vendas-page__fin-value-row {
-  justify-content: center;
-  width: 100%;
-}
-
-.vendas-page__table tbody td.vendas-page__num-cell--commission .vendas-page__num-stack-secondary-slot,
-.vendas-page__table tbody td.vendas-page__num-cell--commission .vendas-page__num-stack-secondary {
+.vendas-page__operacao-shell .vendas-page__table :is(th, td).vendas-page__col-center > * {
+  margin-inline: auto;
   text-align: center;
 }
 
-@media (min-width: 769px) {
-  .vendas-page__table thead th {
-    text-align: center;
-    padding-left: var(--s7-list-table-head-padding-x);
-    padding-right: var(--s7-list-table-head-padding-x);
-  }
+.vendas-page__operacao-shell .vendas-page__table td.vendas-page__col-center > .vendas-page__num-stack,
+.vendas-page__operacao-shell .vendas-page__table td.vendas-page__col-center > .s7-tooltip-portal-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+}
 
-  .vendas-page__table tbody td.vendas-page__num-cell--profit,
-  .vendas-page__table tbody td.vendas-page__num-cell--margin,
-  .vendas-page__table tbody td.vendas-page__num-cell--sale,
-  .vendas-page__table tbody td.vendas-page__num-cell--commission,
-  .vendas-page__table tbody td.vendas-page__num-cell--shipping,
-  .vendas-page__table tbody td.vendas-page__num-cell--received,
-  .vendas-page__table tbody td.vendas-page__num-cell--product-cost {
+.vendas-page__operacao-shell .vendas-page__table .vendas-page__col-center .vendas-page__num-stack-primary,
+.vendas-page__operacao-shell .vendas-page__table .vendas-page__col-center .vendas-page__fin-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.vendas-page__operacao-shell .vendas-page__table .vendas-page__col-center .vendas-page__num-stack-secondary,
+.vendas-page__operacao-shell .vendas-page__table .vendas-page__col-center .vendas-page__num-stack-secondary-slot {
+  text-align: center;
+  width: 100%;
+}
+
+@media (min-width: 769px) {
+  .vendas-page__operacao-shell .vendas-page__table tbody td.vendas-page__col-account.vendas-page__col-center,
+  .vendas-page__operacao-shell .vendas-page__table tbody td.vendas-page__col-channel.vendas-page__col-center,
+  .vendas-page__operacao-shell .vendas-page__table tbody td.vendas-page__col-center {
     padding-left: var(--vendas-table-px-num);
     padding-right: var(--vendas-table-px-num);
   }
+
+  .vendas-page__operacao-shell .vendas-page__table tbody td.vendas-page__col-account.vendas-page__col-center,
+  .vendas-page__operacao-shell .vendas-page__table tbody td.vendas-page__col-channel.vendas-page__col-center {
+    padding-left: var(--vendas-table-px);
+    padding-right: var(--vendas-table-px);
+  }
 }
 
-/* Cabeçalho da lista — sticky abaixo do card Busca e filtros (--s7-list-table-head-sticky-top via JS) */
-.page-content:has(.vendas-page) {
-  --s7-list-table-head-sticky-z: 27;
-}
-
-.page-content:has(.vendas-page) .vendas-page__table thead th {
-  position: sticky;
-  top: var(--s7-list-table-head-sticky-top, 0px);
-  z-index: var(--s7-list-table-head-sticky-z, 27);
-  box-shadow: 0 1px 0 rgba(185, 62, 8, 0.12);
+/* Cabeçalho Lucro (R$) — fonte levemente menor para caber sem abreviar */
+.vendas-page__operacao-shell .vendas-page__table thead th.vendas-page__col-profit {
+  font-size: var(--s7-list-table-head-font-size-compact, 9px);
+  letter-spacing: 0;
 }

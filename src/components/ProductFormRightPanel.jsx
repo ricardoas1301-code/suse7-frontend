@@ -7,6 +7,7 @@
 // ======================================================================
 
 import "./ProductFormRightPanel.css";
+import "../styles/tokens/s7-operational-thumb.css";
 import ProductHealthProgress from "./ProductHealthProgress";
 import S7CatalogListingHeadline from "./catalog/S7CatalogListingHeadline.jsx";
 import "./catalog/S7CatalogListingHeadline.css";
@@ -110,12 +111,16 @@ export default function ProductFormRightPanel({
       {panelProductThumb ? (
         <div className="pf-right-progress-row pf-right-progress-row--with-thumb">
           <div
-            className="pf-product-thumb pf-right-panel-product-thumb pf-product-thumb--data-inline"
+            className="pf-product-thumb pf-right-panel-product-thumb pf-product-thumb--data-inline s7-operational-thumb-frame s7-operational-thumb-frame--circle"
             title={panelProductThumb.title}
             aria-label={panelProductThumb.ariaLabel}
           >
             {panelProductThumb.src ? (
-              <img src={panelProductThumb.src} alt={panelProductThumb.alt} />
+              <img
+                src={panelProductThumb.src}
+                alt={panelProductThumb.alt}
+                className="s7-operational-thumb"
+              />
             ) : (
               <span className="pf-product-thumb__placeholder">IMG</span>
             )}

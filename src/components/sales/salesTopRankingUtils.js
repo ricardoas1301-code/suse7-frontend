@@ -413,7 +413,7 @@ export function formatRankingProfitBrl(item) {
  */
 export function formatRankingValueLine(item, metric) {
   if (metric === "net_profit") {
-    return `${formatRankingProfitBrl(item)} lucro`;
+    return formatRankingProfitBrl(item);
   }
   return formatRankingGrossBrl(item);
 }
@@ -424,12 +424,9 @@ export function formatRankingValueLine(item, metric) {
  * @param {"quantity" | "gross_revenue" | "net_profit"} metric
  */
 export function getTopRankingPodiumDisplay(item, metric) {
-  const isProfit = metric === "net_profit";
   return {
     salesLine: formatRankingQuantityPhrase(item),
     valueLine: formatRankingValueLine(item, metric),
-    valueAmountLine: isProfit ? formatRankingProfitBrl(item) : formatRankingGrossBrl(item),
-    showProfitSuffix: isProfit,
   };
 }
 

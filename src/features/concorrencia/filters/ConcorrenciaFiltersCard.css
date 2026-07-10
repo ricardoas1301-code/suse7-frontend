@@ -20,7 +20,11 @@
   isolation: isolate;
 }
 
-.page-content .concorrencia-filters-card.s7-sticky-filters {
+.products-catalog__list-sticky-chrome > .concorrencia-filters-card {
+  box-shadow: none;
+}
+
+.page-content:not(:has(.products-catalog__list-sticky-chrome)) .concorrencia-filters-card.s7-sticky-filters {
   position: sticky;
   top: var(--s7-sticky-filters-top, 0px);
   z-index: 28;

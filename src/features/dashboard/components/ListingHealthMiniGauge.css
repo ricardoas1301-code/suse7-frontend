@@ -1,0 +1,119 @@
+/* Mini gauge — Central de Saúde dos Anúncios (Dashboard) */
+
+.s7-listing-health-mini-gauge {
+  --s7-mini-gauge-size: 54px;
+  --s7-mini-gauge-h: 30px;
+  --php-color-progress: var(--s7-primary, #2563eb);
+  flex-shrink: 0;
+  width: var(--s7-mini-gauge-size);
+  height: var(--s7-mini-gauge-h);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.s7-listing-health-mini-gauge .php-wrap {
+  cursor: default;
+}
+
+.s7-listing-health-mini-gauge .php-wrap:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.s7-listing-health-mini-gauge .php-wrap--semi {
+  --php-size: var(--s7-mini-gauge-size);
+  width: var(--s7-mini-gauge-size);
+  height: var(--s7-mini-gauge-h);
+}
+
+.s7-listing-health-mini-gauge .php-wrap--semi .php-svg--semi {
+  width: var(--s7-mini-gauge-size);
+  height: calc(var(--s7-mini-gauge-h) - 2px);
+}
+
+.s7-listing-health-mini-gauge--compact-size {
+  --s7-mini-gauge-size: 48px;
+  --s7-mini-gauge-h: 26px;
+  --s7-mini-gauge-percent-size: 10px;
+  --s7-mini-gauge-percent-offset: 5px;
+}
+
+.s7-listing-health-mini-gauge--podium-lead-size {
+  --s7-mini-gauge-size: 100%;
+  --s7-mini-gauge-h: 100%;
+  --s7-mini-gauge-percent-size: clamp(16px, 58%, 26px);
+  --s7-mini-gauge-percent-offset: 10%;
+}
+
+.s7-listing-health-mini-gauge--podium-size {
+  --s7-mini-gauge-size: 100%;
+  --s7-mini-gauge-h: 100%;
+  --s7-mini-gauge-percent-size: clamp(9px, 50%, 16px);
+  --s7-mini-gauge-percent-offset: 8%;
+}
+
+.s7-listing-health-mini-gauge--hero-size {
+  --s7-mini-gauge-size: 156px;
+  --s7-mini-gauge-h: 84px;
+  --s7-mini-gauge-percent-size: 26px;
+  --s7-mini-gauge-percent-offset: 12px;
+}
+
+.s7-listing-health-mini-gauge .php-wrap--semi .php-content.php-content--no-label {
+  transform: translateY(var(--s7-mini-gauge-percent-offset, 6px));
+}
+
+.s7-listing-health-mini-gauge .php-wrap--semi .php-percent {
+  font-size: var(--s7-mini-gauge-percent-size, 11px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--s7-mini-gauge-text, var(--php-color-progress));
+}
+
+.s7-listing-health-mini-gauge--complete {
+  --php-color-progress: #2563eb;
+  --s7-mini-gauge-text: #1d4ed8;
+}
+
+.s7-listing-health-mini-gauge--complete .php-wrap {
+  --php-color-progress: #2563eb;
+}
+
+.s7-listing-health-mini-gauge--excellent {
+  --php-color-progress: #16a34a;
+  --s7-mini-gauge-text: #15803d;
+}
+
+.s7-listing-health-mini-gauge--excellent .php-wrap {
+  --php-color-progress: #16a34a;
+}
+
+.s7-listing-health-mini-gauge--attention {
+  --php-color-progress: #eab308;
+  --s7-mini-gauge-text: #ca8a04;
+}
+
+.s7-listing-health-mini-gauge--attention .php-wrap {
+  --php-color-progress: #eab308;
+}
+
+.s7-listing-health-mini-gauge--critical {
+  --php-color-progress: #f97316;
+  --s7-mini-gauge-text: #ea580c;
+}
+
+.s7-listing-health-mini-gauge--critical .php-wrap {
+  --php-color-progress: #f97316;
+}
+
+.s7-listing-health-mini-gauge--urgent {
+  --php-color-progress: #ef4444;
+  --s7-mini-gauge-text: #dc2626;
+}
+
+.s7-listing-health-mini-gauge--urgent .php-wrap {
+  --php-color-progress: #ef4444;
+}

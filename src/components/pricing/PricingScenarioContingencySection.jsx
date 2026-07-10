@@ -1,18 +1,21 @@
 import { S7_CUSTOS_OPERACIONAIS_SECTION_TITLE } from "../../utils/s7CustosOperacionaisLabel.js";
+import { PricingScenarioMetricValue } from "./PricingScenarioMetricValue.jsx";
 
 /**
  * @param {{
  *   lines: { label: string; subtitlePct?: string | null; amountBrl: string; ativo?: boolean }[];
  *   title?: string;
- *   sectionClassName?: string;
+ *   financialScenarioPending?: boolean;
  * }} props
  */
 export function PricingScenarioContingencySection({
   lines,
   title = S7_CUSTOS_OPERACIONAIS_SECTION_TITLE,
   sectionClassName = "",
+  financialScenarioPending = false,
 }) {
   if (!Array.isArray(lines) || lines.length === 0) return null;
+  const finPend = financialScenarioPending === true;
 
   return (
     <div
@@ -41,7 +44,7 @@ export function PricingScenarioContingencySection({
             >
               <div className="anuncios-sell-popover__line">
                 <span>{line.label}</span>
-                <strong>{line.amountBrl}</strong>
+                <PricingScenarioMetricValue pending={finPend}>{line.amountBrl}</PricingScenarioMetricValue>
               </div>
               {line.subtitlePct != null && String(line.subtitlePct).trim() !== "" ? (
                 <div

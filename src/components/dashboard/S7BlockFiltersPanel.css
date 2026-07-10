@@ -31,6 +31,129 @@
   padding: 0;
 }
 
+.s7-block-filters-panel--inline {
+  max-height: none;
+  opacity: 1;
+  pointer-events: auto;
+  margin: 0;
+  overflow: visible;
+}
+
+.s7-block-filters-panel--inline .s7-block-filters-panel__body {
+  padding: 0;
+}
+
+.s7-block-filters-panel--inline .vendas-filters-card__row--primary {
+  align-items: center;
+  gap: 10px;
+}
+
+.s7-block-filters-panel--inline .vendas-filters-card__field--period {
+  max-width: min(100%, 360px);
+}
+
+/* Dashboard inline — sem rótulo "Período" (quebra alinhamento da linha executiva) */
+.s7-block-filters-panel--inline .vendas-period-picker > .vendas-filters-card__label {
+  display: none;
+}
+
+.s7-block-filters-panel--inline .vendas-filters-card__field--period .vendas-period-picker {
+  gap: 0;
+}
+
+.s7-block-filters-panel--inline .vendas-filters-card__field--account {
+  min-width: 148px;
+  max-width: min(100%, 220px);
+}
+
+.s7-block-filters-panel--inline .vendas-filters-card__select {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 9px;
+}
+
+.s7-block-filters-panel--inline .vendas-period-picker__trigger {
+  min-height: 30px;
+  height: 30px;
+  padding: 0 10px;
+}
+
+.s7-dashboard-block-head--inline-filters {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.s7-dashboard-block-head__title-row--with-filters {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 32px;
+  min-width: 0;
+}
+
+.s7-dashboard-block-head__inline-filters {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 8px;
+}
+
+.s7-dashboard-block-head--inline-filters .s7-daily-summary__title {
+  flex-shrink: 0;
+}
+
+.s7-dashboard-block-head--inline-filters .s7-top10-block__title {
+  flex-shrink: 0;
+}
+
+.s7-top10-block:has(.s7-dashboard-block-head--inline-filters) .s7-dashboard-section-panel__body {
+  gap: var(--s7-section-panel-body-gap, 14px);
+}
+
+.s7-daily-summary:has(.s7-dashboard-block-head--inline-filters) .s7-daily-summary__body {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .s7-dashboard-block-head--inline-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .s7-dashboard-block-head__title-row--with-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .s7-dashboard-block-head--inline-filters .s7-dashboard-block-head__period-aside {
+    align-items: flex-start;
+    text-align: left;
+    margin-left: 0;
+  }
+
+  .s7-dashboard-block-head--inline-filters .s7-dashboard-block-head__period-aside--with-jump {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .s7-dashboard-block-head--inline-filters .s7-dashboard-block-head__period-aside-copy {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .s7-block-filters-panel--inline .vendas-filters-card__row--primary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .s7-block-filters-panel--inline .vendas-filters-card__field--period,
+  .s7-block-filters-panel--inline .vendas-filters-card__field--account {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
 .s7-block-filter-toggle {
   display: inline-flex;
   align-items: center;
@@ -91,6 +214,11 @@
 .s7-dashboard-block-head__title-row .s7-daily-summary__title,
 .s7-dashboard-block-head__title-row .s7-top10-block__title {
   margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #0f172a;
+  line-height: 1.25;
 }
 
 .s7-dashboard-block-head__period-aside {
@@ -105,19 +233,26 @@
   flex-shrink: 0;
 }
 
+.s7-dashboard-block-head__period-aside--with-jump {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.s7-dashboard-block-head__period-aside-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: right;
+}
+
 .s7-top10-block {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-}
-
-.s7-top10-block__shell {
-  margin-bottom: 14px;
-  padding: 18px 20px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.07);
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .s7-top10-block__head,
@@ -137,6 +272,7 @@
 }
 
 .s7-top10-block__period-label,
+.s7-top10-block__period-preset,
 .s7-daily-summary__period-chip,
 .s7-daily-summary__period-label {
   display: inline-flex;
@@ -154,7 +290,6 @@
 }
 
 .s7-top10-block__period-date,
-.s7-top10-block__period-preset,
 .s7-daily-summary__period-range {
   font-size: 12px;
   font-weight: 600;

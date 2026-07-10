@@ -38,7 +38,12 @@ import { pickDefaultPricingScenarioTabId } from "./pricing/pickDefaultPricingSce
 import { ROTULO_LUCRO_RESULTADO } from "./pricing/pricingLucroMargemContribuicaoUi.js";
 import { PricingIntelligenceWorkspaceTabs } from "./pricing/PricingIntelligenceWorkspaceTabs.jsx";
 import { PricingIntelligenceTabRail } from "./pricing/PricingIntelligenceTabRail.jsx";
+import { listMonitoredListingCompetitors } from "../services/competitionApi.js";
 import { PricingIntelligenceCompetitorsPanel } from "./pricing/PricingIntelligenceCompetitorsPanel.jsx";
+import {
+  limparIndiceMonitoredListingsPrecificacao,
+  resolverMonitoredListingIdPrecificacao,
+} from "./pricing/resolverMonitoredListingIdPrecificacao.js";
 import { PricingIntelligenceCompetitorsCompareCards } from "./pricing/PricingIntelligenceCompetitorsCompareCards.jsx";
 import { PricingIntelligenceLoadingState } from "./pricing/PricingIntelligenceLoadingState.jsx";
 import { PricingIntelligenceSectionErrorBoundary } from "./pricing/PricingIntelligenceSectionErrorBoundary.jsx";
@@ -47,7 +52,8 @@ import { PricingPageSalePriceSimulator } from "./pricing/PricingPageSalePriceSim
 import { PricingPageSimulationInputs } from "./pricing/PricingPageSimulationInputs.jsx";
 import { logDiagnosticoPayloadIncompletoPrecificacao } from "./pricing/diagnosticoCenarioClassicoPrecificacao.js";
 import { PricingScenarioDetail } from "./pricing/PricingScenarioDetail.jsx";
-import { PricingIntelligencePromotionsPanel } from "./pricing/PricingIntelligencePromotionsPanel.jsx";
+import S7ModalShareActionsToolbar from "../shared/modalActions/S7ModalShareActionsToolbar.jsx";
+import { S7_PRICING_MODAL_SHARE_ACTION_LABELS } from "../shared/modalActions/s7ModalShareActions.js";
 import { splitPricingPageScenarioRows } from "./pricing/pricingPageScenarioSplit.js";
 import {
   logPiPromosAuditRaw,
@@ -247,6 +253,7 @@ function formatBrlTypingInput(raw) {
  *   caretTrailing?: boolean;
  *   onMlCompareWideChange?: (wide: boolean) => void;
  *   catalogRefreshing?: boolean;
+ *   embeddedInModalShell?: boolean;
  * }} props
  */
 export const PricingIntelligenceContent = forwardRef(function PricingIntelligenceContent(
@@ -260,6 +267,7 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     caretTrailing = false,
     onMlCompareWideChange,
     catalogRefreshing = false,
+    embeddedInModalShell = false,
   },
   ref,
 ) {
@@ -307,7 +315,33 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
   const [mlScenariosError, setMlScenariosError] = useState(/** @type {string | null} */ (null));
   const [cardsIniciaisProntos, setCardsIniciaisProntos] = useState(false);
   const [concorrentesCenariosProntos, setConcorrentesCenariosProntos] = useState(false);
-  const [concorrentesListaPronta, setConcorrentesListaPronta] = useState(false);
+  const CONCORRENTES_SESSAO_CACHE_INICIAL = useMemo(
+    () => ({
+      listingKey: /** @type {string | null} */ (null),
+      status: /** @type {"idle" | "loading" | "success" | "error"} */ ("idle"),
+      competitors: /** @type {Record<string, unknown>[]} */ ([]),
+      error: /** @type {string | null} */ (null),
+      semMonitoredListing: false,
+    }),
+    [],
+  );
+  const [concorrentesSessionCache, setConcorrentesSessionCache] = useState(
+    CONCORRENTES_SESSAO_CACHE_INICIAL,
+  );
+  const PI_TABS_SESSAO_INICIAL = useMemo(
+    () => ({
+      listingKey: /** @type {string | null} */ (null),
+      precificacaoPronta: false,
+      promocoesPronta: false,
+      concorrentesPronta: false,
+    }),
+    [],
+  );
+  const [piTabsSessao, setPiTabsSessao] = useState(PI_TABS_SESSAO_INICIAL);
+  const [piTabsMontadas, setPiTabsMontadas] = useState({
+    promocoes: false,
+    concorrentes: false,
+  });
   const [precoVendendoComparacao, setPrecoVendendoComparacao] = useState(
     /** @type {number | null} */ (null),
   );
@@ -396,6 +430,16 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     };
   }, [active, row.id]);
 
+  const resetarPiTabsSessao = useCallback(
+    (/** @type {{ manterLayoutsMontados?: boolean } | undefined} */ opts) => {
+      setPiTabsSessao(PI_TABS_SESSAO_INICIAL);
+      if (!opts?.manterLayoutsMontados) {
+        setPiTabsMontadas({ promocoes: false, concorrentes: false });
+      }
+    },
+    [PI_TABS_SESSAO_INICIAL],
+  );
+
   const handleSaveFinancialSettings = useCallback(async () => {
     if (!row.id) return;
     setFinancialSettingsSaving(true);
@@ -411,6 +455,9 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     });
     setFinancialSettingsSaving(false);
     if (result.ok) {
+      limparIndiceMonitoredListingsPrecificacao();
+      setConcorrentesSessionCache(CONCORRENTES_SESSAO_CACHE_INICIAL);
+      resetarPiTabsSessao({ manterLayoutsMontados: true });
       addNotification({
         severity: NOTIFICATION_SEVERITY.SUCCESS,
         title: "Configurações salvas",
@@ -434,6 +481,8 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     pageSimSafetyReserveEnabled,
     pageSimSafetyReservePct,
     addNotification,
+    CONCORRENTES_SESSAO_CACHE_INICIAL,
+    resetarPiTabsSessao,
   ]);
 
   useEffect(() => {
@@ -587,10 +636,18 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     setMlScenariosError(null);
     setCardsIniciaisProntos(false);
     setConcorrentesCenariosProntos(false);
-    setConcorrentesListaPronta(false);
+    limparIndiceMonitoredListingsPrecificacao();
+    setConcorrentesSessionCache(CONCORRENTES_SESSAO_CACHE_INICIAL);
+    resetarPiTabsSessao();
     setPrecoVendendoComparacao(null);
     void carregarCenariosMl();
-  }, [active, row.id, carregarCenariosMl]);
+  }, [
+    active,
+    row.id,
+    carregarCenariosMl,
+    CONCORRENTES_SESSAO_CACHE_INICIAL,
+    resetarPiTabsSessao,
+  ]);
 
   const handleCardsIniciaisProntosChange = useCallback((pronto) => {
     setCardsIniciaisProntos(pronto === true);
@@ -600,22 +657,11 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     setConcorrentesCenariosProntos(pronto === true);
   }, []);
 
-  const handleConcorrentesListaProntaChange = useCallback((pronto) => {
-    setConcorrentesListaPronta(pronto === true);
-  }, []);
-
   const handlePrecoVendendoComparacaoChange = useCallback((preco) => {
     setPrecoVendendoComparacao(
       preco != null && Number.isFinite(preco) && preco > 0 ? preco : null,
     );
   }, []);
-
-  useEffect(() => {
-    if (pricingWorkspaceTab === "competitors") {
-      setConcorrentesCenariosProntos(false);
-      setConcorrentesListaPronta(false);
-    }
-  }, [pricingWorkspaceTab, row.id]);
 
   useEffect(() => {
     setPrecoVendendoComparacao(null);
@@ -1088,10 +1134,22 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
       (sim?.comparison?.profit_delta_brl != null ||
         (Array.isArray(sim?.warnings) && sim.warnings.length > 0)));
 
-  const productIdConcorrentes =
-    row?.productId != null && String(row.productId).trim() !== ""
-      ? String(row.productId).trim()
-      : null;
+  const listingKeyConcorrentes =
+    row?.id != null && String(row.id).trim() !== ""
+      ? String(row.id).trim()
+      : row?.externalId != null && String(row.externalId).trim() !== ""
+        ? String(row.externalId).trim()
+        : "";
+
+  const marketplaceListingIdConcorrentes =
+    row?.id != null && String(row.id).trim() !== "" ? String(row.id).trim() : null;
+
+  const externalListingIdConcorrentes =
+    row?.externalId != null && String(row.externalId).trim() !== ""
+      ? String(row.externalId).trim()
+      : row?.externalId != null
+        ? String(row.externalId)
+        : null;
 
   const precoNossoConcorrentes = useMemo(() => {
     if (!isPage) return null;
@@ -1109,6 +1167,144 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     }
     return precoNossoConcorrentes;
   }, [precoVendendoComparacao, precoNossoConcorrentes]);
+
+  const concorrentesSessaoAlinhada =
+    concorrentesSessionCache.listingKey === listingKeyConcorrentes;
+
+  const concorrentesSessaoResolvida =
+    concorrentesSessaoAlinhada &&
+    (concorrentesSessionCache.status === "success" || concorrentesSessionCache.status === "error");
+
+  const carregarConcorrentesSessao = useCallback(async () => {
+    const chave = listingKeyConcorrentes;
+    if (!chave) {
+      setConcorrentesSessionCache({
+        listingKey: null,
+        status: "success",
+        competitors: [],
+        error: null,
+        semMonitoredListing: true,
+      });
+      return;
+    }
+
+    setConcorrentesSessionCache((prev) => {
+      if (prev.listingKey === chave && prev.status === "loading") return prev;
+      return {
+        listingKey: chave,
+        status: "loading",
+        competitors: [],
+        error: null,
+        semMonitoredListing: false,
+      };
+    });
+
+    try {
+      const monitoredListingId = await resolverMonitoredListingIdPrecificacao({
+        marketplaceListingId: marketplaceListingIdConcorrentes,
+        externalListingId: externalListingIdConcorrentes,
+      });
+
+      if (!monitoredListingId) {
+        setConcorrentesSessionCache({
+          listingKey: chave,
+          status: "success",
+          competitors: [],
+          error: null,
+          semMonitoredListing: true,
+        });
+        return;
+      }
+
+      const res = await listMonitoredListingCompetitors(monitoredListingId);
+      if (res.ok) {
+        const list = Array.isArray(res.competitors) ? res.competitors : [];
+        setConcorrentesSessionCache({
+          listingKey: chave,
+          status: "success",
+          competitors: list.slice(0, 6),
+          error: null,
+          semMonitoredListing: false,
+        });
+        return;
+      }
+
+      setConcorrentesSessionCache({
+        listingKey: chave,
+        status: "error",
+        competitors: [],
+        error: res.error || "Não foi possível carregar os concorrentes agora.",
+        semMonitoredListing: false,
+      });
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : "Não foi possível carregar os concorrentes agora.";
+      setConcorrentesSessionCache({
+        listingKey: chave,
+        status: "error",
+        competitors: [],
+        error: msg,
+        semMonitoredListing: false,
+      });
+    }
+  }, [
+    listingKeyConcorrentes,
+    marketplaceListingIdConcorrentes,
+    externalListingIdConcorrentes,
+  ]);
+
+  const handleConcorrentesRetry = useCallback(() => {
+    limparIndiceMonitoredListingsPrecificacao();
+    setConcorrentesSessionCache(CONCORRENTES_SESSAO_CACHE_INICIAL);
+  }, [CONCORRENTES_SESSAO_CACHE_INICIAL]);
+
+  useEffect(() => {
+    if (!isPage || pricingWorkspaceTab !== "competitors") return;
+
+    if (
+      concorrentesSessionCache.listingKey === listingKeyConcorrentes &&
+      (concorrentesSessionCache.status === "loading" ||
+        concorrentesSessionCache.status === "success" ||
+        concorrentesSessionCache.status === "error")
+    ) {
+      return;
+    }
+
+    void carregarConcorrentesSessao();
+  }, [
+    isPage,
+    pricingWorkspaceTab,
+    listingKeyConcorrentes,
+    concorrentesSessionCache.listingKey,
+    concorrentesSessionCache.status,
+    carregarConcorrentesSessao,
+  ]);
+
+  useEffect(() => {
+    if (pricingWorkspaceTab === "promotions") {
+      setPiTabsMontadas((prev) => (prev.promocoes ? prev : { ...prev, promocoes: true }));
+    }
+    if (pricingWorkspaceTab === "competitors") {
+      setPiTabsMontadas((prev) => (prev.concorrentes ? prev : { ...prev, concorrentes: true }));
+    }
+  }, [pricingWorkspaceTab]);
+
+  useEffect(() => {
+    if (!cardsIniciaisProntos) return;
+    setPiTabsSessao((prev) => (prev.precificacaoPronta ? prev : { ...prev, precificacaoPronta: true }));
+  }, [cardsIniciaisProntos]);
+
+  useEffect(() => {
+    if (pricingWorkspaceTab !== "promotions" || mlScenariosLoading) return;
+    setPiTabsSessao((prev) => (prev.promocoesPronta ? prev : { ...prev, promocoesPronta: true }));
+  }, [pricingWorkspaceTab, mlScenariosLoading]);
+
+  useEffect(() => {
+    if (!concorrentesSessaoResolvida || !concorrentesCenariosProntos) return;
+    setPiTabsSessao((prev) => (prev.concorrentesPronta ? prev : { ...prev, concorrentesPronta: true }));
+  }, [concorrentesSessaoResolvida, concorrentesCenariosProntos]);
 
   const renderListingTypeCompareCards = useCallback(
     (
@@ -1143,37 +1339,53 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
     ],
   );
 
+  const handlePricingSharePlaceholder = useCallback(() => undefined, []);
+
   const pricingTabRail =
     isPage && hasMlScenarioCompare ? (
-      <div className="pricing-intelligence-page__workspace-tab-rail-row">
-        <PricingIntelligenceTabRail activeTab={pricingWorkspaceTab} onTabChange={setPricingWorkspaceTab} />
-        <button
-          type="button"
-          className="pricing-intelligence-page__workspace-tab pricing-intelligence-page__workspace-tab--horizontal pricing-intelligence-page__workspace-tab-rail-save"
-          disabled={financialSettingsSaving}
-          aria-busy={financialSettingsSaving || undefined}
-          onClick={handleSaveFinancialSettings}
-        >
-          {financialSettingsSaving ? "Salvando…" : "Salvar"}
-        </button>
+      <div className="pricing-intelligence-page__workspace-header-actions">
+        {embeddedInModalShell ? (
+          <div className="pricing-intelligence-page__workspace-share-row">
+            <S7ModalShareActionsToolbar
+              actionLabels={S7_PRICING_MODAL_SHARE_ACTION_LABELS}
+              onAction={handlePricingSharePlaceholder}
+            />
+          </div>
+        ) : null}
+        <div className="pricing-intelligence-page__workspace-tab-rail-row">
+          <PricingIntelligenceTabRail activeTab={pricingWorkspaceTab} onTabChange={setPricingWorkspaceTab} />
+          <button
+            type="button"
+            className="pricing-intelligence-page__workspace-tab pricing-intelligence-page__workspace-tab--horizontal pricing-intelligence-page__workspace-tab-rail-save"
+            disabled={financialSettingsSaving}
+            aria-busy={financialSettingsSaving || undefined}
+            onClick={handleSaveFinancialSettings}
+          >
+            {financialSettingsSaving ? "Salvando…" : "Salvar"}
+          </button>
+        </div>
       </div>
     ) : null;
 
   const aguardandoHydratacaoCards =
     isPage &&
     hasMlScenarioCompare &&
+    pricingWorkspaceTab === "simulator" &&
     pricingPageBaselineRow != null &&
-    !cardsIniciaisProntos;
+    !piTabsSessao.precificacaoPronta;
 
   const aguardandoConcorrentesTab =
     isPage &&
     hasMlScenarioCompare &&
     pricingWorkspaceTab === "competitors" &&
     pricingPageBaselineRow != null &&
-    (!concorrentesCenariosProntos || !concorrentesListaPronta);
+    !piTabsSessao.concorrentesPronta;
 
   const aguardandoPromocoesTab =
-    isPage && pricingWorkspaceTab === "promotions" && mlScenariosLoading === true;
+    isPage &&
+    pricingWorkspaceTab === "promotions" &&
+    !piTabsSessao.promocoesPronta &&
+    mlScenariosLoading === true;
 
   const aguardandoWorkspacePreparacao =
     aguardandoHydratacaoCards || aguardandoConcorrentesTab || aguardandoPromocoesTab;
@@ -1246,7 +1458,7 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
                     </div>
                     <div className="pricing-intelligence-page__workspace-competitors-loading-span">
                       <PricingIntelligenceLoadingState
-                        title="Carregando Concorrentes Inteligentes"
+                        title="Carregando concorrentes..."
                         subtitle="Estamos comparando seu anúncio com os concorrentes do marketplace."
                       />
                     </div>
@@ -1319,21 +1531,13 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
                     )}
                   </PricingIntelligenceSectionErrorBoundary>
                 }
-                promotionsPanel={
-                  <PricingIntelligenceSectionErrorBoundary
-                    sectionLabel="promoções do anúncio"
-                    externalListingId={row.externalId != null ? String(row.externalId) : null}
-                  >
-                    <PricingIntelligencePromotionsPanel
-                      rows={pricingPagePromotionRows}
-                      listingHintForAudit={mlListingHintForAudit}
-                    />
-                  </PricingIntelligenceSectionErrorBoundary>
-                }
+                promotionsRows={pricingPagePromotionRows}
+                promotionsListingHint={mlListingHintForAudit}
+                promotionsMlScenariosPayload={mlScenariosPayload}
+                promotionsBaselineRow={pricingPageBaselineRow}
+                promotionsCatalogRow={row}
+                promotionsConfiguracaoFinanceira={configuracaoFinanceiraSimulacao}
                 promotionsTabRailSlot={pricingTabRail}
-                promotionsCompareCards={renderListingTypeCompareCards({
-                  permitirEdicaoPreco: false,
-                })}
                 competitorsTabRailSlot={pricingTabRail}
                 competitorsCompareCards={renderListingTypeCompareCards({
                   onCenariosProntosChange: handleConcorrentesCenariosProntosChange,
@@ -1341,12 +1545,23 @@ export const PricingIntelligenceContent = forwardRef(function PricingIntelligenc
                 })}
                 competitorsPanel={
                   <PricingIntelligenceCompetitorsPanel
-                    productId={productIdConcorrentes}
-                    active={pricingWorkspaceTab === "competitors"}
+                    listingKey={listingKeyConcorrentes}
+                    status={
+                      concorrentesSessaoAlinhada ? concorrentesSessionCache.status : "idle"
+                    }
+                    competitors={
+                      concorrentesSessaoAlinhada ? concorrentesSessionCache.competitors : []
+                    }
+                    error={concorrentesSessaoAlinhada ? concorrentesSessionCache.error : null}
+                    semMonitoredListing={
+                      concorrentesSessaoAlinhada ? concorrentesSessionCache.semMonitoredListing : false
+                    }
                     precoNosso={precoReferenciaConcorrentes}
-                    onListaProntaChange={handleConcorrentesListaProntaChange}
+                    onRetry={handleConcorrentesRetry}
                   />
                 }
+                mountPromotionsLayout={piTabsMontadas.promocoes}
+                mountCompetitorsLayout={piTabsMontadas.concorrentes}
               />
                 </div>
               </>

@@ -114,34 +114,42 @@ export default function VendasExecutivePanel({
         />
       </article>
 
-      <div className="vendas-page__executive-kpi-row" aria-label="Indicadores executivos do período">
+      <div
+        className="vendas-page__executive-kpi-row s7-dashboard-executive-kpi-row"
+        aria-label="Indicadores executivos do período"
+      >
         <VendasExecutiveKpiCard
           title="Vendas"
           tone="quantity"
           value={String(quantityKpi.value).replace(/\s+vendas$/i, "")}
+          subtitle={quantityKpi.subtitle}
           valueIcon={dashboardTop10KpiIcons?.sales ?? null}
           valueClassName={tituloExternoTop10 ? "vendas-executive-kpi__value--dashbird-sales" : ""}
+          cardClassName={tituloExternoTop10 ? "s7-kpi-chrome--top10-sales" : ""}
           loading={executiveLoading}
           error={executivePanelError}
           empty={executivePanelEmpty}
           periodLabel={cardPeriodLabel}
-          tituloExterno={tituloExternoTop10}
+          tituloExterno={false}
         />
         <VendasExecutiveKpiCard
           title="Faturamento"
           tone="revenue"
           value={revenueKpi.value}
+          subtitle={revenueKpi.subtitle}
           valueIcon={dashboardTop10KpiIcons?.revenue ?? null}
+          cardClassName={tituloExternoTop10 ? "s7-kpi-chrome--top10-revenue" : ""}
           loading={executiveLoading}
           error={executivePanelError}
           empty={executivePanelEmpty}
           periodLabel={cardPeriodLabel}
-          tituloExterno={tituloExternoTop10}
+          tituloExterno={false}
         />
         <VendasExecutiveKpiCard
           title="Lucro (R$)"
           tone="profit"
           value={netProfitKpi.value}
+          subtitle={netProfitKpi.subtitle}
           valueIcon={dashboardTop10KpiIcons?.profit ?? null}
           valueClassName={
             [
@@ -151,17 +159,18 @@ export default function VendasExecutivePanel({
               .filter(Boolean)
               .join(" ")
           }
+          cardClassName={tituloExternoTop10 ? "s7-kpi-chrome--top10-profit" : ""}
           loading={executiveLoading}
           error={executivePanelError}
           empty={executivePanelEmpty}
           periodLabel={cardPeriodLabel}
-          tituloExterno={tituloExternoTop10}
-          titleDica="Margem de contribuição"
+          tituloExterno={false}
         />
         <VendasExecutiveKpiCard
           title="Lucro (%)"
           tone="conversion"
           value={profitPercentKpi.value}
+          subtitle={profitPercentKpi.subtitle}
           valueIcon={dashboardTop10KpiIcons?.margin ?? null}
           valueClassName={
             [
@@ -171,13 +180,13 @@ export default function VendasExecutivePanel({
               .filter(Boolean)
               .join(" ")
           }
-          subtitle={profitPercentKpi.subtitle}
+          cardClassName={tituloExternoTop10 ? "s7-kpi-chrome--top10-margin" : ""}
           unavailable={profitPercentKpi.unavailable}
           loading={executiveLoading}
           error={executivePanelError}
           empty={executivePanelEmpty}
           periodLabel={cardPeriodLabel}
-          tituloExterno={tituloExternoTop10}
+          tituloExterno={false}
         />
       </div>
     </section>

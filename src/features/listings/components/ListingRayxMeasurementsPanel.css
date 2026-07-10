@@ -1,0 +1,10 @@
+.listing-rayx-measurements {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.listing-rayx-measurements__card-spaced {
+  margin-top: 0;
+}

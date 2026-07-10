@@ -13,8 +13,10 @@ import { useNotifications } from "../contexts/NotificationContext";
 import S7EmptyState from "../components/ui/S7EmptyState";
 import S7Pagination from "../components/ui/S7Pagination";
 import { useProductMainImageSrc } from "../utils/productImageDisplayUrl";
-import MarketplaceBadge from "../components/MarketplaceBadge";
-import S7CatalogAccountCell, { pickCatalogAccountFields } from "../components/catalog/S7CatalogAccountCell.jsx";
+import S7CatalogAccountCell, {
+  pickCatalogAccountFields,
+  S7CatalogChannelCell,
+} from "../components/catalog/S7CatalogAccountCell.jsx";
 import S7CatalogListingHeadline from "../components/catalog/S7CatalogListingHeadline.jsx";
 import "../components/catalog/S7CatalogAccountCell.css";
 import ConcorrenciaProdutoModal from "../components/concorrencia/ConcorrenciaProdutoModal";
@@ -30,8 +32,13 @@ import {
   notificarConcorrenciaSucesso,
 } from "../components/concorrencia/concorrenciaToast";
 import ConcorrenciaFiltersCard from "../features/concorrencia/filters/ConcorrenciaFiltersCard";
-import { bindListTableHeadStickyToFilter } from "../styles/s7ListTableHeadStickySync.js";
+import { bindCatalogListHorizontalScroll } from "../features/listings/layout/catalogListHorizontalScroll.js";
 import { CONCORRENCIA_FILTER_CHIPS } from "../features/concorrencia/filters/concorrenciaFilterChips.js";
+import {
+  S7_OPERATIONAL_DEFAULT_SORT_ID,
+  sortOperationalCatalogRows,
+  getConcorrenciaMonitoredRowSalesCount,
+} from "../utils/s7OperationalListSort.js";
 import ConcorrenciaGerarRelatorioModal from "../features/concorrencia/reports/ConcorrenciaGerarRelatorioModal.jsx";
 import {
   buildConcorrenciaReportContext,
@@ -62,6 +69,8 @@ import { montarComparativoConcorrentePreco } from "../components/pricing/competi
 import "../components/Products.css";
 import "../components/Anuncios.css";
 import "./ConcorrenciaPage.css";
+import CompetitionHealthCenter from "../features/dashboard/components/CompetitionHealthCenter.jsx";
+import S7OperationalExecutiveBlock from "../components/dashboard/S7OperationalExecutiveBlock.jsx";
 
 const CONCORRENCIA_PAGE_SIZE = 100;
 
@@ -357,8 +366,7 @@ function ConcorrenciaCatalogRow({
       >
         <S7CatalogAccountCell
           compact
-          variant="stacked"
-          stackedAvatarPx={40}
+          variant="inline"
           marketplaceAccountId={marketplaceAccountId}
           accountAlias={accountLabel}
           accountLogoUrl={accountLogoUrl}
@@ -369,9 +377,7 @@ function ConcorrenciaCatalogRow({
         {(() => {
           const channel = getMarketplaceChannelDisplay("mercado_livre");
           return (
-            <span className="concorrencia-catalog__channel" title={channel.label}>
-              <MarketplaceBadge marketplace={channel.id} label={channel.label} size={40} />
-            </span>
+            <S7CatalogChannelCell marketplace={channel.id} marketplaceLabel={channel.label} />
           );
         })()}
       </div>
@@ -422,6 +428,7 @@ export default function ConcorrenciaPage() {
   const [listLoading, setListLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterId, setFilterId] = useState("all");
+  const [listSortId, setListSortId] = useState(S7_OPERATIONAL_DEFAULT_SORT_ID);
   const [accountFilterId, setAccountFilterId] = useState("");
   const [marketplaceFilterId, setMarketplaceFilterId] = useState("");
   const [mlAccounts, setMlAccounts] = useState([]);
@@ -440,20 +447,15 @@ export default function ConcorrenciaPage() {
 
   const [competitionByMonitored, setCompetitionByMonitored] = useState({});
   const manageProductRef = useRef(null);
+  const concorrenciaExecutiveRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const concorrenciaFiltersRef = useRef(/** @type {HTMLElement | null} */ (null));
   const selectAllPageRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const catalogTableBlockRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const { addNotification } = useNotifications();
 
   useEffect(() => {
     manageProductRef.current = manageProduct;
   }, [manageProduct]);
-
-  useEffect(() => {
-    const cardEl = concorrenciaFiltersRef.current;
-    const scrollRoot = cardEl?.closest(".page-content");
-    if (!cardEl || !scrollRoot) return undefined;
-    return bindListTableHeadStickyToFilter(scrollRoot, cardEl);
-  }, [listLoading]);
 
   const loadCompetition = useCallback(async () => {
     const res = await listMonitoredListings();
@@ -603,16 +605,22 @@ export default function ConcorrenciaPage() {
 
   const filteredRows = useMemo(() => {
     const chip = CONCORRENCIA_FILTER_CHIPS.find((c) => c.id === filterId);
-    if (!chip || chip.id === "all") return contextFiltered;
-    return contextFiltered.filter((row) => {
-      const competitors = getCompetitors(row);
-      const count = getCompetitorCount(row?.monitored_listing_id);
-      if (typeof chip.matchProduct === "function") {
-        return chip.matchProduct({ product: row.product, competitors, count });
-      }
-      return chip.match(count);
-    });
-  }, [contextFiltered, filterId, getCompetitorCount, getCompetitors]);
+    const base =
+      !chip || chip.id === "all"
+        ? contextFiltered
+        : contextFiltered.filter((row) => {
+            const competitors = getCompetitors(row);
+            const count = getCompetitorCount(row?.monitored_listing_id);
+            if (typeof chip.matchProduct === "function") {
+              return chip.matchProduct({ product: row.product, competitors, count });
+            }
+            return chip.match(count);
+          });
+
+    return sortOperationalCatalogRows(base, listSortId, (row) =>
+      getConcorrenciaMonitoredRowSalesCount(row, getOwnListing),
+    );
+  }, [contextFiltered, filterId, listSortId, getCompetitorCount, getCompetitors, getOwnListing]);
 
   const hasActiveFilters =
     filterId !== "all" ||
@@ -625,6 +633,7 @@ export default function ConcorrenciaPage() {
     setSearchQuery("");
     setAccountFilterId("");
     setMarketplaceFilterId("");
+    setListSortId(S7_OPERATIONAL_DEFAULT_SORT_ID);
   }, []);
 
   const totalFiltered = filteredRows.length;
@@ -632,7 +641,7 @@ export default function ConcorrenciaPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [filterId, searchQuery, accountFilterId, marketplaceFilterId]);
+  }, [filterId, listSortId, searchQuery, accountFilterId, marketplaceFilterId]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -642,6 +651,14 @@ export default function ConcorrenciaPage() {
     const start = (page - 1) * CONCORRENCIA_PAGE_SIZE;
     return filteredRows.slice(start, start + CONCORRENCIA_PAGE_SIZE);
   }, [filteredRows, page]);
+
+  useEffect(() => {
+    const pageContent = catalogTableBlockRef.current?.closest(".page-content");
+    if (!pageContent || !catalogTableBlockRef.current) {
+      return undefined;
+    }
+    return bindCatalogListHorizontalScroll(pageContent, catalogTableBlockRef.current);
+  }, [filteredRows.length, listLoading, page]);
 
   const listSelection = useConcorrenciaListSelection(paginatedRows, filteredRows);
   const {
@@ -905,60 +922,46 @@ export default function ConcorrenciaPage() {
     <div className="products-catalog concorrencia-catalog">
       <h1 className="products-catalog__sr-title">Concorrência — anúncios monitorados</h1>
 
-      <ConcorrenciaFiltersCard
-        ref={concorrenciaFiltersRef}
-        accounts={mlAccounts}
-        accountsReady={mlAccountsReady}
-        accountId={accountFilterId}
-        onAccountIdChange={setAccountFilterId}
-        marketplaceId={marketplaceFilterId}
-        onMarketplaceIdChange={setMarketplaceFilterId}
-        filterChips={CONCORRENCIA_FILTER_CHIPS}
-        listFilter={filterId}
-        onListFilterChange={setFilterId}
-        searchInput={searchQuery}
-        onSearchInputChange={setSearchQuery}
-        hasActiveFilters={hasActiveFilters}
-        onClearAll={limparFiltros}
-        showRelatorios={canShowRelatorios}
-        relatoriosDisabled={relatoriosDisabled}
-        onRelatoriosClick={openReportModal}
-        onIncluirAnuncioClick={listLoading ? undefined : () => setIncluirModalOpen(true)}
-        selectedCount={selectedCount}
-      />
+      <S7OperationalExecutiveBlock ref={concorrenciaExecutiveRef}>
+        <CompetitionHealthCenter
+          className="dashboard-page__competition-health"
+          sectionJumpDownTargetRef={concorrenciaFiltersRef}
+          sectionJumpDownAriaLabel="Ir para busca e filtros"
+        />
+      </S7OperationalExecutiveBlock>
 
-      {listLoading ? (
-        <p className="products-catalog__loading">Carregando anúncios monitorados...</p>
-      ) : monitoredListings.length === 0 ? (
-        <div className="products-catalog__empty-card">
-          <S7EmptyState
-            title="Você ainda não possui anúncios monitorados."
-            description="Escolha exatamente quais anúncios deseja acompanhar na concorrência."
-            action={
-              <S7Button type="button" variant="primary" onClick={() => setIncluirModalOpen(true)}>
-                Incluir anúncio para monitoramento
-              </S7Button>
-            }
+      <div ref={catalogTableBlockRef} className="products-catalog__table-block">
+        <div className="products-catalog__list-sticky-chrome" aria-label="Busca, filtros e cabeçalho da lista">
+          <div className="products-catalog__sticky-top-spacer" aria-hidden="true" />
+
+          <ConcorrenciaFiltersCard
+            ref={concorrenciaFiltersRef}
+            accounts={mlAccounts}
+            accountsReady={mlAccountsReady}
+            accountId={accountFilterId}
+            onAccountIdChange={setAccountFilterId}
+            marketplaceId={marketplaceFilterId}
+            onMarketplaceIdChange={setMarketplaceFilterId}
+            filterChips={CONCORRENCIA_FILTER_CHIPS}
+            listFilter={filterId}
+            onListFilterChange={setFilterId}
+            listSortId={listSortId}
+            onListSortChange={setListSortId}
+            searchInput={searchQuery}
+            onSearchInputChange={setSearchQuery}
+            hasActiveFilters={hasActiveFilters}
+            onClearAll={limparFiltros}
+            showRelatorios={canShowRelatorios}
+            relatoriosDisabled={relatoriosDisabled}
+            onRelatoriosClick={openReportModal}
+            onIncluirAnuncioClick={listLoading ? undefined : () => setIncluirModalOpen(true)}
+            selectedCount={selectedCount}
+            sectionJumpUpTargetRef={concorrenciaExecutiveRef}
+            sectionJumpUpAriaLabel="Voltar para a Central de Saúde da Concorrência"
           />
-        </div>
-      ) : filteredRows.length === 0 ? (
-        <div className="products-catalog__filter-empty-card" role="status">
-          <S7EmptyState
-            title="Nenhum anúncio encontrado"
-            description="Nenhum item corresponde à busca e aos filtros atuais. Ajuste os filtros ou limpe o campo."
-          />
-          <button
-            type="button"
-            className="products-catalog__filter-empty-btn"
-            onClick={limparFiltros}
-          >
-            Mostrar todos
-          </button>
-        </div>
-      ) : (
-        <div className="products-catalog__table-block">
-          <div className="products-catalog__table-card">
-            <div className="products-catalog__table-hscroll">
+
+          <div className="products-catalog__list-header-slot">
+            <div className="products-catalog__table-hscroll products-catalog__table-hscroll--head">
               <div className="concorrencia-catalog__grid concorrencia-catalog__grid--head">
                 <div className="products-catalog__cell products-catalog__cell--select">
                   <label
@@ -995,39 +998,77 @@ export default function ConcorrenciaPage() {
                   <span className="products-catalog__sr-only">Ações</span>
                 </div>
               </div>
-
-              <div className="concorrencia-catalog__body">
-                {paginatedRows.map((row) => (
-                  <ConcorrenciaCatalogRow
-                    key={row.monitored_listing_id}
-                    product={row.product}
-                    competitors={getCompetitors(row)}
-                    ownListing={getOwnListing(row)}
-                    accountLabel={getAccountLabel(row)}
-                    marketplaceAccountId={getMarketplaceAccountId(row)}
-                    accountLogoUrl={getAccountLogoUrl(row)}
-                    listingThumbnail={getListingThumbnail(row)}
-                    onManage={setManageProduct}
-                    rowSelected={isSelected(pickConcorrenciaProductRowId(row))}
-                    onToggleSelect={toggleRowSelection}
-                    onRequestRemoveMonitored={handleRequestRemoveMonitored}
-                    removingMonitored={
-                      String(removingMonitoredId ?? "") === String(row.product?.monitored_listing_id ?? "")
-                    }
-                    onRequestLinkSku={handleRequestLinkSku}
-                    linkingSku={
-                      String(skuModalListing?.monitoredListingId ?? "") ===
-                      String(row.product?.monitored_listing_id ?? "")
-                    }
-                    onOpenCompetitorDetail={(competitor, numeroConcorrente) =>
-                      handleOpenCompetitorDetail(row, competitor, numeroConcorrente)
-                    }
-                  />
-                ))}
-              </div>
             </div>
           </div>
+        </div>
 
+        <div className="products-catalog__list-operational">
+          {listLoading ? (
+            <p className="products-catalog__loading">Carregando anúncios monitorados...</p>
+          ) : monitoredListings.length === 0 ? (
+            <div className="products-catalog__empty-card">
+              <S7EmptyState
+                title="Você ainda não possui anúncios monitorados."
+                description="Escolha exatamente quais anúncios deseja acompanhar na concorrência."
+                action={
+                  <S7Button type="button" variant="primary" onClick={() => setIncluirModalOpen(true)}>
+                    Incluir anúncio para monitoramento
+                  </S7Button>
+                }
+              />
+            </div>
+          ) : filteredRows.length === 0 ? (
+            <div className="products-catalog__filter-empty-card" role="status">
+              <S7EmptyState
+                title="Nenhum anúncio encontrado"
+                description="Nenhum item corresponde à busca e aos filtros atuais. Ajuste os filtros ou limpe o campo."
+              />
+              <button
+                type="button"
+                className="products-catalog__filter-empty-btn"
+                onClick={limparFiltros}
+              >
+                Mostrar todos
+              </button>
+            </div>
+          ) : (
+            <div className="products-catalog__table-card products-catalog__table-card--scroll-viewport">
+              <div className="products-catalog__table-hscroll products-catalog__table-hscroll--body">
+                <div className="concorrencia-catalog__body">
+                  {paginatedRows.map((row) => (
+                    <ConcorrenciaCatalogRow
+                      key={row.monitored_listing_id}
+                      product={row.product}
+                      competitors={getCompetitors(row)}
+                      ownListing={getOwnListing(row)}
+                      accountLabel={getAccountLabel(row)}
+                      marketplaceAccountId={getMarketplaceAccountId(row)}
+                      accountLogoUrl={getAccountLogoUrl(row)}
+                      listingThumbnail={getListingThumbnail(row)}
+                      onManage={setManageProduct}
+                      rowSelected={isSelected(pickConcorrenciaProductRowId(row))}
+                      onToggleSelect={toggleRowSelection}
+                      onRequestRemoveMonitored={handleRequestRemoveMonitored}
+                      removingMonitored={
+                        String(removingMonitoredId ?? "") === String(row.product?.monitored_listing_id ?? "")
+                      }
+                      onRequestLinkSku={handleRequestLinkSku}
+                      linkingSku={
+                        String(skuModalListing?.monitoredListingId ?? "") ===
+                        String(row.product?.monitored_listing_id ?? "")
+                      }
+                      onOpenCompetitorDetail={(competitor, numeroConcorrente) =>
+                        handleOpenCompetitorDetail(row, competitor, numeroConcorrente)
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {filteredRows.length > 0 ? (
           <S7Pagination
             page={page}
             totalPages={totalPages}
@@ -1037,8 +1078,8 @@ export default function ConcorrenciaPage() {
             onPrevious={() => setPage((p) => Math.max(1, p - 1))}
             onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
           />
-        </div>
-      )}
+        ) : null}
+      </div>
 
       <ConcorrenciaIncluirAnuncioModal
         open={incluirModalOpen}

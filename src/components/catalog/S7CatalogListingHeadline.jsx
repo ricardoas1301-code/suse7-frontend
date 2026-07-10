@@ -18,13 +18,16 @@ import "./S7CatalogListingHeadline.css";
  *   listingFirst?: boolean;
  *   titleClassName?: string;
  *   titleTooltip?: string;
+ *   titleCopyValue?: string;
  *   stopTitlePropagation?: boolean;
+ *   copyTitleFlashKey?: string;
  *   copyListingFlashKey?: string;
  *   copySkuFlashKey?: string;
  *   listingEntityType?: string;
  *   skuEntityType?: string;
  *   showSkuWhenEmpty?: boolean;
  *   skuEmptyLabel?: string;
+ *   metaExtra?: import("react").ReactNode;
  *   footer?: import("react").ReactNode;
  *   actions?: import("react").ReactNode;
  *   className?: string;
@@ -41,13 +44,16 @@ export default function S7CatalogListingHeadline({
   listingFirst = false,
   titleClassName = "",
   titleTooltip = "",
+  titleCopyValue = "",
   stopTitlePropagation = false,
+  copyTitleFlashKey = "catalog-listing-title",
   copyListingFlashKey = "catalog-listing-id",
   copySkuFlashKey = "catalog-listing-sku",
   listingEntityType = "marketplace_listing",
   skuEntityType = "marketplace_listing",
   showSkuWhenEmpty = false,
   skuEmptyLabel = "—",
+  metaExtra = null,
   footer = null,
   actions = null,
   className = "",
@@ -55,6 +61,7 @@ export default function S7CatalogListingHeadline({
   const titulo = String(title || "").trim() || "—";
   const lid = String(listingId || "").trim();
   const sk = String(sku || "").trim();
+  const tituloCopiar = String(titleCopyValue || "").trim();
   const lidCopiar = String(listingIdCopyValue || listingId || "").trim();
   const skCopiar = String(skuCopyValue || sku || "").trim();
   const hasMeta = Boolean(lid || sk || showSkuWhenEmpty);
@@ -97,6 +104,21 @@ export default function S7CatalogListingHeadline({
   ) : (
     titleInner
   );
+
+  const titleCopyButton =
+    tituloCopiar && titulo !== "—" ? (
+      <S7CopyButton
+        value={tituloCopiar}
+        ariaLabel="Copiar nome do anúncio"
+        tooltipText="Copiar nome do anúncio"
+        toastLabel="Nome do anúncio"
+        showToast={true}
+        iconMode="unicode"
+        flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+        flashKey={copyTitleFlashKey}
+        toastEntityType={listingEntityType}
+      />
+    ) : null;
 
   const listingMeta =
     lid || lidCopiar ? (
@@ -158,13 +180,17 @@ export default function S7CatalogListingHeadline({
     ) : null;
 
   const metaRow =
-    hasMeta && (listingMeta || skuMeta) ? (
+    hasMeta && (listingMeta || skuMeta || metaExtra) ? (
       <div className={`s7-catalog-headline__meta vendas-page__product-meta${stacked ? " s7-catalog-headline__meta--stacked" : ""}`}>
         {listingMeta}
         {listingMeta && skuMeta ? (
           <span className="s7-catalog-headline__meta-sep vendas-page__product-meta-sep" aria-hidden />
         ) : null}
         {skuMeta}
+        {(listingMeta || skuMeta) && metaExtra ? (
+          <span className="s7-catalog-headline__meta-sep vendas-page__product-meta-sep" aria-hidden />
+        ) : null}
+        {metaExtra}
       </div>
     ) : (
       <span className="s7-catalog-headline__meta--muted vendas-page__product-meta--muted">—</span>
@@ -187,6 +213,7 @@ export default function S7CatalogListingHeadline({
         ) : null}
         <div className="s7-catalog-headline__title-row">
           <span className="s7-catalog-headline__title-slot">{titleNode}</span>
+          {titleCopyButton}
         </div>
         {!listingFirst ? (
           metaRow
@@ -201,7 +228,10 @@ export default function S7CatalogListingHeadline({
 
   return (
     <div className={rootClass}>
-      <span className="s7-catalog-headline__title-slot vendas-page__product-title-slot">{titleNode}</span>
+      <span className="s7-catalog-headline__title-slot vendas-page__product-title-slot">
+        {titleNode}
+        {titleCopyButton}
+      </span>
       {hasMeta ? metaRow : null}
       {actions ? <div className="s7-catalog-headline__actions">{actions}</div> : null}
       {footer ? <div className="s7-catalog-headline__footer">{footer}</div> : null}
@@ -257,18 +287,20 @@ export function S7CatalogProductHeadline({
   return (
     <div className="s7-catalog-headline s7-catalog-headline--stacked s7-catalog-headline--product">
       <div className="s7-catalog-headline__title-row products-catalog__name-row">
-        <span className="s7-catalog-headline__title-slot vendas-page__product-title-slot">{titleNode}</span>
-        <S7CopyButton
-          value={nome}
-          ariaLabel={`Copiar nome ${nome}`}
-          tooltipText="Copiar nome"
-          toastLabel="Nome do produto"
-          showToast={true}
-          iconMode="unicode"
-          flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-          flashKey={copyNameFlashKey}
-          toastEntityType="product"
-        />
+        <span className="s7-catalog-headline__title-slot vendas-page__product-title-slot products-catalog__name-inline">
+          {titleNode}
+          <S7CopyButton
+            value={nome}
+            ariaLabel={`Copiar nome ${nome}`}
+            tooltipText="Copiar nome"
+            toastLabel="Nome do produto"
+            showToast={true}
+            iconMode="unicode"
+            flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+            flashKey={copyNameFlashKey}
+            toastEntityType="product"
+          />
+        </span>
       </div>
       <div className="s7-catalog-headline__meta s7-catalog-headline__meta--stacked products-catalog__sku-row">
         <span className="s7-copy-group s7-catalog-headline__meta-sku">

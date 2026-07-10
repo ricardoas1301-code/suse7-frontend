@@ -27,6 +27,16 @@ import {
 import { listLinks, relinkDraftToProduct } from "../services/images/imageRepository";
 import { updateVariantsSortOrder } from "../services/variants/variantRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
+import ProductTitleSyncModal from "./products/ProductTitleSyncModal";
+import ProductDescriptionSyncModal from "./products/ProductDescriptionSyncModal";
+import { AD_TITLE_SYNC_MAX_CHARS } from "../services/productTitlesApi";
+import {
+  AD_TITLE_DUPLICATE_MESSAGE,
+  encontrarIdsTitulosDuplicados,
+  sanitizeAdTitlesForDisplay,
+  validarTitulosAnuncioSemDuplicidade,
+} from "../utils/adTitleValidation";
+import S7Icon from "./ui/S7Icon";
 import "./FieldLabel.css";
 import "./ProductAdTitlesTab.css";
 import { Trash2 } from "lucide-react";
@@ -271,7 +281,7 @@ export default function ProductForm({
     // - Formato: [{ id, value }]
     // - Backend valida duplicidade e regras por marketplace
     // =========================
-    ad_titles: [{ id: createId(), value: "" }],
+    ad_titles: [],
 
     // =========================
     // SISTEMA
@@ -305,7 +315,7 @@ export default function ProductForm({
         ...(hasVariations ? [{ id: "variations", label: "Variações" }] : []),
         { id: "pricing_stock", label: "Custos e estoque" },
         { id: "images", label: "Imagens" },
-        { id: "ad_titles", label: "Título do anúncio" },
+        { id: "ad_titles", label: "Gerador de títulos" },
         { id: "description", label: "Descrição" },
         { id: "measures", label: "Pesos & medidas" },
       ];
@@ -538,6 +548,10 @@ const [pendingNextChecked, setPendingNextChecked] = useState(false);
   // MODAL: confirmação exclusão de título do anúncio (padrão Suse7)
   // ------------------------------------------------------
   const [adTitleDeleteId, setAdTitleDeleteId] = useState(null);
+  const [selectedAdTitleId, setSelectedAdTitleId] = useState(null);
+  const [titleSyncModalOpen, setTitleSyncModalOpen] = useState(false);
+  const [descriptionSyncModalOpen, setDescriptionSyncModalOpen] = useState(false);
+  const focusAdTitleInputIdRef = useRef(null);
 
   // ------------------------------------------------------
   // HEALTH: progresso circular do cadastro (backend como fonte de verdade)
@@ -753,15 +767,15 @@ useLayoutEffect(() => {
   if (initialProduct) {
     const toMerge = { ...initialProduct };
     // Normalizar ad_titles: backend pode retornar { id, title } ou { id, value }
-    // Regra: sempre iniciar com pelo menos 1 título
-    if (!toMerge.ad_titles || !Array.isArray(toMerge.ad_titles) || toMerge.ad_titles.length === 0) {
-      toMerge.ad_titles = [{ id: createId(), value: "" }];
+    if (!toMerge.ad_titles || !Array.isArray(toMerge.ad_titles)) {
+      toMerge.ad_titles = [];
     } else {
       toMerge.ad_titles = toMerge.ad_titles.map((t) => ({
         id: t.id || createId(),
         value: t.title !== undefined ? t.title : (t.value ?? ""),
       }));
     }
+    toMerge.ad_titles = sanitizeAdTitlesForDisplay(toMerge.ad_titles, toMerge.product_name);
     // Pesos & medidas: string mascarada (nunca number no state vindo da API)
     for (const k of PRODUCT_DECIMAL_MEASURE_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(toMerge, k)) {
@@ -1205,15 +1219,16 @@ useLayoutEffect(() => {
   const handleAddTitle = () => {
     const list = product?.ad_titles ?? [];
     if (list.length >= 10) return;
+    const newId = createId();
+    focusAdTitleInputIdRef.current = newId;
     setProduct((prev) => ({
       ...prev,
-      ad_titles: [...(prev.ad_titles ?? []), { id: createId(), value: "" }],
+      ad_titles: [...(prev.ad_titles ?? []), { id: newId, value: "" }],
     }));
   };
 
   const handleRemoveTitle = (id) => {
-    const list = product?.ad_titles ?? [];
-    if (list.length <= 1) return;
+    setSelectedAdTitleId((prev) => (prev === id ? null : prev));
     setProduct((prev) => ({
       ...prev,
       ad_titles: (prev.ad_titles ?? []).filter((t) => t.id !== id),
@@ -1228,6 +1243,42 @@ useLayoutEffect(() => {
       ),
     }));
   };
+
+  const handleSelectAdTitle = (id) => {
+    setSelectedAdTitleId((prev) => (prev === id ? null : id));
+  };
+
+  const selectedAdTitleEntry = useMemo(() => {
+    if (!selectedAdTitleId) return null;
+    return (product?.ad_titles ?? []).find((t) => t.id === selectedAdTitleId) ?? null;
+  }, [product?.ad_titles, selectedAdTitleId]);
+
+  const selectedAdTitleText = String(selectedAdTitleEntry?.value ?? "").trim();
+  const selectedAdTitleOverLimit = selectedAdTitleText.length > AD_TITLE_SYNC_MAX_CHARS;
+  const duplicateAdTitleIds = useMemo(
+    () => encontrarIdsTitulosDuplicados(product?.ad_titles ?? []),
+    [product?.ad_titles],
+  );
+  const selectedAdTitleIsDuplicate =
+    selectedAdTitleId != null && duplicateAdTitleIds.has(selectedAdTitleId);
+  const canOpenTitleSync =
+    Boolean(product?.id) &&
+    selectedAdTitleText !== "" &&
+    !selectedAdTitleOverLimit &&
+    !selectedAdTitleIsDuplicate &&
+    duplicateAdTitleIds.size === 0;
+  const canOpenDescriptionSync =
+    Boolean(product?.id) && String(product?.description ?? "").trim() !== "";
+
+  useEffect(() => {
+    const focusId = focusAdTitleInputIdRef.current;
+    if (!focusId) return undefined;
+    focusAdTitleInputIdRef.current = null;
+    const timer = window.setTimeout(() => {
+      document.getElementById(`ad-title-input-${focusId}`)?.focus();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [product?.ad_titles?.length]);
 
   const handleImageProgressChange = useCallback((snapshot) => {
     setImageProgress(normalizeImageProgress(snapshot));
@@ -2508,6 +2559,17 @@ const validatePricingTab = () => {
     return;
   }
 
+  const adTitlesDupErr = validarTitulosAnuncioSemDuplicidade(product?.ad_titles ?? []);
+  if (adTitlesDupErr) {
+    addNotification({
+      type: "error",
+      title: "Gerador de títulos",
+      message: adTitlesDupErr,
+    });
+    navigateToTabWithUnlock("ad_titles");
+    return;
+  }
+
   await executeSubmit();
 };
 
@@ -2835,6 +2897,14 @@ const validatePricingTab = () => {
   const stockTabNavigateId = presentation === "modal" ? "pricing_stock" : "stock";
   const [costsStockMounts, setCostsStockMounts] = useState({ costs: null, stock: null });
 
+  const handleCostsStockCostsMount = useCallback((node) => {
+    setCostsStockMounts((prev) => (prev.costs === node ? prev : { ...prev, costs: node }));
+  }, []);
+
+  const handleCostsStockStockMount = useCallback((node) => {
+    setCostsStockMounts((prev) => (prev.stock === node ? prev : { ...prev, stock: node }));
+  }, []);
+
   return (
     <>
     <div className={`pf-page pf-page--bleed${presentation === "modal" ? " pf-page--in-modal" : ""}`}>
@@ -3093,12 +3163,8 @@ const validatePricingTab = () => {
 
         {isMergedCostsStockTab ? (
           <ProductFormRayxCostsStockLayout
-            onCostsMount={(node) =>
-              setCostsStockMounts((prev) => (prev.costs === node ? prev : { ...prev, costs: node }))
-            }
-            onStockMount={(node) =>
-              setCostsStockMounts((prev) => (prev.stock === node ? prev : { ...prev, stock: node }))
-            }
+            onCostsMount={handleCostsStockCostsMount}
+            onStockMount={handleCostsStockStockMount}
           />
         ) : null}
 
@@ -3121,9 +3187,9 @@ const validatePricingTab = () => {
                       text="Custo do produto"
                       required
                       infoText="Este é o principal custo da sua operação. Ele impacta diretamente sua margem de lucro e a precificação ideal do produto."
-                      tipBottom={true}
+                      tipBottom={false}
                       wrap={true}
-                      side="left"
+                      side="center"
                     />
                     <S7Input
                       type="text"
@@ -3158,8 +3224,9 @@ const validatePricingTab = () => {
                     <FieldLabel
                       text="Custo Embalagem"
                       infoText="Inclua caixa, saco, plástico bolha e outros materiais. Esses custos somados influenciam o lucro final de cada venda."
-                      tipBottom={true}
+                      tipBottom={false}
                       wrap={true}
+                      side="center"
                     />
                     <input
                       className="s7-input"
@@ -3182,8 +3249,9 @@ const validatePricingTab = () => {
                     <FieldLabel
                       text="Custo Operacional"
                       infoText="Inclui etiquetas, insumos, mão de obra e tempo operacional. Pequenos valores acumulados podem reduzir seu lucro no final do mês."
-                      tipBottom={true}
+                      tipBottom={false}
                       wrap={true}
+                      side="center"
                     />
                     <input
                       className="s7-input"
@@ -3212,8 +3280,9 @@ const validatePricingTab = () => {
                     <FieldLabel
                       text="Custo Embalagem"
                       infoText="Inclua caixa, saco, plástico bolha e outros materiais. Esses custos somados influenciam o lucro final de cada venda."
-                      tipBottom={true}
+                      tipBottom={false}
                       wrap={true}
+                      side="center"
                     />
                     <input
                       className="s7-input"
@@ -3234,8 +3303,9 @@ const validatePricingTab = () => {
                     <FieldLabel
                       text="Custo Operacional"
                       infoText="Inclui etiquetas, insumos, mão de obra e tempo operacional. Pequenos valores acumulados podem reduzir seu lucro no final do mês."
-                      tipBottom={true}
+                      tipBottom={false}
                       wrap={true}
+                      side="center"
                     />
                     <input
                       className="s7-input"
@@ -3281,8 +3351,8 @@ const validatePricingTab = () => {
                                 text="Custo do produto"
                                 required
                                 infoText="Este é o principal custo da sua operação. Ele impacta diretamente sua margem de lucro e a precificação ideal do produto."
-                                side="left"
-                                tipBottom={true}
+                                side="center"
+                                tipBottom={false}
                                 wrap={true}
                               />
 
@@ -3389,7 +3459,7 @@ const validatePricingTab = () => {
             ABA: IMAGENS (mantém)
         ======================= */}
         {safeTab === "images" && (
-          <div className="pf-container">
+          <div className="pf-container pf-container--images">
             <h2 className="pf-tab-title">Imagens</h2>
             {product.format === "variants" && variantRows.length === 0 ? (
               <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
@@ -3479,29 +3549,46 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "description" && (
           <div className="pf-container pf-container--description">
-            <h2 className="pf-tab-title">Descrição</h2>
-            <div className="pf-description-section">
-              <div className="pf-label-row pf-label-row--copyable">
-                <div className="pf-label-left">
-                  <label className="s7-label" htmlFor="pf-description-textarea">
-                    Descrição do produto
-                  </label>
-                </div>
+            <div className="pf-description-tab-head">
+              <div className="pf-description-tab-title-group">
+                <h2 className="pf-tab-title">Descrição</h2>
                 {String(product?.description ?? "").trim() !== "" ? (
                   <S7CopyButton
                     value={product.description}
                     ariaLabel="Copiar descrição"
                     tooltipText="Copiar descrição"
                     toastLabel="Descrição"
+                    toastPreviewText={
+                      String(product?.description ?? "")
+                        .split(/\r?\n/)
+                        .map((line) => line.trim())
+                        .find(Boolean) ?? ""
+                    }
                     showToast={true}
                     iconMode="unicode"
                     flashMs={S7_COPY_OFFICIAL_FLASH_MS}
                     flashKey="pf-description"
                     toastEntityType="product"
+                    className="pf-description-copy-btn"
                   />
                 ) : null}
               </div>
-
+              {product?.id ? (
+                <div className="pf-description-tab-sync">
+                  <button
+                    type="button"
+                    className="s7-btn s7-btn--secondary s7-ad-titles-sync-btn s7-ad-title-add-btn"
+                    onClick={() => setDescriptionSyncModalOpen(true)}
+                    disabled={!canOpenDescriptionSync}
+                    title={!canOpenDescriptionSync ? "Salve uma descrição válida para sincronizar" : undefined}
+                  >
+                    <S7Icon name="external" size={14} className="s7-ad-titles-sync-btn__icon" />
+                    Sincronizar nos anúncios
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <div className="pf-description-section">
               <div className="pf-description-wrapper">
                 <textarea
                   id="pf-description-textarea"
@@ -3550,9 +3637,9 @@ const validatePricingTab = () => {
                               text="Estoque"
                               required
                               infoText="Quantidade disponível para venda. Manter o estoque atualizado evita cancelamentos e melhora a reputação nos marketplaces."
-                              tipBottom={true}
+                              tipBottom={false}
                               wrap={true}
-                              side="left"
+                              side="center"
                             />
                             <S7Input
                               inputMode="numeric"
@@ -3587,9 +3674,9 @@ const validatePricingTab = () => {
                             <FieldLabel
                               text="Estoque mínimo"
                               infoText="Quando o estoque atinge esse valor, você pode ser alertado para reabastecer e evitar perder vendas por ruptura."
-                              tipBottom={true}
+                              tipBottom={false}
                               wrap={true}
-                              side="right"
+                              side="center"
                             />
                             <input
                               className="s7-input"
@@ -3622,9 +3709,9 @@ const validatePricingTab = () => {
                               <FieldLabel
                                 text="Estoque virtual"
                                 infoText="Este estoque será sincronizado com os marketplaces. O estoque real do produto será controlado automaticamente para evitar vendas acima do disponível."
-                                tipBottom={true}
+                                tipBottom={false}
                                 wrap={true}
-                                side="right"
+                                side="center"
                               />
                             </div>
                             <input
@@ -3662,9 +3749,9 @@ const validatePricingTab = () => {
                               text="Estoque"
                               required
                               infoText="Quantidade disponível para venda. Manter o estoque atualizado evita cancelamentos e melhora a reputação nos marketplaces."
-                              tipBottom={true}
+                              tipBottom={false}
                               wrap={true}
-                              side="left"
+                              side="center"
                             />
                             <S7Input
                               inputMode="numeric"
@@ -3697,9 +3784,9 @@ const validatePricingTab = () => {
                             <FieldLabel
                               text="Estoque mínimo"
                               infoText="Quando o estoque atinge esse valor, você pode ser alertado para reabastecer e evitar perder vendas por ruptura."
-                              tipBottom={true}
+                              tipBottom={false}
                               wrap={true}
-                              side="right"
+                              side="center"
                             />
                             <input
                               className="s7-input"
@@ -3730,9 +3817,9 @@ const validatePricingTab = () => {
                               <FieldLabel
                                 text="Estoque virtual"
                                 infoText="Este estoque será sincronizado com os marketplaces. O estoque real do produto será controlado automaticamente para evitar vendas acima do disponível."
-                                tipBottom={true}
+                                tipBottom={false}
                                 wrap={true}
-                                side="right"
+                                side="center"
                               />
                             </div>
                             <input
@@ -3955,11 +4042,15 @@ const validatePricingTab = () => {
               ======================= */}
               {safeTab === "ad_titles" && (
                 <div className="pf-container">
-                  <h2 className="pf-tab-title">Título do anúncio</h2>
+                  <h2 className="pf-tab-title">
+                    {presentation === "modal" ? "Gerador de título de anúncio" : "Título do anúncio"}
+                  </h2>
                   <div className="s7-local-section-header">
                     <div className="s7-local-section-header-left">
                       <span className="s7-local-section-title">
-                        Crie até 10 títulos por produto
+                        {presentation === "modal"
+                          ? "Crie até 10 variações de título para este produto"
+                          : "Crie até 10 títulos por produto"}
                       </span>
 
                       <span
@@ -3970,7 +4061,29 @@ const validatePricingTab = () => {
                       </span>
                     </div>
 
-                    <div className="s7-local-section-actions">
+                    <div className="s7-local-section-actions s7-ad-titles-sync-actions">
+                      {product?.id ? (
+                        <button
+                          type="button"
+                          className="s7-btn s7-btn--secondary s7-ad-titles-sync-btn s7-ad-title-add-btn"
+                          onClick={() => setTitleSyncModalOpen(true)}
+                          disabled={!canOpenTitleSync}
+                          title={
+                            !selectedAdTitleId
+                              ? "Selecione um título para sincronizar"
+                              : selectedAdTitleText === ""
+                                ? "O título selecionado está vazio"
+                                : selectedAdTitleOverLimit
+                                  ? `Título excede ${AD_TITLE_SYNC_MAX_CHARS} caracteres`
+                                  : selectedAdTitleIsDuplicate || duplicateAdTitleIds.size > 0
+                                    ? AD_TITLE_DUPLICATE_MESSAGE
+                                    : undefined
+                          }
+                        >
+                          <S7Icon name="external" size={14} className="s7-ad-titles-sync-btn__icon" />
+                          Sincronizar no anúncio
+                        </button>
+                      ) : null}
                       {(product?.ad_titles ?? []).length < 10 && (
                         <button
                           type="button"
@@ -3983,58 +4096,105 @@ const validatePricingTab = () => {
                     </div>
                   </div>
 
+                  {(product?.ad_titles ?? []).length === 0 ? (
+                    <p className="s7-ad-titles-empty-hint">
+                      Crie variações de título para testar alternativas nos anúncios deste produto.
+                    </p>
+                  ) : null}
+
                   {/* Lista de cards (um por título) */}
                   <div className="s7-ad-titles-cards">
-                    {(product?.ad_titles ?? []).map((item, idx) => (
-                      <div key={item.id} className="s7-card s7-ad-titles-card">
-                        {/* Título N e ícone copiar na mesma linha; copiar no final (direita), acima do input */}
+                    {(product?.ad_titles ?? []).map((item, idx) => {
+                      const isSelected = selectedAdTitleId === item.id;
+                      const titleLen = item.value?.length ?? 0;
+                      const isOverLimit = titleLen > AD_TITLE_SYNC_MAX_CHARS;
+                      const isDuplicate = duplicateAdTitleIds.has(item.id);
+                      return (
+                      <div
+                        key={item.id}
+                        className={`s7-card s7-ad-titles-card${isSelected ? " s7-ad-titles-card--selected" : ""}${isDuplicate ? " s7-ad-titles-card--duplicate" : ""}`}
+                      >
+                        <div className="s7-ad-title-select-row">
+                          <label className="s7-ad-title-select-label">
+                            <input
+                              type="radio"
+                              name="ad-title-selection"
+                              className="s7-ad-title-select-radio"
+                              checked={isSelected}
+                              onChange={() => handleSelectAdTitle(item.id)}
+                              onClick={() => {
+                                if (selectedAdTitleId === item.id) handleSelectAdTitle(item.id);
+                              }}
+                              aria-label={`Selecionar título ${idx + 1}`}
+                            />
+                            <span>{isSelected ? "Selecionado" : "Selecionar"}</span>
+                          </label>
+                        </div>
+                        {/* Título N e ícone copiar na mesma linha, imediatamente à direita do label */}
                         <div className="s7-ad-title-copy-row">
                           <span className="s7-label s7-ad-titles-card-label">Título {idx + 1}</span>
-                          <div className="s7-ad-title-copy-wrap">
-                            {String(item.value ?? "").trim() !== "" ? (
-                              <S7CopyButton
-                                value={item.value}
-                                ariaLabel="Copiar título"
-                                tooltipText="Copiar título"
-                                toastLabel="Título"
-                                showToast={true}
-                                iconMode="unicode"
-                                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-                                flashKey={`ad_title_${item.id}`}
-                                toastEntityType="product"
-                              />
-                            ) : null}
-                          </div>
-                        </div>
-                        <div className="s7-ad-title-row">
-                          <div className="s7-ad-title-input-wrap">
-                            <input
-                              type="text"
-                              className="s7-input s7-ad-title-input"
-                              placeholder="Ex: Produto XYZ - Marca - Modelo"
+                          {String(item.value ?? "").trim() !== "" ? (
+                            <S7CopyButton
                               value={item.value}
-                              onChange={(e) => handleChangeTitle(item.id, e.target.value)}
+                              ariaLabel="Copiar título"
+                              tooltipText="Copiar título"
+                              toastLabel="Título"
+                              showToast={true}
+                              iconMode="unicode"
+                              flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                              flashKey={`ad_title_${item.id}`}
+                              toastEntityType="product"
                             />
-                            <span className="s7-ad-title-count">
-                              {item.value?.length ?? 0} caracteres
+                          ) : null}
+                        </div>
+                        <div className="s7-ad-title-input-line">
+                          <input
+                            id={`ad-title-input-${item.id}`}
+                            type="text"
+                            className={`s7-input s7-ad-title-input${isDuplicate ? " s7-ad-title-input--duplicate" : ""}`}
+                            placeholder="Ex: Produto XYZ - Marca - Modelo"
+                            value={item.value}
+                            onChange={(e) => handleChangeTitle(item.id, e.target.value)}
+                            aria-invalid={isDuplicate || undefined}
+                          />
+                          <span className={`s7-ad-title-count${isOverLimit ? " s7-ad-title-count--over" : ""}`}>
+                            {titleLen} caracteres
+                            {isOverLimit ? ` (máx. ${AD_TITLE_SYNC_MAX_CHARS} para sync)` : ""}
+                          </span>
+                          {isDuplicate ? (
+                            <span className="s7-ad-title-duplicate-msg" role="alert">
+                              {AD_TITLE_DUPLICATE_MESSAGE}
                             </span>
-                          </div>
-                          {(product?.ad_titles ?? []).length > 1 && (
-                            <button
-                              type="button"
-                              className="s7-title-delete-btn"
-                              onClick={() => setAdTitleDeleteId(item.id)}
-                              aria-label="Excluir título"
-                            >
-                              <Trash2 size={18} strokeWidth={2} />
-                            </button>
-                          )}
+                          ) : null}
+                          <button
+                            type="button"
+                            className="s7-title-delete-btn"
+                            onClick={() => setAdTitleDeleteId(item.id)}
+                            aria-label="Excluir título"
+                          >
+                            <Trash2 size={18} strokeWidth={2} />
+                          </button>
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 </div>
               )}
+
+              <ProductTitleSyncModal
+                open={titleSyncModalOpen}
+                productId={product?.id != null ? String(product.id) : null}
+                selectedTitle={selectedAdTitleText}
+                onClose={() => setTitleSyncModalOpen(false)}
+              />
+
+              <ProductDescriptionSyncModal
+                open={descriptionSyncModalOpen}
+                productId={product?.id != null ? String(product.id) : null}
+                selectedDescription={String(product?.description ?? "")}
+                onClose={() => setDescriptionSyncModalOpen(false)}
+              />
 
               {/* Modal confirmação exclusão título do anúncio (padrão Suse7) */}
               {adTitleDeleteId != null &&
@@ -4256,6 +4416,14 @@ const validatePricingTab = () => {
               {safeTab === "ads" && (
                 <div className="pf-container pf-container--ads">
                   <h2 className="pf-tab-title">Anúncios</h2>
+                  <div className="pf-rayx-list-subhead">
+                    <span className="pf-rayx-list-subhead__label">Total de anúncios</span>
+                    {productAdsListings.length > 0 ? (
+                      <span className="pf-rayx-list-subhead__count">
+                        {productAdsListings.length.toLocaleString("pt-BR")}
+                      </span>
+                    ) : null}
+                  </div>
                   <ProductLinkedListingsSection
                     listings={productAdsListings}
                     listingMetricsLookup={listingMetricsLookup}
@@ -4271,7 +4439,10 @@ const validatePricingTab = () => {
              ======================= */}
              {safeTab === "sales_history" && productFinancialCtx ? (
                <div className="pf-container pf-container--sales-history">
+                 <h2 className="pf-tab-title">Histórico de vendas</h2>
                  <ProductSalesHistorySection
+                   embedded
+                   hideSectionTitle
                    rows={productFinancialCtx.salesHistoryRows}
                    total={productFinancialCtx.salesHistoryTotal}
                    salesCount={productFinancialCtx.salesCountCanonical}
@@ -4288,8 +4459,9 @@ const validatePricingTab = () => {
              ABA: VENDAS
              ======================= */}
              {safeTab === "performance" && (
-             <div className="pf-container">
+             <div className="pf-container pf-container--performance s7-rayx-sales-host">
               <ProductFinancialRayXPanel
+                compact360
                 productId={product?.id ?? null}
                 tabTitle={presentation === "modal" ? "Vendas" : "Vendas & desempenho"}
                 showSalesHistory={false}
@@ -4311,27 +4483,17 @@ const validatePricingTab = () => {
         >
           {allStepsUnlocked ? (
             presentation === "modal" ? (
-              <div className="pf-body-footer-actions">
-                <button
-                  type="button"
-                  className="s7-btn s7-btn--primary pf-body-footer-btn"
-                  onClick={handleClose}
-                  disabled={isSavingProduct}
-                >
-                  Cancelar
-                </button>
-                <S7Button
-                  type="button"
-                  variant="primary"
-                  className="pf-body-footer-btn"
-                  loading={isSavingProduct}
-                  loadingLabel="Salvando..."
-                  disabled={isSavingProduct}
-                  onClick={handleSubmit}
-                >
-                  {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
-                </S7Button>
-              </div>
+              <S7Button
+                type="button"
+                variant="primary"
+                className="pf-body-footer-btn"
+                loading={isSavingProduct}
+                loadingLabel="Salvando..."
+                disabled={!isDirty || isSavingProduct}
+                onClick={handleSubmit}
+              >
+                {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+              </S7Button>
             ) : (
             <S7Button
               type="button"

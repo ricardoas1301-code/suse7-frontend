@@ -116,8 +116,9 @@ export const S7_DAILY_SUMMARY_MOCK = {
         { id: "shipping", label: "Frete", value: "-R$ 640,00", tone: "danger" },
         { id: "taxes", label: "Impostos", value: "-R$ 980,00", tone: "danger" },
         { id: "operation_packaging", label: "Operação + Embalagem", value: "-R$ 120,00", tone: "danger" },
-        { id: "ml_ads", label: "ML Ads", labelTip: "Valor reservado para usar em Mercado Livre Ads.", value: "—", tone: "danger" },
-        { id: "operational_costs", label: "Custos Operacionais", value: "—", tone: "danger" },
+        { id: "ml_ads", label: "ML Ads", labelTip: "Valor reservado para usar em Mercado Livre Ads.", value: "R$ 0,00", sharePercent: "0,00%", tone: "danger" },
+        { id: "operational_costs", label: "Custos Operacionais", value: "R$ 0,00", sharePercent: "0,00%", tone: "danger" },
+        { id: "total_costs", label: "Total dos custos", value: "-R$ 0,00", sharePercent: "0,00%", tone: "danger" },
       ],
 
     },

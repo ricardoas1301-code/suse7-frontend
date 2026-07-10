@@ -1,11 +1,8 @@
 // ======================================================
 // PI.2.11C — Aba Concorrentes da Precificação Inteligente (somente leitura).
-// Reutiliza GET /api/competition/products/:productId/competitors via competitionApi.
+// Fetch e cache por sessão ficam em PricingIntelligenceContent (pai do modal).
 // ======================================================
 
-import { useCallback, useEffect, useState } from "react";
-
-import { listProductCompetitors } from "../../services/competitionApi.js";
 import {
   displayCompetitorTitle,
   formatPowerSeller,
@@ -16,74 +13,40 @@ import {
 } from "../concorrencia/concorrenciaCompetitorDisplay.js";
 import { PricingIntelligenceConcorrenteCard } from "./PricingIntelligenceConcorrenteCard.jsx";
 
-const LIMITE_EXIBICAO = 6;
+/** @typedef {"idle" | "loading" | "success" | "error"} ConcorrentesSessaoStatus */
 
 /**
  * @param {{
- *   productId: string | null;
- *   active: boolean;
+ *   listingKey: string;
+ *   status?: ConcorrentesSessaoStatus;
+ *   competitors?: Record<string, unknown>[];
+ *   error?: string | null;
+ *   semMonitoredListing?: boolean;
  *   precoNosso?: number | string | null;
- *   onListaProntaChange?: (pronto: boolean) => void;
+ *   onRetry?: () => void;
  * }} props
  */
 export function PricingIntelligenceCompetitorsPanel({
-  productId,
-  active,
+  listingKey,
+  status = "idle",
+  competitors = [],
+  error = null,
+  semMonitoredListing = false,
   precoNosso = null,
-  onListaProntaChange,
+  onRetry,
 }) {
-  const [competitors, setCompetitors] = useState(/** @type {Record<string, unknown>[]} */ ([]));
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(/** @type {string | null} */ (null));
-  const [listaHidratada, setListaHidratada] = useState(false);
-
-  const carregarConcorrentes = useCallback(async () => {
-    if (!productId) {
-      setCompetitors([]);
-      setError(null);
-      setLoading(false);
-      setListaHidratada(true);
-      return;
-    }
-    setListaHidratada(false);
-    setLoading(true);
-    setError(null);
-    const res = await listProductCompetitors(productId);
-    if (res.ok) {
-      const list = Array.isArray(res.competitors) ? res.competitors : [];
-      setCompetitors(list.slice(0, LIMITE_EXIBICAO));
-    } else {
-      setCompetitors([]);
-      setError(res.error || "Não foi possível carregar os concorrentes.");
-    }
-    setLoading(false);
-    setListaHidratada(true);
-  }, [productId]);
-
-  useEffect(() => {
-    if (!active) {
-      setListaHidratada(false);
-      return;
-    }
-    void carregarConcorrentes();
-  }, [active, carregarConcorrentes]);
-
-  const semProduto = productId == null || String(productId).trim() === "";
-
-  useEffect(() => {
-    if (!active || !onListaProntaChange) return;
-    onListaProntaChange(semProduto || listaHidratada);
-  }, [active, semProduto, listaHidratada, onListaProntaChange]);
+  const chaveLista = String(listingKey ?? "").trim();
+  const loading = status === "loading" || status === "idle";
 
   return (
     <div className="pricing-intelligence-page__competitors-panel">
-      {semProduto ? (
+      {!chaveLista ? (
         <p className="pricing-intelligence-page__competitors-empty" role="status">
-          Vincule este anúncio a um produto para visualizar concorrentes cadastrados.
+          Anúncio indisponível para consultar concorrentes cadastrados.
         </p>
       ) : loading ? (
         <p className="pricing-intelligence-page__competitors-state" role="status">
-          Carregando concorrentes…
+          Carregando concorrentes...
         </p>
       ) : error ? (
         <div
@@ -94,14 +57,16 @@ export function PricingIntelligenceCompetitorsPanel({
           <button
             type="button"
             className="pricing-intelligence-page__competitors-retry"
-            onClick={() => void carregarConcorrentes()}
+            onClick={() => onRetry?.()}
           >
             Tentar novamente
           </button>
         </div>
-      ) : competitors.length === 0 ? (
+      ) : semMonitoredListing || competitors.length === 0 ? (
         <p className="pricing-intelligence-page__competitors-empty" role="status">
-          Este produto ainda não possui concorrentes cadastrados.
+          {semMonitoredListing
+            ? "Este anúncio não está no monitoramento de concorrência ou ainda não possui concorrentes cadastrados."
+            : "Este anúncio ainda não possui concorrentes cadastrados."}
         </p>
       ) : (
         <ul className="pricing-intelligence-page__competitors-grid" aria-label="Concorrentes cadastrados">

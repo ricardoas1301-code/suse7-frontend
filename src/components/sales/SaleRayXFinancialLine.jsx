@@ -14,6 +14,7 @@ import { DASH } from "./saleRayxFormat";
  *   strongClass?: string;
  *   labelClass?: string;
  *   valueTone?: "default" | "key" | "negative" | "positive";
+ *   isZeroLine?: boolean;
  * }} props
  */
 export default function SaleRayXFinancialLine({
@@ -25,10 +26,13 @@ export default function SaleRayXFinancialLine({
   strongClass = "",
   labelClass = "",
   valueTone = "default",
+  isZeroLine = false,
 }) {
-  const empty = value === DASH;
+  const empty = value === DASH || isZeroLine;
   const toneClass =
-    valueTone === "negative"
+    isZeroLine
+      ? ""
+      : valueTone === "negative"
       ? "vendas-sale-rayx__fin-value--negative"
       : valueTone === "positive"
         ? "vendas-sale-rayx__fin-value--positive"

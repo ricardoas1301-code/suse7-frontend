@@ -4,11 +4,8 @@
    ====================================================================== */
 
 .s7-daily-summary {
-  --s7-daily-summary-radius: 16px;
-  --s7-daily-summary-border: rgba(15, 23, 42, 0.07);
-  --s7-daily-summary-bg: #ffffff;
   --s7-daily-summary-gap: 20px;
-  --s7-daily-summary-inner-gap: 16px;
+  --s7-daily-summary-inner-gap: var(--s7-section-panel-body-gap, 14px);
   /* Pedidos no bloco Vendas — tone warning (paridade Raio-X produto) */
   --s7-daily-summary-sales-orders-accent: #d97706;
 
@@ -16,11 +13,10 @@
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  padding: 18px 20px var(--s7-daily-summary-inner-gap);
-  border-radius: var(--s7-daily-summary-radius);
-  border: 1px solid var(--s7-daily-summary-border);
-  background: var(--s7-daily-summary-bg);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.s7-daily-summary > .s7-dashboard-section-panel {
+  width: 100%;
 }
 
 .s7-daily-summary__head {
@@ -34,9 +30,9 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s7-daily-summary-gap);
   align-items: stretch;
-  margin-top: var(--s7-daily-summary-inner-gap);
-  padding-top: var(--s7-daily-summary-inner-gap);
-  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .s7-daily-summary__block {
@@ -325,8 +321,62 @@
   letter-spacing: -0.01em;
 }
 
+.s7-daily-summary__metric-value-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.s7-daily-summary__metric-value-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+.s7-daily-summary__metric-value-icon {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.s7-daily-summary__metric-value-icon--sales {
+  color: var(--s7-daily-summary-sales-orders-accent, #d97706);
+  width: 26px;
+  height: 26px;
+}
+
+.s7-daily-summary__metric-value-icon--revenue {
+  color: #1d4ed8;
+}
+
+.s7-daily-summary__metric-value-icon--profit {
+  color: #15803d;
+}
+
+.s7-daily-summary__metric-value-icon--margin {
+  color: #15803d;
+}
+
+.s7-daily-summary__metric-value-icon--repasse {
+  color: #1d4ed8;
+  width: 22px;
+  height: 22px;
+}
+
 .s7-daily-summary__metric-value-main {
   line-height: 1.15;
+}
+
+.s7-daily-summary__metric-value-main--tooltip {
+  cursor: help;
 }
 
 .s7-daily-summary__metric-share {
@@ -385,10 +435,30 @@
 }
 
 .s7-daily-summary__block[data-block-id="sales"]
+  .s7-daily-summary__metric[data-metric-id="orders"] {
+  container-type: inline-size;
+  container-name: s7-daily-summary-orders;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.s7-daily-summary__block[data-block-id="sales"]
   .s7-daily-summary__metric[data-metric-id="orders"]
   .s7-daily-summary__metric-value {
-  font-size: 3.04rem;
   line-height: 1.05;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font-size: inherit;
+}
+
+.s7-daily-summary__block[data-block-id="sales"]
+  .s7-daily-summary__metric[data-metric-id="orders"]
+  .s7-daily-summary__metric-value-row {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .s7-daily-summary__block[data-block-id="sales"]
@@ -403,6 +473,13 @@
   font-size: inherit;
 }
 
+.s7-daily-summary__block[data-block-id="sales"]
+  .s7-daily-summary__metric[data-metric-id="revenue"]
+  .s7-daily-summary__metric-value-row {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .s7-daily-summary__metric-value-fit {
   display: block;
   width: 100%;
@@ -414,7 +491,6 @@
 .s7-daily-summary__metric-value-main--adaptive {
   display: inline-block;
   white-space: nowrap;
-  font-size: var(--s7-daily-summary-revenue-max, 4.17rem);
   line-height: 1.05;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -422,9 +498,66 @@
   transform-origin: left center;
 }
 
+.s7-daily-summary__block[data-block-id="sales"]
+  .s7-daily-summary__metric[data-metric-id="revenue"]
+  .s7-daily-summary__metric-value,
+.s7-daily-summary__block[data-block-id="sales"]
+  .s7-daily-summary__metric[data-metric-id="revenue"]
+  .s7-daily-summary__metric-value--positive {
+  color: #1d4ed8;
+}
+
+.s7-daily-summary__metric-value-main--adaptive-revenue {
+  font-size: var(--s7-daily-summary-revenue-max, 4.17rem);
+  color: #1d4ed8;
+}
+
+.s7-daily-summary__metric-value-main--adaptive-orders {
+  font-size: 3.04rem;
+  color: var(--s7-daily-summary-sales-orders-accent, #d97706);
+}
+
 .s7-daily-summary__block[data-block-id="resultado"] {
   display: flex;
   flex-direction: column;
+}
+
+.s7-daily-summary__block[data-block-id="resultado"]
+  .s7-daily-summary__metric[data-metric-id="net_profit"] {
+  min-width: 0;
+  padding-left: 0;
+  margin-left: -4px;
+}
+
+.s7-daily-summary__block[data-block-id="resultado"]
+  .s7-daily-summary__metric[data-metric-id="net_profit"]
+  .s7-daily-summary__metric-label {
+  padding-left: 0;
+}
+
+.s7-daily-summary__block[data-block-id="resultado"]
+  .s7-daily-summary__metric[data-metric-id="net_profit"]
+  .s7-daily-summary__metric-value-row {
+  gap: 6px;
+  min-width: 0;
+}
+
+.s7-daily-summary__block[data-block-id="resultado"]
+  .s7-daily-summary__metric[data-metric-id="net_profit"]
+  .s7-daily-summary__metric-value-main {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s7-daily-summary__block[data-block-id="resultado"]
+  .s7-daily-summary__metric[data-metric-id="marketplace_payout"]
+  .s7-daily-summary__metric-value,
+.s7-daily-summary__block[data-block-id="resultado"]
+  .s7-daily-summary__metric[data-metric-id="marketplace_payout"]
+  .s7-daily-summary__metric-value--positive {
+  color: #1d4ed8;
 }
 
 .s7-daily-summary__resultado-accent {
@@ -479,10 +612,6 @@
 }
 
 @media (max-width: 640px) {
-  .s7-daily-summary {
-    padding: 14px 14px var(--s7-daily-summary-inner-gap);
-  }
-
   .s7-daily-summary__sales-footer-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;
@@ -508,14 +637,12 @@
     font-size: 1.25rem;
   }
 
-  .s7-daily-summary__block[data-block-id="sales"]
-    .s7-daily-summary__metric[data-metric-id="orders"]
-    .s7-daily-summary__metric-value {
-    font-size: 2.775rem;
-  }
-
   .s7-daily-summary__block[data-block-id="sales"] {
     --s7-daily-summary-revenue-max: 3.44rem;
+  }
+
+  .s7-daily-summary__metric-value-main--adaptive-orders {
+    font-size: 2.775rem;
   }
 
   .s7-daily-summary__block[data-block-id="sales"]

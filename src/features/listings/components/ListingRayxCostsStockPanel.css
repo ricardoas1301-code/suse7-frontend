@@ -1,0 +1,137 @@
+.listing-rayx-costs-stock.pf-container--pricing-stock {
+  padding-top: 0;
+}
+
+.listing-rayx-readonly-fields {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.listing-rayx-readonly-fields__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.listing-rayx-readonly-fields__label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #64748b;
+}
+
+.listing-rayx-readonly-fields__value {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.listing-rayx-ml-stock-row__label-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  max-width: 100%;
+}
+
+.listing-rayx-ml-stock-row__main-label {
+  flex: 0 0 auto;
+}
+
+.listing-rayx-ml-stock-row__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.listing-rayx-ml-stock-row__toggle input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #dc2626;
+}
+
+.listing-rayx-ml-stock-row__toggle-label {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: #334155;
+}
+
+.listing-rayx-ml-stock-row__info.pf-info-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: #fff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: help;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.listing-rayx-ml-stock-row__info.pf-info-btn:hover {
+  transform: scale(1.08);
+  border-color: rgba(37, 99, 235, 0.45);
+}
+
+.listing-rayx-ml-stock-row__value {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.listing-rayx-ml-stock-row__input {
+  width: min(160px, 100%);
+  min-height: 34px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  outline: none;
+}
+
+.listing-rayx-ml-stock-row__input:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.listing-rayx-ml-stock-row__helper,
+.listing-rayx-ml-stock-row__error {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.listing-rayx-ml-stock-row__helper {
+  color: #64748b;
+}
+
+.listing-rayx-ml-stock-row__error {
+  color: #b91c1c;
+  font-weight: 700;
+}

@@ -7,8 +7,12 @@ import { useEffect, useState } from "react";
 import ContactModal from "./ContactModal";
 import { mapSupabaseAuthErrorMessage } from "../lib/supabaseEnv.js";
 import { getSupabaseLoginDebug, supabase, supabaseProjectRef } from "../supabaseClient";
+import {
+  clearIntroSessionFlags,
+  logIntroAuthDev,
+  markIntroPendingForNextLogin,
+} from "../auth/introAuthSession.js";
 import { Link, useNavigate } from "react-router-dom";
-import S7LoginIntroSplash from "./S7LoginIntroSplash.jsx";
 import "./Login.css";
 
 function IconEye({ className }) {
@@ -47,14 +51,12 @@ import googleLogo from "../assets/google.png";
 
 
 export default function Login() {
-  const INTRO_PENDING_KEY = "s7_login_intro_pending";
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [showContactModal, setShowContactModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showIntroSplash, setShowIntroSplash] = useState(false);
 
   useEffect(() => {
     console.info("[Suse7][Login] mount", getSupabaseLoginDebug());
@@ -102,8 +104,9 @@ export default function Login() {
     }
 
     console.info("[Suse7][Login] signIn ok", { projectRef: supabaseProjectRef });
-    sessionStorage.setItem(INTRO_PENDING_KEY, "1");
-    setShowIntroSplash(true);
+    markIntroPendingForNextLogin("password_login");
+    logIntroAuthDev("auth_login_success", { provider: "password" });
+    navigate("/", { replace: true });
   };
 
   // --------------------------------------------------------
@@ -114,6 +117,8 @@ export default function Login() {
     const redirectTo =
       import.meta.env.VITE_FRONTEND_URL || window.location.origin;
 
+    markIntroPendingForNextLogin("oauth_google_start");
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -122,6 +127,11 @@ export default function Login() {
     });
 
     if (error) {
+      logIntroAuthDev("intro_skipped_reason", {
+        reason: "oauth_start_failed",
+        message: error?.message ?? null,
+      });
+      clearIntroSessionFlags("oauth_start_failed");
       setError(
         mapSupabaseAuthErrorMessage(error, {
           projectRef: supabaseProjectRef,
@@ -129,15 +139,6 @@ export default function Login() {
       );
     }
   };
-
-  const handleIntroFinished = () => {
-    sessionStorage.removeItem(INTRO_PENDING_KEY);
-    navigate("/", { replace: true });
-  };
-
-  if (showIntroSplash) {
-    return <S7LoginIntroSplash onFinish={handleIntroFinished} />;
-  }
 
   return (
     <div className="login-bg">

@@ -12,6 +12,20 @@ function mlStatusToUi(status) {
   return { statusKey: "active", statusLabel: status ? String(status) : "—" };
 }
 
+function pickString(...values) {
+  for (const value of values) {
+    if (value != null && String(value).trim() !== "") return String(value).trim();
+  }
+  return null;
+}
+
+function pickInt(...values) {
+  for (const value of values) {
+    if (value != null && Number.isFinite(Number(value))) return Math.trunc(Number(value));
+  }
+  return null;
+}
+
 export function isAnunciosCatalogRowPending(row) {
   const ph =
     row.pricingContext != null && typeof row.pricingContext === "object"
@@ -83,19 +97,23 @@ export function mapGridApiToCatalogRow(g) {
     g.legacy_imported_orders_metrics != null && typeof g.legacy_imported_orders_metrics === "object"
       ? /** @type {{ qty_sold_total?: unknown; gross_revenue_brl?: unknown }} */ (g.legacy_imported_orders_metrics)
       : null;
-  const salesCount =
-    legacyMetrics?.qty_sold_total != null && Number.isFinite(Number(legacyMetrics.qty_sold_total))
-      ? Math.trunc(Number(legacyMetrics.qty_sold_total))
-      : g.sold_quantity != null && Number.isFinite(Number(g.sold_quantity))
-        ? Math.trunc(Number(g.sold_quantity))
-        : null;
+  const salesCount = pickInt(
+    g.qty_sold_total,
+    legacyMetrics?.qty_sold_total,
+    g.sold_quantity
+  );
   const soldQtyMl =
     g.sold_quantity_ml_listing != null && Number.isFinite(Number(g.sold_quantity_ml_listing))
       ? Math.trunc(Number(g.sold_quantity_ml_listing))
       : null;
   const grossMissing = Boolean(g.gross_revenue_missing);
+  const grossSalesRaw = pickString(
+    g.gross_sales_brl,
+    g.gross_revenue_brl,
+    legacyMetrics?.gross_revenue_brl
+  );
   const revenueNumeric =
-    !grossMissing && g.gross_revenue_brl != null ? Number(g.gross_revenue_brl) : grossMissing ? 0 : Number(g.gross_revenue_brl) || 0;
+    !grossMissing && grossSalesRaw != null ? Number(grossSalesRaw) : grossMissing ? 0 : Number(grossSalesRaw) || 0;
 
   const qScore = g.health_listing_quality_score;
   const qScoreNum = qScore != null && Number.isFinite(Number(qScore)) ? Number(qScore) : null;
@@ -111,8 +129,17 @@ export function mapGridApiToCatalogRow(g) {
 
   const attentionReason = g.attention_reason != null ? String(g.attention_reason) : null;
 
-  const visitsAbsent = Boolean(g.visits_absent);
-  const visitCountForFilter = visitsAbsent || g.visits == null ? 0 : Number(g.visits) || 0;
+  const visitsRaw = pickString(
+    g.visits,
+    g.visits_count,
+    g.total_visits,
+    g.listing_visits,
+    g.metrics != null && typeof g.metrics === "object"
+      ? /** @type {Record<string, unknown>} */ (g.metrics).visits
+      : null
+  );
+  const visitsAbsent = Boolean(g.visits_absent) && visitsRaw == null;
+  const visitCountForFilter = visitsAbsent || visitsRaw == null ? 0 : Number(visitsRaw) || 0;
 
   const m = String(g.marketplace || "");
   const marketplaceSlug = m === "mercado_livre" ? "mercadolivre" : m || "mercadolivre";
@@ -232,7 +259,13 @@ export function mapGridApiToCatalogRow(g) {
     soldQuantityMlListing: soldQtyMl,
     revenue: revenueNumeric,
     grossRevenueMissing: grossMissing,
-    grossRevenueBrl: g.gross_revenue_brl != null ? String(g.gross_revenue_brl) : null,
+    grossRevenueBrl: grossSalesRaw,
+    grossSalesBrl: grossSalesRaw,
+    contributionProfitBrl: pickString(g.contribution_profit_brl, g.net_profit_brl),
+    netProfitBrl: pickString(g.net_profit_brl, g.contribution_profit_brl),
+    contributionMarginPercent: pickString(g.contribution_margin_percent),
+    averageTicketBrl: pickString(g.average_ticket_brl),
+    youReceiveBrl: pickString(g.you_receive_brl, g.net_received_brl, g.net_revenue_total_brl, legacyMetrics?.net_revenue_total_brl),
     profit: 0,
     marginPct: 0,
     statusKey,
@@ -253,7 +286,7 @@ export function mapGridApiToCatalogRow(g) {
     coverThumbnailUrl,
     visitCount: visitCountForFilter,
     visitsAbsent,
-    visitsText: g.visits != null ? String(g.visits) : null,
+    visitsText: visitsRaw,
     netReceiveBrl:
       g.marketplace_payout_amount != null && String(g.marketplace_payout_amount).trim() !== ""
         ? String(g.marketplace_payout_amount)
@@ -262,8 +295,11 @@ export function mapGridApiToCatalogRow(g) {
       g.marketplace_payout_source != null && String(g.marketplace_payout_source).trim() !== ""
         ? String(g.marketplace_payout_source).trim()
         : "unresolved",
-    /** Protocolo v1: payout e preço vêm dos campos explícitos; net_proceeds não é usado na UI. */
-    netProceeds: null,
+    /** Protocolo v1: payout e preço vêm dos campos explícitos; net_proceeds auxiliar para breakdown unitário. */
+    netProceeds:
+      g.net_proceeds != null && typeof g.net_proceeds === "object"
+        ? /** @type {Record<string, unknown>} */ (g.net_proceeds)
+        : null,
     commissionPercent: g.commission_percent != null ? String(g.commission_percent) : null,
     commissionAmountBrl: g.commission_amount_brl != null ? String(g.commission_amount_brl) : null,
     shippingCostBrl: g.shipping_cost_brl != null ? String(g.shipping_cost_brl) : null,
@@ -383,6 +419,10 @@ export function mapGridApiToCatalogRow(g) {
       g.pricing_context != null && typeof g.pricing_context === "object"
         ? /** @type {Record<string, unknown>} */ (g.pricing_context)
         : null,
+    pricingCurrentState:
+      g.pricing_current_state != null && typeof g.pricing_current_state === "object"
+        ? /** @type {Record<string, unknown>} */ (g.pricing_current_state)
+        : null,
     productId:
       g.product_id != null && String(g.product_id).trim() !== "" ? String(g.product_id).trim() : null,
     isProductReady: typeof g.is_product_ready === "boolean" ? g.is_product_ready : null,
@@ -401,6 +441,17 @@ export function mapGridApiToCatalogRow(g) {
     mlAccountAlias:
       g.ml_account_alias != null && String(g.ml_account_alias).trim() !== ""
         ? String(g.ml_account_alias).trim()
+        : null,
+    /** Contagens opcionais da grid (read-model futuro); fallback no resolver da lista. */
+    promotionsCount: pickInt(g.active_promotions_count, g.promotions_count),
+    activePromotionsCount: pickInt(g.active_promotions_count),
+    competitorsCount: pickInt(g.competitors_count, g.monitored_competitors_count),
+    monitoredCompetitorsCount: pickInt(g.monitored_competitors_count),
+    competitorsAboveCount: pickInt(g.competitors_above_count),
+    competitorsBelowCount: pickInt(g.competitors_below_count),
+    competitionListSource:
+      g.competition_list_source != null && String(g.competition_list_source).trim() !== ""
+        ? String(g.competition_list_source).trim()
         : null,
   };
 }

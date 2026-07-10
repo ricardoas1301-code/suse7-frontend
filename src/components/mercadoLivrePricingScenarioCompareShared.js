@@ -774,13 +774,23 @@ export function buildPromotionContractIdentityKey(contract) {
   const id = prom.promotion_id ?? prom.id ?? "";
   const type = prom.type ?? prom.promotion_type ?? "";
   const refId = prom.offer_id ?? prom.ref_id ?? "";
-  if (String(id).trim() !== "" || String(type).trim() !== "" || String(refId).trim() !== "") {
-    return [id, type, refId].map((v) => (v != null ? String(v).trim() : "")).join("|");
+  const subType = prom.sub_type ?? "";
+  const name = prom.promotion_name ?? prom.name ?? "";
+  if (
+    String(id).trim() !== "" ||
+    String(type).trim() !== "" ||
+    String(refId).trim() !== "" ||
+    String(subType).trim() !== "" ||
+    String(name).trim() !== ""
+  ) {
+    return [id, refId, type, subType, name].map((v) => (v != null ? String(v).trim() : "")).join("|");
   }
   return [
     id || prom.promotion_id || "",
-    type,
     refId || prom.offer_id || "",
+    type,
+    subType,
+    name,
     prom.raw_status ?? prom.status ?? "",
     prom.promotion_start_date ?? "",
     prom.promotion_end_date ?? "",
@@ -864,24 +874,38 @@ function normalizeScenarioRowToPromotionContract(row, index) {
     r.marketplace != null && typeof r.marketplace === "object"
       ? /** @type {Record<string, unknown>} */ (r.marketplace)
       : /** @type {Record<string, unknown>} */ ({});
+  const cardContract =
+    r.promotion_card_contract != null && typeof r.promotion_card_contract === "object"
+      ? /** @type {Record<string, unknown>} */ (r.promotion_card_contract)
+      : null;
+  const offerContract =
+    r.promotion_offer_contract != null && typeof r.promotion_offer_contract === "object"
+      ? /** @type {Record<string, unknown>} */ (r.promotion_offer_contract)
+      : null;
+  const contract = cardContract ?? offerContract;
+
   return {
     scenario_key: key,
     pricing: legacyMlScenarioRowToSaleXrayPricing(r),
     promotion: {
-      promotion_id: r.promotion_id ?? null,
-      offer_id: r.offer_id ?? m.offer_id ?? null,
+      promotion_id: r.promotion_id ?? contract?.promotion_id ?? null,
+      offer_id: r.offer_id ?? contract?.offer_id ?? offerContract?.offer_id ?? m.offer_id ?? null,
       campaign_id: r.campaign_id ?? m.campaign_id ?? null,
       deal_id: r.deal_id ?? m.deal_id ?? null,
-      type: r.promotion_type ?? r.scenario_type ?? r.kind ?? null,
-      promotion_name: r.promotion_name ?? r.label ?? null,
+      type: r.promotion_type ?? contract?.promotion_type ?? r.scenario_type ?? r.kind ?? null,
+      promotion_name: r.promotion_name ?? contract?.promotion_name ?? r.label ?? null,
       status: r.status ?? null,
-      raw_status: r.ml_promotion_raw_status ?? r.raw_status ?? null,
-      promotion_start_date: r.starts_at ?? null,
-      promotion_end_date: r.ends_at ?? null,
+      raw_status: r.ml_promotion_raw_status ?? offerContract?.ml_raw_status ?? r.raw_status ?? null,
+      promotion_start_date: r.starts_at ?? offerContract?.start_date ?? null,
+      promotion_end_date: r.ends_at ?? offerContract?.end_date ?? null,
       promotion_vigencia_text: vigencia,
       discount_text: r._sale_xray_discount_text ?? null,
       ml_official_identity_key: r.ml_official_identity_key ?? null,
     },
+    promotion_card_contract: cardContract,
+    promotion_offer_contract: offerContract,
+    marketplace: r.marketplace ?? null,
+    ml_financial_audit: r.ml_financial_audit ?? null,
     result: r.result ?? null,
     internal_costs: r.internal_costs ?? null,
   };
@@ -1341,6 +1365,30 @@ export function buildRaioxScenariosFromSaleXrayModalContract(payload) {
     if (prom.ml_official_identity_key != null) row.ml_official_identity_key = prom.ml_official_identity_key;
     if (prom.promotion_start_date != null) row.starts_at = prom.promotion_start_date;
     if (prom.promotion_end_date != null) row.ends_at = prom.promotion_end_date;
+    if (
+      contract.promotion_card_contract != null &&
+      typeof contract.promotion_card_contract === "object"
+    ) {
+      row.promotion_card_contract = contract.promotion_card_contract;
+    } else if (
+      legacy != null &&
+      typeof legacy === "object" &&
+      /** @type {Record<string, unknown>} */ (legacy).promotion_card_contract != null
+    ) {
+      row.promotion_card_contract = /** @type {Record<string, unknown>} */ (legacy).promotion_card_contract;
+    }
+    if (
+      contract.promotion_offer_contract != null &&
+      typeof contract.promotion_offer_contract === "object"
+    ) {
+      row.promotion_offer_contract = contract.promotion_offer_contract;
+    } else if (
+      legacy != null &&
+      typeof legacy === "object" &&
+      /** @type {Record<string, unknown>} */ (legacy).promotion_offer_contract != null
+    ) {
+      row.promotion_offer_contract = /** @type {Record<string, unknown>} */ (legacy).promotion_offer_contract;
+    }
     const rawMl = prom.raw_status != null ? String(prom.raw_status).trim().toLowerCase() : "";
     row.promotion_active = rawMl === "started";
     row.seller_participates = rawMl === "started";

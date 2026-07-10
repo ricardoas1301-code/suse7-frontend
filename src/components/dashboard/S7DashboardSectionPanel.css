@@ -1,0 +1,63 @@
+/* ======================================================================
+   Card pai — blocos do Dashboard (Top 10, Central de Saúde, Resumo Diário)
+   SSOT — respiro limite superior do card → título do bloco
+   ====================================================================== */
+
+.s7-dashboard-section-panel {
+  --s7-section-panel-inset-top: 18px;
+  --s7-section-panel-inset-x: 20px;
+  --s7-section-panel-inset-bottom: 20px;
+  --s7-section-panel-body-gap: 14px;
+  --s7-section-panel-radius: 16px;
+  --s7-section-panel-border: rgba(15, 23, 42, 0.07);
+  --s7-section-panel-bg: #ffffff;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--s7-section-panel-inset-top) var(--s7-section-panel-inset-x)
+    var(--s7-section-panel-inset-bottom);
+  border-radius: var(--s7-section-panel-radius);
+  border: 1px solid var(--s7-section-panel-border);
+  background: var(--s7-section-panel-bg);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 8px 22px rgba(15, 23, 42, 0.04);
+  overflow-x: clip;
+}
+
+.s7-dashboard-section-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-section-panel-body-gap);
+  min-width: 0;
+}
+
+/* Respiro homologado — título externo → card branco (Padrão A / Central de Saúde) */
+.s7-dashboard-section-panel__body .sales-top-ranking-stack--titulo-externo {
+  gap: 10px;
+}
+
+.s7-dashboard-section-panel__body .sales-top-ranking-stack--titulo-externo > .sales-top-ranking__head--external {
+  margin: 0;
+  padding: 0 2px;
+}
+
+.s7-dashboard-section-panel .dashboard-page__executive-kpis {
+  margin-bottom: 0;
+}
+
+.s7-dashboard-section-panel .s7-core-kpis.vendas-page__kpis--executive {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .s7-dashboard-section-panel {
+    --s7-section-panel-inset-top: 16px;
+    --s7-section-panel-inset-x: 14px;
+    --s7-section-panel-inset-bottom: 18px;
+    --s7-section-panel-body-gap: 12px;
+    --s7-section-panel-radius: 14px;
+  }
+}

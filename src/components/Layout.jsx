@@ -4,10 +4,15 @@
 // Responsável apenas pela estrutura visual (Navbar + Conteúdo)
 // ======================================================================
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { logAuthBootstrap } from "../auth/authBootstrapDevLog";
 import { useAuthBootstrap } from "../contexts/AuthBootstrapContext";
+import {
+  getIntroPlaybackDecision,
+  logIntroAuthDev,
+  markIntroPlayedForCurrentSession,
+} from "../auth/introAuthSession.js";
 import { fetchUserProfileSummary } from "../services/userProfileApi.js";
 import "./Layout.css";
 
@@ -35,9 +40,13 @@ import S7Tooltip from "./ui/S7Tooltip";
 import { devCenterBootstrap } from "../services/devCenterApi";
 import RenewalOperationalGate from "../billing/components/RenewalOperationalGate";
 import { mountS7ListTableHeadStickySync } from "../styles/s7ListTableHeadStickySync.js";
+import S7LoginIntroSplash from "./S7LoginIntroSplash.jsx";
 
 export default function Layout() {
   const { ready: authReady, user } = useAuthBootstrap();
+  const [showLoginIntro, setShowLoginIntro] = useState(
+    () => getIntroPlaybackDecision().shouldPlay,
+  );
   // -----------------------------------------------------
   // States de dados da empresa (vindos do profiles)
   // -----------------------------------------------------
@@ -46,6 +55,21 @@ export default function Layout() {
   const [showDevCenterNav, setShowDevCenterNav] = useState(false);
 
   const location = useLocation();
+
+  useEffect(() => {
+    if (!authReady || !user) {
+      setShowLoginIntro(false);
+      return;
+    }
+    const decision = getIntroPlaybackDecision();
+    logIntroAuthDev("intro_playback_decision", decision);
+    setShowLoginIntro(decision.shouldPlay);
+  }, [authReady, user]);
+
+  const handleLoginIntroFinish = useCallback(() => {
+    markIntroPlayedForCurrentSession("layout_intro_complete");
+    setShowLoginIntro(false);
+  }, []);
 
   // S1.4D — sticky do cabeçalho de listas abaixo do card de filtros (visual)
   useEffect(() => {
@@ -110,6 +134,10 @@ useEffect(() => {
     /^\/produtos\/[^/]+$/.test(location.pathname);
 
   const isPricingIntelligencePage = location.pathname.startsWith("/precificacoes/inteligente");
+
+  if (showLoginIntro) {
+    return <S7LoginIntroSplash onFinish={handleLoginIntroFinish} />;
+  }
 
   return (
     <div className={`app-container ${isProductForm ? "app-container--pf-bleed" : ""}`}>

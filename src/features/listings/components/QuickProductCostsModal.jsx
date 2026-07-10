@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../../../supabaseClient";
 import S7Input from "../../../components/ui/S7Input";
+import quickProductCostsIllustration from "../../../assets/modals/quick-product-costs-illustration.png";
+import "../../../styles/tokens/s7-operational-thumb.css";
 
 function formatBrlTypingWithSymbol(raw) {
   const digits = String(raw ?? "").replace(/\D/g, "");
@@ -98,6 +101,15 @@ export default function QuickProductCostsModal({
     };
   }, [open, productId]);
 
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   const handleSave = async () => {
@@ -174,7 +186,7 @@ export default function QuickProductCostsModal({
     }
   };
 
-  return (
+  const modalNode = (
     <div className="anuncios-quick-cost-modal__overlay" onMouseDown={() => (!saving ? onClose() : undefined)} role="presentation">
       <div
         ref={modalRef}
@@ -189,9 +201,20 @@ export default function QuickProductCostsModal({
         <div className="anuncios-quick-cost-modal__footer-summary">
           <div className="anuncios-quick-cost-modal__product anuncios-quick-cost-modal__product--footer">
             {productImageUrl ? (
-              <img src={productImageUrl} alt="" className="anuncios-quick-cost-modal__thumb" loading="lazy" decoding="async" />
+              <div className="anuncios-quick-cost-modal__thumb-wrap s7-operational-thumb-frame s7-operational-thumb-frame--circle">
+                <img
+                  src={productImageUrl}
+                  alt=""
+                  className="anuncios-quick-cost-modal__thumb s7-operational-thumb"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             ) : (
-              <div className="anuncios-quick-cost-modal__thumb anuncios-quick-cost-modal__thumb--placeholder" />
+              <div
+                className="anuncios-quick-cost-modal__thumb-wrap anuncios-quick-cost-modal__thumb--placeholder s7-operational-thumb-frame s7-operational-thumb-frame--circle"
+                aria-hidden
+              />
             )}
             <div className="anuncios-quick-cost-modal__identity-text">
               <p className="anuncios-quick-cost-modal__name" title={title}>
@@ -217,8 +240,9 @@ export default function QuickProductCostsModal({
           </div>
         </div>
         <div className="anuncios-quick-cost-modal__body">
-          <div className="anuncios-quick-cost-modal__costs-col">
-            <S7Input
+          <div className="anuncios-quick-cost-modal__body-row">
+            <div className="anuncios-quick-cost-modal__costs-col">
+              <S7Input
               label="Custo do produto"
               required
               name="quick-product-cost-price"
@@ -257,6 +281,16 @@ export default function QuickProductCostsModal({
               disabled={loading || saving}
               error={fieldErrors.operationalCost}
             />
+            </div>
+            <div className="anuncios-quick-cost-modal__illustration" aria-hidden="true">
+              <img
+                src={quickProductCostsIllustration}
+                alt=""
+                className="anuncios-quick-cost-modal__illustration-img"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
           </div>
           {error ? <p className="anuncios-quick-cost-modal__error">{error}</p> : null}
         </div>
@@ -268,4 +302,6 @@ export default function QuickProductCostsModal({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(modalNode, document.body) : modalNode;
 }

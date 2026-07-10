@@ -5,7 +5,7 @@
 
 import { useMemo } from "react";
 import Decimal from "decimal.js";
-import { Coins, DollarSign, Percent, ShoppingCart, TrendingUp, Wallet } from "lucide-react";
+import { CircleDollarSign, Coins, DollarSign, ShoppingCart, TrendingUp, Wallet } from "lucide-react";
 import S7DailySummaryCard from "../dashboard/S7DailySummaryCard.jsx";
 import "../dashboard/S7DailySummaryCard.css";
 import VendasExecutiveKpiCard from "../sales/VendasExecutiveKpiCard.jsx";
@@ -16,6 +16,7 @@ import {
   buildListingRayXCostsMetrics,
   formatPercentDisplay,
 } from "../../features/listings/rayx/listingFinancialTruthEngine.js";
+import { buildLucroPercentualRayxTooltip } from "../../features/sales/executiveSummaryDisplay.js";
 import { useOptionalProductEditFinancial } from "./ProductEditFinancialContext.jsx";
 import ProductSalesHistorySection from "./ProductSalesHistorySection.jsx";
 import "./ProductFinancialRayXPanel.css";
@@ -67,16 +68,6 @@ function resolveProductRayxMoneyValueSizeClass(value) {
 }
 
 /**
- * @param {unknown} raw
- */
-function parseNonNegativeInt(raw) {
-  if (raw == null) return 0;
-  const n = Number.parseInt(String(raw), 10);
-  if (!Number.isFinite(n) || n < 0) return 0;
-  return n;
-}
-
-/**
  * @param {{
  *   productId?: string | null;
  *   tabTitle?: string;
@@ -85,6 +76,7 @@ function parseNonNegativeInt(raw) {
  *   sideIllustrationSrc?: string;
  *   sideIllustrationAlt?: string;
  *   salesCardSideMetrics?: { visitsValue?: string; conversionValue?: string } | null;
+ *   compact360?: boolean;
  * }} props
  */
 export default function ProductFinancialRayXPanel({
@@ -95,6 +87,7 @@ export default function ProductFinancialRayXPanel({
   sideIllustrationSrc = "/product-rayx/ticket-medio-side-illustration.png",
   sideIllustrationAlt = "",
   salesCardSideMetrics = null,
+  compact360 = false,
 }) {
   const ctxFromProduct = useOptionalProductEditFinancial();
   const ctx = financialData ?? ctxFromProduct;
@@ -143,17 +136,26 @@ export default function ProductFinancialRayXPanel({
   }, [empty, netProfitRaw]);
 
   const profitPercentKpi = useMemo(() => {
-    if (empty || !summary) return { value: "—", subtitle: null, unavailable: true, valueNegative: false };
+    if (empty || !summary) {
+      return { value: "—", subtitle: null, valueDica: null, unavailable: true, valueNegative: false };
+    }
     const grossDec = parseExecutiveApiDecimal(summary.gross_sales_brl);
     const netDec = parseExecutiveApiDecimal(netProfitRaw);
     if (grossDec == null || netDec == null) {
-      return { value: "—", subtitle: "Percentual indisponível", unavailable: true, valueNegative: false };
+      return {
+        value: "—",
+        subtitle: "Percentual indisponível",
+        valueDica: null,
+        unavailable: true,
+        valueNegative: false,
+      };
     }
     const marginDec = grossDec.isZero()
       ? new Decimal(0)
       : netDec.div(grossDec).times(100).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
     return {
       value: formatPercentDisplay(marginDec.toFixed(4), 2),
+      valueDica: buildLucroPercentualRayxTooltip(marginDec),
       subtitle: null,
       unavailable: false,
       valueNegative: marginDec.isNegative(),
@@ -162,45 +164,21 @@ export default function ProductFinancialRayXPanel({
 
   const ticketMedioValue = useMemo(() => {
     if (empty || !summary) return "—";
-    if (isListingScope && financialTruthContract?.profit?.ticket_average_brl) {
-      return formatBrlFromApiString(financialTruthContract.profit.ticket_average_brl);
-    }
     const qty = parseExecutiveSalesQty(summary);
     const gross = parseExecutiveApiDecimal(summary.gross_sales_brl);
     if (!qty || gross == null) return "—";
     return formatBrlFromApiString(gross.div(qty).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2));
-  }, [empty, financialTruthContract, isListingScope, summary]);
+  }, [empty, summary]);
 
   const lucroUnidadeBrlValue = useMemo(() => {
     if (empty || !summary) return "—";
-    if (isListingScope && financialTruthContract) {
-      const units = parseNonNegativeInt(summary.units_sold_display ?? summary.items_quantity_sold);
-      const perUnit = financialTruthContract.profit?.profit_per_unit_brl;
-      if (units <= 0 || perUnit == null) return "—";
-      return formatBrlFromApiString(perUnit);
-    }
     const qty = parseExecutiveSalesQty(summary);
     const profit =
       parseExecutiveApiDecimal(summary.contribution_profit_brl) ??
       parseExecutiveApiDecimal(summary.net_profit_brl);
     if (!qty || profit == null) return "—";
     return formatBrlFromApiString(profit.div(qty).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2));
-  }, [empty, financialTruthContract, isListingScope, summary]);
-
-  const lucroUnidadePctValue = useMemo(() => {
-    if (empty || !summary) return "—";
-    if (isListingScope && financialTruthContract?.profit?.profit_per_unit_pct != null) {
-      return formatPercentDisplay(financialTruthContract.profit.profit_per_unit_pct, 2);
-    }
-    const qty = parseExecutiveSalesQty(summary);
-    const gross = parseExecutiveApiDecimal(summary.gross_sales_brl);
-    const profit =
-      parseExecutiveApiDecimal(summary.contribution_profit_brl) ??
-      parseExecutiveApiDecimal(summary.net_profit_brl);
-    if (!qty || gross == null || profit == null || gross.isZero()) return "—";
-    const pct = profit.div(gross).times(100).toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4);
-    return formatPercentDisplay(pct, 2);
-  }, [empty, financialTruthContract, isListingScope, summary]);
+  }, [empty, summary]);
 
   const repasseMarketplaceValue = useMemo(() => {
     if (empty || !summary) return "—";
@@ -240,15 +218,6 @@ export default function ProductFinancialRayXPanel({
     return qty != null && profit != null && profit.isNegative();
   }, [empty, summary]);
 
-  const lucroUnidadePctNegative = useMemo(() => {
-    if (empty || !summary) return false;
-    const gross = parseExecutiveApiDecimal(summary.gross_sales_brl);
-    const profit =
-      parseExecutiveApiDecimal(summary.contribution_profit_brl) ??
-      parseExecutiveApiDecimal(summary.net_profit_brl);
-    return gross != null && profit != null && !gross.isZero() && profit.isNegative();
-  }, [empty, summary]);
-
   const repasseMarketplaceNegative = useMemo(() => {
     if (empty || !summary) return false;
     const payout =
@@ -272,7 +241,9 @@ export default function ProductFinancialRayXPanel({
   const hasProduct = ctx != null || (productId != null && String(productId).trim() !== "");
 
   return (
-    <div className="pf-product-rayx">
+    <div
+      className={["pf-product-rayx", compact360 ? "s7-rayx-sales-compact" : ""].filter(Boolean).join(" ")}
+    >
       <div className="pf-product-rayx__intro">
         <h2 className="pf-tab-title">{tabTitle}</h2>
       </div>
@@ -345,16 +316,16 @@ export default function ProductFinancialRayXPanel({
               <div className={resolveProductRayxKpiCellClass()}>
                 <VendasExecutiveKpiCard
                   title="Lucro (%)"
-                  valueIcon={<Percent className="pf-product-rayx__kpi-value-icon pf-product-rayx__kpi-value-icon--margin" />}
+                  valueIcon={
+                    <TrendingUp
+                      className="pf-product-rayx__kpi-value-icon pf-product-rayx__kpi-value-icon--margin"
+                      aria-hidden
+                    />
+                  }
                   tone="conversion"
                   value={profitPercentKpi.value}
-                  subtitle={
-                    profitPercentKpi.unavailable
-                      ? profitPercentKpi.subtitle
-                      : isListingScope
-                        ? "Percentual arredondado para exibição."
-                        : null
-                  }
+                  valueDica={profitPercentKpi.valueDica}
+                  subtitle={profitPercentKpi.unavailable ? profitPercentKpi.subtitle : null}
                   unavailable={profitPercentKpi.unavailable}
                   loading={executiveLoading}
                   error={executiveError}
@@ -415,56 +386,34 @@ export default function ProductFinancialRayXPanel({
                   tituloExterno
                 />
               </div>
-              {isListingScope ? (
-                <div
-                  className={resolveProductRayxKpiCellClass(
-                    "pf-product-rayx__kpi",
-                    "pf-product-rayx__kpi--money",
-                    "pf-product-rayx__kpi-cell--title-compact",
-                    repasseMarketplaceValueSizeClass,
-                  )}
-                >
-                  <VendasExecutiveKpiCard
-                    title="Repasse do Marketplace (R$)"
-                    valueIcon={
-                      <TrendingUp className="pf-product-rayx__kpi-value-icon pf-product-rayx__kpi-value-icon--unit-margin" />
-                    }
-                    titleClassName="vendas-executive-kpi__title--compact"
-                    tone="revenue"
-                    value={repasseMarketplaceValue}
-                    loading={executiveLoading}
-                    error={executiveError}
-                    empty={empty}
-                    valueClassName={
-                      repasseMarketplaceNegative ? "vendas-executive-kpi__value--negative" : ""
-                    }
-                    tituloExterno
-                  />
-                </div>
-              ) : (
-                <div
-                  className={resolveProductRayxKpiCellClass(
-                    "pf-product-rayx__kpi-cell--title-compact",
-                  )}
-                >
-                  <VendasExecutiveKpiCard
-                    title="Lucro por unidade vendida (%)"
-                    valueIcon={
-                      <TrendingUp className="pf-product-rayx__kpi-value-icon pf-product-rayx__kpi-value-icon--unit-margin" />
-                    }
-                    titleClassName="vendas-executive-kpi__title--compact"
-                    tone="conversion"
-                    value={lucroUnidadePctValue}
-                    loading={executiveLoading}
-                    error={executiveError}
-                    empty={empty}
-                    valueClassName={
-                      lucroUnidadePctNegative ? "vendas-executive-kpi__value--negative" : ""
-                    }
-                    tituloExterno
-                  />
-                </div>
-              )}
+              <div
+                className={resolveProductRayxKpiCellClass(
+                  "pf-product-rayx__kpi",
+                  "pf-product-rayx__kpi--money",
+                  "pf-product-rayx__kpi-cell--title-compact",
+                  repasseMarketplaceValueSizeClass,
+                )}
+              >
+                <VendasExecutiveKpiCard
+                  title="Repasse do Marketplace (R$)"
+                  valueIcon={
+                    <CircleDollarSign
+                      className="pf-product-rayx__kpi-value-icon pf-product-rayx__kpi-value-icon--repasse"
+                      aria-hidden
+                    />
+                  }
+                  titleClassName="vendas-executive-kpi__title--compact"
+                  tone="revenue"
+                  value={repasseMarketplaceValue}
+                  loading={executiveLoading}
+                  error={executiveError}
+                  empty={empty}
+                  valueClassName={
+                    repasseMarketplaceNegative ? "vendas-executive-kpi__value--negative" : ""
+                  }
+                  tituloExterno
+                />
+              </div>
             </div>
           </section>
 

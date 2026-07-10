@@ -18,6 +18,66 @@
   line-height: 1.2;
 }
 
+.pf-product-sales-history__subtitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--s7-orange, #ff8533);
+  line-height: 1.2;
+}
+
+.pf-product-sales-history--embedded {
+  margin-top: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-product-sales-history--embedded .pf-product-sales-history__head {
+  flex-shrink: 0;
+}
+
+.pf-product-sales-history--embedded .pf-product-sales-history__hint {
+  flex-shrink: 0;
+}
+
+.pf-product-sales-history--embedded .pf-product-sales-history__table-block {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.pf-product-sales-history--embedded .pf-product-sales-history__table-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-product-sales-history--embedded .pf-product-sales-history__table-hscroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.pf-product-sales-history--embedded .pf-product-sales-history__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.pf-product-sales-history--embedded .s7-pagination {
+  flex-shrink: 0;
+}
+
+/* Gap título → subtítulo — paridade Raio-X Produto × Anúncio */
+.pf-container--sales-history > .pf-tab-title,
+.listing-rayx-modal__scrollable-tab > .pf-tab-title {
+  flex-shrink: 0;
+  margin: 0 0 1.125rem;
+}
+
 .pf-product-sales-history__count {
   font-size: 12px;
   font-weight: 600;
@@ -94,25 +154,74 @@
   background: rgba(248, 250, 252, 0.95);
 }
 
+.pf-product-sales-history__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pf-product-sales-history__col-rayx {
+  width: 4%;
+  padding-left: 4px !important;
+  padding-right: 2px !important;
+}
+
+.pf-product-sales-history__rayx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 2px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  transition: background 0.15s ease;
+}
+
+.pf-product-sales-history__rayx-btn:hover {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.pf-product-sales-history__rayx-btn:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 1px;
+}
+
+.pf-product-sales-history__rayx-btn-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
 .pf-product-sales-history__table th:nth-child(1),
 .pf-product-sales-history__table td:nth-child(1) {
-  width: 8%;
+  width: 4%;
 }
 
 .pf-product-sales-history__table th:nth-child(2),
 .pf-product-sales-history__table td:nth-child(2) {
-  width: 17%;
-  min-width: 0;
+  width: 7%;
 }
 
 .pf-product-sales-history__table th:nth-child(3),
 .pf-product-sales-history__table td:nth-child(3) {
-  width: 10%;
+  width: 15%;
+  min-width: 0;
 }
 
 .pf-product-sales-history__table th:nth-child(4),
 .pf-product-sales-history__table td:nth-child(4) {
-  width: 5%;
+  width: 10%;
 }
 
 .pf-product-sales-history__table th:nth-child(5),
@@ -122,7 +231,7 @@
 
 .pf-product-sales-history__table th:nth-child(6),
 .pf-product-sales-history__table td:nth-child(6) {
-  width: 8%;
+  width: 5%;
 }
 
 .pf-product-sales-history__table th:nth-child(7),
@@ -132,17 +241,20 @@
 
 .pf-product-sales-history__table th:nth-child(8),
 .pf-product-sales-history__table td:nth-child(8) {
-  width: 7%;
+  width: 8%;
 }
 
 .pf-product-sales-history__table th:nth-child(9),
 .pf-product-sales-history__table td:nth-child(9) {
+  width: 7%;
+}
+
+.pf-product-sales-history__table th:nth-child(10),
+.pf-product-sales-history__table td:nth-child(10) {
   width: 11%;
   min-width: 0;
 }
 
-.pf-product-sales-history__table th:nth-child(4),
-.pf-product-sales-history__table td:nth-child(4),
 .pf-product-sales-history__table th:nth-child(5),
 .pf-product-sales-history__table td:nth-child(5),
 .pf-product-sales-history__table th:nth-child(6),
@@ -152,16 +264,18 @@
 .pf-product-sales-history__table th:nth-child(8),
 .pf-product-sales-history__table td:nth-child(8),
 .pf-product-sales-history__table th:nth-child(9),
-.pf-product-sales-history__table td:nth-child(9) {
+.pf-product-sales-history__table td:nth-child(9),
+.pf-product-sales-history__table th:nth-child(10),
+.pf-product-sales-history__table td:nth-child(10) {
   padding-left: 4px;
   padding-right: 4px;
 }
 
-.pf-product-sales-history__table tbody td:nth-child(2) .pf-product-sales-history__copy-row {
+.pf-product-sales-history__table tbody td:nth-child(3) .pf-product-sales-history__copy-row {
   flex-wrap: nowrap;
 }
 
-.pf-product-sales-history__table tbody td:nth-child(2) .pf-product-sales-history__cell-text--truncate {
+.pf-product-sales-history__table tbody td:nth-child(3) .pf-product-sales-history__cell-text--truncate {
   overflow: visible;
   text-overflow: clip;
 }
@@ -187,8 +301,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.pf-product-sales-history__table tbody td:nth-child(2) .pf-product-sales-history__cell-text,
-.pf-product-sales-history__table tbody td:nth-child(3) .pf-product-sales-history__cell-text {
+.pf-product-sales-history__table tbody td:nth-child(3) .pf-product-sales-history__cell-text,
+.pf-product-sales-history__table tbody td:nth-child(4) .pf-product-sales-history__cell-text {
   color: #64748b !important;
 }
 
@@ -262,11 +376,11 @@
   font-weight: 700;
 }
 
-.pf-product-sales-history__table tbody td:nth-child(2) .pf-product-sales-history__id-text {
+.pf-product-sales-history__table tbody td:nth-child(3) .pf-product-sales-history__id-text {
   font-size: 11px;
 }
 
-.pf-product-sales-history__table td:nth-child(9) {
+.pf-product-sales-history__table td:nth-child(10) {
   overflow: hidden;
   word-wrap: break-word;
 }

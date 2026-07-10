@@ -1,61 +1,271 @@
 /* ======================================================================
-   Ritmo vertical — páginas catálogo (Vendas, Precificações, Anúncios,
-   Produtos, Concorrência). Base: gap Produtos homologado (−20%).
-   - menu → KPIs / filtros: --s7-catalog-block-gap (12px total)
-   - KPIs / filtros → lista: mesmo --s7-catalog-block-gap
+
+   Ritmo vertical — páginas operacionais (Dashboard, Vendas, Precificações,
+
+   Anúncios, Produtos, Concorrência).
+
+   Suspiro uniforme de 12px: menu, laterais, blocos consecutivos e rodapé.
+
 ====================================================================== */
 
+
+
 :root {
-  --s7-catalog-page-inset-top: 5px;
+
+  --s7-catalog-page-inset: 12px;
+
   --s7-catalog-block-gap: 12px;
-  --s7-catalog-filter-offset-top: 7px;
+
+  --s7-page-rhythm: 12px;
+
+  /* Legado — shells internos não somam inset extra (frame fica no .page-content) */
+
+  --s7-catalog-page-inset-top: 0;
+
+  --s7-catalog-filter-offset-top: 0;
+
 }
 
-/* Shells de rota — padding-top unificado */
-.anuncios-catalog {
-  padding-top: var(--s7-catalog-page-inset-top);
+
+
+/* Frame da rota — Dashboard: regra dedicada em Dashboard.css */
+
+.page-content:has(.products-catalog),
+
+.page-content:has(.anuncios-catalog),
+
+.page-content:has(.vendas-page:not(.dashboard-page)),
+
+.page-content:has(.concorrencia-catalog),
+
+.page-content:has(.listings-workspace) {
+
+  padding: var(--s7-catalog-page-inset, 12px);
+
+  scrollbar-gutter: stable;
+
 }
 
-/* KPIs / rankings superiores */
-.anuncios-catalog > .anuncios-catalog__kpis,
-.anuncios-catalog > .s7-core-kpis.anuncios-catalog__kpis {
-  margin-top: 0;
-  margin-bottom: var(--s7-catalog-block-gap);
-}
 
-.s7-core-kpis.anuncios-catalog__kpis {
-  margin-bottom: var(--s7-catalog-block-gap);
-}
-
-/* Card busca + filtros — topo (quando é o 1º bloco visível após o menu) */
-.anuncios-catalog > .products-catalog__controls.s7-catalog-filter-card {
-  margin-top: var(--s7-catalog-filter-offset-top);
-}
-
-/* Sem gap duplo quando KPIs/rankings precedem filtros */
-.anuncios-catalog > .anuncios-catalog__kpis ~ .products-catalog__controls.s7-catalog-filter-card,
-.anuncios-catalog > .s7-core-kpis ~ .products-catalog__controls.s7-catalog-filter-card {
-  margin-top: 0;
-}
-
-/* Card busca + filtros — base antes da lista (Dashboard e rotas legadas) */
-.vendas-filters-card,
-.page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
-.page-content .anuncios-catalog > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible {
-  margin-bottom: var(--s7-catalog-block-gap);
-}
-
-/* Sem gap duplo — Precificações / Anúncios (card colapsável) após KPIs */
-.page-content .anuncios-catalog > .anuncios-catalog__kpis ~ .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
-.page-content .anuncios-catalog > .s7-core-kpis ~ .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
-.page-content .anuncios-catalog > .anuncios-catalog__kpis ~ .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible,
-.page-content .anuncios-catalog > .s7-core-kpis ~ .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible {
-  margin-top: 0;
-}
 
 @media (max-width: 768px) {
-  .page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
-  .page-content .concorrencia-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card {
-    margin-bottom: var(--s7-catalog-block-gap);
+
+  .page-content:has(.products-catalog),
+
+  .page-content:has(.anuncios-catalog),
+
+  .page-content:has(.vendas-page:not(.dashboard-page)),
+
+  .page-content:has(.concorrencia-catalog),
+
+  .page-content:has(.listings-workspace) {
+
+    padding: var(--s7-catalog-page-inset, 12px);
+
   }
+
 }
+
+
+
+/* Shells internos — largura total dentro do frame de 12px */
+
+.products-catalog,
+
+.anuncios-catalog,
+
+.vendas-page:not(.dashboard-page),
+
+.anuncios-page,
+
+.precificacoes-page,
+
+.concorrencia-catalog.products-catalog {
+
+  padding: 0;
+
+  width: 100%;
+
+  max-width: 100%;
+
+  min-width: 0;
+
+  box-sizing: border-box;
+
+}
+
+
+
+/* Bloco executivo (Top 10 / centrais de saúde) */
+
+.s7-operational-executive-block,
+
+.page-content > .s7-operational-executive-block {
+
+  margin-top: 0;
+
+  margin-bottom: var(--s7-catalog-block-gap, 12px);
+
+}
+
+
+
+/* /vendas — Top 10→lista: spacer estrutural em .list-sticky-chrome (VendasPage.css) */
+
+.vendas-page > .s7-operational-executive-block {
+
+  margin-top: 0;
+
+  margin-bottom: 0;
+
+}
+
+
+
+.vendas-page > .vendas-page__operacao-shell > .vendas-page__table-block > .vendas-page__list-sticky-chrome > .vendas-filters-card {
+
+  margin-top: 0;
+
+  margin-bottom: 0;
+
+}
+
+
+
+.vendas-page > .vendas-page__operacao-shell > .vendas-page__table-block {
+
+  margin-top: 0;
+
+  margin-bottom: 0;
+
+}
+
+
+
+.vendas-page > .vendas-page__operacao-shell > .vendas-page__pagination {
+
+  margin-top: 0;
+
+  margin-bottom: 0;
+
+}
+
+
+
+/* KPIs / rankings superiores (rotas legadas com KPIs no catálogo) */
+
+.anuncios-catalog > .anuncios-catalog__kpis,
+
+.anuncios-catalog > .s7-core-kpis.anuncios-catalog__kpis,
+
+.s7-core-kpis.anuncios-catalog__kpis {
+
+  margin-top: 0;
+
+  margin-bottom: var(--s7-catalog-block-gap, 12px);
+
+}
+
+
+
+/* Card busca + filtros — base antes da lista */
+
+.vendas-filters-card,
+
+.page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+
+.products-catalog > .products-filters-card.s7-sticky-filters,
+
+.products-catalog > .concorrencia-filters-card.s7-sticky-filters,
+
+.concorrencia-catalog > .concorrencia-filters-card.s7-sticky-filters {
+
+  margin-top: 0;
+
+  margin-bottom: var(--s7-catalog-block-gap, 12px);
+
+}
+
+
+
+/* Anúncios / Precificações — gap via .anuncios-catalog__operacao-stack (flex) */
+
+.page-content .anuncios-catalog__operacao-stack > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card {
+
+  margin-bottom: 0;
+
+}
+
+
+
+/* Sem gap duplo quando bloco executivo / KPIs precedem filtros */
+
+.anuncios-catalog > .anuncios-catalog__kpis ~ .products-catalog__controls.s7-catalog-filter-card,
+
+.anuncios-catalog > .s7-core-kpis ~ .products-catalog__controls.s7-catalog-filter-card,
+
+.page-content .anuncios-catalog > .anuncios-catalog__kpis ~ .anuncios-catalog__operacao-stack > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+
+.page-content .anuncios-catalog > .s7-core-kpis ~ .anuncios-catalog__operacao-stack > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+
+.page-content .anuncios-catalog > .anuncios-catalog__kpis ~ .anuncios-catalog__operacao-stack > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible,
+
+.page-content .anuncios-catalog > .s7-core-kpis ~ .anuncios-catalog__operacao-stack > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible,
+
+.products-catalog > .s7-operational-executive-block ~ .products-filters-card.s7-sticky-filters,
+
+.products-catalog > .s7-operational-executive-block ~ .concorrencia-filters-card.s7-sticky-filters,
+
+.products-catalog > .products-catalog__rankings ~ .products-filters-card.s7-sticky-filters,
+
+.products-catalog > .s7-core-kpis ~ .products-filters-card.s7-sticky-filters,
+
+.concorrencia-catalog > .s7-operational-executive-block ~ .concorrencia-filters-card.s7-sticky-filters,
+
+.vendas-page > .s7-operational-executive-block ~ .vendas-page__operacao-shell,
+
+.vendas-page > .s7-operational-executive-block ~ .vendas-filters-card.s7-sticky-filters,
+
+.vendas-page > .s7-core-kpis ~ .vendas-filters-card.s7-sticky-filters,
+
+.precificacoes-page > .s7-operational-executive-block ~ .listings-workspace--precificacoes,
+
+.anuncios-page > .s7-operational-executive-block ~ .listings-workspace--anuncios {
+
+  margin-top: 0;
+
+}
+
+
+
+/* Lista / estados vazios — sem respiro extra no rodapé (page-content já tem 12px) */
+
+.products-catalog__table-block,
+
+.vendas-page > .vendas-page__operacao-shell > .vendas-page__table-block,
+
+.vendas-page > .vendas-page__table-block,
+
+.vendas-page > .vendas-page__mobile-list {
+
+  margin-top: 0;
+
+  margin-bottom: 0;
+
+}
+
+
+
+@media (max-width: 768px) {
+
+  .page-content .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+
+  .page-content .concorrencia-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card {
+
+    margin-bottom: var(--s7-catalog-block-gap, 12px);
+
+  }
+
+}
+
+

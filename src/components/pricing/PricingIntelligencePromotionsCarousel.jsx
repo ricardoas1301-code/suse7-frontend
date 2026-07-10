@@ -12,17 +12,24 @@ import { logPiPromosAuditRendered } from "./pricingPromotionsAudit.js";
 /**
  * @param {{
  *   rows: { scenario: unknown; group: string }[];
- *   selectedSelectionId: string | null;
+ *   selectedSelectionIds?: string[];
+ *   selectedSelectionId?: string | null;
  *   onSelectSelectionId: (selectionId: string) => void;
  * }} props
  */
 export function PricingIntelligencePromotionsCarousel({
   rows,
-  selectedSelectionId,
+  selectedSelectionIds = [],
+  selectedSelectionId = null,
   onSelectSelectionId,
 }) {
   const trackRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const cardRefs = useRef(/** @type {Record<string, HTMLButtonElement | null>} */ ({}));
+
+  const idsSelecionados = useMemo(() => {
+    if (selectedSelectionIds.length > 0) return selectedSelectionIds;
+    return selectedSelectionId != null ? [selectedSelectionId] : [];
+  }, [selectedSelectionIds, selectedSelectionId]);
 
   const itens = useMemo(
     () =>
@@ -37,18 +44,19 @@ export function PricingIntelligencePromotionsCarousel({
     logPiPromosAuditRendered(itens.length, null);
   }, [itens.length]);
 
-  const indiceSelecionado = useMemo(() => {
-    if (selectedSelectionId == null) return 0;
-    const idx = itens.findIndex(({ meta }) => meta.selectionId === selectedSelectionId);
+  const indiceFoco = useMemo(() => {
+    const alvo = idsSelecionados[idsSelecionados.length - 1];
+    if (alvo == null) return 0;
+    const idx = itens.findIndex(({ meta }) => meta.selectionId === alvo);
     return idx >= 0 ? idx : 0;
-  }, [itens, selectedSelectionId]);
+  }, [itens, idsSelecionados]);
 
   useEffect(() => {
-    const selectionId = itens[indiceSelecionado]?.meta.selectionId;
+    const selectionId = itens[indiceFoco]?.meta.selectionId;
     if (selectionId == null) return;
     const btn = cardRefs.current[selectionId];
     btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  }, [indiceSelecionado, itens]);
+  }, [indiceFoco, itens]);
 
   const selecionarIndice = useCallback(
     (/** @type {number} */ idx) => {
@@ -60,12 +68,12 @@ export function PricingIntelligencePromotionsCarousel({
   );
 
   const voltarSelecao = useCallback(() => {
-    if (indiceSelecionado > 0) selecionarIndice(indiceSelecionado - 1);
-  }, [indiceSelecionado, selecionarIndice]);
+    if (indiceFoco > 0) selecionarIndice(indiceFoco - 1);
+  }, [indiceFoco, selecionarIndice]);
 
   const avancarSelecao = useCallback(() => {
-    if (indiceSelecionado < itens.length - 1) selecionarIndice(indiceSelecionado + 1);
-  }, [indiceSelecionado, itens.length, selecionarIndice]);
+    if (indiceFoco < itens.length - 1) selecionarIndice(indiceFoco + 1);
+  }, [indiceFoco, itens.length, selecionarIndice]);
 
   if (itens.length === 0) return null;
 
@@ -78,7 +86,7 @@ export function PricingIntelligencePromotionsCarousel({
           type="button"
           className="pricing-intelligence-page__promotions-carousel-nav"
           aria-label="Promoção anterior"
-          disabled={indiceSelecionado <= 0}
+          disabled={indiceFoco <= 0}
           onClick={voltarSelecao}
         >
           <S7Icon name="chevron_left" size={18} strokeWidth={2} />
@@ -89,11 +97,13 @@ export function PricingIntelligencePromotionsCarousel({
         <div
           ref={trackRef}
           className="pricing-intelligence-page__promotions-carousel-track"
-          role="tablist"
-          aria-label="Selecionar promoção"
+          role="listbox"
+          aria-label="Selecionar promoção para comparar"
+          aria-multiselectable="true"
         >
-          {itens.map(({ meta }, index) => {
-            const ativo = index === indiceSelecionado;
+          {itens.map(({ meta }) => {
+            const indiceSlot = idsSelecionados.indexOf(meta.selectionId);
+            const selecionado = indiceSlot >= 0;
             return (
               <button
                 key={meta.selectionId}
@@ -101,12 +111,18 @@ export function PricingIntelligencePromotionsCarousel({
                 ref={(el) => {
                   cardRefs.current[meta.selectionId] = el;
                 }}
-                role="tab"
-                aria-selected={ativo}
+                role="option"
+                aria-selected={selecionado}
                 className={[
                   "pricing-intelligence-page__promotion-mini-card",
                   `pricing-intelligence-page__promotion-mini-card--${meta.statusKind}`,
-                  ativo ? "pricing-intelligence-page__promotion-mini-card--selected" : "",
+                  selecionado ? "pricing-intelligence-page__promotion-mini-card--selected" : "",
+                  selecionado && indiceSlot === 0
+                    ? "pricing-intelligence-page__promotion-mini-card--slot-a"
+                    : "",
+                  selecionado && indiceSlot === 1
+                    ? "pricing-intelligence-page__promotion-mini-card--slot-b"
+                    : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -115,6 +131,12 @@ export function PricingIntelligencePromotionsCarousel({
                 <span className="pricing-intelligence-page__promotion-mini-card-name" title={meta.nome}>
                   {meta.nome}
                 </span>
+                {meta.precoPromocional ? (
+                  <span className="pricing-intelligence-page__promotion-mini-card-price">{meta.precoPromocional}</span>
+                ) : null}
+                {meta.descontoResumo ? (
+                  <span className="pricing-intelligence-page__promotion-mini-card-discount">{meta.descontoResumo}</span>
+                ) : null}
                 <span
                   className={[
                     "pricing-intelligence-page__promotion-mini-card-status",
@@ -125,6 +147,11 @@ export function PricingIntelligencePromotionsCarousel({
                 >
                   {meta.status}
                 </span>
+                {selecionado ? (
+                  <span className="pricing-intelligence-page__promotion-mini-card-slot-badge" aria-hidden>
+                    {indiceSlot === 0 ? "A" : "B"}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -136,7 +163,7 @@ export function PricingIntelligencePromotionsCarousel({
           type="button"
           className="pricing-intelligence-page__promotions-carousel-nav"
           aria-label="Próxima promoção"
-          disabled={indiceSelecionado >= itens.length - 1}
+          disabled={indiceFoco >= itens.length - 1}
           onClick={avancarSelecao}
         >
           <S7Icon name="chevron_right" size={18} strokeWidth={2} />

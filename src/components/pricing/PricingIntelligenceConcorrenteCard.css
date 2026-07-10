@@ -17,6 +17,7 @@
 
 .pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-thumb {
   width: calc(100% * var(--s7-pi-competitor-thumb-scale-refined));
+  background: #fff;
 }
 
 .pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card {
@@ -70,8 +71,13 @@
 .pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
   display: block;
+  transform: scale(1.06);
+  transform-origin: center center;
 }
 
 .pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-price {

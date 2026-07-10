@@ -1,0 +1,1568 @@
+/* ======================================================================
+   Central de Saúde dos Produtos — Dashboard executivo
+   ====================================================================== */
+
+.s7-products-health-center {
+  margin-bottom: 0;
+}
+
+.s7-products-health-center__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.s7-products-health-center__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.s7-products-health-center__subtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--s7-muted, #64748b);
+}
+
+.s7-products-health-center__meta {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(100, 116, 139, 0.95);
+}
+
+.s7-products-health-center__cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  --s7-products-health-main-card-h: var(--s7-top-kpi-large-h, 264px);
+  --s7-products-health-main-card-head-chrome: 38px;
+}
+
+/* Padrão Top 10 — título externo + card branco fixo */
+.s7-products-health-center__main-card-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: calc(var(--s7-products-health-main-card-h) + var(--s7-products-health-main-card-head-chrome));
+  min-height: calc(var(--s7-products-health-main-card-h) + var(--s7-products-health-main-card-head-chrome));
+}
+
+.s7-products-health-center__main-card-head {
+  margin: 0;
+  padding: 0 2px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-products-health-center__main-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  height: var(--s7-products-health-main-card-h);
+  min-height: var(--s7-products-health-main-card-h);
+  max-height: var(--s7-products-health-main-card-h);
+  border: 1px solid #e2e8f0;
+  border-top: 1px solid #e2e8f0;
+  border-radius: var(--s7-list-table-radius, 10px);
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.s7-products-health-center__main-card-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 12px 14px 14px;
+  overflow: hidden;
+}
+
+.s7-products-health-center__main-card-body--registration,
+.s7-products-health-center__main-card-body--operational,
+.s7-products-health-center__main-card-body--commercial {
+  padding: 6px 6px 6px;
+  justify-content: flex-start;
+  gap: 2px;
+}
+
+.s7-products-health-center__health-podium-total {
+  margin: 0;
+  padding: 0 4px 2px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--s7-muted, #64748b);
+  letter-spacing: -0.01em;
+}
+
+/* Linha inferior — KPIs executivos (padrão B unificado via Dashboard.css + overrides locais) */
+
+/* +33% sobre clamp base do KPI executivo (22–28px → ~29–37px) */
+.s7-products-health-center__executive-kpis .vendas-executive-kpi__value {
+  font-size: clamp(29px, 3.72vw, 37px);
+}
+
+@media (max-width: 1180px) {
+  .s7-products-health-center__executive-kpis .vendas-executive-kpi__value {
+    font-size: clamp(27px, 3.32vw, 35px);
+  }
+
+  .s7-products-health-center__executive-kpis
+    .vendas-executive-kpi.s7-kpi-chrome--health-dead-stock
+    .vendas-executive-kpi__value {
+    font-size: clamp(15px, 2.05vw, 26px);
+  }
+}
+
+@media (max-width: 640px) {
+  .s7-products-health-center__executive-kpis .vendas-executive-kpi__value {
+    font-size: clamp(24px, 6.9vw, 32px);
+  }
+
+  .s7-products-health-center__executive-kpis
+    .vendas-executive-kpi.s7-kpi-chrome--health-dead-stock
+    .vendas-executive-kpi__value {
+    font-size: clamp(13px, 3.8vw, 21px);
+  }
+}
+
+.s7-products-health-kpi-value--offline {
+  color: #dc2626 !important;
+}
+
+.s7-products-health-kpi-value--attention {
+  color: #ea580c !important;
+}
+
+.s7-products-health-kpi-value--with-sales {
+  color: #6366f1 !important;
+}
+
+.s7-products-health-kpi-value--dual-active-sales {
+  font-size: clamp(24px, 3.1vw, 32px) !important;
+  letter-spacing: -0.015em;
+  color: #6366f1 !important;
+  margin: 0;
+  width: auto;
+}
+
+.s7-products-health-kpi-dual-value {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.s7-products-health-kpi-dual-value__segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.s7-products-health-kpi-dual-value__cart-icon {
+  width: 24px;
+  height: 24px;
+  color: #6366f1;
+  flex: 0 0 auto;
+}
+
+.s7-products-health-kpi-dual-value__sep {
+  font-size: clamp(22px, 2.8vw, 28px);
+  font-weight: 700;
+  line-height: 1;
+  color: #6366f1;
+  opacity: 0.72;
+  flex: 0 0 auto;
+}
+
+.s7-products-health-kpi-icon--active {
+  width: 26px;
+  height: 26px;
+  color: #15803d;
+}
+
+.s7-products-health-kpi-icon--offline {
+  width: 22px;
+  height: 22px;
+  color: #dc2626;
+}
+
+.s7-products-health-kpi-icon--no-sales {
+  width: 22px;
+  height: 22px;
+  color: #6366f1;
+}
+
+/* Carrinho + X sobreposto — KPI ativos sem venda */
+.s7-products-health-kpi-icon-stack {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+}
+
+.s7-products-health-kpi-icon-stack--no-sales {
+  color: #6366f1;
+}
+
+.s7-products-health-kpi-icon-stack__cart {
+  width: 26px;
+  height: 26px;
+  color: #6366f1;
+}
+
+.s7-products-health-kpi-icon-stack__x {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  transform: translate(-50%, -50%);
+  color: #6366f1;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 1px #fff);
+}
+
+.s7-products-health-kpi-icon--attention {
+  width: 22px;
+  height: 22px;
+  color: #ea580c;
+}
+
+/* Pódio executivo — 5 faixas (espírito Top 10) */
+.s7-products-health-center__registration-podium,
+.s7-products-health-center__operational-podium,
+.s7-products-health-center__commercial-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: stretch;
+  gap: 4px;
+  width: 100%;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.s7-products-health-center__commercial-podium > .s7-tooltip-portal-root {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+}
+
+.s7-products-health-center__podium-tooltip.s7-tooltip-trigger,
+.s7-products-health-center__commercial-podium .s7-products-health-center__podium-column.s7-tooltip-trigger {
+  color: inherit;
+  cursor: default;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  outline: none;
+}
+
+.s7-products-health-center__podium-tooltip.s7-tooltip-trigger:hover,
+.s7-products-health-center__podium-tooltip.s7-tooltip-trigger:focus-visible,
+.s7-products-health-center__commercial-podium .s7-products-health-center__podium-column.s7-tooltip-trigger:hover,
+.s7-products-health-center__commercial-podium .s7-products-health-center__podium-column.s7-tooltip-trigger:focus-visible {
+  color: inherit;
+}
+
+.s7-products-health-center__commercial-podium .s7-products-health-center__podium-column.s7-tooltip-trigger:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 1px;
+  border-radius: 8px;
+}
+
+.s7-products-health-center__podium-column {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.s7-products-health-center__podium-gauge-wrap {
+  width: 100%;
+  max-width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 1px;
+  min-height: 0;
+}
+
+.s7-products-health-center__podium-column--lead .s7-products-health-center__podium-gauge-wrap {
+  width: 100%;
+}
+
+.s7-products-health-center__podium-gauge-wrap .s7-listing-health-mini-gauge {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.s7-products-health-center__podium-column--complete .s7-products-health-center__podium-gauge-wrap {
+  flex: 0 0 32%;
+  max-height: 32%;
+}
+
+.s7-products-health-center__podium-column--excellent .s7-products-health-center__podium-gauge-wrap {
+  flex: 0 0 28%;
+  max-height: 28%;
+}
+
+.s7-products-health-center__podium-column--attention .s7-products-health-center__podium-gauge-wrap {
+  flex: 0 0 26%;
+  max-height: 26%;
+}
+
+.s7-products-health-center__podium-column--critical .s7-products-health-center__podium-gauge-wrap {
+  flex: 0 0 24%;
+  max-height: 24%;
+}
+
+.s7-products-health-center__podium-column--urgent .s7-products-health-center__podium-gauge-wrap {
+  flex: 0 0 22%;
+  max-height: 22%;
+}
+
+.s7-products-health-center__podium-gauge-wrap .s7-listing-health-mini-gauge .php-wrap--semi {
+  width: 100% !important;
+  height: 100% !important;
+  --php-size: 100%;
+}
+
+.s7-products-health-center__podium-gauge-wrap .s7-listing-health-mini-gauge .php-wrap--semi .php-svg--semi {
+  width: 100%;
+  height: calc(100% - 2px);
+}
+
+.s7-products-health-center__podium-gauge-wrap .s7-listing-health-mini-gauge .php-wrap--semi .php-content.php-content--no-label {
+  transform: translateY(var(--s7-mini-gauge-percent-offset, 8%));
+}
+
+.s7-products-health-center__podium-gauge-wrap .s7-listing-health-mini-gauge .php-wrap--semi .php-percent {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 2px;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+  font-size: clamp(9px, 50%, 16px);
+}
+
+.s7-products-health-center__podium-column--lead .s7-products-health-center__podium-gauge-wrap .s7-listing-health-mini-gauge .php-wrap--semi .php-percent {
+  font-size: clamp(16px, 58%, 26px);
+}
+
+.s7-products-health-center__podium-step {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 8px 8px 4px 4px;
+  padding: 5px 3px 6px;
+  box-sizing: border-box;
+  min-height: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+/* Alturas semânticas — % da coluna (hierarquia da faixa, não quantidade) */
+.s7-products-health-center__podium-column--complete .s7-products-health-center__podium-step {
+  flex: 0 0 58%;
+  max-height: 58%;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%);
+}
+
+.s7-products-health-center__podium-column--excellent .s7-products-health-center__podium-step {
+  flex: 0 0 48%;
+  max-height: 48%;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 55%, #15803d 100%);
+}
+
+.s7-products-health-center__podium-column--attention .s7-products-health-center__podium-step {
+  flex: 0 0 38%;
+  max-height: 38%;
+  background: linear-gradient(180deg, #facc15 0%, #eab308 55%, #ca8a04 100%);
+}
+
+.s7-products-health-center__podium-column--critical .s7-products-health-center__podium-step {
+  flex: 0 0 30%;
+  max-height: 30%;
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
+}
+
+.s7-products-health-center__podium-column--urgent .s7-products-health-center__podium-step {
+  flex: 0 0 24%;
+  max-height: 24%;
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 55%, #dc2626 100%);
+}
+
+.s7-products-health-center__podium-count {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  width: 100%;
+}
+
+.s7-products-health-center__podium-count-value {
+  font-size: clamp(11px, 2.8vw, 15px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.s7-products-health-center__podium-column--lead .s7-products-health-center__podium-count-value {
+  font-size: clamp(12px, 3.2vw, 16px);
+}
+
+.s7-products-health-center__podium-count-label {
+  font-size: clamp(8px, 1.6vw, 9px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.92);
+  text-transform: lowercase;
+}
+
+/* Cap rótulo — Saúde operacional (substitui gauge do cadastro) */
+.s7-products-health-center__podium-cap-wrap {
+  width: 100%;
+  max-width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 2px;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.s7-products-health-center__podium-cap-label {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+  font-size: clamp(8px, 44%, 11px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--s7-muted, #64748b);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s7-products-health-center__podium-column--lead .s7-products-health-center__podium-cap-label {
+  font-size: clamp(9px, 48%, 12px);
+}
+
+.s7-products-health-center__podium-column--zero_stock .s7-products-health-center__podium-cap-label {
+  font-size: clamp(7px, 40%, 10px);
+  letter-spacing: -0.03em;
+}
+
+.s7-products-health-center__podium-column--active .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 32%;
+  max-height: 32%;
+}
+
+.s7-products-health-center__podium-column--critical_stock .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 28%;
+  max-height: 28%;
+}
+
+.s7-products-health-center__podium-column--zero_stock .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 26%;
+  max-height: 26%;
+}
+
+.s7-products-health-center__podium-column--paused .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 24%;
+  max-height: 24%;
+}
+
+.s7-products-health-center__podium-column--inactive .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 22%;
+  max-height: 22%;
+}
+
+/* Degraus — Saúde operacional */
+.s7-products-health-center__podium-column--active .s7-products-health-center__podium-step {
+  flex: 0 0 58%;
+  max-height: 58%;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 55%, #15803d 100%);
+}
+
+.s7-products-health-center__podium-column--critical_stock .s7-products-health-center__podium-step {
+  flex: 0 0 48%;
+  max-height: 48%;
+  background: linear-gradient(180deg, #facc15 0%, #eab308 55%, #ca8a04 100%);
+}
+
+.s7-products-health-center__podium-column--zero_stock .s7-products-health-center__podium-step {
+  flex: 0 0 38%;
+  max-height: 38%;
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 55%, #dc2626 100%);
+}
+
+.s7-products-health-center__podium-column--paused .s7-products-health-center__podium-step {
+  flex: 0 0 30%;
+  max-height: 30%;
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
+}
+
+.s7-products-health-center__podium-column--inactive .s7-products-health-center__podium-step {
+  flex: 0 0 24%;
+  max-height: 24%;
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 55%, #475569 100%);
+}
+
+.s7-products-health-center__podium-column--zero_stock .s7-products-health-center__podium-count-value,
+.s7-products-health-center__podium-column--zero_stock .s7-products-health-center__podium-count-label,
+.s7-products-health-center__podium-column--critical_stock .s7-products-health-center__podium-count-value,
+.s7-products-health-center__podium-column--critical_stock .s7-products-health-center__podium-count-label {
+  color: #fff;
+}
+
+/* Cap/degraus — Saúde comercial (margem histórica) */
+.s7-products-health-center__podium-column--excellent_margin .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 32%;
+  max-height: 32%;
+}
+
+.s7-products-health-center__podium-column--healthy_margin .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 28%;
+  max-height: 28%;
+}
+
+.s7-products-health-center__podium-column--attention_margin .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 26%;
+  max-height: 26%;
+}
+
+.s7-products-health-center__podium-column--critical_margin .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 24%;
+  max-height: 24%;
+}
+
+.s7-products-health-center__podium-column--negative_margin .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 22%;
+  max-height: 22%;
+}
+
+.s7-products-health-center__podium-column--no_commercial_data .s7-products-health-center__podium-cap-wrap {
+  flex: 0 0 20%;
+  max-height: 20%;
+}
+
+.s7-products-health-center__podium-column--excellent_margin .s7-products-health-center__podium-step {
+  flex: 0 0 58%;
+  max-height: 58%;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%);
+}
+
+.s7-products-health-center__podium-column--healthy_margin .s7-products-health-center__podium-step {
+  flex: 0 0 48%;
+  max-height: 48%;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 55%, #15803d 100%);
+}
+
+.s7-products-health-center__podium-column--attention_margin .s7-products-health-center__podium-step {
+  flex: 0 0 38%;
+  max-height: 38%;
+  background: linear-gradient(180deg, #facc15 0%, #eab308 55%, #ca8a04 100%);
+}
+
+.s7-products-health-center__podium-column--critical_margin .s7-products-health-center__podium-step {
+  flex: 0 0 30%;
+  max-height: 30%;
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
+}
+
+.s7-products-health-center__podium-column--negative_margin .s7-products-health-center__podium-step {
+  flex: 0 0 24%;
+  max-height: 24%;
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 55%, #dc2626 100%);
+}
+
+.s7-products-health-center__podium-column--no_commercial_data .s7-products-health-center__podium-step {
+  flex: 0 0 18%;
+  max-height: 18%;
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 55%, #475569 100%);
+}
+
+.s7-products-health-center__podium-column--attention_margin .s7-products-health-center__podium-count-value,
+.s7-products-health-center__podium-column--attention_margin .s7-products-health-center__podium-count-label {
+  color: #fff;
+}
+
+.s7-products-health-center__main-card-summary-block {
+  flex-shrink: 0;
+  margin-bottom: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.s7-products-health-center__card-summary {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--s7-muted, #64748b);
+}
+
+.s7-products-health-center__card-summary + .s7-products-health-center__card-summary {
+  margin-top: 3px;
+}
+
+.s7-products-health-center__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.s7-products-health-center__item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 4px;
+  border-radius: 8px;
+}
+
+.s7-products-health-center__item:hover {
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.s7-products-health-center__thumb {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.s7-products-health-center__thumb--placeholder {
+  display: inline-block;
+}
+
+.s7-products-health-center__item-main {
+  min-width: 0;
+}
+
+.s7-products-health-center__item-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--s7-text-secondary, #334155);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s7-products-health-center__item-meta {
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--s7-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s7-products-health-center__item-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.s7-products-health-center__badge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 120px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s7-products-health-center__badge--critical {
+  background: rgba(254, 226, 226, 0.95);
+  color: #b91c1c;
+}
+
+.s7-products-health-center__badge--attention {
+  background: rgba(255, 237, 213, 0.95);
+  color: #c2410c;
+}
+
+.s7-products-health-center__badge--healthy {
+  background: rgba(209, 250, 229, 0.95);
+  color: #047857;
+}
+
+.s7-products-health-center__empty,
+.s7-products-health-center__error,
+.s7-products-health-center__loading {
+  margin: 0;
+  padding: 12px 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--s7-muted, #64748b);
+  text-align: center;
+}
+
+.s7-products-health-center__error {
+  color: #b91c1c;
+}
+
+.s7-products-health-center__error-title {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.s7-products-health-center__error-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+  color: rgba(100, 116, 139, 0.95);
+}
+
+@media (max-width: 1180px) {
+  .s7-products-health-center__cards-row {
+    grid-template-columns: minmax(0, 1fr);
+    --s7-products-health-main-card-h: 240px;
+  }
+}
+
+@media (min-width: 901px) {
+  .s7-products-health-center__cards-row {
+    --s7-products-health-main-card-h: var(--s7-top-kpi-large-h, 264px);
+  }
+}
+
+.s7-products-health-center__main-card-body--abc {
+  padding: 6px 8px 6px;
+  gap: 2px;
+}
+
+.s7-products-health-center__abc-split {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  gap: 10px;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.s7-products-health-center__abc-split__ring {
+  flex: 0 0 46%;
+  max-width: 46%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.s7-products-health-center__abc-split__labels {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 11px;
+  min-width: 0;
+  padding-right: 2px;
+}
+
+.s7-products-health-center__abc-split__labels--abcd {
+  gap: 6px;
+}
+
+.s7-products-health-center__abc-donut-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 212px;
+  overflow: visible;
+}
+
+.s7-products-health-center__abc-donut-bg {
+  fill: #eef2f7;
+}
+
+.s7-products-health-center__abc-donut-segment {
+  cursor: pointer;
+  transition:
+    opacity 0.24s ease,
+    filter 0.24s ease,
+    transform 0.24s ease;
+  transform-origin: center;
+}
+
+.s7-products-health-center__abc-donut-segment--dimmed {
+  opacity: 0.38;
+}
+
+.s7-products-health-center__abc-donut-segment--active {
+  opacity: 1;
+  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.22));
+}
+
+.s7-products-health-center__abc-donut-segment--curve_a.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.42));
+}
+
+.s7-products-health-center__abc-donut-segment--curve_b.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(34, 197, 94, 0.38));
+}
+
+.s7-products-health-center__abc-donut-segment--curve_c.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(245, 158, 11, 0.4));
+}
+
+.s7-products-health-center__abc-donut-hole-svg {
+  fill: #fff;
+  pointer-events: none;
+}
+
+.s7-products-health-center__abc-donut-center {
+  pointer-events: none;
+}
+
+.s7-products-health-center__abc-donut-center-disc {
+  transition: fill 0.24s ease;
+}
+
+.s7-products-health-center__abc-donut-center-label {
+  fill: #ffffff;
+  font-size: clamp(16px, 3vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+  user-select: none;
+}
+
+.s7-products-health-center__abc-donut-bg {
+  pointer-events: none;
+}
+
+.s7-products-health-center__abc-callout-pill {
+  display: grid;
+  grid-template-columns: minmax(22px, auto) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 6px;
+  width: 100%;
+  padding: 5px 8px 5px 6px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+  outline: none;
+  transition:
+    box-shadow 0.24s ease,
+    transform 0.24s ease,
+    border-color 0.24s ease,
+    opacity 0.24s ease;
+}
+
+.s7-products-health-center__abc-callout-pill--dimmed {
+  opacity: 0.58;
+}
+
+.s7-products-health-center__abc-callout-pill--active {
+  opacity: 1;
+  transform: translateY(-1px) scale(1.015);
+  border-color: color-mix(in srgb, var(--s7-abc-accent, #64748b) 55%, #ffffff);
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.12),
+    0 0 0 1px color-mix(in srgb, var(--s7-abc-accent, #64748b) 18%, transparent);
+}
+
+.s7-products-health-center__abc-callout-pill--curve_a.s7-products-health-center__abc-callout-pill--active {
+  box-shadow:
+    0 8px 22px rgba(59, 130, 246, 0.28),
+    0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.s7-products-health-center__abc-callout-pill--curve_b.s7-products-health-center__abc-callout-pill--active {
+  box-shadow:
+    0 8px 22px rgba(34, 197, 94, 0.26),
+    0 0 0 1px rgba(34, 197, 94, 0.18);
+}
+
+.s7-products-health-center__abc-callout-pill--curve_c.s7-products-health-center__abc-callout-pill--active {
+  box-shadow:
+    0 8px 22px rgba(245, 158, 11, 0.28),
+    0 0 0 1px rgba(245, 158, 11, 0.2);
+}
+
+.s7-products-health-center__abc-callout-pill--no-sales-d {
+  border: 1px solid #ef4444;
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(239, 68, 68, 0.14);
+}
+
+.s7-products-health-center__abc-callout-pill--no-sales-d .s7-products-health-center__abc-callout-letter-big {
+  color: #ef4444;
+}
+
+.s7-products-health-center__abc-callout-pill--no-sales-d.s7-products-health-center__abc-callout-pill--dimmed {
+  border-color: rgba(239, 68, 68, 0.72);
+}
+
+.s7-products-health-center__abc-callout-pill--no-sales-d.s7-products-health-center__abc-callout-pill--active {
+  border-color: color-mix(in srgb, #ef4444 55%, #ffffff);
+  box-shadow:
+    0 8px 22px rgba(239, 68, 68, 0.3),
+    0 0 0 1px rgba(239, 68, 68, 0.22);
+}
+
+.s7-products-health-center__abc-callout-pill--no-sales-d:focus-visible {
+  outline: 2px solid rgba(239, 68, 68, 0.35);
+  outline-offset: 2px;
+}
+
+.s7-products-health-center__abc-callout-pill:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s7-products-health-center__abc-donut-segment,
+  .s7-products-health-center__abc-callout-pill {
+    transition: none;
+  }
+
+  .s7-products-health-center__abc-callout-pill--active {
+    transform: none;
+  }
+}
+
+.s7-products-health-center__abc-callout-letter-big {
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
+  font-size: clamp(12px, 2.4vw, 18px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.s7-products-health-center__abc-callout-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.s7-products-health-center__abc-callout-line-text {
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  line-height: 1.15;
+  color: #334155;
+}
+
+.s7-products-health-center__abc-callout-line-text--top {
+  font-size: 7.65px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.s7-products-health-center__abc-callout-line-text--bottom {
+  margin-top: 2px;
+  font-size: 8.53px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.s7-products-health-center__abc-no-sales {
+  margin: 0;
+  padding-top: 0;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #94a3b8;
+}
+
+/* Cobertura de Estoque — padrão visual alinhado à Curva ABC */
+.s7-products-health-center__main-card-body--stock {
+  padding: 6px 8px 6px;
+  gap: 2px;
+}
+
+.s7-products-health-center__stock-split__labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  align-self: stretch;
+  min-height: 0;
+  padding-top: 0;
+  padding-right: 2px;
+}
+
+.s7-products-health-center__stock-split {
+  align-items: center;
+}
+
+.s7-products-health-center__stock-split .s7-products-health-center__abc-split__ring {
+  align-self: center;
+}
+
+.s7-products-health-center__stock-donut-svg {
+  max-height: 208px;
+}
+
+.s7-products-health-center__stock-donut-segment--rupture.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.42));
+}
+
+.s7-products-health-center__stock-donut-segment--critical.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.4));
+}
+
+.s7-products-health-center__stock-donut-segment--low.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(245, 158, 11, 0.38));
+}
+
+.s7-products-health-center__stock-donut-segment--healthy.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(34, 197, 94, 0.38));
+}
+
+.s7-products-health-center__stock-donut-segment--excess.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.38));
+}
+
+.s7-products-health-center__stock-callout-pill,
+.s7-products-health-center__profit-callout-pill {
+  display: grid;
+  grid-template-columns: minmax(22px, auto) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 6px;
+  width: 100%;
+  padding: 5px 8px 5px 6px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+  outline: none;
+  transition:
+    box-shadow 0.24s ease,
+    transform 0.24s ease,
+    border-color 0.24s ease,
+    opacity 0.24s ease;
+}
+
+.s7-products-health-center__profit-callout-pill {
+  grid-template-columns: minmax(18px, auto) minmax(0, 1fr);
+  column-gap: 4px;
+  padding: 5px 4px 5px 3px;
+}
+
+.s7-products-health-center__stock-callout-index,
+.s7-products-health-center__profit-callout-index {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
+  font-size: clamp(11px, 2.1vw, 14px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.s7-products-health-center__stock-callout-pill--dimmed,
+.s7-products-health-center__profit-callout-pill--dimmed {
+  opacity: 0.58;
+}
+
+.s7-products-health-center__stock-callout-pill--active,
+.s7-products-health-center__profit-callout-pill--active {
+  opacity: 1;
+  transform: translateY(-1px) scale(1.015);
+}
+
+.s7-products-health-center__stock-callout-pill--active {
+  border-color: color-mix(in srgb, var(--s7-stock-accent, #64748b) 55%, #ffffff);
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.12),
+    0 0 0 1px color-mix(in srgb, var(--s7-stock-accent, #64748b) 18%, transparent);
+}
+
+.s7-products-health-center__profit-callout-pill--active {
+  border-color: color-mix(in srgb, var(--s7-profit-accent, #64748b) 55%, #ffffff);
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.12),
+    0 0 0 1px color-mix(in srgb, var(--s7-profit-accent, #64748b) 18%, transparent);
+}
+
+.s7-products-health-center__profit-callout-pill--profit {
+  border-color: #3b82f6;
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(59, 130, 246, 0.14);
+}
+
+.s7-products-health-center__profit-callout-pill--profit.s7-products-health-center__profit-callout-pill--active {
+  border-color: color-mix(in srgb, #3b82f6 55%, #ffffff);
+  box-shadow:
+    0 8px 22px rgba(59, 130, 246, 0.28),
+    0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.s7-products-health-center__stock-callout-pill:focus-visible,
+.s7-products-health-center__profit-callout-pill:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+.s7-products-health-center__stock-callout-name {
+  display: none;
+}
+
+.s7-products-health-center__stock-callout-line {
+  display: none;
+}
+
+.s7-products-health-center__stock-no-turnover {
+  margin: 0;
+  padding-top: 0;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #94a3b8;
+}
+
+.s7-products-health-center__stock-data-quality {
+  margin: 0;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #b45309;
+}
+
+/* Lucratividade dos Produtos — padrão donut + pills (família Curva ABC / Cobertura) */
+.s7-products-health-center__main-card-body--profit {
+  padding: 6px 4px 6px 4px;
+  gap: 2px;
+}
+
+.s7-products-health-center__profit-split {
+  align-items: center;
+  gap: 6px;
+}
+
+.s7-products-health-center__profit-split .s7-products-health-center__abc-split__ring {
+  flex: 0 0 40%;
+  max-width: 40%;
+  align-self: center;
+}
+
+.s7-products-health-center__profit-split__labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-width: 0;
+  padding-top: 0;
+  padding-right: 0;
+  margin-left: -3px;
+}
+
+.s7-products-health-center__profit-donut-svg {
+  max-height: 208px;
+}
+
+.s7-products-health-center__profit-donut-segment--high_profit.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(22, 163, 74, 0.4));
+}
+
+.s7-products-health-center__profit-donut-segment--profit.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.42));
+}
+
+.s7-products-health-center__profit-donut-segment--low_profit.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.38));
+}
+
+.s7-products-health-center__profit-donut-segment--loss.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.42));
+}
+
+.s7-products-health-center__profit-donut-segment--no_sales.s7-products-health-center__abc-donut-segment--active {
+  filter: drop-shadow(0 4px 12px rgba(148, 163, 184, 0.32));
+}
+
+.s7-products-health-center__stock-callout-copy {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.s7-products-health-center__stock-callout-copy .s7-products-health-center__abc-callout-line-text {
+  text-align: center;
+}
+
+.s7-products-health-center__profit-callout-copy {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.s7-products-health-center__profit-callout-copy .s7-products-health-center__abc-callout-line-text {
+  text-align: center;
+}
+
+.s7-products-health-center__profit-callout-copy .s7-products-health-center__abc-callout-line-text--top,
+.s7-products-health-center__profit-callout-copy .s7-products-health-center__abc-callout-line-text--bottom {
+  white-space: nowrap;
+}
+
+.s7-products-health-center__profit-callout-name,
+.s7-products-health-center__profit-callout-range,
+.s7-products-health-center__profit-callout-line {
+  display: none;
+}
+
+.s7-products-health-center__profit-no-financial-data {
+  display: none;
+}
+
+.s7-products-health-center__profit-data-quality {
+  margin: 0;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #b45309;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s7-products-health-center__stock-donut-segment,
+  .s7-products-health-center__stock-callout-pill {
+    transition: none;
+  }
+
+  .s7-products-health-center__profit-donut-segment,
+  .s7-products-health-center__profit-callout-pill {
+    transition: none;
+  }
+
+  .s7-products-health-center__stock-callout-pill--active,
+  .s7-products-health-center__profit-callout-pill--active {
+    transform: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  .s7-products-health-center__stock-split__labels {
+    gap: 3px;
+  }
+
+  .s7-products-health-center__profit-split__labels {
+    gap: 3px;
+  }
+
+  .s7-products-health-center__profit-callout-index,
+  .s7-products-health-center__stock-callout-index {
+    font-size: 13px;
+  }
+
+  .s7-products-health-center__abc-callout-line-text--top {
+    font-size: 7.45px;
+  }
+
+  .s7-products-health-center__abc-callout-line-text--bottom {
+    font-size: 8.29px;
+  }
+
+  .s7-products-health-center__abc-split__labels--abcd {
+    gap: 5px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .s7-products-health-center__abc-donut-svg {
+    max-height: 200px;
+  }
+
+  .s7-products-health-center__abc-split {
+    gap: 8px;
+  }
+
+  .s7-products-health-center__abc-split__labels {
+    gap: 9px;
+  }
+
+  .s7-products-health-center__abc-callout-letter-big {
+    font-size: 16px;
+  }
+
+  .s7-products-health-center__abc-callout-line-text--top {
+    font-size: 7.25px;
+  }
+
+  .s7-products-health-center__abc-callout-line-text--bottom {
+    font-size: 8.12px;
+  }
+}
+
+.s7-products-health-center__distribution-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: stretch;
+  gap: 4px;
+  width: 100%;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.s7-products-health-kpi-value--dead-stock {
+  color: #dc2626 !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  letter-spacing: -0.03em;
+}
+
+.s7-products-health-kpi-value--stockout {
+  color: #ea580c !important;
+}
+
+.s7-products-health-kpi-value--markup {
+  color: #6366f1 !important;
+}
+
+.s7-products-health-kpi-value--conversion {
+  color: #15803d !important;
+}
+
+.s7-products-health-kpi-icon--dead-stock {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  color: #dc2626;
+}
+
+.s7-products-health-kpi-icon--stockout {
+  width: 22px;
+  height: 22px;
+  color: #ea580c;
+}
+
+.s7-products-health-center__executive-kpis .vendas-executive-kpi.s7-kpi-chrome--health-dead-stock {
+  --vek-accent: #dc2626;
+  --vek-head-bg: #fef2f2;
+  --vek-head-divider: rgba(220, 38, 38, 0.18);
+  --vek-border: rgba(220, 38, 38, 0.32);
+}
+
+.s7-products-health-center__executive-kpis
+  .vendas-executive-kpi.vendas-executive-kpi--tone-profit.s7-kpi-chrome--health-dead-stock {
+  --vek-accent: #dc2626;
+  --vek-head-bg: #fef2f2;
+}
+
+.s7-products-health-center__executive-kpis
+  .vendas-executive-kpi.s7-kpi-chrome--health-dead-stock
+  .vendas-executive-kpi__value-row {
+  min-width: 0;
+}
+
+.s7-products-health-center__executive-kpis
+  .vendas-executive-kpi.s7-kpi-chrome--health-dead-stock
+  .vendas-executive-kpi__value {
+  font-size: clamp(16px, 2.35vw, 29px);
+  max-width: 100%;
+}
+
+.s7-products-health-center__executive-kpis .vendas-executive-kpi.s7-kpi-chrome--health-stockout {
+  --vek-accent: #ea580c;
+  --vek-head-bg: #fff7ed;
+  --vek-head-divider: rgba(234, 88, 12, 0.18);
+  --vek-border: rgba(234, 88, 12, 0.32);
+}
+
+.s7-products-health-center__executive-kpis
+  .vendas-executive-kpi.vendas-executive-kpi--tone-profit.s7-kpi-chrome--health-stockout {
+  --vek-accent: #ea580c;
+  --vek-head-bg: #fff7ed;
+}
+
+.s7-products-health-center__stock-callout-status {
+  display: inline;
+  cursor: help;
+  text-decoration: underline dotted rgba(148, 163, 184, 0.55);
+  text-underline-offset: 2px;
+}
+
+.s7-products-health-center__stock-split__labels .s7-tooltip-portal-root {
+  display: inline;
+  vertical-align: baseline;
+}
+
+.s7-products-health-center__stock-split__labels .s7-tooltip-portal-root .s7-products-health-center__stock-callout-status.s7-tooltip-trigger {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  color: inherit;
+}
+
+.s7-products-health-kpi-icon--markup {
+  width: 22px;
+  height: 22px;
+  color: #6366f1;
+}
+
+.s7-products-health-kpi-icon--conversion {
+  width: 22px;
+  height: 22px;
+  color: #15803d;
+}
+
+.s7-products-health-center__podium-column--curve_a .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.18), rgba(59, 130, 246, 0.06));
+}
+
+.s7-products-health-center__podium-column--curve_b .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.06));
+}
+
+.s7-products-health-center__podium-column--curve_c .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.06));
+}
+
+.s7-products-health-center__podium-column--no_sales .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0.06));
+}
+
+.s7-products-health-center__podium-column--rupture .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.06));
+}
+
+.s7-products-health-center__podium-column--critical .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.18), rgba(249, 115, 22, 0.06));
+}
+
+.s7-products-health-center__podium-column--low .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.06));
+}
+
+.s7-products-health-center__podium-column--healthy .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.06));
+}
+
+.s7-products-health-center__podium-column--excess .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.18), rgba(99, 102, 241, 0.06));
+}
+
+.s7-products-health-center__podium-column--no_turnover .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0.06));
+}
+
+.s7-products-health-center__podium-column--high_margin .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.18), rgba(59, 130, 246, 0.06));
+}
+
+.s7-products-health-center__podium-column--healthy_margin .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.06));
+}
+
+.s7-products-health-center__podium-column--limit_margin .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.06));
+}
+
+.s7-products-health-center__podium-column--loss_margin .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.06));
+}
+
+.s7-products-health-center__podium-column--no_data .s7-products-health-center__podium-cap-wrap {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0.06));
+}

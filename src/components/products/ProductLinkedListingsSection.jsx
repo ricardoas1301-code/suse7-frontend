@@ -4,7 +4,7 @@
 // Financeiro: executive-summary via listingMetricsLookup (mesma fonte Vendas & desempenho).
 // ======================================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   formatBrlFromApiString,
   formatPercentFromApiString,
@@ -48,6 +48,42 @@ function parseListingMetricQty(metrics) {
   if (!metrics) return null;
   const n = Number(metrics.quantity_sold);
   return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/**
+ * Chaves de ordenação visual — usa métricas já normalizadas no lookup (sem recalcular).
+ * @param {Record<string, unknown>} listing
+ * @param {Map<string, Record<string, unknown>> | null | undefined} listingMetricsLookup
+ */
+function resolveLinkedListingSortKeys(listing, listingMetricsLookup) {
+  const L = listing && typeof listing === "object" ? listing : {};
+  const marketplace = L.marketplace != null ? String(L.marketplace) : "";
+  const extRaw = L.external_listing_id != null ? String(L.external_listing_id).trim() : "";
+
+  const listingMetrics =
+    listingMetricsLookup != null
+      ? pickListingFinancialMetrics(listingMetricsLookup, marketplace, extRaw)
+      : null;
+
+  const qtyRaw = listingMetrics?.quantity_sold;
+  const qtyNum = qtyRaw != null ? Number(qtyRaw) : NaN;
+  const salesCount = Number.isFinite(qtyNum) ? qtyNum : 0;
+
+  const faturamentoRaw =
+    listingMetrics?.gross_sales_brl ?? listingMetrics?.gross_revenue_brl ?? null;
+  const grossSales = parseListingMetricDecimal(
+    faturamentoRaw != null ? String(faturamentoRaw) : null,
+  );
+  const grossSalesCount = grossSales != null ? grossSales : 0;
+
+  const idFallback =
+    extRaw ||
+    (L.id != null ? String(L.id).trim() : "") ||
+    (L.title != null ? String(L.title).trim() : "");
+
+  const title = L.title != null ? String(L.title).trim() : "";
+
+  return { salesCount, grossSalesCount, idFallback, title };
 }
 
 /**
@@ -286,6 +322,29 @@ export default function ProductLinkedListingsSection({
     };
   }, []);
 
+  const sortedListings = useMemo(() => {
+    if (!Array.isArray(listings) || listings.length <= 1) return listings;
+
+    return [...listings].sort((rawA, rawB) => {
+      const a = rawA && typeof rawA === "object" ? rawA : {};
+      const b = rawB && typeof rawB === "object" ? rawB : {};
+      const keysA = resolveLinkedListingSortKeys(a, listingMetricsLookup);
+      const keysB = resolveLinkedListingSortKeys(b, listingMetricsLookup);
+
+      if (keysB.salesCount !== keysA.salesCount) {
+        return keysB.salesCount - keysA.salesCount;
+      }
+      if (keysB.grossSalesCount !== keysA.grossSalesCount) {
+        return keysB.grossSalesCount - keysA.grossSalesCount;
+      }
+
+      const idCmp = keysA.idFallback.localeCompare(keysB.idFallback, undefined, { numeric: true });
+      if (idCmp !== 0) return idCmp;
+
+      return keysA.title.localeCompare(keysB.title, "pt-BR", { sensitivity: "base" });
+    });
+  }, [listings, listingMetricsLookup]);
+
   if (!hasProduct) {
     return <p className="hint pf-product-listings__hint">Salve o produto para listar os anúncios vinculados.</p>;
   }
@@ -328,7 +387,7 @@ export default function ProductLinkedListingsSection({
                 </tr>
               </thead>
               <tbody>
-                {listings.map((raw) => {
+                {sortedListings.map((raw) => {
                   const L = raw && typeof raw === "object" ? raw : {};
                   const marketplace = L.marketplace != null ? String(L.marketplace) : "";
                   const extRaw =

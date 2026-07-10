@@ -1,0 +1,69 @@
+.listing-resumo-kpi-shell {
+  --lrks-accent: #2563eb;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid #e2e8f0;
+  border-top: 3px solid var(--lrks-accent);
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.listing-resumo-kpi-shell--accent-quantity {
+  --lrks-accent: #16a34a;
+}
+
+.listing-resumo-kpi-shell--accent-revenue {
+  --lrks-accent: #2563eb;
+}
+
+.listing-resumo-kpi-shell--accent-profit {
+  --lrks-accent: #ea580c;
+}
+
+.listing-resumo-kpi-shell--accent-conversion {
+  --lrks-accent: #6d28d9;
+}
+
+.listing-resumo-kpi-shell--accent-neutral {
+  --lrks-accent: #94a3b8;
+}
+
+.listing-resumo-kpi-shell--accent-orange {
+  --lrks-accent: var(--s7-orange, #ff8533);
+}
+
+.listing-resumo-kpi-shell__head {
+  padding: 8px 10px;
+  background: #ffffff;
+  border-bottom: 1px solid #eef2f7;
+  box-shadow: none;
+}
+
+.listing-resumo-kpi-shell__title {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  line-height: 1.2;
+  text-shadow: none;
+}
+
+.listing-resumo-kpi-shell__title--compact {
+  font-size: 7.2px;
+  letter-spacing: 0.035em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.listing-resumo-kpi-shell__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}

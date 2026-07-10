@@ -132,7 +132,8 @@ export const listingsPageModes = {
     pricingIntelligenceOpenTarget: "same_tab",
     filterToolbar: {
       chipOrder: [
-        "all",
+        "top_sales",
+        "top_profit",
         "needs_attention",
         "sku_pending_ml",
         "active",
@@ -141,8 +142,6 @@ export const listingsPageModes = {
         "declining",
         "mercadolivre",
         "no_sales",
-        "top_sales",
-        "top_profit",
         "low_margin",
         "loss",
       ],
@@ -154,9 +153,8 @@ export const listingsPageModes = {
     pageSubtitle: "Repasse, margem, risco e oportunidades — apoio à decisão financeira (dados do servidor).",
     srTitle: "Precificações — inteligência comercial",
     marketplaceScopeKey: "mercado_livre",
-    showPrecificaS7Column: true,
-    // Vista Simples (minimal) é a visualização oficial: mantém a coluna Precifica S7 (Raio-X),
-    // capa, anúncio e "Você vende por" — clique na linha abre a Precificação Inteligente.
+    showPrecificaS7Column: false,
+    // Vista Simples (minimal) é a visualização oficial — clique na linha abre a Precificação Inteligente S7.
     defaultViewMode: "minimal",
     allowViewModeToggle: false,
     filtersStartCollapsed: true,
@@ -182,11 +180,10 @@ export const listingsPageModes = {
     bulkBarLabels: { selectedOne: "oferta selecionada", selectedMany: "ofertas selecionadas" },
     filterToolbar: {
       chipOrder: [
-        "all",
+        "top_sales",
+        "top_profit",
         "low_margin",
         "loss",
-        "top_profit",
-        "top_sales",
         "needs_attention",
         "sku_pending_ml",
         "active",

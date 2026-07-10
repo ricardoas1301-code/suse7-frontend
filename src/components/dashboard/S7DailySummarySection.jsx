@@ -43,7 +43,6 @@ export default function S7DailySummarySection({ className = "" }) {
     dailySummaryFiltersExpanded,
     applyDailySummaryPeriod,
     setDailySummaryAccountId,
-    toggleDailySummaryFiltersExpanded,
   } = useDashboardBlockFilters();
 
   const authReady = useAuthBootstrapReady();
@@ -83,13 +82,6 @@ export default function S7DailySummarySection({ className = "" }) {
     }
     return buildDailySummaryBlocks(summary);
   }, [loading, error, summary, empty]);
-
-  const filtersActive = useMemo(
-    () =>
-      dailySummaryPeriodTouched ||
-      Boolean(String(dailySummaryFilters.marketplaceAccountId ?? "").trim()),
-    [dailySummaryPeriodTouched, dailySummaryFilters.marketplaceAccountId],
-  );
 
   const periodChipLabel = scope.resumo.resumoChipLabel;
   const periodDateLabel = useMemo(() => {
@@ -131,6 +123,7 @@ export default function S7DailySummarySection({ className = "" }) {
     <S7BlockFiltersPanel
       idPrefix="s7-daily-summary"
       expanded={dailySummaryFiltersExpanded}
+      layout="inline"
       periodPreset={dailySummaryFilters.periodPreset}
       startDate={dailySummaryFilters.startDate}
       endDate={dailySummaryFilters.endDate}
@@ -150,9 +143,7 @@ export default function S7DailySummarySection({ className = "" }) {
       periodChipLabel={periodChipLabel}
       periodLabel={dailySummaryPeriodTouched ? scope.resumo.resumoPeriodLabel : ""}
       periodDateLabel={periodDateLabel}
-      filtersExpanded={dailySummaryFiltersExpanded}
-      filtersActive={filtersActive}
-      onToggleFilters={toggleDailySummaryFiltersExpanded}
+      filtersLayout="inline"
       filterPanel={filterPanel}
       slots={{ salesFooter }}
       className={className}

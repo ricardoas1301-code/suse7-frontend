@@ -2,13 +2,11 @@
    SUSE7 — Listagem operacional de produtos (catálogo)
 ====================================================================== */
 
-/* Reduz gutter lateral do Layout só nesta rota (mais área útil, estilo wide)
-   padding-top: 0 — evita faixa entre navbar e cabeçalho sticky da grade (conteúdo “vazando”) */
-.page-content:has(.products-catalog),
-.page-content:has(.anuncios-catalog),
-.page-content:has(.vendas-page),
-.page-content:has(.dashboard-page),
-.page-content:has(.concorrencia-catalog),
+/* Gutter lateral e ritmo vertical: s7-catalog-page-rhythm.css + Layout.css */
+:root {
+  --s7-catalog-product-column-width: 340px;
+}
+
 .page-content:has(.clientes360-page),
 .page-content:has(.relatorios-page) {
   padding-left: 4px;
@@ -18,41 +16,14 @@
 }
 
 .products-catalog {
-  padding: var(--s7-catalog-page-inset-top, 5px) clamp(4px, 0.65vw, 10px) 44px;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* Ritmo vertical — menu ↔ filtros = filtros ↔ lista (homologação Produtos) */
+/* Ritmo vertical — ver s7-catalog-page-rhythm.css (gaps entre blocos) */
 .products-catalog:not(.concorrencia-catalog) {
-  --s7-produtos-chrome-gap: calc(
-    var(--s7-catalog-page-inset-top, 5px) + var(--s7-catalog-filter-offset-top, 7px)
-  );
   --products-catalog-table-radius: var(--s7-list-table-radius, 10px);
-}
-
-.products-catalog:not(.concorrencia-catalog) > .products-catalog__rankings,
-.products-catalog:not(.concorrencia-catalog) > .s7-core-kpis.anuncios-catalog__kpis {
-  margin-top: 0;
-  margin-bottom: var(--s7-produtos-chrome-gap, 12px);
-}
-
-.products-catalog:not(.concorrencia-catalog) > .products-filters-card.s7-sticky-filters {
-  margin-top: var(--s7-catalog-filter-offset-top, 7px);
-  margin-bottom: var(--s7-produtos-chrome-gap, 12px);
-}
-
-.products-catalog:not(.concorrencia-catalog) > .products-catalog__rankings ~ .products-filters-card.s7-sticky-filters,
-.products-catalog:not(.concorrencia-catalog) > .s7-core-kpis ~ .products-filters-card.s7-sticky-filters {
-  margin-top: 0;
-}
-
-.products-catalog:not(.concorrencia-catalog) > .products-catalog__table-block,
-.products-catalog:not(.concorrencia-catalog) > .products-catalog__loading,
-.products-catalog:not(.concorrencia-catalog) > .products-catalog__empty-card,
-.products-catalog:not(.concorrencia-catalog) > .products-catalog__filter-empty-card {
-  margin-top: 0;
 }
 
 /* Título só para leitores de tela (header textual removido do layout) */
@@ -104,6 +75,7 @@
 .page-content .concorrencia-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
 .page-content .clientes360-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
 .page-content .relatorios-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card {
+  margin-top: 0;
   margin-bottom: var(--s7-catalog-block-gap, 12px);
   margin-left: clamp(0px, 0.5vw, 10px);
   margin-right: clamp(0px, 0.5vw, 10px);
@@ -122,6 +94,7 @@
   .page-content .concorrencia-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
   .page-content .clientes360-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
   .page-content .relatorios-page .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card {
+    margin-top: 0;
     margin-bottom: var(--s7-catalog-block-gap, 12px);
     margin-left: clamp(0px, 0.35vw, 6px);
     margin-right: clamp(0px, 0.35vw, 6px);
@@ -569,11 +542,16 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-top: 2px;
-  margin-bottom: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
   min-width: 0;
   width: 100%;
   max-width: 100%;
+}
+
+/* List Sticky Chrome S7: cabeçalho laranja e corpo são irmãos no flex — sem gap entre eles */
+.products-catalog__table-block:has(> .products-catalog__list-sticky-chrome) {
+  gap: 0;
 }
 
 /* Card só com a listagem; rolagem só em .page-content (Layout), nunca scroll interno aqui */
@@ -590,6 +568,12 @@
   border-radius: var(--products-catalog-table-radius);
   border: 1px solid var(--catalog-orange-frame);
   box-shadow: var(--s7-list-table-card-shadow);
+}
+
+.concorrencia-catalog > .concorrencia-filters-card.s7-sticky-filters,
+.concorrencia-catalog > .products-filters-card.s7-sticky-filters {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .concorrencia-catalog {
@@ -622,11 +606,43 @@
 }
 
 /* Grid padrão: sem Marketplaces + coluna ações (reativar MKP com .products-catalog__grid--with-marketplaces)
-   minmax(0, fr) permite encolher dentro do card; largura fixa só no thumb e na coluna de ações */
+   A coluna Produto usa largura fixa compartilhada com Anúncios. */
 .products-catalog__grid,
 .products-catalog__row {
   --products-catalog-thumb-col: 68px;
   --products-catalog-thumb-size: 48px;
+  --products-catalog-col-select: 40px;
+  --products-catalog-col-actions: 32px;
+  /* Métricas: Anúncios → Saúde (Repasse com largura ~ Faturamento) */
+  --products-catalog-grid-template:
+    var(--products-catalog-col-select)
+    var(--products-catalog-thumb-col)
+    var(--s7-catalog-product-column-width)
+    minmax(0, 0.44fr)
+    minmax(0, 0.38fr)
+    minmax(0, 0.70fr)
+    minmax(0, 0.62fr)
+    minmax(0, 0.66fr)
+    minmax(54px, 0.44fr)
+    minmax(100px, 0.76fr)
+    minmax(42px, 0.46fr)
+    minmax(0, 0.38fr)
+    var(--products-catalog-col-actions);
+  --products-catalog-grid-template--mkts:
+    var(--products-catalog-col-select)
+    var(--products-catalog-thumb-col)
+    var(--s7-catalog-product-column-width)
+    minmax(0, 0.42fr)
+    minmax(0, 0.36fr)
+    minmax(0, 0.66fr)
+    minmax(0, 0.58fr)
+    minmax(0, 0.62fr)
+    minmax(50px, 0.40fr)
+    minmax(96px, 0.72fr)
+    minmax(40px, 0.42fr)
+    minmax(0, 0.36fr)
+    minmax(0, 0.68fr)
+    var(--products-catalog-col-actions);
 }
 
 .products-catalog__grid {
@@ -634,17 +650,7 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  grid-template-columns:
-    var(--products-catalog-thumb-col) minmax(0, 1.82fr)
-    minmax(0, 0.54fr)
-    minmax(0, 0.48fr)
-    minmax(0, 0.82fr)
-    minmax(0, 0.72fr)
-    minmax(0, 0.76fr)
-    minmax(0, 0.44fr)
-    minmax(0, 0.48fr)
-    minmax(0, 0.46fr)
-    44px;
+  grid-template-columns: var(--products-catalog-grid-template);
   column-gap: 14px;
   align-items: center;
 }
@@ -658,18 +664,7 @@
 }
 
 .products-catalog__grid--with-marketplaces {
-  grid-template-columns:
-    var(--products-catalog-thumb-col) minmax(0, 1.52fr)
-    minmax(0, 0.52fr)
-    minmax(0, 0.46fr)
-    minmax(0, 0.74fr)
-    minmax(0, 0.64fr)
-    minmax(0, 0.74fr)
-    minmax(0, 0.4fr)
-    minmax(0, 0.46fr)
-    minmax(0, 0.42fr)
-    minmax(0, 0.78fr)
-    44px;
+  grid-template-columns: var(--products-catalog-grid-template--mkts);
 }
 
 /**
@@ -681,31 +676,33 @@
   font-family: inherit;
 }
 
-/* Tooltip do cabeçalho: só nesta tela; attr(data-tooltip) + pseudo-elementos (sem S7Tooltip / DS) */
-.products-catalog__grid--head .products-catalog__head-tooltip {
-  position: relative;
+/* Tooltip do cabeçalho — legado data-tooltip (Anúncios); Produtos usa S7Tooltip portal */
+.products-catalog__grid--head .products-catalog__col-head:has(.products-catalog__head-tooltip) {
+  overflow: visible;
+}
+
+/* Portal S7Tooltip no header laranja — mantém tipografia branca do head (sem azul de gatilho DS) */
+.products-catalog__grid--head .s7-tooltip-portal-root {
   display: inline-flex;
   align-items: center;
-  vertical-align: baseline;
+  justify-content: center;
   max-width: 100%;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: none;
+  min-width: 0;
+}
+
+.products-catalog__grid--head .s7-tooltip-portal-root .s7-tooltip-trigger,
+.products-catalog__grid--head .s7-tooltip-portal-root .s7-tooltip-trigger:hover,
+.products-catalog__grid--head .s7-tooltip-portal-root .s7-tooltip-trigger:focus-visible {
   color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  line-height: inherit;
   cursor: help;
-  outline: none;
 }
 
 .products-catalog__grid--head .products-catalog__head-tooltip[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 50%;
-  top: calc(100% + 10px);
+  top: auto;
+  bottom: calc(100% + 10px);
   transform: translateX(-50%);
   z-index: 100020;
 
@@ -746,13 +743,14 @@
   content: "";
   position: absolute;
   left: 50%;
-  top: calc(100% + 2px);
+  top: auto;
+  bottom: calc(100% + 2px);
   transform: translateX(-50%);
   z-index: 100021;
 
   border: 5px solid transparent;
-  border-top-color: transparent;
-  border-bottom-color: var(--s7-tooltip-bg);
+  border-top-color: var(--s7-tooltip-bg);
+  border-bottom-color: transparent;
 
   pointer-events: none;
   opacity: 0;
@@ -794,17 +792,7 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  grid-template-columns:
-    var(--products-catalog-thumb-col) minmax(0, 1.82fr)
-    minmax(0, 0.54fr)
-    minmax(0, 0.48fr)
-    minmax(0, 0.82fr)
-    minmax(0, 0.72fr)
-    minmax(0, 0.76fr)
-    minmax(0, 0.44fr)
-    minmax(0, 0.48fr)
-    minmax(0, 0.46fr)
-    44px;
+  grid-template-columns: var(--products-catalog-grid-template);
   column-gap: 0;
   align-items: center;
   padding-top: var(--s7-list-table-row-padding-y);
@@ -822,18 +810,7 @@
 }
 
 .products-catalog__row--with-marketplaces {
-  grid-template-columns:
-    var(--products-catalog-thumb-col) minmax(0, 1.52fr)
-    minmax(0, 0.52fr)
-    minmax(0, 0.46fr)
-    minmax(0, 0.74fr)
-    minmax(0, 0.64fr)
-    minmax(0, 0.74fr)
-    minmax(0, 0.4fr)
-    minmax(0, 0.46fr)
-    minmax(0, 0.42fr)
-    minmax(0, 0.78fr)
-    44px;
+  grid-template-columns: var(--products-catalog-grid-template--mkts);
   column-gap: 0;
 }
 
@@ -841,6 +818,10 @@
   background: var(--s7-list-table-row-hover-bg);
   box-shadow: none;
   transform: none;
+}
+
+.products-catalog__row--selected {
+  background: rgba(37, 99, 235, 0.08);
 }
 
 .products-catalog__row:active {
@@ -862,8 +843,9 @@
 }
 
 .products-catalog__cell--actions {
-  justify-self: stretch;
-  width: 100%;
+  justify-self: center;
+  width: var(--products-catalog-col-actions);
+  max-width: var(--products-catalog-col-actions);
   min-width: 0;
   display: flex;
   align-items: center;
@@ -1400,76 +1382,80 @@
   text-transform: inherit;
 }
 
-/* Homologação — títulos centralizados (Anúncios → Estoque) */
-.products-catalog__grid--head .products-catalog__cell:nth-child(3),
-.products-catalog__grid--head .products-catalog__cell:nth-child(4),
-.products-catalog__grid--head .products-catalog__cell:nth-child(5),
-.products-catalog__grid--head .products-catalog__cell:nth-child(6),
-.products-catalog__grid--head .products-catalog__cell:nth-child(7),
-.products-catalog__grid--head .products-catalog__cell:nth-child(8),
-.products-catalog__grid--head .products-catalog__cell:nth-child(9),
-.products-catalog__grid--head .products-catalog__cell:nth-child(10) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  justify-self: stretch;
-  text-align: center;
+/* Respiro fino Lucro (%) / Repasse / Estoque — padding inline (UI-only) */
+.products-catalog__grid--head [data-col="profit-percent"],
+.products-catalog__row [data-col="profit-percent"] {
+  padding-inline: 2px 6px;
 }
 
-.products-catalog__grid--head .products-catalog__cell:nth-child(3) .products-catalog__head-tooltip,
-.products-catalog__grid--head .products-catalog__cell:nth-child(4) .products-catalog__head-tooltip,
-.products-catalog__grid--head .products-catalog__cell:nth-child(5) .products-catalog__head-tooltip,
-.products-catalog__grid--head .products-catalog__cell:nth-child(6) .products-catalog__head-tooltip,
-.products-catalog__grid--head .products-catalog__cell:nth-child(7) .products-catalog__head-tooltip,
-.products-catalog__grid--head .products-catalog__cell:nth-child(8) .products-catalog__head-tooltip,
-.products-catalog__grid--head .products-catalog__cell:nth-child(9) .products-catalog__head-tooltip {
-  width: 100%;
-  justify-content: center;
-  text-align: center;
+.products-catalog__grid--head [data-col="payout"],
+.products-catalog__row [data-col="payout"] {
+  padding-inline: 6px;
 }
 
-/* Produto + SKU (padrão copiar alinhado ao ProductForm / pf-copy-btn)
-   Nome: flex na linha inteira para alinhar à esquerda com SKU e botão Completar cadastro. */
+.products-catalog__grid--head [data-col="stock"],
+.products-catalog__row [data-col="stock"] {
+  padding-inline: 6px 4px;
+}
+
+/* Produto + SKU — nome com botão copiar inline após o final do texto (1 ou 2 linhas) */
 .products-catalog__name-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
+  display: block;
   margin-bottom: 2px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-}
-
-.products-catalog__name-row > .s7-tooltip-portal-root,
-.products-catalog__name-row > .s7-catalog-headline__title-slot {
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: 100%;
-  display: block;
-}
-
-.products-catalog__cell--product .s7-catalog-headline__title-slot.vendas-page__product-title-slot,
-.products-catalog__cell--product .s7-catalog-headline__title-slot.vendas-page__product-title-slot .s7-catalog-headline__title,
-.products-catalog__cell--product .s7-catalog-headline__title-slot.vendas-page__product-title-slot .vendas-page__product-title {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  line-height: 1.3;
+  max-height: calc(1.3em * 2 + 3px);
   overflow: hidden;
-  word-break: break-word;
-  white-space: normal;
+  text-align: left;
+}
+
+.products-catalog__cell--product .products-catalog__name-inline.s7-catalog-headline__title-slot {
+  display: inline;
+  flex: none;
+  max-width: 100%;
+  min-width: 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.products-catalog__cell--product .products-catalog__name-row .s7-catalog-headline__title-tip.products-catalog__product-name-tip,
+.products-catalog__cell--product .products-catalog__name-row .s7-catalog-headline__title,
+.products-catalog__cell--product .products-catalog__name-row .vendas-page__product-title {
+  display: inline;
+  width: auto;
+  max-width: 100%;
+  overflow: visible;
   text-overflow: unset;
+  white-space: normal;
+  word-break: break-word;
+  -webkit-box-orient: unset;
+  -webkit-line-clamp: unset;
   line-height: 1.3;
   font-size: 12px;
+  vertical-align: baseline;
 }
 
-.products-catalog__cell--product .s7-catalog-headline__title-row .s7-catalog-headline__title-tip.products-catalog__product-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
-  display: block;
-  width: 100%;
-  min-width: 0;
+.products-catalog__cell--product .products-catalog__name-row .products-catalog__copy-btn {
+  display: inline;
+  vertical-align: baseline;
+  margin-left: 4px;
+  position: relative;
+  top: -0.05em;
+}
+
+.products-catalog__cell--product .products-catalog__name-inline .s7-tooltip-portal-root {
+  display: inline;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: unset;
-  white-space: normal;
+}
+
+.products-catalog__cell--product .products-catalog__name-row .products-catalog__product-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  display: inline;
+  width: auto;
+  max-width: 100%;
+  overflow: visible;
+  text-align: left;
 }
 
 .products-catalog__product-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {

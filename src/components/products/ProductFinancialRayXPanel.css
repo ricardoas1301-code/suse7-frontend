@@ -142,8 +142,8 @@
   height: 24px;
 }
 
-.pf-product-rayx__kpi-value-icon--unit-margin {
-  color: #7c3aed;
+.pf-product-rayx__kpi-value-icon--repasse {
+  color: #1d4ed8;
   width: 24px;
   height: 24px;
 }
@@ -210,7 +210,7 @@
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
 }
 
@@ -319,4 +319,189 @@
   .pf-product-rayx__daily-card--custos .s7-daily-summary__metrics {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* S1.25A — visão 360 unificada (Produto × Anúncio) — mesma densidade/tokens */
+.pf-product-rayx.s7-rayx-sales-compact {
+  --s7-rayx-sales-density: 0.91;
+  overflow: visible;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__intro,
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__executive {
+  flex-shrink: 0;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__intro {
+  margin-bottom: calc(10px * var(--s7-rayx-sales-density));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__metric {
+  gap: 4px;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__intro .pf-tab-title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__executive {
+  --pf-rayx-kpi-scale: calc(0.84 * 0.9 * var(--s7-rayx-sales-density));
+  margin-bottom: calc(8px * var(--s7-rayx-sales-density));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-grid {
+  gap: calc(8px * var(--s7-rayx-sales-density));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-grid--unit {
+  margin-top: calc(8px * var(--s7-rayx-sales-density));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-cell .vendas-executive-kpi__head--external {
+  padding-left: 7px;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-cell .vendas-executive-kpi__head--external .vendas-executive-kpi__title {
+  font-size: 12px;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-cell .vendas-executive-kpi__head--external .vendas-executive-kpi__title--compact {
+  font-size: 9px;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-cell .vendas-executive-kpi__body {
+  padding-top: calc(4px * var(--pf-rayx-kpi-scale));
+  padding-bottom: calc(7px * var(--pf-rayx-kpi-scale));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-value-icon {
+  width: calc(18px * var(--s7-rayx-sales-density));
+  height: calc(18px * var(--s7-rayx-sales-density));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-value-icon--unit-profit,
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-value-icon--repasse {
+  width: calc(20px * var(--s7-rayx-sales-density));
+  height: calc(20px * var(--s7-rayx-sales-density));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__ticket-side-image {
+  transform: translateX(6px) scale(calc(1.28 * var(--s7-rayx-sales-density)));
+  max-height: calc(var(--pf-rayx-kpi-card-h) * 0.86);
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-value--size-0 .vendas-executive-kpi__value {
+  font-size: clamp(19px, 2.35vw, 24px);
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-value--size-1 .vendas-executive-kpi__value {
+  font-size: clamp(17px, 2.05vw, 21px);
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-value--size-2 .vendas-executive-kpi__value {
+  font-size: clamp(14px, 1.75vw, 18px);
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-value--size-3 .vendas-executive-kpi__value {
+  font-size: clamp(12px, 1.5vw, 16px);
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__kpi-value--size-4 .vendas-executive-kpi__value {
+  font-size: clamp(11px, 1.3vw, 14px);
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .vendas-executive-kpi__aside-item {
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .vendas-executive-kpi__aside-label,
+.pf-product-rayx.s7-rayx-sales-compact .vendas-executive-kpi__aside-value {
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__blocks {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card.pf-product-rayx__daily-card--custos {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card .s7-daily-summary__head {
+  flex-shrink: 0;
+  padding: calc(9px * var(--s7-rayx-sales-density)) 14px;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card .s7-daily-summary__title {
+  font-size: 12px;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card .s7-daily-summary__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: calc(14px * var(--s7-rayx-sales-density)) 14px calc(16px * var(--s7-rayx-sales-density));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card .s7-daily-summary__block {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__metrics {
+  flex: 1 1 auto;
+  align-content: space-between;
+  height: 100%;
+  gap: calc(14px * var(--s7-rayx-sales-density)) calc(12px * var(--s7-rayx-sales-density));
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__metric {
+  gap: 4px;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__metric-label {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__metric-value {
+  font-size: clamp(0.84rem, 1.18vw, 1rem);
+  line-height: 1.18;
+  gap: 1px;
+}
+
+.pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__metric-share {
+  font-size: 0.74rem;
+  line-height: 1.12;
+}
+
+/* Host compartilhado — Raio-X Produto × Anúncio (aba Vendas) */
+.s7-rayx-sales-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.s7-rayx-sales-host > .pf-product-rayx.s7-rayx-sales-compact {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }

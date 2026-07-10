@@ -41,6 +41,9 @@ function VendasExecutiveKpiSkeleton() {
  *   titleDica?: string | null;
  *   periodLabel?: string | null;
  *   valueAside?: import("react").ReactNode;
+ *   valueDica?: string | null;
+ *   cardClassName?: string;
+ *   valueContent?: import("react").ReactNode;
  * }} props
  */
 export default function VendasExecutiveKpiCard({
@@ -60,6 +63,9 @@ export default function VendasExecutiveKpiCard({
   titleDica = null,
   periodLabel = null,
   valueAside = null,
+  valueDica = null,
+  cardClassName = "",
+  valueContent = null,
 }) {
   const showLoading = Boolean(loading);
   const showError = Boolean(error) && !showLoading;
@@ -69,6 +75,18 @@ export default function VendasExecutiveKpiCard({
   const displayValue = showEmpty ? EXECUTIVE_PANEL_EMPTY_KPI_VALUE : value;
 
   const hasSubtitle = Boolean(subtitle) && !showEmpty && !showError && !showLoading;
+  const showValueDica =
+    Boolean(valueDica) && !showEmpty && !showError && !showLoading && !showUnavailable;
+
+  const valueNode = (
+    <p
+      className={["vendas-executive-kpi__value", valueClassName].filter(Boolean).join(" ")}
+      aria-live="polite"
+      tabIndex={showValueDica ? 0 : undefined}
+    >
+      {displayValue}
+    </p>
+  );
 
   const bodyClass = [
     "vendas-executive-kpi__body",
@@ -98,7 +116,6 @@ export default function VendasExecutiveKpiCard({
         ) : null}
         <h3
           className={["vendas-executive-kpi__title", titleClassName].filter(Boolean).join(" ")}
-          title={title}
         >
           {title}
         </h3>
@@ -121,7 +138,11 @@ export default function VendasExecutiveKpiCard({
   );
 
   const cardShell = (
-    <article className={`vendas-executive-kpi vendas-executive-kpi--tone-${tone}`}>
+    <article
+      className={["vendas-executive-kpi", `vendas-executive-kpi--tone-${tone}`, cardClassName]
+        .filter(Boolean)
+        .join(" ")}
+    >
       {!tituloExterno ? headerNode : null}
       {showLoading ? (
         <VendasExecutiveKpiSkeleton />
@@ -137,18 +158,25 @@ export default function VendasExecutiveKpiCard({
           ) : (
             <>
               <div className="vendas-executive-kpi__value-row">
-                {valueIcon ? (
-                  <span className="vendas-executive-kpi__value-icon" aria-hidden>
-                    {valueIcon}
-                  </span>
-                ) : null}
-                <p
-                  className={["vendas-executive-kpi__value", valueClassName].filter(Boolean).join(" ")}
-                  aria-live="polite"
-                >
-                  {displayValue}
-                </p>
-                {valueAside ? <div className="vendas-executive-kpi__value-aside">{valueAside}</div> : null}
+                {valueContent ? (
+                  valueContent
+                ) : (
+                  <>
+                    {valueIcon ? (
+                      <span className="vendas-executive-kpi__value-icon" aria-hidden>
+                        {valueIcon}
+                      </span>
+                    ) : null}
+                    {showValueDica ? (
+                      <S7Tooltip content={valueDica} placement="top-start" offset={6} wrap>
+                        {valueNode}
+                      </S7Tooltip>
+                    ) : (
+                      valueNode
+                    )}
+                    {valueAside ? <div className="vendas-executive-kpi__value-aside">{valueAside}</div> : null}
+                  </>
+                )}
               </div>
               {hasSubtitle ? (
                 <p className="vendas-executive-kpi__subtitle">{subtitle}</p>

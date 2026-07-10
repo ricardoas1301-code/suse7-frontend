@@ -6,9 +6,18 @@
 @import "./styles/s7-list-table-head-shared.css";
 
 /* Utilitário de página — cor em: styles/tokens/colors.css (--s7-bg-page) */
+html,
+#root {
+  background-color: var(--s7-bg-page, #f2f7ff);
+}
+
 .s7-page {
   background-color: var(--s7-bg-page);
-  min-height: 100vh;
+}
+
+/* Scrollport operacional — altura vem do flex shell (Layout), não de 100vh */
+.page-content.s7-page {
+  min-height: 0;
 }
 
 /*

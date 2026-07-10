@@ -1,5 +1,5 @@
 // ======================================================================
-// Top 10 — bloco do Dashboard com filtros próprios (período + conta).
+// Top 10 — bloco do Dashboard / Vendas com filtros inline (período + conta).
 // ======================================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -7,8 +7,9 @@ import { fetchMercadoLivreMarketplaceAccounts } from "../../services/marketplace
 import { useDashboardBlockFilters } from "./DashboardBlockFiltersContext.jsx";
 import { useDashboardScope } from "./useDashboardScope.js";
 import S7BlockFiltersPanel from "./S7BlockFiltersPanel.jsx";
-import S7Icon from "../ui/S7Icon";
+import S7DashboardSectionPanel from "./S7DashboardSectionPanel.jsx";
 import VendasExecutivePanelSection from "../sales/VendasExecutivePanelSection";
+import S7SectionJumpButton from "../ui/S7SectionJumpButton.jsx";
 import "./S7BlockFiltersPanel.css";
 
 /** @param {Record<string, unknown> | null | undefined} a */
@@ -21,18 +22,19 @@ function dashboardMlAccountLabel(a) {
 }
 
 /**
- * @param {{ className?: string }} props
+ * @param {{
+ *   className?: string;
+ *   sectionJumpDownTargetRef?: import("react").RefObject<Element | null>;
+ *   sectionJumpDownAriaLabel?: string;
+ * }} props
  */
-export default function S7Top10BlockSection({ className = "" }) {
+export default function S7Top10BlockSection({
+  className = "",
+  sectionJumpDownTargetRef = null,
+  sectionJumpDownAriaLabel = "Ir para busca e filtros",
+}) {
   const scope = useDashboardScope();
-  const {
-    top10Filters,
-    top10FiltersExpanded,
-    top10PeriodTouched,
-    applyTop10Period,
-    setTop10AccountId,
-    toggleTop10FiltersExpanded,
-  } = useDashboardBlockFilters();
+  const { top10Filters, applyTop10Period, setTop10AccountId } = useDashboardBlockFilters();
 
   const [mlAccounts, setMlAccounts] = useState(/** @type {Record<string, unknown>[]} */ ([]));
   const [mlAccountsReady, setMlAccountsReady] = useState(false);
@@ -52,94 +54,82 @@ export default function S7Top10BlockSection({ className = "" }) {
     };
   }, []);
 
-  const filtersActive = useMemo(
-    () =>
-      top10PeriodTouched || Boolean(String(top10Filters.marketplaceAccountId ?? "").trim()),
-    [top10PeriodTouched, top10Filters.marketplaceAccountId],
-  );
-
   const top10ExecutiveParams = useMemo(
     () => scope.top10.executiveParams,
     [scope.top10.executiveParams],
   );
 
-  const handleTop10HeaderToggle = () => {
-    toggleTop10FiltersExpanded();
-  };
+  const top10DateLabel = useMemo(() => {
+    const raw = scope.top10.top10DateLabel;
+    if (!raw) return "";
+    return String(raw).replace(/\s[–→]\s/g, " | ");
+  }, [scope.top10.top10DateLabel]);
 
-  /** @param {import("react").KeyboardEvent<HTMLElement>} event */
-  const handleTop10HeaderKeyDown = (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      toggleTop10FiltersExpanded();
-    }
-  };
+  const filterPanel = (
+    <S7BlockFiltersPanel
+      idPrefix="s7-top10"
+      expanded={false}
+      layout="inline"
+      periodPreset={top10Filters.periodPreset}
+      startDate={top10Filters.startDate}
+      endDate={top10Filters.endDate}
+      marketplaceAccountId={top10Filters.marketplaceAccountId}
+      accounts={mlAccounts}
+      accountLabel={dashboardMlAccountLabel}
+      accountsReady={mlAccountsReady}
+      onApplyPeriod={applyTop10Period}
+      onAccountChange={setTop10AccountId}
+    />
+  );
 
   return (
     <section className={["s7-top10-block", className].filter(Boolean).join(" ")} aria-label="Top 10">
-      <div className="s7-top10-block__shell">
-        <header
-          className="s7-top10-block__head s7-dashboard-block-head s7-dashboard-block-head--clickable"
-          onClick={handleTop10HeaderToggle}
-          onKeyDown={handleTop10HeaderKeyDown}
-          role="button"
-          tabIndex={0}
-          aria-expanded={top10FiltersExpanded}
-          aria-controls="s7-top10-filters-panel"
-        >
-          <div className="s7-dashboard-block-head__title-row">
-            <button
-              type="button"
+      <S7DashboardSectionPanel>
+        <header className="s7-top10-block__head s7-dashboard-block-head s7-dashboard-block-head--inline-filters">
+          <div className="s7-dashboard-block-head__title-row s7-dashboard-block-head__title-row--with-filters">
+            <h2 className="s7-top10-block__title">Top 10</h2>
+            <div className="s7-dashboard-block-head__inline-filters">{filterPanel}</div>
+          </div>
+          {scope.top10.top10ChipLabel || top10DateLabel || sectionJumpDownTargetRef ? (
+            <div
               className={[
-                "s7-block-filter-toggle",
-                top10FiltersExpanded || filtersActive ? "s7-block-filter-toggle--active" : "",
+                "s7-dashboard-block-head__period-aside",
+                sectionJumpDownTargetRef ? "s7-dashboard-block-head__period-aside--with-jump" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
-              aria-expanded={top10FiltersExpanded}
-              aria-controls="s7-top10-filters-panel"
-              aria-label={top10FiltersExpanded ? "Recolher filtros dos Top 10" : "Expandir filtros dos Top 10"}
-              onClick={(event) => {
-                event.stopPropagation();
-                toggleTop10FiltersExpanded();
-              }}
+              aria-label="Período dos Top 10"
             >
-              <S7Icon name="search" size={18} strokeWidth={1.85} />
-            </button>
-            <h2 className="s7-top10-block__title">Top 10</h2>
-          </div>
-          <div className="s7-dashboard-block-head__period-aside" aria-label="Período dos Top 10">
-            <span className="s7-top10-block__period-label">{scope.top10.top10PeriodLabel || "Período"}</span>
-            {scope.top10.top10ChipLabel ? (
-              <span className="s7-top10-block__period-preset">{scope.top10.top10ChipLabel}</span>
-            ) : null}
-            {scope.top10.top10DateLabel ? (
-              <span className="s7-top10-block__period-date">{scope.top10.top10DateLabel}</span>
-            ) : null}
-          </div>
+              {sectionJumpDownTargetRef ? (
+                <S7SectionJumpButton
+                  direction="down"
+                  targetRef={sectionJumpDownTargetRef}
+                  ariaLabel={sectionJumpDownAriaLabel}
+                />
+              ) : null}
+              {scope.top10.top10ChipLabel || top10DateLabel ? (
+                <div className="s7-dashboard-block-head__period-aside-copy">
+                  {scope.top10.top10ChipLabel ? (
+                    <span className="s7-daily-summary__period-chip">{scope.top10.top10ChipLabel}</span>
+                  ) : null}
+                  {top10DateLabel ? (
+                    <span className="s7-top10-block__period-date s7-daily-summary__period-range">
+                      {top10DateLabel}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </header>
 
-        <S7BlockFiltersPanel
-          idPrefix="s7-top10"
-          expanded={top10FiltersExpanded}
-          periodPreset={top10Filters.periodPreset}
-          startDate={top10Filters.startDate}
-          endDate={top10Filters.endDate}
-          marketplaceAccountId={top10Filters.marketplaceAccountId}
-          accounts={mlAccounts}
-          accountLabel={dashboardMlAccountLabel}
-          accountsReady={mlAccountsReady}
-          onApplyPeriod={applyTop10Period}
-          onAccountChange={setTop10AccountId}
+        <VendasExecutivePanelSection
+          className="dashboard-page__executive-kpis"
+          tituloExternoTop10
+          executiveParamsOverride={top10ExecutiveParams}
+          executivePeriodLabelOverride={scope.top10.top10PeriodLabel}
         />
-      </div>
-
-      <VendasExecutivePanelSection
-        className="dashboard-page__executive-kpis"
-        tituloExternoTop10
-        executiveParamsOverride={top10ExecutiveParams}
-        executivePeriodLabelOverride={scope.top10.top10PeriodLabel}
-      />
+      </S7DashboardSectionPanel>
     </section>
   );
 }

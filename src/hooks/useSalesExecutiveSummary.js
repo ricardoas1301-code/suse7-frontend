@@ -134,13 +134,11 @@ export function useSalesExecutiveSummary(params, options = {}) {
       if (import.meta.env.DEV && res.data) {
         const data = res.data;
         console.info("[S7][ExecutiveSummary response]", {
-          summary: data.summary ?? null,
+          ordersCount: data.summary?.orders_count ?? null,
           listingsCount: Array.isArray(data.rankings?.listings) ? data.rankings.listings.length : 0,
           productsCount: Array.isArray(data.rankings?.products) ? data.rankings.products.length : 0,
-          firstListing: Array.isArray(data.rankings?.listings) ? data.rankings.listings[0] ?? null : null,
-          dataQuality: data.data_quality ?? null,
-          filtersApplied: data.filters_applied ?? null,
-          period: data.period ?? null,
+          dataQualityStatus: data.data_quality?.status ?? null,
+          periodPreset: data.period?.preset ?? null,
         });
       }
     })();

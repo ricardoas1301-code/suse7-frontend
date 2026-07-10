@@ -13,9 +13,7 @@ import { isSaleRayxDetailItemId, pickSaleRayxDetailItemId } from "../components/
 import S7Icon from "../components/ui/S7Icon";
 import { getVendasTableFinancialHealthToneClass } from "../utils/saleHealthUi";
 import {
-  pickSaleCommissionSecondaryLabel,
   pickSaleInternalTaxBrl,
-  pickSaleInternalTaxPercentLabel,
   pickSaleMarketplaceFeeBrl,
   pickSaleOperationalStatusLabel,
 } from "../components/sales/saleRayxFinancialPickers";
@@ -25,9 +23,17 @@ import S7CatalogAccountCell, {
 } from "../components/catalog/S7CatalogAccountCell.jsx";
 import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../components/ui/S7CopyButton";
 import S7CatalogListingHeadline from "../components/catalog/S7CatalogListingHeadline.jsx";
+import { CatalogProfitHealthHint } from "../components/catalog/CatalogFinancialMetricUi.jsx";
 import S7Button from "../components/ui/S7Button";
+import S7Tooltip from "../components/ui/S7Tooltip";
 import QuickProductCostsModal from "../features/listings/components/QuickProductCostsModal.jsx";
 import { formatVendasTableTitleCase } from "../features/vendas/utils/vendasTableDisplayFormat.js";
+import {
+  pickVendasCommissionSecondaryLabel,
+  pickVendasCustoSecondaryLabel,
+  pickVendasFreteSecondaryLabel,
+  pickVendasImpostoSecondaryLabel,
+} from "../features/vendas/utils/vendasTableSaleSharePercentDisplay.js";
 import { resolveSalesRowProductThumbUrl, salesRowThumbCacheKey } from "../utils/resolveSalesRowProductThumbUrl.js";
 import { getSaleStatusToneClass } from "../features/vendas/utils/saleStatusToneClass.js";
 import VendasFiltersCard from "../features/vendas/filters/VendasFiltersCard.jsx";
@@ -42,7 +48,8 @@ import "../components/Products.css";
 import "../components/Anuncios.css";
 import "../styles/VendasPage.css";
 import "../features/vendas/mobile/VendasMobileSaleCard.css";
-import { bindListTableHeadStickyToFilter } from "../styles/s7ListTableHeadStickySync.js";
+import { bindVendasListHorizontalScroll } from "../features/vendas/layout/vendasListBodyScroll.js";
+import VendasTableColgroup from "../features/vendas/components/VendasTableColgroup.jsx";
 import {
   buildVendasReportContext,
   canOfferVendasReport,
@@ -58,9 +65,14 @@ import { pickVendasSaleRowId } from "../features/vendas/selection/pickVendasSale
 import { aggregateVendasSelectedSalesMetrics } from "../features/vendas/selection/aggregateVendasSelectedSalesMetrics.js";
 import { buildVendasSelectedReportExecutivePreview } from "../features/vendas/selection/buildVendasSelectedReportExecutivePreview.js";
 import VendasRowSelectCheckbox from "../features/vendas/selection/VendasRowSelectCheckbox.jsx";
+import { DashboardBlockFiltersProvider } from "../components/dashboard/DashboardBlockFiltersContext.jsx";
+import S7Top10BlockSection from "../components/dashboard/S7Top10BlockSection.jsx";
+import S7OperationalExecutiveBlock from "../components/dashboard/S7OperationalExecutiveBlock.jsx";
 
 const DASH = "—";
 const DEFAULT_PAGE_SIZE = 100;
+const COMPLETE_PRODUCT_COSTS_LABEL = "Cadastrar Custos";
+const COMPLETE_PRODUCT_COSTS_TOOLTIP = "Cadastrar custos do produto para calcular lucro e margem.";
 
 /** @returns {{ date: string; time: string } | null} */
 function formatSaleDateParts(iso) {
@@ -212,13 +224,6 @@ function VendasTableNumSingle({ children }) {
   );
 }
 
-/** @param {string | null | undefined} pctLabel */
-function formatVendasTaxSecondaryLabel(pctLabel) {
-  const pct = pctLabel != null && String(pctLabel).trim() !== "" ? String(pctLabel).trim() : "";
-  if (!pct) return null;
-  return `Imposto ${pct}`;
-}
-
 /** @param {string} toneClass */
 function vendasFinHealthValueClass(toneClass) {
   if (toneClass === "vendas-page__fin--health-critical") return "vendas-page__fin-value--health-critical";
@@ -226,41 +231,6 @@ function vendasFinHealthValueClass(toneClass) {
   if (toneClass === "vendas-page__fin--health-healthy") return "vendas-page__fin-value--health-healthy";
   if (toneClass === "vendas-page__fin--empty") return "vendas-page__fin-value--empty";
   return "";
-}
-
-/**
- * Indicador compacto de saúde na coluna Lucro (R$): seta ↓ prejuízo, bolinha margem crítica, seta ↑ saudável.
- * @param {{ toneClass: string }} props
- */
-function VendasProfitHealthHint({ toneClass }) {
-  if (toneClass === "vendas-page__fin--health-critical") {
-    return (
-      <span
-        className="vendas-page__profit-hint vendas-page__profit-hint--down"
-        title="Prejuízo"
-        aria-label="Prejuízo"
-      />
-    );
-  }
-  if (toneClass === "vendas-page__fin--health-warn") {
-    return (
-      <span
-        className="vendas-page__profit-hint vendas-page__profit-hint--dot"
-        title="Margem crítica"
-        aria-label="Margem crítica"
-      />
-    );
-  }
-  if (toneClass === "vendas-page__fin--health-healthy") {
-    return (
-      <span
-        className="vendas-page__profit-hint vendas-page__profit-hint--up"
-        title="Saudável"
-        aria-label="Saudável"
-      />
-    );
-  }
-  return null;
 }
 
 /** @param {Record<string, unknown> | null | undefined} a */
@@ -275,7 +245,9 @@ function vendasMlAccountLabel(a) {
 export default function VendasPage() {
   return (
     <VendasFiltersProvider>
-      <VendasPageContent />
+      <DashboardBlockFiltersProvider>
+        <VendasPageContent />
+      </DashboardBlockFiltersProvider>
     </VendasFiltersProvider>
   );
 }
@@ -308,6 +280,8 @@ function VendasPageContent() {
   const [costsModal, setCostsModal] = useState(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const vendasFiltersRef = useRef(/** @type {HTMLElement | null} */ (null));
+  const vendasExecutiveRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const vendasListBodyScrollRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [reportModalMode, setReportModalMode] = useState(/** @type {"filters" | "selected"} */ ("filters"));
   const selectAllPageRef = useRef(/** @type {HTMLInputElement | null} */ (null));
 
@@ -328,11 +302,11 @@ function VendasPageContent() {
   }, [somePageSelected]);
 
   useEffect(() => {
-    const cardEl = vendasFiltersRef.current;
-    const scrollRoot = cardEl?.closest(".page-content");
-    if (!cardEl || !scrollRoot) return undefined;
-    return bindListTableHeadStickyToFilter(scrollRoot, cardEl);
-  }, [vendasFilters.expanded, loading]);
+    const bodyScrollEl = vendasListBodyScrollRef.current;
+    const scrollRoot = vendasFiltersRef.current?.closest(".page-content");
+    if (!scrollRoot || !bodyScrollEl) return undefined;
+    return bindVendasListHorizontalScroll(scrollRoot, bodyScrollEl);
+  }, [loading, rows.length, page]);
 
   useEffect(() => {
     clearSelection();
@@ -791,20 +765,15 @@ function VendasPageContent() {
     <div className="vendas-page">
       <h1 className="products-catalog__sr-title">Vendas</h1>
 
-      <VendasFiltersCard
-        ref={vendasFiltersRef}
-        accounts={mlAccounts}
-        accountLabel={vendasMlAccountLabel}
-        accountsReady={mlAccountsReady}
-        listFilter={filter}
-        onListFilterChange={setFilter}
-        searchInput={searchInput}
-        onSearchInputChange={setSearchInput}
-        showGerarRelatorio={showGerarRelatorio}
-        gerarRelatorioDisabled={gerarRelatorioDisabled}
-        onGerarRelatorioClick={openReportModal}
-        selectedCount={selectedCount}
-      />
+      <S7OperationalExecutiveBlock ref={vendasExecutiveRef}>
+        <S7Top10BlockSection
+          className="dashboard-page__top10-block"
+          sectionJumpDownTargetRef={vendasFiltersRef}
+          sectionJumpDownAriaLabel="Ir para busca e filtros"
+        />
+      </S7OperationalExecutiveBlock>
+
+      <div className="vendas-page__operacao-shell" aria-label="Busca, lista e paginação de vendas">
 
       {truncatedList || executiveTruncated ? (
         <p className="vendas-page__scan-note" role="status">
@@ -818,48 +787,98 @@ function VendasPageContent() {
         </p>
       ) : null}
 
-      <div className="vendas-page__table-block vendas-page__table-block--desktop">
-        <div className="vendas-page__table-card">
-          <div className="vendas-page__table-hscroll">
-            <table className="vendas-page__table">
-              <thead>
-                <tr>
-                  <th className="vendas-page__col-select" scope="col">
-                    <label
-                      className="vendas-page__row-select vendas-page__row-select--head"
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                    >
-                      <input
-                        ref={selectAllPageRef}
-                        type="checkbox"
-                        className="anuncios-catalog__select-checkbox vendas-page__row-select-checkbox"
-                        checked={allPageSelected}
-                        disabled={loading || rows.length === 0}
-                        aria-label="Selecionar todas as vendas da página"
-                        onChange={toggleAllOnPage}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </label>
-                  </th>
-                  <th className="vendas-page__col-venda">Venda</th>
-                  <th className="vendas-page__col-product">Anúncio</th>
-                  <th className="vendas-page__col-account">Conta</th>
-                  <th className="vendas-page__col-channel">Canal</th>
-                  <th className="vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--profit">Lucro (R$)</th>
-                  <th className="vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--margin">
-                    Lucro (%)
-                  </th>
-                  <th className="vendas-page__num-col vendas-page__num-col--sale">Venda</th>
-                  <th className="vendas-page__num-col vendas-page__num-col--commission">Comissão</th>
-                  <th className="vendas-page__num-col vendas-page__num-col--shipping">Frete</th>
-                  <th className="vendas-page__num-col vendas-page__num-col--received">Repasse</th>
-                  <th className="vendas-page__num-col vendas-page__num-col--product-cost">Custo</th>
-                  <th className="vendas-page__num-col vendas-page__num-col--tax">Imposto</th>
-                  <th className="vendas-page__col-sale-status">Status</th>
+      <div className="vendas-page__table-block">
+        <div className="vendas-page__list-sticky-chrome" aria-label="Busca, filtros e cabeçalho da lista">
+          <div className="vendas-page__sticky-top-spacer" aria-hidden="true" />
+
+          <VendasFiltersCard
+            ref={vendasFiltersRef}
+            accounts={mlAccounts}
+            accountLabel={vendasMlAccountLabel}
+            accountsReady={mlAccountsReady}
+            listFilter={filter}
+            onListFilterChange={setFilter}
+            searchInput={searchInput}
+            onSearchInputChange={setSearchInput}
+            showGerarRelatorio={showGerarRelatorio}
+            gerarRelatorioDisabled={gerarRelatorioDisabled}
+            onGerarRelatorioClick={openReportModal}
+            selectedCount={selectedCount}
+            sectionJumpUpTargetRef={vendasExecutiveRef}
+            sectionJumpUpAriaLabel="Voltar para o Top 10"
+          />
+
+          <div className="vendas-page__table-thead-slot">
+            <div className="vendas-page__table-hscroll">
+              <table className="vendas-page__table vendas-page__table--head">
+                <VendasTableColgroup />
+                <thead>
+                  <tr>
+                      <th className="vendas-page__col-select" scope="col">
+                        <label
+                          className="vendas-page__row-select vendas-page__row-select--head"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            ref={selectAllPageRef}
+                            type="checkbox"
+                            className="anuncios-catalog__select-checkbox vendas-page__row-select-checkbox"
+                            checked={allPageSelected}
+                            disabled={loading || rows.length === 0}
+                            aria-label="Selecionar todas as vendas da página"
+                            onChange={toggleAllOnPage}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </label>
+                      </th>
+                      <th className="vendas-page__col-venda">Venda</th>
+                      <th className="vendas-page__col-product">Anúncio</th>
+                      <th className="vendas-page__col-account vendas-page__col-center">Conta</th>
+                      <th className="vendas-page__col-channel vendas-page__col-center">Canal</th>
+                      <th className="vendas-page__col-profit vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--profit vendas-page__col-center">
+                        Lucro (R$)
+                      </th>
+                      <th className="vendas-page__col-margin vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--margin vendas-page__col-center">
+                        Lucro (%)
+                      </th>
+                      <th className="vendas-page__col-sale-value vendas-page__num-col vendas-page__num-col--sale vendas-page__col-center">
+                        Venda
+                      </th>
+                      <th className="vendas-page__col-payout vendas-page__num-col vendas-page__num-col--received vendas-page__col-center">
+                        Repasse
+                      </th>
+                      <th className="vendas-page__col-fee vendas-page__num-col vendas-page__num-col--commission vendas-page__col-center">
+                        Comissão
+                      </th>
+                      <th className="vendas-page__col-shipping vendas-page__num-col vendas-page__num-col--shipping vendas-page__col-center">
+                        Frete
+                      </th>
+                      <th className="vendas-page__col-tax vendas-page__num-col vendas-page__num-col--tax vendas-page__col-center">
+                        Imposto
+                      </th>
+                      <th className="vendas-page__col-cost vendas-page__num-col vendas-page__num-col--product-cost vendas-page__col-center">
+                        Custo
+                      </th>
+                      <th className="vendas-page__col-sale-status">Status</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="vendas-page__list-operational vendas-page__table-block--desktop">
+          <div className="vendas-page__table-card vendas-page__table-card--scroll-viewport">
+          <div
+            ref={vendasListBodyScrollRef}
+            className="vendas-page__table-body-scroll"
+            aria-label="Corpo da lista de vendas"
+          >
+            <div className="vendas-page__table-hscroll">
+              <table className="vendas-page__table vendas-page__table--body">
+                <VendasTableColgroup />
+                <tbody>
                 {loading ? (
                   <tr>
                     <td colSpan={14} className="vendas-page__empty">
@@ -882,9 +901,11 @@ function VendasPageContent() {
                     const financialHealthTone = getVendasTableFinancialHealthToneClass(f.margin_percent);
                     const financialHealthValueClass = vendasFinHealthValueClass(financialHealthTone);
                     const internalTaxBrl = pickSaleInternalTaxBrl(f);
-                    const internalTaxPct = pickSaleInternalTaxPercentLabel(f);
                     const commissionBrl = pickSaleMarketplaceFeeBrl(f);
-                    const commissionDetail = pickSaleCommissionSecondaryLabel(f);
+                    const commissionDetail = pickVendasCommissionSecondaryLabel(f);
+                    const freteSecondary = pickVendasFreteSecondaryLabel(f);
+                    const custoSecondary = pickVendasCustoSecondaryLabel(f, r);
+                    const impostoSecondary = pickVendasImpostoSecondaryLabel(f);
                     const saleStatusLabel = pickSaleOperationalStatusLabel(r);
                     const dateParts = formatSaleDateParts(r.sale_date);
                     const buyerName =
@@ -1040,97 +1061,107 @@ function VendasPageContent() {
                                   onClick={(e) => e.stopPropagation()}
                                   onKeyDown={(e) => e.stopPropagation()}
                                 >
-                                  <S7Button
-                                    type="button"
-                                    variant="warning"
-                                    size="sm"
-                                    className="vendas-page__complete-product-btn"
-                                    onClick={async () => {
-                                      const productImageUrl =
-                                        (await resolveSalesRowProductThumbUrl(/** @type {Record<string, unknown>} */ (r))) ||
-                                        null;
-                                      setCostsModal({
-                                        productId: String(r.product_id).trim(),
-                                        sku: skuForMeta || null,
-                                        productTitle:
-                                          r.product_display_title != null &&
-                                          String(r.product_display_title).trim() !== ""
-                                            ? String(r.product_display_title).trim()
-                                            : "Produto",
-                                        productImageUrl: productImageUrl || null,
-                                      });
-                                    }}
-                                  >
-                                    Completar cadastro
-                                  </S7Button>
+                                  <S7Tooltip content={COMPLETE_PRODUCT_COSTS_TOOLTIP} placement="bottom-start" offset={6} wrap>
+                                    <span className="anuncios-completar-tooltip-anchor">
+                                      <S7Button
+                                        type="button"
+                                        variant="warning"
+                                        size="sm"
+                                        className="vendas-page__complete-product-btn"
+                                        onClick={async () => {
+                                          const productImageUrl =
+                                            (await resolveSalesRowProductThumbUrl(
+                                              /** @type {Record<string, unknown>} */ (r),
+                                            )) || null;
+                                          setCostsModal({
+                                            productId: String(r.product_id).trim(),
+                                            sku: skuForMeta || null,
+                                            productTitle:
+                                              r.product_display_title != null &&
+                                              String(r.product_display_title).trim() !== ""
+                                                ? String(r.product_display_title).trim()
+                                                : "Produto",
+                                            productImageUrl: productImageUrl || null,
+                                          });
+                                        }}
+                                      >
+                                        {COMPLETE_PRODUCT_COSTS_LABEL}
+                                      </S7Button>
+                                    </span>
+                                  </S7Tooltip>
                                 </div>
                               ) : null}
                             </div>
                           </div>
                         </td>
-                        <td className="vendas-page__col-account vendas-page__cell-align-stack">
+                        <td className="vendas-page__col-account vendas-page__col-center vendas-page__cell-align-stack">
                           <S7CatalogAccountCell
-                            variant="stacked"
-                            stackedAvatarPx={28}
+                            compact
+                            variant="inline"
                             marketplaceAccountId={accountFields.marketplaceAccountId}
                             accountAlias={accountAliasDisplay}
                             accountLogoUrl={accountFields.accountLogoUrl}
                           />
                         </td>
-                        <td className="vendas-page__col-channel vendas-page__cell-align-stack">
+                        <td className="vendas-page__col-channel vendas-page__col-center vendas-page__cell-align-stack">
                           <S7CatalogChannelCell
-                            variant="stacked"
-                            stackedBadgePx={33}
+                            variant="inline"
                             marketplace={r.marketplace}
                             marketplaceLabel={channelLabelDisplay}
                           />
                         </td>
                         <td
-                          className={`vendas-page__num-cell vendas-page__num-cell--profit vendas-page__cell-align-main ${financialHealthTone}`}
+                          className={`vendas-page__col-profit vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--profit vendas-page__cell-align-main ${financialHealthTone}`}
                         >
                           <VendasTableNumSingle>
                             <span className="vendas-page__fin-value-row">
                               <span className={`vendas-page__fin-value ${financialHealthValueClass}`}>
                                 {renderBrlValueCell(f.profit_brl)}
                               </span>
-                              <VendasProfitHealthHint toneClass={financialHealthTone} />
+                              <CatalogProfitHealthHint toneClass={financialHealthTone} />
                             </span>
                           </VendasTableNumSingle>
                         </td>
                         <td
-                          className={`vendas-page__num-cell vendas-page__num-cell--margin vendas-page__cell-align-main ${financialHealthTone}`}
+                          className={`vendas-page__col-margin vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--margin vendas-page__cell-align-main ${financialHealthTone}`}
                         >
                           <VendasTableNumSingle>
                             <span className="vendas-page__fin-value-row">
                               <span className={`vendas-page__fin-value ${financialHealthValueClass}`}>
                                 {formatPctApi(f.margin_percent)}
                               </span>
-                              <VendasProfitHealthHint toneClass={financialHealthTone} />
+                              <CatalogProfitHealthHint toneClass={financialHealthTone} />
                             </span>
                           </VendasTableNumSingle>
                         </td>
-                        <td className="vendas-page__num-cell vendas-page__num-cell--sale vendas-page__cell-align-main">
+                        <td className="vendas-page__col-sale-value vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--sale vendas-page__cell-align-main">
                           <VendasTableNumSingle>{formatBrlApi(f.sale_price)}</VendasTableNumSingle>
                         </td>
-                        <td className="vendas-page__num-cell vendas-page__num-cell--commission vendas-page__cell-align-main">
+                        <td className="vendas-page__col-payout vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--received vendas-page__cell-align-main">
+                          <VendasTableNumSingle>{renderBrlValueCell(f.net_received)}</VendasTableNumSingle>
+                        </td>
+                        <td className="vendas-page__col-fee vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--commission vendas-page__cell-align-main">
                           <VendasTableNumStack
                             primary={renderBrlValueCell(commissionBrl ?? f.commission)}
                             secondary={commissionDetail}
                           />
                         </td>
-                        <td className="vendas-page__num-cell vendas-page__num-cell--shipping vendas-page__cell-align-main">
-                          <VendasTableNumSingle>{renderBrlValueCell(f.shipping_cost)}</VendasTableNumSingle>
+                        <td className="vendas-page__col-shipping vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--shipping vendas-page__cell-align-main">
+                          <VendasTableNumStack
+                            primary={renderBrlValueCell(f.shipping_cost)}
+                            secondary={freteSecondary}
+                          />
                         </td>
-                        <td className="vendas-page__num-cell vendas-page__num-cell--received vendas-page__cell-align-main">
-                          <VendasTableNumSingle>{renderBrlValueCell(f.net_received)}</VendasTableNumSingle>
-                        </td>
-                        <td className="vendas-page__num-cell vendas-page__num-cell--product-cost vendas-page__cell-align-main">
-                          <VendasTableNumSingle>{renderBrlValueCell(r.product_cost_only_brl)}</VendasTableNumSingle>
-                        </td>
-                        <td className="vendas-page__num-cell vendas-page__num-cell--tax vendas-page__cell-align-main">
+                        <td className="vendas-page__col-tax vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--tax vendas-page__cell-align-main">
                           <VendasTableNumStack
                             primary={renderBrlValueCell(internalTaxBrl)}
-                            secondary={formatVendasTaxSecondaryLabel(internalTaxPct)}
+                            secondary={impostoSecondary}
+                          />
+                        </td>
+                        <td className="vendas-page__col-cost vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--product-cost vendas-page__cell-align-main">
+                          <VendasTableNumStack
+                            primary={renderBrlValueCell(r.product_cost_only_brl)}
+                            secondary={custoSecondary}
                           />
                         </td>
                         <td className="vendas-page__col-sale-status vendas-page__cell-align-main">
@@ -1149,8 +1180,10 @@ function VendasPageContent() {
                   })
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -1210,6 +1243,7 @@ function VendasPageContent() {
         >
           Próxima
         </button>
+      </div>
       </div>
 
       <SaleDetailModal open={modalOpen} itemId={selectedItemId} onClose={closeDetail} />

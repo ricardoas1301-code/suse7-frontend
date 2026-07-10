@@ -6,6 +6,7 @@ import {
   normalizeSupabaseUrl,
   validateSupabaseEnvPair,
 } from "./lib/supabaseEnv.js";
+import { logIntroAuthDev } from "./auth/introAuthSession.js";
 
 const supabaseUrl = normalizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL);
 const supabaseAnonKey = String(import.meta.env.VITE_SUPABASE_ANON_KEY ?? "").trim();
@@ -25,12 +26,39 @@ if (!envCheck.ok) {
 
 export const supabaseProjectRef = envCheck.ok ? envCheck.projectRef : null;
 export const supabaseRealUrl = envCheck.ok ? envCheck.url : supabaseUrl;
+const supabaseStorageKey = `sb-${supabaseProjectRef ?? "default"}-auth-token`;
+
+if (typeof window !== "undefined") {
+  logIntroAuthDev("session_persistence_mode", {
+    mode: "sessionStorage",
+    storage_key: supabaseStorageKey,
+  });
+  try {
+    const stalePersistentSession = window.localStorage.getItem(supabaseStorageKey);
+    if (stalePersistentSession) {
+      window.localStorage.removeItem(supabaseStorageKey);
+      logIntroAuthDev("existing_persistent_session_cleared", {
+        storage_key: supabaseStorageKey,
+      });
+    }
+  } catch (error) {
+    logIntroAuthDev("existing_persistent_session_cleared", {
+      storage_key: supabaseStorageKey,
+      warning: error?.message ?? "localStorage_unavailable",
+    });
+  }
+}
 
 export const supabase = createClient(envCheck.ok ? envCheck.url : supabaseUrl || "", supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage:
+      typeof window !== "undefined" && window.sessionStorage
+        ? window.sessionStorage
+        : undefined,
+    storageKey: supabaseStorageKey,
   },
 });
 

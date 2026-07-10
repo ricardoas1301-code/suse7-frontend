@@ -413,6 +413,38 @@
   padding-bottom: 16px; /* respiro antes da barra inferior (fora do scroll colado) */
 }
 
+.pf-description-tab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  min-height: 0;
+}
+
+.pf-description-tab-title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pf-description-tab-head .pf-tab-title {
+  margin: 0;
+}
+
+.pf-description-tab-title-group .pf-description-copy-btn {
+  transform: translateY(2px);
+}
+
+.pf-description-tab-sync {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 /* Aba Anúncios: lista preenche altura útil até o rodapé do formulário */
 .pf-body[data-active-tab="ads"] {
   display: flex;
@@ -434,6 +466,30 @@
 
 .pf-container--ads .pf-tab-title {
   flex-shrink: 0;
+}
+
+.pf-rayx-list-subhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  flex-shrink: 0;
+}
+
+.pf-rayx-list-subhead__label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--s7-orange, #ff8533);
+  line-height: 1.2;
+}
+
+.pf-rayx-list-subhead__count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.12);
 }
 
 .pf-container--ads .pf-product-listings,
@@ -472,6 +528,96 @@
   flex-direction: column;
 }
 
+/* Aba Imagens: conteúdo ocupa altura natural — sem scroll/setas residuais */
+.pf-form-area:has(.pf-body[data-active-tab="images"]) {
+  overflow: visible;
+}
+
+.pf-body[data-active-tab="images"] {
+  flex: 0 1 auto;
+  min-height: auto;
+  overflow: visible;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.pf-body[data-active-tab="images"]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.pf-body[data-active-tab="images"]::-webkit-scrollbar-button,
+.pf-body[data-active-tab="images"]::-webkit-scrollbar-thumb,
+.pf-body[data-active-tab="images"]::-webkit-scrollbar-track {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.pf-container--images {
+  padding-bottom: 0;
+  overflow: visible;
+}
+
+.pf-container--images .pf-tab-title {
+  flex-shrink: 0;
+}
+
+.pf-container--images .pf-images-container,
+.pf-container--images .pf-images-section,
+.pf-container--images .pf-images-slot-row-wrap,
+.pf-container--images .pf-images-slot-row {
+  overflow: visible;
+}
+
+@media (max-height: 760px) {
+  .pf-body[data-active-tab="images"] {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
+  }
+
+  .pf-body[data-active-tab="images"]::-webkit-scrollbar {
+    width: 6px;
+    display: block;
+  }
+
+  .pf-body[data-active-tab="images"]::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+}
+
+/* Modal Raio-X do Produto — aba Imagens sem scroll/setas residuais */
+.product-edit-modal .pf-body[data-active-tab="images"] {
+  flex: 0 1 auto;
+  min-height: auto;
+  overflow: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.product-edit-modal .pf-form-area:has(.pf-body[data-active-tab="images"]) {
+  overflow: visible;
+}
+
+.product-edit-modal .pf-card.pf-card--primary:has(.pf-body[data-active-tab="images"]) {
+  overflow: visible;
+}
+
+.product-edit-modal .pf-body[data-active-tab="images"]::-webkit-scrollbar,
+.product-edit-modal .pf-body[data-active-tab="images"]::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .pf-container--pricing .pf-tab-title,
 .pf-container--stock .pf-tab-title {
   flex-shrink: 0;
@@ -487,57 +633,152 @@
 .pf-pricing-stock-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 20px 28px;
-  align-items: start;
+  gap: 12px;
+  align-items: stretch;
   min-width: 0;
 }
 
-.pf-pricing-stock-col__subtitle {
-  margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form {
+  height: 100%;
+  overflow: visible !important;
 }
 
-.pf-pricing-stock-col__subtitle--costs {
-  grid-column: 1;
-  grid-row: 1;
+.pf-container--pricing-stock .pf-product-rayx__daily-card.s7-daily-summary {
+  overflow: visible !important;
 }
 
-.pf-pricing-stock-col__subtitle--stock {
-  grid-column: 2;
-  grid-row: 1;
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form .s7-daily-summary__body {
+  padding: 14px 16px 16px;
+  overflow: visible !important;
+}
+
+.pf-container--pricing-stock .s7-daily-summary__head,
+.pf-container--pricing-stock .pf-pricing-stock-col__body,
+.pf-container--pricing-stock .pf-label-row {
+  overflow: visible !important;
+}
+
+.pf-container--pricing-stock .pf-pricing-stock-grid,
+.pf-container--pricing-stock .pf-row,
+.pf-container--pricing-stock .pf-group,
+.pf-container--pricing-stock .pf-stock-virtual-header,
+.pf-container--pricing-stock .pf-label-left {
+  overflow: visible !important;
+}
+
+/* Custos & estoque: tooltip sempre acima e na frente de qualquer elemento. */
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::after,
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::before {
+  z-index: 400000 !important;
+}
+
+/* Força top-center (mesmo que venha com classes auxiliares antigas). */
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::after {
+  top: auto !important;
+  bottom: calc(100% + 10px) !important;
+  left: 50% !important;
+  right: auto !important;
+  margin-left: 0 !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::before {
+  top: auto !important;
+  bottom: calc(100% + 2px) !important;
+  left: 50% !important;
+  right: auto !important;
+  margin-left: 0 !important;
+  transform: translateX(-50%) !important;
+  border-top-color: var(--s7-tooltip-bg) !important;
+  border-bottom-color: transparent !important;
+}
+
+.pf-container--pricing-stock .pf-info-btn.s7-tip:hover::after {
+  transform: translateX(-50%) translateY(-2px) !important;
+}
+
+/* Card com tooltip ativo sobe na pilha e fica acima do card irmão. */
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form {
+  position: relative;
+  z-index: 10;
+}
+
+.pf-container--pricing-stock .pf-product-rayx__daily-card--custos {
+  z-index: 20;
+}
+
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form:has(.pf-info-btn:hover),
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form:has(.pf-info-btn:focus-visible) {
+  z-index: 30;
+}
+
+/* Custos + estoque: mantém formato de balão de conversa (com seta). */
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::before {
+  content: "" !important;
+  display: block !important;
 }
 
 .pf-pricing-stock-col__body {
   min-width: 0;
 }
 
-.pf-pricing-stock-col__body--costs {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.pf-pricing-stock-col__body--stock {
-  grid-column: 2;
-  grid-row: 2;
+.pf-pricing-stock-col__body .pf-pricing-simple-column,
+.pf-pricing-stock-col__body .pf-stock-variants-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .pf-container--sales-history {
   min-width: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+}
+
+.pf-body[data-active-tab="sales_history"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pf-body[data-active-tab="sales_history"] .pf-body-inner {
+  display: none;
+}
+
+.pf-container--sales-history .pf-tab-title {
+  flex-shrink: 0;
+}
+
+.pf-container--performance.s7-rayx-sales-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  padding-bottom: 2px;
+}
+
+.pf-body[data-active-tab="performance"] {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+  padding: 8px 16px 0;
+}
+
+.pf-body[data-active-tab="performance"] .pf-container--performance.s7-rayx-sales-host {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
   .pf-pricing-stock-grid {
     grid-template-columns: 1fr;
-  }
-
-  .pf-pricing-stock-col__subtitle--costs,
-  .pf-pricing-stock-col__subtitle--stock,
-  .pf-pricing-stock-col__body--costs,
-  .pf-pricing-stock-col__body--stock {
-    grid-column: 1;
-    grid-row: auto;
   }
 }
 
@@ -711,40 +952,64 @@
   max-width: 100%;
 }
 
-/* SEO na aba Dados: preenche altura restante + tags +16% */
+/* SEO na aba Dados: tags compactas para visão 360 no modal */
 .pf-container--data .pf-seo-wrapper .seo-keywords-input {
-  flex: 1 1 auto;
-  min-height: 72px;
-  height: 100%;
-  padding: 12px 14px;
+  flex: 0 1 auto;
+  min-height: 52px;
+  height: auto;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  font-size: calc(14px * 1.16);
+  font-size: 13px;
 }
 
 .pf-container--data .pf-seo-wrapper .seo-keywords-input-inner {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
   align-content: flex-start;
-  gap: calc(6px * 1.16);
+  gap: 5px;
 }
 
 .pf-container--data .pf-seo-wrapper .seo-keywords-tag {
-  font-size: calc(13px * 1.16);
-  padding: calc(4px * 1.16) calc(10px * 1.16);
-  gap: calc(6px * 1.16);
+  font-size: 12px;
+  padding: 3px 8px;
+  gap: 5px;
 }
 
 .pf-container--data .pf-seo-wrapper .seo-keywords-tag-remove {
-  width: calc(18px * 1.16);
-  height: calc(18px * 1.16);
-  font-size: calc(16px * 1.16);
+  width: 16px;
+  height: 16px;
+  font-size: 14px;
 }
 
 .pf-container--data .pf-seo-wrapper .seo-keywords-hint {
   flex-shrink: 0;
-  margin-top: 8px;
-  font-size: calc(12px * 1.16);
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.product-edit-modal .pf-body[data-active-tab="data"] {
+  flex: 0 1 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
+.product-edit-modal .pf-container--data {
+  flex: 0 1 auto;
+  min-height: auto;
+}
+
+.product-edit-modal .pf-container--data .pf-row--data-seo,
+.product-edit-modal .pf-container--data .pf-group--seo,
+.product-edit-modal .pf-container--data .pf-seo-wrapper {
+  flex: 0 1 auto;
+  min-height: auto;
+}
+
+.product-edit-modal .pf-container--data .pf-seo-wrapper .seo-keywords-input {
+  flex: 0 1 auto;
+  min-height: 48px;
+  height: auto;
 }
 
 .pf-group--btn{
@@ -924,7 +1189,6 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  margin-top: 8px;   /* respiro entre label e textarea */
 }
 
 .pf-description-textarea {

@@ -14,8 +14,10 @@ import { useEffect, useRef, useState } from "react";
 import {
   chaveCacheSimulacaoOficial,
   chaveExtrasPrecificacaoInteligente,
+  montarPayloadSelecaoPromocaoSimulacao,
   simularCenarioListingTypeOficial,
 } from "../../utils/simulateListingTypeScenarioOficial.js";
+import { sanitizarCenarioSimuladoBrutoPromocao } from "../../features/pricing/promotions/aplicarReducaoTarifaPromocaoNoCenario.js";
 
 /** @typedef {import("./pricingListingTypeUi.js").ListingTypeChoice} ListingTypeChoice */
 /** @typedef {{ kind: "preco" | "margem"; value: number } | null} IntencaoSimulacao */
@@ -66,6 +68,7 @@ function num(v) {
  *   listingId?: string | null;
  *   intents: Partial<Record<ListingTypeChoice, IntencaoSimulacao>>;
  *   configuracaoFinanceira?: ConfiguracaoFinanceiraExtras | null;
+ *   promotionSelection?: ReturnType<typeof montarPayloadSelecaoPromocaoSimulacao>;
  * }} p
  * @returns {Record<ListingTypeChoice, EstadoSimulacaoTipo>}
  */
@@ -74,6 +77,7 @@ export function useSimulacaoOficialListingType({
   listingId,
   intents,
   configuracaoFinanceira = null,
+  promotionSelection = null,
 }) {
   const [estado, setEstado] = useState(
     /** @type {Record<ListingTypeChoice, EstadoSimulacaoTipo>} */ ({
@@ -87,12 +91,17 @@ export function useSimulacaoOficialListingType({
   const seqRef = useRef(/** @type {Record<string, number>} */ ({ classic: 0, premium: 0 }));
 
   const extrasKey = chaveExtrasPrecificacaoInteligente(configuracaoFinanceira);
+  const promotionIdKey =
+    promotionSelection?.promotion_id != null && String(promotionSelection.promotion_id).trim() !== ""
+      ? String(promotionSelection.promotion_id).trim()
+      : "none";
   const intentClassicKey = chaveDaIntencao(
     listingExternalId,
     listingId,
     "classic",
     intents.classic,
     configuracaoFinanceira,
+    promotionIdKey,
   );
   const intentPremiumKey = chaveDaIntencao(
     listingExternalId,
@@ -100,6 +109,7 @@ export function useSimulacaoOficialListingType({
     "premium",
     intents.premium,
     configuracaoFinanceira,
+    promotionIdKey,
   );
 
   useEffect(() => {
@@ -128,6 +138,7 @@ export function useSimulacaoOficialListingType({
         kind: intent.kind,
         value: intent.value,
         configuracaoFinanceira,
+        promotionId: promotionIdKey !== "none" ? promotionIdKey : null,
       });
 
       // Cache hit → aplica imediatamente, sem loading nem nova chamada.
@@ -137,9 +148,12 @@ export function useSimulacaoOficialListingType({
           clearTimeout(/** @type {ReturnType<typeof setTimeout>} */ (timersRef.current[tipo]));
           timersRef.current[tipo] = null;
         }
+        const scenarioCache =
+          cached.scenario != null ? sanitizarCenarioSimuladoBrutoPromocao(cached.scenario) : null;
+        const cachedSanitizado = { ...cached, scenario: scenarioCache };
         setEstado((prev) => (prev[tipo].key === key && !prev[tipo].loading
           ? prev
-          : { ...prev, [tipo]: { ...cached, loading: false, erro: null, key } }));
+          : { ...prev, [tipo]: { ...cachedSanitizado, loading: false, erro: null, key } }));
         continue;
       }
 
@@ -158,6 +172,7 @@ export function useSimulacaoOficialListingType({
           listingId,
           listingType: tipo,
           configuracaoFinanceira,
+          promotionSelection,
           ...(intent.kind === "margem"
             ? { targetMarginPct: intent.value }
             : { salePrice: intent.value }),
@@ -180,10 +195,24 @@ export function useSimulacaoOficialListingType({
         }
 
         const data = /** @type {Record<string, unknown>} */ (res.data);
-        const scenario =
+        const scenarioBruto =
           data.scenario != null && typeof data.scenario === "object"
-            ? /** @type {Record<string, unknown>} */ (data.scenario)
+            ? sanitizarCenarioSimuladoBrutoPromocao(data.scenario)
             : null;
+        if (scenarioBruto == null) {
+          setEstado((prev) => ({
+            ...prev,
+            [tipo]: {
+              ...prev[tipo],
+              loading: false,
+              erro: "Resposta de simulação inválida.",
+            },
+          }));
+          return;
+        }
+
+        const dataSanitizado = { ...data, scenario: scenarioBruto };
+        const scenario = scenarioBruto;
         const financial =
           data.financial != null && typeof data.financial === "object"
             ? /** @type {Record<string, unknown>} */ (data.financial)
@@ -237,13 +266,13 @@ export function useSimulacaoOficialListingType({
 
         /** @type {EstadoSimulacaoTipo} */
         const novo = {
-          scenario: data.scenario,
+          scenario: scenarioBruto,
           loading: false,
           erro: null,
           resolvedPrice,
           resolvedMargin,
-          commissionSource: data.commission_source != null ? String(data.commission_source) : null,
-          feePercent: data.official_fee_percent != null ? String(data.official_fee_percent) : null,
+          commissionSource: dataSanitizado.commission_source != null ? String(dataSanitizado.commission_source) : null,
+          feePercent: dataSanitizado.official_fee_percent != null ? String(dataSanitizado.official_fee_percent) : null,
           key,
         };
         cacheRef.current.set(key, novo);
@@ -251,7 +280,7 @@ export function useSimulacaoOficialListingType({
       }, DEBOUNCE_MS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intentClassicKey, intentPremiumKey, listingExternalId, listingId, extrasKey]);
+  }, [intentClassicKey, intentPremiumKey, listingExternalId, listingId, extrasKey, promotionIdKey]);
 
   // Limpeza dos timers ao desmontar.
   useEffect(() => {
@@ -272,9 +301,12 @@ export function useSimulacaoOficialListingType({
  * @param {ListingTypeChoice} tipo
  * @param {IntencaoSimulacao} intent
  * @param {ConfiguracaoFinanceiraExtras | null | undefined} configuracaoFinanceira
+ * @param {string} promotionIdKey
  */
-function chaveDaIntencao(ext, id, tipo, intent, configuracaoFinanceira) {
-  if (intent == null) return `${tipo}|none|extras:${chaveExtrasPrecificacaoInteligente(configuracaoFinanceira)}`;
+function chaveDaIntencao(ext, id, tipo, intent, configuracaoFinanceira, promotionIdKey) {
+  if (intent == null) {
+    return `${tipo}|none|promo:${promotionIdKey}|extras:${chaveExtrasPrecificacaoInteligente(configuracaoFinanceira)}`;
+  }
   return chaveCacheSimulacaoOficial({
     listingExternalId: ext,
     listingId: id,
@@ -282,5 +314,6 @@ function chaveDaIntencao(ext, id, tipo, intent, configuracaoFinanceira) {
     kind: intent.kind,
     value: intent.value,
     configuracaoFinanceira,
+    promotionId: promotionIdKey !== "none" ? promotionIdKey : null,
   });
 }

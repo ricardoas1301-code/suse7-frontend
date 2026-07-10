@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthBootstrapReady } from "../../../hooks/useAuthBootstrapReady.js";
 import { useSalesExecutiveSummary } from "../../../hooks/useSalesExecutiveSummary.js";
 import { isExecutiveSummaryEmptyForFilters } from "../../../components/sales/vendasExecutivePanelUx.js";
@@ -14,10 +14,14 @@ const SALES_HISTORY_PAGE_SIZE = 20;
 
 /**
  * @param {Record<string, unknown> | null | undefined} listing
- * @param {{ enabled?: boolean }} [options]
+ * @param {{
+ *   enabled?: boolean;
+ *   executiveEnabled?: boolean;
+ *   historyEnabled?: boolean;
+ * }} [options]
  */
 export function useListingFinancialRayX(listing, options = {}) {
-  const { enabled = true } = options;
+  const { enabled = true, executiveEnabled = enabled, historyEnabled = enabled } = options;
   const authReady = useAuthBootstrapReady();
 
   const marketplace = useMemo(
@@ -62,7 +66,8 @@ export function useListingFinancialRayX(listing, options = {}) {
       }),
     [listingId, marketplace, marketplaceAccountId],
   );
-  const queryEnabled = Boolean(enabled && authReady && executiveParams?.q);
+  const executiveQueryEnabled = Boolean(executiveEnabled && authReady && executiveParams?.q);
+  const historyQueryEnabled = Boolean(historyEnabled && authReady && listingId);
 
   const {
     summary,
@@ -72,7 +77,7 @@ export function useListingFinancialRayX(listing, options = {}) {
     loading: executiveLoading,
     error: executiveError,
     refetch: refetchExecutive,
-  } = useSalesExecutiveSummary(executiveParams ?? {}, { enabled: queryEnabled });
+  } = useSalesExecutiveSummary(executiveParams ?? {}, { enabled: executiveQueryEnabled });
 
   const financialTruthContract = useMemo(
     () => buildListingFinancialTruthContract(listing, executiveData),
@@ -102,6 +107,9 @@ export function useListingFinancialRayX(listing, options = {}) {
   const [salesHistoryTotalPages, setSalesHistoryTotalPages] = useState(1);
   const [salesHistoryLoading, setSalesHistoryLoading] = useState(false);
   const [salesHistoryError, setSalesHistoryError] = useState(/** @type {string | null} */ (null));
+  const [salesHistoryResolved, setSalesHistoryResolved] = useState(false);
+  const historyFetchInFlightRef = useRef(false);
+  const historyPrimeiraPaginaCarregadaRef = useRef(false);
 
   useEffect(() => {
     setSalesHistoryPage(1);
@@ -109,44 +117,57 @@ export function useListingFinancialRayX(listing, options = {}) {
     setSalesHistoryTotal(0);
     setSalesHistoryTotalPages(1);
     setSalesHistoryError(null);
+    setSalesHistoryResolved(false);
+    historyPrimeiraPaginaCarregadaRef.current = false;
   }, [listingId]);
 
   const loadSalesHistory = useCallback(
     async (page = 1) => {
-      if (!queryEnabled) return;
+      if (!historyQueryEnabled) return;
       if (!listingId) return;
+      if (historyFetchInFlightRef.current) return;
 
+      historyFetchInFlightRef.current = true;
       setSalesHistoryLoading(true);
       setSalesHistoryError(null);
-      const res = await fetchListingSalesHistory({
-        listingId,
-        marketplace,
-        marketplaceAccountId,
-        page,
-        pageSize: SALES_HISTORY_PAGE_SIZE,
-      });
-      setSalesHistoryLoading(false);
+      try {
+        const res = await fetchListingSalesHistory({
+          listingId,
+          marketplace,
+          marketplaceAccountId,
+          page,
+          pageSize: SALES_HISTORY_PAGE_SIZE,
+        });
 
-      if (!res.ok) {
-        setSalesHistoryError(res.error ?? "Erro ao carregar histórico");
-        setSalesHistoryRows([]);
-        setSalesHistoryTotal(0);
-        setSalesHistoryTotalPages(1);
-        return;
+        if (!res.ok) {
+          setSalesHistoryError(res.error ?? "Erro ao carregar histórico");
+          setSalesHistoryRows([]);
+          setSalesHistoryTotal(0);
+          setSalesHistoryTotalPages(1);
+          return;
+        }
+
+        setSalesHistoryRows(res.rows);
+        setSalesHistoryTotal(res.total);
+        setSalesHistoryTotalPages(res.totalPages);
+        setSalesHistoryPage(page);
+        if (page === 1) {
+          historyPrimeiraPaginaCarregadaRef.current = true;
+        }
+      } finally {
+        historyFetchInFlightRef.current = false;
+        setSalesHistoryLoading(false);
+        setSalesHistoryResolved(true);
       }
-
-      setSalesHistoryRows(res.rows);
-      setSalesHistoryTotal(res.total);
-      setSalesHistoryTotalPages(res.totalPages);
-      setSalesHistoryPage(page);
     },
-    [queryEnabled, listingId, marketplace, marketplaceAccountId],
+    [historyQueryEnabled, listingId, marketplace, marketplaceAccountId],
   );
 
   useEffect(() => {
-    if (!queryEnabled) return;
+    if (!historyQueryEnabled) return;
+    if (salesHistoryPage === 1 && historyPrimeiraPaginaCarregadaRef.current) return;
     void loadSalesHistory(salesHistoryPage);
-  }, [queryEnabled, salesHistoryPage, loadSalesHistory]);
+  }, [historyQueryEnabled, salesHistoryPage, loadSalesHistory]);
 
   const goSalesHistoryPage = useCallback((page) => {
     setSalesHistoryPage(Math.max(1, page));
@@ -170,6 +191,7 @@ export function useListingFinancialRayX(listing, options = {}) {
     salesHistoryPage,
     salesHistoryLoading,
     salesHistoryError,
+    salesHistoryResolved,
     goSalesHistoryPage,
     loadSalesHistory,
   };

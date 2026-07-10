@@ -1,48 +1,115 @@
 /* ======================================================================
-   Produtos — alinhamento cabeçalho ↔ corpo (Anúncios → Estoque)
-   Importado após VendasPage.css para vencer text-align: right dos KPIs.
-   Paridade geométrica com .products-catalog__grid--head (column-gap: 0).
+   Página Produtos — alinhamento header ↔ body (contrato data-col)
+   Importado após VendasPage.css para vencer text-align/align-items right.
+   Causa raiz anterior: head com column-gap 14px + padding horizontal; body com gap 0.
    ====================================================================== */
 
-.products-catalog__row > .products-catalog__cell {
+.products-catalog {
+  --products-catalog-grid-inset-x: clamp(14px, 2vw, 22px);
+}
+
+/* Paridade geométrica — mesmo grid que as linhas do corpo */
+.products-catalog .products-catalog__grid.products-catalog__grid--head {
+  column-gap: 0;
+}
+
+.products-catalog .products-catalog__row {
+  padding-left: var(--products-catalog-grid-inset-x);
+  padding-right: var(--products-catalog-grid-inset-x);
+  box-sizing: border-box;
+}
+
+/* Padding lateral das células métricas (exceto select/thumb) */
+.products-catalog .products-catalog__row > .products-catalog__cell:not([data-col="select"]):not([data-col="thumb"]) {
   box-sizing: border-box;
   padding-left: var(--s7-list-table-head-padding-x, 6px);
   padding-right: var(--s7-list-table-head-padding-x, 6px);
 }
 
-.products-catalog__grid--head .products-catalog__cell:nth-child(3),
-.products-catalog__grid--head .products-catalog__cell:nth-child(4),
-.products-catalog__grid--head .products-catalog__cell:nth-child(5),
-.products-catalog__grid--head .products-catalog__cell:nth-child(6),
-.products-catalog__grid--head .products-catalog__cell:nth-child(7),
-.products-catalog__grid--head .products-catalog__cell:nth-child(8),
-.products-catalog__grid--head .products-catalog__cell:nth-child(9),
-.products-catalog__grid--head .products-catalog__cell:nth-child(10),
-.products-catalog__row .products-catalog__cell:nth-child(3),
-.products-catalog__row .products-catalog__cell:nth-child(4),
-.products-catalog__row .products-catalog__cell:nth-child(5),
-.products-catalog__row .products-catalog__cell:nth-child(6),
-.products-catalog__row .products-catalog__cell:nth-child(7),
-.products-catalog__row .products-catalog__cell:nth-child(8),
-.products-catalog__row .products-catalog__cell:nth-child(9),
-.products-catalog__row .products-catalog__cell:nth-child(10) {
+/* -----------------------------------------------------------------------
+   Coluna seleção — checkbox header + linhas
+   ----------------------------------------------------------------------- */
+.products-catalog [data-col="select"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+  width: var(--s7-list-select-col-width, 40px);
+  min-width: var(--s7-list-select-col-width, 40px);
+  max-width: var(--s7-list-select-col-width, 40px);
+  box-sizing: border-box;
+}
+
+.products-catalog__grid--head [data-col="select"] {
+  height: 100%;
+  padding-top: var(--s7-list-table-head-padding-y, 6px);
+  padding-bottom: var(--s7-list-table-head-padding-y, 6px);
+}
+
+.products-catalog [data-col="select"] .anuncios-catalog__select-checkbox {
+  display: block;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------------------
+   Colunas numéricas/operacionais — Anúncios → Estoque
+   ----------------------------------------------------------------------- */
+.products-catalog [data-col="listings"],
+.products-catalog [data-col="sales"],
+.products-catalog [data-col="revenue"],
+.products-catalog [data-col="avg-ticket"],
+.products-catalog [data-col="profit-brl"],
+.products-catalog [data-col="profit-percent"],
+.products-catalog [data-col="payout"],
+.products-catalog [data-col="stock"] {
   display: flex;
   align-items: center;
   justify-content: center;
   justify-self: stretch;
+  text-align: center;
+  min-width: 0;
+}
+
+.products-catalog__grid--head [data-col="listings"],
+.products-catalog__grid--head [data-col="sales"],
+.products-catalog__grid--head [data-col="revenue"],
+.products-catalog__grid--head [data-col="avg-ticket"],
+.products-catalog__grid--head [data-col="profit-brl"],
+.products-catalog__grid--head [data-col="profit-percent"],
+.products-catalog__grid--head [data-col="payout"],
+.products-catalog__grid--head [data-col="stock"] {
+  height: 100%;
+}
+
+.products-catalog__grid--head [data-col="listings"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="sales"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="revenue"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="avg-ticket"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="profit-brl"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="profit-percent"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="payout"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="stock"] .products-catalog__head-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   max-width: 100%;
-  min-width: 0;
   text-align: center;
 }
 
-.products-catalog .products-catalog__cell.products-catalog__cell--metric-vendas.vendas-page__num-cell {
-  display: grid;
-  place-items: center;
-  text-align: center;
-}
-
-.products-catalog .products-catalog__cell--metric-vendas .vendas-page__num-stack {
+/* Corpo — vence VendasPage (.vendas-page__num-stack align-items: flex-end) */
+.products-catalog [data-col="listings"] .vendas-page__num-stack,
+.products-catalog [data-col="sales"] .vendas-page__num-stack,
+.products-catalog [data-col="revenue"] .vendas-page__num-stack,
+.products-catalog [data-col="avg-ticket"] .vendas-page__num-stack,
+.products-catalog [data-col="profit-brl"] .vendas-page__num-stack,
+.products-catalog [data-col="profit-percent"] .vendas-page__num-stack,
+.products-catalog [data-col="payout"] .vendas-page__num-stack,
+.products-catalog [data-col="stock"] .vendas-page__num-stack {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -51,8 +118,14 @@
   min-width: 0;
 }
 
-.products-catalog .products-catalog__cell--metric-vendas .vendas-page__num-stack-primary,
-.products-catalog .products-catalog__cell--metric-vendas .vendas-page__fin-value-row {
+.products-catalog [data-col="listings"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="sales"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="revenue"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="avg-ticket"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="profit-brl"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="profit-percent"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="payout"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="stock"] .vendas-page__num-stack-primary {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,11 +134,35 @@
   text-align: center;
 }
 
-.products-catalog .products-catalog__cell--metric-vendas .vendas-page__num-stack-secondary-slot {
+.products-catalog [data-col="listings"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="sales"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="revenue"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="avg-ticket"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="profit-brl"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="profit-percent"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="payout"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="stock"] .vendas-page__num-stack-secondary-slot {
   text-align: center;
 }
 
-.products-catalog .products-catalog__cell--metric-vendas .vendas-page__fin-value-row {
+.products-catalog [data-col="profit-brl"] .vendas-page__fin-value-row,
+.products-catalog [data-col="profit-percent"] .vendas-page__fin-value-row {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.products-catalog [data-col="listings"].vendas-page__num-cell,
+.products-catalog [data-col="sales"].vendas-page__num-cell,
+.products-catalog [data-col="revenue"].vendas-page__num-cell,
+.products-catalog [data-col="avg-ticket"].vendas-page__num-cell,
+.products-catalog [data-col="profit-brl"].vendas-page__num-cell,
+.products-catalog [data-col="profit-percent"].vendas-page__num-cell,
+.products-catalog [data-col="payout"].vendas-page__num-cell,
+.products-catalog [data-col="stock"].vendas-page__num-cell {
+  text-align: center;
 }

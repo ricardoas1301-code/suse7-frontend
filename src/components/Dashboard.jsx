@@ -13,7 +13,6 @@ import CompleteProfileModal from "./CompleteProfileModal";
 import S7DailySummarySection from "./dashboard/S7DailySummarySection";
 import { DashboardBlockFiltersProvider } from "./dashboard/DashboardBlockFiltersContext.jsx";
 import S7ImportIntelligencePanel from "./import/S7ImportIntelligencePanel";
-import S7Top10BlockSection from "./dashboard/S7Top10BlockSection";
 import { VendasFiltersProvider } from "../features/vendas/filters/VendasFiltersContext.jsx";
 
 function DashboardContent() {
@@ -79,8 +78,6 @@ function DashboardContent() {
       )}
 
       <S7DailySummarySection className="dashboard-page__daily-summary" />
-
-      <S7Top10BlockSection className="dashboard-page__top10-block" />
 
       <div className="dashboard-page__import-panel">
         <S7ImportIntelligencePanel pollSeconds={45} layout="dashboard" />

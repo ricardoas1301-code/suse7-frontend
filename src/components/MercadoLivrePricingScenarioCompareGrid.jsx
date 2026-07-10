@@ -9,6 +9,7 @@ import {
   MercadoLivrePricingScenarioRevenueSection,
   resolveMlScenarioTabId,
 } from "./MercadoLivrePricingScenarioRaiox.jsx";
+import { buildPromotionCardViewModel } from "../features/pricing/promotions/buildPromotionMarketplaceRevenueViewModel.js";
 import { PricingScenarioContingencySection } from "./pricing/PricingScenarioContingencySection.jsx";
 import {
   buildOrderedScenarioRows,
@@ -50,6 +51,27 @@ import {
  *   listingTypeSelectionBadge?: "Vendendo" | "Alternativa" | null;
  *   cardFooterNotice?: string | null;
  *   layoutPiFixo?: boolean;
+ *   promocaoPrecoVendaExibicaoOverride?: string | null;
+ *   promocaoNomeExibicao?: string | null;
+ *   exibirReservaEstrategica?: boolean;
+ *   layoutCabecalhoPromocaoPi?: boolean;
+ *   forcarLinhaDescontoSellerPromocao?: boolean;
+ *   descontoSellerPromocaoExibicao?: string | null;
+ *   promocaoPrecoOriginalExibicao?: string | null;
+ *   promocaoSubsidiMlExibicao?: string | null;
+ *   financialScenarioPending?: boolean;
+ *   selectedPromotion?: unknown;
+ *   promocaoSelecionada?: unknown;
+ *   financialSnapshot?: unknown;
+ *   listingTypeCard?: string | null;
+ *   promocaoCardViewModel?: {
+ *     revenue?: Record<string, unknown> | null;
+ *     profit_brl?: string | null;
+ *     margin_pct?: string | null;
+ *     offer_status_semantic?: string | null;
+ *     health_status?: string | null;
+ *     auditPayload?: Record<string, unknown>;
+ *   } | null;
  * }} props
  */
 export function MercadoLivrePricingScenarioCompareCard({
@@ -72,7 +94,65 @@ export function MercadoLivrePricingScenarioCompareCard({
   listingTypeSelectionBadge = null,
   cardFooterNotice = null,
   layoutPiFixo = false,
+  promocaoPrecoVendaExibicaoOverride = null,
+  promocaoNomeExibicao = null,
+  exibirReservaEstrategica = true,
+  layoutCabecalhoPromocaoPi = false,
+  forcarLinhaDescontoSellerPromocao = false,
+  descontoSellerPromocaoExibicao = null,
+  promocaoPrecoOriginalExibicao = null,
+  financialScenarioPending = false,
+  selectedPromotion = null,
+  promocaoSelecionada = null,
+  promotionFeeDiscountBrl = null,
+  snapshotFeeDiscountBrl = null,
+  promotionOfficialAmountToReceiveBrl = null,
+  promotionRevenueSource = null,
+  promotionSelectedKey = null,
+  promotionSnapshot = null,
+  officialRowContract = null,
+  comparisonModel = null,
+  isCurrentListingType = false,
+  selectedPromotionRequestId = null,
+  listingTypeCard = null,
+  promocaoCardViewModel: promocaoCardViewModelIn = null,
 }) {
+  const selectedPromotionEffective = selectedPromotion ?? promocaoSelecionada;
+
+  const promocaoCardViewModelBuilt = useMemo(() => {
+    if (promocaoCardViewModelIn != null) return null;
+    if (
+      !layoutCabecalhoPromocaoPi ||
+      selectedPromotionEffective == null ||
+      scenario == null ||
+      typeof scenario !== "object"
+    ) {
+      return null;
+    }
+    const scenarioRec = /** @type {Record<string, unknown>} */ (scenario);
+    if (scenarioRec.is_baseline === true) return null;
+    return buildPromotionCardViewModel({
+      selectedPromotion: selectedPromotionEffective,
+      scenario,
+      listingType: listingTypeCard,
+      listingExternalId: listingHintForAudit || null,
+      promocaoPrecoVendaExibicaoOverride,
+      componentName: "MercadoLivrePricingScenarioCompareCard",
+      renderPhase: financialScenarioPending ? "loading" : "final",
+    });
+  }, [
+    promocaoCardViewModelIn,
+    layoutCabecalhoPromocaoPi,
+    selectedPromotionEffective,
+    scenario,
+    listingTypeCard,
+    listingHintForAudit,
+    promocaoPrecoVendaExibicaoOverride,
+    financialScenarioPending,
+  ]);
+
+  const promocaoCardViewModel = promocaoCardViewModelIn ?? promocaoCardViewModelBuilt;
+
   if (scenario == null || typeof scenario !== "object") {
     return (
       <article className="s7-ml-scenario-compare__card" role="status">
@@ -83,6 +163,7 @@ export function MercadoLivrePricingScenarioCompareCard({
 
   const badgeInfo = resolveRaioxListingBadge(scenario);
   const scenarioRec = /** @type {Record<string, unknown>} */ (scenario);
+
   const res =
     scenarioRec.result != null && typeof scenarioRec.result === "object"
       ? /** @type {Record<string, unknown>} */ (scenarioRec.result)
@@ -136,6 +217,21 @@ export function MercadoLivrePricingScenarioCompareCard({
       : "pricing-intelligence-page__listing-type-selection-pill--vendendo";
   const showListingTypeBadgeTitle = listingTypeBadgeRaw !== "";
 
+  const statusPromoRotulo =
+    group === "participating"
+      ? participatingBadgeText
+      : badgeInfo.label != null && String(badgeInfo.label).trim() !== ""
+        ? String(badgeInfo.label).trim()
+        : "Disponível";
+  const linhaStatusVigenciaPromo =
+    layoutCabecalhoPromocaoPi && group !== "baseline" && !baselineAdStatus
+      ? `${statusPromoRotulo.toLocaleUpperCase("pt-BR")} · ${
+          vigenciaLine != null && String(vigenciaLine).trim() !== ""
+            ? String(vigenciaLine).trim()
+            : "Sem data informada"
+        }`
+      : null;
+
   const cardTitleNode = showListingTypeBadgeTitle ? (
     <>
       <span className="s7-ml-scenario-compare__card-title-prefix">Anúncio</span>
@@ -169,8 +265,22 @@ export function MercadoLivrePricingScenarioCompareCard({
       data-scenario-ux-group={group}
       data-profit-brl={profitRaw !== "" ? profitRaw : undefined}
     >
-      <header className="s7-ml-scenario-compare__card-head">
-        <div className="s7-ml-scenario-compare__card-head-line">
+      <header
+        className={[
+          "s7-ml-scenario-compare__card-head",
+          layoutCabecalhoPromocaoPi ? "s7-ml-scenario-compare__card-head--promo-pi" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <div
+          className={[
+            "s7-ml-scenario-compare__card-head-line",
+            layoutCabecalhoPromocaoPi ? "s7-ml-scenario-compare__card-head-line--promo-pi" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <div className="s7-ml-scenario-compare__card-title-stack">
             <span
               className={[
@@ -194,14 +304,37 @@ export function MercadoLivrePricingScenarioCompareCard({
                   {baselineAdStatus.label}
                 </span>
               </span>
-            ) : vigenciaLine ? (
+            ) : layoutCabecalhoPromocaoPi && linhaStatusVigenciaPromo ? (
+              <span className="s7-ml-scenario-compare__card-vigencia s7-ml-scenario-compare__card-vigencia--promo-status">
+                {linhaStatusVigenciaPromo}
+              </span>
+            ) : !layoutCabecalhoPromocaoPi && vigenciaLine ? (
               <span className="s7-ml-scenario-compare__card-vigencia">{vigenciaLine}</span>
             ) : null}
+            {layoutCabecalhoPromocaoPi &&
+            promocaoNomeExibicao != null &&
+            String(promocaoNomeExibicao).trim() !== "" ? (
+              <div className="s7-ml-scenario-compare__card-promo-pi-row">
+                <span className="s7-ml-scenario-compare__card-promotion-name">
+                  {String(promocaoNomeExibicao).trim()}
+                </span>
+                {promocaoPrecoOriginalExibicao != null &&
+                String(promocaoPrecoOriginalExibicao).trim() !== "" ? (
+                  <span className="s7-ml-scenario-compare__card-original-price">
+                    {String(promocaoPrecoOriginalExibicao).trim()}
+                  </span>
+                ) : null}
+              </div>
+            ) : !layoutCabecalhoPromocaoPi &&
+              promocaoNomeExibicao != null &&
+              String(promocaoNomeExibicao).trim() !== "" ? (
+              <span className="s7-ml-scenario-compare__card-promotion-name">{String(promocaoNomeExibicao).trim()}</span>
+            ) : null}
           </div>
-          {group === "participating" ? (
+          {!layoutCabecalhoPromocaoPi && group === "participating" ? (
             <span className={participatingBadgeClass}>{participatingBadgeText}</span>
           ) : null}
-          {group === "available" ? (
+          {!layoutCabecalhoPromocaoPi && group === "available" ? (
             <span className="s7-ml-scenario-compare__badge s7-ml-scenario-compare__badge--available">
               {badgeInfo.label != null && String(badgeInfo.label).trim() !== "" ? badgeInfo.label : "Disponível"}
             </span>
@@ -228,16 +361,40 @@ export function MercadoLivrePricingScenarioCompareCard({
           listingUnitSaleDisplayOverride={listingUnitSaleDisplayOverride}
           inlineEditSale={inlineEditSale}
           salePriceEditControl={salePriceEditControl}
+          promocaoPrecoVendaExibicaoOverride={promocaoPrecoVendaExibicaoOverride}
+          forcarLinhaDescontoSellerPromocao={forcarLinhaDescontoSellerPromocao}
+          descontoSellerPromocaoExibicao={descontoSellerPromocaoExibicao}
+          ocultarDescontoPromocaoReceitaMarketplace={layoutCabecalhoPromocaoPi}
+          financialScenarioPending={financialScenarioPending}
+          layoutReceitaPiPromocoes={layoutCabecalhoPromocaoPi}
+          promocaoCardViewModel={promocaoCardViewModel}
+          promotionFeeDiscountBrl={promotionFeeDiscountBrl}
+          snapshotFeeDiscountBrl={snapshotFeeDiscountBrl}
+          promotionOfficialAmountToReceiveBrl={promotionOfficialAmountToReceiveBrl}
+          promotionRevenueSource={promotionRevenueSource}
+          promotionSelectedKey={promotionSelectedKey}
+          promotionSnapshot={promotionSnapshot}
+          officialRowContract={officialRowContract}
+          comparisonModel={comparisonModel}
+          isCurrentListingType={isCurrentListingType}
+          selectedPromotionRequestId={selectedPromotionRequestId}
+          listingTypeCard={listingTypeCard}
+          listingExternalId={listingHintForAudit || null}
         />
-        {layoutPiFixo || (Array.isArray(strategicReserveLines) && strategicReserveLines.length > 0) ? (
+        {exibirReservaEstrategica !== false &&
+        (layoutPiFixo || (Array.isArray(strategicReserveLines) && strategicReserveLines.length > 0)) ? (
           <PricingScenarioContingencySection
             title="Reserva estratégica"
             lines={strategicReserveLines}
             sectionClassName="anuncios-sell-popover__section--strategic-reserve"
+            financialScenarioPending={financialScenarioPending}
           />
         ) : null}
         {layoutPiFixo || (Array.isArray(contingencyLines) && contingencyLines.length > 0) ? (
-          <PricingScenarioContingencySection lines={contingencyLines} />
+          <PricingScenarioContingencySection
+            lines={contingencyLines}
+            financialScenarioPending={financialScenarioPending}
+          />
         ) : null}
         <MercadoLivrePricingScenarioInternalAndResultSection
           scenario={scenario}
@@ -245,6 +402,8 @@ export function MercadoLivrePricingScenarioCompareCard({
           profitLineLabel={resultProfitLineLabel}
           inlineEditMargin={inlineEditMargin}
           layoutPiFixo={layoutPiFixo}
+          financialScenarioPending={financialScenarioPending}
+          promocaoCardViewModel={promocaoCardViewModel}
         />
       </div>
       {cardFooterNotice != null && String(cardFooterNotice).trim() !== "" ? (

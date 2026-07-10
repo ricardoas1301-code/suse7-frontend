@@ -3,7 +3,7 @@
 // Valores apenas como strings da API (sem cálculo de dinheiro no JSX).
 // ======================================================
 
-import { useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { formatCatalogBRL } from "../utils/productCatalogRow";
 import { PricingInlineEditableMetric } from "./pricing/PricingInlineEditableMetric.jsx";
 import {
@@ -11,6 +11,17 @@ import {
   TOOLTIP_LUCRO_MARGEM_CONTRIBUICAO,
 } from "./pricing/pricingLucroMargemContribuicaoUi.js";
 import { PricingScenarioSalePriceControl } from "./pricing/PricingScenarioSalePriceControl.jsx";
+import { PricingScenarioMetricValue } from "./pricing/PricingScenarioMetricValue.jsx";
+import { PromotionPiRevenueMarketplaceSection } from "./pricing/PromotionPiRevenueMarketplaceSection.jsx";
+import { obterAjustesFinanceirosPromocao } from "../features/pricing/promotions/aplicarReducaoTarifaPromocaoNoCenario.js";
+import {
+  buildPromotionCardViewModel,
+  logPromotionCardRenderViewModel,
+} from "../features/pricing/promotions/buildPromotionMarketplaceRevenueViewModel.js";
+import {
+  calcularReceitaPiPromocaoRenderFinal,
+  logPromotionRevenueSectionFinalFromSnapshot,
+} from "../features/pricing/promotions/calcularReceitaPiPromocaoRenderFinal.js";
 import S7Icon from "./ui/S7Icon";
 import S7Tooltip from "./ui/S7Tooltip";
 import {
@@ -24,8 +35,24 @@ import {
   shouldSaleXrayShippingAuditTrace,
 } from "./mercadoLivrePricingScenarioCompareShared.js";
 import { logPiPromoFlowAudit } from "./pricing/piPromoFlowAudit.js";
+import {
+  formatarPercentualPromocaoPtBr,
+  normalizarPercentualPromocaoExibicao,
+  parsePercentualPromocaoApiDecimal,
+} from "./pricing/pricingPromotionMiniCardUi.js";
 
 const DASH = "—";
+
+/**
+ * @param {{ pending: boolean; className?: string; children: import("react").ReactNode }} props
+ */
+function ValorFinanceiroDerivado({ pending, className, children }) {
+  return (
+    <PricingScenarioMetricValue pending={pending} className={className}>
+      {children}
+    </PricingScenarioMetricValue>
+  );
+}
 
 /**
  * Rótulo "Lucro" com tooltip opcional (margem de contribuição).
@@ -131,9 +158,12 @@ function buildTariffSubtitleFromScenarioMarketplace(m) {
 /** @param {{ sellerDiscountPercent?: string | null }} m */
 function buildSellerDiscountSubtitleFromMarketplace(m) {
   if (m.sellerDiscountPercent == null || String(m.sellerDiscountPercent).trim() === "") return null;
-  const n = Number(String(m.sellerDiscountPercent).trim().replace(",", "."));
-  if (!Number.isFinite(n)) return null;
-  return `Desconto ${Math.round(n).toLocaleString("pt-BR")}%`;
+  const raw = String(m.sellerDiscountPercent).trim();
+  if (raw.toLowerCase().startsWith("desconto ")) return raw;
+  const parsed = parsePercentualPromocaoApiDecimal(raw);
+  if (parsed == null) return null;
+  const normalizado = normalizarPercentualPromocaoExibicao(parsed);
+  return `Desconto ${formatarPercentualPromocaoPtBr(normalizado)}%`;
 }
 
 /**
@@ -370,8 +400,69 @@ export function MercadoLivrePricingScenarioSubsidyCollapsible({ scenario }) {
   );
 }
 
+export function MercadoLivrePricingScenarioRevenueSection(props) {
+  const {
+    layoutReceitaPiPromocoes = false,
+    scenario,
+    financialScenarioPending = false,
+    promocaoPrecoVendaExibicaoOverride = null,
+    promotionFeeDiscountBrl = null,
+    snapshotFeeDiscountBrl = null,
+    promotionOfficialAmountToReceiveBrl = null,
+    promotionRevenueSource = null,
+    promotionSelectedKey = null,
+    promotionSnapshot = null,
+    officialRowContract = null,
+    comparisonModel = null,
+    isCurrentListingType = false,
+    selectedPromotionRequestId = null,
+    listingTypeCard = null,
+    listingExternalId = null,
+  } = props;
+
+  if (
+    layoutReceitaPiPromocoes === true &&
+    scenario != null &&
+    typeof scenario === "object" &&
+    /** @type {Record<string, unknown>} */ (scenario).is_baseline !== true
+  ) {
+    const promoRec = /** @type {Record<string, unknown>} */ (scenario);
+    return (
+      <PromotionPiRevenueMarketplaceSection
+        scenario={promoRec}
+        financialScenarioPending={financialScenarioPending === true}
+        promocaoPrecoVendaExibicaoOverride={promocaoPrecoVendaExibicaoOverride}
+        promotionFeeDiscountBrl={promotionFeeDiscountBrl}
+        snapshotFeeDiscountBrl={snapshotFeeDiscountBrl}
+        promotionOfficialAmountToReceiveBrl={promotionOfficialAmountToReceiveBrl}
+        promotionRevenueSource={promotionRevenueSource}
+        promotionSelectedKey={promotionSelectedKey}
+        promotionSnapshot={promotionSnapshot}
+        officialRowContract={officialRowContract}
+        comparisonModel={comparisonModel}
+        isCurrentListingType={isCurrentListingType}
+        selectedPromotionRequestId={selectedPromotionRequestId}
+        listingTypeCard={listingTypeCard}
+        listingExternalId={listingExternalId}
+        promotionId={
+          promoRec.promotion_id != null ? String(promoRec.promotion_id) : null
+        }
+        promotionName={
+          promoRec.promotion_name != null
+            ? String(promoRec.promotion_name)
+            : promoRec.label != null
+              ? String(promoRec.label)
+              : null
+        }
+      />
+    );
+  }
+
+  return <MercadoLivrePricingScenarioRevenueSectionLegacy {...props} />;
+}
+
 /**
- * Seção Receita do marketplace para um cenário isolado.
+ * Seção Receita do marketplace — legado (baseline, Raio-x, promoções fora do layout PI).
  * `baselineListingSaleDisplayOverride`: só exibição — alinha “Valor de venda” do baseline ao preço do catálogo (página Precificação).
  *
  * @param {{
@@ -384,9 +475,32 @@ export function MercadoLivrePricingScenarioSubsidyCollapsible({ scenario }) {
  *     displayValue: string;
  *     onCommit: (raw: string) => void;
  *   } | null;
+ *   promocaoPrecoVendaExibicaoOverride?: string | null;
+ *   forcarLinhaDescontoSellerPromocao?: boolean;
+ *   descontoSellerPromocaoExibicao?: string | null;
+ *   ocultarDescontoPromocaoReceitaMarketplace?: boolean;
+ *   financialScenarioPending?: boolean;
+ *   layoutReceitaPiPromocoes?: boolean;
+ *   selectedPromotion?: unknown;
+ *   promocaoSelecionada?: unknown;
+ *   financialSnapshot?: unknown;
+ *   promotionFeeDiscountBrl?: string | null;
+ *   promotionOfficialAmountToReceiveBrl?: string | null;
+ *   promotionRevenueSource?: string | null;
+ *   promotionSelectedKey?: string | null;
+ *   listingTypeCard?: string | null;
+ *   listingExternalId?: string | null;
+ *   promocaoCardViewModel?: {
+ *     revenue?: Record<string, unknown> | null;
+ *     profit_brl?: string | null;
+ *     margin_pct?: string | null;
+ *     offer_status_semantic?: string | null;
+ *     health_status?: string | null;
+ *     auditPayload?: Record<string, unknown>;
+ *   } | null;
  * }} props
  */
-export function MercadoLivrePricingScenarioRevenueSection({
+function MercadoLivrePricingScenarioRevenueSectionLegacy({
   scenario,
   showSubsidy = true,
   showShippingSubsidyMlLine = true,
@@ -394,7 +508,86 @@ export function MercadoLivrePricingScenarioRevenueSection({
   listingUnitSaleDisplayOverride = null,
   inlineEditSale = null,
   salePriceEditControl = null,
+  promocaoPrecoVendaExibicaoOverride = null,
+  forcarLinhaDescontoSellerPromocao = false,
+  descontoSellerPromocaoExibicao = null,
+  ocultarDescontoPromocaoReceitaMarketplace = false,
+  financialScenarioPending = false,
+  layoutReceitaPiPromocoes = false,
+  promocaoCardViewModel = null,
+  selectedPromotion = null,
+  promocaoSelecionada = null,
+  financialSnapshot = null,
+  listingTypeCard = null,
+  listingExternalId = null,
 }) {
+  const finPend = financialScenarioPending === true;
+
+  const selectedPromotionEffective = selectedPromotion ?? promocaoSelecionada;
+  const temSnapshotFinanceiro =
+    financialSnapshot != null &&
+    typeof financialSnapshot === "object" &&
+    /** @type {Record<string, unknown>} */ (financialSnapshot).has_snapshot === true;
+
+  const promocaoCardViewModelResolved = useMemo(() => {
+    if (promocaoCardViewModel != null) return promocaoCardViewModel;
+    if (!layoutReceitaPiPromocoes || scenario.is_baseline === true) return null;
+    if (selectedPromotionEffective == null) return null;
+    return buildPromotionCardViewModel({
+      selectedPromotion: selectedPromotionEffective,
+      scenario,
+      listingType: listingTypeCard,
+      listingExternalId,
+      promocaoPrecoVendaExibicaoOverride,
+      componentName: "MercadoLivrePricingScenarioRevenueSection",
+      renderPhase: finPend ? "loading" : "final",
+    });
+  }, [
+    promocaoCardViewModel,
+    layoutReceitaPiPromocoes,
+    scenario,
+    selectedPromotionEffective,
+    listingTypeCard,
+    listingExternalId,
+    promocaoPrecoVendaExibicaoOverride,
+    finPend,
+  ]);
+
+  const receitaPiAtiva = layoutReceitaPiPromocoes === true && scenario.is_baseline !== true;
+
+  const piRenderFinal = useMemo(() => {
+    if (!receitaPiAtiva) return null;
+    return calcularReceitaPiPromocaoRenderFinal({
+      selectedPromotion: temSnapshotFinanceiro ? null : selectedPromotionEffective,
+      financialSnapshot,
+      scenario,
+      listingType: listingTypeCard,
+      listingExternalId,
+      promocaoPrecoVendaExibicaoOverride,
+    });
+  }, [
+    receitaPiAtiva,
+    temSnapshotFinanceiro,
+    selectedPromotionEffective,
+    financialSnapshot,
+    scenario,
+    listingTypeCard,
+    listingExternalId,
+    promocaoPrecoVendaExibicaoOverride,
+  ]);
+
+  useEffect(() => {
+    if (!receitaPiAtiva || finPend || piRenderFinal == null) return;
+    logPromotionRevenueSectionFinalFromSnapshot(piRenderFinal);
+  }, [receitaPiAtiva, finPend, piRenderFinal]);
+
+  useEffect(() => {
+    if (promocaoCardViewModelResolved?.auditPayload == null) return;
+    if (finPend) return;
+    logPromotionCardRenderViewModel(promocaoCardViewModelResolved.auditPayload);
+  }, [promocaoCardViewModelResolved, finPend]);
+
+  const receitaVm = promocaoCardViewModelResolved?.revenue ?? null;
   const m =
     scenario.marketplace != null && typeof scenario.marketplace === "object"
       ? /** @type {Record<string, unknown>} */ (scenario.marketplace)
@@ -469,7 +662,11 @@ export function MercadoLivrePricingScenarioRevenueSection({
       ? String(sx.subsidy_ml_brl).trim()
       : sx?.subsidy_amount_brl != null && String(sx.subsidy_amount_brl).trim() !== ""
         ? String(sx.subsidy_amount_brl).trim()
-        : "";
+        : m.promotion_subsidy_amount_brl != null && String(m.promotion_subsidy_amount_brl).trim() !== ""
+          ? String(m.promotion_subsidy_amount_brl).trim()
+          : m.fee_discount_brl != null && String(m.fee_discount_brl).trim() !== ""
+            ? String(m.fee_discount_brl).trim()
+            : "";
   const feeNetAfterRaw =
     sx?.fee_amount_net_display_brl != null && String(sx.fee_amount_net_display_brl).trim() !== ""
       ? String(sx.fee_amount_net_display_brl).trim()
@@ -500,11 +697,31 @@ export function MercadoLivrePricingScenarioRevenueSection({
         : DASH;
   const shipPick = pickSaleXrayShippingRawString(m, sx, /** @type {Record<string, unknown>} */ (scenario));
   const shipRaw = shipPick.raw != null ? shipPick.raw : "";
-  const shipVal = shipRaw !== "" ? formatNegativeBrlFromApiString(shipRaw) ?? DASH : DASH;
-  const sale =
+  const shipRawPi =
+    piRenderFinal?.shipping_cost_brl != null && String(piRenderFinal.shipping_cost_brl).trim() !== ""
+      ? String(piRenderFinal.shipping_cost_brl).trim()
+      : receitaVm?.shipping_cost_brl != null && String(receitaVm.shipping_cost_brl).trim() !== ""
+        ? String(receitaVm.shipping_cost_brl).trim()
+        : shipRaw;
+  const shipVal =
+    shipRawPi !== "" ? formatNegativeBrlFromApiString(shipRawPi) ?? DASH : DASH;
+  const saleFromMarketplace =
     m.sale_price_brl != null && String(m.sale_price_brl).trim() !== ""
       ? formatBrlFromApiString(String(m.sale_price_brl))
       : DASH;
+  const promocaoSaleOverride =
+    promocaoPrecoVendaExibicaoOverride != null &&
+    String(promocaoPrecoVendaExibicaoOverride).trim() !== ""
+      ? String(promocaoPrecoVendaExibicaoOverride).trim()
+      : null;
+  const saleFromPiRenderFinal =
+    piRenderFinal?.sale_price_brl != null && String(piRenderFinal.sale_price_brl).trim() !== ""
+      ? formatBrlFromApiString(String(piRenderFinal.sale_price_brl))
+      : null;
+  const sale =
+    receitaPiAtiva && saleFromPiRenderFinal != null && saleFromPiRenderFinal !== DASH
+      ? saleFromPiRenderFinal
+      : promocaoSaleOverride ?? saleFromMarketplace;
   const unitSaleOverride =
     listingUnitSaleDisplayOverride != null && String(listingUnitSaleDisplayOverride).trim() !== ""
       ? String(listingUnitSaleDisplayOverride).trim()
@@ -520,10 +737,26 @@ export function MercadoLivrePricingScenarioRevenueSection({
     (unitSaleOverride != null && String(unitSaleOverride).trim() !== "");
   const saleLineDisplay = unitSaleOverride ?? (scenario.is_baseline === true ? saleBaselineDisplay : sale);
   const receivePick = resolveVoceRecebeExibicaoRaw(m, sx, /** @type {Record<string, unknown>} */ (scenario));
+  const receiveFromPiRenderFinal =
+    piRenderFinal?.final_amount_to_receive_brl != null &&
+    String(piRenderFinal.final_amount_to_receive_brl).trim() !== ""
+      ? formatBrlFromApiString(String(piRenderFinal.final_amount_to_receive_brl))
+      : null;
+  const receiveFromViewModel =
+    receitaVm?.amount_to_receive_brl != null && String(receitaVm.amount_to_receive_brl).trim() !== ""
+      ? formatBrlFromApiString(String(receitaVm.amount_to_receive_brl))
+      : null;
   const receive =
-    receivePick.raw != null && String(receivePick.raw).trim() !== ""
-      ? formatBrlFromApiString(String(receivePick.raw))
-      : DASH;
+    receitaPiAtiva && receiveFromPiRenderFinal != null
+      ? receiveFromPiRenderFinal
+      : receitaPiAtiva && temSnapshotFinanceiro
+        ? receiveFromPiRenderFinal ?? DASH
+        : receitaPiAtiva && receiveFromViewModel != null
+          ? receiveFromViewModel
+          : receiveFromViewModel ??
+            (receivePick.raw != null && String(receivePick.raw).trim() !== ""
+              ? formatBrlFromApiString(String(receivePick.raw))
+              : DASH);
   const forcePayoutLog =
     typeof import.meta !== "undefined" && import.meta.env?.VITE_SALE_XRAY_PAYOUT_TRACE === "1";
   logSaleXrayPayoutPickInRender(
@@ -591,6 +824,17 @@ export function MercadoLivrePricingScenarioRevenueSection({
   const sellerDiscSub = buildSellerDiscountSubtitleFromMarketplace({
     sellerDiscountPercent: m.seller_discount_percent != null ? String(m.seller_discount_percent) : null,
   });
+  const sellerDiscExibicao =
+    sellerDisc ??
+    (forcarLinhaDescontoSellerPromocao
+      ? descontoSellerPromocaoExibicao != null && String(descontoSellerPromocaoExibicao).trim() !== ""
+        ? String(descontoSellerPromocaoExibicao).trim()
+        : DASH
+      : null);
+  const exibirBlocoDescontoSeller =
+    !ocultarDescontoPromocaoReceitaMarketplace &&
+    sellerDiscExibicao != null &&
+    (sellerDisc != null || forcarLinhaDescontoSellerPromocao);
   if (import.meta.env.DEV && scenario.is_baseline !== true) {
     const promoName =
       scenario.promotion_name != null
@@ -659,8 +903,68 @@ export function MercadoLivrePricingScenarioRevenueSection({
         : "";
   const feeSimpleLine = feeSimpleRaw !== "" ? formatNegativeBrlFromApiString(feeSimpleRaw) ?? DASH : DASH;
 
+  const piAjustesFinanceiros =
+    receitaPiAtiva && piRenderFinal == null && receitaVm == null
+      ? obterAjustesFinanceirosPromocao(
+          selectedPromotionEffective != null && typeof selectedPromotionEffective === "object"
+            ? /** @type {Record<string, unknown>} */ (selectedPromotionEffective)
+            : /** @type {Record<string, unknown>} */ (scenario),
+        )
+      : null;
+  const piFeeDiscountRaw =
+    receitaPiAtiva && piRenderFinal?.should_render_fee_discount_line === true
+      ? piRenderFinal.selected_promotion_fee_discount_brl != null &&
+        String(piRenderFinal.selected_promotion_fee_discount_brl).trim() !== "" &&
+        piRenderFinal.selected_promotion_fee_discount_brl !== "0.00"
+        ? String(piRenderFinal.selected_promotion_fee_discount_brl).trim()
+        : ""
+      : receitaPiAtiva && receitaVm != null
+        ? receitaVm.should_render_fee_discount_line === true &&
+          receitaVm.marketplace_fee_discount_brl != null &&
+          String(receitaVm.marketplace_fee_discount_brl).trim() !== "" &&
+          receitaVm.marketplace_fee_discount_brl !== "0.00"
+          ? String(receitaVm.marketplace_fee_discount_brl).trim()
+          : ""
+        : piAjustesFinanceiros?.has_marketplace_fee_discount === true &&
+            piAjustesFinanceiros.marketplace_fee_discount_brl != null &&
+            String(piAjustesFinanceiros.marketplace_fee_discount_brl).trim() !== ""
+          ? String(piAjustesFinanceiros.marketplace_fee_discount_brl).trim()
+          : layoutReceitaPiPromocoes && m.fee_discount_brl != null && String(m.fee_discount_brl).trim() !== ""
+            ? String(m.fee_discount_brl).trim()
+            : layoutReceitaPiPromocoes && hasFeeSubsidy && feeReductionRaw !== ""
+              ? feeReductionRaw
+              : "";
+  const piFeeDiscountLabel =
+    piRenderFinal?.fee_discount_label != null && String(piRenderFinal.fee_discount_label).trim() !== ""
+      ? String(piRenderFinal.fee_discount_label).trim()
+      : receitaVm?.fee_discount_label != null && String(receitaVm.fee_discount_label).trim() !== ""
+        ? String(receitaVm.fee_discount_label).trim()
+        : piAjustesFinanceiros?.marketplace_fee_discount_label != null &&
+            String(piAjustesFinanceiros.marketplace_fee_discount_label).trim() !== ""
+          ? String(piAjustesFinanceiros.marketplace_fee_discount_label).trim()
+          : "Reduzimos sua tarifa";
+  const piTarifaBrutaRaw =
+    piRenderFinal?.gross_sale_fee_brl != null && String(piRenderFinal.gross_sale_fee_brl).trim() !== ""
+      ? String(piRenderFinal.gross_sale_fee_brl).trim()
+      : receitaVm?.gross_sale_fee_brl != null && String(receitaVm.gross_sale_fee_brl).trim() !== ""
+        ? String(receitaVm.gross_sale_fee_brl).trim()
+        : feeGrossRaw !== ""
+          ? feeGrossRaw
+          : m.promotion_fee_gross_brl != null && String(m.promotion_fee_gross_brl).trim() !== ""
+            ? String(m.promotion_fee_gross_brl).trim()
+            : feeSinglePromo !== ""
+              ? feeSinglePromo
+              : feeDisplayRaw;
+
   return (
-    <div className="anuncios-sell-popover__section">
+    <div
+      className={[
+        "anuncios-sell-popover__section",
+        layoutReceitaPiPromocoes ? "anuncios-sell-popover__section--receita-pi-promo" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
         <h4 className="anuncios-sell-popover__section-title">Receita do marketplace</h4>
         <div className="anuncios-sell-popover__block">
           {useListingSalePriceLine ? (
@@ -718,10 +1022,17 @@ export function MercadoLivrePricingScenarioRevenueSection({
           )}
         </div>
         <div className="anuncios-sell-popover__block">
-          {saleXraySimple ? (
+          {layoutReceitaPiPromocoes ? (
             <div className="anuncios-sell-popover__line">
               <span>Tarifa de venda</span>
-              <strong>{feeSimpleLine}</strong>
+              <ValorFinanceiroDerivado pending={finPend}>
+                {formatNegativeBrlFromApiString(piTarifaBrutaRaw) ?? feeAmtSingleLine}
+              </ValorFinanceiroDerivado>
+            </div>
+          ) : saleXraySimple ? (
+            <div className="anuncios-sell-popover__line">
+              <span>Tarifa de venda</span>
+              <ValorFinanceiroDerivado pending={finPend}>{feeSimpleLine}</ValorFinanceiroDerivado>
             </div>
           ) : hasBillingTariffContract ? (
             <>
@@ -737,17 +1048,23 @@ export function MercadoLivrePricingScenarioRevenueSection({
                 <>
                   <div className="anuncios-sell-popover__line">
                     <span>Tarifa bruta</span>
-                    <strong>{formatNegativeBrlFromApiString(String(sx.charged_fee_gross_brl)) ?? DASH}</strong>
+                    <ValorFinanceiroDerivado pending={finPend}>
+                      {formatNegativeBrlFromApiString(String(sx.charged_fee_gross_brl)) ?? DASH}
+                    </ValorFinanceiroDerivado>
                   </div>
                   <div className="anuncios-sell-popover__line">
                     <span>Redução da tarifa</span>
-                    <strong>{formatNegativeBrlFromApiString(String(sx.charged_fee_reduction_brl)) ?? DASH}</strong>
+                    <ValorFinanceiroDerivado pending={finPend}>
+                      {formatNegativeBrlFromApiString(String(sx.charged_fee_reduction_brl)) ?? DASH}
+                    </ValorFinanceiroDerivado>
                   </div>
                 </>
               ) : null}
               <div className="anuncios-sell-popover__line">
                 <span>Tarifa cobrada</span>
-                <strong>{formatNegativeBrlFromApiString(String(sx.charged_fee_net_brl)) ?? DASH}</strong>
+                <ValorFinanceiroDerivado pending={finPend}>
+                  {formatNegativeBrlFromApiString(String(sx.charged_fee_net_brl)) ?? DASH}
+                </ValorFinanceiroDerivado>
               </div>
             </>
           ) : hasSuse7PreviewTariff ? (
@@ -760,33 +1077,52 @@ export function MercadoLivrePricingScenarioRevenueSection({
               </div>
               <div className="anuncios-sell-popover__line">
                 <span>Tarifa bruta</span>
-                <strong>{formatNegativeBrlFromApiString(String(m.preview_fee_gross_brl)) ?? DASH}</strong>
+                <ValorFinanceiroDerivado pending={finPend}>
+                  {formatNegativeBrlFromApiString(String(m.preview_fee_gross_brl)) ?? DASH}
+                </ValorFinanceiroDerivado>
               </div>
               {showSuse7TariffReduction ? (
                 <div className="anuncios-sell-popover__line">
                   <span>Redução da tarifa</span>
-                  <strong>+ {formatBrlFromApiString(String(m.preview_fee_reduction_brl))}</strong>
+                  <ValorFinanceiroDerivado pending={finPend}>
+                    + {formatBrlFromApiString(String(m.preview_fee_reduction_brl))}
+                  </ValorFinanceiroDerivado>
                 </div>
               ) : null}
               <div className="anuncios-sell-popover__line">
                 <span>Tarifa cobrada</span>
-                <strong>{formatNegativeBrlFromApiString(String(m.preview_fee_net_brl)) ?? DASH}</strong>
+                <ValorFinanceiroDerivado pending={finPend}>
+                  {formatNegativeBrlFromApiString(String(m.preview_fee_net_brl)) ?? DASH}
+                </ValorFinanceiroDerivado>
               </div>
             </>
-          ) : scenario.is_baseline !== true && hasChargedFeeFromApi && feeGrossRaw !== "" ? (
+          ) : scenario.is_baseline !== true && (hasChargedFeeFromApi && feeGrossRaw !== "" || (hasFeeSubsidy && feeGrossRaw !== "")) ? (
             <>
               <div className="anuncios-sell-popover__line">
-                <span>Tarifa de venda</span>
-                <strong>{formatNegativeBrlFromApiString(feeGrossRaw) ?? DASH}</strong>
-              </div>
-              <div className="anuncios-sell-popover__line">
-                <span>{chargedFeeLabel}</span>
-                <strong>{formatNegativeBrlFromApiString(chargedFeeRaw) ?? DASH}</strong>
+                <span>Tarifa de venda cheia</span>
+                <ValorFinanceiroDerivado pending={finPend}>
+                  {formatNegativeBrlFromApiString(feeGrossRaw) ?? DASH}
+                </ValorFinanceiroDerivado>
               </div>
               {hasFeeSubsidy && feeReductionRaw !== "" ? (
                 <div className="anuncios-sell-popover__line">
-                  <span>Redução da tarifa</span>
-                  <strong>+ {formatBrlFromApiString(feeReductionRaw)}</strong>
+                  <span>Redução ML nas tarifas</span>
+                  <ValorFinanceiroDerivado pending={finPend}>+ {formatBrlFromApiString(feeReductionRaw)}</ValorFinanceiroDerivado>
+                </div>
+              ) : null}
+              {hasFeeSubsidy && feeNetAfterRaw !== "" ? (
+                <div className="anuncios-sell-popover__line">
+                  <span>Tarifa de venda líquida</span>
+                  <ValorFinanceiroDerivado pending={finPend}>
+                    {formatNegativeBrlFromApiString(feeNetAfterRaw) ?? DASH}
+                  </ValorFinanceiroDerivado>
+                </div>
+              ) : hasChargedFeeFromApi ? (
+                <div className="anuncios-sell-popover__line">
+                  <span>{chargedFeeLabel}</span>
+                  <ValorFinanceiroDerivado pending={finPend}>
+                    {formatNegativeBrlFromApiString(chargedFeeRaw) ?? DASH}
+                  </ValorFinanceiroDerivado>
                 </div>
               ) : null}
               {sx?.show_fee_subsidy_breakdown === true &&
@@ -798,21 +1134,15 @@ export function MercadoLivrePricingScenarioRevenueSection({
                       className="anuncios-sell-popover__line anuncios-sell-popover__muted"
                     >
                       <span>Redução da tarifa (detalhe)</span>
-                      <strong>+ {formatBrlFromApiString(String(part))}</strong>
+                      <ValorFinanceiroDerivado pending={finPend}>+ {formatBrlFromApiString(String(part))}</ValorFinanceiroDerivado>
                     </div>
                   ))
                 : null}
-              {hasFeeSubsidy && feeNetAfterRaw !== "" ? (
-                <div className="anuncios-sell-popover__line">
-                  <span>Tarifa atualizada</span>
-                  <strong>{formatNegativeBrlFromApiString(feeNetAfterRaw) ?? DASH}</strong>
-                </div>
-              ) : null}
             </>
           ) : (
             <div className="anuncios-sell-popover__line">
               <span>Tarifa de venda</span>
-              <strong>{feeAmtSingleLine}</strong>
+              <ValorFinanceiroDerivado pending={finPend}>{feeAmtSingleLine}</ValorFinanceiroDerivado>
             </div>
           )}
           {feeSub != null ? <div className="anuncios-sell-popover__muted">{feeSub}</div> : null}
@@ -820,15 +1150,25 @@ export function MercadoLivrePricingScenarioRevenueSection({
         <div className="anuncios-sell-popover__block">
           <div className="anuncios-sell-popover__line">
             <span>{ML_SHIPPING_TITLE}</span>
-            <strong>{shipVal}</strong>
+            <ValorFinanceiroDerivado pending={finPend}>{shipVal}</ValorFinanceiroDerivado>
           </div>
           {shipCtxLabel != null ? (
             <div className="anuncios-sell-popover__muted">{shipCtxLabel}</div>
           ) : null}
+          {layoutReceitaPiPromocoes && piFeeDiscountRaw !== "" ? (
+            <div className="anuncios-sell-popover__line anuncios-sell-popover__line--fee-discount-pi">
+              <span>{piFeeDiscountLabel}</span>
+              <ValorFinanceiroDerivado pending={finPend}>
+                <span className="anuncios-sell-popover__value--positive">
+                  + {formatBrlFromApiString(piFeeDiscountRaw)}
+                </span>
+              </ValorFinanceiroDerivado>
+            </div>
+          ) : null}
           {showShippingSubsidyMlLine && shipSub != null && !saleXraySimple ? (
             <div className="anuncios-sell-popover__line">
               <span>Subsídio de frete (ML)</span>
-              <strong>{shipSub}</strong>
+              <ValorFinanceiroDerivado pending={finPend}>{shipSub}</ValorFinanceiroDerivado>
             </div>
           ) : null}
         </div>
@@ -836,22 +1176,22 @@ export function MercadoLivrePricingScenarioRevenueSection({
           <div className="anuncios-sell-popover__block">
             <div className="anuncios-sell-popover__line">
               <span>{benefitLineLabel}</span>
-              <strong>+ {benefitLineAmt}</strong>
+              <ValorFinanceiroDerivado pending={finPend}>+ {benefitLineAmt}</ValorFinanceiroDerivado>
             </div>
           </div>
         ) : null}
-        {sellerDisc != null ? (
+        {exibirBlocoDescontoSeller ? (
           <div className="anuncios-sell-popover__block">
             <div className="anuncios-sell-popover__line">
-              <span>Desconto bancado pelo seller</span>
-              <strong>{sellerDisc}</strong>
+              <span>Desconto da promoção</span>
+              <strong>{sellerDiscExibicao}</strong>
             </div>
             {sellerDiscSub != null ? (
               <div className="anuncios-sell-popover__muted">{sellerDiscSub}</div>
             ) : null}
           </div>
         ) : null}
-        {!saleXraySimple && promoSubMl != null ? (
+        {!saleXraySimple && promoSubMl != null && !hasFeeSubsidy ? (
           <div className="anuncios-sell-popover__block">
             <div className="anuncios-sell-popover__line">
               <span>Subsídio promocional (ML)</span>
@@ -864,7 +1204,7 @@ export function MercadoLivrePricingScenarioRevenueSection({
         <div className="anuncios-sell-popover__block">
           <div className="anuncios-sell-popover__line anuncios-sell-popover__line--total anuncios-sell-popover__line--key">
             <span>Você recebe</span>
-            <strong>{receive}</strong>
+            <ValorFinanceiroDerivado pending={finPend}>{receive}</ValorFinanceiroDerivado>
           </div>
         </div>
         {scenario.is_baseline !== true && saleXraySubsidyTxt != null && !hasFeeSubsidy && !saleXraySimple ? (
@@ -908,6 +1248,15 @@ export function MercadoLivrePricingScenarioRevenueSection({
  *     displayValue: string;
  *     onCommit: (raw: string) => void;
  *   } | null;
+ *   financialScenarioPending?: boolean;
+ *   promocaoCardViewModel?: {
+ *     revenue?: Record<string, unknown> | null;
+ *     profit_brl?: string | null;
+ *     margin_pct?: string | null;
+ *     offer_status_semantic?: string | null;
+ *     health_status?: string | null;
+ *     auditPayload?: Record<string, unknown>;
+ *   } | null;
  * }} props
  */
 export function MercadoLivrePricingScenarioInternalAndResultSection({
@@ -916,7 +1265,10 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
   profitLineLabel = null,
   inlineEditMargin = null,
   layoutPiFixo = false,
+  financialScenarioPending = false,
+  promocaoCardViewModel = null,
 }) {
+  const finPend = financialScenarioPending === true;
   const ic =
     scenario.internal_costs != null && typeof scenario.internal_costs === "object"
       ? /** @type {Record<string, unknown>} */ (scenario.internal_costs)
@@ -927,10 +1279,28 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
       : null;
   const block2Mode = ui?.block2_mode != null ? String(ui.block2_mode) : "no_product";
   const block3Mode = ui?.block3_mode != null ? String(ui.block3_mode) : "blocked";
-  const simRes =
+  const simResBase =
     scenario.result != null && typeof scenario.result === "object"
       ? /** @type {Record<string, unknown>} */ (scenario.result)
       : null;
+  const simRes =
+    promocaoCardViewModel != null && simResBase != null
+      ? {
+          ...simResBase,
+          ...(promocaoCardViewModel.profit_brl != null
+            ? { profit_brl: promocaoCardViewModel.profit_brl }
+            : {}),
+          ...(promocaoCardViewModel.margin_pct != null
+            ? { margin_pct: promocaoCardViewModel.margin_pct }
+            : {}),
+          ...(promocaoCardViewModel.offer_status_semantic != null
+            ? { offer_status_semantic: promocaoCardViewModel.offer_status_semantic }
+            : {}),
+          ...(promocaoCardViewModel.health_status != null
+            ? { health_status: promocaoCardViewModel.health_status }
+            : {}),
+        }
+      : simResBase;
   const taxPercentLabel =
     ic?.tax_percent_label != null && String(ic.tax_percent_label).trim() !== ""
       ? String(ic.tax_percent_label)
@@ -987,7 +1357,8 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
             <div className="anuncios-sell-popover__block">
               <div className="anuncios-sell-popover__line">
                 <span>Impostos</span>
-                <strong
+                <ValorFinanceiroDerivado
+                  pending={finPend}
                   className={
                     ic?.tax_amount_brl != null && String(ic.tax_amount_brl).trim() !== ""
                       ? undefined
@@ -997,7 +1368,7 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
                   {ic?.tax_amount_brl != null && String(ic.tax_amount_brl).trim() !== ""
                     ? formatarCustoInterno(String(ic.tax_amount_brl))
                     : DASH}
-                </strong>
+                </ValorFinanceiroDerivado>
               </div>
               {taxPercentLabel != null ? (
                 <div className="anuncios-sell-popover__muted">{taxPercentLabel}</div>
@@ -1042,9 +1413,9 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
                     tooltip={tooltipLucroMargemContribuicao}
                   />
                 </span>
-                <strong className={offerSemClass || undefined}>
+                <ValorFinanceiroDerivado pending={finPend} className={offerSemClass || undefined}>
                   {simRes?.profit_brl != null ? formatBrlFromApiString(String(simRes.profit_brl)) : DASH}
-                </strong>
+                </ValorFinanceiroDerivado>
               </div>
             </div>
             <div className="anuncios-sell-popover__block">
@@ -1060,11 +1431,11 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
               ) : (
                 <div className="anuncios-sell-popover__line anuncios-sell-popover__line--raiox-result-metric">
                   <span className={offerSemClass || undefined}>Margem</span>
-                  <strong className={offerSemClass || undefined}>
+                  <ValorFinanceiroDerivado pending={finPend} className={offerSemClass || undefined}>
                     {simRes?.margin_pct != null && String(simRes.margin_pct).trim() !== ""
                       ? `${String(simRes.margin_pct).replace(".", ",")} %`
                       : DASH}
-                  </strong>
+                  </ValorFinanceiroDerivado>
                 </div>
               )}
             </div>
@@ -1083,7 +1454,9 @@ export function MercadoLivrePricingScenarioInternalAndResultSection({
             <div className="anuncios-sell-popover__block">
               <div className="anuncios-sell-popover__line anuncios-sell-popover__line--status-offer anuncios-sell-popover__line--raiox-result-metric">
                 <span className={offerSemClass || undefined}>Status da oferta</span>
-                <strong className={offerSemClass || undefined}>{offerStatusLineText}</strong>
+                <ValorFinanceiroDerivado pending={finPend} className={offerSemClass || undefined}>
+                  {offerStatusLineText}
+                </ValorFinanceiroDerivado>
               </div>
             </div>
           </>

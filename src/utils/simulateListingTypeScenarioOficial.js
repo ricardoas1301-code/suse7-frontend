@@ -37,6 +37,32 @@ export function montarPayloadExtrasPrecificacaoInteligente(cfg) {
 }
 
 /**
+ * @param {{
+ *   promotion_id?: string | null;
+ *   promotion_name?: string | null;
+ *   promotion_type?: string | null;
+ *   selected_final_price?: string | null;
+ *   selected_discount_amount?: string | null;
+ *   selected_rule?: string | null;
+ *   source_trace?: unknown;
+ * } | null | undefined} ctx
+ */
+export function montarPayloadSelecaoPromocaoSimulacao(ctx) {
+  if (ctx == null || typeof ctx !== "object") return null;
+  if (ctx.promotion_id == null && ctx.selected_final_price == null) return null;
+  return {
+    promotionId: ctx.promotion_id,
+    promotion_id: ctx.promotion_id,
+    promotion_name: ctx.promotion_name,
+    promotion_type: ctx.promotion_type,
+    selected_final_price: ctx.selected_final_price,
+    selected_discount_amount: ctx.selected_discount_amount,
+    selected_rule: ctx.selected_rule,
+    source_trace: ctx.source_trace,
+  };
+}
+
+/**
  * @param {ConfiguracaoFinanceiraExtras | null | undefined} cfg
  */
 export function chaveExtrasPrecificacaoInteligente(cfg) {
@@ -59,6 +85,7 @@ export function chaveExtrasPrecificacaoInteligente(cfg) {
  *   salePrice?: string | number | null;
  *   targetMarginPct?: string | number | null;
  *   configuracaoFinanceira?: ConfiguracaoFinanceiraExtras | null;
+ *   promotionSelection?: ReturnType<typeof montarPayloadSelecaoPromocaoSimulacao>;
  * }} params
  * @returns {Promise<{ ok: boolean; data?: Record<string, unknown>; error?: string }>}
  */
@@ -86,6 +113,10 @@ export async function simularCenarioListingTypeOficial(params) {
     body.financialExtras = extras;
   }
 
+  if (params.promotionSelection != null && typeof params.promotionSelection === "object") {
+    body.promotionSelection = params.promotionSelection;
+  }
+
   const res = await apiFetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -107,6 +138,7 @@ export async function simularCenarioListingTypeOficial(params) {
  *   kind: "preco" | "margem";
  *   value: number;
  *   configuracaoFinanceira?: ConfiguracaoFinanceiraExtras | null;
+ *   promotionId?: string | null;
  * }} p
  */
 export function chaveCacheSimulacaoOficial(p) {
@@ -116,5 +148,7 @@ export function chaveCacheSimulacaoOficial(p) {
       : String(p.listingId ?? "").trim()) || "?";
   const valor = Number.isFinite(p.value) ? Math.round(p.value * 100) / 100 : "?";
   const extras = chaveExtrasPrecificacaoInteligente(p.configuracaoFinanceira);
-  return `${anuncio}|${p.listingType}|${p.kind}:${valor}|extras:${extras}`;
+  const promo =
+    p.promotionId != null && String(p.promotionId).trim() !== "" ? String(p.promotionId).trim() : "none";
+  return `${anuncio}|${p.listingType}|${p.kind}:${valor}|promo:${promo}|extras:${extras}`;
 }

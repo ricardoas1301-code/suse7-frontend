@@ -4,10 +4,12 @@
 // ======================================================================
 
 import "./S7DailySummaryCard.css";
+import S7DashboardSectionPanel from "./S7DashboardSectionPanel.jsx";
 import { S7_DAILY_SUMMARY_MOCK } from "./s7DailySummaryMock.js";
 import S7Icon from "../ui/S7Icon";
 import S7Tooltip from "../ui/S7Tooltip";
-import S7DailySummaryAdaptiveRevenueValue from "./S7DailySummaryAdaptiveRevenueValue.jsx";
+import S7DailySummaryAdaptiveMetricValue from "./S7DailySummaryAdaptiveMetricValue.jsx";
+import { renderExecutiveRayxKpiMetricIcon } from "../../features/sales/executiveRayxKpiMetricIcons.jsx";
 
 /**
  * @param {{
@@ -21,6 +23,7 @@ import S7DailySummaryAdaptiveRevenueValue from "./S7DailySummaryAdaptiveRevenueV
  *   filtersExpanded?: boolean;
  *   filtersActive?: boolean;
  *   onToggleFilters?: () => void;
+ *   filtersLayout?: "collapsible" | "inline";
  *   filterPanel?: import("react").ReactNode;
  *   slots?: {
  *     salesFooter?: import("react").ReactNode;
@@ -39,12 +42,14 @@ export default function S7DailySummaryCard({
   filtersExpanded = false,
   filtersActive = false,
   onToggleFilters,
+  filtersLayout = "collapsible",
   filterPanel = null,
   slots = {},
   className = "",
 }) {
   const rootClass = ["s7-daily-summary", className].filter(Boolean).join(" ");
-  const hasHeaderToggle = typeof onToggleFilters === "function";
+  const inlineFilters = filtersLayout === "inline";
+  const hasHeaderToggle = !inlineFilters && typeof onToggleFilters === "function";
 
   const handleHeaderToggle = () => {
     if (!hasHeaderToggle) return;
@@ -62,23 +67,32 @@ export default function S7DailySummaryCard({
 
   return (
     <section className={rootClass} aria-label={title}>
+      <S7DashboardSectionPanel>
       <header
         className={[
           "s7-daily-summary__head",
           "s7-dashboard-block-head",
+          inlineFilters ? "s7-dashboard-block-head--inline-filters" : "",
           hasHeaderToggle ? "s7-dashboard-block-head--clickable" : "",
         ]
           .filter(Boolean)
           .join(" ")}
-        onClick={handleHeaderToggle}
-        onKeyDown={handleHeaderKeyDown}
+        onClick={hasHeaderToggle ? handleHeaderToggle : undefined}
+        onKeyDown={hasHeaderToggle ? handleHeaderKeyDown : undefined}
         role={hasHeaderToggle ? "button" : undefined}
         tabIndex={hasHeaderToggle ? 0 : undefined}
         aria-expanded={hasHeaderToggle ? filtersExpanded : undefined}
         aria-controls={hasHeaderToggle ? "s7-daily-summary-filters-panel" : undefined}
       >
-        <div className="s7-dashboard-block-head__title-row">
-          {hasHeaderToggle ? (
+        <div
+          className={[
+            "s7-dashboard-block-head__title-row",
+            inlineFilters ? "s7-dashboard-block-head__title-row--with-filters" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {!inlineFilters && hasHeaderToggle ? (
             <button
               type="button"
               className={[
@@ -92,13 +106,16 @@ export default function S7DailySummaryCard({
               aria-label={filtersExpanded ? "Recolher filtros do Resumo Diário" : "Expandir filtros do Resumo Diário"}
               onClick={(event) => {
                 event.stopPropagation();
-                onToggleFilters();
+                onToggleFilters?.();
               }}
             >
               <S7Icon name="search" size={18} strokeWidth={1.85} />
             </button>
           ) : null}
           <h2 className="s7-daily-summary__title">{title}</h2>
+          {inlineFilters && filterPanel ? (
+            <div className="s7-dashboard-block-head__inline-filters">{filterPanel}</div>
+          ) : null}
         </div>
         {(periodChipLabel || periodLabel || periodDateLabel) ? (
           <div className="s7-dashboard-block-head__period-aside" aria-label="Período do resumo">
@@ -114,7 +131,7 @@ export default function S7DailySummaryCard({
         ) : null}
       </header>
 
-      {filterPanel ? (
+      {filterPanel && !inlineFilters ? (
         <div className="s7-daily-summary__filters-wrap">{filterPanel}</div>
       ) : null}
 
@@ -131,7 +148,9 @@ export default function S7DailySummaryCard({
               {block.title}
             </h3>
             <dl className="s7-daily-summary__metrics">
-              {block.metrics.map((metric) => (
+              {block.metrics.map((metric) => {
+                const metricIcon = renderExecutiveRayxKpiMetricIcon(metric.id);
+                return (
                 <div key={metric.id} className="s7-daily-summary__metric" data-metric-id={metric.id}>
                   <dt className="s7-daily-summary__metric-label">
                     <span className="s7-daily-summary__metric-label-wrap">
@@ -157,17 +176,36 @@ export default function S7DailySummaryCard({
                       .filter(Boolean)
                       .join(" ")}
                   >
-                    {metric.id === "revenue" ? (
-                      <S7DailySummaryAdaptiveRevenueValue value={metric.value} />
-                    ) : (
-                      <span className="s7-daily-summary__metric-value-main">{metric.value}</span>
-                    )}
+                    <div className="s7-daily-summary__metric-value-row">
+                      {metricIcon ? (
+                        <span className="s7-daily-summary__metric-value-icon-wrap" aria-hidden>
+                          {metricIcon}
+                        </span>
+                      ) : null}
+                      {metric.id === "revenue" ? (
+                        <S7DailySummaryAdaptiveMetricValue value={metric.value} variant="revenue" />
+                      ) : metric.id === "orders" ? (
+                        <S7DailySummaryAdaptiveMetricValue value={metric.value} variant="orders" />
+                      ) : metric.valueDica ? (
+                        <S7Tooltip content={metric.valueDica} placement="top-start" offset={6} wrap>
+                          <span
+                            className="s7-daily-summary__metric-value-main s7-daily-summary__metric-value-main--tooltip"
+                            tabIndex={0}
+                          >
+                            {metric.value}
+                          </span>
+                        </S7Tooltip>
+                      ) : (
+                        <span className="s7-daily-summary__metric-value-main">{metric.value}</span>
+                      )}
+                    </div>
                     {metric.sharePercent ? (
                       <span className="s7-daily-summary__metric-share">{metric.sharePercent}</span>
                     ) : null}
                   </dd>
                 </div>
-              ))}
+              );
+              })}
             </dl>
             {block.id === "resultado" ? (
               <div className="s7-daily-summary__resultado-accent" aria-hidden="true">
@@ -188,6 +226,7 @@ export default function S7DailySummaryCard({
           </article>
         ))}
       </div>
+      </S7DashboardSectionPanel>
     </section>
   );
 }

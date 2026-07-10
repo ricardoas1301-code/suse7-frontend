@@ -2,14 +2,8 @@
    Concorrência S7 — alinhamento visual a Produtos + Raio-X (Anuncios.css)
 ====================================================================== */
 
-.page-content:has(.concorrencia-page) {
-  padding-left: 4px;
-  padding-right: 4px;
-  padding-top: 0;
-}
-
 .concorrencia-page__shell {
-  padding: 10px clamp(4px, 0.65vw, 10px) 44px;
+  padding: var(--s7-catalog-page-inset-top, 5px) clamp(4px, 0.65vw, 10px) 44px;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -714,16 +708,14 @@
   margin-right: 0;
 }
 
-/* Ritmo vertical — menu ↔ filtros = filtros ↔ lista (homologação Concorrência) */
+/* Ritmo vertical — blocos consecutivos: s7-catalog-page-rhythm.css */
 .concorrencia-catalog.products-catalog {
-  --s7-concorrencia-chrome-gap: calc(
-    var(--s7-catalog-page-inset-top, 5px) + var(--s7-catalog-filter-offset-top, 7px)
-  );
+  --products-catalog-table-radius: var(--s7-list-table-radius, 10px);
 }
 
 .concorrencia-catalog > .concorrencia-filters-card.s7-sticky-filters {
-  margin-top: var(--s7-catalog-filter-offset-top, 7px);
-  margin-bottom: var(--s7-concorrencia-chrome-gap, 12px);
+  margin-top: 0;
+  margin-bottom: var(--s7-catalog-block-gap, 12px);
 }
 
 .concorrencia-catalog > .products-catalog__table-block,
@@ -750,7 +742,7 @@
   width: 100%;
   max-width: 100%;
   grid-template-columns:
-    36px
+    var(--s7-list-select-col-width, 40px)
     40px
     minmax(0, 2.1fr)
     minmax(0, 0.82fr)
@@ -834,88 +826,29 @@
   max-width: 100%;
   padding-left: 0;
   text-align: center;
-}
-
-.concorrencia-catalog__cell--account .s7-catalog-account--stacked {
-  display: grid;
-  grid-template-rows: 40px;
-  gap: var(--s7-concorrencia-stack-label-gap);
-  justify-items: center;
-  align-items: center;
-  max-width: 100%;
-  width: 100%;
-  margin: 0;
-}
-
-.concorrencia-catalog__cell--account .s7-catalog-account--stacked .s7-catalog-account__avatar {
-  grid-row: 1;
-  align-self: center;
-  justify-self: center;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--s7-concorrencia-account-icon-size) !important;
-  height: var(--s7-concorrencia-account-icon-size) !important;
-  min-width: var(--s7-concorrencia-account-icon-size);
-  min-height: var(--s7-concorrencia-account-icon-size);
-  border-radius: 50%;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  background: linear-gradient(145deg, #e0e7ff 0%, #f1f5f9 100%);
-  box-shadow: none;
-  overflow: hidden;
-  margin: 0;
-}
-
-.concorrencia-catalog__cell--account .s7-catalog-account--stacked .s7-catalog-account__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-}
-
-.concorrencia-catalog__cell--account .s7-catalog-account--stacked .s7-catalog-account__name,
-.concorrencia-catalog__cell--account .s7-catalog-account--stacked .s7-catalog-account__name--stacked {
-  grid-row: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0 1px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #334155;
-  line-height: 1.2;
-  min-height: calc(11px * 1.2);
-  white-space: nowrap;
-  word-break: normal;
-  overflow: hidden;
-  text-overflow: clip;
-  text-transform: none;
-  letter-spacing: normal;
 }
 
-.concorrencia-catalog__cell--account[data-account-fit="medium"] .s7-catalog-account__name,
-.concorrencia-catalog__cell--account[data-account-fit="medium"] .s7-catalog-account__name--stacked {
-  font-size: 10px;
-  min-height: calc(10px * 1.2);
+.concorrencia-catalog__cell--account .s7-catalog-account--compact {
+  justify-content: center;
 }
 
-.concorrencia-catalog__cell--account[data-account-fit="long"] .s7-catalog-account__name,
-.concorrencia-catalog__cell--account[data-account-fit="long"] .s7-catalog-account__name--stacked {
-  font-size: 9px;
-  min-height: calc(9px * 1.2);
+/* Avatar Conta — círculo perfeito, sem moldura (só Concorrência). */
+.concorrencia-catalog__cell--account .s7-catalog-account__avatar {
+  border-radius: 50%;
+  border: none;
+  box-shadow: none;
+  background: transparent;
 }
 
-.concorrencia-catalog__cell--account[data-account-fit="xlong"] .s7-catalog-account__name,
-.concorrencia-catalog__cell--account[data-account-fit="xlong"] .s7-catalog-account__name--stacked {
-  font-size: 8.5px;
-  min-height: calc(8.5px * 1.2);
-  text-overflow: ellipsis;
+.concorrencia-catalog__cell--account .s7-catalog-account__avatar img {
+  border-radius: 50%;
+}
+
+.concorrencia-catalog__cell--account .s7-catalog-account__avatar:has(.s7-catalog-account__initial) {
+  background: linear-gradient(145deg, #e0e7ff 0%, #f1f5f9 100%);
 }
 
 .concorrencia-incluir-modal__search {
@@ -1009,7 +942,7 @@
   width: 100%;
   max-width: 100%;
   grid-template-columns:
-    36px
+    var(--s7-list-select-col-width, 40px)
     40px
     minmax(0, 2.1fr)
     minmax(0, 0.82fr)
@@ -1023,7 +956,6 @@
   transition: background 0.18s ease;
   --s7-concorrencia-catalog-thumb-size: 38px;
   --s7-concorrencia-stack-label-gap: 2px;
-  --s7-concorrencia-account-icon-size: 40px;
 }
 
 .concorrencia-catalog__body .concorrencia-catalog__row:last-child {
@@ -1035,25 +967,12 @@
   background: rgba(248, 250, 252, 0.92);
 }
 
-/* Seleção — mesmo padrão visual da página Vendas */
-.concorrencia-catalog .products-catalog__cell--select {
-  width: 36px;
-  min-width: 36px;
-  max-width: 36px;
-  padding: 0 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Seleção — coluna compacta alinhada (s7-list-select-column.css) */
+.concorrencia-catalog__row .products-catalog__cell--select {
   padding-top: 0;
 }
 
 .concorrencia-catalog .vendas-page__row-select {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  min-height: 28px;
-  margin: 0;
   cursor: pointer;
 }
 
@@ -1061,16 +980,22 @@
   margin-inline: auto;
 }
 
-.concorrencia-catalog .vendas-page__row-select-checkbox {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  flex-shrink: 0;
-}
-
 .concorrencia-catalog__grid--head .products-catalog__cell--select {
   align-items: center;
-  padding-top: 0;
+  justify-content: center;
+  height: 100%;
+  padding: var(--s7-list-table-head-padding-y, 6px) 0;
+}
+
+.concorrencia-catalog__grid--head .products-catalog__cell--select .vendas-page__row-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  line-height: 1;
 }
 
 .concorrencia-catalog__row .products-catalog__cell--thumb {
@@ -1114,6 +1039,13 @@
   min-width: 0;
   max-width: 100%;
   padding-left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concorrencia-catalog__cell--channel .s7-catalog-channel {
+  justify-content: center;
 }
 
 .concorrencia-catalog__cell--competitor {
@@ -1132,46 +1064,6 @@
   justify-content: center;
   gap: 10px;
   padding-left: 10px;
-}
-
-/* Canal: logo do marketplace + nome em pilha compacta (preparado para multi-canal) */
-.concorrencia-catalog__channel {
-  display: grid;
-  grid-template-rows: 40px;
-  justify-items: center;
-  align-items: center;
-  gap: 0;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.concorrencia-catalog__channel > :first-child {
-  grid-row: 1;
-  align-self: center;
-  justify-self: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 40px;
-  flex-shrink: 0;
-}
-
-.concorrencia-catalog__channel .anuncios-catalog__mkt-badge-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.concorrencia-catalog__channel .anuncios-catalog__mkt-logo {
-  width: 40px !important;
-  height: 40px !important;
-}
-
-.concorrencia-catalog__channel-label {
-  display: none;
 }
 
 /* Nome do anúncio — laranja + peso forte; MLB/SKU cinza (sem laranja). */
@@ -4066,10 +3958,6 @@
   text-align: center;
   padding-left: var(--s7-list-table-head-padding-x);
   padding-right: var(--s7-list-table-head-padding-x);
-}
-
-.concorrencia-catalog__cell--account .s7-catalog-account--stacked {
-  justify-items: center;
 }
 
 .concorrencia-catalog__comp-main {

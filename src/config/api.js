@@ -79,7 +79,16 @@ let _hasWarned401 = false;
  * @returns {Promise<{ ok: boolean; data?: any; error?: string; status: number }>}
  */
 export async function apiFetch(url, options = {}) {
-  const { method = "GET", headers = {}, body, unauthorizedFallback, cache, timeoutMs } = options;
+  const {
+    method = "GET",
+    headers = {},
+    body,
+    unauthorizedFallback,
+    cache,
+    timeoutMs,
+    signal,
+    timeoutErrorMessage,
+  } = options;
 
   if (!API_BASE_URL) {
     const message = "VITE_API_BASE_URL não configurada.";
@@ -109,28 +118,50 @@ export async function apiFetch(url, options = {}) {
   if (controller) {
     timeoutId = setTimeout(() => controller.abort(), Number(timeoutMs));
   }
+  const mergedSignal =
+    signal && controller
+      ? AbortSignal.any([signal, controller.signal])
+      : signal ?? controller?.signal;
   try {
     res = await fetch(url, {
       method,
       headers: sendHeaders,
       ...(cache != null ? { cache } : {}),
       ...(body != null && { body: typeof body === "string" ? body : JSON.stringify(body) }),
-      ...(controller ? { signal: controller.signal } : {}),
+      ...(mergedSignal ? { signal: mergedSignal } : {}),
     });
   } catch (err) {
-    if (controller?.signal.aborted) {
-      const message = "Tempo esgotado ao carregar o resumo executivo. Tente novamente.";
+    if (controller?.signal.aborted || signal?.aborted || err?.name === "AbortError") {
+      const message =
+        timeoutErrorMessage != null && String(timeoutErrorMessage).trim() !== ""
+          ? String(timeoutErrorMessage)
+          : "Tempo esgotado na requisição. Tente novamente.";
       if (import.meta.env.DEV) {
         console.warn("[S7 API] Timeout:", url, { timeoutMs });
       }
-      return { ok: false, error: message, status: 408, timedOut: true, connectionError: true };
+      return {
+        ok: false,
+        error: message,
+        status: 408,
+        timedOut: true,
+        connectionError: true,
+        errorName: err?.name ?? "AbortError",
+        errorMessage: err?.message ?? message,
+      };
     }
     const message =
       "Não foi possível conectar ao backend. Verifique se a API está online e se VITE_API_BASE_URL está correta.";
     if (import.meta.env.DEV) {
       console.warn("[S7 API] Falha de rede:", url, err);
     }
-    return { ok: false, error: message, status: 0, connectionError: true };
+    return {
+      ok: false,
+      error: message,
+      status: 0,
+      connectionError: true,
+      errorName: err?.name ?? "NetworkError",
+      errorMessage: err?.message ?? message,
+    };
   } finally {
     if (timeoutId != null) clearTimeout(timeoutId);
   }

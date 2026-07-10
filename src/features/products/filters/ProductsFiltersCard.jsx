@@ -7,7 +7,9 @@ import { forwardRef, useCallback, useMemo, useState } from "react";
 import S7Icon from "../../../components/ui/S7Icon";
 import S7Input from "../../../components/ui/S7Input";
 import S7Button from "../../../components/ui/S7Button";
+import S7SectionJumpButton from "../../../components/ui/S7SectionJumpButton.jsx";
 import { PRODUCTS_FILTERS_EXPANDED_SESSION_KEY } from "./productsFiltersConstants";
+import { formatCatalogSelectionCountLabel } from "../../../utils/formatCatalogSelectionCountLabel.js";
 import "./ProductsFiltersCard.css";
 
 function readExpandedFromSession() {
@@ -52,6 +54,9 @@ function writeExpandedToSession(expanded) {
  *   showRelatorios?: boolean;
  *   relatoriosDisabled?: boolean;
  *   onRelatoriosClick?: () => void;
+ *   selectedCount?: number;
+ *   sectionJumpUpTargetRef?: import("react").RefObject<Element | null>;
+ *   sectionJumpUpAriaLabel?: string;
  * }} props
  */
 const ProductsFiltersCard = forwardRef(function ProductsFiltersCard(
@@ -67,6 +72,9 @@ const ProductsFiltersCard = forwardRef(function ProductsFiltersCard(
     showRelatorios = false,
     relatoriosDisabled = false,
     onRelatoriosClick,
+    selectedCount = 0,
+    sectionJumpUpTargetRef = null,
+    sectionJumpUpAriaLabel = "Voltar para o resumo da página",
   },
   ref,
 ) {
@@ -118,11 +126,35 @@ const ProductsFiltersCard = forwardRef(function ProductsFiltersCard(
             </span>
             <span className="products-filters-card__header-text">
               <span className="products-filters-card__title">Busca e filtros</span>
-              {!expanded ? <span className="products-filters-card__summary">{collapsedSummary}</span> : null}
+              {!expanded ? (
+                <span className="products-filters-card__summary">
+                  {collapsedSummary}
+                  {selectedCount > 0 ? (
+                    <>
+                      {" · "}
+                      <span className="products-filters-card__summary-selected">
+                        {formatCatalogSelectionCountLabel(selectedCount)}
+                      </span>
+                    </>
+                  ) : null}
+                </span>
+              ) : null}
             </span>
           </span>
         </button>
         <div className="products-filters-card__header-actions">
+          {sectionJumpUpTargetRef ? (
+            <S7SectionJumpButton
+              direction="up"
+              targetRef={sectionJumpUpTargetRef}
+              ariaLabel={sectionJumpUpAriaLabel}
+            />
+          ) : null}
+          {expanded && selectedCount > 0 ? (
+            <span className="products-filters-card__header-selected">
+              {formatCatalogSelectionCountLabel(selectedCount)}
+            </span>
+          ) : null}
           {onNewProductClick ? (
             <S7Button
               type="button"
@@ -147,7 +179,7 @@ const ProductsFiltersCard = forwardRef(function ProductsFiltersCard(
               title="Gerar relatório com os filtros atuais"
               onClick={() => onRelatoriosClick?.()}
             >
-              Relatórios
+              Gerar relatório
             </S7Button>
           ) : null}
           <button
