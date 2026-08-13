@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient";
 import { logAuthBootstrap } from "./authBootstrapDevLog";
+import { completeSignupBirthOnce, isSignupBirthAlreadyComplete } from "../services/completeSignupBirth.js";
 import { clearIntroSessionFlags, logIntroAuthDev } from "./introAuthSession";
 
 /** @type {Promise<import("@supabase/supabase-js").Session | null> | null} */
@@ -9,6 +10,79 @@ let bootPromise = null;
 let cachedSession = null;
 
 let listenerInstalled = false;
+
+/** @type {Promise<{ ok: boolean; code?: string }> | null} */
+let birthCompletionBootstrapInFlight = null;
+
+/** @type {"idle" | "running" | "done" | "failed" | "skipped"} */
+let birthCompletionState = "idle";
+
+/** @type {Set<(state: typeof birthCompletionState) => void>} */
+const birthCompletionListeners = new Set();
+
+/**
+ * @param {(state: typeof birthCompletionState) => void} listener
+ */
+export function subscribeBirthCompletionState(listener) {
+  birthCompletionListeners.add(listener);
+  listener(birthCompletionState);
+  return () => birthCompletionListeners.delete(listener);
+}
+
+export function getBirthCompletionState() {
+  return birthCompletionState;
+}
+
+function setBirthCompletionState(next) {
+  birthCompletionState = next;
+  for (const listener of birthCompletionListeners) listener(birthCompletionState);
+}
+
+async function maybeCompleteSignupBirthOnSession(session, source = "auth_bootstrap") {
+  if (!session?.access_token || !session?.user?.id) {
+    setBirthCompletionState("skipped");
+    return { ok: true, code: "NO_SESSION" };
+  }
+
+  if (birthCompletionState === "done") {
+    return { ok: true, code: "ALREADY_DONE" };
+  }
+
+  if (birthCompletionBootstrapInFlight) {
+    return birthCompletionBootstrapInFlight;
+  }
+
+  setBirthCompletionState("running");
+  birthCompletionBootstrapInFlight = (async () => {
+    try {
+      const result = await completeSignupBirthOnce();
+      if (isSignupBirthAlreadyComplete(result)) {
+        setBirthCompletionState("done");
+        logAuthBootstrap("signup_birth_complete", { source, code: result.code });
+        return result;
+      }
+      if (result.code === "PENDING_NOT_FOUND") {
+        setBirthCompletionState("skipped");
+        logAuthBootstrap("signup_birth_skipped_no_pending", { source });
+        return { ok: true, code: "NO_PENDING" };
+      }
+      setBirthCompletionState("failed");
+      logAuthBootstrap("signup_birth_failed", { source, code: result.code, error: result.error });
+      return result;
+    } catch (err) {
+      setBirthCompletionState("failed");
+      logAuthBootstrap("signup_birth_failed", {
+        source,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return { ok: false, code: "COMPLETION_EXCEPTION" };
+    } finally {
+      birthCompletionBootstrapInFlight = null;
+    }
+  })();
+
+  return birthCompletionBootstrapInFlight;
+}
 
 /** @type {Set<(session: import("@supabase/supabase-js").Session | null) => void>} */
 const sessionListeners = new Set();
@@ -79,6 +153,11 @@ export async function ensureAuthSessionBootstrapped() {
       userId: session?.user?.id ?? null,
       hasToken: Boolean(session?.access_token),
     });
+    if (session?.access_token) {
+      await maybeCompleteSignupBirthOnSession(session, "boot");
+    } else {
+      setBirthCompletionState("skipped");
+    }
     return session;
   })();
 
@@ -133,6 +212,7 @@ export function installAuthBootstrapListener() {
           user_id: next?.user?.id ?? null,
         });
       }
+      void maybeCompleteSignupBirthOnSession(next, `event:${event}`);
     }
     if (event === "SIGNED_OUT") {
       clearIntroSessionFlags("signed_out");

@@ -200,5 +200,8 @@ export function mapSupabaseAuthErrorMessage(error, ctx = {}) {
   if (/invalid login credentials|invalid email or password/i.test(msg)) {
     return "E-mail ou senha inválidos.";
   }
+  if (/email not confirmed|confirm your email|email address has not been confirmed/i.test(msg)) {
+    return "Confirme seu e-mail para continuar.";
+  }
   return msg || "Não foi possível entrar. Tente novamente.";
 }

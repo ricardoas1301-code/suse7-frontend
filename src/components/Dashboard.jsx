@@ -39,20 +39,8 @@ function DashboardContent() {
           .maybeSingle();
 
         if (!profile) {
-          const { data: newProfile, error } = await supabase
-            .from("profiles")
-            .insert({
-              id: user.id,
-              email: user.email,
-              primeiro_login: true,
-              created_at: new Date(),
-              last_login: new Date(),
-            })
-            .select()
-            .single();
-
-          if (error) throw error;
-          profile = newProfile;
+          console.warn("[Dashboard] Perfil ausente — birth completion deve ocorrer via AuthBootstrap.");
+          return;
         }
 
         if (profile.primeiro_login === true) {
