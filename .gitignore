@@ -34,6 +34,9 @@ prod_schema.sql
 # Supabase generated snapshots (keep repo clean)
 supabase/migrations/*remote_schema*.sql
 supabase/migrations/*baseline*.sql
+# Canonical DEV V2 replay baselines (explicit allow — negation must follow ignore rule)
+!supabase/migrations/20260301215430_baseline_public_from_prod.sql
+!supabase/migrations/20260301215959_baseline_sales_schema_bridge.sql
 
 # Node lock (only if this repo does NOT version it)
 package-lock.json
