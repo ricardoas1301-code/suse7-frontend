@@ -4,11 +4,7 @@ import S7Button from "../ui/S7Button.jsx";
 import { useS7DialogFocus } from "../ui/useS7DialogFocus.js";
 import TermsDocumentContent from "./TermsDocumentContent.jsx";
 import { useScrollAteFinal } from "./useScrollAteFinal.js";
-import {
-  TERMOS_USO_HASH_CONTEUDO,
-  TERMOS_USO_TIPO_DOCUMENTO,
-  TERMOS_USO_VERSAO_ID,
-} from "../../domain/legal/termosUsoDocumento.js";
+import { useTermosUsoCatalogo } from "../../hooks/useTermosUsoCatalogo.js";
 import "./TermsAcceptanceModal.css";
 
 /**
@@ -33,7 +29,8 @@ export default function TermsAcceptanceModal({ open, onClose, onAccepted }) {
   const panelRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const scrollRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [aceiteInterno, setAceiteInterno] = useState(false);
-  const scrollAteFinal = useScrollAteFinal(scrollRef, { enabled: open });
+  const { catalog, loading: catalogLoading, error: catalogError } = useTermosUsoCatalogo();
+  const scrollAteFinal = useScrollAteFinal(scrollRef, { enabled: open && Boolean(catalog) });
 
   useS7DialogFocus({ open, onClose, containerRef: panelRef });
 
@@ -46,15 +43,15 @@ export default function TermsAcceptanceModal({ open, onClose, onAccepted }) {
     return () => window.cancelAnimationFrame(frame);
   }, [open]);
 
-  const podeMarcarAceite = scrollAteFinal;
-  const podeConfirmar = scrollAteFinal && aceiteInterno;
+  const podeMarcarAceite = scrollAteFinal && Boolean(catalog);
+  const podeConfirmar = scrollAteFinal && aceiteInterno && Boolean(catalog);
 
   function handleConfirmar() {
-    if (!podeConfirmar) return;
+    if (!podeConfirmar || !catalog) return;
     onAccepted({
-      document_type: TERMOS_USO_TIPO_DOCUMENTO,
-      document_version: TERMOS_USO_VERSAO_ID,
-      document_hash: TERMOS_USO_HASH_CONTEUDO,
+      document_type: catalog.document_type,
+      document_version: catalog.document_version,
+      document_hash: catalog.document_hash,
       accepted_at: new Date().toISOString(),
       source: "SIGNUP",
       scrolled_to_end: true,
@@ -81,7 +78,7 @@ export default function TermsAcceptanceModal({ open, onClose, onAccepted }) {
         <header className="s7-terms-modal__header">
           <div>
             <h2 id="s7-terms-modal-title" className="s7-terms-modal__heading">
-              Termos de Uso do SUSE7
+              {catalog?.title_modal ?? "Termos de Uso do SUSE7"}
             </h2>
             <p id="s7-terms-modal-desc" className="s7-terms-modal__hint">
               Leia o documento integralmente para habilitar o aceite.
@@ -93,11 +90,23 @@ export default function TermsAcceptanceModal({ open, onClose, onAccepted }) {
         </header>
 
         <div ref={scrollRef} className="s7-terms-modal__scroll" tabIndex={0}>
-          <TermsDocumentContent variant="modal" showTitle={false} showUpdateDate />
+          {catalogError ? (
+            <p className="s7-terms-modal__catalog-error" role="alert">
+              {catalogError}
+            </p>
+          ) : (
+            <TermsDocumentContent variant="modal" showTitle={false} showUpdateDate />
+          )}
         </div>
 
         <footer className="s7-terms-modal__footer">
-          {!scrollAteFinal ? (
+          {catalogLoading ? (
+            <p className="s7-terms-modal__scroll-hint" aria-live="polite">
+              Carregando documento jurídico…
+            </p>
+          ) : null}
+
+          {!catalogLoading && !catalogError && !scrollAteFinal ? (
             <p className="s7-terms-modal__scroll-hint" aria-live="polite">
               Role até o final para habilitar o aceite.
             </p>
@@ -123,7 +132,12 @@ export default function TermsAcceptanceModal({ open, onClose, onAccepted }) {
             <S7Button variant="secondary" type="button" onClick={onClose}>
               Cancelar
             </S7Button>
-            <S7Button variant="primary" type="button" disabled={!podeConfirmar} onClick={handleConfirmar}>
+            <S7Button
+              variant="primary"
+              type="button"
+              disabled={!podeConfirmar || catalogLoading || Boolean(catalogError)}
+              onClick={handleConfirmar}
+            >
               Aceitar e continuar
             </S7Button>
           </div>

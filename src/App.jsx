@@ -22,6 +22,7 @@ import "./styles/s7-list-sticky-chrome.css";
 import "./styles/s7-list-select-column.css";
 
 import { useAuthBootstrap } from "./contexts/AuthBootstrapContext";
+import AuthCallbackGate from "./components/AuthCallbackGate.jsx";
 
 // Layout e páginas principais
 import Layout from "./components/Layout";
@@ -96,10 +97,17 @@ const Configuracoes = () => <h1>Configurações</h1>;
 // AUTH WRAPPER
 // ======================================================================
 function AuthOutlet() {
-  const { loading, session } = useAuthBootstrap();
+  const { loading, session, callbackError } = useAuthBootstrap();
 
-  if (loading) return <div>Carregando...</div>;
-  return session ? <Outlet /> : <Navigate to="/login" replace />;
+  if (!loading && !session && !callbackError) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <AuthCallbackGate>
+      <Outlet />
+    </AuthCallbackGate>
+  );
 }
 
 // ======================================================================
