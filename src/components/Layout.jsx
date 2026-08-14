@@ -41,6 +41,7 @@ import { devCenterBootstrap } from "../services/devCenterApi";
 import RenewalOperationalGate from "../billing/components/RenewalOperationalGate";
 import { mountS7ListTableHeadStickySync } from "../styles/s7ListTableHeadStickySync.js";
 import S7LoginIntroSplash from "./S7LoginIntroSplash.jsx";
+import GlobalOperationalTasksHost from "../features/dashboard/operationalTasks/GlobalOperationalTasksHost.jsx";
 
 export default function Layout() {
   const { ready: authReady, user } = useAuthBootstrap();
@@ -229,6 +230,7 @@ className={`nav-item ${
         </RenewalOperationalGate>
       </main>
       <DailySalesSummaryNotificationModalHost />
+      {authReady ? <GlobalOperationalTasksHost /> : null}
     </div>
   );
 }
