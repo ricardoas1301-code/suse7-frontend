@@ -242,3 +242,11 @@
     padding: 4px 0 2px;
   }
 }
+
+.configuration-onboarding-modal-form input.s7-co-input-readonly,
+.configuration-onboarding-modal-form input.s7-co-input-readonly:disabled,
+.configuration-onboarding-modal-form input.s7-co-input-readonly[readonly] {
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #6b7280;
+}

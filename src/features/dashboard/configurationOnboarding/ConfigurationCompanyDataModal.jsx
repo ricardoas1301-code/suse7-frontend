@@ -23,6 +23,7 @@ import "./ConfigurationOnboardingModals.css";
  *   onClose: () => void;
  *   company: Record<string, unknown> | null;
  *   accountEmail?: string;
+ *   emailLocked?: boolean;
  *   saving?: boolean;
  *   loading?: boolean;
  *   error?: string | null;
@@ -34,6 +35,7 @@ export default function ConfigurationCompanyDataModal({
   onClose,
   company,
   accountEmail = "",
+  emailLocked = false,
   saving = false,
   loading = false,
   error = null,
@@ -73,6 +75,7 @@ export default function ConfigurationCompanyDataModal({
   );
 
   const busy = saving || loading;
+  const contactEmailLocked = emailLocked && Boolean(String(accountEmail ?? "").trim());
 
   return (
     <ConfigurationTaskModalShell
@@ -134,7 +137,9 @@ export default function ConfigurationCompanyDataModal({
             type="email"
             value={String(form.contact_email ?? "")}
             onChange={(e) => updateField("contact_email", e.target.value)}
-            disabled={busy}
+            disabled={busy || contactEmailLocked}
+            readOnly={contactEmailLocked}
+            className={contactEmailLocked ? "s7-co-input-readonly" : undefined}
             autoComplete="email"
           />
         </label>

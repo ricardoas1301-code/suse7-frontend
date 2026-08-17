@@ -9,6 +9,10 @@ import {
   resolverAcaoMilestone,
 } from "./configurationMilestoneActionRegistry.js";
 import ConfigurationCompanyDataModal from "./ConfigurationCompanyDataModal.jsx";
+import {
+  CONFIGURATION_COMPANY_DATA_MODAL_STATE,
+  resolverEstadoModalDadosEmpresa,
+} from "./configurationCompanyDataModalState.js";
 import ConfigurationPercentModal from "./ConfigurationPercentModal.jsx";
 import ConfigurationOperationalCycleModal from "./ConfigurationOperationalCycleModal.jsx";
 import ConfigurationMarketplacePreConfirmModal from "./ConfigurationMarketplacePreConfirmModal.jsx";
@@ -17,8 +21,10 @@ import { executarSalvarConfiguracaoComRefresh } from "./configurationOnboardingS
 import {
   fetchSellerCompanyForConfiguration,
   patchSellerCompanyForConfiguration,
+  createSellerCompanyForConfiguration,
   saveOperationalCycleConfirmation,
 } from "./configurationOnboardingWriteApi.js";
+import { buildConfigurationCompanyDataCreateBody } from "./configurationOnboardingFormHelpers.js";
 import {
   montarUrlRotaMlConnectFrontend,
   validarSessaoParaConexaoMl,
@@ -55,6 +61,9 @@ export default function ConfigurationOnboardingActionsHost({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [company, setCompany] = useState(/** @type {Record<string, unknown> | null} */ (null));
+  const [companyDataMode, setCompanyDataMode] = useState(
+    /** @type {import("./configurationCompanyDataModalState.js").ConfigurationCompanyDataModalState | null} */ (null),
+  );
   const savingRef = useRef(false);
 
   const companyId = useMemo(() => {
@@ -77,6 +86,7 @@ export default function ConfigurationOnboardingActionsHost({
       setSaving(false);
       setError(null);
       setCompany(null);
+      setCompanyDataMode(null);
       savingRef.current = false;
       return;
     }
@@ -87,6 +97,56 @@ export default function ConfigurationOnboardingActionsHost({
       action.actionType === CONFIGURATION_MILESTONE_ACTION_TYPES.MODAL_OPERATIONAL_COST ||
       action.actionType === CONFIGURATION_MILESTONE_ACTION_TYPES.MODAL_ML_PRECONFIRM
     ) {
+      if (action.actionType === CONFIGURATION_MILESTONE_ACTION_TYPES.MODAL_COMPANY_DATA) {
+        const resolved = resolverEstadoModalDadosEmpresa({
+          actionType: action.actionType,
+          companyId,
+          companyAmbiguous,
+        });
+
+        setCompanyDataMode(resolved.state);
+
+        if (resolved.state === CONFIGURATION_COMPANY_DATA_MODAL_STATE.ERROR) {
+          setLoading(false);
+          setError(resolved.error);
+          return;
+        }
+
+        if (resolved.state === CONFIGURATION_COMPANY_DATA_MODAL_STATE.FIRST_CREATE) {
+          setLoading(false);
+          setError(null);
+          setCompany(null);
+          return;
+        }
+
+        if (resolved.state === CONFIGURATION_COMPANY_DATA_MODAL_STATE.EDIT_EXISTING && companyId) {
+          let cancelled = false;
+          setLoading(true);
+          setError(null);
+          (async () => {
+            const result = await fetchSellerCompanyForConfiguration(companyId);
+            if (cancelled) return;
+            setLoading(false);
+            if (!result.ok) {
+              const failed = resolverEstadoModalDadosEmpresa({
+                actionType: action.actionType,
+                companyId,
+                companyAmbiguous,
+                fetchFailed: true,
+                fetchError: result.error,
+              });
+              setCompanyDataMode(failed.state);
+              setError(failed.error);
+              return;
+            }
+            setCompany(result.company);
+          })();
+          return () => {
+            cancelled = true;
+          };
+        }
+      }
+
       if (action.actionType === CONFIGURATION_MILESTONE_ACTION_TYPES.MODAL_ML_PRECONFIRM && companyAmbiguous) {
         setError("Não foi possível identificar a empresa principal. Ajuste em Perfil → Dados da Empresa.");
         return;
@@ -190,6 +250,14 @@ export default function ConfigurationOnboardingActionsHost({
 
   const handleSaveCompany = useCallback(
     async (body) => {
+      if (companyDataMode === CONFIGURATION_COMPANY_DATA_MODAL_STATE.FIRST_CREATE) {
+        await runSaveFlow(async () => {
+          const result = await createSellerCompanyForConfiguration(buildConfigurationCompanyDataCreateBody(body));
+          return { ok: result.ok, error: result.error };
+        });
+        return;
+      }
+
       if (!companyId) {
         setError("Empresa principal não encontrada.");
         return;
@@ -199,7 +267,7 @@ export default function ConfigurationOnboardingActionsHost({
         return { ok: result.ok, error: result.error };
       });
     },
-    [companyId, runSaveFlow],
+    [companyDataMode, companyId, runSaveFlow],
   );
 
   const handleSaveTaxRate = useCallback(
@@ -281,6 +349,7 @@ export default function ConfigurationOnboardingActionsHost({
         onClose={onClose}
         company={company}
         accountEmail={String(user?.email ?? "")}
+        emailLocked={Boolean(String(user?.email ?? "").trim())}
         saving={saving}
         loading={loading}
         error={error}

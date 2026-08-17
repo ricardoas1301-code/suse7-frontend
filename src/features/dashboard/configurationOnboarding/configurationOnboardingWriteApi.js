@@ -38,6 +38,37 @@ export async function fetchSellerCompanyForConfiguration(companyId) {
 }
 
 /**
+ * @param {Record<string, unknown>} body
+ */
+export async function createSellerCompanyForConfiguration(body) {
+  const url = buildApiUrl("/api/seller/companies");
+  if (!url) return { ok: false, error: "Configure VITE_API_BASE_URL." };
+
+  await ensureAuthSessionBootstrapped();
+  const res = await apiFetch(url, { method: "POST", body });
+  if (!res.ok) {
+    return {
+      ok: false,
+      error:
+        (res.data && typeof res.data === "object" && typeof res.data.error === "string"
+          ? res.data.error
+          : null) || res.error || "Não foi possível salvar.",
+    };
+  }
+
+  const company =
+    res.data && typeof res.data === "object" && res.data.company && typeof res.data.company === "object"
+      ? res.data.company
+      : null;
+  if (!company) return { ok: false, error: "Empresa não retornada após cadastro." };
+  return {
+    ok: true,
+    company,
+    idempotent: res.data?.idempotent === true,
+  };
+}
+
+/**
  * @param {string} companyId
  * @param {Record<string, unknown>} body
  */

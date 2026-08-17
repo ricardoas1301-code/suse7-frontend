@@ -80,6 +80,23 @@ export function validateConfigurationCompanyDataForm(form) {
 /**
  * @param {Record<string, unknown>} form
  */
+export function buildConfigurationCompanyDataCreateBody(form) {
+  const digits = (value) => String(value ?? "").replace(/\D/g, "");
+  return {
+    company_name: String(form.company_name ?? "").trim(),
+    trade_name: String(form.trade_name ?? "").trim(),
+    document_cnpj: digits(form.document_cnpj),
+    contact_email: normalizeSellerCompanyContactEmailForPatch(form.contact_email),
+    whatsapp: digits(form.whatsapp) || null,
+    phone: digits(form.phone) || null,
+    configuration_onboarding: true,
+    is_primary: true,
+  };
+}
+
+/**
+ * @param {Record<string, unknown>} form
+ */
 export function buildConfigurationCompanyDataPatchBody(form) {
   const digits = (value) => String(value ?? "").replace(/\D/g, "");
   return {
