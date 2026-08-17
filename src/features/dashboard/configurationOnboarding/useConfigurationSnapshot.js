@@ -38,6 +38,7 @@ export function useConfigurationSnapshot(options = {}) {
     setSnapshot({
       configuration: res.configuration,
       milestones: Array.isArray(res.milestones) ? res.milestones : [],
+      authorities: res.authorities && typeof res.authorities === "object" ? res.authorities : {},
     });
     if (import.meta.env.DEV) {
       console.info("[S7_CONFIGURATION_SNAPSHOT_LOAD]", {
@@ -75,12 +76,12 @@ export function useConfigurationSnapshot(options = {}) {
     async (/** @type {{ force?: boolean }} */ opts = {}) => {
       const seq = ++requestSeqRef.current;
       if (!effectivelyEnabled) {
-        setInitialLoading(false);
+        setInitialLoading(true);
         setRefreshing(false);
         setError(null);
         setSnapshot(null);
-        setHasResolvedOnce(true);
-        hasResolvedOnceRef.current = true;
+        setHasResolvedOnce(false);
+        hasResolvedOnceRef.current = false;
         return null;
       }
 
@@ -118,11 +119,12 @@ export function useConfigurationSnapshot(options = {}) {
     (async () => {
       if (!effectivelyEnabled) {
         if (!cancelled) {
-          setInitialLoading(false);
+          setInitialLoading(true);
           setRefreshing(false);
+          setError(null);
           setSnapshot(null);
-          setHasResolvedOnce(true);
-          hasResolvedOnceRef.current = true;
+          setHasResolvedOnce(false);
+          hasResolvedOnceRef.current = false;
         }
         return;
       }

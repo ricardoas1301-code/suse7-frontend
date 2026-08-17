@@ -1,12 +1,13 @@
 // ======================================================================
 // COMPONENTE: MLConnect
-// Objetivo: Iniciar o OAuth do Mercado Livre via BACKEND
+// Objetivo: Iniciar o OAuth do Mercado Livre via BACKEND (navegação browser)
 // ======================================================================
 
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { buildApiUrl } from "../config/api";
+import { montarUrlBackendMlConnect } from "../features/dashboard/configurationOnboarding/configurationOnboardingMlConnectApi.js";
 
 const ML_OAUTH_CONFIG_ERR_KEY = "ml_oauth_config_errors";
 
@@ -20,16 +21,10 @@ export default function MLConnect() {
     let mounted = true;
 
     const iniciarOAuthML = async () => {
-      // --------------------------------------------------------
-      // 1. Buscar usuário autenticado no Supabase ok
-      // --------------------------------------------------------
       const { data, error } = await supabase.auth.getUser();
 
       if (!mounted) return;
 
-      // --------------------------------------------------------
-      // 2. Validação de sessão
-      // --------------------------------------------------------
       if (error || !data?.user) {
         console.warn("Usuário não autenticado para integração ML");
         window.location.href = "/login";
@@ -44,20 +39,6 @@ export default function MLConnect() {
       if (!sellerCompanyId) {
         console.warn("[MLConnect] missing_seller_company_id — selecione uma empresa em Integrações.");
         navigate("/perfil/integracoes/mercado-livre?ml_error=seller_company_id_required_for_ml_connect");
-        return;
-      }
-
-      // --------------------------------------------------------
-      // 3. Redirecionar para o backend (OAuth ML) — path /api/ml/connect
-      // --------------------------------------------------------
-      let connectPath = `/api/ml/connect?user_id=${encodeURIComponent(userId)}`;
-      connectPath += `&seller_company_id=${encodeURIComponent(sellerCompanyId)}`;
-      const connectUrl = buildApiUrl(connectPath);
-      if (!connectUrl) {
-        console.error(
-          "[ML] Defina VITE_API_BASE_URL (dev local: http://localhost:3001; produção: URL do backend deployado)"
-        );
-        navigate("/perfil/integracoes/mercado-livre");
         return;
       }
 
@@ -80,6 +61,21 @@ export default function MLConnect() {
         }
       }
 
+      const intent = searchParams.get("intent") || "";
+      const connectUrl = montarUrlBackendMlConnect({
+        userId,
+        sellerCompanyId,
+        intent: intent || undefined,
+      });
+
+      if (!connectUrl) {
+        console.error(
+          "[ML] Defina VITE_API_BASE_URL (dev local: http://localhost:3001; produção: URL do backend deployado)",
+        );
+        navigate("/perfil/integracoes/mercado-livre");
+        return;
+      }
+
       window.location.href = connectUrl;
     };
 
@@ -90,9 +86,6 @@ export default function MLConnect() {
     };
   }, [navigate, searchParams]);
 
-  // --------------------------------------------------------------
-  // Tela de transição
-  // --------------------------------------------------------------
   return (
     <h2 style={{ padding: 20, textAlign: "center" }}>
       Redirecionando para o Mercado Livre...

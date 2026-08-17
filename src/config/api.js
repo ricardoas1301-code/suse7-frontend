@@ -79,7 +79,8 @@ let _hasWarned401 = false;
  * @returns {Promise<{ ok: boolean; data?: any; error?: string; status: number }>}
  */
 export async function apiFetch(url, options = {}) {
-  const { method = "GET", headers = {}, body, unauthorizedFallback, cache, timeoutMs } = options;
+  const { method = "GET", headers = {}, body, unauthorizedFallback, cache, timeoutMs, signal: externalSignal } =
+    options;
 
   if (!API_BASE_URL) {
     const message = "VITE_API_BASE_URL não configurada.";
@@ -102,11 +103,16 @@ export async function apiFetch(url, options = {}) {
   /** @type {ReturnType<typeof setTimeout> | null} */
   let timeoutId = null;
   /** @type {AbortController | null} */
-  const controller =
-    timeoutMs != null && Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
-      ? new AbortController()
-      : null;
-  if (controller) {
+  const controller = new AbortController();
+  const onExternalAbort = () => controller.abort();
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      controller.abort();
+    } else {
+      externalSignal.addEventListener("abort", onExternalAbort, { once: true });
+    }
+  }
+  if (timeoutMs != null && Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0) {
     timeoutId = setTimeout(() => controller.abort(), Number(timeoutMs));
   }
   try {
@@ -115,15 +121,25 @@ export async function apiFetch(url, options = {}) {
       headers: sendHeaders,
       ...(cache != null ? { cache } : {}),
       ...(body != null && { body: typeof body === "string" ? body : JSON.stringify(body) }),
-      ...(controller ? { signal: controller.signal } : {}),
+      signal: controller.signal,
     });
   } catch (err) {
-    if (controller?.signal.aborted) {
-      const message = "Tempo esgotado ao carregar o resumo executivo. Tente novamente.";
+    if (controller.signal.aborted) {
+      const abortedByCaller = Boolean(externalSignal?.aborted);
+      const message = abortedByCaller
+        ? "Requisição cancelada."
+        : "Tempo esgotado ao carregar o resumo executivo. Tente novamente.";
       if (import.meta.env.DEV) {
-        console.warn("[S7 API] Timeout:", url, { timeoutMs });
+        console.warn("[S7 API] Timeout:", url, { timeoutMs, abortedByCaller });
       }
-      return { ok: false, error: message, status: 408, timedOut: true, connectionError: true };
+      return {
+        ok: false,
+        error: message,
+        status: abortedByCaller ? 499 : 408,
+        timedOut: !abortedByCaller,
+        aborted: abortedByCaller,
+        connectionError: !abortedByCaller,
+      };
     }
     const message =
       "Não foi possível conectar ao backend. Verifique se a API está online e se VITE_API_BASE_URL está correta.";
@@ -133,6 +149,7 @@ export async function apiFetch(url, options = {}) {
     return { ok: false, error: message, status: 0, connectionError: true };
   } finally {
     if (timeoutId != null) clearTimeout(timeoutId);
+    if (externalSignal) externalSignal.removeEventListener("abort", onExternalAbort);
   }
 
   const data = await res.json().catch(() => ({}));
@@ -155,6 +172,8 @@ export async function apiFetch(url, options = {}) {
       error: data?.message ?? data?.error ?? `Erro ${res.status}`,
       status: res.status,
       data,
+      connectionError: res.status === 0 || res.status === 408 || res.status === 503,
+      unauthorized: res.status === 401,
     };
   }
 

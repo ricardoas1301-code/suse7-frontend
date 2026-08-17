@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ensureAuthSessionBootstrapped } from "../../../auth/authBootstrapService";
 import { useAuthBootstrap } from "../../../contexts/AuthBootstrapContext.jsx";
 import {
+  extrairFaseSincronizacaoInicialOperacional,
+} from "./operationalTasksMarketplaceSyncState.js";
+import {
   fetchOperationalTasks,
   invalidateOperationalTasksCache,
   OPERATIONAL_TASKS_INVALIDATE_EVENT,
@@ -19,6 +22,7 @@ export function useOperationalTasks(options = {}) {
 
   const [tasks, setTasks] = useState(/** @type {Record<string, unknown>[]} */ ([]));
   const [totalTasks, setTotalTasks] = useState(0);
+  const [mlInitialSyncPhase, setMlInitialSyncPhase] = useState(/** @type {string | null} */ (null));
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(/** @type {string | null} */ (null));
@@ -41,6 +45,7 @@ export function useOperationalTasks(options = {}) {
     setError(null);
     setTasks(nextTasks);
     setTotalTasks(Number(res.total_tasks ?? data.total_tasks) || nextTasks.length);
+    setMlInitialSyncPhase(extrairFaseSincronizacaoInicialOperacional(data));
 
     if (import.meta.env.DEV) {
       console.info("[S7_OPERATIONAL_TASKS_LOAD]", {
@@ -48,6 +53,7 @@ export function useOperationalTasks(options = {}) {
         task_count: nextTasks[0]?.count ?? null,
         from_cache: Boolean(res.fromCache),
         refreshing: hasResolvedOnceRef.current,
+        ml_initial_sync_phase: extrairFaseSincronizacaoInicialOperacional(data),
       });
     }
 
@@ -205,6 +211,7 @@ export function useOperationalTasks(options = {}) {
   return {
     tasks,
     totalTasks,
+    mlInitialSyncPhase,
     initialLoading,
     refreshing,
     /** @deprecated use initialLoading + refreshing */

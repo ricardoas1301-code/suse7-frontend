@@ -163,33 +163,43 @@ export default function Login() {
 
 
         {/* E-mail */}
-        <label className="login-label">E-mail ou usuário</label>
-        <input
-          className={`login-input ${error ? "login-input-error" : ""}`}
-          type="email"
-          placeholder="Digite seu e-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div className="login-field">
+          <label className="login-label" htmlFor="login-email">
+            E-mail ou usuário
+          </label>
+          <input
+            id="login-email"
+            className={`login-input ${error ? "login-input-error" : ""}`}
+            type="email"
+            placeholder="Digite seu e-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
         {/* Senha */}
-        <label className="login-label">Senha</label>
-        <div className="password-wrapper">
-          <input
-            className={`login-input-password ${error ? "login-input-error" : ""}`}
-            type={showPassword ? "text" : "password"}
-            placeholder="Digite sua senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-          />
-          <button
-            type="button"
-            className="password-toggle-btn"
-            onClick={() => setShowPassword(!showPassword)}
-            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-          >
-            {showPassword ? <IconEyeOff /> : <IconEye />}
-          </button>
+        <div className="login-field">
+          <label className="login-label" htmlFor="login-senha">
+            Senha
+          </label>
+          <div className="password-wrapper">
+            <input
+              id="login-senha"
+              className={`login-input-password ${error ? "login-input-error" : ""}`}
+              type={showPassword ? "text" : "password"}
+              placeholder="Digite sua senha"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+            />
+            <button
+              type="button"
+              className="password-toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            >
+              {showPassword ? <IconEyeOff /> : <IconEye />}
+            </button>
+          </div>
         </div>
 
         {/* Esqueci senha */}
@@ -238,7 +248,7 @@ export default function Login() {
 )}
 
         <Link to="/termos">Termos de uso</Link> |{" "}
-        <Link to="/privacidade">Segurança e privacidade</Link>
+        <Link to="/privacidade">Política de Privacidade</Link>
         <span className="login-copy">
           Suse7 2026 © Todos os direitos reservados
         </span>

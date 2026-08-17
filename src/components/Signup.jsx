@@ -8,11 +8,11 @@ import { useState, useRef, useEffect } from "react";
 import { useNotifications } from "../contexts/NotificationContext.jsx";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes.js";
 import { supabase } from "../supabaseClient";
-import { useNavigate } from "react-router-dom";
 import GoogleIcon from "../assets/google.png";
 import "./Signup.css";
 import Suse7Alert from "../components/Suse7Alert";
 import SignupMarketingColumn from "./SignupMarketingColumn.jsx";
+import PublicBackLink from "./legal/PublicBackLink.jsx";
 import TermsAcceptanceModal from "./legal/TermsAcceptanceModal.jsx";
 import SignupCheckEmail from "../pages/SignupCheckEmail.jsx";
 import {
@@ -206,7 +206,6 @@ export default function Signup() {
     };
   }, []);
 
-  const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const formRef = useRef(null);
 
@@ -508,19 +507,20 @@ export default function Signup() {
     }
   };
 
+  if (preConfirmSuccess) {
+    return <SignupCheckEmail emailMasked={preConfirmSuccess.emailMasked} />;
+  }
+
   return (
     <div className="signup-container">
+      <div className="signup-back-anchor">
+        <PublicBackLink to="/login" />
+      </div>
 
       <SignupMarketingColumn />
 
       {/* COLUNA DIREITA (FORMULÁRIO) — congelado / homologado */}
       <div className="signup-right">
-        {preConfirmSuccess ? (
-          <SignupCheckEmail
-            emailMasked={preConfirmSuccess.emailMasked}
-            onClose={() => navigate("/login")}
-          />
-        ) : (
           <>
         {/* Google Login */}
         <button
@@ -540,7 +540,7 @@ export default function Signup() {
 
         <form ref={formRef} onSubmit={handleSubmit} noValidate className="signup-form">
 
-          {/* Linha 1: Razão social | Nome fantasia */}
+          {/* Linha 1: Razão social | Nome da Loja */}
           <div className="row">
             <div className="field">
               <label htmlFor="signup-nome">
@@ -559,7 +559,7 @@ export default function Signup() {
 
             <div className="field">
               <label htmlFor="signup-nome-loja">
-                Nome fantasia <ReqMark />
+                Nome da Loja <ReqMark />
               </label>
               <input
                 id="signup-nome-loja"
@@ -745,7 +745,6 @@ export default function Signup() {
 
         </form>
           </>
-        )}
       </div>
 
 {alertData && (

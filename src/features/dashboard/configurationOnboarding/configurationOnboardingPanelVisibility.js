@@ -1,10 +1,17 @@
 export {
   CARD_PANEL_MODE,
+  CONFIGURACAO_INICIAL_ESTADO,
+  celebracaoConfiguracaoAtiva,
+  configuracaoInicialConcluida,
+  configuracaoInicialPendente,
+  resolverEstadoConfiguracaoInicial,
   painelCentralDeveSerVisivel,
   painelCentralRecolhivel,
+  painelCentralOnboardingOverlay,
   possuiPendenciasOperacionaisAcionaveis,
   resolverContratoPainelCentral,
   resolverModoPainelCentral,
   rotuloPainelCentralRecolhido,
   secaoConfiguracaoDeveAparecer,
+  secaoOperacionalPosOnboardingDeveAparecer,
 } from "./configurationOnboardingPanelState.js";

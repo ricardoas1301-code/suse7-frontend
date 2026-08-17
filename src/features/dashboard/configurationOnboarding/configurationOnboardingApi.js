@@ -7,6 +7,7 @@ import { ensureAuthSessionBootstrapped } from "../../../auth/authBootstrapServic
  *   error?: string;
  *   configuration?: Record<string, unknown>;
  *   milestones?: Record<string, unknown>[];
+ *   authorities?: Record<string, unknown>;
  *   fromCache?: boolean;
  * }} ConfigurationSnapshotResult
  */
@@ -77,11 +78,14 @@ export async function fetchConfigurationSnapshot(options = {}) {
     const configuration =
       data.configuration && typeof data.configuration === "object" ? data.configuration : {};
     const milestones = Array.isArray(data.milestones) ? data.milestones : [];
+    const authorities =
+      data.authorities && typeof data.authorities === "object" ? data.authorities : {};
 
     const normalized = {
       ok: true,
       configuration,
       milestones,
+      authorities,
       fromCache: false,
     };
     storeCache(normalized);

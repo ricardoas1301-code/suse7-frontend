@@ -13,7 +13,7 @@ export const CONFIGURATION_MILESTONE_PRESENTATION_ORDER = [
 /** @type {Record<string, { label: string; description: string; icon: string; order: number; actionVisualType: string }>} */
 export const CONFIGURATION_MILESTONE_PRESENTATION = {
   [CONFIGURATION_MILESTONE_IDS.COMPANY_DATA]: {
-    label: "Dados da empresa",
+    label: "Dados da loja",
     description: "Razão social, CNPJ e contatos da empresa principal.",
     icon: "building",
     order: 1,
