@@ -341,29 +341,6 @@ export default function Signup() {
         });
         return;
       }
-
-      setTimeout(async () => {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: existingProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (existingProfile) return;
-
-        await supabase.from("profiles").insert({
-          id: user.id,
-          email: user.email,
-          primeiro_login: true,
-          created_at: new Date(),
-          last_login: new Date(),
-        });
-      }, 800);
     } finally {
       oauthInFlightRef.current = false;
       setOauthLoading(false);

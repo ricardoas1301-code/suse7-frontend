@@ -1,6 +1,11 @@
 import { supabase } from "../supabaseClient";
 import { logAuthBootstrap } from "./authBootstrapDevLog";
 import { completeSignupBirthOnce, isSignupBirthAlreadyComplete } from "../services/completeSignupBirth.js";
+import {
+  bootstrapSocialSessionOnce,
+  isSocialAuthSession,
+  isSocialBootstrapComplete,
+} from "../services/bootstrapSocialSession.js";
 import { clearIntroSessionFlags, logIntroAuthDev } from "./introAuthSession";
 import { hasAuthCallbackInUrl, limparAuthCallbackDaUrl } from "./authCallbackCleanup.js";
 
@@ -70,7 +75,56 @@ function scheduleBirthCompletion(session, source) {
     setBirthCompletionState("skipped");
     return;
   }
+  if (isSocialAuthSession(session)) {
+    void maybeBootstrapSocialSession(session, source);
+    return;
+  }
   void maybeCompleteSignupBirthOnSession(session, source);
+}
+
+async function maybeBootstrapSocialSession(session, source = "auth_bootstrap") {
+  if (!session?.access_token || !session?.user?.id) {
+    setBirthCompletionState("skipped");
+    return { ok: true, code: "NO_SESSION" };
+  }
+
+  if (birthCompletionState === "done") {
+    return { ok: true, code: "ALREADY_DONE" };
+  }
+
+  if (birthCompletionBootstrapInFlight) {
+    return birthCompletionBootstrapInFlight;
+  }
+
+  setBirthCompletionState("running");
+  birthCompletionBootstrapInFlight = (async () => {
+    try {
+      const result = await bootstrapSocialSessionOnce();
+      if (isSocialBootstrapComplete(result)) {
+        setBirthCompletionState("done");
+        logAuthBootstrap("social_bootstrap_complete", { source, code: result.code });
+        return result;
+      }
+      setBirthCompletionState("failed");
+      logAuthBootstrap("social_bootstrap_failed", {
+        source,
+        code: result.code,
+        error: result.error,
+      });
+      return result;
+    } catch (err) {
+      setBirthCompletionState("failed");
+      logAuthBootstrap("social_bootstrap_failed", {
+        source,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return { ok: false, code: "BOOTSTRAP_EXCEPTION" };
+    } finally {
+      birthCompletionBootstrapInFlight = null;
+    }
+  })();
+
+  return birthCompletionBootstrapInFlight;
 }
 
 async function maybeCompleteSignupBirthOnSession(session, source = "auth_bootstrap") {
@@ -100,6 +154,11 @@ async function maybeCompleteSignupBirthOnSession(session, source = "auth_bootstr
         setBirthCompletionState("skipped");
         logAuthBootstrap("signup_birth_skipped_no_pending", { source });
         return { ok: true, code: "NO_PENDING" };
+      }
+      if (result.code === "RPC_NOT_AVAILABLE") {
+        setBirthCompletionState("skipped");
+        logAuthBootstrap("signup_birth_skipped_rpc_unavailable", { source });
+        return { ok: true, code: "RPC_NOT_AVAILABLE" };
       }
       setBirthCompletionState("failed");
       logAuthBootstrap("signup_birth_failed", { source, code: result.code, error: result.error });
