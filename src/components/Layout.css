@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden; /* o layout nunca rola */
+  background: var(--s7-bg-page, #f2f7ff);
 }
 
 /* ======================================================================
@@ -16,9 +17,12 @@
 ====================================================================== */
 
 .navbar-premium {
-  height: 64px;
+  height: var(--s7-topnav-bar-height);
   position: relative;   /* 🔥 cria contexto */
-  z-index: 10;
+  /* Navbar + menu do perfil sempre acima de cards/filtros sticky das páginas
+     (ex.: card "Busca e filtros" sticky usa z-index 28). Abaixo de modais/
+     tooltips que usam portal em z-index alto (100000+). */
+  z-index: 1000;
 
   /* 🔥 Troca de flex para grid para centralização perfeita */
   display: grid;
@@ -49,12 +53,35 @@
   align-items: center;
 }
 
-/* 🔥 Logo SEMPRE controlada (não estoura / não some) */
+/* Tooltip da logo — preserva aparência do link (sem override azul do gatilho S7) */
+.nav-logo-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.nav-logo-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.nav-logo-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  display: inline-flex;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  padding: 0;
+  border: none;
+}
+
+.nav-logo-tip .nav-logo {
+  display: flex;
+  align-items: center;
+}
+
+/* Logo Suse7 — alinhada à altura compacta do header (S1.1) */
 .nav-logo-img {
-  width: 63px;
-  height: 63px;
+  width: var(--s7-topnav-logo-size);
+  height: var(--s7-topnav-logo-size);
   object-fit: contain;
   display: block;
+}
+
+/* Avatar empresa — escopo header (não altera logo-sm em outras telas) */
+.nav-right .suse7-avatar.logo-sm {
+  width: var(--s7-topnav-avatar-size);
+  height: var(--s7-topnav-avatar-size);
 }
 
 /* ======================================================================
@@ -99,7 +126,7 @@
 
 @media (max-width: 900px) {
   .nav-center {
-    gap: 12px;
+    gap: 10px;
   }
 
   .nav-item span {
@@ -127,6 +154,10 @@
 /* Precificação inteligente: metade do respiro padrão sob a navbar (8px → 4px). */
 .page-content.page-content--pricing-intelligence {
   padding-top: 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 
@@ -178,20 +209,25 @@
 ====================================================================== */
 @media (max-width: 768px) {
   .navbar-premium {
-    height: 58px;
+    height: 46px;
     padding: 0 10px;
     grid-template-columns: auto 1fr auto;
-    gap: 8px;
+    gap: 6px;
   }
 
   .nav-logo-img {
-    width: 48px;
-    height: 48px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .nav-right .suse7-avatar.logo-sm {
+    width: 32px;
+    height: 32px;
   }
 
   .nav-center {
     justify-content: flex-start;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
@@ -205,15 +241,15 @@
   }
 
   .nav-item {
-    padding: 7px 9px;
-    border-radius: 9px;
+    padding: 0 8px;
     font-size: 12px;
+    min-height: 34px;
     flex-shrink: 0;
   }
 
   .nav-right {
     padding-left: 8px;
-    gap: 8px;
+    gap: 6px;
   }
 
   .page-content {
@@ -239,7 +275,7 @@
   }
 
   .nav-item {
-    padding: 6px 8px;
+    padding: 0 8px;
   }
 }
 
@@ -257,7 +293,12 @@
   }
 
   .nav-logo-img {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .nav-right .suse7-avatar.logo-sm {
+    width: 30px;
+    height: 30px;
   }
 }
