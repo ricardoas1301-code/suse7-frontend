@@ -2,14 +2,8 @@
    Concorrência S7 — alinhamento visual a Produtos + Raio-X (Anuncios.css)
 ====================================================================== */
 
-.page-content:has(.concorrencia-page) {
-  padding-left: 4px;
-  padding-right: 4px;
-  padding-top: 0;
-}
-
 .concorrencia-page__shell {
-  padding: 10px clamp(4px, 0.65vw, 10px) 44px;
+  padding: var(--s7-catalog-page-inset-top, 5px) clamp(4px, 0.65vw, 10px) 44px;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -294,6 +288,17 @@
   padding: 0;
 }
 
+/* Moldura laranja sutil — mesma identidade do card da lista principal */
+.s7-concorrencia-modal.concorrencia-incluir-modal,
+.s7-concorrencia-modal.concorrencia-produto-modal,
+.s7-concorrencia-modal.concorrencia-discover-modal {
+  border: 1px solid color-mix(in srgb, var(--s7-orange) 42%, transparent);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 28px rgba(15, 23, 42, 0.07),
+    0 20px 50px rgba(15, 23, 42, 0.12);
+}
+
 .s7-concorrencia-modal__head {
   display: flex;
   align-items: center;
@@ -368,6 +373,201 @@
   width: min(720px, 100%);
 }
 
+/* Modal Incluir — sem rolagem no container pai; scroll só na lista de resultados */
+.s7-concorrencia-modal.concorrencia-incluir-modal {
+  max-height: min(88vh, 720px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.concorrencia-incluir-modal .s7-concorrencia-modal__head,
+.concorrencia-incluir-modal .s7-concorrencia-modal__empty {
+  flex-shrink: 0;
+}
+
+.concorrencia-incluir-modal .s7-concorrencia-modal__head {
+  justify-content: flex-start;
+}
+
+.concorrencia-incluir-modal__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(108px, 0.34fr);
+  gap: 12px 14px;
+  padding: 0 16px 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.concorrencia-incluir-modal__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.concorrencia-incluir-modal__search {
+  margin: 0;
+  padding: 10px 0 10px;
+  flex-shrink: 0;
+}
+
+.concorrencia-incluir-modal__search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-incluir-modal__search-icon-box {
+  flex: 0 0 auto;
+}
+
+.concorrencia-incluir-modal__search-field-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.concorrencia-incluir-modal__search-field-wrap .concorrencia-incluir-modal__search-s7,
+.concorrencia-incluir-modal__search-field-wrap .s7-input__wrapper {
+  width: 100%;
+  max-width: 100%;
+}
+
+.concorrencia-incluir-modal__search-input-field {
+  height: 33px;
+  min-height: 33px;
+  font-size: 12.5px;
+  border-radius: 8px;
+  padding-left: 10px;
+}
+
+.concorrencia-incluir-modal__search-row .s7-clear-filters-action {
+  flex: 0 0 auto;
+}
+
+.concorrencia-incluir-modal__results {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.concorrencia-incluir-modal__all-monitored-hint {
+  margin: 0 0 8px;
+  padding: 0 2px;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.concorrencia-incluir-modal .s7-concorrencia-modal__pick-list.concorrencia-incluir-modal__list {
+  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: min(48vh, 480px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0 0 4px;
+}
+
+.concorrencia-incluir-modal__avatar-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-width: 0;
+  padding: 8px 0 4px;
+}
+
+.concorrencia-incluir-modal__avatar {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  max-height: min(52vh, 420px);
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+  user-select: none;
+}
+
+.s7-concorrencia-modal__pick-check {
+  margin-top: 18px;
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+}
+
+.s7-concorrencia-modal__pick-check-slot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin-top: 18px;
+  flex-shrink: 0;
+}
+
+.concorrencia-incluir-modal__pick-row--is-already-monitored {
+  cursor: default;
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.concorrencia-incluir-modal__pick-row--is-already-monitored:hover {
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.concorrencia-incluir-modal__pick-row--is-already-monitored .s7-concorrencia-modal__pick-title,
+.concorrencia-incluir-modal__pick-row--is-already-monitored .concorrencia-incluir-modal__meta-line {
+  color: rgba(71, 85, 105, 0.88);
+}
+
+.concorrencia-incluir-modal__pick-row--is-already-monitored .concorrencia-incluir-modal__meta-price {
+  color: rgba(249, 115, 22, 0.72);
+}
+
+.concorrencia-incluir-modal__pick-row--is-already-monitored .concorrencia-incluir-modal__meta-sales {
+  color: rgba(22, 163, 74, 0.72);
+}
+
+.concorrencia-incluir-modal__pick-row--is-already-monitored .s7-concorrencia-modal__pick-thumb,
+.concorrencia-incluir-modal__pick-row--is-already-monitored .s7-concorrencia-modal__pick-thumb-wrap img {
+  filter: grayscale(0.35) saturate(0.75);
+  opacity: 0.88;
+}
+
+.concorrencia-incluir-modal__cursor-tooltip-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-incluir-modal__pick-row--is-already-monitored:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-radius: 8px;
+}
+
+.concorrencia-incluir-modal .s7-concorrencia-modal__empty {
+  padding: 8px 2px 4px;
+}
+
+.concorrencia-incluir-modal .s7-concorrencia-modal__foot,
+.concorrencia-incluir-modal__foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.concorrencia-incluir-modal__foot .concorrencia-incluir-modal__count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  line-height: 1;
+}
+
 .s7-concorrencia-modal__empty {
   margin: 0;
   padding: 16px 18px 8px;
@@ -413,21 +613,29 @@
   accent-color: #2563eb;
 }
 
-.s7-concorrencia-modal__pick-thumb-wrap {
+.s7-concorrencia-modal__pick-check-slot {
   display: block;
-  width: 52px;
-  height: 52px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #f1f5f9;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  width: 18px;
+  height: 18px;
+  margin-top: 18px;
   flex-shrink: 0;
 }
 
-.s7-concorrencia-modal__pick-thumb {
+.concorrencia-incluir-modal .s7-concorrencia-modal__pick-thumb-wrap {
+  display: block;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ffffff;
+  border: none;
+  flex-shrink: 0;
+}
+
+.concorrencia-incluir-modal .s7-concorrencia-modal__pick-thumb {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -541,4 +749,3551 @@
     width: 44px;
     height: 44px;
   }
+}
+
+/* ======================================================================
+   Concorrência — Catálogo de produtos por SKU (Fase 1)
+   Grid de 5 colunas; reaproveita .products-catalog__* (thumb/nome/sku/card/
+   paginação) e adiciona colunas próprias. minmax(0, fr) garante encolhimento
+   dentro do card, sem scroll horizontal.
+====================================================================== */
+
+/* Tooltip arredondado (portal S7) — títulos na lista, mesmo padrão do copiar SKU */
+.concorrencia-catalog__comp-head > .s7-tooltip-portal-root {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  display: block;
+}
+
+.concorrencia-catalog__product-name-tip.s7-tooltip-portal-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.concorrencia-catalog__product-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--s7-orange, #f97316);
+  padding: 0;
+  cursor: inherit;
+  font: inherit;
+  text-align: inherit;
+  line-height: 1.25;
+}
+
+.concorrencia-catalog__comp-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+  padding: 0;
+  cursor: inherit;
+  font: inherit;
+  text-align: inherit;
+  line-height: 1.25;
+}
+
+.concorrencia-catalog__comp-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--s7-text, #0f172a);
+}
+
+.concorrencia-catalog__product-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-catalog__product-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible,
+.concorrencia-catalog__comp-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-catalog__comp-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  background: transparent;
+  box-shadow: none;
+}
+
+.concorrencia-catalog__product-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-catalog__product-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: var(--s7-orange, #f97316);
+}
+
+.concorrencia-catalog__product-name-tip a.concorrencia-catalog__product-ad-link:hover,
+.concorrencia-catalog__product-name-tip a.concorrencia-catalog__product-ad-link:focus-visible {
+  color: #c2410c;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.concorrencia-catalog__comp-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-catalog__comp-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: inherit;
+}
+
+.concorrencia-produto-modal__queue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.concorrencia-produto-modal__cand-action--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.concorrencia-catalog .concorrencia-filters-card {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Ritmo vertical — blocos consecutivos: s7-catalog-page-rhythm.css */
+.concorrencia-catalog.products-catalog {
+  --s7-conc-grid-cols:
+    var(--s7-list-select-col-width, 40px)
+    40px
+    minmax(0, 1.62fr)
+    minmax(0, 0.52fr)
+    minmax(0, 0.44fr)
+    repeat(6, minmax(0, 1.36fr))
+    44px;
+  --products-catalog-table-radius: var(--s7-list-table-radius, 10px);
+}
+
+.concorrencia-catalog > .concorrencia-filters-card.s7-sticky-filters {
+  margin-top: 0;
+  margin-bottom: var(--s7-catalog-block-gap, 12px);
+}
+
+.concorrencia-catalog > .products-catalog__table-block,
+.concorrencia-catalog > .products-catalog__loading,
+.concorrencia-catalog > .products-catalog__empty-card,
+.concorrencia-catalog > .products-catalog__filter-empty-card {
+  margin-top: 0;
+}
+
+.concorrencia-catalog .products-catalog__table-hscroll {
+  overflow: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.concorrencia-catalog .products-catalog__table-card {
+  overflow: visible;
+}
+
+/* Template compartilhado por cabeçalho e linhas (mesma trilha de colunas).
+   11 colunas: seleção | capa | produto | conta | MKP | 6× concorrente | ação. */
+.concorrencia-catalog__grid {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: var(--s7-conc-grid-cols);
+  column-gap: 2px;
+  align-items: center;
+}
+
+.concorrencia-catalog__col-head {
+  min-width: 0;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.concorrencia-catalog__col-head--competitor {
+  text-align: center;
+}
+
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--competitor {
+  padding-left: var(--s7-list-table-head-padding-x);
+  padding-right: var(--s7-list-table-head-padding-x);
+}
+
+.concorrencia-catalog__col-head--product {
+  text-align: center;
+  padding-left: 5px;
+}
+
+.concorrencia-catalog__col-head--action {
+  text-align: center;
+  padding-left: 10px;
+}
+
+.concorrencia-catalog__col-head--account {
+  text-align: center;
+}
+
+.concorrencia-catalog__col-head--channel {
+  text-align: center;
+}
+
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--account,
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--channel,
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--competitor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  padding-left: var(--s7-list-table-head-padding-x);
+  padding-right: var(--s7-list-table-head-padding-x);
+}
+
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--account,
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--channel {
+  justify-self: center;
+  margin-inline: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  text-align: center;
+}
+
+.concorrencia-catalog__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 12px;
+  padding: 0 clamp(4px, 0.65vw, 10px);
+}
+
+.concorrencia-catalog__cell--account {
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+  padding-left: 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concorrencia-catalog__cell--account .s7-catalog-account--compact {
+  justify-content: center;
+}
+
+/* Avatar Conta — círculo perfeito, sem moldura (só Concorrência). */
+.concorrencia-catalog__cell--account .s7-catalog-account__avatar {
+  border-radius: 50%;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.concorrencia-catalog__cell--account .s7-catalog-account__avatar img {
+  border-radius: 50%;
+}
+
+.concorrencia-catalog__cell--account .s7-catalog-account__avatar:has(.s7-catalog-account__initial) {
+  background: linear-gradient(145deg, #e0e7ff 0%, #f1f5f9 100%);
+}
+
+.concorrencia-incluir-modal__meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.concorrencia-incluir-modal__meta-sep {
+  color: rgba(100, 116, 139, 0.55);
+  user-select: none;
+}
+
+.concorrencia-incluir-modal__meta-account {
+  font-weight: 600;
+  color: #475569;
+}
+
+.concorrencia-incluir-modal__meta-price {
+  font-weight: 700;
+  color: var(--s7-orange, #f97316);
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-incluir-modal__meta-sales {
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.concorrencia-incluir-modal__meta-sales--zero {
+  font-weight: 400;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.concorrencia-incluir-modal__meta-copy.s7-copy-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (hover: hover) {
+  .concorrencia-incluir-modal__meta-copy .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .concorrencia-incluir-modal__meta-copy:hover .products-catalog__copy-btn,
+  .concorrencia-incluir-modal__meta-copy:focus-within .products-catalog__copy-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.concorrencia-incluir-modal__count {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .concorrencia-incluir-modal__content {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .concorrencia-incluir-modal__avatar-col {
+    order: 2;
+    padding: 0 0 6px;
+  }
+
+  .concorrencia-incluir-modal__avatar {
+    max-width: 180px;
+    max-height: 200px;
+  }
+}
+
+.concorrencia-catalog__body {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Linha da lista — não clicável por inteiro; ações nos botões das células */
+.concorrencia-catalog__row {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: var(--s7-conc-grid-cols);
+  column-gap: 2px;
+  align-items: start;
+  padding: 11px clamp(10px, 1.4vw, 16px);
+  transition: background 0.18s ease;
+  --s7-concorrencia-catalog-thumb-size: 38px;
+  --s7-concorrencia-stack-label-gap: 2px;
+}
+
+.concorrencia-catalog__row:hover {
+  background: rgba(248, 250, 252, 0.92);
+}
+
+/* Seleção — coluna compacta alinhada (s7-list-select-column.css) */
+.concorrencia-catalog__row .products-catalog__cell--select {
+  padding-top: 0;
+}
+
+.concorrencia-catalog .vendas-page__row-select {
+  cursor: pointer;
+}
+
+.concorrencia-catalog .vendas-page__row-select--head {
+  margin-inline: auto;
+}
+
+.concorrencia-catalog__grid--head .products-catalog__cell--select {
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--s7-list-table-head-padding-y, 6px) 0;
+}
+
+.concorrencia-catalog__grid--head .products-catalog__cell--select .vendas-page__row-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Capa + Conta + Canal — mesma linha vertical (centralizados na altura da linha). */
+.concorrencia-catalog__row .products-catalog__cell--thumb,
+.concorrencia-catalog__row .concorrencia-catalog__cell--account,
+.concorrencia-catalog__row .concorrencia-catalog__cell--channel {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0;
+}
+
+.concorrencia-catalog__row .products-catalog__cell--thumb {
+  min-height: var(--s7-concorrencia-catalog-thumb-size, 38px);
+}
+
+.concorrencia-catalog__row .concorrencia-catalog__cell--action {
+  align-self: center;
+  padding-top: 0;
+}
+
+.concorrencia-catalog__row .products-catalog__cell--product {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  padding-right: 0;
+  padding-left: 3px;
+}
+
+.concorrencia-catalog__cell {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--s7-text, #1f2937);
+}
+
+.concorrencia-catalog__cell--channel {
+  justify-self: center;
+  text-align: center;
+  min-width: 0;
+  max-width: 100%;
+  padding-left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concorrencia-catalog__cell--channel .s7-catalog-channel {
+  justify-content: center;
+}
+
+.concorrencia-catalog__cell--competitor {
+  justify-self: stretch;
+  min-width: 0;
+  text-align: left;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.concorrencia-catalog__cell--action {
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding-left: 10px;
+}
+
+.concorrencia-catalog__row .concorrencia-catalog__cell--action {
+  align-self: center;
+  padding-top: 0;
+}
+
+/* Coluna Anúncio — paridade tipografia + 3ª linha (preço/vendas) centralizada no respiro inferior. */
+.concorrencia-catalog__row .concorrencia-catalog__headline-vendas-parity.s7-catalog-headline.vendas-page__product-headline {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  flex: 1 1 auto;
+}
+
+.concorrencia-catalog__row
+  .concorrencia-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot.vendas-page__product-title-slot {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.concorrencia-catalog__row
+  .concorrencia-catalog__headline-vendas-parity
+  .s7-catalog-headline__meta.vendas-page__product-meta {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-catalog__row
+  .concorrencia-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.concorrencia-catalog__row
+  .concorrencia-catalog__headline-vendas-parity
+  .s7-catalog-headline__title,
+.concorrencia-catalog__row
+  .concorrencia-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-link,
+.concorrencia-catalog__row
+  .concorrencia-catalog__headline-vendas-parity
+  .anuncios-ad-title-link,
+.concorrencia-catalog__row
+  .concorrencia-catalog__headline-vendas-parity
+  .vendas-page__product-title,
+.concorrencia-catalog__row
+  .concorrencia-catalog__headline-vendas-parity
+  .vendas-page__product-title-link,
+.concorrencia-catalog__row .s7-catalog-headline__title,
+.concorrencia-catalog__row .s7-catalog-headline__title-link,
+.concorrencia-catalog__row .products-catalog__product-name,
+.concorrencia-catalog__row .concorrencia-catalog__product-ad-title,
+.concorrencia-catalog__row .concorrencia-catalog__product-ad-link {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  line-height: var(--s7-list-row-identity-title-line-height, 1.3);
+  font-size: var(--s7-list-row-identity-title-size, 12px);
+  font-weight: var(--s7-list-row-identity-title-weight, 600);
+  color: var(--s7-orange, #ff8533);
+  letter-spacing: normal;
+  max-height: calc(var(--s7-list-row-identity-title-line-height, 1.3) * 2em);
+}
+
+.concorrencia-catalog__row .s7-catalog-headline__title-link,
+.concorrencia-catalog__row .concorrencia-catalog__product-ad-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.concorrencia-catalog__row .s7-catalog-headline__title-link:hover,
+.concorrencia-catalog__row .s7-catalog-headline__title-link:focus-visible,
+.concorrencia-catalog__row .concorrencia-catalog__product-ad-link:hover,
+.concorrencia-catalog__row .concorrencia-catalog__product-ad-link:focus-visible {
+  color: #c2410c;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.concorrencia-catalog__listing-headline .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  color: var(--s7-orange, #ff8533);
+  font-weight: var(--s7-list-row-identity-title-weight, 600);
+}
+
+.concorrencia-catalog__listing-headline .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-catalog__listing-headline .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: var(--s7-orange, #ff8533);
+}
+
+.concorrencia-catalog__listing-headline .s7-catalog-headline__meta,
+.concorrencia-catalog__listing-headline .s7-catalog-headline__meta-value,
+.concorrencia-catalog__listing-headline .anuncios-ad-id-text,
+.concorrencia-catalog__listing-headline .anuncios-ad-sku-label,
+.concorrencia-catalog__listing-headline .anuncios-ad-sku-value {
+  color: rgba(15, 23, 42, 0.52);
+  font-weight: 600;
+}
+
+.concorrencia-catalog__headline-vendas-parity .s7-catalog-headline__footer,
+.concorrencia-catalog__headline-vendas-parity .s7-catalog-headline__actions {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-catalog__headline-vendas-parity .s7-catalog-headline__footer {
+  margin-top: auto;
+  margin-bottom: 3px;
+  padding-top: 2px;
+}
+
+/* 3ª linha — preço + vendas (+16% sobre tamanho atual; line-height compacto preserva altura da linha). */
+.concorrencia-catalog__own-meta {
+  --concorrencia-own-meta-value-size: calc(10.5px * 1.2 * 1.2 * 1.16 * 0.95 * 0.97);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--concorrencia-own-meta-value-size);
+  line-height: 1.1;
+}
+
+.concorrencia-catalog__own-meta .concorrencia-catalog__own-price {
+  font-size: var(--concorrencia-own-meta-value-size);
+  font-weight: 700;
+  color: var(--s7-orange, #f97316);
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-catalog__own-meta-sep {
+  color: rgba(15, 23, 42, 0.32);
+  flex-shrink: 0;
+  font-size: var(--concorrencia-own-meta-value-size);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.concorrencia-catalog__own-meta .concorrencia-catalog__own-sales {
+  font-size: var(--concorrencia-own-meta-value-size);
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.concorrencia-catalog__own-meta .concorrencia-catalog__own-sales--zero {
+  font-weight: 400;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.concorrencia-catalog__product-actions {
+  margin-top: 6px;
+}
+
+@media (min-width: 769px) {
+  .concorrencia-catalog__row .concorrencia-catalog__headline-vendas-parity.s7-catalog-headline.vendas-page__product-headline {
+    gap: 1px;
+  }
+
+  .concorrencia-catalog__row .concorrencia-catalog__headline-vendas-parity .vendas-page__product-title,
+  .concorrencia-catalog__row .concorrencia-catalog__headline-vendas-parity .vendas-page__product-title-link,
+  .concorrencia-catalog__row .concorrencia-catalog__headline-vendas-parity .anuncios-ad-title-link,
+  .concorrencia-catalog__row
+    .concorrencia-catalog__headline-vendas-parity
+    .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+  .concorrencia-catalog__row .s7-catalog-headline__title,
+  .concorrencia-catalog__row .s7-catalog-headline__title-link {
+    font-size: 11px;
+  }
+}
+
+.concorrencia-catalog__link-sku-btn {
+  min-height: 24px;
+  font-size: 0.73rem;
+  padding: 0 10px;
+}
+
+/* Badge de contagem de concorrentes (legado — removido da lista principal) */
+.concorrencia-catalog__comp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.18);
+}
+
+.concorrencia-catalog__comp-badge--has {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.24);
+}
+
+/* Capa: imagem direta na linha (mesmo padrão de Vendas), círculo sem moldura/fundo cinza.
+   O frame (s7-operational-thumb-frame--circle) já trata display/círculo/contain/overflow;
+   aqui só dimensionamos (sem mexer no display para não conflitar com o inline-flex do frame). */
+.concorrencia-catalog__thumb {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+}
+
+.concorrencia-catalog__thumb-slot {
+  display: block;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+/* Célula de concorrente — thumb + título; preço e diff completos abaixo */
+.concorrencia-catalog__comp {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+.concorrencia-catalog__comp-main {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-catalog__comp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-catalog__comp-thumb {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+}
+
+.concorrencia-catalog__comp-thumb-slot {
+  display: block;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+.concorrencia-catalog__comp--btn {
+  border: none;
+  background: transparent;
+  padding: 2px 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+  width: 100%;
+}
+
+.concorrencia-catalog__comp--btn:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.concorrencia-catalog__comp--btn:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 1px;
+}
+
+.concorrencia-catalog__comp-name {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.concorrencia-catalog__comp-metrics {
+  --s7-compare-arrow-col: 12px;
+  --s7-compare-gap: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-catalog__comp-price {
+  display: inline-flex;
+  align-items: baseline;
+  padding-left: calc(var(--s7-compare-arrow-col) + var(--s7-compare-gap));
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--s7-orange, #f97316);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.concorrencia-catalog__comp-compare-line {
+  display: grid;
+  grid-template-columns: var(--s7-compare-arrow-col) minmax(0, max-content);
+  column-gap: var(--s7-compare-gap);
+  align-items: baseline;
+}
+
+.concorrencia-catalog__comp-compare-arrow {
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.concorrencia-catalog__comp-compare {
+  font-size: 10.8px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.concorrencia-catalog__comp-compare-arrow.concorrencia-catalog__comp-compare--abaixo,
+.concorrencia-catalog__comp-compare--abaixo {
+  color: #16a34a;
+}
+
+.concorrencia-catalog__comp-compare-arrow.concorrencia-catalog__comp-compare--acima,
+.concorrencia-catalog__comp-compare--acima {
+  color: #dc2626;
+}
+
+.concorrencia-catalog__comp-compare-arrow.concorrencia-catalog__comp-compare--neutral,
+.concorrencia-catalog__comp-compare--neutral {
+  color: rgba(100, 116, 139, 0.92);
+}
+
+.concorrencia-catalog__comp-compare--indisponivel {
+  display: none;
+}
+
+.concorrencia-catalog__comp--inativo .concorrencia-catalog__comp-thumb img,
+.concorrencia-catalog__comp--inativo .s7-operational-thumb {
+  filter: grayscale(1);
+  opacity: 0.72;
+}
+
+.concorrencia-catalog__comp--inativo .concorrencia-catalog__comp-name {
+  color: rgba(71, 85, 105, 0.9);
+}
+
+.concorrencia-catalog__comp--inativo .concorrencia-catalog__comp-price {
+  color: rgba(100, 116, 139, 0.85);
+  font-weight: 600;
+}
+
+.concorrencia-catalog__comp--inativo.concorrencia-catalog__comp--btn:hover {
+  background: rgba(100, 116, 139, 0.06);
+}
+
+/* Filtro contextual ativo — concorrente fora do match (clicável, baixo destaque). */
+.concorrencia-catalog__comp--contextual-muted:not(.concorrencia-catalog__comp--inativo) {
+  filter: grayscale(0.88) saturate(0.35);
+  opacity: 0.68;
+}
+
+.concorrencia-catalog__comp--contextual-muted:not(.concorrencia-catalog__comp--inativo)
+  .concorrencia-catalog__comp-thumb
+  img,
+.concorrencia-catalog__comp--contextual-muted:not(.concorrencia-catalog__comp--inativo)
+  .s7-operational-thumb {
+  filter: grayscale(0.92);
+  opacity: 0.78;
+}
+
+.concorrencia-catalog__comp--contextual-muted:not(.concorrencia-catalog__comp--inativo)
+  .concorrencia-catalog__comp-name {
+  color: rgba(71, 85, 105, 0.82);
+}
+
+.concorrencia-catalog__comp--contextual-muted:not(.concorrencia-catalog__comp--inativo)
+  .concorrencia-catalog__comp-price,
+.concorrencia-catalog__comp--contextual-muted:not(.concorrencia-catalog__comp--inativo)
+  .concorrencia-catalog__comp-compare,
+.concorrencia-catalog__comp--contextual-muted:not(.concorrencia-catalog__comp--inativo)
+  .concorrencia-catalog__comp-compare-arrow {
+  color: rgba(100, 116, 139, 0.78);
+}
+
+.concorrencia-catalog__comp--contextual-muted.concorrencia-catalog__comp--btn:hover {
+  opacity: 0.82;
+  filter: grayscale(0.72) saturate(0.5);
+}
+
+.concorrencia-catalog__comp-badge-inativo {
+  margin-left: calc(var(--s7-compare-arrow-col) + var(--s7-compare-gap));
+  justify-self: start;
+  align-self: flex-start;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(71, 85, 105, 0.92);
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.concorrencia-catalog__comp-empty {
+  color: rgba(100, 116, 139, 0.55);
+  font-size: 13px;
+}
+
+/* Botão de ação principal (laranja Suse7) */
+.concorrencia-catalog__manage-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 7px 13px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--s7-orange) 38%, transparent);
+  background: color-mix(in srgb, var(--s7-orange) 10%, #fff);
+  color: var(--s7-orange, #ea580c);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.14s ease;
+}
+
+.concorrencia-catalog__manage-btn:hover {
+  background: var(--s7-orange, #ea580c);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.28);
+  transform: translateY(-1px);
+}
+
+.concorrencia-catalog__manage-btn:active {
+  transform: translateY(0);
+}
+
+.concorrencia-catalog__manage-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--s7-orange) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* Variante compacta (somente ícone) — usada na lista densa de 10 colunas */
+.concorrencia-catalog__manage-btn--icon {
+  width: var(--s7-concorrencia-catalog-thumb-size, 38px);
+  height: var(--s7-concorrencia-catalog-thumb-size, 38px);
+  padding: 0;
+  gap: 0;
+  justify-content: center;
+}
+
+.concorrencia-catalog__remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  margin: -6px;
+  border: 1px solid rgba(220, 38, 38, 0.34);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--s7-color-error, #dc2626);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.16s ease,
+    visibility 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.12s ease;
+}
+
+.concorrencia-catalog__remove-btn--icon {
+  flex: 0 0 auto;
+  margin-bottom: 2px;
+}
+
+.concorrencia-catalog__row:hover .concorrencia-catalog__remove-btn,
+.concorrencia-catalog__row:focus-within .concorrencia-catalog__remove-btn,
+.concorrencia-catalog__remove-btn:focus-visible,
+.concorrencia-catalog__remove-btn:disabled {
+  opacity: 1;
+  visibility: visible;
+}
+
+.concorrencia-catalog__remove-btn:hover,
+.concorrencia-catalog__remove-btn:focus-visible {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.52);
+  color: #b91c1c;
+  transform: scale(1.06);
+}
+
+.concorrencia-catalog__remove-btn:active {
+  transform: scale(0.98);
+}
+
+.concorrencia-catalog__remove-btn:disabled {
+  cursor: wait;
+  opacity: 0.62;
+  visibility: visible;
+  transform: none;
+}
+
+/* S7Tooltip: força padrão vermelho do excluir (evita estilo azul default do trigger) */
+.concorrencia-catalog__remove-btn.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  border: 1px solid rgba(220, 38, 38, 0.34);
+  background: transparent;
+  color: var(--s7-color-error, #dc2626);
+}
+
+.concorrencia-catalog__remove-btn.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-catalog__remove-btn.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.52);
+  color: #b91c1c;
+}
+
+.concorrencia-catalog__confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1305;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.concorrencia-catalog__confirm-backdrop .concorrencia-produto-modal__confirm {
+  width: min(420px, calc(100vw - 32px));
+  max-width: 100%;
+}
+
+.concorrencia-catalog__confirm-code-block {
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+
+.concorrencia-catalog__confirm-code-text {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.concorrencia-catalog__confirm-code-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.concorrencia-catalog__confirm-code-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px dashed rgba(15, 23, 42, 0.3);
+  background: rgba(248, 250, 252, 0.92);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-catalog__confirm-code-input {
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+  outline: none;
+  text-align: center;
+}
+
+.concorrencia-catalog__confirm-code-input:focus-visible {
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.concorrencia-catalog__confirm-code-block .s7-destructive-confirmation-challenge {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.concorrencia-catalog__confirm-code-block .s7-destructive-confirmation-challenge__instruction {
+  font-size: 0.82rem;
+}
+
+.concorrencia-catalog__confirm-code-block .s7-destructive-confirmation-challenge__row {
+  gap: 4px;
+}
+
+.concorrencia-catalog__confirm-code-block .s7-destructive-confirmation-challenge__code {
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+  height: 34px;
+  font-size: 0.95rem;
+}
+
+.concorrencia-catalog__confirm-code-block .s7-destructive-confirmation-challenge__input {
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+  height: 34px;
+  font-size: 0.78rem;
+}
+
+.concorrencia-catalog__confirm-code-block .s7-destructive-confirmation-challenge__error {
+  font-size: 0.82rem;
+}
+
+/* S7Tooltip: preserva o botão laranja oficial (evita override azul do .s7-tooltip-trigger) */
+.concorrencia-catalog__manage-btn.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  border: 1px solid color-mix(in srgb, var(--s7-orange) 38%, transparent);
+  background: color-mix(in srgb, var(--s7-orange) 10%, #fff);
+  color: var(--s7-orange, #ea580c);
+}
+
+.concorrencia-catalog__manage-btn.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-catalog__manage-btn.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  background: var(--s7-orange, #ea580c);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.28);
+  transform: translateY(-1px);
+}
+
+.concorrencia-catalog__manage-btn.s7-tooltip.s7-tip.s7-tooltip-trigger .s7-icon {
+  color: inherit;
+  stroke: currentColor;
+}
+
+/* ======================================================================
+   Modal shell de gestão de concorrentes (Fase 1)
+====================================================================== */
+
+.concorrencia-produto-modal {
+  position: relative;
+  width: min(980px, calc(100vw - 32px));
+  /* Config local — altura do modal Gerenciar Concorrentes */
+  --s7-concorrente-produto-modal-height: 660px;
+  height: min(var(--s7-concorrente-produto-modal-height), 90vh);
+  min-height: min(var(--s7-concorrente-produto-modal-height), 90vh);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.concorrencia-produto-modal .s7-concorrencia-modal__head {
+  justify-content: flex-start;
+}
+
+.concorrencia-produto-modal__body {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.6fr) minmax(260px, 0.4fr);
+  flex: 1 1 auto;
+  min-height: 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.07);
+}
+
+.concorrencia-produto-modal__col {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.concorrencia-produto-modal__col--left {
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.4);
+  overflow-y: visible;
+}
+
+.concorrencia-produto-modal__col--right {
+  overflow: hidden;
+}
+
+/* Card do anúncio próprio — layout horizontal (thumb + título) */
+.concorrencia-produto-modal__own-card-wrap {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.55);
+}
+
+.concorrencia-produto-modal__own-card {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+.concorrencia-produto-modal__own-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__own-thumb {
+  flex: 0 0 auto;
+  width: 105px;
+  height: 105px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concorrencia-produto-modal__own-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #fff;
+}
+
+.concorrencia-produto-modal__own-thumb-ph {
+  color: rgba(100, 116, 139, 0.72);
+}
+
+.concorrencia-produto-modal__own-head-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.concorrencia-produto-modal__own-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--s7-orange, #ea580c);
+  font-variant-numeric: tabular-nums;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.concorrencia-produto-modal__own-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.concorrencia-produto-modal__own-title-link:hover {
+  color: #c2410c;
+  text-decoration: underline;
+}
+
+.concorrencia-produto-modal__own-price-line {
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 5px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.concorrencia-produto-modal__own-price {
+  font-size: calc(14px * 1.1);
+  font-weight: 800;
+  color: var(--s7-orange, #f97316);
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-produto-modal__own-price-sep {
+  color: rgba(15, 23, 42, 0.32);
+  font-weight: 400;
+}
+
+.concorrencia-produto-modal__own-sales {
+  font-size: 14px;
+  font-weight: 600;
+  color: #16a34a;
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-produto-modal__own-sales--zero {
+  font-weight: 400;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.concorrencia-produto-modal__own-frete {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #16a34a;
+  line-height: 1.2;
+}
+
+.concorrencia-produto-modal__own-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.concorrencia-produto-modal__own-meta--account {
+  margin-top: 0;
+}
+
+.concorrencia-produto-modal__own-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__own-meta-sep {
+  color: rgba(15, 23, 42, 0.32);
+}
+
+.concorrencia-produto-modal__own-foot {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.concorrencia-produto-modal__own-chan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.78);
+}
+
+.concorrencia-produto-modal__own-tipo-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.concorrencia-produto-modal__own-tipo-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.concorrencia-produto-modal__own-tipo-empty {
+  font-size: 10px;
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.concorrencia-produto-modal__own-count-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.concorrencia-produto-modal__own-count-row .concorrencia-produto-modal__count-pill {
+  font-size: 10px;
+}
+
+.concorrencia-produto-modal__section--registered {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 12px 20px;
+}
+
+.concorrencia-produto-modal__section--search {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px 12px 0;
+}
+
+.concorrencia-produto-modal__search-results {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 10px;
+  margin-top: 4px;
+}
+
+.concorrencia-produto-modal__col--left .concorrencia-produto-modal__placeholder {
+  margin-bottom: 4px;
+}
+
+.concorrencia-produto-modal__section--registered .concorrencia-produto-modal__reg-grid {
+  flex: 1 1 auto;
+  min-height: 388px;
+  align-content: start;
+}
+
+/* Gerenciar concorrentes — imagem inteira no thumb (sem ampliar o container) */
+.concorrencia-produto-modal__section--registered
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-thumb {
+  background: #fff;
+}
+
+.concorrencia-produto-modal__section--registered
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-thumb
+  img {
+  object-fit: contain;
+  object-position: center center;
+  background: #fff;
+}
+
+/* Gerenciar concorrentes — tooltip S7 + copiar título nos cards cadastrados */
+.concorrencia-produto-modal__section--registered .concorrencia-produto-modal__reg-card-title-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__section--registered
+  .concorrencia-produto-modal__reg-card-title-wrap
+  .s7-tooltip-portal-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__section--registered
+  .concorrencia-produto-modal__reg-card-title-wrap
+  .concorrencia-produto-modal__reg-card-title,
+.concorrencia-produto-modal__section--registered
+  .concorrencia-produto-modal__reg-card-title-wrap
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger {
+  padding-right: 22px;
+}
+
+.concorrencia-produto-modal__section--registered .concorrencia-produto-modal__reg-card-title-copy {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+.concorrencia-produto-modal__col--left .concorrencia-produto-modal__placeholder,
+.concorrencia-produto-modal__col--left .concorrencia-produto-modal__state {
+  flex: 1 1 auto;
+  min-height: 388px;
+}
+
+.concorrencia-produto-modal__count-pill--full {
+  color: #9a3412;
+  background: rgba(234, 88, 12, 0.12);
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+/* Grade de concorrentes — mesmo grid/mini-card da aba Concorrentes (PI) */
+.concorrencia-produto-modal__reg-grid {
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-discover-modal__reg-grid.concorrencia-produto-modal__reg-grid {
+  grid-template-columns: repeat(auto-fill, var(--s7-concorrente-produto-card-width));
+  grid-template-rows: none;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 0;
+  /* Teste UX — conteúdo interno −16% (0.9 homologado × 0.84); altura/largura externa fixas */
+  --s7-concorrente-produto-inner-scale: 0.756;
+  /* Destaques Selecionar ML — título/preço/vendedor +10% (sobre escalas homologadas do discover) */
+  --s7-concorrente-produto-title-scale-refined: 1.34288;
+  --s7-concorrente-produto-thumb-local-scale: 0.9156;
+  --s7-concorrente-produto-price-scale-refined: calc(1.8647794 * 1.16);
+  --s7-concorrente-produto-compare-scale-refined: calc(1.45541 * 1.16);
+  --s7-concorrente-produto-seller-scale-refined: 1.276;
+}
+
+.concorrencia-discover-modal
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card {
+  width: var(--s7-concorrente-produto-card-width);
+  min-width: var(--s7-concorrente-produto-card-width);
+  max-width: var(--s7-concorrente-produto-card-width);
+  height: var(--s7-concorrente-produto-card-height);
+  min-height: var(--s7-concorrente-produto-card-height);
+  max-height: var(--s7-concorrente-produto-card-height);
+}
+
+.concorrencia-discover-modal
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-seller-line,
+.concorrencia-discover-modal
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-medal-line {
+  flex-shrink: 0;
+  font-size: calc(
+    8.5px * var(--s7-concorrente-produto-text-scale) * var(--s7-concorrente-produto-seller-scale-refined, 1)
+  );
+}
+
+.concorrencia-discover-modal
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-medal-line {
+  gap: calc(
+    3px * var(--s7-concorrente-produto-text-scale) * var(--s7-concorrente-produto-seller-scale-refined, 1)
+  );
+}
+
+.concorrencia-discover-modal
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-rep-icon {
+  transform: scale(var(--s7-concorrente-produto-seller-scale-refined, 1));
+}
+
+/* Overlay cadastrar — mesmo canto do botão excluir (thumb-row, topo direita) */
+.concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-thumb-row
+  .concorrencia-produto-modal__reg-card-delete-wrap,
+.concorrencia-discover-modal
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-thumb-row
+  .concorrencia-produto-modal__reg-card-register-wrap,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card-thumb-row
+  .concorrencia-produto-modal__reg-card-register-wrap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-thumb-row:hover .concorrencia-produto-modal__reg-card-delete,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card:hover .concorrencia-produto-modal__reg-card-delete,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-delete:hover,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-delete:focus-visible {
+  opacity: 1;
+  background: rgba(185, 28, 28, 0.9);
+  transform: scale(1.04);
+}
+
+.concorrencia-produto-modal__reg-card-delete-wrap {
+  display: inline-flex;
+}
+
+.concorrencia-produto-modal__reg-card-delete-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.concorrencia-produto-modal__reg-card-delete-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-produto-modal__reg-card-delete-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+}
+
+.concorrencia-produto-modal__reg-card-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.42);
+  color: rgba(255, 255, 255, 0.94);
+  cursor: pointer;
+  opacity: 0.68;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+
+.concorrencia-produto-modal__reg-card-delete:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Confirmação de exclusão (overlay interno do modal) */
+.concorrencia-produto-modal__confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.42);
+  border-radius: inherit;
+}
+
+.concorrencia-produto-modal__confirm {
+  width: min(360px, 100%);
+  padding: 18px 18px 16px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--s7-orange) 42%, transparent);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 28px rgba(15, 23, 42, 0.07),
+    0 16px 40px rgba(15, 23, 42, 0.14);
+}
+
+.concorrencia-produto-modal__confirm-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.concorrencia-produto-modal__confirm-text {
+  margin: 0 0 16px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.concorrencia-produto-modal__confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.concorrencia-produto-modal__confirm-btn {
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.concorrencia-produto-modal__confirm-btn--cancel {
+  background: #fff;
+  color: #475569;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+.concorrencia-produto-modal__confirm-btn--cancel:hover {
+  background: #f8fafc;
+}
+
+.concorrencia-produto-modal__confirm-btn--danger {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+.concorrencia-produto-modal__confirm-btn--danger:hover:not(:disabled) {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.concorrencia-produto-modal__confirm-btn--danger:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Coluna direita — busca compacta */
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__section-title {
+  font-size: 0.76rem;
+  margin-bottom: 6px;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__tabs {
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__tab {
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  border-radius: 8px;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__search {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__search-input {
+  font-size: 0.8rem;
+  padding: 8px 10px;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__search-btn {
+  width: 100%;
+  font-size: 0.76rem;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__limit {
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__cand {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 7px 8px;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__cand-thumb {
+  width: 40px;
+  height: 40px;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__cand-title {
+  font-size: 0.78rem;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__cand-meta {
+  font-size: 0.72rem;
+}
+
+.concorrencia-produto-modal__col--right .concorrencia-produto-modal__hint-note {
+  margin: 6px 12px 10px;
+  padding: 7px 10px;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+/* ======================================================================
+   Modal de descoberta — busca por nome (candidatos ML)
+====================================================================== */
+
+.concorrencia-discover-modal-backdrop {
+  z-index: 1250;
+}
+
+.concorrencia-discover-modal {
+  width: min(1240px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.concorrencia-discover-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px 16px 16px;
+}
+
+.concorrencia-discover-modal__results {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.concorrencia-discover-modal__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 4px;
+  scrollbar-gutter: stable;
+}
+
+.concorrencia-discover-modal__footer {
+  flex-shrink: 0;
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+}
+
+.concorrencia-discover-modal__meta {
+  flex-shrink: 0;
+  margin: 0 0 10px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  z-index: 2;
+}
+
+.concorrencia-discover-modal__meta.concorrencia-produto-modal__cands-meta {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.concorrencia-discover-modal__reg-grid {
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-discover-modal__reg-grid.concorrencia-discover-modal__analitico-list {
+  --s7-concorrente-produto-thumb-local-scale: calc(0.9156 * 0.5 * 1.3 * 1.3 * 1.5 * 1.14);
+}
+
+.concorrencia-discover-modal__analitico-list {
+  --s7-discover-analitico-card-width: calc(272px * 0.91 * 0.9);
+  --s7-discover-analitico-thumb-height: calc((var(--s7-discover-analitico-card-width) - 20px) * 0.72);
+  --s7-discover-analitico-card-height: calc(var(--s7-discover-analitico-card-width) * 2.5);
+  --s7-discover-meta-apos-linha: 5px;
+  --s7-discover-meta-apos-linha-vendedor: 7px;
+  --s7-discover-meta-coluna-rotulo: 6.4rem;
+  --s7-concorrente-produto-price-scale-refined: calc(1.8647794 * 1.16 * 1.09);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--s7-discover-analitico-card-width)) !important;
+  grid-template-rows: none !important;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  align-items: start;
+  justify-content: center;
+}
+
+.concorrencia-analitico-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: var(--s7-discover-analitico-card-width);
+  max-width: var(--s7-discover-analitico-card-width);
+  min-width: var(--s7-discover-analitico-card-width);
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  box-sizing: border-box;
+  padding: 10px 10px 4px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.concorrencia-discover-modal
+  .concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card,
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.concorrencia-discover-modal
+  .concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card-body,
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  overflow: visible;
+  min-width: 0;
+  min-height: 0;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card--discover-resumo
+  .concorrencia-produto-modal__reg-card-main {
+  gap: calc(var(--s7-concorrente-produto-block-gap) * 1.1);
+  flex-shrink: 0;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__linha {
+  grid-template-columns: minmax(0, var(--s7-discover-meta-coluna-rotulo)) minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: start;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__linha--completa {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  width: 100%;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__linha--completa .concorrencia-oficial-meta__rotulo {
+  width: 100%;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__linha--completa .concorrencia-oficial-meta__valor {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__valor {
+  justify-self: start;
+  text-align: left;
+}
+
+/* Discover analítico — nome da loja e reputação: fonte adaptável, linha única */
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__valor--texto-adaptavel {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: max(
+    0.56rem,
+    calc(0.72rem - max(0, var(--s7-meta-texto-len, 0) - 16) * 0.011rem)
+  );
+  line-height: 1.2;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__linha--nome-loja,
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__linha--reputacao {
+  align-items: center;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor {
+  white-space: nowrap;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .s7-tooltip-portal-root {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Discover analítico — reputação colorida por nível (verde / laranja / vermelho) */
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-verde,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-verde.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  color: #16a34a;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-amarelo,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-amarelo.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  color: #ca8a04;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-laranja,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-laranja.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  color: var(--s7-orange, #ff8533);
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-vermelho,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-vermelho.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  color: #dc2626;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-verde.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-verde.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: #15803d;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-amarelo.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-amarelo.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: #a16207;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-laranja.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-laranja.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: #ea580c;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-vermelho.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--rep-vermelho.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: #b91c1c;
+}
+
+/* Discover analítico — título link azul (S7Tooltip funde classes no <a>) */
+.concorrencia-discover-modal__analitico-list
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger {
+  color: var(--s7-primary, #2563eb);
+}
+
+.concorrencia-discover-modal__analitico-list
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger:hover,
+.concorrencia-discover-modal__analitico-list
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger:focus-visible {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Discover analítico — mais respiro entre título e preço */
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card--discover-resumo
+  .concorrencia-produto-modal__reg-card-details {
+  flex-shrink: 0;
+}
+
+/* Discover analítico — hierarquia: preço → linha → diferença → linha → anúncio */
+.concorrencia-discover-modal
+  .concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card-footer,
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-footer {
+  margin-top: 0;
+  padding-top: 0;
+  flex-shrink: 0;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-price-row {
+  flex-shrink: 0;
+  overflow: visible;
+  margin-bottom: 8px;
+}
+
+.concorrencia-discover-modal
+  .concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card-compare,
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-compare {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-top: 1px dotted rgba(15, 23, 42, 0.24);
+  border-bottom: 1px dotted rgba(15, 23, 42, 0.24);
+  align-items: center;
+  flex-shrink: 0;
+  min-height: calc(
+    var(--s7-concorrente-produto-compare-font-size) * var(--s7-concorrente-produto-compare-line-height) +
+      12px
+  );
+  overflow: visible;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 100%;
+  line-height: 1.25;
+}
+
+/* Discover analítico — thumb 100% da largura interna; imagem proporcional sem zoom */
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-thumb-row {
+  position: relative;
+  justify-content: stretch;
+  align-items: stretch;
+  flex: 0 0 auto;
+  width: 100%;
+  height: var(--s7-discover-analitico-thumb-height);
+  min-height: var(--s7-discover-analitico-thumb-height);
+  max-height: var(--s7-discover-analitico-thumb-height);
+  overflow: hidden;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-thumb {
+  width: 100%;
+  height: var(--s7-discover-analitico-thumb-height);
+  min-height: var(--s7-discover-analitico-thumb-height);
+  max-height: var(--s7-discover-analitico-thumb-height);
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  display: block;
+  flex-shrink: 0;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-thumb img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+  background: #fff;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-thumb-ph {
+  background: #fff;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta {
+  gap: 0;
+  flex: 0 0 auto;
+  min-height: 0;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 0;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__bloco {
+  padding-top: 5px;
+  margin-top: 0;
+  border-top: 1px dotted rgba(15, 23, 42, 0.24);
+  gap: 4px;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__bloco-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__bloco:last-child {
+  margin-top: 0;
+  padding-top: var(--s7-discover-meta-apos-linha-vendedor);
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__bloco:last-child
+  .concorrencia-oficial-meta__bloco-titulo {
+  margin: 2px 0 0;
+  line-height: 1.1;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__bloco:last-child
+  .concorrencia-oficial-meta__bloco-corpo {
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Discover analítico — valores do anúncio alinhados na mesma coluna */
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__bloco:first-child {
+  margin-top: 0;
+  padding-top: var(--s7-discover-meta-apos-linha);
+  padding-bottom: 6px;
+  margin-bottom: 0;
+  border-top: none;
+}
+
+/* Discover analítico — ID e categoria sem negrito */
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__bloco:first-child
+  .concorrencia-oficial-meta__linha:first-child
+  .concorrencia-oficial-meta__valor,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__bloco:first-child
+  .concorrencia-oficial-meta__linha--completa
+  .concorrencia-oficial-meta__valor {
+  font-weight: 500;
+}
+
+/* Discover analítico — vendedor (nome, seller id, vendas) sem negrito */
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__bloco:last-child
+  .concorrencia-oficial-meta__valor {
+  font-weight: 500;
+}
+
+/* Discover analítico — copiar título (2ª linha, direita; reveal no hover) */
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-title-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card-title-wrap
+  .s7-tooltip-portal-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card-title-wrap
+  .concorrencia-produto-modal__reg-card-title,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-produto-modal__reg-card-title-wrap
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger {
+  padding-right: 22px;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-produto-modal__reg-card-title-copy {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+/* Discover analítico — tipo em linha única; MercadoLíder compacto */
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__linha--tipo-inline {
+  align-items: center;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--tipo-inline
+  .concorrencia-oficial-meta__valor {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__linha--mercado-lider {
+  align-items: center;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--mercado-lider
+  .concorrencia-oficial-meta__valor {
+  font-size: 0.6rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__valor--vazio {
+  min-height: 1.15em;
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__valor--placeholder {
+  font-weight: 500;
+  color: rgba(100, 116, 139, 0.78);
+}
+
+.concorrencia-discover-modal__analitico-list .concorrencia-oficial-meta__valor-tip {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__valor-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  background: transparent;
+  box-shadow: none;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__valor-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__valor-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  background: transparent;
+  box-shadow: none;
+}
+
+.concorrencia-discover-modal__analitico-list
+  .concorrencia-oficial-meta__linha--reputacao
+  .concorrencia-oficial-meta__valor--placeholder {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Modal descoberta — botão de cadastro (wrapper interno recebe cor; S7Tooltip funde classes no span) */
+
+.concorrencia-discover-modal
+  .concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-register-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(24px * var(--s7-concorrente-produto-inner-scale, 1));
+  height: calc(24px * var(--s7-concorrente-produto-inner-scale, 1));
+  padding: 0;
+  min-width: 0;
+  border: none;
+  border-radius: calc(7px * var(--s7-concorrente-produto-inner-scale, 1));
+  box-shadow: none;
+  opacity: 1;
+  transform: none;
+  color: #fff;
+}
+
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap .concorrencia-produto-modal__reg-card-register {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  cursor: inherit;
+  font: inherit;
+  line-height: 1;
+}
+
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.concorrencia-produto-modal__reg-card-register--available,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--available,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--available:hover,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--available:focus-visible {
+  background: var(--s7-orange, #ea580c);
+  cursor: pointer;
+}
+
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.concorrencia-produto-modal__reg-card-register--saved,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--saved,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--saved:hover,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--saved:focus-visible {
+  background: #16a34a;
+  cursor: default;
+}
+
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.concorrencia-produto-modal__reg-card-register--limit,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--limit,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--limit:hover,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--limit:focus-visible {
+  background: #dc2626;
+  cursor: not-allowed;
+}
+
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.concorrencia-produto-modal__reg-card-register--available:has(.concorrencia-produto-modal__reg-card-register:disabled),
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger.concorrencia-produto-modal__reg-card-register--available:has(
+    .concorrencia-produto-modal__reg-card-register:disabled
+  ) {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+/* Sobrescreve .s7-tooltip-trigger (fundo transparente + ícone azul herdado) */
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: #fff;
+}
+
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap .s7-icon,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger .s7-icon,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger:hover .s7-icon,
+.concorrencia-discover-modal .concorrencia-produto-modal__reg-card-register-wrap.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible .s7-icon {
+  color: #fff;
+  stroke: #fff;
+}
+
+@media (max-width: 520px) {
+  .concorrencia-discover-modal__reg-grid.concorrencia-produto-modal__reg-grid {
+    grid-template-columns: repeat(auto-fill, var(--s7-concorrente-produto-card-width));
+    justify-content: center;
+  }
+}
+
+@media (max-width: 900px) {
+  .concorrencia-produto-modal {
+    width: min(96vw, 760px);
+    max-height: 90vh;
+  }
+
+  .concorrencia-produto-modal__body {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .concorrencia-produto-modal__col--left {
+    border-right: none;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    overflow-y: visible;
+  }
+
+  .concorrencia-produto-modal__reg-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .concorrencia-produto-modal__col--right {
+    min-height: 280px;
+  }
+
+  .concorrencia-produto-modal__col--right .concorrencia-produto-modal__search {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .concorrencia-produto-modal__search-results {
+    max-height: min(42vh, 360px);
+  }
+}
+
+@media (max-width: 520px) {
+  .concorrencia-produto-modal__reg-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ======================================================================
+   Modal de detalhes do concorrente — shell Raio-x (marketplace no topo)
+====================================================================== */
+
+.concorrente-detalhe-modal__shell.anuncios-raiox-shell--compact.anuncios-raiox-shell--portal {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+  padding: 18px 8px 14px;
+  height: auto !important;
+  max-height: min(92dvh, 760px);
+  overflow: visible;
+  isolation: isolate;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translate(-50%, calc(-50% - clamp(14px, 4.5vh, 58px))) !important;
+  transform-origin: center center;
+  --s7-concorrente-detalhe-frame-bleed-x: 14px;
+  --s7-concorrente-detalhe-frame-suspiro-y: 22px;
+  --s7-concorrente-detalhe-frame-altura: 65.4%;
+}
+
+/* Moldura amarela — Raio-x: altura do stage; respiro amarelo acima/abaixo do card branco */
+.concorrente-detalhe-modal__shell.anuncios-raiox-shell--compact .anuncios-raiox-shell__frame {
+  display: none;
+}
+
+.concorrente-detalhe-modal__stage {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  margin: 18px 12px 12px;
+  width: calc(100% - 24px);
+  box-sizing: border-box;
+  overflow: visible;
+  padding: var(--s7-concorrente-detalhe-frame-suspiro-y, 22px) 0;
+}
+
+.concorrente-detalhe-modal__frame {
+  position: absolute;
+  top: 50%;
+  right: calc(-1 * var(--s7-concorrente-detalhe-frame-bleed-x));
+  bottom: auto;
+  left: calc(-1 * var(--s7-concorrente-detalhe-frame-bleed-x));
+  height: var(--s7-concorrente-detalhe-frame-altura, 65.4%);
+  transform: translateY(-50%);
+  border-radius: 18px;
+  background: var(--marketplace-primary);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  box-shadow:
+    0 3px 10px rgba(15, 23, 42, 0.07),
+    0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.concorrente-detalhe-modal__shell .concorrente-detalhe-modal__panel {
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  flex: 0 1 auto;
+  min-height: min-content;
+  max-height: none;
+  padding: 24px 12px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--marketplace-primary);
+  background: #fff;
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.06),
+    0 10px 26px rgba(15, 23, 42, 0.1);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.concorrente-detalhe-modal__mkt-badge {
+  position: absolute;
+  left: 50%;
+  top: var(--s7-concorrente-detalhe-frame-suspiro-y, 22px);
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: calc(40px * 0.84);
+  min-height: 0;
+  padding: 0 24px;
+  background: var(--marketplace-primary);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--marketplace-accent, #2d3277) 14%, transparent);
+  box-shadow:
+    0 3px 12px rgba(15, 23, 42, 0.1),
+    0 1px 2px rgba(15, 23, 42, 0.08);
+  pointer-events: none;
+}
+
+.concorrente-detalhe-modal__mkt-badge-img {
+  display: block;
+  height: auto;
+  width: auto;
+  max-height: calc(34px * 0.84);
+  max-width: 210px;
+  object-fit: contain;
+}
+
+.concorrente-detalhe-modal__mkt-badge-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.concorrente-detalhe-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 6px;
+  padding: 0 2px 6px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.concorrente-detalhe-modal__head h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--s7-text, #0f172a);
+}
+
+.concorrente-detalhe-modal__head-num {
+  font-weight: 800;
+  color: var(--s7-orange, #ff8533);
+}
+
+.concorrente-detalhe-modal__close {
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: rgba(100, 116, 139, 0.92);
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.concorrente-detalhe-modal__close:hover,
+.concorrente-detalhe-modal__close:focus-visible {
+  color: #0f172a;
+}
+
+.concorrente-detalhe-modal__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  padding: 2px 2px 0 0;
+}
+
+.concorrente-detalhe-modal__body .concorrencia-oficial-meta {
+  padding: 4px 0 0;
+  margin-top: 0;
+  border-top: none;
+  min-height: 0;
+}
+
+.concorrente-detalhe-modal__confirm-backdrop {
+  z-index: 6;
+}
+
+.concorrente-detalhe-modal__card-grid.concorrencia-produto-modal__reg-grid {
+  --s7-concorrente-detalhe-boost: 1.26;
+  --s7-concorrente-detalhe-content-boost: 1.1;
+  --s7-concorrente-detalhe-height-boost: 1.14;
+  --s7-concorrente-detalhe-thumb-aspect: 1.1;
+  --s7-concorrente-produto-element-gap: 2px;
+  --s7-concorrente-produto-block-gap: calc(
+    9px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale) * 0.88
+  );
+  --s7-concorrente-produto-compare-offset-top: 0;
+  --s7-concorrente-produto-compare-divider-gap: calc(
+    1px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale) * 0.35
+  );
+  --s7-concorrente-produto-card-scale: calc(0.968 * var(--s7-concorrente-detalhe-boost));
+  --s7-concorrente-produto-card-width: calc(
+    184px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-detalhe-content-boost)
+  );
+  --s7-concorrente-produto-thumb-scale-refined: calc(
+    0.7 * 1.03 * 1.01 * 1.01 * 1.005 * 1.0039 * var(--s7-concorrente-produto-thumb-local-scale) *
+      var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale) *
+      var(--s7-concorrente-detalhe-content-boost) * 0.9
+  );
+  --s7-concorrente-produto-title-scale-refined: var(--s7-concorrente-detalhe-content-boost);
+  --s7-concorrente-produto-price-scale-refined: calc(1.461426 * var(--s7-concorrente-detalhe-content-boost));
+  --s7-concorrente-produto-compare-scale-refined: calc(
+    1.254664 * var(--s7-concorrente-detalhe-content-boost) * 0.9
+  );
+  --s7-concorrente-produto-card-height: auto;
+  display: block;
+  width: var(--s7-concorrente-produto-card-width);
+  min-width: var(--s7-concorrente-produto-card-width);
+  max-width: var(--s7-concorrente-produto-card-width);
+  margin: 0;
+  padding: 0;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card {
+  width: var(--s7-concorrente-produto-card-width);
+  min-width: var(--s7-concorrente-produto-card-width);
+  max-width: var(--s7-concorrente-produto-card-width);
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  gap: 2px;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-body {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-thumb,
+.concorrente-detalhe-modal__card-grid
+  .concorrencia-produto-modal__reg-card-carousel
+  .concorrencia-produto-modal__reg-card-thumb {
+  aspect-ratio: 1 / var(--s7-concorrente-detalhe-thumb-aspect, 1.1);
+  background: #fff;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-thumb img,
+.concorrente-detalhe-modal__card-grid
+  .concorrencia-produto-modal__reg-card-carousel
+  .concorrencia-produto-modal__reg-card-thumb
+  img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  background: #fff;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-thumb-ph {
+  background: #fff;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-title {
+  max-width: 100%;
+}
+
+/* Detalhe — tooltip S7 + copiar título (padrão Gerenciar/Discover) */
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-title-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrente-detalhe-modal__card-grid
+  .concorrencia-produto-modal__reg-card-title-wrap
+  .s7-tooltip-portal-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.concorrente-detalhe-modal__card-grid
+  .concorrencia-produto-modal__reg-card-title-wrap
+  .concorrencia-produto-modal__reg-card-title,
+.concorrente-detalhe-modal__card-grid
+  .concorrencia-produto-modal__reg-card-title-wrap
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger {
+  padding-right: 22px;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-title-copy {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+.concorrente-detalhe-modal__card-grid
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger {
+  color: var(--s7-primary, #2563eb);
+}
+
+.concorrente-detalhe-modal__card-grid
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger:hover,
+.concorrente-detalhe-modal__card-grid
+  a.concorrencia-produto-modal__reg-card-title.s7-tooltip-trigger:focus-visible {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-price-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(
+    2px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  flex-shrink: 0;
+  margin-bottom: 4px;
+  overflow: visible;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-price-frete-sep {
+  display: none;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-frete-line {
+  align-self: flex-start;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-rep-icon {
+  transform: scale(var(--s7-concorrente-detalhe-boost, 1.26));
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-thumb-ph svg {
+  transform: scale(var(--s7-concorrente-detalhe-boost, 1.26));
+}
+
+/* Detalhe — bloco preço separado; diferença entre duas linhas pontilhadas */
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-footer {
+  margin-top: 0;
+  padding-top: 0;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.concorrente-detalhe-modal__card-grid .concorrencia-produto-modal__reg-card-compare {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  border-top: 1px dotted rgba(15, 23, 42, 0.24);
+  border-bottom: 1px dotted rgba(15, 23, 42, 0.24);
+  align-items: center;
+  flex-shrink: 0;
+  min-height: calc(
+    var(--s7-concorrente-produto-compare-font-size) * var(--s7-concorrente-produto-compare-line-height) +
+      6px
+  );
+  overflow: visible;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 100%;
+  line-height: 1.25;
+}
+
+.concorrencia-produto-modal__product {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.concorrencia-produto-modal__thumb-wrap {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--s7-bg-soft, #f3f4f6);
+  border: 1px solid var(--s7-divider, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concorrencia-produto-modal__thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.concorrencia-produto-modal__thumb-ph {
+  color: var(--s7-muted, #9ca3af);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concorrencia-produto-modal__product-info {
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__product-name {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.concorrencia-produto-modal__sku-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--s7-muted, #6b7280);
+}
+
+.concorrencia-produto-modal__section {
+  padding: 14px 16px 0;
+}
+
+.concorrencia-produto-modal__section-title {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.concorrencia-produto-modal__placeholder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(15, 23, 42, 0.16);
+  background: rgba(248, 250, 252, 0.7);
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.concorrencia-produto-modal__placeholder--ml {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: rgba(37, 99, 235, 0.05);
+  color: #475569;
+}
+
+.concorrencia-produto-modal__note {
+  margin: 14px 16px 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid rgba(234, 88, 12, 0.2);
+  color: #9a3412;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ======================================================================
+   Modal FUNCIONAL de gestão de concorrentes (Fase S1 — seleção + cadastro)
+====================================================================== */
+
+/* Feedback transitório (sucesso/erro) */
+.concorrencia-produto-modal__feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 16px 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.concorrencia-produto-modal__feedback--success {
+  color: #166534;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.24);
+}
+
+.concorrencia-produto-modal__feedback--error {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.22);
+}
+
+/* Área 1 — meta do produto (canal + contador) */
+.concorrencia-produto-modal__product-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.concorrencia-produto-modal__chan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.concorrencia-produto-modal__count-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.22);
+}
+
+/* Estados textuais (loading/erro) */
+.concorrencia-produto-modal__state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.concorrencia-produto-modal__state--error {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.06);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.concorrencia-produto-modal__retry {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.concorrencia-produto-modal__retry:hover {
+  text-decoration: underline;
+}
+
+/* Área 2 — cards de concorrentes cadastrados */
+.concorrencia-produto-modal__cards,
+.concorrencia-produto-modal__cands {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.concorrencia-produto-modal__card,
+.concorrencia-produto-modal__cand {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+}
+
+.concorrencia-produto-modal__card-thumb,
+.concorrencia-produto-modal__cand-thumb {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.concorrencia-produto-modal__card-thumb img,
+.concorrencia-produto-modal__cand-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.concorrencia-produto-modal__card-thumb-ph {
+  color: #94a3b8;
+}
+
+.concorrencia-produto-modal__card-main,
+.concorrencia-produto-modal__cand-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.concorrencia-produto-modal__card-title,
+.concorrencia-produto-modal__cand-title {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.concorrencia-produto-modal__card-title--link {
+  text-decoration: none;
+  color: #1d4ed8;
+  transition: color 0.15s ease;
+}
+
+.concorrencia-produto-modal__card-title--link:hover {
+  color: #1e40af;
+  text-decoration: underline;
+}
+
+.concorrencia-produto-modal__cand-title--link {
+  text-decoration: none;
+  color: #1d4ed8;
+  transition: color 0.15s ease;
+}
+
+.concorrencia-produto-modal__cand-title--link:hover {
+  color: #1e40af;
+  text-decoration: underline;
+}
+
+.concorrencia-produto-modal__card-meta,
+.concorrencia-produto-modal__cand-meta {
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.concorrencia-produto-modal__card-meta strong,
+.concorrencia-produto-modal__cand-meta strong {
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-produto-modal__dot {
+  margin: 0 5px;
+  color: #cbd5e1;
+}
+
+.concorrencia-produto-modal__free {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.concorrencia-produto-modal__seller-badge {
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.concorrencia-produto-modal__card-updated {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.concorrencia-produto-modal__card-updated--pending {
+  color: #b45309;
+}
+
+.concorrencia-produto-modal__card-link {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.concorrencia-produto-modal__card-link:hover {
+  text-decoration: underline;
+}
+
+.concorrencia-produto-modal__card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.concorrencia-produto-modal__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.concorrencia-produto-modal__icon-btn:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.concorrencia-produto-modal__icon-btn--danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.concorrencia-produto-modal__icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Área 3 — abas busca nome / link */
+.concorrencia-produto-modal__tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.concorrencia-produto-modal__tab {
+  flex: 1 1 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.concorrencia-produto-modal__tab--active {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.35);
+  color: #1d4ed8;
+}
+
+.concorrencia-produto-modal__link-partial-hint {
+  margin: 8px 0 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.concorrencia-produto-modal__search-input--invalid {
+  border-color: rgba(220, 38, 38, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* Área 3 — busca */
+.concorrencia-produto-modal__search {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.concorrencia-produto-modal__search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  font: inherit;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #fff;
+}
+
+.concorrencia-produto-modal__search-input:focus {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.concorrencia-produto-modal__search-btn {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--s7-orange, #ea580c);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.concorrencia-produto-modal__search-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.28);
+  transform: translateY(-1px);
+}
+
+.concorrencia-produto-modal__search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.concorrencia-produto-modal__cands-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin: 10px 0 8px;
+}
+
+.concorrencia-produto-modal__cands-count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.concorrencia-produto-modal__cands-more-hint {
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.concorrencia-produto-modal__load-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.concorrencia-produto-modal__load-more-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.06);
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.concorrencia-produto-modal__load-more-btn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.5);
+}
+
+.concorrencia-produto-modal__load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.concorrencia-produto-modal__limit {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid rgba(234, 88, 12, 0.22);
+  color: #9a3412;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.concorrencia-produto-modal__cands {
+  margin-top: 10px;
+}
+
+.concorrencia-produto-modal__cand-action {
+  display: inline-flex;
+  align-items: center;
+}
+
+.concorrencia-produto-modal__add-btn {
+  padding: 7px 14px;
+  border-radius: 9px;
+  border: 1px solid color-mix(in srgb, var(--s7-orange) 38%, transparent);
+  background: color-mix(in srgb, var(--s7-orange) 10%, #fff);
+  color: var(--s7-orange, #ea580c);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.concorrencia-produto-modal__add-btn:hover:not(:disabled) {
+  background: var(--s7-orange, #ea580c);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.26);
+}
+
+.concorrencia-produto-modal__add-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.concorrencia-produto-modal__badge-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #166534;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.24);
+  white-space: nowrap;
+}
+
+/* Cabeçalho da seção (título + botão Atualizar concorrentes) */
+.concorrencia-produto-modal__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.concorrencia-produto-modal__section-head .concorrencia-produto-modal__section-title {
+  margin: 0;
+}
+
+.concorrencia-produto-modal__refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 9px;
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  background: rgba(37, 99, 235, 0.07);
+  color: #1d4ed8;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.concorrencia-produto-modal__refresh-btn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.13);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+  transform: translateY(-1px);
+}
+
+.concorrencia-produto-modal__refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.concorrencia-produto-modal__hint-note {
+  margin: 16px 16px 18px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  color: #475569;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/* ======================================================================
+   Homologação Concorrência — Conta, Canal, Concorrentes 1–6 centralizados
+   + cabeçalho laranja sticky abaixo do card Busca e filtros
+   ====================================================================== */
+
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--account,
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--channel,
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--competitor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  padding-left: var(--s7-list-table-head-padding-x);
+  padding-right: var(--s7-list-table-head-padding-x);
+}
+
+.concorrencia-catalog__cell--account,
+.concorrencia-catalog__cell--channel {
+  justify-self: center;
+  text-align: center;
+  padding-left: var(--s7-list-table-head-padding-x);
+  padding-right: var(--s7-list-table-head-padding-x);
+}
+
+.concorrencia-catalog__comp-main {
+  align-items: flex-start;
+}
+
+.concorrencia-catalog__comp-head {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.concorrencia-catalog__comp-head > .s7-tooltip-portal-root {
+  flex: unset;
+  width: 100%;
+  max-width: 100%;
+}
+
+.concorrencia-catalog__comp-name-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.concorrencia-catalog__comp-name {
+  text-align: left;
+}
+
+.concorrencia-catalog__comp--btn {
+  text-align: left;
+}
+
+.concorrencia-catalog__comp-metrics {
+  margin-inline: 0;
+  justify-items: start;
+  width: 100%;
+  max-width: 100%;
+}
+
+.concorrencia-catalog__comp-badge-inativo {
+  justify-self: start;
+}
+
+.concorrencia-catalog__comp-empty {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+/* Homologação fina — centralização exata em Conta/Canal (título + conteúdo). */
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--account,
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head--channel {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  justify-self: center !important;
+  width: 100% !important;
+  margin-inline: auto !important;
+  text-align: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.concorrencia-catalog__row .concorrencia-catalog__cell--account,
+.concorrencia-catalog__row .concorrencia-catalog__cell--channel {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  justify-self: center !important;
+  width: 100% !important;
+  text-align: center !important;
+  padding-top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.page-content:has(.concorrencia-catalog) {
+  --s7-list-table-head-sticky-z: 27;
+}
+
+.page-content:has(.concorrencia-catalog) .concorrencia-catalog__grid.concorrencia-catalog__grid--head {
+  position: sticky;
+  top: var(--s7-list-table-head-sticky-top, 0px);
+  z-index: var(--s7-list-table-head-sticky-z, 27);
 }

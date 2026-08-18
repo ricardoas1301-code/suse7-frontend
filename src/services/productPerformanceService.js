@@ -1,4 +1,9 @@
-import { apiFetch, buildApiUrl } from "../config/api";
+// ======================================================================
+// @deprecated Use useSalesExecutiveSummary + product_id (fonte única executive-summary).
+// Mantido apenas para compatibilidade de import legado.
+// ======================================================================
+
+import { fetchSalesExecutiveSummary } from "./salesExecutiveSummaryApi";
 
 /**
  * @param {string} productId
@@ -6,14 +11,23 @@ import { apiFetch, buildApiUrl } from "../config/api";
 export async function fetchProductPerformance(productId) {
   const pid = productId != null ? String(productId).trim() : "";
   if (!pid) return { ok: false, error: "product_id inválido" };
-  const url = buildApiUrl(`/api/products/${encodeURIComponent(pid)}/performance`);
-  if (!url) return { ok: false, error: "API base não configurada" };
-  const res = await apiFetch(url, { method: "GET" });
+
+  const res = await fetchSalesExecutiveSummary({ product_id: pid });
   if (!res.ok) {
     return {
       ok: false,
-      error: res.data?.message || res.data?.error || res.error || "Erro ao carregar desempenho",
+      error: res.error ?? "Erro ao carregar desempenho",
     };
   }
-  return { ok: true, data: res.data || {} };
+
+  const summary =
+    res.data?.summary != null && typeof res.data.summary === "object" ? res.data.summary : {};
+  return {
+    ok: true,
+    data: {
+      summary,
+      rankings: res.data?.rankings ?? null,
+      period: res.data?.period ?? null,
+    },
+  };
 }

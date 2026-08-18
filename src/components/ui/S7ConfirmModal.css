@@ -53,6 +53,21 @@
   }
 }
 
+.s7-confirm-modal-card--danger-border {
+  border: 1.5px solid #fca5a5;
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.16),
+    0 0 0 1px rgba(252, 165, 165, 0.28);
+}
+
+.s7-confirm-modal-actions--single {
+  justify-content: center;
+}
+
+.s7-confirm-modal-actions--single .s7-confirm-modal-btn--danger {
+  min-width: 180px;
+}
+
 .s7-confirm-modal-title {
   font-size: 18px;
   font-weight: 700;

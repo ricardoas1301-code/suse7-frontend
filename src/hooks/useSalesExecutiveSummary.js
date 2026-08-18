@@ -1,8 +1,32 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchSalesExecutiveSummary } from "../services/salesExecutiveSummaryApi";
+import { ensureAuthSessionBootstrapped } from "../auth/authBootstrapService";
+import {
+  buildSalesExecutiveSummaryQueryKey,
+  fetchSalesExecutiveSummary,
+} from "../services/salesExecutiveSummaryApi";
 
 /** Evita flicker quando a API responde muito rápido (skeleton some suave). */
 const EXECUTIVE_SUMMARY_MIN_LOADING_MS = 280;
+
+/**
+ * @typedef {'idle' | 'loading' | 'success' | 'refreshing' | 'error'} ExecutiveSummaryStatus
+ */
+
+/**
+ * @param {import("../services/salesExecutiveSummaryApi.js").SalesExecutiveSummaryParams} parsedParams
+ * @param {AbortSignal} signal
+ */
+async function fetchExecutiveSummaryWithAuthRetry(parsedParams, signal) {
+  let res = await fetchSalesExecutiveSummary(parsedParams, { signal });
+  if (res.aborted) return res;
+  const shouldRetry =
+    !res.ok && (res.status === 401 || res.status === 0 || Boolean(res.connectionError));
+  if (shouldRetry) {
+    await ensureAuthSessionBootstrapped();
+    res = await fetchSalesExecutiveSummary(parsedParams, { signal });
+  }
+  return res;
+}
 
 /**
  * @param {import("../services/salesExecutiveSummaryApi.js").SalesExecutiveSummaryParams | null | undefined} params
@@ -12,11 +36,17 @@ export function useSalesExecutiveSummary(params, options = {}) {
   const { enabled = true } = options;
 
   const [data, setData] = useState(/** @type {Record<string, unknown> | null} */ (null));
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState(/** @type {ExecutiveSummaryStatus} */ ("idle"));
   const [error, setError] = useState(/** @type {string | null} */ (null));
 
-  const paramsKey = useMemo(() => JSON.stringify(params ?? {}), [params]);
+  const paramsKey = useMemo(() => buildSalesExecutiveSummaryQueryKey(params), [params]);
   const requestSeqRef = useRef(0);
+  const abortRef = useRef(/** @type {AbortController | null} */ (null));
+  const dataRef = useRef(/** @type {Record<string, unknown> | null} */ (null));
+  dataRef.current = data;
+
+  const loading = status === "loading" || status === "refreshing";
+  const refreshing = status === "refreshing";
 
   const finishLoadingAfterMinDelay = useCallback(async (startedAt) => {
     const elapsed = Date.now() - startedAt;
@@ -26,73 +56,103 @@ export function useSalesExecutiveSummary(params, options = {}) {
     }
   }, []);
 
+  const applyStaleAbortState = useCallback(() => {
+    if (dataRef.current != null) {
+      setStatus("success");
+      return;
+    }
+    setStatus("idle");
+  }, []);
+
   const refetch = useCallback(async () => {
     const seq = ++requestSeqRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     if (!enabled) {
-      setLoading(false);
+      setStatus("idle");
       setError(null);
       setData(null);
       return null;
     }
 
-    setLoading(true);
-    setError(null);
+    const hasPreviousData = dataRef.current != null;
+    setStatus(hasPreviousData ? "refreshing" : "loading");
+    if (!hasPreviousData) setError(null);
 
     const startedAt = Date.now();
-    const parsedParams = paramsKey ? JSON.parse(paramsKey) : {};
-    const res = await fetchSalesExecutiveSummary(parsedParams);
+    const parsedParams = params ?? {};
+    const res = await fetchExecutiveSummaryWithAuthRetry(parsedParams, controller.signal);
 
     if (seq !== requestSeqRef.current) return null;
+
+    if (controller.signal.aborted || res.aborted) {
+      applyStaleAbortState();
+      return null;
+    }
 
     await finishLoadingAfterMinDelay(startedAt);
-    if (seq !== requestSeqRef.current) return null;
-
-    setLoading(false);
+    if (seq !== requestSeqRef.current || controller.signal.aborted) {
+      if (seq === requestSeqRef.current) applyStaleAbortState();
+      return null;
+    }
 
     if (!res.ok) {
       const errMsg =
         res.error ??
         (res.timedOut ? "Tempo esgotado ao carregar o resumo executivo." : "Não foi possível carregar o resumo executivo.");
+      setStatus("error");
       setError(errMsg);
-      setData(null);
+      if (!hasPreviousData) setData(null);
       return null;
     }
 
+    setError(null);
     setData(res.data ?? null);
+    setStatus("success");
     return res.data ?? null;
-  }, [enabled, finishLoadingAfterMinDelay, paramsKey]);
+  }, [applyStaleAbortState, enabled, finishLoadingAfterMinDelay, params]);
 
   useEffect(() => {
-    let cancelled = false;
+    const seq = ++requestSeqRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let disposed = false;
 
     (async () => {
-      const seq = ++requestSeqRef.current;
-
       if (!enabled) {
-        if (!cancelled) {
-          setLoading(false);
+        if (!disposed) {
+          setStatus("idle");
           setError(null);
           setData(null);
         }
         return;
       }
 
-      if (!cancelled) {
-        setLoading(true);
-        setError(null);
+      const hasPreviousData = dataRef.current != null;
+      if (!disposed) {
+        setStatus(hasPreviousData ? "refreshing" : "loading");
+        if (!hasPreviousData) setError(null);
       }
 
       const startedAt = Date.now();
-      const parsedParams = paramsKey ? JSON.parse(paramsKey) : {};
-      const res = await fetchSalesExecutiveSummary(parsedParams);
+      const parsedParams = params ?? {};
+      const res = await fetchExecutiveSummaryWithAuthRetry(parsedParams, controller.signal);
 
-      if (cancelled || seq !== requestSeqRef.current) return;
+      if (disposed || seq !== requestSeqRef.current) return;
+
+      if (controller.signal.aborted || res.aborted) {
+        applyStaleAbortState();
+        return;
+      }
 
       await finishLoadingAfterMinDelay(startedAt);
-      if (cancelled || seq !== requestSeqRef.current) return;
-
-      setLoading(false);
+      if (disposed || seq !== requestSeqRef.current || controller.signal.aborted) {
+        if (seq === requestSeqRef.current) applyStaleAbortState();
+        return;
+      }
 
       if (!res.ok) {
         const errMsg =
@@ -102,35 +162,40 @@ export function useSalesExecutiveSummary(params, options = {}) {
           console.warn("[S7][ExecutiveSummary request failed]", {
             status: res.status,
             timedOut: Boolean(res.timedOut),
+            aborted: Boolean(res.aborted),
             error: errMsg,
+            query_key: paramsKey,
           });
         }
+        setStatus("error");
         setError(errMsg);
-        setData(null);
+        if (!hasPreviousData) setData(null);
         return;
       }
 
+      setError(null);
       setData(res.data ?? null);
+      setStatus("success");
 
       if (import.meta.env.DEV && res.data) {
-        const data = res.data;
+        const payload = res.data;
         console.info("[S7][ExecutiveSummary response]", {
-          summary: data.summary ?? null,
-          listingsCount: Array.isArray(data.rankings?.listings) ? data.rankings.listings.length : 0,
-          productsCount: Array.isArray(data.rankings?.products) ? data.rankings.products.length : 0,
-          firstListing: Array.isArray(data.rankings?.listings) ? data.rankings.listings[0] ?? null : null,
-          dataQuality: data.data_quality ?? null,
-          filtersApplied: data.filters_applied ?? null,
-          period: data.period ?? null,
+          query_key: paramsKey,
+          ordersCount: payload.summary?.orders_count ?? null,
+          listingsCount: Array.isArray(payload.rankings?.listings) ? payload.rankings.listings.length : 0,
+          productsCount: Array.isArray(payload.rankings?.products) ? payload.rankings.products.length : 0,
+          dataQualityStatus: payload.data_quality?.status ?? null,
+          periodPreset: payload.period?.preset ?? null,
         });
       }
     })();
 
     return () => {
-      cancelled = true;
-      requestSeqRef.current += 1;
+      disposed = true;
+      controller.abort();
+      if (abortRef.current === controller) abortRef.current = null;
     };
-  }, [enabled, finishLoadingAfterMinDelay, paramsKey]);
+  }, [applyStaleAbortState, enabled, finishLoadingAfterMinDelay, params, paramsKey]);
 
   const summary = useMemo(() => {
     const s = data?.summary;
@@ -174,6 +239,12 @@ export function useSalesExecutiveSummary(params, options = {}) {
     return h != null && typeof h === "object" ? /** @type {Record<string, unknown>} */ (h) : null;
   }, [data]);
 
+  const distributionByAccount = useMemo(() => {
+    const dist = data?.distribution != null && typeof data.distribution === "object" ? data.distribution : null;
+    const byAccount = dist?.by_account;
+    return Array.isArray(byAccount) ? byAccount : [];
+  }, [data]);
+
   const dataQuality = useMemo(() => {
     const dq = data?.data_quality;
     return dq != null && typeof dq === "object" ? /** @type {Record<string, unknown>} */ (dq) : null;
@@ -200,11 +271,14 @@ export function useSalesExecutiveSummary(params, options = {}) {
     topListingsByNetProfit,
     topProducts,
     health,
+    distributionByAccount,
     dataQuality,
     period,
     filtersApplied,
     truncatedScan,
+    status,
     loading,
+    refreshing,
     error,
     refetch,
   };

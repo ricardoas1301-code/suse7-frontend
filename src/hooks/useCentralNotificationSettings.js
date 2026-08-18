@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuthBootstrap } from "../contexts/AuthBootstrapContext";
+import { applyNotificationChannelsPresentation } from "../constants/notificationChannelPresentation";
 import {
   fetchNotificationCategories,
   fetchCentralNotificationPreferences,
@@ -9,31 +11,39 @@ import {
   deleteCentralNotificationRecipient,
   fetchCentralEventDeliveryRules,
   patchCentralEventDeliveryRules,
+  fetchDailySalesSummaryAutomationRule,
+  patchDailySalesSummaryAutomationRule,
 } from "../services/centralNotificationsApi";
 
 /**
  * Estado central de notificações seller (Fase 3.2.2) — sem lógica de envio.
  */
 export function useCentralNotificationSettings() {
+  const { ready: authReady, loading: authLoading } = useAuthBootstrap();
   const [categories, setCategories] = useState([]);
   const [channelsMeta, setChannelsMeta] = useState([]);
   const [preferences, setPreferences] = useState([]);
   const [recipientGroups, setRecipientGroups] = useState([]);
   const [deliveryRules, setDeliveryRules] = useState([]);
+  const [dailySalesSummaryRule, setDailySalesSummaryRule] = useState(null);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingPreferences, setLoadingPreferences] = useState(true);
   const [loadingRecipients, setLoadingRecipients] = useState(true);
   const [loadingRules, setLoadingRules] = useState(true);
+  const [loadingDailySalesRule, setLoadingDailySalesRule] = useState(true);
 
   const [errorCategories, setErrorCategories] = useState(null);
   const [errorPreferences, setErrorPreferences] = useState(null);
   const [errorRecipients, setErrorRecipients] = useState(null);
   const [errorRules, setErrorRules] = useState(null);
+  const [errorDailySalesRule, setErrorDailySalesRule] = useState(null);
 
   const [savingPrefKey, setSavingPrefKey] = useState(null);
   const [savingRuleKey, setSavingRuleKey] = useState(null);
+  const [savingAutomationRule, setSavingAutomationRule] = useState(false);
   const [savingRecipient, setSavingRecipient] = useState(false);
+  const dailySalesRuleSaveReqRef = useRef(0);
 
   const prefLookup = useMemo(() => {
     const map = new Map();
@@ -44,7 +54,10 @@ export function useCentralNotificationSettings() {
   }, [preferences]);
 
   const inAppChannelsMeta = useMemo(
-    () => (channelsMeta ?? []).filter((ch) => ch.key === "in_app"),
+    () =>
+      applyNotificationChannelsPresentation(
+        (channelsMeta ?? []).filter((ch) => ch.key === "in_app")
+      ),
     [channelsMeta]
   );
 
@@ -97,18 +110,46 @@ export function useCentralNotificationSettings() {
     setDeliveryRules(res.rules ?? []);
   }, []);
 
+  const loadDailySalesSummaryRule = useCallback(async () => {
+    setLoadingDailySalesRule(true);
+    setErrorDailySalesRule(null);
+    const res = await fetchDailySalesSummaryAutomationRule();
+    setLoadingDailySalesRule(false);
+    if (!res.ok) {
+      setErrorDailySalesRule(res.error ?? "Erro ao carregar agendamento do resumo diário");
+      return;
+    }
+    setDailySalesSummaryRule(res.rule ?? null);
+  }, []);
+
   const reloadAll = useCallback(async () => {
     await Promise.all([
       loadCategories(),
       loadPreferences(),
       loadRecipients(),
       loadDeliveryRules(),
+      loadDailySalesSummaryRule(),
     ]);
-  }, [loadCategories, loadPreferences, loadRecipients, loadDeliveryRules]);
+  }, [loadCategories, loadPreferences, loadRecipients, loadDeliveryRules, loadDailySalesSummaryRule]);
 
   useEffect(() => {
+    if (authLoading || !authReady) {
+      setLoadingCategories(authLoading);
+      setLoadingPreferences(authLoading);
+      setLoadingRecipients(authLoading);
+      setLoadingRules(authLoading);
+      setLoadingDailySalesRule(authLoading);
+      if (!authLoading && !authReady) {
+        setErrorCategories(null);
+        setErrorPreferences(null);
+        setErrorRecipients(null);
+        setErrorRules(null);
+        setErrorDailySalesRule(null);
+      }
+      return;
+    }
     reloadAll();
-  }, [reloadAll]);
+  }, [authLoading, authReady, reloadAll]);
 
   const setChannelEnabled = useCallback(
     async (categoryCode, typeKey, channel, enabled) => {
@@ -220,6 +261,51 @@ export function useCentralNotificationSettings() {
     [deliveryRules]
   );
 
+  const saveDailySalesSummaryRule = useCallback(
+    async (patch) => {
+      const requestId = dailySalesRuleSaveReqRef.current + 1;
+      dailySalesRuleSaveReqRef.current = requestId;
+      setSavingAutomationRule(true);
+      const prev = dailySalesSummaryRule;
+      const normalizedPatch = {
+        ...patch,
+        enabled: true,
+      };
+      setDailySalesSummaryRule((current) => ({
+        ...(current ?? {}),
+        ...normalizedPatch,
+        config:
+          normalizedPatch?.config && typeof normalizedPatch.config === "object"
+            ? { ...(current?.config ?? {}), ...normalizedPatch.config }
+            : current?.config,
+      }));
+
+      const res = await patchDailySalesSummaryAutomationRule(normalizedPatch);
+      // Ignora resposta fora de ordem para evitar UI divergente do último save.
+      if (requestId !== dailySalesRuleSaveReqRef.current) {
+        return { ok: false, message: "SAVE_STALE_RESPONSE_IGNORED" };
+      }
+
+      setSavingAutomationRule(false);
+
+      if (!res.ok) {
+        setDailySalesSummaryRule(prev);
+        return { ok: false, message: res.message ?? res.error ?? "Não foi possível salvar agendamento." };
+      }
+
+      setDailySalesSummaryRule(res.rule ?? null);
+      // Reconfirma do backend SEM acionar o loading global (loadDailySalesSummaryRule
+      // ligaria loadingDailySalesRule -> prefsReady=false -> remount do painel e
+      // scroll-to-top). O refetch silencioso só atualiza o estado da regra.
+      const confirmRes = await fetchDailySalesSummaryAutomationRule();
+      if (requestId === dailySalesRuleSaveReqRef.current && confirmRes.ok) {
+        setDailySalesSummaryRule(confirmRes.rule ?? null);
+      }
+      return { ok: true, rule: res.rule };
+    },
+    [dailySalesSummaryRule]
+  );
+
   const saveRecipient = useCallback(
     async (payload, editingGroupId = null) => {
       setSavingRecipient(true);
@@ -262,25 +348,31 @@ export function useCentralNotificationSettings() {
     preferences,
     recipientGroups,
     deliveryRules,
+    dailySalesSummaryRule,
     prefLookup,
     loadingCategories,
     loadingPreferences,
     loadingRecipients,
     loadingRules,
+    loadingDailySalesRule,
     errorCategories,
     errorPreferences,
     errorRecipients,
     errorRules,
+    errorDailySalesRule,
     savingPrefKey,
     savingRuleKey,
+    savingAutomationRule,
     savingRecipient,
     reloadAll,
     loadCategories,
     loadPreferences,
     loadRecipients,
     loadDeliveryRules,
+    loadDailySalesSummaryRule,
     setChannelEnabled,
     setEventDeliveryRule,
+    saveDailySalesSummaryRule,
     saveRecipient,
     removeRecipient,
   };

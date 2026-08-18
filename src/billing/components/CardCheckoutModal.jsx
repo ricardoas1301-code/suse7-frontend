@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CreditCard } from "lucide-react";
 import { S7Button } from "../../components/ui";
 import suse7Logo from "../../assets/suse7-logo-redonda.png";
@@ -33,6 +33,31 @@ const EMPTY_FORM = {
   save_card: true,
 };
 
+function buildEmptyForm(hasExistingCards) {
+  return {
+    ...EMPTY_FORM,
+    set_default: !hasExistingCards,
+  };
+}
+
+function createIdempotencyKey() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `pm-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+const CARD_CHECKOUT_BASE_SCALE = 0.84;
+const CARD_CHECKOUT_VIEWPORT_MARGIN_PX = 32;
+
+function obterAlturaTopNavPx() {
+  if (typeof window === "undefined") return 64;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--s7-topnav-bar-height").trim();
+  const parsed = Number.parseFloat(raw);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  return 64;
+}
+
 /**
  * @param {{
  *   open: boolean;
@@ -50,6 +75,7 @@ const EMPTY_FORM = {
  *     card_type?: "credit";
  *     set_default?: boolean;
  *     persist?: boolean;
+ *     idempotency_key?: string;
  *   }) => void | Promise<void>;
  * }} props
  */
@@ -74,30 +100,164 @@ export default function CardCheckoutModal({
   const [useNewCard, setUseNewCard] = useState(true);
   const [selectedSavedId, setSelectedSavedId] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const [validationBanner, setValidationBanner] = useState(null);
+  const fitHostRef = useRef(null);
+  const panelRef = useRef(null);
+  const idempotencyKeyRef = useRef(/** @type {string | null} */ (null));
 
   const isSaveMode = mode === "save";
   const displayPlanName = useMemo(() => formatPlanDisplayName(planName || "Plano"), [planName]);
 
+  const aplicarEscalaModal = useCallback(() => {
+    if (isSaveMode) return;
+
+    const panel = panelRef.current;
+    const fitHost = fitHostRef.current;
+    const sheet = fitHost?.closest(".s7-billing-card-checkout-sheet");
+    if (!panel) return;
+
+    panel.style.zoom = "1";
+    panel.style.transform = "none";
+
+    const topNavHeight = obterAlturaTopNavPx();
+    const alturaDisponivel = window.innerHeight - CARD_CHECKOUT_VIEWPORT_MARGIN_PX - topNavHeight;
+    const larguraDisponivel = window.innerWidth - CARD_CHECKOUT_VIEWPORT_MARGIN_PX;
+    const alturaNatural = panel.scrollHeight;
+    const larguraNatural = panel.offsetWidth;
+
+    if (!alturaNatural || !larguraNatural) return;
+
+    const escalaViewport = Math.min(
+      1,
+      alturaDisponivel / alturaNatural,
+      larguraDisponivel / larguraNatural
+    );
+    const escalaFinal = escalaViewport * CARD_CHECKOUT_BASE_SCALE;
+    const alturaVisual = alturaNatural * escalaFinal;
+
+    panel.style.setProperty("--s7-card-checkout-fit-scale", String(escalaFinal));
+
+    if (typeof CSS !== "undefined" && CSS.supports("zoom", "1")) {
+      panel.style.zoom = String(escalaFinal);
+      panel.style.transform = "none";
+    } else {
+      panel.style.zoom = "";
+      panel.style.transform = `scale(${escalaFinal})`;
+      panel.style.transformOrigin = "center center";
+    }
+
+    if (sheet && fitHost) {
+      const cabeNaViewport = alturaVisual <= alturaDisponivel;
+      sheet.style.alignItems = cabeNaViewport ? "center" : "flex-start";
+      sheet.style.justifyContent = "center";
+      sheet.style.overflowY = cabeNaViewport ? "hidden" : "auto";
+      fitHost.style.marginTop = cabeNaViewport ? "auto" : "0";
+      fitHost.style.marginBottom = cabeNaViewport ? "auto" : "0";
+    }
+  }, [isSaveMode]);
+
+  useEffect(() => {
+    if (!open) {
+      idempotencyKeyRef.current = null;
+      return;
+    }
+    idempotencyKeyRef.current = createIdempotencyKey();
+    setForm(buildEmptyForm(creditCards.length > 0));
+    setFieldErrors({});
+    setValidationBanner(null);
+  }, [open, creditCards.length]);
+
   useEffect(() => {
     if (!open) return;
-    setForm(EMPTY_FORM);
-    setFieldErrors({});
+
+    const scrollY = window.scrollY;
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousWidth = document.body.style.width;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+      document.body.style.position = previousPosition;
+      document.body.style.top = previousTop;
+      document.body.style.width = previousWidth;
+      window.scrollTo(0, scrollY);
+    };
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
+    if (isSaveMode) {
+      setUseNewCard(true);
+      setSelectedSavedId("");
+      return;
+    }
     const initial = defaultSaved ?? null;
     setUseNewCard(!initial);
     setSelectedSavedId(initial?.id ?? "");
-  }, [open, defaultSaved?.id]);
+  }, [open, isSaveMode, defaultSaved?.id]);
+
+  useEffect(() => {
+    if (!open || isSaveMode) return;
+
+    let observer = null;
+
+    const measureFrame = window.requestAnimationFrame(() => {
+      aplicarEscalaModal();
+      window.requestAnimationFrame(() => {
+        aplicarEscalaModal();
+        if (panelRef.current && typeof ResizeObserver !== "undefined") {
+          observer = new ResizeObserver(() => aplicarEscalaModal());
+          observer.observe(panelRef.current);
+        }
+      });
+    });
+
+    window.addEventListener("resize", aplicarEscalaModal);
+
+    return () => {
+      window.cancelAnimationFrame(measureFrame);
+      window.removeEventListener("resize", aplicarEscalaModal);
+      observer?.disconnect();
+
+      const panel = panelRef.current;
+      if (panel) {
+        panel.style.zoom = "";
+        panel.style.transform = "";
+        panel.style.transformOrigin = "";
+        panel.style.removeProperty("--s7-card-checkout-fit-scale");
+      }
+
+      const fitHost = fitHostRef.current;
+      const sheet = fitHost?.closest(".s7-billing-card-checkout-sheet");
+      if (sheet) {
+        sheet.style.alignItems = "";
+        sheet.style.justifyContent = "";
+        sheet.style.overflowY = "";
+      }
+      if (fitHost) {
+        fitHost.style.marginTop = "";
+        fitHost.style.marginBottom = "";
+      }
+    };
+  }, [open, aplicarEscalaModal, errorMessage, useNewCard, loading, fieldErrors, isSaveMode]);
 
   if (!open) return null;
 
   const title = isSaveMode ? "Adicionar cartão de crédito" : "Pagamento com cartão de crédito";
-  const statusLabel = isSaveMode ? "Cadastro seguro" : "Confirme o pagamento";
-  const statusClass = isSaveMode
-    ? "s7-billing-card-checkout__status s7-billing-card-checkout__status--secure"
-    : "s7-billing-card-checkout__status";
+  const statusLabel = "Confirme o pagamento";
+  const statusClass = "s7-billing-card-checkout__status";
 
   const primaryLabel = isSaveMode
     ? loading
@@ -129,6 +289,7 @@ export default function CardCheckoutModal({
 
   function updateField(name, value) {
     setForm((prev) => ({ ...prev, [name]: value }));
+    setValidationBanner(null);
     setFieldErrors((prev) => {
       if (!prev[name]) return prev;
       const next = { ...prev };
@@ -140,13 +301,15 @@ export default function CardCheckoutModal({
   async function handleSubmit(event) {
     event.preventDefault();
     setFieldErrors({});
+    setValidationBanner(null);
 
-    if (!useNewCard && selectedSavedId) {
+    if (!isSaveMode && !useNewCard && selectedSavedId) {
       await onSubmit({
         payment_method_id: selectedSavedId,
         card_type: "credit",
         set_default: form.set_default,
         persist: false,
+        idempotency_key: idempotencyKeyRef.current ?? createIdempotencyKey(),
       });
       return;
     }
@@ -154,6 +317,7 @@ export default function CardCheckoutModal({
     const built = buildCardApiPayload(form);
     if (!built.ok) {
       setFieldErrors(built.errors);
+      setValidationBanner("Confira os campos destacados.");
       return;
     }
 
@@ -163,23 +327,33 @@ export default function CardCheckoutModal({
       card_type: "credit",
       set_default: built.payload.set_default,
       persist: built.payload.persist,
+      idempotency_key: idempotencyKeyRef.current ?? createIdempotencyKey(),
     });
   }
 
   return (
     <div
-      className="s7-billing-checkout-sheet s7-billing-card-checkout-sheet"
+      className={`s7-billing-checkout-sheet s7-billing-card-checkout-sheet${
+        isSaveMode ? " s7-billing-card-checkout-sheet--viewport-fill" : ""
+      }`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="s7-card-checkout-title"
       onClick={onClose}
     >
       <div
-        className="s7-billing-checkout-sheet__panel s7-billing-card-checkout"
+        className="s7-billing-card-checkout__fit-host"
+        ref={fitHostRef}
         onClick={(event) => event.stopPropagation()}
       >
+        <div className="s7-billing-checkout-sheet__panel s7-billing-card-checkout" ref={panelRef}>
         <form className="s7-billing-card-checkout__layout" onSubmit={handleSubmit} noValidate>
-          <aside className="s7-billing-card-checkout__summary-col" aria-label="Resumo">
+          <aside
+            className={`s7-billing-card-checkout__summary-col${
+              isSaveMode ? " s7-billing-card-checkout__summary-col--save-mode" : ""
+            }`}
+            aria-label="Resumo"
+          >
             <header className="s7-billing-card-checkout__summary-header">
               <div className="s7-billing-card-checkout__brand-stack">
                 <img
@@ -194,7 +368,7 @@ export default function CardCheckoutModal({
               <h3 id="s7-card-checkout-title" className="s7-billing-card-checkout__title">
                 {title}
               </h3>
-              <p className={statusClass}>{statusLabel}</p>
+              {!isSaveMode ? <p className={statusClass}>{statusLabel}</p> : null}
             </header>
 
             <dl className="s7-billing-card-checkout__facts">
@@ -233,6 +407,11 @@ export default function CardCheckoutModal({
           <section className="s7-billing-card-checkout__payment-col" aria-label="Dados do cartão">
             <div className="s7-billing-card-checkout__form-card">
               {errorMessage ? <p className="s7-billing-card-checkout__banner-error">{errorMessage}</p> : null}
+              {validationBanner ? (
+                <p className="s7-billing-card-checkout__banner-error" role="alert">
+                  {validationBanner}
+                </p>
+              ) : null}
 
               <div className="s7-billing-card-checkout__form-body">
               <div className="s7-billing-card-checkout__form">
@@ -391,6 +570,7 @@ export default function CardCheckoutModal({
             cartão nem o CVV.
           </p>
         </form>
+        </div>
       </div>
     </div>
   );

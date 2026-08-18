@@ -4,18 +4,38 @@
   margin-top: 0;
 }
 
+.profile-layout--full {
+  display: block;
+}
+
+.profile-layout--full:has(.dados-empresa-page),
+.profile-layout--full:has(.alterar-senha-page),
+.profile-layout--full:has(.ml-integrations-page),
+.profile-layout--full:has(.minha-assinatura-page),
+.profile-layout--full:has(.s7-notification-center-page) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-layout--full:has(.minha-assinatura-page) {
+  min-height: calc(100vh - var(--s7-topnav-bar-height-fallback, 64px));
+}
+
 .profile-content {
   flex: 1;
-  padding: 8px 24px;     /* 🔥 era 24px → agora reduzimos ~70% */
-  padding: 8px 24px;     /* 🔥 era 24px → agora reduzimos ~70% */
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 24px;
   background: #f6f8fb;
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
   .profile-layout {
-    flex-direction: column;
     min-height: auto;
-    gap: 10px;
   }
 
   .profile-content {
@@ -23,9 +43,62 @@
   }
 }
 
-@media (max-width: 390px) {
-  .profile-content {
-    padding-left: 8px;
-    padding-right: 8px;
+.profile-content:has(.dados-empresa-page),
+.profile-content:has(.alterar-senha-page),
+.profile-content:has(.ml-integrations-page),
+.profile-content:has(.minha-assinatura-page),
+.profile-content:has(.s7-notification-center-page) {
+  --s7-empresa-page-gutter: 12px;
+  --s7-topnav-bar-height-fallback: 64px;
+
+  max-width: none;
+  padding: var(--s7-empresa-page-gutter);
+  background: #f6f8fb;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content.s7-page:has(.dados-empresa-page),
+.page-content.s7-page:has(.alterar-senha-page),
+.page-content.s7-page:has(.ml-integrations-page),
+.page-content.s7-page:has(.minha-assinatura-page),
+.page-content.s7-page:has(.s7-notification-center-page) {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: auto;
+}
+
+@media (max-width: 768px) {
+  .profile-content:has(.dados-empresa-page),
+  .profile-content:has(.alterar-senha-page),
+  .profile-content:has(.ml-integrations-page),
+  .profile-content:has(.minha-assinatura-page),
+  .profile-content:has(.s7-notification-center-page) {
+    padding: 12px;
   }
+}
+
+/* S1.PERFIL-NOTIFICACOES.5 — scroll inteligente (Perfil da Empresa + Alterar Senha) */
+.profile-layout--full:has(> .profile-content > .dados-empresa-page:not(.s7-notification-center-page)) {
+  flex: 0 1 auto;
+  width: 100%;
+}
+
+.profile-content:has(> .dados-empresa-page:not(.s7-notification-center-page)) {
+  flex: 0 0 auto;
+}
+
+/* S1.PERFIL-NOTIFICACOES.6 — scroll inteligente exclusivo Alterar Senha */
+.profile-layout--full:has(> .profile-content > .alterar-senha-page) {
+  flex: 0 1 auto;
+  width: 100%;
+}
+
+.profile-content:has(> .alterar-senha-page) {
+  flex: 0 0 auto;
 }

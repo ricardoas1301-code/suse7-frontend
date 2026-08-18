@@ -25,9 +25,21 @@ export function formatPaymentDueDatePt(value) {
 
 export function formatBillingDate(value) {
   if (!value) return "—";
-  const d = new Date(value);
+  const raw = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const [year, month, day] = raw.split("-").map(Number);
+    const dateOnly = new Date(Date.UTC(year, month - 1, day));
+    if (Number.isNaN(dateOnly.getTime())) return "—";
+    return dateOnly.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  }
+  const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
 export function formatSalesLimit(limit) {
@@ -47,6 +59,7 @@ const PLAN_KEY_DISPLAY_NAMES = {
   scale: "Scale",
   elite: "Elite",
   enterprise: "Enterprise",
+  infinity: "Infinity",
 };
 
 /**

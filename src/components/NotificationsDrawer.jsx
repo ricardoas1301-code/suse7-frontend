@@ -48,7 +48,7 @@ export default function NotificationsDrawer({
     <div className="nd-overlay" onClick={onClose} role="presentation">
       <div className="nd-drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-labelledby="nd-title">
         <div className="nd-header">
-          <h2 id="nd-title">Notificações</h2>
+          <h2 id="nd-title">Central de notificações</h2>
           <button type="button" className="nd-close" onClick={onClose} aria-label="Fechar">
             <X size={20} />
           </button>

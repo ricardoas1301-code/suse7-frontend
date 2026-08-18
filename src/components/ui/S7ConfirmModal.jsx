@@ -15,7 +15,10 @@ import "./S7ConfirmModal.css";
  * @param {string} [props.cancelLabel]
  * @param {string} [props.confirmLabel]
  * @param {'danger' | 'primary'} [props.confirmVariant]
+ * @param {boolean} [props.hideCancel] — oculta ação secundária (fechar via backdrop/Escape)
+ * @param {boolean} [props.dangerBorder] — borda externa semântica de ação destrutiva
  * @param {boolean} [props.loading]
+ * @param {boolean} [props.confirmDisabled]
  * @param {string} [props.loadingLabel] — texto do botão de confirmação enquanto loading
  * @param {() => void} props.onCancel
  * @param {() => void} props.onConfirm
@@ -29,7 +32,10 @@ export default function S7ConfirmModal({
   cancelLabel = "Cancelar",
   confirmLabel = "Confirmar",
   confirmVariant = "danger",
+  hideCancel = false,
+  dangerBorder = false,
   loading = false,
+  confirmDisabled = false,
   loadingLabel = "Aguarde…",
   onCancel,
   onConfirm,
@@ -64,7 +70,7 @@ export default function S7ConfirmModal({
       onMouseDown={handleOverlayMouseDown}
     >
       <div
-        className="s7-confirm-modal-card"
+        className={`s7-confirm-modal-card${dangerBorder ? " s7-confirm-modal-card--danger-border" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -78,15 +84,17 @@ export default function S7ConfirmModal({
         ) : (
           <p className="s7-confirm-modal-text">{message}</p>
         )}
-        <div className="s7-confirm-modal-actions">
-          <button
-            type="button"
-            className="s7-confirm-modal-btn s7-confirm-modal-btn--secondary"
-            disabled={loading}
-            onClick={() => onCancel?.()}
-          >
-            {cancelLabel}
-          </button>
+        <div className={`s7-confirm-modal-actions${hideCancel ? " s7-confirm-modal-actions--single" : ""}`}>
+          {!hideCancel ? (
+            <button
+              type="button"
+              className="s7-confirm-modal-btn s7-confirm-modal-btn--secondary"
+              disabled={loading}
+              onClick={() => onCancel?.()}
+            >
+              {cancelLabel}
+            </button>
+          ) : null}
           <button
             type="button"
             className={
@@ -94,7 +102,7 @@ export default function S7ConfirmModal({
                 ? "s7-confirm-modal-btn s7-confirm-modal-btn--primary"
                 : "s7-confirm-modal-btn s7-confirm-modal-btn--danger"
             }
-            disabled={loading}
+            disabled={loading || confirmDisabled}
             onClick={() => onConfirm?.()}
           >
             {loading ? loadingLabel : confirmLabel}

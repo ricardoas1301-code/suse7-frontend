@@ -1,0 +1,515 @@
+/* ======================================================
+   Card Concorrentes — modal Gerenciar Concorrentes (ConcorrenciaPage)
+   Padrão homologado na PI; escopo: .concorrencia-produto-modal__reg-grid
+====================================================== */
+
+.concorrencia-produto-modal__reg-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto);
+  gap: calc(6px * var(--s7-concorrente-produto-card-scale, 0.968));
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  align-content: start;
+  align-items: stretch;
+  --s7-concorrente-produto-card-scale: 0.968;
+  /* Config local — conteúdo interno −10% (card externo mantém altura fixa) */
+  --s7-concorrente-produto-inner-scale: 0.9;
+  --s7-concorrente-produto-text-scale: calc(
+    1.3 * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  --s7-concorrente-produto-price-scale-refined: 1.461426;
+  --s7-concorrente-produto-compare-scale-refined: 1.254664;
+  --s7-concorrente-produto-title-scale-refined: 1;
+  --s7-concorrente-produto-price-frete-gap: calc(
+    6px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  --s7-concorrente-produto-compare-offset-top: calc(
+    4px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  --s7-concorrente-produto-element-gap: calc(
+    5.5px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  --s7-concorrente-produto-block-gap: calc(
+    9px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  --s7-concorrente-produto-footer-top-gap: calc(
+    5px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  --s7-concorrente-produto-compare-divider-gap: calc(
+    2px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  --s7-concorrente-produto-compare-bottom-gap: 0;
+  --s7-concorrente-produto-compare-font-size: calc(
+    10px * var(--s7-concorrente-produto-text-scale) * var(--s7-concorrente-produto-compare-scale-refined)
+  );
+  --s7-concorrente-produto-compare-line-height: 1.2;
+  /* Altura fixa — layout PI com medalha em linha própria */
+  --s7-concorrente-produto-card-height: calc(236px * var(--s7-concorrente-produto-card-scale));
+  /* Largura fixa homologada — coluna esquerda do modal Gerenciar (980px × 0.6fr, 3 cols) */
+  --s7-concorrente-produto-card-width: calc(184px * var(--s7-concorrente-produto-card-scale));
+  /* Config local — thumb PI homologada × ajuste deste modal (−16% imagem) */
+  --s7-concorrente-produto-thumb-local-scale: 0.84;
+  --s7-concorrente-produto-thumb-scale-refined: calc(
+    0.7 * 1.03 * 1.01 * 1.01 * 1.005 * 1.0039 * var(--s7-concorrente-produto-thumb-local-scale) *
+      var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-concorrente-produto-element-gap);
+  min-width: 0;
+  height: var(--s7-concorrente-produto-card-height);
+  min-height: var(--s7-concorrente-produto-card-height);
+  padding: calc(
+    6px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  border-radius: calc(
+    9px * var(--s7-concorrente-produto-card-scale) * var(--s7-concorrente-produto-inner-scale)
+  );
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, #fff 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-thumb-row {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel .concorrencia-produto-modal__reg-card-thumb {
+  position: relative;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: calc(22px * var(--s7-concorrente-produto-inner-scale, 0.9));
+  height: calc(22px * var(--s7-concorrente-produto-inner-scale, 0.9));
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.46);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel-nav:hover,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel-nav:focus-visible {
+  background: rgba(15, 23, 42, 0.62);
+  opacity: 1;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel-nav--prev {
+  left: calc(4px * var(--s7-concorrente-produto-inner-scale, 0.9));
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel-nav--next {
+  right: calc(4px * var(--s7-concorrente-produto-inner-scale, 0.9));
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel-dots {
+  position: absolute;
+  bottom: calc(5px * var(--s7-concorrente-produto-inner-scale, 0.9));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: calc(4px * var(--s7-concorrente-produto-inner-scale, 0.9));
+  z-index: 2;
+  max-width: calc(100% - 12px);
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel-dot {
+  flex: 0 0 auto;
+  width: calc(5px * var(--s7-concorrente-produto-inner-scale, 0.9));
+  height: calc(5px * var(--s7-concorrente-produto-inner-scale, 0.9));
+  border: none;
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.58);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-carousel-dot.is-active {
+  background: #fff;
+  transform: scale(1.2);
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-thumb {
+  position: relative;
+  width: calc(100% * var(--s7-concorrente-produto-thumb-scale-refined));
+  aspect-ratio: 1 / 1;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-thumb-ph {
+  color: rgba(100, 116, 139, 0.72);
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-thumb-ph svg {
+  width: calc(18px * var(--s7-concorrente-produto-thumb-scale-refined));
+  height: calc(18px * var(--s7-concorrente-produto-thumb-scale-refined));
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-concorrente-produto-block-gap);
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-concorrente-produto-element-gap);
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0;
+  padding-top: var(--s7-concorrente-produto-compare-offset-top);
+  padding-bottom: 0;
+  min-width: 0;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-title {
+  margin: 0;
+  font-size: calc(
+    9.5px * var(--s7-concorrente-produto-text-scale) * var(--s7-concorrente-produto-title-scale-refined, 1)
+  );
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--s7-primary, #2563eb);
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.concorrencia-produto-modal__reg-grid a.concorrencia-produto-modal__reg-card-title:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.concorrencia-produto-modal__reg-card-title-tip {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.concorrencia-produto-modal__reg-card-title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--s7-primary, #2563eb);
+  padding: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.concorrencia-produto-modal__reg-card-title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.concorrencia-produto-modal__reg-card-title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  background: transparent;
+  box-shadow: none;
+}
+
+.concorrencia-produto-modal__reg-card-title-tip a.concorrencia-produto-modal__reg-card-title,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-title-tip a.concorrencia-produto-modal__reg-card-title {
+  color: var(--s7-primary, #2563eb);
+  text-decoration: none;
+}
+
+.concorrencia-produto-modal__reg-card-title-tip a.concorrencia-produto-modal__reg-card-title:hover,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-title-tip a.concorrencia-produto-modal__reg-card-title:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.concorrencia-produto-modal__reg-card--discover-resumo .concorrencia-produto-modal__reg-card-main {
+  gap: calc(var(--s7-concorrente-produto-block-gap) * 0.72);
+}
+
+.concorrencia-produto-modal__reg-card--discover-resumo .concorrencia-produto-modal__reg-card-details {
+  gap: 0;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: var(--s7-concorrente-produto-price-frete-gap);
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-price-frete-sep {
+  flex: 0 0 1px;
+  align-self: center;
+  width: 1px;
+  height: calc(
+    10px * var(--s7-concorrente-produto-text-scale) * var(--s7-concorrente-produto-price-scale-refined) *
+      0.72
+  );
+  background: rgba(15, 23, 42, 0.16);
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-price {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  font-size: calc(
+    10px * var(--s7-concorrente-produto-text-scale) * var(--s7-concorrente-produto-price-scale-refined)
+  );
+  font-weight: 800;
+  color: var(--s7-orange, #ff8533);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-frete-line {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  flex: 0 0 auto;
+  font-size: calc(10px * var(--s7-concorrente-produto-text-scale) * 0.82);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-frete-line:not(.concorrencia-produto-modal__reg-card-frete--pago) {
+  color: #16a34a;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-frete--pago {
+  color: rgba(51, 65, 85, 0.78);
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-seller-line {
+  display: block;
+  font-size: calc(8.5px * var(--s7-concorrente-produto-text-scale));
+  font-weight: 600;
+  color: rgba(51, 65, 85, 0.82);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-medal-line {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(3px * var(--s7-concorrente-produto-text-scale));
+  font-size: calc(8.5px * var(--s7-concorrente-produto-text-scale));
+  font-weight: 600;
+  color: #16a34a;
+  line-height: 1.2;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-rep-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-rep-icon {
+  flex-shrink: 0;
+  color: #16a34a;
+  stroke: #16a34a;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-compare {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 0;
+  margin-bottom: var(--s7-concorrente-produto-compare-bottom-gap);
+  padding-top: var(--s7-concorrente-produto-compare-divider-gap);
+  border-top: 1px dotted rgba(15, 23, 42, 0.24);
+  min-height: calc(
+    var(--s7-concorrente-produto-compare-font-size) * var(--s7-concorrente-produto-compare-line-height)
+  );
+  font-size: var(--s7-concorrente-produto-compare-font-size);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: var(--s7-concorrente-produto-compare-line-height);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-compare--acima {
+  color: #dc2626;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-compare--abaixo {
+  color: #16a34a;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-compare--neutral {
+  color: rgba(100, 116, 139, 0.92);
+  font-weight: 800;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-compare--indisponivel {
+  display: none;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-status {
+  font-size: calc(8px * var(--s7-concorrente-produto-text-scale));
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-status--pending {
+  color: #b45309;
+}
+
+.concorrencia-produto-modal__reg-grid
+  .concorrencia-produto-modal__reg-card-thumb-row
+  .concorrencia-produto-modal__reg-card-delete-wrap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-thumb-row:hover .concorrencia-produto-modal__reg-card-delete,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card:hover .concorrencia-produto-modal__reg-card-delete,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-delete:hover,
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-delete:focus-visible {
+  opacity: 1;
+  background: rgba(185, 28, 28, 0.9);
+  transform: scale(1.04);
+}
+
+.concorrencia-produto-modal__reg-grid .concorrencia-produto-modal__reg-card-delete {
+  width: calc(24px * var(--s7-concorrente-produto-inner-scale, 1));
+  height: calc(24px * var(--s7-concorrente-produto-inner-scale, 1));
+  border-radius: calc(7px * var(--s7-concorrente-produto-inner-scale, 1));
+  opacity: 0.82;
+}
+
+@media (max-width: 980px) {
+  .concorrencia-produto-modal__reg-grid:not(.concorrencia-discover-modal__reg-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .concorrencia-produto-modal__reg-grid:not(.concorrencia-discover-modal__reg-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.concorrencia-produto-modal__reg-card--inativo {
+  filter: none;
+}
+
+.concorrencia-produto-modal__reg-card--inativo .concorrencia-produto-modal__reg-card-thumb img {
+  filter: grayscale(1);
+  opacity: 0.72;
+}
+
+.concorrencia-produto-modal__reg-card--inativo .concorrencia-produto-modal__reg-card-title,
+.concorrencia-produto-modal__reg-card--inativo .concorrencia-produto-modal__reg-card-price {
+  color: rgba(71, 85, 105, 0.9);
+}
+
+.concorrencia-produto-modal__reg-card--inativo .concorrencia-produto-modal__reg-card-price {
+  font-weight: 600;
+}
+
+.concorrencia-produto-modal__reg-card-badge-inativo {
+  align-self: flex-start;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(71, 85, 105, 0.92);
+  background: rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  line-height: 1.35;
+}

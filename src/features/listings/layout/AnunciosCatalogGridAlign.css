@@ -1,0 +1,274 @@
+/* ======================================================================
+   Página Anúncios — alinhamento header ↔ body (contrato data-col)
+   Vista analítica minimal (.anuncios-catalog__grid--anuncios-analytic)
+   ====================================================================== */
+
+/* Checkbox — header e linhas centralizados */
+.anuncios-catalog__grid--anuncios-analytic [data-col="select"],
+.anuncios-catalog__row--anuncios-analytic [data-col="select"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.anuncios-catalog__grid--anuncios-analytic [data-col="select"] .anuncios-catalog__select-checkbox,
+.anuncios-catalog__row--anuncios-analytic [data-col="select"] .anuncios-catalog__select-checkbox {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Capa — sem título visível no header; thumb centralizada */
+.anuncios-catalog__grid--anuncios-analytic [data-col="cover"],
+.anuncios-catalog__row--anuncios-analytic [data-col="cover"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.anuncios-catalog__grid--anuncios-analytic [data-col="cover"].products-catalog__col-head {
+  padding-inline: 0;
+}
+
+.anuncios-catalog__row--anuncios-analytic [data-col="listing"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="listing"] {
+  min-width: 0;
+  justify-self: stretch;
+}
+
+/* Tipo anúncio, Conta, Canal — header e valor centralizados na coluna */
+.anuncios-catalog__grid--anuncios-analytic [data-col="listing-type"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="account"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="channel"],
+.anuncios-catalog__row--anuncios-analytic [data-col="listing-type"],
+.anuncios-catalog__row--anuncios-analytic [data-col="account"],
+.anuncios-catalog__row--anuncios-analytic [data-col="channel"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: stretch;
+  text-align: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.anuncios-catalog__row--anuncios-analytic [data-col="listing-type"] .anuncios-catalog__listing-type-badge,
+.anuncios-catalog__row--anuncios-analytic [data-col="listing-type"] .anuncios-catalog__listing-type-empty {
+  margin-inline: auto;
+}
+
+.anuncios-catalog__row--anuncios-analytic [data-col="account"] > .s7-tooltip-portal-root,
+.anuncios-catalog__row--anuncios-analytic [data-col="channel"] > .s7-tooltip-portal-root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.anuncios-catalog__row--anuncios-analytic [data-col="account"] .s7-catalog-account,
+.anuncios-catalog__row--anuncios-analytic [data-col="channel"] .s7-catalog-channel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+/* Conta — avatar redondo, sem moldura (paridade visual Vendas/Concorrência) */
+.anuncios-catalog__row--anuncios-analytic [data-col="account"] .s7-catalog-account__avatar {
+  border-radius: 50%;
+  border: none;
+  box-shadow: none;
+  background: linear-gradient(145deg, #e0e7ff 0%, #f1f5f9 100%);
+}
+
+.anuncios-catalog__row--anuncios-analytic [data-col="account"] .s7-catalog-account__avatar img {
+  border-radius: 50%;
+}
+
+.anuncios-catalog__grid--anuncios-analytic [data-col="profit-brl"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="profit-percent"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="sale-price"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="sales"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="revenue"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="avg-ticket"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="payout"],
+.anuncios-catalog__grid--anuncios-analytic [data-col="quality"],
+.anuncios-catalog__row--anuncios-analytic [data-col="profit-brl"],
+.anuncios-catalog__row--anuncios-analytic [data-col="profit-percent"],
+.anuncios-catalog__row--anuncios-analytic [data-col="sale-price"],
+.anuncios-catalog__row--anuncios-analytic [data-col="sales"],
+.anuncios-catalog__row--anuncios-analytic [data-col="revenue"],
+.anuncios-catalog__row--anuncios-analytic [data-col="avg-ticket"],
+.anuncios-catalog__row--anuncios-analytic [data-col="payout"],
+.anuncios-catalog__row--anuncios-analytic [data-col="quality"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.anuncios-catalog__row--anuncios-analytic [data-col="profit-brl"] .vendas-page__fin-value-row,
+.anuncios-catalog__row--anuncios-analytic [data-col="profit-percent"] .vendas-page__fin-value-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.anuncios-catalog__row--anuncios-analytic [data-col="sale-price"].anuncios-catalog__cell--kpi-stack {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ======================================================================
+   Coluna Anúncio — paridade lista Vendas / Precificações (somente Anúncios)
+   Tipografia, clamp 2 linhas, gap título→MLB|SKU e altura-base da linha.
+   ====================================================================== */
+
+.anuncios-catalog__row--anuncios-analytic .anuncios-ad-main {
+  gap: 0;
+  justify-content: center;
+}
+
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity.s7-catalog-headline.vendas-page__product-headline {
+  gap: 2px 0.5rem;
+  align-items: flex-end;
+}
+
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot.vendas-page__product-title-slot {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__meta.vendas-page__product-meta {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title,
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-link,
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity
+  .anuncios-ad-title-link,
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity
+  .vendas-page__product-title,
+.anuncios-catalog__row--anuncios-analytic
+  .anuncios-catalog__headline-vendas-parity
+  .vendas-page__product-title-link {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  white-space: normal;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--s7-list-row-identity-title-size, 12px);
+  font-weight: var(--s7-list-row-identity-title-weight, 600);
+  color: var(--s7-orange, #ff8533);
+  line-height: var(--s7-list-row-identity-title-line-height, 1.3);
+  letter-spacing: normal;
+  max-height: calc(var(--s7-list-row-identity-title-line-height, 1.3) * 2em);
+}
+
+.anuncios-catalog__row--anuncios-analytic .anuncios-catalog__minimal-title-actions {
+  margin-top: 0;
+}
+
+/* Altura-base da linha — SSOT lista Vendas (7px + 44px + 7px = 58px) */
+.anuncios-catalog__row.anuncios-catalog__row--anuncios-analytic.s7-operational-row-card {
+  min-height: var(--s7-vendas-list-row-min-height, 58px);
+  padding-top: var(--s7-list-table-row-padding-y, 7px);
+  padding-bottom: var(--s7-list-table-row-padding-y, 7px);
+  align-items: center;
+}
+
+.anuncios-catalog__row.anuncios-catalog__row--anuncios-analytic.s7-operational-row-card .anuncios-ad-thumb {
+  width: var(--s7-vendas-list-row-thumb-size, 44px);
+  height: var(--s7-vendas-list-row-thumb-size, 44px);
+}
+
+.anuncios-catalog__row.anuncios-catalog__row--anuncios-analytic.s7-operational-row-card [data-col="cover"],
+.anuncios-catalog__row.anuncios-catalog__row--anuncios-analytic.s7-operational-row-card [data-col="listing"] {
+  align-self: center;
+}
+
+/* Linha com botão (Informar SKU / Vincular / equivalente) — cresce só o necessário */
+.anuncios-catalog__row.anuncios-catalog__row--anuncios-analytic.s7-operational-row-card:has(
+    .anuncios-ad-line-action-btn
+  ) {
+  min-height: 0;
+  align-items: start;
+}
+
+.anuncios-catalog__row.anuncios-catalog__row--anuncios-analytic.s7-operational-row-card:has(
+    .anuncios-ad-line-action-btn
+  )
+  .anuncios-ad-main {
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+@media (min-width: 769px) {
+  .anuncios-catalog__row--anuncios-analytic
+    .anuncios-catalog__headline-vendas-parity.s7-catalog-headline.vendas-page__product-headline {
+    align-items: baseline;
+    gap: 1px 0.4rem;
+  }
+
+  .anuncios-catalog__row--anuncios-analytic
+    .anuncios-catalog__headline-vendas-parity
+    .vendas-page__product-title,
+  .anuncios-catalog__row--anuncios-analytic
+    .anuncios-catalog__headline-vendas-parity
+    .vendas-page__product-title-link,
+  .anuncios-catalog__row--anuncios-analytic
+    .anuncios-catalog__headline-vendas-parity
+    .anuncios-ad-title-link,
+  .anuncios-catalog__row--anuncios-analytic
+    .anuncios-catalog__headline-vendas-parity
+    .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+    font-size: 11px;
+  }
+}
+
+.anuncios-catalog__row--anuncios-analytic [data-col="quality"] .listing-quality-gauge {
+  margin-inline: auto;
+}
+
+.anuncios-catalog__grid--anuncios-analytic .anuncios-catalog__cell--quality.products-catalog__col-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}

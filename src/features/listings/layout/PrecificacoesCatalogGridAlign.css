@@ -1,0 +1,574 @@
+/* ======================================================================
+   Página Precificações — grid + alinhamento header ↔ body (contrato data-col)
+   Vista minimal oficial (.anuncios-catalog__grid--precificacoes-minimal)
+   ====================================================================== */
+
+.anuncios-catalog__grid.anuncios-catalog__grid--precificacoes-minimal,
+.anuncios-catalog__row.anuncios-catalog__row--precificacoes-minimal {
+  --s7-catalog-precificacoes-listing-column-width: 200px;
+  --precificacoes-grid-template:
+    40px
+    56px
+    var(--s7-catalog-precificacoes-listing-column-width)
+    minmax(46px, 0.09fr)
+    minmax(36px, 0.068fr)
+    minmax(34px, 0.058fr)
+    minmax(58px, 0.095fr)
+    minmax(52px, 0.085fr)
+    minmax(62px, 0.1fr)
+    minmax(54px, 0.09fr)
+    minmax(50px, 0.085fr)
+    minmax(54px, 0.09fr)
+    minmax(48px, 0.08fr)
+    minmax(48px, 0.08fr)
+    minmax(48px, 0.081fr)
+    minmax(62px, 0.116fr);
+  min-width: 0;
+  width: 100%;
+  grid-template-columns: var(--precificacoes-grid-template);
+  column-gap: 5px;
+  align-items: center;
+}
+
+.anuncios-catalog__grid.anuncios-catalog__grid--precificacoes-minimal.anuncios-catalog__grid--no-precifica-col,
+.anuncios-catalog__row.anuncios-catalog__row--precificacoes-minimal.anuncios-catalog__row--no-precifica-col {
+  grid-template-columns: var(--precificacoes-grid-template) !important;
+  column-gap: 5px;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal.anuncios-catalog__grid--precificacoes-analytic--no-scroll,
+.anuncios-catalog__row--precificacoes-minimal {
+  overflow-x: clip;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="select"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="select"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="select"] .anuncios-catalog__select-checkbox,
+.anuncios-catalog__row--precificacoes-minimal [data-col="select"] .anuncios-catalog__select-checkbox {
+  display: block;
+  margin: 0 auto;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="cover"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="cover"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="cover"].products-catalog__col-head {
+  padding-inline: 0;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="listing"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="listing"] {
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="listing"].products-catalog__col-head {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="listing-type"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="account"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="channel"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="current-price"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="profit-brl"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="profit-percent"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="payout"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="commission"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="shipping"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="tax"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="cost"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="sales"],
+.anuncios-catalog__grid--precificacoes-minimal [data-col="competitors"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="listing-type"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="account"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="channel"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="sales"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="current-price"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-percent"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="payout"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="commission"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="shipping"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="tax"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="cost"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="competitors"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: stretch;
+  text-align: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="listing-type"] .anuncios-catalog__listing-type-badge,
+.anuncios-catalog__row--precificacoes-minimal [data-col="listing-type"] .anuncios-catalog__listing-type-empty {
+  margin-inline: auto;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="account"] > .s7-tooltip-portal-root,
+.anuncios-catalog__row--precificacoes-minimal [data-col="channel"] > .s7-tooltip-portal-root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="account"] .s7-catalog-account,
+.anuncios-catalog__row--precificacoes-minimal [data-col="channel"] .s7-catalog-channel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="account"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="account"] {
+  padding-right: 0;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal [data-col="channel"],
+.anuncios-catalog__row--precificacoes-minimal [data-col="channel"] {
+  padding-left: 0;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="account"] .s7-catalog-account__avatar {
+  border-radius: 50%;
+  border: none;
+  box-shadow: none;
+  background: linear-gradient(145deg, #e0e7ff 0%, #f1f5f9 100%);
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="account"] .s7-catalog-account__avatar img {
+  border-radius: 50%;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"] .vendas-page__fin-value-row,
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-percent"] .vendas-page__fin-value-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+/* Paridade VendasPage — num-stack centralizado (vence align-items: flex-end global) */
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-percent"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="current-price"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="commission"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="shipping"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="payout"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="cost"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="tax"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="sales"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="competitors"] .vendas-page__num-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-percent"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="current-price"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="commission"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="shipping"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="payout"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="cost"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="tax"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="sales"] .vendas-page__num-stack-primary,
+.anuncios-catalog__row--precificacoes-minimal [data-col="competitors"] .vendas-page__num-stack-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-percent"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="current-price"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="commission"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="shipping"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="payout"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="cost"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="tax"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="sales"] .vendas-page__num-stack-secondary-slot,
+.anuncios-catalog__row--precificacoes-minimal [data-col="competitors"] .vendas-page__num-stack-secondary-slot {
+  text-align: center;
+}
+
+.precificacoes-catalog__price-secondary {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  text-decoration: line-through;
+  color: #64748b;
+  text-align: center;
+}
+
+.precificacoes-catalog__sales-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #334155;
+}
+
+.precificacoes-catalog__count-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #334155;
+}
+
+.precificacoes-catalog__count-cell--active {
+  color: #1d4ed8;
+}
+
+.precificacoes-catalog__count-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2563eb;
+  flex-shrink: 0;
+}
+
+.precificacoes-catalog__competitors-total {
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.15;
+}
+
+.precificacoes-catalog__competitors-total--active {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.precificacoes-catalog__competitors-secondary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  width: 100%;
+}
+
+.precificacoes-catalog__competitors-detail {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.precificacoes-catalog__competitors-detail--above {
+  color: #dc2626;
+}
+
+.precificacoes-catalog__competitors-detail--below {
+  color: #16a34a;
+}
+
+.anuncios-catalog__grid--precificacoes-minimal .products-catalog__col-head {
+  font-size: 10px;
+  line-height: 1.15;
+  padding-inline: 2px;
+  white-space: nowrap;
+}
+
+/* Concorrentes — header mais leve para evitar amontoamento visual */
+.anuncios-catalog__grid--precificacoes-minimal [data-col="competitors"].products-catalog__col-head {
+  font-size: 8.7px;
+  letter-spacing: -0.02em;
+  padding-inline: 1px;
+  padding-left: 4px;
+}
+
+/* Lucro R$ — sem divisor operacional; header e corpo centralizados */
+.anuncios-catalog__grid--precificacoes-minimal [data-col="profit-brl"].products-catalog__col-head {
+  border-left: none;
+  padding-left: 2px;
+  text-align: center;
+  justify-content: center;
+}
+
+.listings-workspace--precificacoes .anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"],
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__cell--precificacoes-result {
+  border-left: none;
+  padding-left: 2px;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"] .vendas-page__num-stack,
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"] .vendas-page__num-stack-primary {
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.anuncios-catalog__row--precificacoes-minimal [data-col="profit-brl"] .vendas-page__fin-value-row {
+  justify-content: center;
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* Coluna Anúncio — paridade Página Vendas (layout compacto). */
+.listings-workspace--precificacoes .anuncios-catalog__row--precificacoes-minimal .anuncios-ad-main {
+  gap: 0;
+  justify-content: center;
+}
+
+/* Coluna Anúncio — paridade lista Vendas (layout, tipografia, clamp 2 linhas). */
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity.s7-catalog-headline.vendas-page__product-headline {
+  gap: 2px 0.5rem;
+  align-items: flex-end;
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot.vendas-page__product-title-slot {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__meta.vendas-page__product-meta {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-link,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .anuncios-ad-title-link,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .vendas-page__product-title,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .vendas-page__product-title-link {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  white-space: normal;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--s7-list-row-identity-title-size, 12px);
+  font-weight: var(--s7-list-row-identity-title-weight, 600);
+  color: var(--s7-orange, #ff8533);
+  line-height: var(--s7-list-row-identity-title-line-height, 1.3);
+  letter-spacing: normal;
+  max-height: calc(var(--s7-list-row-identity-title-line-height, 1.3) * 2em);
+}
+
+/* Título Anúncio — hover laranja escuro (paridade lista Vendas) */
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .anuncios-ad-title-link,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .vendas-page__product-title-link,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-link,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title {
+  transition: color 0.15s ease;
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot
+  .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot
+  .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .anuncios-ad-title-link:hover,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .vendas-page__product-title-link:hover,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-link:hover,
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title:hover,
+.anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot
+  .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot
+  .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible,
+.anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .anuncios-ad-title-link:hover,
+.anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .vendas-page__product-title-link:hover,
+.anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-link:hover,
+.anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__headline-vendas-parity
+  .s7-catalog-headline__title:hover {
+  color: #c2410c;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row--precificacoes-minimal
+  .anuncios-catalog__minimal-title-actions {
+  margin-top: 0;
+}
+
+@media (min-width: 769px) {
+  .listings-workspace--precificacoes
+    .anuncios-catalog__row--precificacoes-minimal
+    .anuncios-catalog__headline-vendas-parity.s7-catalog-headline.vendas-page__product-headline {
+    align-items: baseline;
+    gap: 1px 0.4rem;
+  }
+
+  .listings-workspace--precificacoes
+    .anuncios-catalog__row--precificacoes-minimal
+    .anuncios-catalog__headline-vendas-parity
+    .vendas-page__product-title,
+  .listings-workspace--precificacoes
+    .anuncios-catalog__row--precificacoes-minimal
+    .anuncios-catalog__headline-vendas-parity
+    .vendas-page__product-title-link,
+  .listings-workspace--precificacoes
+    .anuncios-catalog__row--precificacoes-minimal
+    .anuncios-catalog__headline-vendas-parity
+    .anuncios-ad-title-link,
+  .listings-workspace--precificacoes
+    .anuncios-catalog__row--precificacoes-minimal
+    .anuncios-catalog__headline-vendas-parity
+    .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+    font-size: 11px;
+  }
+}
+
+/* ======================================================================
+   Altura-base da linha — SSOT lista Vendas (somente Precificações)
+   Fórmula: 7px + 44px + 7px = 58px (linha padrão sem botão)
+   Sobrescreve S1.5 (padding 14px) apenas nesta página.
+   ====================================================================== */
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row.anuncios-catalog__row--precificacoes-minimal.s7-operational-row-card {
+  min-height: var(--s7-vendas-list-row-min-height, 58px);
+  padding-top: var(--s7-list-table-row-padding-y, 7px);
+  padding-bottom: var(--s7-list-table-row-padding-y, 7px);
+  align-items: center;
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row.anuncios-catalog__row--precificacoes-minimal.s7-operational-row-card
+  .anuncios-ad-thumb {
+  width: var(--s7-vendas-list-row-thumb-size, 44px);
+  height: var(--s7-vendas-list-row-thumb-size, 44px);
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row.anuncios-catalog__row--precificacoes-minimal.s7-operational-row-card
+  [data-col="cover"] {
+  align-self: center;
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row.anuncios-catalog__row--precificacoes-minimal.s7-operational-row-card
+  [data-col="listing"] {
+  align-self: center;
+}
+
+/* Linha com botão (Cadastrar Custos / equivalente) — cresce só o necessário */
+.listings-workspace--precificacoes
+  .anuncios-catalog__row.anuncios-catalog__row--precificacoes-minimal.s7-operational-row-card:has(
+    .anuncios-ad-line-action-btn
+  ) {
+  min-height: 0;
+  align-items: start;
+}
+
+.listings-workspace--precificacoes
+  .anuncios-catalog__row.anuncios-catalog__row--precificacoes-minimal.s7-operational-row-card:has(
+    .anuncios-ad-line-action-btn
+  )
+  .anuncios-ad-main {
+  gap: 6px;
+  justify-content: flex-start;
+}

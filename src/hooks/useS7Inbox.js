@@ -1,123 +1,89 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useAuthBootstrap } from "../contexts/AuthBootstrapContext";
 import {
-  listNotificationInbox,
-  markAllInboxRead,
-  markInboxItemRead,
-} from "../services/centralInboxApi";
-import { getSessionToken } from "../config/api";
+  acquireInboxPollSlot,
+  getSharedInboxSnapshot,
+  markSharedInboxAllRead,
+  markSharedInboxItemRead,
+  refreshSharedInbox,
+  subscribeSharedInbox,
+} from "./sharedInboxStore";
 
-const REFRESH_MS_OPEN = 60000;
-
+/**
+ * Inbox central — gated por authReady, single-flight compartilhado, poll só com UI aberta.
+ *
+ * @param {{ enabled?: boolean; pollWhenOpen?: boolean }} [options]
+ */
 export function useS7Inbox({ enabled = true, pollWhenOpen = false } = {}) {
-  const [items, setItems] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [cursor, setCursor] = useState(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState(null);
-  const pollRef = useRef(null);
+  const { ready: authReady, user, signedOut } = useAuthBootstrap();
+  const effectivelyEnabled = Boolean(enabled && authReady && !signedOut);
 
-  const applyList = useCallback((data, append = false) => {
-    const nextItems = Array.isArray(data.items) ? data.items : [];
-    setItems((prev) => (append ? [...prev, ...nextItems] : nextItems));
-    setUnreadCount(Number(data.unread_count ?? 0));
-    setCursor(data.cursor ?? null);
-    setHasMore(Boolean(data.has_more));
-  }, []);
+  const [snapshot, setSnapshot] = useState(() => getSharedInboxSnapshot());
 
-  const refresh = useCallback(
-    async (opts = {}) => {
-      if (!enabled) return;
-      const token = await getSessionToken();
-      if (!token) return;
-
-      const append = opts.append === true;
-      if (append) setLoadingMore(true);
-      else setLoading(true);
-      setError(null);
-
-      const pageCursor = append ? opts.cursor ?? null : opts.cursor ?? null;
-
-      const { ok, items: list, unread_count, cursor: nextCursor, has_more, error: err } =
-        await listNotificationInbox({
-          limit: opts.limit ?? 20,
-          cursor: pageCursor,
-          unread: opts.unread,
-        });
-
-      if (append) setLoadingMore(false);
-      else setLoading(false);
-
-      if (!ok) {
-        setError(err ?? "Erro ao carregar notificações");
-        return;
-      }
-      applyList({ items: list, unread_count, cursor: nextCursor, has_more }, append);
-    },
-    [enabled, applyList]
-  );
-
-  const loadMore = useCallback(() => {
-    if (!hasMore || loadingMore) return;
-    return refresh({ append: true, cursor });
-  }, [hasMore, loadingMore, refresh, cursor]);
-
-  const markOneRead = useCallback(async (id) => {
-    const { ok } = await markInboxItemRead(id);
-    if (!ok) return false;
-    setItems((prev) =>
-      prev.map((n) =>
-        String(n.id) === String(id)
-          ? { ...n, is_read: true, read_at: n.read_at || new Date().toISOString() }
-          : n
-      )
-    );
-    setUnreadCount((c) => Math.max(0, c - 1));
-    return true;
-  }, []);
-
-  const markAllRead = useCallback(async () => {
-    const { ok } = await markAllInboxRead();
-    if (!ok) return false;
-    const readAt = new Date().toISOString();
-    setItems((prev) => prev.map((n) => ({ ...n, is_read: true, read_at: readAt })));
-    setUnreadCount(0);
-    return true;
-  }, []);
+  useEffect(() => subscribeSharedInbox(setSnapshot), []);
 
   useEffect(() => {
-    if (!enabled) return;
-    refresh();
-  }, [enabled]);
-
-  useEffect(() => {
-    if (!pollWhenOpen || !enabled) {
-      if (pollRef.current) clearInterval(pollRef.current);
+    if (!effectivelyEnabled) {
+      // Logout / auth não pronta: não dispara request.
       return undefined;
     }
-    pollRef.current = setInterval(() => refresh(), REFRESH_MS_OPEN);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [pollWhenOpen, enabled, refresh]);
+    void refreshSharedInbox({ force: false });
+    return undefined;
+  }, [effectivelyEnabled, user?.id]);
 
   useEffect(() => {
+    if (!effectivelyEnabled || !pollWhenOpen) return undefined;
+    return acquireInboxPollSlot();
+  }, [effectivelyEnabled, pollWhenOpen]);
+
+  useEffect(() => {
+    if (!effectivelyEnabled || !pollWhenOpen) return undefined;
     const onVisible = () => {
-      if (document.visibilityState === "visible" && enabled) refresh();
+      if (document.visibilityState === "visible") {
+        void refreshSharedInbox({ force: true });
+      }
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [enabled, refresh]);
+  }, [effectivelyEnabled, pollWhenOpen]);
+
+  const refresh = useCallback(
+    async (opts = {}) => {
+      if (!effectivelyEnabled) return;
+      await refreshSharedInbox({
+        force: true,
+        append: opts.append === true,
+        cursor: opts.cursor,
+        limit: opts.limit,
+        unread: opts.unread,
+      });
+    },
+    [effectivelyEnabled],
+  );
+
+  const loadMore = useCallback(() => {
+    if (!snapshot.hasMore || snapshot.loadingMore || !effectivelyEnabled) return;
+    return refresh({ append: true, cursor: snapshot.cursor });
+  }, [snapshot.hasMore, snapshot.loadingMore, snapshot.cursor, effectivelyEnabled, refresh]);
+
+  const markOneRead = useCallback(async (id) => {
+    if (!effectivelyEnabled) return false;
+    return markSharedInboxItemRead(id);
+  }, [effectivelyEnabled]);
+
+  const markAllRead = useCallback(async () => {
+    if (!effectivelyEnabled) return false;
+    return markSharedInboxAllRead();
+  }, [effectivelyEnabled]);
 
   return {
-    items,
-    unreadCount,
-    cursor,
-    hasMore,
-    loading,
-    loadingMore,
-    error,
+    items: snapshot.items,
+    unreadCount: snapshot.unreadCount,
+    cursor: snapshot.cursor,
+    hasMore: snapshot.hasMore,
+    loading: effectivelyEnabled ? snapshot.loading : false,
+    loadingMore: snapshot.loadingMore,
+    error: snapshot.error,
     refresh,
     loadMore,
     markOneRead,

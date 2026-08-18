@@ -1,0 +1,169 @@
+/* ======================================================
+   S7 — cabeçalho unificado de listas
+   Tipografia + altura: paridade Clientes 360 thead th
+   Sticky: inalterado — position/top/z-index mantidos
+   ====================================================== */
+
+/* --- Faixa laranja contínua (grades) --- */
+.products-catalog__grid.products-catalog__grid--head,
+.anuncios-catalog__grid.anuncios-catalog__grid--head,
+.concorrencia-catalog__grid.concorrencia-catalog__grid--head {
+  position: sticky;
+  top: var(--s7-list-table-head-sticky-top, 0px);
+  z-index: var(--s7-list-table-head-sticky-z, 20);
+  overflow: hidden;
+  box-sizing: border-box;
+  align-items: stretch;
+  column-gap: 0;
+  row-gap: 0;
+  padding: 0;
+  min-height: var(--s7-list-table-head-block-height, 32.5px);
+  max-height: var(--s7-list-table-head-block-height, 32.5px);
+  height: var(--s7-list-table-head-block-height, 32.5px);
+  border-radius:
+    var(--s7-list-table-head-radius, 10px)
+    var(--s7-list-table-head-radius, 10px)
+    var(--s7-list-table-head-radius-bottom, 4px)
+    var(--s7-list-table-head-radius-bottom, 4px);
+  background: linear-gradient(
+    180deg,
+    var(--s7-list-title-bar-bg-from) 0%,
+    var(--s7-list-title-bar-bg-to) 100%
+  );
+  background-clip: padding-box;
+  box-shadow: var(--s7-list-table-head-shadow);
+}
+
+/* Células do head = Clientes 360 thead th */
+.products-catalog__grid--head .products-catalog__cell,
+.anuncios-catalog__grid--head .products-catalog__cell,
+.concorrencia-catalog__grid--head .products-catalog__cell,
+.concorrencia-catalog__grid--head .concorrencia-catalog__col-head {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  padding: var(--s7-list-table-head-padding-y) var(--s7-list-table-head-padding-x);
+  font-family: var(--s7-list-table-head-font-family);
+  font-size: var(--s7-list-table-head-font-size);
+  font-weight: var(--s7-list-table-head-font-weight);
+  letter-spacing: var(--s7-list-table-head-letter-spacing);
+  line-height: var(--s7-list-table-head-line-height);
+  text-transform: var(--s7-list-table-head-text-transform);
+  color: var(--s7-list-title-bar-text);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* --- Tabelas HTML (Vendas + Clientes 360) --- */
+.vendas-page__table thead th,
+.clientes360-table thead th {
+  position: sticky;
+  top: var(--s7-list-table-head-sticky-top, 0px);
+  z-index: var(--s7-list-table-head-sticky-z, 20);
+  box-sizing: border-box;
+  min-height: var(--s7-list-table-head-block-height, 32.5px);
+  max-height: var(--s7-list-table-head-block-height, 32.5px);
+  height: var(--s7-list-table-head-block-height, 32.5px);
+  padding: var(--s7-list-table-head-padding-y) var(--s7-list-table-head-padding-x);
+  font-family: var(--s7-list-table-head-font-family);
+  font-size: var(--s7-list-table-head-font-size);
+  font-weight: var(--s7-list-table-head-font-weight);
+  letter-spacing: var(--s7-list-table-head-letter-spacing);
+  line-height: var(--s7-list-table-head-line-height);
+  text-transform: var(--s7-list-table-head-text-transform);
+  color: var(--s7-list-title-bar-text);
+  vertical-align: middle;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    var(--s7-list-title-bar-bg-from) 0%,
+    var(--s7-list-title-bar-bg-to) 100%
+  );
+  background-clip: padding-box;
+  box-shadow: var(--s7-list-table-head-shadow);
+}
+
+.clientes360-table thead th {
+  text-align: center;
+}
+
+.clientes360-table thead tr:first-child th:first-child,
+.vendas-page__table thead tr:first-child th:first-child {
+  border-top-left-radius: var(--s7-list-table-head-radius, 10px);
+  border-bottom-left-radius: var(--s7-list-table-head-radius-bottom, 4px);
+}
+
+.clientes360-table thead tr:first-child th:last-child,
+.vendas-page__table thead tr:first-child th:last-child {
+  border-top-right-radius: var(--s7-list-table-head-radius, 10px);
+  border-bottom-right-radius: var(--s7-list-table-head-radius-bottom, 4px);
+}
+
+/* Tipografia interna — herda o thead/célula (paridade Clientes 360) */
+.products-catalog__grid--head .products-catalog__head-tooltip,
+.anuncios-catalog__grid--head .products-catalog__head-tooltip {
+  font-family: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+}
+
+.products-catalog__grid--head .products-catalog__head-tooltip,
+.anuncios-catalog__grid--head .products-catalog__head-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: help;
+  outline: none;
+}
+.products-catalog__grid--head .products-catalog__head-tooltip--compact,
+.anuncios-catalog__grid--head .products-catalog__head-tooltip--compact {
+  font-size: var(--s7-list-table-head-font-size);
+  letter-spacing: var(--s7-list-table-head-letter-spacing);
+  white-space: nowrap;
+  line-height: var(--s7-list-table-head-line-height);
+}
+
+/* Anúncios / Precificações — dense não altera tipografia do head */
+.anuncios-catalog.anuncios-catalog--dense .anuncios-catalog__grid.anuncios-catalog__grid--head .products-catalog__cell,
+.anuncios-catalog.anuncios-catalog--dense .anuncios-catalog__grid.anuncios-catalog__grid--head .concorrencia-catalog__col-head {
+  font-size: var(--s7-list-table-head-font-size);
+  font-weight: var(--s7-list-table-head-font-weight);
+  letter-spacing: var(--s7-list-table-head-letter-spacing);
+  line-height: var(--s7-list-table-head-line-height);
+  text-transform: var(--s7-list-table-head-text-transform);
+}
+
+.anuncios-catalog__grid--head .anuncios-catalog__select-checkbox,
+.vendas-page__table thead th .vendas-page__row-select-checkbox {
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.vendas-page__table thead th .vendas-page__row-select {
+  min-width: 0;
+  min-height: 0;
+  line-height: 1;
+}
+
+.products-catalog__grid--head .products-catalog__head-tooltip:focus-visible,
+.anuncios-catalog__grid--head .products-catalog__head-tooltip:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

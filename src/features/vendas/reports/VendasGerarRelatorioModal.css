@@ -1,0 +1,314 @@
+.vendas-relatorio-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+/* Shell — linha azul fina S7 (sem backplate grosso) */
+.vendas-relatorio-modal-shell {
+  position: relative;
+  width: min(500px, 100%);
+  max-height: min(92dvh, 880px);
+  box-sizing: border-box;
+  border: 1.5px solid #ffe82b;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 8px 28px rgba(15, 23, 42, 0.12),
+    0 2px 8px rgba(37, 99, 235, 0.08);
+  overflow: visible;
+}
+
+.vendas-relatorio-modal-shell__decor {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 84%;
+  width: 32px;
+  transform: translate(-50%, -50%);
+  border-radius: 12px;
+  background: #ffe82b;
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.28);
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.vendas-relatorio-modal-shell__decor--right {
+  left: auto;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+.vendas-relatorio-modal-shell__panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: min(92dvh, 876px);
+  background: #ffffff;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.vendas-relatorio-modal__head-row.vendas-sale-rayx__modal-head-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 7px 9px 5px;
+  background: #ffffff;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  overflow: visible;
+}
+
+.vendas-relatorio-modal__head-row .vendas-sale-rayx__modal-title-stack {
+  flex: none;
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+}
+
+.vendas-relatorio-modal__head-row .anuncios-sell-popover__title {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vendas-relatorio-modal__subtitle {
+  margin: 2px 0 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.vendas-relatorio-modal__head-row .vendas-sale-rayx__ops-actions--icon-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  flex: none;
+  justify-content: flex-end;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.vendas-relatorio-modal__head-row .s7-tooltip-portal-root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+/* Feedback visual do canal Copiar (P_2.8.12F.B) */
+.vendas-sale-rayx__ops-icon-btn--copied {
+  color: #059669;
+}
+
+/* Card interno — moldura laranja S7 */
+.vendas-relatorio-modal__inner-card {
+  --vendas-relatorio-orange-frame: color-mix(in srgb, var(--s7-orange, #ff8533) 42%, transparent);
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 7px 7px;
+  padding: 7px 9px 8px;
+  border-radius: 14px 14px 10px 10px;
+  border: 1px solid var(--vendas-relatorio-orange-frame);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  /* P_2.8.12F: relatório exibido de uma vez, sem scrollbar. O modal cresce
+     conforme o conteúdo (cap por dvh). Mobile mantém fallback de rolagem. */
+  overflow-y: visible;
+  overflow-x: clip;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vendas-relatorio-modal__summary-list {
+  margin: 0 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.vendas-relatorio-modal__summary-row {
+  display: grid;
+  grid-template-columns: minmax(84px, 34%) minmax(0, 1fr);
+  gap: 3px 8px;
+  align-items: baseline;
+}
+
+.vendas-relatorio-modal__summary-label,
+.vendas-relatorio-modal__summary-row dt {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.vendas-relatorio-modal__summary-value,
+.vendas-relatorio-modal__summary-row dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+  letter-spacing: 0;
+  word-break: break-word;
+}
+
+/* Destaque da quantidade de vendas — laranja Suse7 (#F97316) */
+.vendas-relatorio-modal__summary-value--count {
+  color: #f97316;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.vendas-relatorio-modal__filter-tags {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.vendas-relatorio-modal__filter-tags li {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(255, 133, 51, 0.12);
+  color: #c2410c;
+}
+
+.vendas-relatorio-modal__accounts {
+  margin: 0 0 6px;
+}
+
+.vendas-relatorio-modal__accounts-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vendas-relatorio-modal__accounts-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.vendas-relatorio-modal__accounts-name {
+  color: #334155;
+  font-weight: 600;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.vendas-relatorio-modal__accounts-count {
+  flex: none;
+  color: #f97316;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.vendas-relatorio-modal__exec-section {
+  padding-top: 0;
+}
+
+.vendas-relatorio-modal__section-title {
+  margin: 0 0 6px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+@media (max-width: 520px) {
+  .vendas-relatorio-modal__backdrop {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  .vendas-relatorio-modal-shell {
+    width: 100%;
+    max-height: 92dvh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .vendas-relatorio-modal-shell__decor {
+    top: 50%;
+    height: 84%;
+    width: 30px;
+    transform: translate(-45%, -50%);
+    border-radius: 12px;
+  }
+
+  .vendas-relatorio-modal-shell__decor--right {
+    transform: translate(45%, -50%);
+  }
+
+  .vendas-relatorio-modal-shell__panel {
+    max-height: 92dvh;
+  }
+
+  /* Em telas baixas o conteúdo pode exceder o viewport: mantém rolagem segura. */
+  .vendas-relatorio-modal__inner-card {
+    overflow-y: auto;
+  }
+
+  .vendas-relatorio-modal__head-row.vendas-sale-rayx__modal-head-row {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 8px;
+    padding: 10px 12px 8px;
+  }
+
+  .vendas-relatorio-modal__head-row .vendas-sale-rayx__modal-title-stack {
+    width: 100%;
+  }
+
+  .vendas-relatorio-modal__head-row .anuncios-sell-popover__title {
+    white-space: normal;
+  }
+
+  .vendas-relatorio-modal__head-row .vendas-sale-rayx__ops-actions--icon-bar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .vendas-relatorio-modal__inner-card {
+    margin-inline: 8px;
+    margin-bottom: 8px;
+    border-radius: 16px 16px 12px 12px;
+  }
+
+  .vendas-relatorio-modal__summary-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    align-items: start;
+  }
+}

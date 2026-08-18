@@ -37,6 +37,7 @@ export function useCopyToClipboard(options = {}) {
    *   flashKey?: string;
    *   showToast?: boolean;
    *   toastLabel?: string;
+   *   toastPreviewText?: string;
    *   toastEventType?: string;
    *   toastFailEventType?: string;
    *   toastEntityType?: string;
@@ -49,6 +50,7 @@ export function useCopyToClipboard(options = {}) {
       flashKey: key = "default",
       showToast = false,
       toastLabel = "Texto",
+      toastPreviewText,
       toastEventType = "TEXT_COPIED",
       toastFailEventType = "TEXT_COPY_FAILED",
       toastEntityType = "generic",
@@ -66,11 +68,15 @@ export function useCopyToClipboard(options = {}) {
         timeoutRef.current = setTimeout(() => clearFlash(key), flashMs);
 
         if (showToast) {
+          const preview =
+            toastPreviewText != null && String(toastPreviewText).trim() !== ""
+              ? String(toastPreviewText).trim()
+              : t;
           addNotification({
             event_type: toastEventType,
             entity_type: toastEntityType,
             title: `${toastLabel} copiado`,
-            message: `${t} foi copiado para a área de transferência.`,
+            message: `${preview} foi copiado para a área de transferência.`,
             severity: NOTIFICATION_SEVERITY.INFO,
           });
         }

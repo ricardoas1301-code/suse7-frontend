@@ -11,7 +11,16 @@ import {
   groupInboxByTime,
   severityTone,
 } from "../billing/notificationInboxUi";
+import { emitOpenDailySalesSummaryModal } from "../components/notifications/central/dailySalesSummaryModalBus";
 import "./NotificacoesInboxPage.css";
+
+function isDailySalesSummaryItem(item) {
+  const eventType = String(item?.event_type_key ?? "").toUpperCase();
+  if (eventType === "SALES:DAILY_SALES_SUMMARY") return true;
+  const category = String(item?.category_code ?? "").toUpperCase();
+  const type = String(item?.type_key ?? "").toUpperCase();
+  return category === "SALES" && type === "DAILY_SALES_SUMMARY";
+}
 
 function InboxCard({ item, onOpen }) {
   const tone = severityTone(item.severity);
@@ -65,6 +74,10 @@ export default function NotificacoesInboxPage() {
     if (!item?.is_read) await markOneRead(item.id);
     if (opts.markOnly) {
       refresh();
+      return;
+    }
+    if (isDailySalesSummaryItem(item)) {
+      emitOpenDailySalesSummaryModal(item, "inbox_page_click");
       return;
     }
     const link = item?.deep_link;

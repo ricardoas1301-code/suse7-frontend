@@ -18,16 +18,17 @@
 ====================================================== */
 :root{
   /* --------------------------------------------------
-     TIPOGRAFIA
+     TIPOGRAFIA — mapeamento DS v1 → escala S1.2 (tokens/typography.css)
   -------------------------------------------------- */
   --s7-font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
-  --s7-fs-title: 20px;
-  --s7-fs-subtitle: 15px;
-  --s7-fs-label: 13px;
-  --s7-fs-input: 14px;
-  --s7-fs-hint: 12px;
-  --s7-fs-tooltip: 11px;
+  --s7-fs-title: var(--s7-text-title);
+  --s7-fs-subtitle: var(--s7-text-subtitle);
+  --s7-fs-label: var(--s7-text-body);
+  --s7-fs-input: var(--s7-text-body);
+  --s7-fs-hint: var(--s7-text-caption);
+  --s7-fs-tooltip: var(--s7-text-caption);
+  --s7-fs-kpi: var(--s7-text-kpi);
 
   /* --------------------------------------------------
      CORES (padrão Suse7)
@@ -136,6 +137,44 @@
 .s7-required{
   color: var(--s7-danger);
   margin-left: 4px;
+}
+
+/* --------------------------------------------------
+   S1.2 — utilitários semânticos (escala global)
+-------------------------------------------------- */
+.s7-text-caption {
+  font-family: var(--s7-font);
+  font-size: var(--s7-text-caption);
+  line-height: var(--s7-line-normal);
+}
+
+.s7-text-body {
+  font-family: var(--s7-font);
+  font-size: var(--s7-text-body);
+  line-height: var(--s7-line-normal);
+}
+
+.s7-text-subtitle {
+  font-family: var(--s7-font);
+  font-size: var(--s7-text-subtitle);
+  line-height: var(--s7-line-normal);
+  font-weight: var(--s7-font-semibold);
+}
+
+.s7-text-title {
+  font-family: var(--s7-font);
+  font-size: var(--s7-text-title);
+  line-height: var(--s7-line-tight);
+  font-weight: var(--s7-font-bold);
+  color: var(--s7-text);
+}
+
+.s7-text-kpi {
+  font-family: var(--s7-font);
+  font-size: var(--s7-text-kpi);
+  line-height: var(--s7-line-tight);
+  font-weight: var(--s7-font-bold);
+  color: var(--s7-text);
 }
 
 /* ======================================================

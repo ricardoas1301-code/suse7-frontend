@@ -2,22 +2,25 @@
 // Cabeçalho institucional S7 — exports Excel (referência para relatórios).
 // ======================================================================
 
-import precificaS7IconUrl from "../../assets/precifica-s7-icon.png";
+import suse7LogoUrl from "../../assets/suse7-logo-redonda.png";
 
 /** Cor laranja oficial Suse7 (#ff8533) */
 export const S7_EXCEL_ORANGE_ARGB = "FFFF8533";
 
 export const S7_EXCEL_BRAND_NAME = "Suse7 Precifica";
 
+/** Tamanho base anterior (24px) + 60% */
+const LOGO_SIZE_PX = Math.round(24 * 1.6);
+
 let cachedLogoBuffer = null;
 
 /**
- * Carrega buffer PNG do logo Precifica (cache em memória).
+ * Carrega buffer PNG da logo oficial Suse7 (cache em memória).
  * @returns {Promise<ArrayBuffer>}
  */
 export async function loadS7PrecificaLogoBuffer() {
   if (cachedLogoBuffer) return cachedLogoBuffer;
-  const response = await fetch(precificaS7IconUrl);
+  const response = await fetch(suse7LogoUrl);
   if (!response.ok) {
     throw new Error("LOGO_LOAD_FAILED");
   }
@@ -36,10 +39,36 @@ export async function applyS7ExcelInstitutionalHeader(sheet, workbook, options) 
   const reportTitle = String(options.reportTitle ?? "").trim() || "Relatório";
   const columnCount = Math.max(1, options.columnCount ?? 1);
 
-  sheet.getColumn(1).width = 10;
-  sheet.getRow(1).height = 20;
-  sheet.getRow(2).height = 20;
-  sheet.getRow(3).height = 20;
+  const brandRowIndex = 1;
+  const spacerRowIndex = 2;
+  const tableHeaderRowIndex = 3;
+  const textStartCol = 2;
+
+  sheet.getRow(brandRowIndex).height = LOGO_SIZE_PX + 8;
+  sheet.getRow(spacerRowIndex).height = 6;
+
+  if (columnCount >= textStartCol) {
+    sheet.mergeCells(brandRowIndex, textStartCol, brandRowIndex, columnCount);
+  }
+
+  const textCell = sheet.getCell(brandRowIndex, textStartCol);
+  textCell.value = {
+    richText: [
+      {
+        font: { bold: true, size: 14, color: { argb: "FF111827" }, name: "Calibri" },
+        text: S7_EXCEL_BRAND_NAME,
+      },
+      {
+        font: { bold: true, size: 14, color: { argb: "FF111827" }, name: "Calibri" },
+        text: "  ",
+      },
+      {
+        font: { bold: true, size: 13, color: { argb: "FF374151" }, name: "Calibri" },
+        text: reportTitle,
+      },
+    ],
+  };
+  textCell.alignment = { vertical: "middle", horizontal: "left" };
 
   try {
     const logoBuffer = await loadS7PrecificaLogoBuffer();
@@ -48,38 +77,14 @@ export async function applyS7ExcelInstitutionalHeader(sheet, workbook, options) 
       extension: "png",
     });
     sheet.addImage(imageId, {
-      tl: { col: 0.1, row: 0.15 },
-      ext: { width: 42, height: 42 },
+      tl: { col: 0, row: 0.08 },
+      ext: { width: LOGO_SIZE_PX, height: LOGO_SIZE_PX },
     });
   } catch {
     // Planilha segue válida sem logo se o asset não carregar.
   }
 
-  const brandStartCol = 2;
-  if (columnCount >= brandStartCol) {
-    sheet.mergeCells(1, brandStartCol, 3, columnCount);
-    const brandCell = sheet.getCell(1, brandStartCol);
-    brandCell.value = S7_EXCEL_BRAND_NAME;
-    brandCell.font = { bold: true, size: 14, color: { argb: "FF111827" } };
-    brandCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
-  } else {
-    const brandCell = sheet.getCell(1, 1);
-    brandCell.value = S7_EXCEL_BRAND_NAME;
-    brandCell.font = { bold: true, size: 14, color: { argb: "FF111827" } };
-    brandCell.alignment = { vertical: "middle", horizontal: "left" };
-  }
-
-  const titleRowIndex = 5;
-  sheet.mergeCells(titleRowIndex, 1, titleRowIndex, columnCount);
-  const titleCell = sheet.getCell(titleRowIndex, 1);
-  titleCell.value = reportTitle;
-  titleCell.font = { bold: true, size: 13, color: { argb: "FF374151" } };
-  titleCell.alignment = { vertical: "middle", horizontal: "left" };
-  sheet.getRow(titleRowIndex).height = 22;
-
-  sheet.getRow(6).height = 8;
-
-  return 7;
+  return tableHeaderRowIndex;
 }
 
 /**

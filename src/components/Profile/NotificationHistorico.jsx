@@ -10,6 +10,7 @@ import { fetchMarketplaceAccountsForRouting } from "../../services/notificationR
 import { fetchNotificationEvents, simulateNotificationDebug } from "../../services/notificationHistoryService";
 import NotificationEventCard from "../notifications/NotificationEventCard.jsx";
 import NotificationEventDetailsModal from "../notifications/NotificationEventDetailsModal.jsx";
+import NotificationCenterPageShell from "./NotificationCenterPageShell";
 import "./NotificationHistorico.css";
 
 const SEVERITY_OPTIONS = ["", "critical", "important", "medium", "info"];
@@ -163,13 +164,14 @@ export default function NotificationHistorico() {
   };
 
   return (
-    <div className="profile-section s7-notif-historico">
-      <header className="s7-notif-historico__header">
-        <h2>Histórico de notificações</h2>
-        <p>Acompanhe os alertas gerados pelo Suse7 e o status de envio por canal e destinatário.</p>
-      </header>
-
-      <section className="s7-notif-historico__filters s7-card">
+    <>
+      <NotificationCenterPageShell
+        title="Histórico de notificações"
+        subtitle="Acompanhe os alertas gerados pelo Suse7 e o status de envio por canal e destinatário."
+        className="s7-notification-center-hero--historico"
+      >
+        <div className="s7-notif-historico">
+          <section className="s7-notif-historico__filters s7-card">
         <div className="s7-notif-historico__filters-grid">
           <label className="s7-notif-historico__field">
             <span>Tipo de alerta</span>
@@ -288,6 +290,8 @@ export default function NotificationHistorico() {
           Próxima
         </button>
       </footer>
+        </div>
+      </NotificationCenterPageShell>
 
       <NotificationEventDetailsModal
         open={Boolean(detailId)}
@@ -296,6 +300,6 @@ export default function NotificationHistorico() {
         toast={toast}
         accountsById={accountsById}
       />
-    </div>
+    </>
   );
 }

@@ -1,0 +1,30 @@
+/* Overrides Produtos — shell base em S7SearchFiltersCard.css */
+
+.products-catalog__list-sticky-chrome > .products-filters-card.s7-search-filters-card {
+  box-shadow: none;
+}
+
+.page-content:not(:has(.products-catalog__list-sticky-chrome)) .products-filters-card.s7-sticky-filters {
+  position: sticky;
+  top: var(--s7-sticky-filters-top, 0px);
+  z-index: 28;
+  background: #ffffff;
+}
+
+.products-filters-card__new-product-btn,
+.products-filters-card__report-btn {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .products-filters-card__report-btn .s7-btn__label,
+  .products-filters-card__new-product-btn .s7-btn__label {
+    display: none;
+  }
+
+  .products-filters-card__report-btn,
+  .products-filters-card__new-product-btn {
+    min-width: 36px;
+    padding-inline: 8px;
+  }
+}

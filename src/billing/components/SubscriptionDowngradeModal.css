@@ -1,0 +1,21 @@
+.s7-billing-downgrade-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.s7-billing-downgrade-modal__panel {
+  position: relative;
+  z-index: 200001;
+  width: min(480px, calc(100% - 24px));
+  max-width: 480px;
+  margin: 0;
+}

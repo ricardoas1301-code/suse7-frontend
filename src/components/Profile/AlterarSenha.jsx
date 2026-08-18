@@ -8,36 +8,58 @@ import { supabase } from "../../supabaseClient";
 import "./Profile.css";
 import "./AlterarSenha.css";
 import FeedbackModal from "../FeedbackModal/FeedbackModal";
+import S7PasswordVisibilityToggle from "../ui/S7PasswordVisibilityToggle";
+import alterarSenhaIllustration from "../../assets/profile/alterar-senha-illustration.png";
+
+function CampoSenha({
+  id,
+  label,
+  value,
+  onChange,
+  visible,
+  onToggleVisible,
+  autoComplete,
+}) {
+  return (
+    <div className="s7-alterar-senha-field">
+      <label htmlFor={id}>{label} *</label>
+      <div className="password-wrapper">
+        <input
+          id={id}
+          name={id}
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={onChange}
+          autoComplete={autoComplete}
+        />
+        <S7PasswordVisibilityToggle
+          visible={visible}
+          onToggle={onToggleVisible}
+          ariaLabelShow={`Mostrar ${label.toLowerCase()}`}
+          ariaLabelHide={`Ocultar ${label.toLowerCase()}`}
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function AlterarSenha() {
-  // ------------------------------------------------------------------
-  // STATES — FORM
-  // ------------------------------------------------------------------
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ------------------------------------------------------------------
-  // STATES — VISIBILIDADE DAS SENHAS
-  // ------------------------------------------------------------------
   const [showSenhaAtual, setShowSenhaAtual] = useState(false);
   const [showNovaSenha, setShowNovaSenha] = useState(false);
   const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
 
-  // ------------------------------------------------------------------
-  // STATES — FEEDBACK MODAL (PADRÃO SUSE7)
-  // ------------------------------------------------------------------
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({
-    type: "",     // "success" | "error" | "warning" (depende do seu modal)
+    type: "",
     title: "",
     message: "",
   });
 
-  // ------------------------------------------------------------------
-  // HELPERS — ABRIR / FECHAR MODAL
-  // ------------------------------------------------------------------
   const openFeedback = ({ type, title, message }) => {
     setFeedback({ type, title, message });
     setShowFeedback(true);
@@ -45,8 +67,6 @@ export default function AlterarSenha() {
 
   const closeFeedback = () => {
     setShowFeedback(false);
-
-    // Limpa o conteúdo para evitar comportamento estranho do modal ao montar
     setFeedback({
       type: "",
       title: "",
@@ -54,14 +74,8 @@ export default function AlterarSenha() {
     });
   };
 
-  // ------------------------------------------------------------------
-  // HANDLE SAVE
-  // ------------------------------------------------------------------
   const handleChangePassword = async () => {
     try {
-      // ------------------------------------------------------------
-      // Validações (Front-end UX)
-      // ------------------------------------------------------------
       if (!senhaAtual || !novaSenha || !confirmarSenha) {
         openFeedback({
           type: "error",
@@ -91,9 +105,6 @@ export default function AlterarSenha() {
 
       setLoading(true);
 
-      // ------------------------------------------------------------
-      // Identifica usuário logado
-      // ------------------------------------------------------------
       const {
         data: { user },
         error: userError,
@@ -108,9 +119,6 @@ export default function AlterarSenha() {
         return;
       }
 
-      // ------------------------------------------------------------
-      // Reautenticação obrigatória (senha atual)
-      // ------------------------------------------------------------
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: senhaAtual,
@@ -125,9 +133,6 @@ export default function AlterarSenha() {
         return;
       }
 
-      // ------------------------------------------------------------
-      // Atualiza senha
-      // ------------------------------------------------------------
       const { error: updateError } = await supabase.auth.updateUser({
         password: novaSenha,
       });
@@ -141,9 +146,6 @@ export default function AlterarSenha() {
         return;
       }
 
-      // ------------------------------------------------------------
-      // Sucesso: limpa formulário + feedback
-      // ------------------------------------------------------------
       setSenhaAtual("");
       setNovaSenha("");
       setConfirmarSenha("");
@@ -153,106 +155,84 @@ export default function AlterarSenha() {
         title: "Senha atualizada",
         message: "Sua senha foi alterada com sucesso.",
       });
-    } catch (err) {
-      // ------------------------------------------------------------
-      // Fallback de erro inesperado
-      // ------------------------------------------------------------
+    } catch {
       openFeedback({
         type: "error",
         title: "Erro inesperado",
         message: "Ocorreu um erro ao alterar sua senha. Tente novamente.",
       });
     } finally {
-      // ------------------------------------------------------------
-      // Garante que o loading sempre finalize
-      // ------------------------------------------------------------
       setLoading(false);
     }
   };
 
-  // ------------------------------------------------------------------
-  // RENDER
-  // ------------------------------------------------------------------
   return (
-    <div className="dados-empresa-container alterar-senha-page">
-      <div className="profile-card">
-        <div className="form-header">
-          <h2>Alterar Senha</h2>
-          <span className="required-hint">* Campos obrigatórios</span>
-        </div>
+    <div className="dados-empresa-page alterar-senha-page">
+      <div className="profile-card s7-alterar-senha-hero">
+        <div className="s7-alterar-senha-body">
+          <aside className="s7-alterar-senha-body__illustration" aria-hidden="true">
+            <img
+              className="s7-alterar-senha-illustration"
+              src={alterarSenhaIllustration}
+              alt=""
+              decoding="async"
+            />
+          </aside>
 
-        {/* FORMULÁRIO */}
-        <div className="form-grid form-single-column">
-          {/* SENHA ATUAL */}
-          <div className="field-full password-field">
-            <label>Senha atual *</label>
+          <div className="s7-alterar-senha-body__form">
+            <div className="s7-alterar-senha-frame">
+              <header className="s7-alterar-senha-header">
+                <h2 className="s7-alterar-senha-header__title">Alterar Senha</h2>
+                <p className="s7-alterar-senha-header__subtitle">
+                  Atualize sua senha de acesso com segurança.
+                </p>
+                <span className="s7-alterar-senha-header__required">* Campos obrigatórios</span>
+              </header>
 
-            <div className="password-wrapper">
-              <input
-                type={showSenhaAtual ? "text" : "password"}
-                value={senhaAtual}
-                onChange={(e) => setSenhaAtual(e.target.value)}
-              />
+              <div className="s7-alterar-senha-form">
+                <CampoSenha
+                  id="senha-atual"
+                  label="Senha atual"
+                  value={senhaAtual}
+                  onChange={(e) => setSenhaAtual(e.target.value)}
+                  visible={showSenhaAtual}
+                  onToggleVisible={() => setShowSenhaAtual((prev) => !prev)}
+                  autoComplete="current-password"
+                />
 
-              <span
-                className="toggle-password"
-                onClick={() => setShowSenhaAtual(!showSenhaAtual)}
-                title={showSenhaAtual ? "Ocultar senha" : "Mostrar senha"}
+                <CampoSenha
+                  id="nova-senha"
+                  label="Nova senha"
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  visible={showNovaSenha}
+                  onToggleVisible={() => setShowNovaSenha((prev) => !prev)}
+                  autoComplete="new-password"
+                />
+
+                <CampoSenha
+                  id="confirmar-senha"
+                  label="Confirmar nova senha"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  visible={showConfirmarSenha}
+                  onToggleVisible={() => setShowConfirmarSenha((prev) => !prev)}
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <button
+                type="button"
+                className="btn-primary s7-alterar-senha-submit"
+                onClick={handleChangePassword}
+                disabled={loading}
               >
-                {showSenhaAtual ? "✖" : "✔"}
-              </span>
-            </div>
-          </div>
-
-          {/* NOVA SENHA */}
-          <div className="field-lg password-field">
-            <label>Nova senha *</label>
-
-            <div className="password-wrapper">
-              <input
-                type={showNovaSenha ? "text" : "password"}
-                value={novaSenha}
-                onChange={(e) => setNovaSenha(e.target.value)}
-              />
-
-              <span
-                className="toggle-password"
-                onClick={() => setShowNovaSenha(!showNovaSenha)}
-                title={showNovaSenha ? "Ocultar senha" : "Mostrar senha"}
-              >
-                {showNovaSenha ? "✖" : "✔"}
-              </span>
-            </div>
-          </div>
-
-          {/* CONFIRMAR SENHA */}
-          <div className="field-lg password-field">
-            <label>Confirmar nova senha *</label>
-
-            <div className="password-wrapper">
-              <input
-                type={showConfirmarSenha ? "text" : "password"}
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-              />
-
-              <span
-                className="toggle-password"
-                onClick={() => setShowConfirmarSenha(!showConfirmarSenha)}
-                title={showConfirmarSenha ? "Ocultar senha" : "Mostrar senha"}
-              >
-                {showConfirmarSenha ? "✖" : "✔"}
-              </span>
+                {loading ? "Atualizando..." : "Salvar nova senha"}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* BOTÃO */}
-        <button className="btn-primary" onClick={handleChangePassword} disabled={loading}>
-          {loading ? "Atualizando..." : "Salvar nova senha"}
-        </button>
-
-        {/* FEEDBACK MODAL — renderiza SOMENTE quando necessário */}
         {showFeedback && (
           <FeedbackModal
             show={showFeedback}

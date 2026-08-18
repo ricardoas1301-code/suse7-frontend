@@ -1,0 +1,53 @@
+.s7-billing-pay-monthly-modal.profile-modal {
+  max-width: 520px;
+}
+
+.s7-billing-pay-monthly-modal h3 {
+  margin: 0 0 8px;
+}
+
+.s7-billing-pay-monthly-modal__summary {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.s7-billing-pay-monthly-modal__summary div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.s7-billing-pay-monthly-modal__summary dt {
+  margin: 0;
+  color: var(--s7-text-muted, #667085);
+  font-size: 0.875rem;
+}
+
+.s7-billing-pay-monthly-modal__summary dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.s7-billing-pay-monthly-modal__methods {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.s7-billing-pay-monthly-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.s7-billing-pay-monthly-modal__actions .s7-btn {
+  min-width: 180px;
+}
+
+@media (max-width: 640px) {
+  .s7-billing-pay-monthly-modal__summary div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

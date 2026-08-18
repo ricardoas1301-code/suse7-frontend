@@ -18,14 +18,14 @@
 
 .s7-page-header__title {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--s7-text-title);
   font-weight: 800;
   color: var(--s7-text, #0f172a);
 }
 
 .s7-page-header__subtitle {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--s7-text-body);
   color: var(--s7-muted, #6b7280);
 }
 

@@ -1,0 +1,35 @@
+/* Primitives visuais reutilizáveis — Central de Notificações */
+
+:root {
+  --s7-ncenter-left-accent-blue: #93c5fd;
+  --s7-ncenter-left-accent-width: 4px;
+  /* Altura canônica fechada — paridade card com bloco No app (ex.: Perda de competitividade) */
+  --s7-ncenter-compact-card-pad: 12px;
+  --s7-ncenter-compact-head-stack: 46px;
+  --s7-ncenter-compact-in-app-stack: 50px;
+  --s7-ncenter-compact-footer-stack: 32px;
+  --s7-ncenter-compact-notification-card-height: calc(
+    (var(--s7-ncenter-compact-card-pad) * 2) + 8px + var(--s7-ncenter-compact-head-stack) +
+      var(--s7-ncenter-compact-in-app-stack) + var(--s7-ncenter-compact-footer-stack)
+  );
+}
+
+.s7-ncenter-card--left-accent-blue {
+  border-left: var(--s7-ncenter-left-accent-width) solid var(--s7-ncenter-left-accent-blue);
+  box-sizing: border-box;
+}
+
+.s7-ncenter-recipient--left-accent-orange {
+  border-left: var(--s7-ncenter-left-accent-width) solid var(--s7-orange, #ff8533);
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.s7-nevent-rules__panel--neutral {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  box-sizing: border-box;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}

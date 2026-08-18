@@ -1,0 +1,68 @@
+.s7-ncenter-popup {
+  margin-bottom: 28px;
+}
+
+.s7-ncenter-popup--embedded {
+  margin-bottom: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.s7-ncenter-popup__head h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.s7-ncenter-popup__head p {
+  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.s7-ncenter-popup__loading {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.s7-ncenter-popup__list {
+  display: grid;
+  gap: 12px;
+}
+
+.s7-ncenter-popup__list--grid {
+  gap: 12px;
+}
+
+.s7-ncenter-popup__card h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.s7-ncenter-popup__card--grid {
+  display: flex;
+  flex-direction: column;
+  min-height: 118px;
+  height: auto;
+}
+
+.s7-ncenter-popup__card--grid .notif-type-card__head {
+  margin-bottom: 8px;
+}
+
+.s7-ncenter-popup__card--grid .notif-channels {
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.s7-ncenter-popup__card--grid .notif-switch-row {
+  padding: 8px 10px;
+}
+
+.notif-switch-row--disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}

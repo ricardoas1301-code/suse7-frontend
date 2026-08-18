@@ -38,6 +38,8 @@ export default function S7Tooltip({
   offset = 6,
   /** Permite quebra de linha em textos longos (.s7-tip-wrap) */
   wrap = false,
+  /** Fração 0–1 da altura do gatilho para ancorar top-start (ex.: pódio com coluna alta) */
+  anchorTopRatio = null,
   className = "",
 }) {
   const hasRich = richContent != null;
@@ -79,6 +81,7 @@ export default function S7Tooltip({
         placement={placement}
         offset={offset}
         wrap={wrap}
+        anchorTopRatio={anchorTopRatio}
         triggerClassName={mergedClass}
         style={style}
       >
@@ -93,6 +96,7 @@ export default function S7Tooltip({
       placement={placement}
       offset={offset}
       wrap={wrap}
+      anchorTopRatio={anchorTopRatio}
       triggerClassName={mergedClass}
       style={style}
     >
@@ -104,7 +108,7 @@ export default function S7Tooltip({
 /**
  * Tooltip textual via portal (position: fixed) — evita clip por overflow/stacking do Raio-x e modais.
  */
-function S7TooltipTextPortal({ children, content, placement, offset, wrap, triggerClassName, style }) {
+function S7TooltipTextPortal({ children, content, placement, offset, wrap, anchorTopRatio, triggerClassName, style }) {
   const rootRef = useRef(null);
   const bubbleRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [active, setActive] = useState(false);
@@ -112,6 +116,10 @@ function S7TooltipTextPortal({ children, content, placement, offset, wrap, trigg
 
   const isBottomStart = placement === "bottom-start";
   const gap = Math.max(0, Number(offset) || 6);
+  const anchorTopRatioSafe =
+    anchorTopRatio != null && Number.isFinite(Number(anchorTopRatio))
+      ? Math.max(0, Math.min(1, Number(anchorTopRatio)))
+      : null;
 
   const measure = useCallback(() => {
     const root = rootRef.current;
@@ -124,6 +132,8 @@ function S7TooltipTextPortal({ children, content, placement, offset, wrap, trigg
     const pad = 8;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
+    const anchorTop =
+      anchorTopRatioSafe != null ? rect.top + rect.height * anchorTopRatioSafe : rect.top;
 
     if (isBottomStart) {
       let left = rect.left;
@@ -134,7 +144,7 @@ function S7TooltipTextPortal({ children, content, placement, offset, wrap, trigg
 
       let top = rect.bottom + gap;
       const fitsBelow = top + bubbleRect.height <= vh - pad;
-      const topAbove = rect.top - gap - bubbleRect.height;
+      const topAbove = anchorTop - gap - bubbleRect.height;
       const fitsAbove = topAbove >= pad;
 
       if (!fitsBelow && fitsAbove) {
@@ -157,7 +167,7 @@ function S7TooltipTextPortal({ children, content, placement, offset, wrap, trigg
       left = vw - pad - bubbleRect.width;
     }
 
-    let top = rect.top - gap - bubbleRect.height;
+    let top = anchorTop - gap - bubbleRect.height;
     if (top < pad) {
       top = rect.bottom + gap;
     }
@@ -169,7 +179,7 @@ function S7TooltipTextPortal({ children, content, placement, offset, wrap, trigg
       zIndex: "var(--s7-z-tooltip, 290000)",
       ["--s7-tooltip-arrow-left"]: `${Math.min(Math.max(rect.right - 14 - left, 10), Math.max(bubbleRect.width - 18, 10))}px`,
     });
-  }, [gap, isBottomStart]);
+  }, [anchorTopRatioSafe, gap, isBottomStart]);
 
   useLayoutEffect(() => {
     if (!active) return;

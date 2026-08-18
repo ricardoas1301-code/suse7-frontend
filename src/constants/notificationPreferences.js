@@ -28,7 +28,7 @@ export const NOTIFICATION_CATEGORY_VIEWS = {
 };
 
 export const NOTIFICATION_CATEGORY_TABS = [
-  { key: NOTIFICATION_CATEGORY_VIEWS.sales, label: "Vendas e lucro", category: NOTIFICATION_CATEGORIES.salesProfit },
+  { key: NOTIFICATION_CATEGORY_VIEWS.sales, label: "Vendas", category: NOTIFICATION_CATEGORIES.salesProfit },
   {
     key: NOTIFICATION_CATEGORY_VIEWS.products,
     label: "Produtos e estoque",
@@ -54,7 +54,7 @@ export const POPUP_ALERTS_CATEGORY_VIEWS = {
 };
 
 export const POPUP_ALERTS_CATEGORY_TABS = [
-  { key: POPUP_ALERTS_CATEGORY_VIEWS.sales, label: "Vendas e lucro", category: NOTIFICATION_CATEGORIES.salesProfit },
+  { key: POPUP_ALERTS_CATEGORY_VIEWS.sales, label: "Vendas", category: NOTIFICATION_CATEGORIES.salesProfit },
   {
     key: POPUP_ALERTS_CATEGORY_VIEWS.products,
     label: "Produtos e estoque",
@@ -95,7 +95,7 @@ export const NOTIFICATION_TYPES = {
 export const NOTIFICATION_CATALOG = [
   {
     id: "sales-profit",
-    title: "Vendas e lucro",
+    title: "Vendas",
     category: NOTIFICATION_CATEGORIES.salesProfit,
     items: [
       {
@@ -275,7 +275,7 @@ export const NOTIFICATION_CATALOG_BY_VIEW = NOTIFICATION_CATEGORY_TABS.reduce((a
 export const POPUP_ALERTS_CATALOG = [
   {
     id: "popup-sales-profit",
-    title: "Vendas e lucro",
+    title: "Vendas",
     category: NOTIFICATION_CATEGORIES.salesProfit,
     items: [
       {

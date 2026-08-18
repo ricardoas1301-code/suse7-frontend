@@ -14,6 +14,9 @@ export default function ProductHealthProgress({
   hint = null, // ex: "Salve para calcular"
   showLabel = true, // quando false, esconde o texto abaixo do percentual
   variant = "full", // "full" | "semi"
+  accent = "primary", // "primary" | "orange"
+  percentText = null, // sobrescreve o texto central (ex.: "—")
+  suppressTooltip = false,
 }) {
   const clamped = Math.max(0, Math.min(100, percent));
   const circumference = 2 * Math.PI * 45;
@@ -27,11 +30,12 @@ export default function ProductHealthProgress({
 
   const isClickable = typeof onClick === "function";
   const isSemi = variant === "semi";
+  const accentClass = accent === "orange" ? " php-wrap--accent-orange" : "";
 
   return (
     <div
-      className={`php-wrap ${!isClickable ? "php-wrap--disabled" : ""} ${isSemi ? "php-wrap--semi" : ""}`}
-      title={tooltipText}
+      className={`php-wrap ${!isClickable ? "php-wrap--disabled" : ""} ${isSemi ? "php-wrap--semi" : ""}${accentClass}`}
+      title={suppressTooltip ? undefined : tooltipText}
       onClick={isClickable ? onClick : undefined}
       role={isClickable ? "button" : undefined}
       tabIndex={isClickable ? 0 : undefined}
@@ -90,7 +94,7 @@ export default function ProductHealthProgress({
         </svg>
       )}
       <div className={`php-content ${!showLabel ? "php-content--no-label" : ""}`}>
-        <span className="php-percent">{Math.round(clamped)}%</span>
+        <span className="php-percent">{percentText ?? `${Math.round(clamped)}%`}</span>
         {showLabel && <span className="php-label">{hint || "Cadastro"}</span>}
       </div>
     </div>

@@ -2,12 +2,9 @@
 // Modal “Raio-x da venda” — dados e financeiro só via GET /api/sales/detail
 // ======================================================
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { API_BASE_URL, buildApiUrl, apiFetch } from "../../config/api";
 import MarketplaceRayXShell from "../rayx/MarketplaceRayXShell";
-import RaioxOfferComparisonChartModal from "../rayx/RaioxOfferComparisonChartModal.jsx";
-import { useRaioxMlPricingScenarios } from "../rayx/useRaioxMlPricingScenarios.js";
-import { openPricingIntelligenceInNewTab } from "../../utils/openPricingIntelligenceInNewTab.js";
 import SaleFinancialBreakdownCard from "./SaleFinancialBreakdownCard";
 import { isSaleRayxDetailItemId } from "./saleRayxDetailItemId";
 import SaleGeneralInfoLines from "./SaleGeneralInfoCard";
@@ -23,7 +20,6 @@ export default function SaleDetailModal({ open, itemId, onClose }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
   const [payload, setPayload] = useState(null);
-  const [offerCompareOpen, setOfferCompareOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !itemId) {
@@ -106,64 +102,8 @@ export default function SaleDetailModal({ open, itemId, onClose }) {
   const pm = blocks?.profit_margin;
   const saleContextMetrics = blocks?.sale_context_metrics;
   const marketplace = general?.marketplace ?? product?.marketplace ?? null;
-  const listingInternalId = blocks?.pricing_comparison?.listing_internal_id ?? null;
   const listingTitle =
     product?.title != null && String(product.title).trim() !== "" ? String(product.title).trim() : null;
-
-  const listingExternalId = useMemo(() => {
-    const raw =
-      product?.listing_id_display ?? general?.listing_id_display ?? null;
-    if (raw == null || String(raw).trim() === "") return "";
-    return String(raw).trim().replace(/^#/, "");
-  }, [product, general]);
-
-  const listingRowStub = useMemo(() => {
-    if (!product && !general) return null;
-    const sku = product?.sku_display ?? general?.sku_display ?? null;
-    const thumb =
-      product?.product_thumbnail_url ??
-      product?.listing_thumbnail_url ??
-      product?.product_image_url ??
-      null;
-    return {
-      externalId: listingExternalId,
-      adTitle: listingTitle,
-      productName: listingTitle,
-      sku: sku != null ? String(sku).trim() : "",
-      coverThumbnailUrl: thumb != null ? String(thumb).trim() : "",
-    };
-  }, [product, general, listingExternalId, listingTitle]);
-
-  const marketplaceSlug = String(marketplace ?? "")
-    .trim()
-    .toLowerCase();
-  const isMercadoLivre = marketplaceSlug === "mercado_livre" || marketplaceSlug === "mercadolivre";
-
-  const { scenarios, hasScenarios } = useRaioxMlPricingScenarios(listingExternalId, {
-    enabled: open && !loading && !err && Boolean(product) && isMercadoLivre && listingExternalId !== "",
-    listingRowStub,
-  });
-
-  useEffect(() => {
-    if (!open) setOfferCompareOpen(false);
-  }, [open]);
-
-  const handleOpenOfferCompare = useCallback(() => {
-    if (hasScenarios) setOfferCompareOpen(true);
-  }, [hasScenarios]);
-
-  const listingIdCopyText = listingExternalId;
-  const skuLabel =
-    product?.sku_display != null && String(product.sku_display).trim() !== ""
-      ? String(product.sku_display).trim()
-      : general?.sku_display != null && String(general.sku_display).trim() !== ""
-        ? String(general.sku_display).trim()
-        : "";
-  const thumbnailUrl =
-    product?.product_thumbnail_url ??
-    product?.listing_thumbnail_url ??
-    product?.product_image_url ??
-    null;
 
   if (!open) return null;
 
@@ -205,7 +145,7 @@ export default function SaleDetailModal({ open, itemId, onClose }) {
         >
           {loading ? (
             <div className="vendas-sale-rayx__loading-host">
-              <SaleRayXLoadingState listingTitle={listingTitle} />
+              <SaleRayXLoadingState />
             </div>
           ) : null}
           {err ? (
@@ -215,47 +155,29 @@ export default function SaleDetailModal({ open, itemId, onClose }) {
           ) : null}
 
           {!loading && !err && product ? (
-            <>
-              <div className="vendas-sale-rayx__body-layout">
-                <div className="vendas-sale-rayx__info-column">
-                  <SaleGeneralInfoLines
-                    general={general}
-                    product={product}
-                    financial={fin}
-                    profitMargin={pm}
-                    listingTitle={listingTitle}
-                    itemId={itemId}
-                    saleContextMetrics={saleContextMetrics}
-                    listingInternalId={listingInternalId}
-                    onOpenOfferCompare={handleOpenOfferCompare}
-                  />
-                </div>
-
-                <div className="vendas-sale-rayx__compare anuncios-raiox-compare--spacious">
-                  <div className="vendas-sale-rayx__right-stack">
-                    <SaleRayXHealthSummary financial={fin} profitMargin={pm} />
-                    <SaleFinancialBreakdownCard financial={fin} profitMargin={pm} detail={payload} />
-                  </div>
-                </div>
+            <div className="vendas-sale-rayx__body-layout">
+              <div className="vendas-sale-rayx__info-column">
+                <SaleGeneralInfoLines
+                  general={general}
+                  product={product}
+                  financial={fin}
+                  profitMargin={pm}
+                  listingTitle={listingTitle}
+                  itemId={itemId}
+                  saleContextMetrics={saleContextMetrics}
+                />
               </div>
 
-            </>
+              <div className="vendas-sale-rayx__compare anuncios-raiox-compare--spacious">
+                <div className="vendas-sale-rayx__right-stack">
+                  <SaleRayXHealthSummary financial={fin} profitMargin={pm} />
+                  <SaleFinancialBreakdownCard financial={fin} profitMargin={pm} detail={payload} />
+                </div>
+              </div>
+            </div>
           ) : null}
         </div>
       </div>
-      <RaioxOfferComparisonChartModal
-        open={offerCompareOpen && hasScenarios}
-        onClose={() => setOfferCompareOpen(false)}
-        scenarios={scenarios}
-        listingTitle={listingTitle}
-        thumbnailUrl={thumbnailUrl}
-        listingIdDisplay={listingIdCopyText || null}
-        listingIdCopyText={listingIdCopyText || null}
-        skuLabel={skuLabel || null}
-        skuCopyText={skuLabel || null}
-        stackAboveSaleRayx
-        onOpenPricing={() => openPricingIntelligenceInNewTab(listingInternalId)}
-      />
     </MarketplaceRayXShell>
   );
 }

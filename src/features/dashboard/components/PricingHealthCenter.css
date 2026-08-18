@@ -1,0 +1,424 @@
+/* ======================================================================
+   Central de Saúde da Precificação — Dashboard executivo
+   Família visual alinhada às centrais homologadas (pizza cortada).
+   ====================================================================== */
+
+.s7-pricing-health-center {
+  margin-bottom: 0;
+}
+
+.s7-pricing-health-center__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.s7-pricing-health-center__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.s7-pricing-health-center__loading,
+.s7-pricing-health-center__empty {
+  margin: 0;
+  padding: 8px 2px 0;
+  font-size: 13px;
+  color: var(--s7-muted, #64748b);
+}
+
+.s7-pricing-health-center__error {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.s7-pricing-health-center__error-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.s7-pricing-health-center__error-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #991b1b;
+}
+
+.s7-pricing-health-center__cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  --s7-pricing-health-main-card-h: var(--s7-top-kpi-large-h, 264px);
+  --s7-pricing-health-main-card-head-chrome: 38px;
+}
+
+.s7-pricing-health-center__main-card-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: calc(var(--s7-pricing-health-main-card-h) + var(--s7-pricing-health-main-card-head-chrome));
+  min-height: calc(var(--s7-pricing-health-main-card-h) + var(--s7-pricing-health-main-card-head-chrome));
+}
+
+.s7-pricing-health-center__main-card-head {
+  margin: 0;
+  padding: 0 2px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-pricing-health-center__main-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  height: var(--s7-pricing-health-main-card-h);
+  min-height: var(--s7-pricing-health-main-card-h);
+  max-height: var(--s7-pricing-health-main-card-h);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--s7-list-table-radius, 10px);
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.s7-pricing-health-center__main-card-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 12px 14px 14px;
+  overflow: hidden;
+}
+
+.s7-pricing-health-center__health-podium-total {
+  margin: 0;
+  padding: 0 4px 2px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--s7-muted, #64748b);
+  letter-spacing: -0.01em;
+}
+
+.s7-pricing-health-center__split {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  gap: 10px;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.s7-pricing-health-center__split__chart {
+  flex: 0 0 46%;
+  max-width: 46%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.s7-pricing-health-center__split__labels {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding-right: 2px;
+}
+
+.s7-pricing-health-center__pie-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 212px;
+  overflow: visible;
+}
+
+.s7-pricing-health-center__pie-bg {
+  fill: #eef2f7;
+}
+
+.s7-pricing-health-center__pie-segment {
+  cursor: pointer;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  transform-origin: center;
+}
+
+.s7-pricing-health-center__pie-segment--sliced {
+  paint-order: stroke fill;
+}
+
+.s7-pricing-health-center__pie-segment--active {
+  opacity: 1;
+  filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.12));
+}
+
+.s7-pricing-health-center__pie-center-label {
+  fill: #fff;
+  font-size: clamp(11px, 2vw, 16px);
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.s7-pricing-health-center__side-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-left-width: 3px;
+  border-radius: 8px;
+  background: #fff;
+  transition: opacity 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+  cursor: default;
+  text-align: center;
+}
+
+.s7-pricing-health-center__side-pill--active {
+  background: rgba(248, 250, 252, 0.95);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.s7-pricing-health-center__side-pill--dimmed {
+  opacity: 0.48;
+}
+
+.s7-pricing-health-center__side-pill-badge {
+  flex: 0 0 auto;
+  min-width: 16px;
+  font-size: clamp(10px, 1.8vw, 11px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-align: center;
+  align-self: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.s7-pricing-health-center__side-pill-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1px;
+  text-align: center;
+}
+
+.s7-pricing-health-center__side-pill-line {
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.s7-pricing-health-center__side-pill-line--top {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.s7-pricing-health-center__side-pill-line--bottom {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.s7-pricing-health-center__side-pill:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+.s7-pricing-health-center__main-card-body--compact-pills {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.s7-pricing-health-center__main-card-body--compact-pills .s7-pricing-health-center__split__labels {
+  gap: 5px;
+  justify-content: space-between;
+}
+
+.s7-pricing-health-center__main-card-body--compact-pills .s7-pricing-health-center__side-pill {
+  padding: 4px 6px;
+  gap: 6px;
+  border-radius: 7px;
+}
+
+.s7-pricing-health-center__main-card-body--compact-pills .s7-pricing-health-center__side-pill-badge {
+  min-width: 14px;
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.s7-pricing-health-center__main-card-body--compact-pills .s7-pricing-health-center__side-pill-line--top {
+  font-size: 9.75px;
+  line-height: 1.15;
+}
+
+.s7-pricing-health-center__main-card-body--compact-pills .s7-pricing-health-center__side-pill-line--bottom {
+  font-size: 9px;
+  line-height: 1.12;
+}
+
+.s7-pricing-health-center__main-card-body--compact-pills .s7-pricing-health-center__pie-svg {
+  max-height: 198px;
+}
+
+/* Badge numérico (+33%) — KPIs laterais dos 3 cards principais */
+.s7-pricing-health-center__main-card-body--offer-status .s7-pricing-health-center__side-pill-badge,
+.s7-pricing-health-center__main-card-body--promotion-status .s7-pricing-health-center__side-pill-badge,
+.s7-pricing-health-center__main-card-body--projected-margin .s7-pricing-health-center__side-pill-badge {
+  min-width: 21px;
+  font-size: clamp(13px, 2.4vw, 15px);
+  line-height: 1.15;
+}
+
+.s7-pricing-health-center__executive-kpis .vendas-executive-kpi__value {
+  font-size: clamp(29px, 3.72vw, 37px);
+}
+
+.s7-pricing-health-kpi-value--classic {
+  color: #2563eb !important;
+}
+
+.s7-pricing-health-kpi-value--premium {
+  color: #7c3aed !important;
+}
+
+.s7-pricing-health-kpi-value--shipping {
+  color: #ea580c !important;
+}
+
+.s7-pricing-health-kpi-value--promotion {
+  color: #16a34a !important;
+}
+
+.s7-pricing-health-kpi-icon--classic {
+  color: #2563eb;
+}
+
+.s7-pricing-health-kpi-icon--premium {
+  color: #7c3aed;
+}
+
+.s7-pricing-health-kpi-icon--shipping {
+  color: #ea580c;
+}
+
+.s7-pricing-health-kpi-icon--promotion {
+  color: #16a34a;
+}
+
+.s7-pricing-health-listing-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.s7-pricing-health-listing-store-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.s7-pricing-health-listing-store-badge__store {
+  width: 100%;
+  height: 100%;
+}
+
+.s7-pricing-health-listing-store-badge__crown {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 11px;
+  height: 11px;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.85));
+}
+
+.s7-pricing-health-center__executive-kpis .vendas-executive-kpi.s7-kpi-chrome--pricing-shipping {
+  --vek-accent: #ea580c;
+  --vek-head-bg: #fff7ed;
+  --vek-head-divider: rgba(234, 88, 12, 0.18);
+  --vek-border: rgba(234, 88, 12, 0.32);
+}
+
+.s7-pricing-health-center__executive-kpis .vendas-executive-kpi.s7-kpi-chrome--pricing-classic {
+  --vek-accent: #2563eb;
+  --vek-head-bg: #eff6ff;
+  --vek-head-divider: rgba(37, 99, 235, 0.18);
+  --vek-border: rgba(37, 99, 235, 0.32);
+}
+
+.s7-pricing-health-center__executive-kpis .vendas-executive-kpi.s7-kpi-chrome--pricing-premium {
+  --vek-accent: #7c3aed;
+  --vek-head-bg: #f5f3ff;
+  --vek-head-divider: rgba(124, 58, 237, 0.18);
+  --vek-border: rgba(124, 58, 237, 0.32);
+}
+
+.s7-pricing-health-center__executive-kpis .vendas-executive-kpi.s7-kpi-chrome--pricing-promotion {
+  --vek-accent: #16a34a;
+  --vek-head-bg: #f0fdf4;
+  --vek-head-divider: rgba(22, 163, 74, 0.18);
+  --vek-border: rgba(22, 163, 74, 0.32);
+}
+
+@media (max-width: 1180px) {
+  .s7-pricing-health-center__cards-row {
+    grid-template-columns: 1fr;
+    --s7-pricing-health-main-card-h: auto;
+  }
+
+  .s7-pricing-health-center__main-card-stack {
+    height: auto;
+    min-height: 0;
+  }
+
+  .s7-pricing-health-center__main-card {
+    height: auto;
+    min-height: 240px;
+    max-height: none;
+  }
+
+  .s7-pricing-health-center__executive-kpis .vendas-executive-kpi__value {
+    font-size: clamp(27px, 3.32vw, 35px);
+  }
+}
+
+@media (max-width: 640px) {
+  .s7-pricing-health-center__split {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .s7-pricing-health-center__split__chart {
+    flex: 0 0 auto;
+    max-width: 100%;
+  }
+
+  .s7-pricing-health-center__executive-kpis .vendas-executive-kpi__value {
+    font-size: clamp(24px, 6.9vw, 32px);
+  }
+}

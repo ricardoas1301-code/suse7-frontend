@@ -1,0 +1,52 @@
+.s7-public-plans-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.s7-public-plans-page__inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.s7-public-plans-page__back {
+  margin: 0 0 12px;
+  font-size: 0.9375rem;
+}
+
+.s7-public-plans-page__back a {
+  color: #374151;
+  text-decoration: none;
+}
+
+.s7-public-plans-page__back a:hover {
+  color: #0077ff;
+}
+
+.s7-public-plans-page__card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.s7-public-plans-page .s7-billing-page {
+  max-width: none;
+  width: 100%;
+}
+
+.s7-public-plans-page .s7-planos-page .s7-billing-plans-grid {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .s7-public-plans-page__card {
+    padding: 16px 14px 12px;
+  }
+}

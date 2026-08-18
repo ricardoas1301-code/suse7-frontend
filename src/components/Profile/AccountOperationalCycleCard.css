@@ -1,0 +1,118 @@
+.s7-account-cycle-card {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  width: fit-content;
+  max-width: 100%;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.s7-account-cycle-card--loading {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s7-account-cycle-card__loading {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.s7-account-cycle-card__head {
+  margin-bottom: 0;
+}
+
+.s7-account-cycle-card__title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0b2d5c;
+}
+
+.s7-account-cycle-card__desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #64748b;
+  max-width: 22rem;
+}
+
+.s7-account-cycle-card__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  margin-top: 22px;
+}
+
+.s7-account-cycle-card__actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  margin-top: 26px;
+}
+
+.s7-account-cycle-card__time {
+  width: 100%;
+  max-width: 220px;
+  flex: 0 1 220px;
+}
+
+.s7-account-cycle-card__days .s7-operational-working-days {
+  width: auto;
+}
+
+.s7-account-cycle-card__days .s7-operational-working-days__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.profile-card .s7-account-cycle-card .s7-account-cycle-card__save.btn-primary,
+.s7-account-cycle-card__save.btn-primary {
+  align-self: flex-end;
+  width: auto !important;
+  min-width: 112px;
+  margin: 0 0 0 auto !important;
+  padding: 9px 20px;
+  font-size: 14px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .s7-account-cycle-card {
+    padding: 16px;
+    width: 100%;
+  }
+
+  .s7-account-cycle-card__actions {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .s7-account-cycle-card__time {
+    max-width: none;
+    flex: 1 1 180px;
+  }
+
+  .profile-card .s7-account-cycle-card .s7-account-cycle-card__save.btn-primary,
+  .s7-account-cycle-card__save.btn-primary {
+    width: auto !important;
+    min-width: 112px;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+  }
+}

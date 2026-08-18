@@ -3,11 +3,38 @@
 ===================================================== */
 @import "./styles/tokens/index.css";
 @import "./styles/s7-topnav-shared.css";
+@import "./styles/s7-list-table-head-shared.css";
 
 /* Utilitário de página — cor em: styles/tokens/colors.css (--s7-bg-page) */
+html,
+#root {
+  background-color: var(--s7-bg-page, #f2f7ff);
+}
+
 .s7-page {
   background-color: var(--s7-bg-page);
-  min-height: 100vh;
+}
+
+/* Scrollport operacional — altura vem do flex shell (Layout), não de 100vh */
+.page-content.s7-page {
+  min-height: 0;
+}
+
+/*
+ * Shells de rota — não pintar por cima do fundo canônico (.page-content / --s7-bg-page).
+ * Referência visual: página Concorrência.
+ */
+.vendas-page,
+.dashboard-page,
+.dashboard-wrapper,
+.products-catalog,
+.anuncios-catalog,
+.concorrencia-catalog,
+.clientes360-page,
+.relatorios-page,
+.listings-workspace,
+.pricing-intelligence-page {
+  background: transparent;
 }
 
 img{

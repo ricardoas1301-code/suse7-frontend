@@ -1,0 +1,174 @@
+.s7-marketplace-integration-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.s7-marketplace-integration-page-header__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.s7-marketplace-integration-page-header__actions {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.s7-marketplace-integration-page-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 12px 28px;
+  align-items: start;
+  align-content: start;
+  --s7-mi-visual-intro-estimate: 128px;
+  --s7-mi-visual-row-gap: 12px;
+  --s7-mi-visual-card-height: 76px;
+  --s7-mi-visual-cards-gap: 12px;
+  --s7-mi-visual-logo-size-max: 176px;
+}
+
+.s7-marketplace-integration-page-body__main-intro {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.s7-marketplace-integration-page-body__main-integrations {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  align-self: start;
+  padding-bottom: 4px;
+}
+
+.s7-marketplace-integration-page-body__visual {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+  align-self: stretch;
+  position: relative;
+  padding: 0 12px;
+  box-sizing: border-box;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.s7-marketplace-connection-visual {
+  position: absolute;
+  top: calc(
+    48px + (
+        var(--s7-mi-visual-intro-estimate) + var(--s7-mi-visual-row-gap) +
+          var(--s7-mi-account-rows, 2) * var(--s7-mi-visual-card-height) +
+          max(0, var(--s7-mi-account-rows, 2) - 1) * var(--s7-mi-visual-cards-gap) - 48px
+      ) / 2 - var(--s7-mi-visual-logo-size-max) / 2
+  );
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 4.6vw, 43px);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  pointer-events: none;
+}
+
+.s7-marketplace-connection-visual__logo {
+  width: clamp(136px, 21.6vw, 176px);
+  height: clamp(136px, 21.6vw, 176px);
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+}
+
+.s7-marketplace-connection-visual__connector {
+  font-size: clamp(43px, 6.1vw, 61px);
+  line-height: 1;
+  color: #9ca3af;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Cards: largura fixa de 2 por linha — item único não estica */
+.s7-marketplace-integration-page-body__main-integrations .s7-marketplace-integration-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+  .s7-marketplace-integration-page-body {
+    gap: 14px 22px;
+  }
+
+  .s7-marketplace-connection-visual__logo {
+    width: clamp(117px, 18.6vw, 148px);
+    height: clamp(117px, 18.6vw, 148px);
+  }
+
+  .s7-marketplace-connection-visual__connector {
+    font-size: clamp(37px, 5.5vw, 50px);
+  }
+}
+
+@media (max-width: 768px) {
+  .s7-marketplace-integration-page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .s7-marketplace-integration-page-header__actions {
+    width: 100%;
+  }
+
+  .s7-marketplace-integration-page-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 24px;
+  }
+
+  .s7-marketplace-integration-page-body__main-intro,
+  .s7-marketplace-integration-page-body__main-integrations,
+  .s7-marketplace-integration-page-body__visual {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .s7-marketplace-integration-page-body__visual {
+    order: 2;
+    position: static;
+    padding: 8px 0 12px;
+    pointer-events: auto;
+  }
+
+  .s7-marketplace-connection-visual {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .s7-marketplace-integration-page-body__main-intro {
+    order: 1;
+  }
+
+  .s7-marketplace-integration-page-body__main-integrations {
+    order: 3;
+  }
+
+  .s7-marketplace-integration-page-body__main-integrations .s7-marketplace-integration-cards {
+    grid-template-columns: 1fr;
+  }
+}

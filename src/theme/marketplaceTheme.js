@@ -73,7 +73,7 @@ const THEME_BY_KEY = {
     brandPrimary: "#ee4d2d",
     brandAccent: "#ff7337",
     brandSoft: "rgba(238, 77, 45, 0.12)",
-    shellModifierClass: null,
+    shellModifierClass: "anuncios-raiox-shell--shopee",
   },
   amazon: {
     key: "amazon",
@@ -118,6 +118,7 @@ export function normalizeMarketplaceThemeKey(raw) {
     .toLowerCase()
     .replace(/-/g, "_");
   if (s === "mercadolivre" || s === "ml" || s === "mercado_livre") return "mercado_livre";
+  if (s === "shopping" || s === "shoppe") return "shopee";
   if (s === "magazineluiza" || s === "magazine_luiza") return "magalu";
   if (THEME_BY_KEY[s]) return s;
   return "default";

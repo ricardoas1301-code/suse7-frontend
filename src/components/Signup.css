@@ -1,93 +1,96 @@
-/* Rota /signup: desktop = uma viewport, sem rolagem do documento (classe via useEffect em Signup.jsx) */
+/* Rota /signup: scroll natural da página em 100% de zoom (sem lock de viewport) */
 html.signup-page-lock,
 body.signup-page-lock {
-  height: 100%;
-  max-height: 100dvh;
   box-sizing: border-box;
-  overscroll-behavior: none;
-  scrollbar-width: none;
-}
-
-html.signup-page-lock::-webkit-scrollbar,
-body.signup-page-lock::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  min-height: 100dvh;
 }
 
 @media (min-width: 951px) {
   html.signup-page-lock,
   body.signup-page-lock {
-    overflow: hidden;
-  }
-
-  body.signup-page-lock #root {
-    height: 100%;
-    max-height: 100dvh;
-    overflow: hidden;
-  }
-}
-
-@media (max-width: 950px) {
-  html.signup-page-lock {
-    max-height: none;
-    height: auto;
     overflow-x: hidden;
     overflow-y: auto;
   }
 
-  html.signup-page-lock,
-  body.signup-page-lock {
-    max-height: none;
-    height: auto;
-    min-height: 100dvh;
-    overflow-y: auto;
-  }
-
   body.signup-page-lock #root {
-    max-height: none;
+    min-height: 100dvh;
     height: auto;
     overflow: visible;
   }
 }
 
-/* CONTAINER PRINCIPAL — scroll só no documento/página (não dentro do card) */
+@media (max-width: 950px) {
+  html.signup-page-lock,
+  body.signup-page-lock {
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body.signup-page-lock #root {
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* Voltar — mesmo slot visual dos Termos, sem barra de menu */
+.signup-back-anchor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: var(--signup-back-row-height, 60px);
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.signup-back-anchor .public-back-link {
+  pointer-events: auto;
+}
+
 .signup-container {
+  position: relative;
+  --signup-back-row-height: 60px;
+  --signup-gutter-top: 12px;
+  --signup-gutter-inline-end: 12px;
+  --signup-gutter-inline-start: 12px;
+  --signup-gutter-bottom: 12px;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: none;
   min-height: 100dvh;
   box-sizing: border-box;
-  padding: 11px clamp(12px, 3vw, 28px) 19px;
+  padding: calc(var(--signup-back-row-height) + var(--signup-gutter-top)) var(--signup-gutter-inline-end)
+    var(--signup-gutter-bottom) var(--signup-gutter-inline-start);
   background: #f4f6fb;
   font-family: "Inter", sans-serif;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
-  gap: 13px;
+  gap: 12px;
   overflow-x: hidden;
   overflow-y: visible;
 }
 
 @media (min-width: 951px) {
   html.signup-page-lock .signup-container {
-    height: 100%;
-    max-height: 100dvh;
-    min-height: 0;
-    overflow: hidden;
-    /* stretch: card fills viewport height (center bloqueava altura ao conteúdo) */
-    align-items: stretch;
-    justify-content: center;
-    /* ~5% da altura da viewport — respiro em cima e embaixo do card */
-    padding-top: 2.5dvh;
-    padding-bottom: 2.5dvh;
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
     box-sizing: border-box;
   }
 }
 
-/* COLUNA ESQUERDA (MARKETING) — quebra linha e não estoura a página */
+/* COLUNA ESQUERDA (MARKETING) */
 .signup-left {
   width: 100%;
-  max-width: min(620px, 100%);
+  max-width: 100%;
   min-width: 0;
-  padding: 5px 4px 11px;
+  padding: 0 0 24px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -98,6 +101,163 @@ body.signup-page-lock::-webkit-scrollbar {
   overflow-wrap: break-word;
   word-break: break-word;
   overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.signup-left__content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.signup-marketing-hero {
+  margin-top: 0;
+}
+
+.signup-main-title {
+  font-size: clamp(1.65rem, 2.4vw, 2rem);
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 24px;
+  line-height: 1.35;
+  max-width: 28rem;
+}
+
+.signup-main-title__highlight {
+  color: #0077ff;
+}
+
+.signup-lead {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: #374151;
+  max-width: 36rem;
+}
+
+.signup-free-tier {
+  margin: 0 0 28px;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: #374151;
+  max-width: 36rem;
+}
+
+.signup-marketing-hero .signup-lead,
+.signup-marketing-hero .signup-free-tier {
+  color: #374151;
+  font-weight: 400;
+}
+
+.signup-plans-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 40px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0077ff;
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.signup-plans-link:hover {
+  text-decoration: underline;
+}
+
+.signup-plans-link:focus-visible {
+  outline: 2px solid #0077ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.signup-value-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 36rem;
+}
+
+.signup-value-section {
+  min-width: 0;
+}
+
+.signup-value-section__title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #111;
+}
+
+.signup-value-section p {
+  margin: 0 0 8px;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.signup-value-section p:last-child {
+  margin-bottom: 0;
+}
+
+.signup-value-section__list {
+  margin: 0 0 10px;
+  padding-left: 1.15rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.signup-value-section__list li {
+  margin-bottom: 4px;
+}
+
+.signup-value-section__list li:last-child {
+  margin-bottom: 0;
+}
+
+.signup-positioning-quote {
+  margin: 12px 0 0;
+  padding: 10px 12px 10px 14px;
+  border-left: 3px solid #0077ff;
+  background: #f4f8ff;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #0f172a;
+}
+
+.signup-marketing-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
+  max-width: 36rem;
+}
+
+.signup-marketing-footer__title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #111;
+}
+
+.signup-marketing-footer p {
+  margin: 0 0 8px;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.signup-plans-link--footer {
+  margin-top: 4px;
+  margin-bottom: 0;
 }
 
 
@@ -136,7 +296,7 @@ body.signup-page-lock::-webkit-scrollbar {
 /* Voltar */
 .signup-back {
   margin-top: 27px;
-  color: #0077ff;
+  color: #0f172a;
   font-weight: 600;
   text-decoration: none;
 }
@@ -144,13 +304,13 @@ body.signup-page-lock::-webkit-scrollbar {
   text-decoration: underline;
 }
 
-/* COLUNA DIREITA (FORM) — mais “ar” no topo (Google); base inferior mantida */
+/* COLUNA DIREITA (FORM) — paridade visual Nova empresa, layout compacto */
 .signup-right {
   width: 100%;
-  max-width: 600px;
-  flex: 1 1 440px;
-  padding: 26px 16px 12px;
-  margin-top: 0;
+  max-width: 620px;
+  flex: 0 1 auto;
+  padding: 36px 20px 64px;
+  margin-top: 24px;
   overflow: visible;
   background: #ffffff;
   border-radius: 14px;
@@ -158,74 +318,123 @@ body.signup-page-lock::-webkit-scrollbar {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  /* ~32% menor que o bloco anterior — inputs mais compactos */
   --su-in-py: 6px;
-  --su-in-px: 9px;
-  --su-in-minh: 26px;
-  --su-in-radius: 6px;
+  --su-in-px: 10px;
+  --su-in-minh: 34px;
+  --su-in-radius: 10px;
   --su-in-fs: 13px;
 }
 
-.signup-right form {
-  flex: 1 1 auto;
+.signup-right .signup-form {
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-width: 0;
 }
 
-/* Card: gap horizontal entre campos da mesma linha */
+/* Card: gap horizontal entre campos; respiro vertical entre blocos (label ↔ input acima) */
 .signup-right .row {
-  gap: 24px;
-  /* Espaço entre a base dos inputs da linha e os rótulos da linha seguinte */
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.signup-right .row--single .field {
+  flex: 1 1 100%;
 }
 
 .signup-right .field label {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
-/* Asterisco obrigatório — vermelho padrão SUSE7 (alinhado a `.err` / borda de erro) */
+/* Asterisco obrigatório — paridade Nova empresa */
+.signup-right .s7-co-required,
 .signup-right .label-asterisk {
-  color: #ff3b3b;
+  color: var(--s7-color-error, #dc2626);
   font-weight: 700;
 }
 
-/* +33% respiro: Google → texto; texto → primeira linha do form */
 .signup-right .divider {
-  margin-top: calc(13px * 1.33);
-  margin-bottom: calc(13px * 1.33);
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.signup-right .signup-divider {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 28px;
+}
+
+.signup-right .signup-divider__text {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.signup-right .signup-form > .row:first-of-type {
+  margin-top: 0;
+}
+
+.signup-right .signup-form-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 36px;
+  margin-top: 12px;
+}
+
+.signup-right .signup-form-footer .termos-box {
+  margin: 0;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.signup-right .signup-form-footer .termos-box label {
+  line-height: 1.45;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.signup-right .signup-form-footer .err--termos {
+  margin: -6px 0 0;
+}
+
+.signup-right .signup-btn--stacked {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0;
+  min-height: var(--su-in-minh);
+  height: var(--su-in-minh);
+  padding: var(--su-in-py) var(--su-in-px);
+  font-size: var(--su-in-fs);
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: var(--su-in-radius);
 }
 
 /*
- * Linha final: mesma grade da linha de senhas (50/50, gap 24px).
- * Botão = mesma “caixa” do input Confirmar senha (--su-in-* + border-box).
+ * Legado — mantido para referência de testes antigos; footer substitui grade lado a lado.
  */
 .signup-right .termos-actions-row {
-  display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 24px;
-  margin: 6px 0 6px 0;
-  min-width: 0;
+  margin: 6px 0;
 }
 
-.signup-right .termos-actions-row__left {
-  flex: 1 1 0;
-  min-width: 0;
+.signup-right .field--termos {
+  justify-content: center;
 }
 
-.signup-right .termos-actions-row__cta {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+.signup-right .field--signup-cta {
+  justify-content: center;
 }
 
 .signup-right .termos-actions-row .termos-box {
   margin: 0;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
+  min-width: 0;
 }
 
 .signup-right .termos-actions-row .termos-box label {
@@ -239,8 +448,6 @@ body.signup-page-lock::-webkit-scrollbar {
   width: 100%;
   max-width: 100%;
   margin-top: 0;
-  flex: 0 1 auto;
-  /* ~+33% altura vs o input de senha (mesma base --su-in-*) */
   min-height: calc(var(--su-in-minh) * 1.33);
   padding: calc(var(--su-in-py) * 1.33) var(--su-in-px);
   font-size: var(--su-in-fs);
@@ -250,34 +457,24 @@ body.signup-page-lock::-webkit-scrollbar {
   white-space: nowrap;
 }
 
-/*
- * Desktop: após ocupar 100% da coluna CTA (+200% vs faixa estreita), a coluna do botão
- * fica ~39% mais larga que a metade 50/50 (≈69,5% da linha → flex-grow 2.28 : 1).
- */
 @media (min-width: 951px) {
-  .signup-right .termos-actions-row__left {
-    flex: 1 1 0;
-  }
-
-  .signup-right .termos-actions-row__cta {
-    flex: 2.28 1 0;
+  .signup-right .termos-actions-row .termos-box label {
+    white-space: nowrap;
   }
 
   .signup-right .termos-actions-row .signup-btn--inline {
     width: 100%;
     max-width: 100%;
-    white-space: nowrap;
-    line-height: 1.25;
     text-align: center;
   }
 }
 
-/* Metade do espaço só entre a linha de senhas e a linha termos+botão */
-.signup-right form > .row:has(+ .termos-actions-row) {
-  margin-bottom: 7px;
+/* Respiro menor entre senhas e checkbox — card mantém altura via padding-bottom */
+.signup-right form > .row:has(+ .signup-form-footer) {
+  margin-bottom: 10px;
 }
 
-.signup-right .termos-actions-row + .err--termos {
+.signup-right .signup-form-footer + .err--termos {
   margin-top: 4px;
 }
 
@@ -285,26 +482,41 @@ body.signup-page-lock::-webkit-scrollbar {
   margin-top: 5px;
 }
 
-/* Google login */
-.google-btn {
+/* Google login — mesma altura/largura dos inputs do formulário */
+.signup-right .google-btn {
+  box-sizing: border-box;
   width: 100%;
-  padding: 5px 10px;
-  border: 1px solid #d0d0d0;
-  border-radius: 8px;
-  min-height: 26px;
-  height: auto;
-  background: white;
+  min-height: var(--su-in-minh);
+  height: var(--su-in-minh);
+  padding: var(--su-in-py) var(--su-in-px);
+  border: 1px solid #cbd5e1;
+  border-radius: var(--su-in-radius);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 11px;
-  font-size: 11px;
+  gap: 10px;
+  font-size: var(--su-in-fs);
+  line-height: 1.25;
+  color: #334155;
   cursor: pointer;
-  
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.google-btn img {
-  width: 16px;
-  height: 16px;
+
+.signup-right .google-btn:hover:not(:disabled) {
+  border-color: #0077ff;
+  box-shadow: 0 0 0 2px rgba(0, 119, 255, 0.1);
+}
+
+.signup-right .google-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.signup-right .google-btn img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 /* Divider */
@@ -315,59 +527,102 @@ body.signup-page-lock::-webkit-scrollbar {
   font-size: 12px;
 }
 
-/* FORM FIELDS */
+/* FORM FIELDS — paridade Nova empresa */
 .row {
   display: flex;
-  gap: 19px;
-  margin-bottom: 3px;
+  gap: 12px;
+  margin-bottom: 0;
+  min-width: 0;
 }
 
 .field {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-.field.small {
-  max-width: 56px;
+  min-width: 0;
 }
 
 .field label {
   font-size: 12px;
-  margin-bottom: 3px;
-  color: #0077ff;
-  font-weight: 500;
+  margin-bottom: 2px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.2;
+  min-height: 18px;
 }
 
-.field input {
+.field input:not([type="checkbox"]) {
   box-sizing: border-box;
   width: 100%;
   padding: var(--su-in-py) var(--su-in-px);
   min-height: var(--su-in-minh);
   font-size: var(--su-in-fs);
   border-radius: var(--su-in-radius);
-  border: 1px solid #ccc;
-  background: #f8f8f8;
+  border: 1px solid #cbd5e1;
+  background: #fff;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-top: 1px;
+  line-height: 1.25;
 }
 
 .field input:focus {
   border-color: #0077ff;
-  background: white;
+  box-shadow: 0 0 0 2px rgba(0, 119, 255, 0.12);
 }
 
-/* ERRO (opção 3 PREMIUM) */
+.field input:invalid:not(:focus) {
+  border-color: var(--s7-color-error, #dc2626);
+}
+
+/* Erro explícito (submit) + paridade Nova empresa */
 .error {
-  border-color: #ff3b3b !important;
-  background: #ffecec !important;
+  border-color: var(--s7-color-error, #dc2626) !important;
+  background: #fff !important;
 }
 
 .err {
   font-size: 11px;
-  color: #ff3b3b;
+  color: var(--s7-color-error, #dc2626);
   margin-top: 4px;
   font-weight: 500;
+}
+
+.signup-right .row--operational {
+  margin-bottom: 4px;
+}
+
+.signup-right .row--operational-days {
+  margin-bottom: 6px;
+}
+
+.signup-right .row--operational-days .s7-operational-working-days__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+}
+
+.signup-right .row--operational-days .s7-operational-working-days__grid {
+  gap: 6px 10px;
+}
+
+.signup-right .row--operational-days .s7-operational-working-days__item {
+  font-size: 12px;
+}
+
+.signup-right .field--operational-close .field-help,
+.signup-right .s7-operational-working-days__help {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.termos-box--invalid {
+  outline: 1px solid var(--s7-color-error, #dc2626);
+  outline-offset: 2px;
+  border-radius: 6px;
+  padding: 2px 4px;
 }
 
 /* Termos */
@@ -381,6 +636,21 @@ body.signup-page-lock::-webkit-scrollbar {
 .termos-box label {
   color: #333;
   font-size: 12px;
+}
+
+.signup-termos-link {
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: #0077ff;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.signup-termos-link:hover {
+  color: #005fcc;
 }
 
 /* Botão Criar Conta */
@@ -414,85 +684,66 @@ body.signup-page-lock::-webkit-scrollbar {
   cursor: not-allowed;
 }
 
-.field.imposto-small input {
-  width: 42px !important;
-  text-align: center;
-  padding-right: 8px;
+.signup-right .row--imposto-single {
+  margin-bottom: 8px;
 }
 
-/* Linha CEP + Endereço: CEP ~35% da largura que tinha em 50/50 (≈65% menor na prática); endereço ganha o resto */
+.signup-right .row--imposto-single .field {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
 @media (min-width: 951px) {
-  .signup-right .row--cep-endereco {
-    align-items: flex-start;
-    gap: 17px;
-  }
-
-  .signup-right .row--cep-endereco .field--cep-tight {
-    flex: 0 0 17.5%;
-    max-width: 10rem;
-    min-width: 7.25rem;
-  }
-
-  .signup-right .row--cep-endereco .field--endereco-wide {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  /* Número + Complemento + Bairro (número e complemento bem menores que o antigo 50/50) */
-  .signup-right .row--numero-comp-bairro {
-    align-items: flex-start;
-    gap: 17px;
-  }
-
-  /* Metade da linha era ~50%: −79% → ~10.5%; complemento −60% → ~20%; bairro ocupa o resto */
-  .signup-right .row--numero-comp-bairro .field--numero-mini {
-    flex: 0 0 10.5%;
-    max-width: 5.5rem;
-    min-width: 4.25rem;
-  }
-
-  .signup-right .row--numero-comp-bairro .field--complemento-tight {
-    flex: 0 0 20%;
-    max-width: 11rem;
-    min-width: 7rem;
-  }
-
-  .signup-right .row--numero-comp-bairro .field--bairro-wide {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  /* Cidade + UF + Imposto na mesma linha */
-  .signup-right .row--cidade-uf-imposto {
-    align-items: flex-start;
-    gap: 17px;
-  }
-
-  .signup-right .row--cidade-uf-imposto .field--cidade-wide {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .signup-right .row--cidade-uf-imposto .field--uf-tight {
-    flex: 0 0 3.5rem;
-    max-width: 3.75rem;
-    min-width: 3rem;
-  }
-
-  .signup-right .row--cidade-uf-imposto .field--imposto-inline {
-    flex: 0 0 4.75rem;
-    max-width: 5.25rem;
-    min-width: 4rem;
-  }
-
-  .signup-right .row--cidade-uf-imposto .field.imposto-small.field--imposto-inline input {
-    width: 100% !important;
-    max-width: 3.5rem;
-    box-sizing: border-box;
+  .signup-right .row--imposto-single .field {
+    max-width: min(100%, 280px);
   }
 }
 
-/* Efeito SHAKER */
+.field.field--imposto-inline input {
+  max-width: 100%;
+}
+
+/* Linha fiscal: Imposto | Custo | CEP | Número */
+@media (min-width: 951px) {
+  .signup-right .row--fiscal-quad {
+    display: grid;
+    grid-template-columns: minmax(4.25rem, 0.85fr) minmax(5.5rem, 1.15fr) minmax(6.5rem, 1.05fr) minmax(4rem, 0.75fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .signup-right .row--fiscal-quad .field {
+    min-width: 0;
+  }
+
+  .signup-right .row--cidade-uf {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .signup-right .row--cidade-uf .field--cidade-wide {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .signup-right .row--cidade-uf .field--uf-tight {
+    flex: 0 0 4.5rem;
+    max-width: 5rem;
+    min-width: 3.5rem;
+  }
+}
+
+@media (min-width: 951px) and (max-width: 1100px) {
+  .signup-right .row--fiscal-quad {
+    grid-template-columns: minmax(4rem, 1fr) minmax(4.5rem, 1.1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .signup-right .row--fiscal-quad {
+    grid-template-columns: 1fr;
+  }
+}
 .shake {
   animation: shake 0.3s ease-in-out;
 }
@@ -507,8 +758,22 @@ body.signup-page-lock::-webkit-scrollbar {
 
 /* RESPONSIVO */
 @media (max-width: 950px) {
+  .signup-container {
+    gap: 16px;
+  }
+
   .signup-right {
-    padding: 22px 18px 12px;
+    order: 1;
+  }
+
+  .signup-left {
+    order: 2;
+    max-width: 100%;
+    padding-bottom: 28px;
+  }
+
+  .signup-right {
+    padding: 28px 16px 58px;
     min-height: auto;
   }
 
@@ -516,43 +781,36 @@ body.signup-page-lock::-webkit-scrollbar {
     flex-direction: column;
   }
 
-  .signup-right .row--cep-endereco .field--cep-tight,
-  .signup-right .row--cep-endereco .field--endereco-wide {
+  .signup-right .row--fiscal-quad {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .signup-right .row--cidade-uf .field--cidade-wide,
+  .signup-right .row--cidade-uf .field--uf-tight {
     flex: 1 1 auto;
     max-width: none;
     min-width: 0;
     width: 100%;
   }
 
-  .signup-right .row--numero-comp-bairro .field--numero-mini,
-  .signup-right .row--numero-comp-bairro .field--complemento-tight,
-  .signup-right .row--numero-comp-bairro .field--bairro-wide,
-  .signup-right .row--cidade-uf-imposto .field--cidade-wide,
-  .signup-right .row--cidade-uf-imposto .field--uf-tight,
-  .signup-right .row--cidade-uf-imposto .field--imposto-inline {
-    flex: 1 1 auto;
-    max-width: none;
-    min-width: 0;
-    width: 100%;
+  .signup-right .signup-form-footer .termos-box label {
+    white-space: normal;
   }
 
-  .signup-right .row--cidade-uf-imposto .field.imposto-small.field--imposto-inline input {
-    width: 100% !important;
-    max-width: 5rem;
+  .signup-right .signup-btn--stacked {
+    width: 100%;
+    max-width: none;
   }
 
   .signup-right .termos-actions-row {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .signup-right .termos-actions-row__left {
-    flex: 1 1 100%;
-    max-width: none;
-  }
-
-  .signup-right .termos-actions-row__cta {
-    flex: 1 1 100%;
-    justify-content: stretch;
+  .signup-right .termos-actions-row .termos-box label {
+    white-space: normal;
   }
 
   .signup-right .termos-actions-row .signup-btn--inline {
@@ -568,84 +826,89 @@ body.signup-page-lock::-webkit-scrollbar {
 
 @media (min-width: 951px) {
   .signup-container {
+    --signup-gutter-inline-start: 43px;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: stretch;
-    justify-content: center;
+    justify-content: space-between;
     min-height: 100dvh;
-    /* Mais espaço entre marketing (esquerda) e card de cadastro */
-    /* +16% depois +10% vs clamp(40px, 5vw, 80px) */
-    gap: 24px clamp(51px, 6.4vw, 102px);
-    padding-top: 8px;
-    padding-bottom: 10px;
+    gap: clamp(20px, 2.5vw, 40px);
+    padding: var(--signup-gutter-top) var(--signup-gutter-inline-end) var(--signup-gutter-bottom)
+      var(--signup-gutter-inline-start);
   }
 
   .signup-left {
     width: auto;
-    flex: 1 1 40%;
-    max-width: 520px;
-    padding: 5px 8px 5px 4px;
+    flex: 1 1 0;
+    max-width: min(52rem, calc(100% - 620px - clamp(20px, 2.5vw, 40px)));
+    min-width: 0;
+    min-height: calc(
+      100dvh - var(--signup-back-row-height) - var(--signup-gutter-top) - var(--signup-gutter-bottom)
+    );
+    padding: 0 0 24px;
     display: flex;
     flex-direction: column;
-    /* Não estica à altura do card: sobe o bloco e libera “ar” no fim da página */
-    align-self: flex-start;
+    align-self: stretch;
+  }
+
+  .signup-left__content {
+    flex: 1;
+    justify-content: center;
+    min-height: 0;
+    margin-top: -12px;
   }
 
   .signup-right {
-    width: auto;
-    flex: 1 1 52%;
-    max-width: min(600px, 46vw);
-    min-height: 0;
-    transform: none;
+    width: min(620px, 100%);
+    flex: 0 0 min(620px, 100%);
+    max-width: 620px;
+    align-self: flex-start;
+    margin-top: 24px;
   }
 
-  /* Card ocupa do topo ao fundo da área útil da página */
-  html.signup-page-lock .signup-right {
-    align-self: stretch;
-    min-height: 100%;
-    height: 100%;
-    max-height: none;
-    box-sizing: border-box;
+  .signup-main-title,
+  .signup-lead,
+  .signup-free-tier,
+  .signup-value-sections {
+    max-width: 100%;
   }
 }
 
 @media (min-width: 1200px) {
   .signup-right {
-    max-width: min(640px, 44vw);
-    min-height: 0;
-  }
-
-  html.signup-page-lock .signup-right {
-    min-height: 100%;
-    height: 100%;
+    width: 620px;
+    flex: 0 0 620px;
+    max-width: 620px;
   }
 }
 
-/* Telas largas mas baixas: ainda caber em ~uma viewport */
+/* Telas baixas: inputs um pouco mais compactos sem esmagar legibilidade */
 @media (min-width: 951px) and (max-height: 820px) {
-  .signup-benefits li h3 {
-    font-size: 16px;
+  .signup-value-section__title,
+  .signup-marketing-footer__title {
+    font-size: 1rem;
   }
 
-  .signup-benefits li p {
-    font-size: 14px;
-    line-height: 1.86;
-    margin-bottom: 5px;
-  }
-
-  .signup-benefits {
-    gap: 8px;
+  .signup-value-section p,
+  .signup-value-section__list,
+  .signup-lead,
+  .signup-free-tier {
+    font-size: 0.875rem;
   }
 
   .signup-right {
-    --su-in-minh: 24px;
+    --su-in-minh: 32px;
     --su-in-py: 5px;
     --su-in-fs: 12px;
-    padding: 14px 12px 6px;
+    padding: 14px 14px 48px;
   }
 
-  .signup-left .signup-main-title {
-    font-size: 1.65em !important;
+  .signup-right .row {
+    margin-bottom: 20px;
+  }
+
+  .signup-main-title {
+    font-size: 1.65rem;
   }
 }
 
@@ -798,17 +1061,66 @@ body.signup-page-lock::-webkit-scrollbar {
   color: #777;
 }
 
-.signup-back-top {
-  display: flex;
-  align-items: center;   /* 🔥 Alinha seta e texto na mesma linha */
-  gap: 8px;
-  font-size: 16px;
-  text-decoration: none;
-  color: #333;
-  margin-bottom: 8px;
+.signup-label-with-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.signup-back-top svg {
+.signup-label-with-tip__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 18px;
   height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #0077ff;
+  cursor: pointer;
+}
+
+.signup-label-with-tip__btn:hover,
+.signup-label-with-tip__btn:focus-visible {
+  background: #eef5ff;
+  outline: none;
+}
+
+.signup-check-email {
+  padding: 2rem 1.5rem;
+  max-width: 28rem;
+}
+
+.signup-check-email__title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.signup-check-email__lead {
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.signup-check-email__hint {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.signup-check-email__spam {
+  margin: 0 0 1.5rem;
+  color: var(--s7-text-muted, #666);
+  font-size: 0.9rem;
+}
+
+.signup-check-email__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.signup-check-email__login-link {
+  text-align: center;
+  font-size: 0.95rem;
 }

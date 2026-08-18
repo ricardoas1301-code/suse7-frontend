@@ -1,0 +1,172 @@
+/* Resumo executivo — Relatório de Concorrência (3 cards + 3 linhas, padrão Vendas) */
+
+.concorrencia-relatorio-exec {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.concorrencia-relatorio-exec__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.concorrencia-relatorio-exec__metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 4px;
+  min-height: 84px;
+  padding: 10px 12px 11px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(15, 23, 42, 0.1);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.concorrencia-relatorio-exec__metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.concorrencia-relatorio-exec__metric-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  line-height: 1.25;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.concorrencia-relatorio-exec__metric-icon {
+  flex: none;
+  color: #94a3b8;
+}
+
+.concorrencia-relatorio-exec__metric-value {
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.concorrencia-relatorio-exec__metric--accent-green {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.concorrencia-relatorio-exec__metric--accent-green .concorrencia-relatorio-exec__metric-value,
+.concorrencia-relatorio-exec__metric--accent-green .concorrencia-relatorio-exec__metric-icon {
+  color: #059669;
+}
+
+.concorrencia-relatorio-exec__metric--accent-blue {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+}
+
+.concorrencia-relatorio-exec__metric--accent-blue .concorrencia-relatorio-exec__metric-value,
+.concorrencia-relatorio-exec__metric--accent-blue .concorrencia-relatorio-exec__metric-icon {
+  color: #2563eb;
+}
+
+.concorrencia-relatorio-exec__metric--accent-gray {
+  border-color: rgba(100, 116, 139, 0.35);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.concorrencia-relatorio-exec__metric--accent-gray .concorrencia-relatorio-exec__metric-value,
+.concorrencia-relatorio-exec__metric--accent-gray .concorrencia-relatorio-exec__metric-icon {
+  color: #64748b;
+}
+
+.concorrencia-relatorio-exec__ops {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.concorrencia-relatorio-exec__ops-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.03);
+  box-sizing: border-box;
+}
+
+.concorrencia-relatorio-exec__ops-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.concorrencia-relatorio-exec__ops-icon {
+  flex: none;
+  color: #94a3b8;
+}
+
+.concorrencia-relatorio-exec__ops-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.concorrencia-relatorio-exec__ops-value {
+  flex: none;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.concorrencia-relatorio-exec__ops-row--accent-green .concorrencia-relatorio-exec__ops-icon,
+.concorrencia-relatorio-exec__ops-row--accent-green .concorrencia-relatorio-exec__ops-value {
+  color: #059669;
+}
+
+.concorrencia-relatorio-exec__ops-row--accent-gold .concorrencia-relatorio-exec__ops-icon,
+.concorrencia-relatorio-exec__ops-row--accent-gold .concorrencia-relatorio-exec__ops-value {
+  color: #d97706;
+}
+
+.concorrencia-relatorio-exec__ops-row--accent-orange .concorrencia-relatorio-exec__ops-icon,
+.concorrencia-relatorio-exec__ops-row--accent-orange .concorrencia-relatorio-exec__ops-value {
+  color: #f97316;
+}
+
+.concorrencia-relatorio-exec__empty {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+@media (max-width: 720px) {
+  .concorrencia-relatorio-exec__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .concorrencia-relatorio-exec__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

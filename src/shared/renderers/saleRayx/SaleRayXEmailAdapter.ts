@@ -5,6 +5,7 @@
 import {
   buildSaleRayxSummaryBody,
 } from "../../../components/sales/saleRayxSummary.js";
+import { buildSaleRayxXlsxExport } from "../../../components/sales/buildSaleRayxXlsxExport.js";
 import { postSaleRayxManualNotification } from "../../../services/saleRayxManualNotifyApi.js";
 import {
   blobToBase64DataUri,
@@ -30,6 +31,15 @@ export type SendSaleRayxEmailShareResult = {
   apiResponses: Awaited<ReturnType<typeof postSaleRayxManualNotification>>[];
 };
 
+function arrayBufferToBase64Payload(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 /**
  * Gera imagem premium (mesmo renderer do WhatsApp/Imprimir) e envia via motor central.
  */
@@ -42,6 +52,8 @@ export async function sendSaleRayxEmailShare(
   const dataUri = await blobToBase64DataUri(generated.blob);
   const base64Payload = dataUri.includes(",") ? dataUri.split(",")[1] : dataUri;
   const summaryText = buildSaleRayxSummaryBody(shareInput).join("\n");
+  const xlsx = await buildSaleRayxXlsxExport(shareInput);
+  const xlsxBase64 = arrayBufferToBase64Payload(xlsx.buffer);
 
   const apiResponses = await Promise.all(
     recipientTargets.map((target) =>
@@ -56,6 +68,9 @@ export async function sendSaleRayxEmailShare(
         deliveryFormat: "image",
         shareCacheKey: generated.cacheKey,
         shareTextFallback: summaryText,
+        shareDocumentBase64: xlsxBase64,
+        shareDocumentFilename: xlsx.filename,
+        shareDocumentMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
     ),
   );

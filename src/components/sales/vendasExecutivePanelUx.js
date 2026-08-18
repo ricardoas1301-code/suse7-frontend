@@ -12,6 +12,15 @@ export const EXECUTIVE_PANEL_EMPTY_RANKING_MESSAGE = "Nenhuma venda encontrada";
 export const EXECUTIVE_PANEL_EMPTY_KPI_VALUE = "—";
 
 /**
+ * Sinal negativo vindo da API (somente para classe visual; sem recálculo financeiro).
+ * @param {unknown} raw
+ */
+export function isExecutiveApiDecimalNegative(raw) {
+  const s = String(raw ?? "").trim();
+  return s.startsWith("-") && s !== "-0" && s !== "-0.00" && s !== "-0.0";
+}
+
+/**
  * @param {unknown} value
  * @returns {number}
  */

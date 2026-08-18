@@ -106,7 +106,7 @@ export function buildCardApiPayload(form) {
       cvv: validation.cvv,
       cpf_cnpj: validation.tax,
       card_type: "credit",
-      set_default: form.set_default !== false,
+      set_default: Boolean(form.set_default),
       persist: form.save_card !== false,
     },
   };

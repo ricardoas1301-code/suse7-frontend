@@ -4,17 +4,17 @@
    ===================================================================== */
 .login-bg {
   background: #f5f7ff;
+  height: 100dvh;
   min-height: 100dvh;
-  max-height: 100dvh;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 4px;
+  padding: 6px 16px;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 
@@ -62,6 +62,17 @@
 
 
 /* =====================================================================
+   CAMPOS — label + input com mesmo respiro (e-mail e senha)
+   ===================================================================== */
+.login-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+/* =====================================================================
    LABELS DOS INPUTS — Titulos acima das caixas de texto
    ===================================================================== */
 .login-label {
@@ -70,7 +81,7 @@
   font-size: 13px;
   font-weight: 500;
   color: #4a4a4a;
-  margin-bottom: 4px;
+  margin: 0 0 4px;
 }
 
 
@@ -87,7 +98,7 @@
   border: 1px solid #cfd7e3;
   background: #f1f5ff;
   font-size: 14px;
-  margin-bottom: 12px;
+  margin: 0;
   box-sizing: border-box;
   appearance: none;
 }
@@ -210,7 +221,7 @@
    (Fale conosco | Termos | Privacidade)
    ===================================================================== */
 .login-footer {
-  margin-top: 4px;
+  margin-top: 2px;
   font-size: 12px;
   text-align: center;
   font-family: "Inter", sans-serif;
@@ -278,8 +289,7 @@
   min-width: 0;
   display: block;
   box-sizing: border-box;
-  margin-bottom: 12px;
-  line-height: 0;
+  margin: 0;
   align-self: stretch;
 }
 
@@ -391,6 +401,7 @@
     justify-content: flex-start;
     gap: 10px;
     padding: 12px 12px max(12px, env(safe-area-inset-bottom));
+    overflow-y: auto;
   }
 
   .login-box {
@@ -410,6 +421,10 @@
     font-size: 18px;
   }
 
+  .login-field {
+    margin-bottom: 10px;
+  }
+
   .login-label {
     font-size: 12px;
   }
@@ -418,10 +433,6 @@
   .login-input-password {
     height: 42px;
     font-size: 16px; /* evita zoom automático no iOS */
-  }
-
-  .password-wrapper {
-    margin-bottom: 10px;
   }
 
   .forgot-password {

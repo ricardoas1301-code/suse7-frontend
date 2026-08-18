@@ -35,7 +35,7 @@ export function severityTone(severity) {
  */
 export function categoryLabel(category) {
   const map = {
-    BILLING: "Billing",
+    BILLING: "Assinatura e pagamentos",
     SALES: "Vendas",
     PROFIT: "Lucro",
     PRODUCTS: "Produtos",

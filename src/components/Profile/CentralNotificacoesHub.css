@@ -107,6 +107,63 @@
   gap: 14px;
 }
 
+/* S1.PERFIL-NOTIFICACOES.7 — Destinatários: grade densa + card pai preenchendo viewport */
+.s7-ncenter-recipients-page {
+  flex: 1 1 auto;
+  min-height: calc(
+    100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) -
+      (var(--s7-empresa-page-gutter, 12px) * 2)
+  );
+  display: flex;
+  flex-direction: column;
+}
+
+.s7-ncenter-recipients-page .profile-card.s7-notification-center-hero {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+.s7-ncenter-recipients-page .s7-notification-center-hero__head {
+  margin-bottom: 14px;
+}
+
+.s7-ncenter-recipients-page .s7-notification-center-hero__head p {
+  max-width: none;
+}
+
+.s7-ncenter-recipients-page .s7-notification-center-hero__body,
+.s7-ncenter-recipients-page .s7-ncenter-recipients-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.s7-ncenter-recipients-page .s7-cnhub__recipients-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+@media (max-width: 1100px) {
+  .s7-ncenter-recipients-page .s7-cnhub__recipients-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .s7-ncenter-recipients-page .s7-cnhub__recipients-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .s7-ncenter-recipients-page .s7-cnhub__recipients-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .s7-cnhub__empty,
 .s7-cnhub__empty-card {
   padding: 24px;

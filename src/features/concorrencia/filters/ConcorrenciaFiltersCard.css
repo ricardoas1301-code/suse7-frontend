@@ -1,0 +1,44 @@
+/* Overrides Concorrência — shell base em S7SearchFiltersCard.css */
+
+.page-content .concorrencia-filters-card.s7-sticky-filters {
+  position: sticky;
+  top: var(--s7-sticky-filters-top, 0px);
+  z-index: 28;
+  background: #ffffff;
+}
+
+.concorrencia-filters-card__include-btn,
+.concorrencia-filters-card__report-btn {
+  flex-shrink: 0;
+}
+
+.concorrencia-filters-card__field--hidden {
+  display: none !important;
+}
+
+.concorrencia-filters-card__select {
+  height: 36px;
+  width: 100%;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #ffffff;
+  font-size: 12.5px;
+}
+
+@media (max-width: 768px) {
+  .concorrencia-filters-card__include-btn .s7-btn__label {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .concorrencia-filters-card__report-btn .s7-btn__label {
+    display: none;
+  }
+
+  .concorrencia-filters-card__report-btn {
+    min-width: 36px;
+    padding-inline: 8px;
+  }
+}

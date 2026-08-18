@@ -2,6 +2,8 @@
 // Histórico de pagamentos — normalização visual
 // ======================================================================
 
+import { formatPaymentDueDatePt } from "./billingFormatters.js";
+
 const STATUS_LABELS = {
   paid: "Pago",
   pending: "Pendente",
@@ -55,6 +57,11 @@ export function normalizePaymentHistoryRow(value) {
     created_at: asTrimmedString(row.created_at) ?? new Date().toISOString(),
     invoice_url: asTrimmedString(row.invoice_url),
     payment_method_type: asTrimmedString(row.payment_method_type),
+    action_type: asTrimmedString(row.action_type),
+    action_label: asTrimmedString(row.action_label),
+    renewal_cycle_id: row.renewal_cycle_id != null ? String(row.renewal_cycle_id) : null,
+    billing_state: asTrimmedString(row.billing_state),
+    is_projected: row.is_projected === true,
   };
 }
 
@@ -82,7 +89,11 @@ export function paymentHistoryStatusClass(payment) {
  */
 export function formatPaymentHistoryDate(value) {
   if (!value) return "—";
-  const date = new Date(value);
+  const raw = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return formatPaymentDueDatePt(raw) ?? "—";
+  }
+  const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleDateString("pt-BR");
 }
@@ -92,6 +103,7 @@ export function formatPaymentHistoryDate(value) {
  */
 export function formatPaymentHistoryMethodLabel(type) {
   const raw = String(type || "").trim().toUpperCase();
+  if (!raw) return "—";
   if (raw === "CREDIT_CARD") return "Cartão de crédito";
   if (raw === "DEBIT_CARD") return "Cartão de débito";
   if (raw === "PIX") return "Pix";

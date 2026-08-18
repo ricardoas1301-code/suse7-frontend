@@ -5,6 +5,19 @@
  * @param {{ label?: string, email?: string, whatsapp?: string }} [fieldErrors]
  */
 export function mapRecipientApiError(payload, fieldErrors = {}) {
+  if (payload?.error === "PRIMARY_RECIPIENT_PROTECTED" || payload?.error === "PRIMARY_RECIPIENT_CONTACT_LOCKED") {
+    return {
+      message: payload?.message ?? "E-mail e WhatsApp do destinatário padrão são gerenciados em Dados da Empresa.",
+      field: payload?.field,
+    };
+  }
+
+  if (payload?.error === "PRIMARY_RECIPIENT_DELETE_FORBIDDEN") {
+    return {
+      message: payload?.message ?? "O destinatário padrão da empresa principal não pode ser removido.",
+    };
+  }
+
   if (payload?.error === "DUPLICATE_RECIPIENT") {
     const field = payload.duplicated_field ?? inferDuplicateField(payload.message);
     if (field === "email") return { message: "E-mail já cadastrado em outro destinatário.", field: "email" };

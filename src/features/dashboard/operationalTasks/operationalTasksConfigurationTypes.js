@@ -1,0 +1,19 @@
+/** IDs canônicos — espelham contrato backend (somente leitura). */
+export const CONFIGURATION_MILESTONE_IDS = /** @type {const} */ ({
+  COMPANY_DATA: "COMPANY_DATA",
+  LEGAL_ACCEPTANCE: "LEGAL_ACCEPTANCE",
+  TAX_RATE: "TAX_RATE",
+  OPERATIONAL_COST: "OPERATIONAL_COST",
+  OPERATIONAL_CYCLE: "OPERATIONAL_CYCLE",
+  FIRST_MARKETPLACE_CONNECTION: "FIRST_MARKETPLACE_CONNECTION",
+});
+
+export const CONFIGURATION_MILESTONE_STATUS = /** @type {const} */ ({
+  PENDING: "PENDING",
+  COMPLETED: "COMPLETED",
+});
+
+export const CONFIGURATION_STATUS = /** @type {const} */ ({
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
+});

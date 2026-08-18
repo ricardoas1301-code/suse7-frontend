@@ -1,0 +1,31 @@
+.listing-rayx-resumo-kpi {
+  min-height: 108px;
+}
+
+.listing-rayx-resumo-kpi .vendas-executive-kpi__body {
+  padding: 8px 12px 12px;
+}
+
+.listing-rayx-resumo-kpi .vendas-executive-kpi__value {
+  font-size: clamp(20px, 2.2vw, 26px);
+}
+
+.listing-rayx-resumo-kpi__footer {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #64748b;
+}
+
+.listing-rayx-resumo-kpi__footer-link {
+  color: #2563eb;
+  text-decoration: none;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.28);
+}
+
+.listing-rayx-resumo-kpi__footer-link:hover {
+  color: #1d4ed8;
+  border-bottom-color: rgba(29, 78, 216, 0.45);
+}

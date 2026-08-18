@@ -1,0 +1,19 @@
+/* ======================================================
+   DESIGN TOKENS — LIST ROW CARD (S1.8 / S1.8.1)
+   Uma linha = uma unidade visual (cards horizontais)
+   ====================================================== */
+
+:root {
+  --s7-list-row-gap: 6px;
+  --s7-list-row-radius: 10px;
+  --s7-list-row-border: rgba(148, 163, 184, 0.28);
+  --s7-list-row-background: #ffffff;
+  --s7-list-row-hover-border: rgba(100, 116, 139, 0.42);
+  --s7-list-row-hover-background: #f8fafc;
+  --s7-list-row-selected-background: rgba(37, 99, 235, 0.08);
+  --s7-list-row-selected-border: rgba(37, 99, 235, 0.38);
+  --s7-list-row-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --s7-list-row-hover-shadow: 0 2px 4px rgba(15, 23, 42, 0.07);
+  --s7-list-row-stack-padding-y: 6px;
+  --s7-list-row-attention-border: rgba(220, 38, 38, 0.34);
+}

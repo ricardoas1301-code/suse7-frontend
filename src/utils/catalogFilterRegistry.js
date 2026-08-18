@@ -16,7 +16,6 @@ export const SHOW_CATALOG_MARKETPLACE_FILTER_CHIPS = false;
  * Ordem fixa na UI (uma linha com wrap; “Limpar filtros” é botão separado no JSX).
  */
 export const CATALOG_FILTER_TOOLBAR_LINE1_IDS = [
-  "all",
   "top_sales",
   "top_profit",
   "low_margin",

@@ -27,13 +27,28 @@ import "./VendasPeriodRangePicker.css";
 
 /**
  * @param {{
- *   periodPreset: VendasPeriodPresetUi;
+ *   periodPreset: VendasPeriodPresetUi | "operational_cycle";
  *   startDate: string;
  *   endDate: string;
- *   onApply: (payload: { preset: VendasPeriodPresetUi; startDate: string; endDate: string }) => void;
+ *   onApply: (payload: {
+ *     preset: VendasPeriodPresetUi | "operational_cycle";
+ *     startDate: string;
+ *     endDate: string;
+ *   }) => void;
+ *   showFieldLabel?: boolean;
+ *   triggerLabelOverride?: string | null;
+ *   presets?: readonly { id: string; label: string }[];
  * }} props
  */
-export default function VendasPeriodRangePicker({ periodPreset, startDate, endDate, onApply }) {
+export default function VendasPeriodRangePicker({
+  periodPreset,
+  startDate,
+  endDate,
+  onApply,
+  showFieldLabel = true,
+  triggerLabelOverride = null,
+  presets = VENDAS_PERIOD_PRESETS,
+}) {
   const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const panelRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [open, setOpen] = useState(false);
@@ -140,22 +155,34 @@ export default function VendasPeriodRangePicker({ periodPreset, startDate, endDa
     };
   }, [open, closePanel]);
 
-  const applyPreset = useCallback((presetId) => {
-    /** @type {VendasPeriodPresetUi} */
-    const preset = presetId;
-    if (preset === "custom") {
-      setDraftPreset("custom");
+  const applyPreset = useCallback(
+    (presetId) => {
+      if (presetId === "operational_cycle") {
+        onApply({
+          preset: "operational_cycle",
+          startDate: startDate || "",
+          endDate: endDate || "",
+        });
+        setOpen(false);
+        return;
+      }
+      /** @type {VendasPeriodPresetUi} */
+      const preset = /** @type {VendasPeriodPresetUi} */ (presetId);
+      if (preset === "custom") {
+        setDraftPreset("custom");
+        setPickPhase("start");
+        return;
+      }
+      const range = resolveVendasPeriodRange(preset);
+      setDraftPreset(preset);
+      setDraftStart(range.startDate);
+      setDraftEnd(range.endDate);
       setPickPhase("start");
-      return;
-    }
-    const range = resolveVendasPeriodRange(preset);
-    setDraftPreset(preset);
-    setDraftStart(range.startDate);
-    setDraftEnd(range.endDate);
-    setPickPhase("start");
-    const d = parseIsoDateOnlyUtc(range.startDate);
-    if (d) setLeftMonth(monthKeyFromDate(d));
-  }, []);
+      const d = parseIsoDateOnlyUtc(range.startDate);
+      if (d) setLeftMonth(monthKeyFromDate(d));
+    },
+    [onApply, startDate, endDate],
+  );
 
   const onDayClick = useCallback(
     (iso) => {
@@ -192,7 +219,16 @@ export default function VendasPeriodRangePicker({ periodPreset, startDate, endDa
     setOpen(false);
   }, [canApply, draftPreset, draftStart, draftEnd, onApply]);
 
-  const triggerLabel = formatVendasOrderDateTriggerLabel(startDate, endDate);
+  const triggerLabel =
+    triggerLabelOverride != null && String(triggerLabelOverride).trim() !== ""
+      ? String(triggerLabelOverride).trim()
+      : formatVendasOrderDateTriggerLabel(startDate, endDate);
+  const periodAriaLabel =
+    triggerLabelOverride != null && String(triggerLabelOverride).trim() !== ""
+      ? String(triggerLabelOverride).trim()
+      : startDate && endDate
+        ? `Período: ${formatIsoToBrDate(startDate)} até ${formatIsoToBrDate(endDate)}`
+        : "Período";
 
   const panel =
     open && typeof document !== "undefined" ? (
@@ -225,13 +261,16 @@ export default function VendasPeriodRangePicker({ periodPreset, startDate, endDa
           </div>
 
           <aside className="vendas-period-picker__presets" aria-label="Presets de período">
-            {VENDAS_PERIOD_PRESETS.map((p) => (
+            {presets.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 className={[
                   "vendas-period-picker__preset",
-                  draftPreset === p.id ? "vendas-period-picker__preset--active" : "",
+                  draftPreset === p.id ||
+                  (p.id === "operational_cycle" && periodPreset === "operational_cycle")
+                    ? "vendas-period-picker__preset--active"
+                    : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -270,13 +309,14 @@ export default function VendasPeriodRangePicker({ periodPreset, startDate, endDa
 
   return (
     <div className="vendas-period-picker" ref={rootRef}>
-      <span className="vendas-filters-card__label">Período</span>
+      {showFieldLabel ? <span className="vendas-filters-card__label">Período</span> : null}
       <button
         type="button"
         className="vendas-period-picker__trigger"
         onClick={() => (open ? closePanel() : openPanel())}
         aria-expanded={open}
         aria-haspopup="dialog"
+        aria-label={periodAriaLabel}
       >
         <S7Icon name="calendar" size={16} strokeWidth={1.85} className="vendas-period-picker__trigger-icon" />
         <span className="vendas-period-picker__trigger-text">{triggerLabel}</span>

@@ -1,0 +1,1872 @@
+/* ======================================================
+   PI.2.11A — Modal espelho da Precificação Inteligente (95vw × 95vh)
+   Container externo; conteúdo = mesma página PI (`variant="page"`).
+   ====================================================== */
+
+.pricing-intelligence-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.pricing-intelligence-modal__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 95vw;
+  height: 95vh;
+  max-width: 95vw;
+  max-height: 95vh;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--s7-surface-elevated, #fff);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  box-shadow:
+    0 24px 48px rgba(15, 23, 42, 0.18),
+    0 8px 16px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  --s7-pi-modal-inset-block: 8px;
+  --s7-pi-modal-inset-block-end: 0px;
+  --s7-pi-modal-inset-inline: 10px;
+  --s7-pi-edit-popover-gap-acima-linha: 6px; /* folga entre popover e a linha "Valor de venda" */
+  --s7-pi-edit-popover-deslocamento-baixo: 8px; /* empurra o mini-modal um pouco para baixo (teste UX) */
+  --s7-pi-three-cards-suspiro-extend: 0px;
+  --s7-pi-modal-share-tab-gap: 10px;
+  /* Compensa a faixa de compartilhamento no topo da coluna direita (sem aumentar o modal). */
+  --s7-pricing-listing-type-chart-card-h: 264px;
+}
+
+.pricing-intelligence-modal__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-intelligence-modal__scroll .pricing-intelligence-page {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  height: 100%;
+}
+
+/* PI — modal sem moldura pai externa (cards individuais preservados). */
+.pricing-intelligence-modal .pricing-intelligence-page__content .anuncios-pricing-modal__results-panel,
+.pricing-intelligence-modal
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__results-panel,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__results-panel {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: var(--s7-pi-modal-inset-block, 8px) var(--s7-pi-modal-inset-inline, 10px) 0;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__results-panel {
+  border: none;
+  box-shadow: none;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__body {
+  padding: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__content,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  height: 100%;
+}
+
+/* Vence compare-near-full da página (flex: 0 1 auto) — modal precisa esticar até a base. */
+.pricing-intelligence-modal
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .pricing-intelligence-page__body,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .pricing-intelligence-page__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full
+  .anuncios-pricing-modal__main-grid,
+.pricing-intelligence-modal
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__main-grid,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full
+  .anuncios-pricing-modal__main-grid,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__main-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__col--results,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__col--results {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__results-panel,
+.pricing-intelligence-modal
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__current-scenarios,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__results-panel,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+  .anuncios-pricing-modal__current-scenarios {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  gap: 0;
+}
+
+/* Refino 1 — card anúncio alinhado no topo com Clássico, Premium e abas. */
+@media (min-width: 1100px) {
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-product-col,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-product-col {
+    margin-top: 0;
+  }
+
+  /* Refino 2/3 — ML, Clássico e Premium mesma altura; workspace encosta topo/base do modal. */
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+    .pricing-intelligence-page__workspace-shell,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__content.pricing-intelligence-page__content--compare-near-full.pricing-intelligence-page__content--ml-scenario-compare
+    .pricing-intelligence-page__workspace-shell {
+    flex: 1 1 auto;
+    min-height: 100%;
+    height: 100%;
+    align-items: stretch;
+    padding-bottom: 0;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--tabs-horizontal,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--tabs-horizontal {
+    padding-bottom: 0;
+  }
+
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-mount,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-mount {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-mount > .pricing-intelligence-page__workspace-shell:not([hidden]),
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-mount
+    > .pricing-intelligence-page__workspace-shell:not([hidden]) {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-mount > .pricing-intelligence-page__workspace-shell[hidden],
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-mount
+    > .pricing-intelligence-page__workspace-shell[hidden] {
+    display: none !important;
+  }
+
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-product-col,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-product-col {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    min-height: 100%;
+  }
+
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-main-col,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-main-col {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-panels,
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-panel:not([hidden]),
+  .pricing-intelligence-modal .pricing-intelligence-page__sale-price-simulator--embedded,
+  .pricing-intelligence-modal .pricing-intelligence-page__scenario-workspace--listing-type-dual,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-panels,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-panel:not([hidden]),
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__sale-price-simulator--embedded,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__scenario-workspace--listing-type-dual {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-intelligence-modal .pricing-intelligence-page__scenario-main--listing-type-dual,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__scenario-main--listing-type-dual {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    align-items: stretch;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-right-stack,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-right-stack {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-right-stack__chart,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-right-stack__chart {
+    flex: 1 1 auto;
+    min-height: var(--s7-pricing-listing-type-chart-card-h, 300px);
+    padding: 0 0 2px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-compare,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare {
+    align-self: stretch;
+    min-height: 100%;
+    height: 100%;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-compare__col,
+  .pricing-intelligence-modal .pricing-intelligence-page__competitors-compare-card,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__competitors-compare-card {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .pricing-scenario-detail,
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .s7-ml-scenario-compare__card,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .pricing-scenario-detail,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .s7-ml-scenario-compare__card {
+    flex: 1 1 auto;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .s7-ml-scenario-compare__card-body,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .s7-ml-scenario-compare__card-body {
+    flex: 1 1 auto;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics {
+    flex: 1 1 auto;
+  }
+
+  /* Refino 4 — suspiro inferior = superior (só card ML, Clássico e Premium; topo fixo). */
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-product-col,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-product-col,
+  .pricing-intelligence-modal .pricing-listing-type-compare__col,
+  .pricing-intelligence-modal .pricing-intelligence-page__competitors-compare-card,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__competitors-compare-card {
+    overflow: visible;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical {
+    min-height: calc(100% + var(--s7-pi-three-cards-suspiro-extend, 0px));
+    box-sizing: border-box;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .pricing-scenario-detail,
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .s7-ml-scenario-compare__card,
+  .pricing-intelligence-modal .pricing-intelligence-page__competitors-compare-card .pricing-scenario-detail,
+  .pricing-intelligence-modal .pricing-intelligence-page__competitors-compare-card .s7-ml-scenario-compare__card,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .pricing-scenario-detail,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .s7-ml-scenario-compare__card,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__competitors-compare-card
+    .pricing-scenario-detail,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__competitors-compare-card
+    .s7-ml-scenario-compare__card {
+    min-height: calc(100% + var(--s7-pi-three-cards-suspiro-extend, 0px));
+    box-sizing: border-box;
+  }
+
+  /* Refino 5 — card dados do anúncio: tipografia + respiro interno (desktop modal). */
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical {
+    gap: 7px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-marketplace
+    img,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-marketplace
+    img {
+    width: min(90px, 100%);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-thumb,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-thumb {
+    width: 116px;
+    height: 116px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-title,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-title {
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta {
+    font-size: 11px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta--copy
+    .anuncios-ad-sku-label,
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta--copy
+    .anuncios-ad-sku-value,
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta--account
+    .anuncios-ad-sku-label,
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta--account
+    .anuncios-ad-sku-value,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta--copy
+    .anuncios-ad-sku-label,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta--copy
+    .anuncios-ad-sku-value,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta--account
+    .anuncios-ad-sku-label,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-header-meta--account
+    .anuncios-ad-sku-value {
+    font-size: 11px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics {
+    margin-top: 5px;
+    padding-top: 9px;
+    gap: 11px;
+    justify-content: space-between;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-title,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-title {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-label,
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-value,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-label,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-value {
+    font-size: 10px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-row,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-row {
+    margin-bottom: 4px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-section,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-section {
+    padding-top: 8px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__listing-type-pill.s7-ml-scenario-compare__badge--available,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__listing-type-pill.s7-ml-scenario-compare__badge--available {
+    font-size: calc(11px * 0.81 * 0.84);
+    padding: 5px 11px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-skeleton,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-product-col
+    .pricing-intelligence-page__product-header--vertical
+    .pricing-intelligence-page__product-metrics-skeleton {
+    height: 10px;
+  }
+
+  /* Refino 6 — Clássico/Premium: altura fixa + densidade adaptativa (modal desktop). */
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .pricing-scenario-detail,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .pricing-scenario-detail {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .s7-ml-scenario-compare__card,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .s7-ml-scenario-compare__card {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .s7-ml-scenario-compare__card-head,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .s7-ml-scenario-compare__card-head {
+    flex: 0 0 auto;
+    padding: 10px 12px 6px;
+  }
+
+  .pricing-intelligence-modal .pricing-listing-type-compare__col .s7-ml-scenario-compare__card-body,
+  .pricing-intelligence-page--modal-shell .pricing-listing-type-compare__col .s7-ml-scenario-compare__card-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 6px 10px 10px;
+    --s7-pi-compare-section-mt: 0px;
+    --s7-pi-compare-section-mb: 0px;
+    --s7-pi-compare-section-title-mb: 7px;
+    --s7-pi-compare-block-gap: 8px;
+    --s7-pi-compare-line-lh: 1.4;
+    --s7-pi-compare-future-pt: 10px;
+    --s7-pi-compare-contingency-pt: 8px;
+    --s7-pi-compare-contingency-entry-gap: 4px;
+  }
+
+  /* Estado inicial — Receita + Custos internos expandem; Resultado intacto no rodapé. */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency)),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency)) {
+    justify-content: flex-start;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section:first-child,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section:first-child,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado) {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section--raiox-resultado,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section--raiox-resultado {
+    flex: 0 0 auto;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__section-title,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__section-title {
+    margin-top: 4px;
+    margin-bottom: 0;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__block:first-of-type,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    > .anuncios-sell-popover__block:first-of-type,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__block:first-of-type,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    > .anuncios-sell-popover__block:first-of-type {
+    margin-top: auto;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__block:last-of-type,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    > .anuncios-sell-popover__block:last-of-type,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__block:last-of-type,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:not(:has(.anuncios-sell-popover__section--contingency))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    > .anuncios-sell-popover__block:last-of-type {
+    margin-bottom: auto;
+  }
+
+  /* Fase Promoção — 1 bloco Reserva estratégica (1 linha): preenche os dois cards. */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry)),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry)) {
+    justify-content: flex-start;
+    padding: 4px 10px 10px;
+    --s7-pi-compare-section-mb: 0px;
+    --s7-pi-compare-section-title-mb: 0px;
+    --s7-pi-compare-block-gap: 6px;
+    --s7-pi-compare-line-lh: 1.34;
+    --s7-pi-compare-future-pt: 8px;
+    --s7-pi-compare-contingency-pt: 8px;
+    --s7-pi-compare-contingency-entry-gap: 3px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section:first-child,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--strategic-reserve,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section:first-child,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--strategic-reserve,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado) {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--raiox-resultado,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--raiox-resultado {
+    flex: 0 0 auto;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__section-title,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__section-title {
+    margin-top: 3px;
+    margin-bottom: 0;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__block:first-of-type,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--strategic-reserve
+    > .anuncios-sell-popover__block--contingency,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    > .anuncios-sell-popover__block:first-of-type,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__block:first-of-type,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--strategic-reserve
+    > .anuncios-sell-popover__block--contingency,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    > .anuncios-sell-popover__block:first-of-type {
+    margin-top: auto;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__block:last-of-type,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--strategic-reserve
+    > .anuncios-sell-popover__block--contingency,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    > .anuncios-sell-popover__block:last-of-type,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section:first-child
+    > .anuncios-sell-popover__block:last-of-type,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--strategic-reserve
+    > .anuncios-sell-popover__block--contingency,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--strategic-reserve):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    > .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    > .anuncios-sell-popover__block:last-of-type {
+    margin-bottom: auto;
+  }
+
+  /* Demais parâmetros ativos — compacta progressivamente (exceto fase Promo acima). */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--contingency):not(
+      :has(.anuncios-sell-popover__section--strategic-reserve):not(
+        :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+      ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    ),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--contingency):not(
+      :has(.anuncios-sell-popover__section--strategic-reserve):not(
+        :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+      ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry))
+    ) {
+    justify-content: flex-start;
+    padding: 2px 10px 8px;
+    --s7-pi-compare-section-mb: 4px;
+    --s7-pi-compare-section-title-mb: 4px;
+    --s7-pi-compare-block-gap: 4px;
+    --s7-pi-compare-line-lh: 1.28;
+    --s7-pi-compare-future-pt: 6px;
+    --s7-pi-compare-contingency-pt: 5px;
+    --s7-pi-compare-contingency-entry-gap: 3px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card:has(.anuncios-sell-popover__section--contingency)
+    .s7-ml-scenario-compare__card-head,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card:has(.anuncios-sell-popover__section--contingency)
+    .s7-ml-scenario-compare__card-head {
+    padding: 8px 12px 4px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section {
+    margin-top: var(--s7-pi-compare-section-mt, 0px);
+    margin-bottom: var(--s7-pi-compare-section-mb, 5px);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section:first-child,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section:first-child {
+    margin-top: 0;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section:last-child,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section:last-child {
+    margin-bottom: 0;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section-title,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section-title,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-pricing-modal__raiox-block
+    .anuncios-sell-popover__section-title,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-pricing-modal__raiox-block
+    .anuncios-sell-popover__section-title {
+    margin-bottom: var(--s7-pi-compare-section-title-mb, 4px);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__block
+    + .anuncios-sell-popover__block,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__block
+    + .anuncios-sell-popover__block {
+    margin-top: var(--s7-pi-compare-block-gap, 4px);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__line,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__line {
+    line-height: var(--s7-pi-compare-line-lh, 1.26);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section--future,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section--future {
+    padding-top: var(--s7-pi-compare-future-pt, 5px);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section--contingency,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__section--contingency {
+    padding-top: var(--s7-pi-compare-contingency-pt, 5px);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__block--contingency
+    .anuncios-sell-popover__contingency-entry
+    + .anuncios-sell-popover__contingency-entry,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body
+    .anuncios-sell-popover__block--contingency
+    .anuncios-sell-popover__contingency-entry
+    + .anuncios-sell-popover__contingency-entry {
+    margin-top: var(--s7-pi-compare-contingency-entry-gap, 2px);
+  }
+
+  /* 1 bloco extra (Custos operacionais isolado — não fase Promo). */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--contingency):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry)):not(
+      :has(.anuncios-sell-popover__section--strategic-reserve)
+    ),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--contingency):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry)):not(
+      :has(.anuncios-sell-popover__section--strategic-reserve)
+    ) {
+    --s7-pi-compare-section-mb: 3px;
+    --s7-pi-compare-section-title-mb: 3px;
+    --s7-pi-compare-block-gap: 3px;
+    --s7-pi-compare-line-lh: 1.24;
+    --s7-pi-compare-future-pt: 5px;
+    --s7-pi-compare-contingency-pt: 4px;
+    padding-bottom: 6px;
+  }
+
+  /* 1 bloco extra com 2+ linhas (ex.: Promoção + Afiliados). */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--contingency):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(.anuncios-sell-popover__section--contingency):not(
+      :has(.anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency)
+    ):has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry) {
+    --s7-pi-compare-section-mb: 2px;
+    --s7-pi-compare-section-title-mb: 2px;
+    --s7-pi-compare-block-gap: 2px;
+    --s7-pi-compare-line-lh: 1.2;
+    --s7-pi-compare-future-pt: 4px;
+    --s7-pi-compare-contingency-pt: 3px;
+    --s7-pi-compare-contingency-entry-gap: 2px;
+    padding-bottom: 5px;
+  }
+
+  /* 2 blocos extras (Reserva estratégica + Custos operacionais). */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(
+      .anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry)),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(
+      .anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency
+    ):not(:has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry)) {
+    --s7-pi-compare-section-mb: 2px;
+    --s7-pi-compare-section-title-mb: 2px;
+    --s7-pi-compare-block-gap: 2px;
+    --s7-pi-compare-line-lh: 1.2;
+    --s7-pi-compare-future-pt: 4px;
+    --s7-pi-compare-contingency-pt: 3px;
+    --s7-pi-compare-contingency-entry-gap: 2px;
+    padding-top: 1px;
+    padding-bottom: 4px;
+  }
+
+  /* 2 blocos extras + múltiplas linhas (estado cheio). */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(
+      .anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency
+    ):has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body:has(
+      .anuncios-sell-popover__section--contingency ~ .anuncios-sell-popover__section--contingency
+    ):has(.anuncios-sell-popover__contingency-entry ~ .anuncios-sell-popover__contingency-entry) {
+    --s7-pi-compare-section-mb: 1px;
+    --s7-pi-compare-section-title-mb: 1px;
+    --s7-pi-compare-block-gap: 1px;
+    --s7-pi-compare-line-lh: 1.16;
+    --s7-pi-compare-future-pt: 2px;
+    --s7-pi-compare-contingency-pt: 2px;
+    --s7-pi-compare-contingency-entry-gap: 1px;
+    padding-top: 0;
+    padding-bottom: 3px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card:has(
+      .s7-ml-scenario-compare__card-body
+        .anuncios-sell-popover__section--contingency
+        ~ .anuncios-sell-popover__section--contingency
+    )
+    .s7-ml-scenario-compare__card-head,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card:has(
+      .s7-ml-scenario-compare__card-body
+        .anuncios-sell-popover__section--contingency
+        ~ .anuncios-sell-popover__section--contingency
+    )
+    .s7-ml-scenario-compare__card-head {
+    padding-bottom: 2px;
+  }
+
+  /* Refino 8 — layout fixo PI: linhas reserva/custos sempre visíveis + distribuição estável. */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo {
+    justify-content: space-between;
+    padding: 4px 10px 10px;
+    --s7-pi-compare-section-mb: 0px;
+    --s7-pi-compare-section-title-gap: 4px;
+    --s7-pi-compare-section-title-mb: var(--s7-pi-compare-section-title-gap, 4px);
+    --s7-pi-compare-line-label-color: #0f172a;
+    --s7-pi-compare-line-sub-color: rgba(15, 23, 42, 0.58);
+    --s7-pi-compare-line-sub-font-size: 9px;
+    --s7-pi-compare-line-custo-color: #dc2626;
+    --s7-pi-compare-block-gap: 4px;
+    --s7-pi-compare-line-lh: 1.3;
+    --s7-pi-compare-block-separator-gap: 11px;
+    --s7-pi-compare-future-pt: var(--s7-pi-compare-block-separator-gap, 11px);
+    --s7-pi-compare-contingency-pt: var(--s7-pi-compare-block-separator-gap, 11px);
+    --s7-pi-compare-contingency-entry-gap: 3px;
+  }
+
+  /* Refino 10 — respiro entre blocos: linha acima → título (Clássico + Premium). */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section--contingency,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section--future,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section--contingency,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section--future {
+    padding-top: var(--s7-pi-compare-block-separator-gap, 11px);
+  }
+
+  /* Refino 9 — gap padrão título → 1ª linha (todos os blocos, Clássico + Premium). */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section
+    > .anuncios-sell-popover__section-title,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-pricing-modal__raiox-block
+    .anuncios-sell-popover__section-title,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section
+    > .anuncios-sell-popover__section-title,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-pricing-modal__raiox-block
+    .anuncios-sell-popover__section-title {
+    margin-bottom: var(--s7-pi-compare-section-title-gap, 4px);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    > .anuncios-sell-popover__section,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    > .anuncios-sell-popover__section {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry--inativo
+    .anuncios-sell-popover__line,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry--inativo
+    .anuncios-sell-popover__line
+    > span,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry--inativo
+    .anuncios-sell-popover__line
+    > strong,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry--inativo
+    .anuncios-sell-popover__line,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry--inativo
+    .anuncios-sell-popover__line
+    > span,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry--inativo
+    .anuncios-sell-popover__line
+    > strong {
+    color: rgba(15, 23, 42, 0.34);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry--inativo
+    .anuncios-sell-popover__line
+    > strong,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry--inativo
+    .anuncios-sell-popover__line
+    > strong {
+    font-weight: 700;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-pct--inativo,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-pct--inativo {
+    color: rgba(15, 23, 42, 0.34);
+    font-size: var(--s7-pi-compare-line-sub-font-size, 9px);
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
+  /* Sublinhas (tarifa %, frete, imposto %, reserva/custos %) — menor e cor suave. */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section:not(.anuncios-sell-popover__section--raiox-resultado)
+    .anuncios-sell-popover__muted,
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-pct:not(.anuncios-sell-popover__contingency-pct--inativo),
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section:not(.anuncios-sell-popover__section--raiox-resultado)
+    .anuncios-sell-popover__muted,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-pct:not(.anuncios-sell-popover__contingency-pct--inativo) {
+    color: var(--s7-pi-compare-line-sub-color, rgba(15, 23, 42, 0.58));
+    font-size: var(--s7-pi-compare-line-sub-font-size, 9px);
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry:not(.anuncios-sell-popover__contingency-entry--inativo)
+    .anuncios-sell-popover__line
+    > span,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry:not(.anuncios-sell-popover__contingency-entry--inativo)
+    .anuncios-sell-popover__line
+    > span {
+    color: var(--s7-pi-compare-line-label-color, #0f172a);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry:not(.anuncios-sell-popover__contingency-entry--inativo)
+    .anuncios-sell-popover__line
+    > strong,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry:not(.anuncios-sell-popover__contingency-entry--inativo)
+    .anuncios-sell-popover__line
+    > strong {
+    color: var(--s7-pi-compare-line-custo-color, #dc2626);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry:not(.anuncios-sell-popover__contingency-entry--inativo)
+    .anuncios-sell-popover__line
+    > strong,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__contingency-entry:not(.anuncios-sell-popover__contingency-entry--inativo)
+    .anuncios-sell-popover__line
+    > strong {
+    font-weight: 700;
+  }
+
+  /* Receita — label padrão (card ML); valor negativo vermelho; venda/recebe laranja (.line--key). */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__value--positive,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__value--positive {
+    color: #16a34a;
+    font-weight: 700;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    > .anuncios-sell-popover__section:first-child
+    .anuncios-sell-popover__block:not(:first-child)
+    .anuncios-sell-popover__line:not(.anuncios-sell-popover__line--promo-sale):not(
+      .anuncios-sell-popover__line--total
+    )
+    > span,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    > .anuncios-sell-popover__section:first-child
+    .anuncios-sell-popover__block:not(:first-child)
+    .anuncios-sell-popover__line:not(.anuncios-sell-popover__line--promo-sale):not(
+      .anuncios-sell-popover__line--total
+    )
+    > span {
+    color: var(--s7-pi-compare-line-label-color, #0f172a);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    > .anuncios-sell-popover__section:first-child
+    .anuncios-sell-popover__block:not(:first-child)
+    .anuncios-sell-popover__line:not(.anuncios-sell-popover__line--promo-sale):not(
+      .anuncios-sell-popover__line--total
+    )
+    > strong,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    > .anuncios-sell-popover__section:first-child
+    .anuncios-sell-popover__block:not(:first-child)
+    .anuncios-sell-popover__line:not(.anuncios-sell-popover__line--promo-sale):not(
+      .anuncios-sell-popover__line--total
+    )
+    > strong {
+    color: var(--s7-pi-compare-line-custo-color, #dc2626);
+  }
+
+  /* Custos internos — label padrão; valor de saída vermelho. */
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    .anuncios-sell-popover__line
+    > span,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    .anuncios-sell-popover__line
+    > span {
+    color: var(--s7-pi-compare-line-label-color, #0f172a);
+  }
+
+  .pricing-intelligence-modal
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    .anuncios-sell-popover__line
+    > strong,
+  .pricing-intelligence-page--modal-shell
+    .pricing-listing-type-compare__col
+    .s7-ml-scenario-compare__card-body--pi-layout-fixo
+    .anuncios-sell-popover__section--future:not(.anuncios-sell-popover__section--raiox-resultado)
+    .anuncios-sell-popover__line
+    > strong {
+    color: var(--s7-pi-compare-line-custo-color, #dc2626);
+  }
+}
+
+/* Alinhamento topo/base — colunas do workspace no modal. */
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-shell--tabs-horizontal,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-shell--tabs-horizontal {
+  align-items: stretch;
+  padding-bottom: 0;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-shell,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-shell {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  overflow: visible;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-main-col {
+  gap: 0;
+  padding-top: 0;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__scenario-main--listing-type-dual {
+  align-items: stretch;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-compare,
+.pricing-intelligence-modal .pricing-listing-type-right-stack {
+  margin-top: 0;
+  align-self: stretch;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-right-stack__tab-rail {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Faixa superior: compartilhamento + abas (coluna direita do modal PI). */
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-header-actions,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s7-pi-modal-share-tab-gap, 10px);
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-toolbar,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  flex: 0 0 auto;
+  padding-right: 2px;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-toolbar-left,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-toolbar-left {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-toolbar-right,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-toolbar-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Legado: share-row virou toolbar — manter alias para não quebrar referências antigas. */
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-share-row,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-share-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+  padding-right: 2px;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-header-actions .pricing-intelligence-page__workspace-tab-rail-row,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__workspace-header-actions
+  .pricing-intelligence-page__workspace-tab-rail-row {
+  width: 100%;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-right-stack {
+  gap: 4px;
+  min-height: 0;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-right-stack__footer {
+  display: none;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-right-stack__chart,
+.pricing-intelligence-modal .pricing-listing-type-right-stack__chart.anuncios-pricing-modal__ml-chart-slot {
+  padding: 0 0 2px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-right-stack__chart {
+  flex: 1 1 auto;
+  min-height: var(--s7-pricing-listing-type-chart-card-h, 300px);
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__workspace-product-col
+  .pricing-intelligence-page__product-header {
+  height: auto;
+  min-height: 100%;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-right-stack__footer {
+  flex: 0 0 auto;
+  margin-top: 0;
+  padding-bottom: 0;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-right-stack__footer-actions {
+  margin-bottom: 0;
+}
+
+.pricing-intelligence-modal .pricing-listing-type-right-stack {
+  --s7-pricing-listing-type-right-col-w: 374px;
+}
+
+.pricing-intelligence-modal .s7-ml-scenario-chart--listing-type-kpi__bar-in-value {
+  font-size: 7.5px;
+}
+
+.pricing-intelligence-modal .s7-ml-scenario-chart--listing-type-kpi__bar-in-tick {
+  font-size: 7.8px;
+}
+
+.pricing-intelligence-modal .s7-ml-scenario-chart__bar-track--listing-type-kpi {
+  max-width: calc(48px * 1.05);
+}
+
+@media (min-width: 1100px) {
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--competitors-tab,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--competitors-tab {
+    display: grid;
+    grid-template-columns: var(--s7-pricing-product-col-w) var(--s7-pricing-listing-type-compare-w) minmax(0, 1fr);
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    align-self: stretch;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--competitors-tab
+    .pricing-listing-type-compare--pi-dual,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--competitors-tab
+    .pricing-listing-type-compare--pi-dual {
+    min-height: 100%;
+    align-items: stretch;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--competitors-tab
+    > .pricing-intelligence-page__workspace-dual-scenario-compare-col,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--competitors-tab
+    > .pricing-intelligence-page__workspace-dual-scenario-compare-col {
+    align-self: stretch;
+    min-height: 100%;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--competitors-tab
+    > .pricing-intelligence-page__workspace-dual-scenario-right-col,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--competitors-tab
+    > .pricing-intelligence-page__workspace-dual-scenario-right-col {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--competitors-tab
+    .pricing-intelligence-page__workspace-competitors-grid-col,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--competitors-tab
+    .pricing-intelligence-page__workspace-competitors-grid-col {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-intelligence-modal .pricing-intelligence-page__workspace-panel--competitors,
+  .pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-panel--competitors {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--promotions-tab,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--tabs-horizontal.pricing-intelligence-page__workspace-shell--promotions-tab {
+    display: grid;
+    grid-template-columns: var(--s7-pricing-product-col-w) var(--s7-pricing-listing-type-compare-w) minmax(0, 1fr);
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    align-self: stretch;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--promotions-tab
+    .pricing-listing-type-compare--promotions-dual,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--promotions-tab
+    .pricing-listing-type-compare--promotions-dual {
+    min-height: 100%;
+    height: 100%;
+    align-items: stretch;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--promotions-tab
+    > .pricing-intelligence-page__workspace-dual-scenario-compare-col,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--promotions-tab
+    > .pricing-intelligence-page__workspace-dual-scenario-compare-col {
+    align-self: stretch;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--promotions-tab
+    > .pricing-intelligence-page__workspace-dual-scenario-right-col,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--promotions-tab
+    > .pricing-intelligence-page__workspace-dual-scenario-right-col {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-shell--promotions-tab
+    .pricing-intelligence-page__workspace-promotions-content-col,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-shell--promotions-tab
+    .pricing-intelligence-page__workspace-promotions-content-col {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-intelligence-modal
+    .pricing-intelligence-page__workspace-panel--promotions,
+  .pricing-intelligence-page--modal-shell
+    .pricing-intelligence-page__workspace-panel--promotions {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-intelligence-modal__panel {
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+}
+
+/* PI — aba Concorrentes no modal: grade estica até a base dos cards Clássico/Premium. */
+.pricing-intelligence-modal .pricing-intelligence-page__workspace-competitors-grid-col,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__workspace-competitors-grid-col {
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__competitors-panel,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__competitors-panel {
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-intelligence-modal .pricing-intelligence-page__competitors-grid,
+.pricing-intelligence-page--modal-shell .pricing-intelligence-page__competitors-grid {
+  --s7-pi-competitor-card-scale: 0.88;
+  --s7-pi-competitor-thumb-scale: calc(0.58 * var(--s7-pi-competitor-card-scale));
+  --s7-pi-competitor-text-scale: calc(1.18 * var(--s7-pi-competitor-card-scale));
+  --s7-pi-competitor-price-scale: 1.08;
+  --s7-pi-competitor-card-min-height: 0;
+  --s7-pi-competitor-element-gap: calc(4px * var(--s7-pi-competitor-card-scale, 0.88));
+  --s7-pi-competitor-block-gap: calc(6px * var(--s7-pi-competitor-card-scale, 0.88));
+  --s7-pi-competitor-thumb-scale-refined: calc(0.94 * var(--s7-pi-competitor-card-scale, 0.88));
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  gap: calc(6px * var(--s7-pi-competitor-card-scale, 0.88));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-content: stretch;
+  overflow: hidden;
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: calc(6px * var(--s7-pi-competitor-card-scale, 0.88));
+  box-sizing: border-box;
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card-thumb,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card-thumb {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+  width: 100%;
+  align-self: stretch;
+  background: #fff;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card-thumb
+  img,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card-thumb
+  img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  transform: scale(1.1);
+  transform-origin: center center;
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card-body,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card-body {
+  flex: 0 0 auto;
+}
+
+.pricing-intelligence-modal
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card-footer,
+.pricing-intelligence-page--modal-shell
+  .pricing-intelligence-page__competitors-grid
+  .pricing-intelligence-page__competitor-mini-card-footer {
+  padding-top: calc(5px * var(--s7-pi-competitor-card-scale, 0.88));
+}

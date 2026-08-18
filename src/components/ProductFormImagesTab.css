@@ -16,8 +16,12 @@
 }
 
 .pf-images-section {
-  margin-bottom: 28px;
+  margin-bottom: 16px;
   overflow: visible;
+}
+
+.pf-images-section:last-child {
+  margin-bottom: 0;
 }
 
 .pf-images-section-title {
@@ -125,11 +129,38 @@
   /* mesmo padrão .pf-images-action-btn / .pf-images-secondary-btn */
 }
 
-/* Linha com 7 slots fixos */
+/* Linha com até 14 slots (grid 7 colunas → 2 linhas) */
 .pf-images-slot-row {
   display: grid;
-  grid-template-columns: repeat(7, minmax(80px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(7, minmax(68px, 1fr));
+  gap: 8px;
+}
+
+.pf-images-container > .s7-local-section-header {
+  margin-bottom: 8px;
+}
+
+.pf-images-top-actions {
+  flex-wrap: nowrap !important;
+  gap: 5px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.pf-images-top-actions .s7-btn.s7-btn--secondary.s7-btn--sm {
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 5px !important;
+  font-size: 11px !important;
+}
+
+.pf-images-top-actions .s7-btn .s7-btn__label {
+  font-size: 11px !important;
+  white-space: nowrap;
+}
+
+.pf-images-variant-actions.pf-images-top-actions {
+  margin-bottom: 8px;
 }
 
 /* Slot vazio = placeholder quadrado (1:1) com borda tracejada */
@@ -318,6 +349,70 @@
   display: block;
 }
 
+.pf-images-card-actions {
+  padding: 3px 6px 4px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 11px;
+  min-height: 28px;
+}
+
+.pf-images-card-actions .s7-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-images-card-actions__left,
+.pf-images-card-actions__right {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.pf-images-btn-select,
+.pf-images-btn-open,
+.pf-images-btn-delete {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--s7-primary, #2563eb);
+  cursor: pointer;
+  padding: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.pf-images-btn-select--selected {
+  color: var(--s7-primary, #2563eb);
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.22);
+}
+
+.pf-images-check--inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+.pf-images-check--inline input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
 .pf-images-card-placeholder {
   width: 100%;
   height: 100%;
@@ -328,47 +423,7 @@
   color: #9ca3af;
 }
 
-.pf-images-card-actions {
-  padding: 6px 6px 4px;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 2px;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  min-height: 28px;
-}
-
-.pf-images-card-actions__left {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.pf-images-card-actions__right {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.pf-images-btn-download,
-.pf-images-btn-open,
-.pf-images-btn-delete {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--s7-muted, #9ca3af);
-  cursor: pointer;
-  padding: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-  border-radius: 4px;
-}
-
-.pf-images-btn-download:hover,
+.pf-images-btn-select:hover,
 .pf-images-btn-open:hover {
   color: var(--s7-primary, #2563eb);
   border-color: transparent;
@@ -405,13 +460,14 @@
 
 /* Drag handle: área clicável, cursor grab */
 .pf-images-drag-handle {
-  color: var(--s7-muted, #9ca3af);
+  color: var(--s7-primary, #2563eb);
   cursor: grab;
   user-select: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 3px;
+  flex-shrink: 0;
   border-radius: 4px;
   border: 1px solid transparent;
   transition: color 0.15s ease, box-shadow 0.15s ease;
@@ -581,4 +637,9 @@
 
 .pf-images-actions {
   margin-top: 24px;
+}
+
+.pf-images-action-tooltip-wrap {
+  display: inline-flex;
+  align-items: center;
 }

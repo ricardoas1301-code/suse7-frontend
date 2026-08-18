@@ -3,6 +3,8 @@
 // Manter alinhado com o state inicial em ProductForm.jsx (campos do produto).
 // ======================================================================
 
+import { sanitizeAdTitlesForDisplay } from "./adTitleValidation.js";
+
 /**
  * Remove relacionamentos aninhados e chaves null/undefined para o merge
  * em `setProduct` não apagar defaults com null nem poluir com joins.
@@ -24,5 +26,6 @@ export function pickProductFieldsForForm(row) {
     }
     out[k] = v;
   }
+  out.ad_titles = sanitizeAdTitlesForDisplay(row.ad_titles, row.product_name);
   return out;
 }

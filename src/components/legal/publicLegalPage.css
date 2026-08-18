@@ -1,0 +1,215 @@
+/* Shell compartilhado — páginas públicas legais (/termos, /privacidade) */
+
+body.public-legal-page-active {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  background: #f1f3f7;
+}
+
+.public-legal-page {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.public-legal-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--public-legal-header-height, 60px);
+  background: #ffffffee;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 9999;
+  box-sizing: border-box;
+}
+
+.public-legal-header__inner {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.public-legal-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.public-legal-header__nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 28px);
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.public-legal-header__link {
+  font-size: 15px;
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.public-legal-header__link--button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.public-legal-header__link:hover,
+.public-legal-header__link:focus-visible {
+  color: #2563eb;
+  text-decoration: underline;
+  outline: none;
+}
+
+.public-legal-header__cta {
+  background: #2563eb;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.public-legal-header__cta:hover,
+.public-legal-header__cta:focus-visible {
+  background: #1e4ec9;
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.public-legal-header__menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.public-legal-header__menu-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.public-legal-header__menu-icon,
+.public-legal-header__menu-icon::before,
+.public-legal-header__menu-icon::after {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: #334155;
+  border-radius: 1px;
+  position: relative;
+}
+
+.public-legal-header__menu-icon::before,
+.public-legal-header__menu-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+
+.public-legal-header__menu-icon::before {
+  top: -6px;
+}
+
+.public-legal-header__menu-icon::after {
+  top: 6px;
+}
+
+.public-legal-container {
+  display: flex;
+  justify-content: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: calc(var(--public-legal-header-height, 60px) + 12px) 12px 12px;
+}
+
+.public-legal-card {
+  background: #fff;
+  width: 100%;
+  max-width: none;
+  padding: clamp(24px, 4vw, 44px);
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .public-legal-header__link {
+    font-size: 14px;
+  }
+
+  .public-legal-header__cta {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 767px) {
+  .public-legal-header__menu-btn {
+    display: inline-flex;
+  }
+
+  .public-legal-header__nav {
+    display: none;
+    position: absolute;
+    top: calc(var(--public-legal-header-height, 60px) + 4px);
+    right: 12px;
+    left: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  }
+
+  .public-legal-header__nav.is-open {
+    display: flex;
+  }
+
+  .public-legal-header__link,
+  .public-legal-header__cta {
+    width: 100%;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .public-legal-header__cta {
+    padding: 12px 16px;
+  }
+
+  .public-legal-header__inner {
+    position: relative;
+  }
+}

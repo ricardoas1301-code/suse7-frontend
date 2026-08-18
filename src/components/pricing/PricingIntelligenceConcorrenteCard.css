@@ -1,0 +1,175 @@
+/* ======================================================
+   Refinos do card Concorrentes — somente Precificação Inteligente
+   Escopo: .pricing-intelligence-page__competitors-grid
+====================================================== */
+
+.pricing-intelligence-page__competitors-grid {
+  --s7-pi-competitor-price-scale-refined: 1.0904;
+  --s7-pi-competitor-compare-scale-refined: 0.9923;
+  /* Espaço padrão entre linhas do bloco principal */
+  --s7-pi-competitor-element-gap: calc(5.5px * var(--s7-pi-competitor-card-scale, 0.968));
+  /* Espaço de bloco: título↔preço e medalha↔comparativo */
+  --s7-pi-competitor-block-gap: calc(9px * var(--s7-pi-competitor-card-scale, 0.968));
+  --s7-pi-competitor-card-min-height: calc(218px * var(--s7-pi-competitor-card-scale, 0.968));
+  /* Thumb base 70% + 5,97% cumulativo (+3% + 1% + 1% + 0,5% + 0,39%, somente PI) */
+  --s7-pi-competitor-thumb-scale-refined: calc(0.7 * 1.03 * 1.01 * 1.01 * 1.005 * 1.0039 * var(--s7-pi-competitor-card-scale, 0.968));
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-thumb {
+  width: calc(100% * var(--s7-pi-competitor-thumb-scale-refined));
+  background: #fff;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card {
+  min-height: var(--s7-pi-competitor-card-min-height);
+  gap: var(--s7-pi-competitor-element-gap);
+  box-sizing: border-box;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-pi-competitor-block-gap);
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-pi-competitor-element-gap);
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-footer {
+  margin-top: auto;
+  padding-top: var(--s7-pi-competitor-block-gap);
+  border-top: 1px dotted rgba(15, 23, 42, 0.24);
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-title {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-thumb-ph svg {
+  width: calc(18px * var(--s7-pi-competitor-thumb-scale-refined));
+  height: calc(18px * var(--s7-pi-competitor-thumb-scale-refined));
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-thumb img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  transform: scale(1.06);
+  transform-origin: center center;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-price {
+  display: block;
+  font-size: calc(
+    10px * var(--s7-pi-competitor-text-scale, 1.2584) * var(--s7-pi-competitor-price-scale-refined)
+  );
+  font-weight: 800;
+  color: var(--s7-orange, #ff8533);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-frete-line {
+  display: block;
+  font-size: calc(10px * var(--s7-pi-competitor-text-scale, 1.2584) * 0.82);
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-frete-line:not(.pricing-intelligence-page__competitor-mini-card-frete--pago) {
+  color: #16a34a;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-frete--pago {
+  color: rgba(51, 65, 85, 0.78);
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-seller-line {
+  display: block;
+  font-size: calc(8.5px * var(--s7-pi-competitor-text-scale, 1.2584));
+  font-weight: 600;
+  color: rgba(51, 65, 85, 0.82);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-medal-line {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(3px * var(--s7-pi-competitor-text-scale, 1.2584));
+  font-size: calc(8.5px * var(--s7-pi-competitor-text-scale, 1.2584));
+  font-weight: 600;
+  color: #16a34a;
+  line-height: 1.2;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-seller-badge-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-seller-badge-icon {
+  flex-shrink: 0;
+  color: #16a34a;
+  stroke: #16a34a;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-compare {
+  display: block;
+  font-size: calc(
+    10px * var(--s7-pi-competitor-text-scale, 1.2584) * var(--s7-pi-competitor-compare-scale-refined)
+  );
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-compare--acima {
+  color: #dc2626;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-compare--abaixo {
+  color: #16a34a;
+}
+
+.pricing-intelligence-page__competitors-grid .pricing-intelligence-page__competitor-mini-card-compare--neutral {
+  color: rgba(100, 116, 139, 0.92);
+  font-weight: 600;
+}

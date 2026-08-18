@@ -106,9 +106,9 @@
 
 /* Quando o Nome do produto estiver dentro da aba Dados, não usa o divisor global */
 .pf-product-name-fixed--in-data{
-  padding: 0 0 10px;
+  padding: 0;
   border-bottom: none;
-  margin-bottom: 2px;
+  margin-bottom: 0;
 }
 
 /* Linha superior: título + obrigatórios + fechar dentro do mesmo card */
@@ -289,6 +289,12 @@
   justify-content: flex-end;
 }
 
+.pf-body-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .pf-body-footer > div{
   display: flex;
   align-items: center;
@@ -407,11 +413,425 @@
   padding-bottom: 16px; /* respiro antes da barra inferior (fora do scroll colado) */
 }
 
+.pf-description-tab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  min-height: 0;
+}
+
+.pf-description-tab-title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pf-description-tab-head .pf-tab-title {
+  margin: 0;
+}
+
+.pf-description-tab-title-group .pf-description-copy-btn {
+  transform: translateY(2px);
+}
+
+.pf-description-tab-sync {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Aba Anúncios: lista preenche altura útil até o rodapé do formulário */
+.pf-body[data-active-tab="ads"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pf-body[data-active-tab="ads"] .pf-body-inner {
+  display: none;
+}
+
+.pf-container--ads {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+}
+
+.pf-container--ads .pf-tab-title {
+  flex-shrink: 0;
+}
+
+.pf-rayx-list-subhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  flex-shrink: 0;
+}
+
+.pf-rayx-list-subhead__label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--s7-orange, #ff8533);
+  line-height: 1.2;
+}
+
+.pf-rayx-list-subhead__count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.12);
+}
+
+.pf-container--ads .pf-product-listings,
+.pf-container--ads .pf-product-listings__hint {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Aba Dados: SEO preenche altura útil até o rodapé do card */
+.pf-body[data-active-tab="data"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pf-body[data-active-tab="data"] .pf-body-inner {
+  display: none;
+}
+
+.pf-container--data {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+}
+
+.pf-container--data .pf-tab-title {
+  flex-shrink: 0;
+}
+
+/* Custos / Estoque: flex evita colapso de margem título→1º campo (igual Dados) */
+.pf-container--pricing,
+.pf-container--stock {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Aba Imagens: conteúdo ocupa altura natural — sem scroll/setas residuais */
+.pf-form-area:has(.pf-body[data-active-tab="images"]) {
+  overflow: visible;
+}
+
+.pf-body[data-active-tab="images"] {
+  flex: 0 1 auto;
+  min-height: auto;
+  overflow: visible;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.pf-body[data-active-tab="images"]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.pf-body[data-active-tab="images"]::-webkit-scrollbar-button,
+.pf-body[data-active-tab="images"]::-webkit-scrollbar-thumb,
+.pf-body[data-active-tab="images"]::-webkit-scrollbar-track {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.pf-container--images {
+  padding-bottom: 0;
+  overflow: visible;
+}
+
+.pf-container--images .pf-tab-title {
+  flex-shrink: 0;
+}
+
+.pf-container--images .pf-images-container,
+.pf-container--images .pf-images-section,
+.pf-container--images .pf-images-slot-row-wrap,
+.pf-container--images .pf-images-slot-row {
+  overflow: visible;
+}
+
+@media (max-height: 760px) {
+  .pf-body[data-active-tab="images"] {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
+  }
+
+  .pf-body[data-active-tab="images"]::-webkit-scrollbar {
+    width: 6px;
+    display: block;
+  }
+
+  .pf-body[data-active-tab="images"]::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+}
+
+/* Modal Raio-X do Produto — aba Imagens sem scroll/setas residuais */
+.product-edit-modal .pf-body[data-active-tab="images"] {
+  flex: 0 1 auto;
+  min-height: auto;
+  overflow: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.product-edit-modal .pf-form-area:has(.pf-body[data-active-tab="images"]) {
+  overflow: visible;
+}
+
+.product-edit-modal .pf-card.pf-card--primary:has(.pf-body[data-active-tab="images"]) {
+  overflow: visible;
+}
+
+.product-edit-modal .pf-body[data-active-tab="images"]::-webkit-scrollbar,
+.product-edit-modal .pf-body[data-active-tab="images"]::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.pf-container--pricing .pf-tab-title,
+.pf-container--stock .pf-tab-title {
+  flex-shrink: 0;
+}
+
+/* Raio-X — aba unificada Custos e estoque */
+.pf-body[data-active-tab="pricing_stock"] {
+  overflow: visible;
+}
+
+.pf-container--pricing-stock {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pf-pricing-stock-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form {
+  height: 100%;
+  overflow: visible !important;
+}
+
+.pf-container--pricing-stock .pf-product-rayx__daily-card.s7-daily-summary {
+  overflow: visible !important;
+}
+
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form .s7-daily-summary__body {
+  padding: 14px 16px 16px;
+  overflow: visible !important;
+}
+
+.pf-container--pricing-stock .s7-daily-summary__head,
+.pf-container--pricing-stock .pf-pricing-stock-col__body,
+.pf-container--pricing-stock .pf-label-row {
+  overflow: visible !important;
+}
+
+.pf-container--pricing-stock .pf-pricing-stock-grid,
+.pf-container--pricing-stock .pf-row,
+.pf-container--pricing-stock .pf-group,
+.pf-container--pricing-stock .pf-stock-virtual-header,
+.pf-container--pricing-stock .pf-label-left {
+  overflow: visible !important;
+}
+
+/* Custos & estoque: tooltip sempre acima e na frente de qualquer elemento. */
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::after,
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::before {
+  z-index: 400000 !important;
+}
+
+/* Força top-center (mesmo que venha com classes auxiliares antigas). */
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::after {
+  top: auto !important;
+  bottom: calc(100% + 10px) !important;
+  left: 50% !important;
+  right: auto !important;
+  margin-left: 0 !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::before {
+  top: auto !important;
+  bottom: calc(100% + 2px) !important;
+  left: 50% !important;
+  right: auto !important;
+  margin-left: 0 !important;
+  transform: translateX(-50%) !important;
+  border-top-color: var(--s7-tooltip-bg) !important;
+  border-bottom-color: transparent !important;
+}
+
+.pf-container--pricing-stock .pf-info-btn.s7-tip:hover::after {
+  transform: translateX(-50%) translateY(-2px) !important;
+}
+
+/* Card com tooltip ativo sobe na pilha e fica acima do card irmão. */
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form {
+  position: relative;
+  z-index: 10;
+}
+
+.pf-container--pricing-stock .pf-product-rayx__daily-card--custos {
+  z-index: 20;
+}
+
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form:has(.pf-info-btn:hover),
+.pf-container--pricing-stock .pf-product-rayx__daily-card--form:has(.pf-info-btn:focus-visible) {
+  z-index: 30;
+}
+
+/* Custos + estoque: mantém formato de balão de conversa (com seta). */
+.pf-container--pricing-stock .pf-info-btn.s7-tip[data-tip]::before {
+  content: "" !important;
+  display: block !important;
+}
+
+.pf-pricing-stock-col__body {
+  min-width: 0;
+}
+
+.pf-pricing-stock-col__body .pf-pricing-simple-column,
+.pf-pricing-stock-col__body .pf-stock-variants-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-container--sales-history {
+  min-width: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+}
+
+.pf-body[data-active-tab="sales_history"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pf-body[data-active-tab="sales_history"] .pf-body-inner {
+  display: none;
+}
+
+.pf-container--sales-history .pf-tab-title {
+  flex-shrink: 0;
+}
+
+.pf-container--performance.s7-rayx-sales-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  padding-bottom: 8px;
+}
+
+.pf-body[data-active-tab="performance"] {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+  padding: 8px 16px 0;
+}
+
+.pf-body[data-active-tab="performance"] .pf-container--performance.s7-rayx-sales-host {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Raio-X Produto — aba Vendas: título Custos colado no topo e bloco mais baixo */
+.pf-container--performance.s7-rayx-sales-host .pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__head {
+  min-height: calc(14px * var(--s7-rayx-sales-density));
+  padding: calc(2px * var(--s7-rayx-sales-density)) 14px 0;
+}
+
+.pf-container--performance.s7-rayx-sales-host .pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__body {
+  padding: calc(2px * var(--s7-rayx-sales-density)) 14px calc(3px * var(--s7-rayx-sales-density));
+}
+
+.pf-container--performance.s7-rayx-sales-host .pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card--custos .s7-daily-summary__metrics {
+  gap: calc(4px * var(--s7-rayx-sales-density)) calc(12px * var(--s7-rayx-sales-density));
+}
+
+.pf-container--performance.s7-rayx-sales-host .pf-product-rayx.s7-rayx-sales-compact .pf-product-rayx__daily-card.pf-product-rayx__daily-card--custos {
+  margin-bottom: calc(10px * var(--s7-rayx-sales-density));
+}
+
+@media (max-width: 900px) {
+  .pf-pricing-stock-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pf-row--data-seo {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.pf-row--data-seo .pf-group--seo {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-container--data .pf-seo-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .pf-page--bleed{
   width: 100%;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Respiro vertical entre blocos label+input (12px + 10%) — padrão Raio-X */
+  --pf-form-line-gap: 13.2px;
 }
 
 /* =====================================================
@@ -420,8 +840,8 @@
 
 .pf-layout{
   display: grid;
-  grid-template-columns: 16% 1fr;
-  gap: 16px;
+  grid-template-columns: 13% 1fr;
+  gap: 14px;
   align-items: start;
   width: 100%;
 }
@@ -504,7 +924,114 @@
    Palavras‑chave SEO: ligeiramente mais largo (~10% a mais) */
 .pf-group--full.pf-group--seo{
   max-width: 80%;
-  margin-bottom: 8px; /* pequeno respiro ao final da aba Dados */
+  margin-bottom: 0;
+}
+
+/* Pilha de campos Raio-X — mesmo respiro título→1º campo e entre linhas (Dados / Custos / Estoque) */
+.pf-data-form-column,
+.pf-pricing-simple-column,
+.pf-stock-simple-column {
+  margin-top: var(--pf-form-line-gap, 13.2px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-form-line-gap, 13.2px);
+  width: 100%;
+}
+
+.pf-data-form-column {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.pf-pricing-simple-column,
+.pf-stock-simple-column {
+  max-width: 220px;
+}
+
+.pf-data-form-column .pf-row,
+.pf-pricing-simple-column .pf-row,
+.pf-stock-simple-column .pf-row {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.pf-data-form-column .pf-product-name-fixed--in-data {
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.pf-data-col--tercio {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+}
+
+.pf-data-format-field {
+  display: none !important;
+}
+
+.pf-container--data .pf-group--full.pf-group--seo {
+  max-width: 100%;
+}
+
+/* SEO na aba Dados: tags compactas para visão 360 no modal */
+.pf-container--data .pf-seo-wrapper .seo-keywords-input {
+  flex: 0 1 auto;
+  min-height: 52px;
+  height: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.pf-container--data .pf-seo-wrapper .seo-keywords-input-inner {
+  flex: 0 1 auto;
+  min-height: 0;
+  align-content: flex-start;
+  gap: 5px;
+}
+
+.pf-container--data .pf-seo-wrapper .seo-keywords-tag {
+  font-size: 12px;
+  padding: 3px 8px;
+  gap: 5px;
+}
+
+.pf-container--data .pf-seo-wrapper .seo-keywords-tag-remove {
+  width: 16px;
+  height: 16px;
+  font-size: 14px;
+}
+
+.pf-container--data .pf-seo-wrapper .seo-keywords-hint {
+  flex-shrink: 0;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.product-edit-modal .pf-body[data-active-tab="data"] {
+  flex: 0 1 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
+.product-edit-modal .pf-container--data {
+  flex: 0 1 auto;
+  min-height: auto;
+}
+
+.product-edit-modal .pf-container--data .pf-row--data-seo,
+.product-edit-modal .pf-container--data .pf-group--seo,
+.product-edit-modal .pf-container--data .pf-seo-wrapper {
+  flex: 0 1 auto;
+  min-height: auto;
+}
+
+.product-edit-modal .pf-container--data .pf-seo-wrapper .seo-keywords-input {
+  flex: 0 1 auto;
+  min-height: 48px;
+  height: auto;
 }
 
 .pf-group--btn{
@@ -684,7 +1211,6 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  margin-top: 8px;   /* respiro entre label e textarea */
 }
 
 .pf-description-textarea {
@@ -1722,20 +2248,7 @@
   box-sizing: border-box;
 }
 
-/* Modo simples: coluna com todos os inputs do mesmo tamanho (espelha .pf-stock-simple-column) */
-.pf-pricing-simple-column{
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  max-width: 220px;
-}
-
-.pf-pricing-simple-column .pf-row{
-  width: 100%;
-}
-
+/* Modo simples: coluna estreita (largura útil dos inputs de custo) */
 .pf-pricing-simple-column .pf-group.pf-pricing-global-group{
   width: 100%;
   max-width: 100%;
@@ -1751,18 +2264,18 @@
 
 /* Lista de cards das variações no Pricing */
 .pf-pricing-variants-list{
-  margin-top: 12px;
+  margin-top: var(--pf-form-line-gap, 13.2px);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--pf-form-line-gap, 13.2px);
 }
 
 /* Container da lista: sem overflow horizontal (evita barra de rolagem) */
 .pf-pricing-variants-outer {
-  margin-top: 12px;
+  margin-top: var(--pf-form-line-gap, 13.2px);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--pf-form-line-gap, 13.2px);
   min-width: 0;
   overflow-x: visible;
 }
@@ -1896,10 +2409,10 @@
 ====================================================================== */
 
 .pf-stock-variants-list{
-  margin-top: 12px;
+  margin-top: var(--pf-form-line-gap, 13.2px);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--pf-form-line-gap, 13.2px);
 }
 
 /* Modo simples: sem moldura (alinhado às outras abas) */
@@ -1910,20 +2423,7 @@
   box-shadow: none;
 }
 
-/* Modo simples: campos empilhados (igual Custos & precificação) */
-.pf-stock-simple-column{
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  max-width: 220px;
-}
-
-/* Todos os grupos/inputs da coluna simples com a mesma largura útil */
-.pf-stock-simple-column .pf-row{
-  width: 100%;
-}
-
+/* Modo simples: grupos com mesma largura útil dos inputs */
 .pf-stock-simple-column .pf-group{
   width: 100%;
   max-width: 100%;
@@ -2413,49 +2913,6 @@
 
 .s7-local-info-icon {
   flex-shrink: 0;
-}
-
-/* Aba Anúncios — lista vinda do backend (GET /api/products/listings) */
-.pf-product-ads-table-wrap {
-  overflow-x: auto;
-  margin-top: 8px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 12px;
-  background: #fff;
-}
-
-.pf-product-ads-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.pf-product-ads-table th,
-.pf-product-ads-table td {
-  padding: 10px 12px;
-  text-align: left;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  vertical-align: top;
-}
-
-.pf-product-ads-table th {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--s7-text-secondary, #64748b);
-  background: rgba(248, 250, 252, 0.9);
-}
-
-.pf-product-ads-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.pf-product-ads-table__title {
-  max-width: 280px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Aba Vendas & desempenho */
