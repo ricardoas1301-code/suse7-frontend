@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { logAuthBootstrap } from "../auth/authBootstrapDevLog";
 import { useAuthBootstrap } from "../contexts/AuthBootstrapContext";
-import { supabase } from "../supabaseClient";import "./Layout.css";
+import { supabase } from "../supabaseClient";
+import "./Layout.css";
 
 // ---------------- Ícones do menu central ----------------
 import {
@@ -31,6 +32,8 @@ import S7NotificationCenter from "./notifications/S7NotificationCenter";
 import AvatarMenu from "./AvatarMenu";
 import { devCenterBootstrap } from "../services/devCenterApi";
 import RenewalOperationalGate from "../billing/components/RenewalOperationalGate";
+import GlobalOperationalTasksHost from "../features/dashboard/operationalTasks/GlobalOperationalTasksHost.jsx";
+import { GlobalSellerCompanyModalProvider } from "../features/dashboard/operationalTasks/globalSellerCompanyModalContext.jsx";
 
 export default function Layout() {
   const { ready: authReady, user } = useAuthBootstrap();
@@ -103,6 +106,7 @@ useEffect(() => {
   const isPricingIntelligencePage = location.pathname.startsWith("/precificacoes/inteligente");
 
   return (
+    <GlobalSellerCompanyModalProvider>
     <div className={`app-container ${isProductForm ? "app-container--pf-bleed" : ""}`}>
       {/* ===================== NAVBAR ===================== */}
       <nav className="navbar-premium">
@@ -189,6 +193,8 @@ className={`nav-item ${
           <Outlet />
         </RenewalOperationalGate>
       </main>
+      {authReady ? <GlobalOperationalTasksHost /> : null}
     </div>
+    </GlobalSellerCompanyModalProvider>
   );
 }

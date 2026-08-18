@@ -1,0 +1,187 @@
+/* ======================================================================
+   S7 Operational Row Card — base compartilhada (SSOT: /produtos homologado)
+   Classes explícitas no DOM real — grid (Produtos, Anúncios, Precificações, Concorrência)
+   ====================================================================== */
+
+.products-catalog__list-operational > .s7-operational-row-card-viewport,
+.anuncios-catalog .products-catalog__list-operational > .s7-operational-row-card-viewport,
+.concorrencia-catalog .products-catalog__list-operational > .s7-operational-row-card-viewport,
+.s7-operational-row-card-viewport {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.s7-operational-row-card-viewport .products-catalog__table-hscroll--body,
+.s7-operational-row-card-viewport .concorrencia-catalog__body {
+  background: var(--s7-bg-page, #f2f7ff);
+}
+
+.s7-operational-row-card-stack,
+.concorrencia-catalog__body.s7-operational-row-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  row-gap: 6px;
+  background: var(--s7-bg-page, #f2f7ff);
+  padding: 6px 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Card horizontal — linhas grid */
+.products-catalog__row.s7-operational-row-card,
+.anuncios-catalog__row.s7-operational-row-card,
+.concorrencia-catalog__row.s7-operational-row-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.38);
+  overflow: clip;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.products-catalog__row.s7-operational-row-card:hover,
+.anuncios-catalog__row.s7-operational-row-card:hover:not(.anuncios-catalog__row--pending-product),
+.concorrencia-catalog__row.s7-operational-row-card:hover {
+  background: #f8fafc;
+  border-color: rgba(100, 116, 139, 0.52);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+  transform: none;
+}
+
+.products-catalog__row.s7-operational-row-card:focus,
+.anuncios-catalog__row.s7-operational-row-card:focus {
+  outline: none;
+}
+
+.products-catalog__row.s7-operational-row-card:focus-visible,
+.anuncios-catalog__row.s7-operational-row-card:focus-visible,
+.concorrencia-catalog__row.s7-operational-row-card:focus-visible {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    inset 0 0 0 2px rgba(37, 99, 235, 0.35);
+}
+
+/* Seleção azul */
+.s7-operational-row-card.s7-operational-row-card--selected,
+.products-catalog__row.s7-operational-row-card.products-catalog__row--selected,
+.anuncios-catalog__row.s7-operational-row-card.s7-operational-row-card--selected,
+.concorrencia-catalog__row.s7-operational-row-card.s7-operational-row-card--selected {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.42);
+}
+
+.s7-operational-row-card.s7-operational-row-card--selected:hover,
+.products-catalog__row.s7-operational-row-card.products-catalog__row--selected:hover,
+.anuncios-catalog__row.s7-operational-row-card.s7-operational-row-card--selected:hover,
+.concorrencia-catalog__row.s7-operational-row-card.s7-operational-row-card--selected:hover {
+  background: rgba(37, 99, 235, 0.11);
+  border-color: rgba(37, 99, 235, 0.48);
+}
+
+/* Crítico / atenção */
+.s7-operational-row-card.s7-operational-row-card--critical,
+.products-catalog__row.s7-operational-row-card.products-catalog__row--incomplete-catalog,
+.anuncios-catalog__row.s7-operational-row-card.anuncios-catalog__row--pending-product,
+.anuncios-catalog__row.s7-operational-row-card.anuncios-catalog__row--sku-pending {
+  background: rgba(254, 202, 202, 0.32);
+  border-color: rgba(220, 38, 38, 0.34);
+  border-left: 3px solid rgba(220, 38, 38, 0.45);
+}
+
+.anuncios-catalog__row.s7-operational-row-card.anuncios-catalog__row--sku-pending {
+  background: rgba(255, 165, 0, 0.08);
+  border-color: rgba(245, 158, 11, 0.34);
+  border-left: 3px solid rgba(245, 158, 11, 0.45);
+}
+
+.s7-operational-row-card.s7-operational-row-card--critical:hover,
+.products-catalog__row.s7-operational-row-card.products-catalog__row--incomplete-catalog:hover,
+.anuncios-catalog__row.s7-operational-row-card.anuncios-catalog__row--pending-product:hover {
+  background: rgba(254, 202, 202, 0.42);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+/* Selecionado + crítico */
+.s7-operational-row-card.s7-operational-row-card--selected.s7-operational-row-card--critical,
+.products-catalog__row.s7-operational-row-card.products-catalog__row--selected.products-catalog__row--incomplete-catalog,
+.anuncios-catalog__row.s7-operational-row-card.s7-operational-row-card--selected.anuncios-catalog__row--pending-product,
+.concorrencia-catalog__row.s7-operational-row-card.s7-operational-row-card--selected.anuncios-catalog__row--pending-product {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.42);
+  border-left: 3px solid rgba(220, 38, 38, 0.45);
+}
+
+/* Células transparentes — moldura na linha */
+.s7-operational-row-card > .products-catalog__cell,
+.anuncios-catalog__row.s7-operational-row-card > .products-catalog__cell,
+.concorrencia-catalog__row.s7-operational-row-card > .products-catalog__cell,
+.concorrencia-catalog__row.s7-operational-row-card > .concorrencia-catalog__cell--account,
+.concorrencia-catalog__row.s7-operational-row-card > .concorrencia-catalog__cell--channel,
+.concorrencia-catalog__row.s7-operational-row-card > .concorrencia-catalog__cell--action {
+  background: transparent;
+}
+
+/* Grayscale contextual permanece nos slots internos — não na linha inteira */
+.concorrencia-catalog__row.s7-operational-row-card .concorrencia-catalog__competitor-slot--grayscale {
+  opacity: 1;
+}
+
+/* ======================================================================
+   Altura-base da linha — SSOT lista Vendas (exceto Concorrência)
+   Fórmula: padding-y × 2 + thumb 44px = 58px (linha padrão sem botão)
+   ====================================================================== */
+
+.products-catalog__row.s7-operational-row-card:not(.concorrencia-catalog__row),
+.anuncios-catalog__row.s7-operational-row-card {
+  --products-catalog-thumb-size: var(--s7-vendas-list-row-thumb-size, 44px);
+  min-height: var(--s7-vendas-list-row-min-height, 58px);
+  padding-top: var(--s7-list-table-row-padding-y, 7px);
+  padding-bottom: var(--s7-list-table-row-padding-y, 7px);
+  align-items: center;
+}
+
+.anuncios-catalog__row.s7-operational-row-card.anuncios-catalog__row--minimal,
+.anuncios-catalog__row.s7-operational-row-card.anuncios-catalog__row--anuncios-analytic {
+  align-items: center;
+}
+
+.anuncios-catalog__row.s7-operational-row-card .anuncios-ad-thumb {
+  width: var(--s7-vendas-list-row-thumb-size, 44px);
+  height: var(--s7-vendas-list-row-thumb-size, 44px);
+}
+
+.anuncios-catalog__row.s7-operational-row-card:not(:has(.anuncios-ad-line-action-btn)) .anuncios-ad-main {
+  gap: 0;
+  justify-content: center;
+}
+
+/* Linha com botão — cresce apenas o necessário */
+.products-catalog__row.s7-operational-row-card:not(.concorrencia-catalog__row):has(
+    .anuncios-ad-line-action-btn,
+    .products-catalog__complete-product-btn,
+    .vendas-page__complete-product-btn
+  ),
+.anuncios-catalog__row.s7-operational-row-card:has(
+    .anuncios-ad-line-action-btn,
+    .products-catalog__complete-product-btn,
+    .vendas-page__complete-product-btn
+  ) {
+  min-height: 0;
+  align-items: start;
+}
+
+.anuncios-catalog__row.s7-operational-row-card:has(.anuncios-ad-line-action-btn) .anuncios-ad-main {
+  gap: 6px;
+  justify-content: flex-start;
+}
