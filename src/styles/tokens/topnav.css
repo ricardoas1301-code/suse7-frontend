@@ -4,25 +4,32 @@
 ====================================================== */
 
 :root {
+  /* S1.1 Fase 1 — header compacto (~25% vs baseline 64px) */
   --s7-topnav-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial,
     sans-serif;
-  --s7-topnav-font-size: 15px;
+  --s7-topnav-font-size: var(--s7-text-body);
   --s7-topnav-font-weight: 500;
   --s7-topnav-font-weight-active: 600;
-  --s7-topnav-line-height: 1.4;
-  --s7-topnav-letter-spacing: normal;
+  --s7-topnav-line-height: 1.35;
+  --s7-topnav-letter-spacing: -0.01em;
 
-  --s7-topnav-bar-height: 64px;
-  --s7-topnav-bar-padding-x: 33px;
+  --s7-topnav-bar-height: 48px;
+  --s7-topnav-bar-padding-x: 24px;
   --s7-topnav-bar-bg: #ffffff;
   --s7-topnav-bar-border: #e5e7eb;
 
-  --s7-topnav-link-gap: 6px;
-  --s7-topnav-items-gap: 18px;
-  --s7-topnav-link-padding-y: 8px;
-  --s7-topnav-link-padding-x: 12px;
-  --s7-topnav-link-radius: 10px;
-  --s7-topnav-icon-size: 16px;
+  --s7-topnav-link-gap: 5px;
+  --s7-topnav-items-gap: 13px;
+  /* Hit area horizontal; vertical vem do min-height + pill centralizado (S1.1B) */
+  --s7-topnav-link-padding-y: 0;
+  --s7-topnav-link-padding-x: 10px;
+  --s7-topnav-link-radius: 8px;
+  --s7-topnav-link-min-height: 36px;
+  /* Pill visual compacto — active/hover (S1.1B) */
+  --s7-topnav-pill-height: 28px;
+  --s7-topnav-pill-radius: 6px;
+  --s7-topnav-pill-height-mobile: 30px;
+  --s7-topnav-icon-size: 14px;
 
   --s7-topnav-link-color: #374151;
   --s7-topnav-icon-color: #6b7280;
@@ -34,14 +41,17 @@
   --s7-topnav-active-color: #ffffff;
   --s7-topnav-active-icon-color: #e9ebf1;
 
-  --s7-topnav-actions-gap: 12px;
-  --s7-topnav-actions-padding-left: 33px;
+  --s7-topnav-actions-gap: 10px;
+  --s7-topnav-actions-padding-left: 20px;
+  --s7-topnav-action-hit-size: 34px;
 
-  /* Slot esquerdo — paridade com .nav-logo-img (63px) */
-  --s7-topnav-brand-slot-min-width: 63px;
+  /* Logo Suse7 + avatar empresa no header */
+  --s7-topnav-logo-size: 44px;
+  --s7-topnav-avatar-size: 34px;
+  --s7-topnav-brand-slot-min-width: var(--s7-topnav-logo-size);
 
   /* Dev Center — identidade admin */
-  --s7-dev-center-brand-font-size: 15px;
+  --s7-dev-center-brand-font-size: var(--s7-text-body);
   --s7-dev-center-brand-font-weight: 600;
   --s7-dev-center-brand-letter-spacing: normal;
   --s7-dev-center-brand-color: var(--s7-orange);

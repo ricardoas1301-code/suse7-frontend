@@ -30,6 +30,7 @@ import suse7Logo from "../assets/suse7-logo-redonda.png";
 // ---------------- Componentes ----------------
 import S7NotificationCenter from "./notifications/S7NotificationCenter";
 import AvatarMenu from "./AvatarMenu";
+import S7Tooltip from "./ui/S7Tooltip";
 import { devCenterBootstrap } from "../services/devCenterApi";
 import RenewalOperationalGate from "../billing/components/RenewalOperationalGate";
 import GlobalOperationalTasksHost from "../features/dashboard/operationalTasks/GlobalOperationalTasksHost.jsx";
@@ -112,9 +113,11 @@ useEffect(() => {
       <nav className="navbar-premium">
         {/* Logo Suse7 */}
         <div className="nav-left">
-          <Link to="/" className="nav-logo">
-            <img src={suse7Logo} alt="Suse7" className="nav-logo-img" />
-          </Link>
+          <S7Tooltip content="Dashboard" placement="bottom-start" offset={6} className="nav-logo-tip">
+            <Link to="/" className="nav-logo">
+              <img src={suse7Logo} alt="Suse7" className="nav-logo-img" />
+            </Link>
+          </S7Tooltip>
         </div>
 
         {/* Menu central */}
