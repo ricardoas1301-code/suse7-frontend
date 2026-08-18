@@ -42,11 +42,11 @@ export async function buildSaleRayxXlsxExport(ctx) {
   });
 
   const headerRow = sheet.getRow(headerRowIndex);
-  headerRow.values = [undefined, ...headers];
+  headerRow.values = headers;
   styleS7ExcelTableHeaderRow(headerRow);
 
   const dataRow = sheet.getRow(headerRowIndex + 1);
-  dataRow.values = [undefined, ...row];
+  dataRow.values = row;
   dataRow.eachCell((cell) => {
     cell.alignment = { vertical: "middle", wrapText: true };
   });

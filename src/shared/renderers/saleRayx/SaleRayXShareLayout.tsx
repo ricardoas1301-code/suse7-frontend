@@ -8,7 +8,7 @@ import {
   type SaleHealthVisualState,
 } from "./saleRayxShareHealthVisual.js";
 
-export type SaleRayXShareOutputMode = "whatsapp" | "copy" | "print";
+export type SaleRayXShareOutputMode = "whatsapp" | "copy" | "print" | "email";
 
 export type SaleRayXSharePayload = {
   saleId: string;
@@ -77,7 +77,7 @@ function isContingencySectionText(text: string): boolean {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
-  return normalized.includes("margem de contingencia");
+  return normalized.includes("margem de contingencia") || normalized.includes("custos operacionais");
 }
 
 function isCustosInternosSectionText(text: string): boolean {

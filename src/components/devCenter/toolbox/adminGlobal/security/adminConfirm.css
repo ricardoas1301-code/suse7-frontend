@@ -1,0 +1,93 @@
+/* ======================================================
+   ADMIN GLOBAL — Confirmação dupla reutilizável (S1_5.5)
+   ====================================================== */
+
+.s7-admin-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.s7-admin-confirm__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.s7-admin-confirm__card {
+  position: relative;
+  width: min(440px, 100%);
+  background: var(--s7-surface-elevated, #fff);
+  border: 1px solid var(--s7-border-subtle, #e2e8f0);
+  border-radius: 0.85rem;
+  padding: 1.1rem 1.2rem;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.s7-admin-confirm[data-critico="1"] .s7-admin-confirm__card {
+  border-color: color-mix(in srgb, var(--s7-color-warning, #d97706) 55%, transparent);
+}
+
+.s7-admin-confirm__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.s7-admin-confirm__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--s7-surface-muted, #f1f5f9);
+  color: var(--s7-text-muted, #64748b);
+}
+
+.s7-admin-confirm__tag--critico {
+  background: color-mix(in srgb, var(--s7-color-warning, #d97706) 16%, transparent);
+  color: var(--s7-color-warning, #b45309);
+}
+
+.s7-admin-confirm__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--s7-text, #0f172a);
+}
+
+.s7-admin-confirm__desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--s7-text-muted, #475569);
+}
+
+.s7-admin-confirm__aviso {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--s7-color-warning, #b45309);
+  background: color-mix(in srgb, var(--s7-color-warning, #d97706) 10%, transparent);
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.5rem;
+}
+
+.s7-admin-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}

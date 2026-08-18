@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import S7Icon from "../../../components/ui/S7Icon.jsx";
 import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../../../components/ui/S7CopyButton.jsx";
 import { useProductMainImageSrc } from "../../../utils/productImageDisplayUrl.js";
@@ -82,7 +82,7 @@ export function SkuLookupProductItem({
       <span className="anuncios-sku-modal__lookup-text">
         <strong>{item.productName}</strong>
         <span className="anuncios-sku-modal__lookup-sku s7-copy-group">
-          <span>SKU: {item.sku || "ÔÇö"}</span>
+          <span>SKU: {item.sku || "—"}</span>
           {!compact && item.sku ? (
             <S7CopyButton
               value={item.sku}
@@ -99,7 +99,7 @@ export function SkuLookupProductItem({
             />
           ) : null}
           {item.matchedBy === "variant" && item.matchedVariantSku
-            ? ` ┬À Varia├º├úo: ${item.matchedVariantSku}`
+            ? ` · Variação: ${item.matchedVariantSku}`
             : ""}
         </span>
       </span>
@@ -262,7 +262,7 @@ export function ListingSkuLookupPanel({
           </div>
           {skuMatches.length > 1 ? (
             <p className="anuncios-sku-modal__confirm-hint">
-              Marque o produto correto para habilitar o v├¡nculo deste an├║ncio.
+              Marque o produto correto para habilitar o vínculo deste anúncio.
             </p>
           ) : null}
         </>

@@ -1,0 +1,30 @@
+.listing-rayx-description-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.listing-rayx-description-panel__wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0;
+}
+
+.listing-rayx-description-panel__textarea {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: 1.55;
+  padding: 14px 16px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  resize: none;
+  overflow-y: auto;
+  box-sizing: border-box;
+}

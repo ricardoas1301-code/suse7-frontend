@@ -9,11 +9,9 @@ import {
 } from "./SaleRayXShareRenderer.js";
 
 const PRINT_WINDOW_TITLE = "Suse7";
-const PRINT_PAGE_MARGIN_MM = 10;
-const PRINT_PAGE_WIDTH_MM = 210;
-const PRINT_PAGE_HEIGHT_MM = 297;
-const PRINT_QUADRANT_WIDTH_MM = (PRINT_PAGE_WIDTH_MM - PRINT_PAGE_MARGIN_MM * 2) / 2;
-const PRINT_QUADRANT_HEIGHT_MM = (PRINT_PAGE_HEIGHT_MM - PRINT_PAGE_MARGIN_MM * 2) / 2;
+// Padrão premium A4 retrato — mesma escala do Relatório de Vendas (P_2.8.8A).
+const PRINT_SHEET_MAX_WIDTH_MM = 160;
+const PRINT_SHEET_MAX_HEIGHT_MM = 265;
 
 function escapeHtml(raw: string) {
   return raw
@@ -79,34 +77,33 @@ export async function printSaleRayxShare(input: SaleRayXShareInput): Promise<voi
   <meta charset="utf-8" />
   <title>${escapeHtml(PRINT_WINDOW_TITLE)}</title>
   <style>
-    @page { size: A4 portrait; margin: 10mm; }
+    @page { size: A4 portrait; margin: 12mm; }
     html, body { margin: 0; padding: 0; background: #fff; box-sizing: border-box; }
-    body { display: flex; justify-content: flex-start; align-items: flex-start; }
-    .s7-rayx-print-root {
-      box-sizing: border-box;
-      width: ${PRINT_QUADRANT_WIDTH_MM}mm;
-      height: ${PRINT_QUADRANT_HEIGHT_MM}mm;
-      max-width: ${PRINT_QUADRANT_WIDTH_MM}mm;
-      max-height: ${PRINT_QUADRANT_HEIGHT_MM}mm;
-      overflow: hidden;
+    body { display: flex; justify-content: center; align-items: flex-start; }
+    .s7-rayx-print-sheet {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: ${PRINT_SHEET_MAX_WIDTH_MM}mm;
+      max-height: ${PRINT_SHEET_MAX_HEIGHT_MM}mm;
+      object-fit: contain;
       page-break-inside: avoid;
       break-inside: avoid;
     }
-    .s7-rayx-print-sheet {
-      display: block;
-      width: 100%;
-      height: 100%;
-      max-width: ${PRINT_QUADRANT_WIDTH_MM}mm;
-      max-height: ${PRINT_QUADRANT_HEIGHT_MM}mm;
-      object-fit: contain;
-      object-position: top left;
+    @media print {
+      html, body { background: #fff !important; }
+      .s7-rayx-print-sheet {
+        max-width: ${PRINT_SHEET_MAX_WIDTH_MM}mm !important;
+        max-height: ${PRINT_SHEET_MAX_HEIGHT_MM}mm !important;
+        object-fit: contain !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="s7-rayx-print-root">
-    <img class="s7-rayx-print-sheet" src="${dataUrl.replace(/"/g, "&quot;")}" alt="${escapeHtml(SALE_RAYX_BRAND_TITLE)}" />
-  </div>
+  <img class="s7-rayx-print-sheet" src="${dataUrl.replace(/"/g, "&quot;")}" alt="${escapeHtml(SALE_RAYX_BRAND_TITLE)}" />
 </body>
 </html>`);
   doc.close();
@@ -118,12 +115,14 @@ export async function printSaleRayxShare(input: SaleRayXShareInput): Promise<voi
       return;
     }
     const trigger = () => {
-      const maxW = mmToCssPx(PRINT_QUADRANT_WIDTH_MM);
-      const maxH = mmToCssPx(PRINT_QUADRANT_HEIGHT_MM);
+      const maxW = mmToCssPx(PRINT_SHEET_MAX_WIDTH_MM);
+      const maxH = mmToCssPx(PRINT_SHEET_MAX_HEIGHT_MM);
       if (img.naturalWidth > 0 && img.naturalHeight > 0) {
         const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
         img.style.width = `${Math.floor(img.naturalWidth * scale)}px`;
         img.style.height = `${Math.floor(img.naturalHeight * scale)}px`;
+        img.style.maxWidth = "none";
+        img.style.maxHeight = "none";
       }
       try {
         frameWin?.focus();

@@ -10,7 +10,9 @@ import { getSaleRayxHealthShellClasses, resolveSaleRayxHealthState } from "./sal
 
 import { getSaleRayxMarginSemantic } from "./saleRayxMarginSemantic";
 
-import { collectSaleRayxContingencyMargin } from "./saleRayxPricingVariables";
+import {
+  collectSaleRayxOperationalCostsDisplayLines,
+} from "./saleRayxOperationalCostsDisplay";
 
 import S7Icon from "../ui/S7Icon";
 import S7Tooltip from "../ui/S7Tooltip";
@@ -199,7 +201,7 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin, de
           className="anuncios-sell-popover__promo-price-tip-btn vendas-sale-rayx__sale-promo-tip-btn"
           aria-label="Detalhes do desconto aplicado nesta venda"
         >
-          <S7Icon name="info" size={13} strokeWidth={2} />
+          <S7Icon name="info" size={12} strokeWidth={2} />
         </button>
       </S7Tooltip>
     ) : null;
@@ -293,7 +295,7 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin, de
     ? `Alíquota ${internalTaxPercentLabel}`
     : null;
 
-  const contingencyMarginLines = collectSaleRayxContingencyMargin(fin);
+  const operationalCostsLines = collectSaleRayxOperationalCostsDisplayLines(fin);
 
 
 
@@ -379,37 +381,39 @@ export default function SaleFinancialBreakdownCard({ financial, profitMargin, de
 
         </div>
 
-        {contingencyMarginLines.length > 0 ? (
+        <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section vendas-sale-rayx__financial-section--contingency-margin">
 
-          <div className="anuncios-sell-popover__section anuncios-pricing-modal__raiox-block vendas-sale-rayx__financial-section vendas-sale-rayx__financial-section--contingency-margin">
+          <h4 className="anuncios-sell-popover__section-title">Custos operacionais</h4>
 
-            <h4 className="anuncios-sell-popover__section-title">Margem de contingência</h4>
+          <div className="anuncios-sell-popover__block vendas-sale-rayx__fin-lines-group">
 
-            <div className="anuncios-sell-popover__block vendas-sale-rayx__fin-lines-group">
+            {operationalCostsLines.map((row) => (
 
-              {contingencyMarginLines.map((row) => (
+              <SaleRayXFinancialLine
 
-                <SaleRayXFinancialLine
+                key={row.label}
 
-                  key={row.label}
+                label={row.label}
 
-                  label={row.label}
+                value={row.value}
 
-                  value={row.value}
+                percentDetail={row.percentDetail}
 
-                  percentDetail={row.percentDetail}
+                valueTone={row.isZero ? "default" : "negative"}
 
-                  valueTone="negative"
+                isZeroLine={row.isZero}
 
-                />
+                lineClass={
+                  row.isZero ? "vendas-sale-rayx__operational-cost-line--empty" : ""
+                }
 
-              ))}
+              />
 
-            </div>
+            ))}
 
           </div>
 
-        ) : null}
+        </div>
 
 
 

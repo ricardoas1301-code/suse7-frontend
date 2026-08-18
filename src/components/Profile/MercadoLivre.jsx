@@ -2,23 +2,49 @@
 // PÁGINA: Mercado Livre — multi-conta + vínculo empresa (OAuth backend)
 // ======================================================================
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useLocation, useNavigate } from "react-router-dom";
 import { buildApiUrl, apiFetch } from "../../config/api";
 import { useNotifications } from "../../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../../services/notificationTypes";
 import MarketplaceCompanyPickerModal from "./MarketplaceCompanyPickerModal";
+import "./Profile.css";
 import "./MercadoLivre.css";
 import S7ImportIntelligencePanel from "../import/S7ImportIntelligencePanel";
-
-import suse7Logo from "../../assets/suse7-logo-redonda.png";
-import mercadoLivreLogo from "../../assets/mercado-livre.png";
+import MarketplaceIntegrationCard from "./marketplaceIntegration/MarketplaceIntegrationCard.jsx";
+import MarketplaceIntegrationModal from "./marketplaceIntegration/MarketplaceIntegrationModal.jsx";
+import MarketplaceSyncDetailsModal from "./marketplaceIntegration/MarketplaceSyncDetailsModal.jsx";
+import MarketplaceIntegrationPageLayout, {
+  MarketplaceConnectionVisual,
+} from "./marketplaceIntegration/MarketplaceIntegrationPageLayout.jsx";
+import {
+  buildMercadoLivreIntegrationCardPresentation,
+  buildMercadoLivreIntegrationModalPresentation,
+} from "./marketplaceIntegration/mercadoLivreIntegrationAdapter.js";
+import {
+  buildMercadoLivreSyncDetailsPresentation,
+} from "./marketplaceIntegration/mercadoLivreSyncDetailsAdapter.js";
+import { mercadoLivrePresentation } from "./marketplaceIntegration/mercadoLivrePresentation.js";
+import {
+  buildSellerCompaniesById,
+  resolveLinkedCompanyDocumentFormatted,
+  resolveLinkedCompanyPresentation,
+} from "./marketplaceIntegration/marketplaceIntegrationFormat.js";
+import { sortMarketplaceIntegrationsChronologically } from "./marketplaceIntegration/sortMarketplaceIntegrationsChronologically.js";
+import {
+  ML_INTEGRATION_HISTORICAL_SALES_MESSAGE,
+  ML_INTEGRATION_OAUTH_INTRO,
+  ML_SYNC_DETAILS_CTA_LABEL,
+} from "./marketplaceIntegration/mercadoLivreIntegrationCopy.js";
+import "./marketplaceIntegration/s7ModalStack.css";
+import MarketplaceSyncDetailsOpeningIndicator from "./marketplaceIntegration/MarketplaceSyncDetailsOpeningIndicator.jsx";
 
 const ML_OAUTH_SUCCESS_TOAST_GAP_MS = 3500;
 let _mlOAuthSuccessToastLastAt = 0;
 const ML_OAUTH_CONFIG_ERR_KEY = "ml_oauth_config_errors";
 const ML_SYNC_MODAL_QS = "ml_sync_modal";
+const ML_POST_CONNECT_QS = "ml_post_connect";
 const ML_ACCOUNT_UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -52,110 +78,6 @@ const ML_DEFAULT_CHECKLIST = [
   { key: "historical_sales", label: "Histórico de vendas", status: "pending" },
 ];
 
-function syncJobStatusPt(status) {
-  const s = String(status || "").toLowerCase();
-  if (s === "done") return "concluído";
-  if (s === "running") return "em andamento";
-  if (s === "pending") return "na fila";
-  if (s === "error") return "com erro";
-  return s || "—";
-}
-
-/** Resumo para cartões Integrações (camada recente + histórico). */
-function mlHotHistoricalLines(payload) {
-  if (!payload?.checklist?.length) return null;
-  const recent = payload.checklist.find((x) => x.key === "sales_recent");
-  const hist = payload.checklist.find((x) => x.key === "historical_sales");
-  /** @type {string[]} */
-  const parts = [];
-  if (recent) parts.push(`Dados recentes: ${syncJobStatusPt(recent.status)}`);
-  if (hist) {
-    const ux = hist.historical_ux;
-    if (ux?.checklist_detail_lines?.length) {
-      const head =
-        typeof ux.checklist_primary === "string" && ux.checklist_primary.trim() !== ""
-          ? ux.checklist_primary.trim()
-          : "Histórico de vendas";
-      parts.push(`${head}: ${syncJobStatusPt(hist.status)}`);
-      for (const line of ux.checklist_detail_lines.slice(0, 3)) {
-        if (line && String(line).trim()) parts.push(`  · ${String(line).trim()}`);
-      }
-    } else {
-      let extra = "";
-      const pt = Number(hist.progress_total);
-      const pc = Number(hist.progress_current);
-      if (Number.isFinite(pt) && pt > 0 && Number.isFinite(pc) && !hist.historical_ux?.hide_raw_progress_fraction) {
-        extra = ` (${Math.min(100, Math.round((100 * pc) / pt))}%)`;
-      }
-      parts.push(`Histórico (Mercado Livre): ${syncJobStatusPt(hist.status)}${extra}`);
-    }
-  }
-  return parts.length ? parts : null;
-}
-
-function statusLabel(s) {
-  const v = String(s || "").toLowerCase();
-  if (v === "active") return "Ativa";
-  if (v === "removed") return "Removida";
-  if (v === "expired" || v === "invalid") return "Reautenticar";
-  return s || "—";
-}
-
-function formatSyncAt(iso) {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-  } catch {
-    return "—";
-  }
-}
-
-/** Prefer sync-status `connection`; fallback to campos planos do GET accounts. */
-function mergeMlConnection(acc, summary) {
-  const c = summary?.connection;
-  if (c && typeof c === "object") {
-    return {
-      health: c.health ?? "unknown",
-      badge_label: c.badge_label ?? "—",
-      alert_message: c.alert_message ?? null,
-      show_reconnect: c.show_reconnect === true,
-      monitoring_headline: c.monitoring_headline ?? null,
-      pipeline_active: c.pipeline_active === true,
-    };
-  }
-  return {
-    health: acc.connection_health ?? "unknown",
-    badge_label: acc.connection_badge_label ?? "—",
-    alert_message: acc.connection_alert_message ?? null,
-    show_reconnect: acc.show_reconnect_cta === true,
-    monitoring_headline: acc.monitoring_headline ?? null,
-    pipeline_active: acc.pipeline_active === true,
-  };
-}
-
-/** Destaque em “Ver sincronização” quando há atividade ou pendência. */
-function mlSyncViewNeedsEmphasis(summary) {
-  if (!summary) return false;
-  if (summary.sync_attention_required === true) return true;
-  const ov = String(summary.overall || "").toLowerCase();
-  if (ov === "running" || ov === "error" || ov === "completed_with_errors") return true;
-  if (summary.historical_backfill_active === true) return true;
-  if (summary.stalled === true) return true;
-  if (summary.pending_queued_too_long === true) return true;
-  return false;
-}
-
-/** Conta com sync concluído, sem atenção e sem reconexão — link vai para opções avançadas. */
-function mlAccountFullyStable(summary, connection) {
-  if (!summary || !connection) return false;
-  if (connection.show_reconnect === true) return false;
-  const ov = String(summary.overall || "").toLowerCase();
-  if (ov !== "done") return false;
-  if (summary.historical_backfill_active === true) return false;
-  if (summary.sync_attention_required === true) return false;
-  return true;
-}
-
 function readStoredMlIntegrationStage(accountId) {
   if (!accountId) return null;
   try {
@@ -175,6 +97,9 @@ export default function MercadoLivre() {
   const [syncingId, setSyncingId] = useState(null);
   const [removingId, setRemovingId] = useState(null);
 
+  /** Modal de gestão — visão executiva no card, detalhes operacionais aqui. */
+  const [manageModalAccountId, setManageModalAccountId] = useState(null);
+
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [onboardingAccountId, setOnboardingAccountId] = useState(null);
   const [syncStatusPayload, setSyncStatusPayload] = useState(null);
@@ -185,6 +110,7 @@ export default function MercadoLivre() {
 
   /** GET /sync-status por conta (cards Integrações). */
   const [syncSummariesByAccountId, setSyncSummariesByAccountId] = useState({});
+  const [syncStatusFetching, setSyncStatusFetching] = useState(false);
 
   /** Modal 1 — visão operacional “Importação inteligente” (painel grande só aqui). */
   const [operationalImportModalOpen, setOperationalImportModalOpen] = useState(false);
@@ -194,6 +120,10 @@ export default function MercadoLivre() {
   /** Empresas para o modal de integração (multi-marketplace). */
   const [integrationCompanies, setIntegrationCompanies] = useState([]);
   const [integrationPickerOpen, setIntegrationPickerOpen] = useState(false);
+  const syncViewButtonRef = useRef(null);
+  const syncDetailsFetchGenRef = useRef(0);
+  const syncDetailsOpeningAccountIdRef = useRef(null);
+  const [syncDetailsOpeningAccountId, setSyncDetailsOpeningAccountId] = useState(null);
   /** Após OAuth com ml_awaiting_sync: confirmação antes de enfileirar sync. */
   const [postConnectReadyOpen, setPostConnectReadyOpen] = useState(false);
 
@@ -548,7 +478,6 @@ export default function MercadoLivre() {
       console.info("[ml/ui] oauth_target_account_id", { marketplace_account_id: mid, source: "ml_sync_modal_qs" });
       setSyncStatusPayload(null);
       setOnboardingAccountId(mid);
-      setOperationalImportModalOpen(true);
       setOnboardingOpen(false);
       setOnboardingDismissed(false);
 
@@ -568,42 +497,35 @@ export default function MercadoLivre() {
         setOauthAwaitingAccountInList(false);
       }
 
-      const accRow = list.find((a) => String(a.id) === String(mid));
-      const stUrl = buildApiUrl(`/api/marketplace/accounts/${encodeURIComponent(mid)}/sync-status`);
-      if (stUrl && found && accRow) {
-        console.info("[ml/ui] sync_poll_start_for_account", {
-          marketplace_account_id: mid,
-          in_accounts_list: true,
-          source: "ml_sync_modal_qs",
-        });
-        const pr = await apiFetch(stUrl, { method: "GET", cache: "no-store" });
-        if (!cancelled && pr.ok && pr.data?.ok) {
-          const pid = pr.data.marketplace_account_id;
-          if (pid != null && String(pid) !== String(mid)) {
-            console.info("[ml/ui] sync_payload_discarded_wrong_account", {
-              expected_marketplace_account_id: mid,
-              payload_marketplace_account_id: pid,
-            });
-          } else {
-            logSyncPayloadTokensMissing(pr.data, {
-              marketplace_account_id: mid,
-              external_seller_id: accRow.external_seller_id ?? null,
-              seller_company_id: accRow.seller_company_id ?? null,
-            });
-            setSyncStatusPayload(pr.data);
-            setSyncSummariesByAccountId((prev) => ({ ...prev, [mid]: pr.data }));
-            const ov = String(pr.data.overall || "").toLowerCase();
-            setInitialPipelineEngaged(ov !== "awaiting_start");
-          }
-        } else if (!cancelled) {
-          setInitialPipelineEngaged(false);
-        }
-      } else if (!cancelled) {
-        setInitialPipelineEngaged(false);
+      if (!cancelled && found) {
+        void openTechnicalSyncDetails(mid);
       }
 
       const next = new URLSearchParams(location.search);
       next.delete(ML_SYNC_MODAL_QS);
+      const q = next.toString();
+      navigate(`${location.pathname}${q ? `?${q}` : ""}`, { replace: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [location.search, navigate, loadAccounts]);
+
+  /** Abre modal pós-conexão (Iniciar sincronização) via card flutuante — não dispara sync. */
+  useEffect(() => {
+    const sp = new URLSearchParams(location.search);
+    const mid = sp.get(ML_POST_CONNECT_QS)?.trim();
+    if (!mid || !ML_ACCOUNT_UUID_RE.test(mid)) return undefined;
+    let cancelled = false;
+    (async () => {
+      setOnboardingAccountId(mid);
+      setPostConnectReadyOpen(true);
+      setOnboardingOpen(false);
+      let list = await loadAccounts({ noCache: true });
+      if (cancelled) return;
+      setAccounts(list);
+      const next = new URLSearchParams(location.search);
+      next.delete(ML_POST_CONNECT_QS);
       const q = next.toString();
       navigate(`${location.pathname}${q ? `?${q}` : ""}`, { replace: true });
     })();
@@ -777,7 +699,71 @@ export default function MercadoLivre() {
     navigate(`/ml/connect?seller_company_id=${encodeURIComponent(co)}`);
   };
 
-  const visibleAccounts = accounts.filter((a) => String(a.status || "").toLowerCase() !== "removed");
+  const visibleAccounts = useMemo(
+    () =>
+      sortMarketplaceIntegrationsChronologically({
+        integrations: accounts.filter((a) => String(a.status || "").toLowerCase() !== "removed"),
+        companies: integrationCompanies,
+      }),
+    [accounts, integrationCompanies]
+  );
+
+  const integrationAccountGridRows = useMemo(
+    () => Math.max(1, Math.ceil(visibleAccounts.length / 2)),
+    [visibleAccounts.length]
+  );
+
+  const integrationCompaniesById = useMemo(
+    () => buildSellerCompaniesById(integrationCompanies),
+    [integrationCompanies]
+  );
+
+  const manageModalAccount = useMemo(
+    () => visibleAccounts.find((a) => String(a.id) === String(manageModalAccountId)) ?? null,
+    [visibleAccounts, manageModalAccountId]
+  );
+
+  const manageModalPresentation = useMemo(() => {
+    if (!manageModalAccount) return null;
+    const summary = syncSummariesByAccountId[manageModalAccount.id] ?? null;
+    const integrationStage =
+      summary?.integration_stage ?? readStoredMlIntegrationStage(manageModalAccount.id);
+    const linkedCompanyDocumentFormatted = resolveLinkedCompanyDocumentFormatted(
+      integrationCompaniesById,
+      manageModalAccount.seller_company_id
+    );
+    return buildMercadoLivreIntegrationModalPresentation(manageModalAccount, summary, {
+      integrationStage,
+      linkedCompanyDocumentFormatted,
+    });
+  }, [manageModalAccount, syncSummariesByAccountId, integrationCompaniesById]);
+
+  const refreshAccountSyncSummary = useCallback(async (accountId) => {
+    const url = buildApiUrl(`/api/marketplace/accounts/${encodeURIComponent(accountId)}/sync-status`);
+    if (!url) return;
+    const pr = await apiFetch(url, { method: "GET", cache: "no-store" });
+    if (pr.ok && pr.data?.ok) {
+      const mid = pr.data.marketplace_account_id;
+      if (mid != null && String(mid) !== String(accountId)) return;
+      setSyncSummariesByAccountId((prev) => ({ ...prev, [accountId]: pr.data }));
+    }
+  }, []);
+
+  const openManageModal = useCallback(
+    (accountId) => {
+      if (!accountId) return;
+      setManageModalAccountId(accountId);
+      if (!integrationCompanies.length) {
+        void loadIntegrationCompanies();
+      }
+      void refreshAccountSyncSummary(accountId);
+    },
+    [refreshAccountSyncSummary, integrationCompanies.length, loadIntegrationCompanies]
+  );
+
+  const closeManageModal = useCallback(() => {
+    setManageModalAccountId(null);
+  }, []);
 
   const operationalModalAccount = useMemo(() => {
     if (!onboardingAccountId) return null;
@@ -963,6 +949,7 @@ export default function MercadoLivre() {
       });
       setAccounts(await loadAccounts());
       await loadIntegrationCompanies();
+      setManageModalAccountId(null);
     } finally {
       setRemovingId(null);
     }
@@ -1044,38 +1031,70 @@ export default function MercadoLivre() {
     setOperationalImportModalOpen(false);
     setSyncStatusPayload(null);
     setOnboardingAccountId(accountId);
+    const requestGen = ++syncDetailsFetchGenRef.current;
     const cached = syncSummariesByAccountId[accountId];
     if (cached) setSyncStatusPayload(cached);
     const url = buildApiUrl(`/api/marketplace/accounts/${encodeURIComponent(accountId)}/sync-status`);
     if (url) {
+      setSyncStatusFetching(true);
       console.info("[ml/ui] sync_poll_start_for_account", {
         marketplace_account_id: accountId,
         in_accounts_list: true,
         source: "technical_modal_open",
       });
-      const pr = await apiFetch(url, { method: "GET", cache: "no-store" });
-      if (pr.ok && pr.data?.ok) {
-        const mid = pr.data.marketplace_account_id;
-        if (mid != null && String(mid) !== String(accountId)) {
-          console.info("[ml/ui] sync_payload_discarded_wrong_account", {
+      try {
+        const pr = await apiFetch(url, { method: "GET", cache: "no-store" });
+        if (requestGen !== syncDetailsFetchGenRef.current) {
+          console.info("[ml/ui] sync_payload_discarded_stale_request", {
             expected_marketplace_account_id: accountId,
-            payload_marketplace_account_id: mid,
+            source: "technical_modal_open",
           });
-        } else {
-          const accRow = accounts.find((a) => String(a.id) === String(accountId));
-          logSyncPayloadTokensMissing(pr.data, {
-            marketplace_account_id: accountId,
-            external_seller_id: accRow?.external_seller_id ?? null,
-            seller_company_id: accRow?.seller_company_id ?? null,
-          });
-          setSyncStatusPayload(pr.data);
-          setSyncSummariesByAccountId((prev) => ({ ...prev, [accountId]: pr.data }));
-          const ov = String(pr.data.overall || "").toLowerCase();
-          setInitialPipelineEngaged(ov !== "awaiting_start");
+          return;
+        }
+        if (pr.ok && pr.data?.ok) {
+          const mid = pr.data.marketplace_account_id;
+          if (mid != null && String(mid) !== String(accountId)) {
+            console.info("[ml/ui] sync_payload_discarded_wrong_account", {
+              expected_marketplace_account_id: accountId,
+              payload_marketplace_account_id: mid,
+            });
+          } else {
+            const accRow = accounts.find((a) => String(a.id) === String(accountId));
+            logSyncPayloadTokensMissing(pr.data, {
+              marketplace_account_id: accountId,
+              external_seller_id: accRow?.external_seller_id ?? null,
+              seller_company_id: accRow?.seller_company_id ?? null,
+            });
+            setSyncStatusPayload(pr.data);
+            setSyncSummariesByAccountId((prev) => ({ ...prev, [accountId]: pr.data }));
+            const ov = String(pr.data.overall || "").toLowerCase();
+            setInitialPipelineEngaged(ov !== "awaiting_start");
+          }
+        }
+      } finally {
+        if (requestGen === syncDetailsFetchGenRef.current) {
+          setSyncStatusFetching(false);
         }
       }
     }
     setOnboardingOpen(true);
+  };
+
+  const handleOpenSyncDetails = async (accountId) => {
+    const id = accountId != null ? String(accountId).trim() : "";
+    if (!id) return;
+    if (syncDetailsOpeningAccountIdRef.current === id) return;
+
+    syncDetailsOpeningAccountIdRef.current = id;
+    setSyncDetailsOpeningAccountId(id);
+    try {
+      await openTechnicalSyncDetails(id);
+    } finally {
+      if (syncDetailsOpeningAccountIdRef.current === id) {
+        syncDetailsOpeningAccountIdRef.current = null;
+      }
+      setSyncDetailsOpeningAccountId((current) => (current === id ? null : current));
+    }
   };
 
   const handleConfirmPostConnectStartSync = async () => {
@@ -1134,18 +1153,6 @@ export default function MercadoLivre() {
     };
   }, [visibleAccountIdsKey]);
 
-  if (loading) {
-    return (
-      <div className="ml-container">
-        <div className="ml-card">
-          <p>Carregando integração...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const checklistRows = syncStatusPayload?.checklist?.length ? syncStatusPayload.checklist : ML_DEFAULT_CHECKLIST;
-
   const overall = String(syncStatusPayload?.overall || "").toLowerCase();
 
   const awaitingPipelineStart =
@@ -1153,6 +1160,94 @@ export default function MercadoLivre() {
     onboardingAccountId &&
     !initialPipelineEngaged &&
     (overall === "awaiting_start" || syncStatusPayload == null);
+
+  const dismissOnboardingModal = useCallback(() => {
+    if (awaitingPipelineStart) return;
+    setOnboardingDismissed(true);
+    setOnboardingOpen(false);
+    if (manageModalAccountId) {
+      window.requestAnimationFrame(() => {
+        syncViewButtonRef.current?.focus();
+      });
+    }
+  }, [awaitingPipelineStart, manageModalAccountId]);
+
+  const integrationModalStacked =
+    Boolean(manageModalAccountId) &&
+    onboardingOpen &&
+    onboardingAccountId != null &&
+    String(onboardingAccountId) === String(manageModalAccountId);
+
+  const checklistRowsForSync = useMemo(() => {
+    const payloadAccountId = syncStatusPayload?.marketplace_account_id;
+    const payloadMatchesAccount =
+      payloadAccountId == null ||
+      String(payloadAccountId) === String(onboardingAccountId);
+    if (!payloadMatchesAccount) return ML_DEFAULT_CHECKLIST;
+    return syncStatusPayload?.checklist?.length ? syncStatusPayload.checklist : ML_DEFAULT_CHECKLIST;
+  }, [syncStatusPayload, onboardingAccountId]);
+
+  const syncStatusForPresentation = useMemo(() => {
+    if (!syncStatusPayload) return null;
+    const payloadAccountId = syncStatusPayload.marketplace_account_id;
+    if (payloadAccountId != null && String(payloadAccountId) !== String(onboardingAccountId)) {
+      return null;
+    }
+    return syncStatusPayload;
+  }, [syncStatusPayload, onboardingAccountId]);
+
+  const syncContextAccount = useMemo(() => {
+    if (!onboardingAccountId) return null;
+    if (
+      integrationModalStacked &&
+      manageModalAccount &&
+      String(manageModalAccount.id) === String(onboardingAccountId)
+    ) {
+      return manageModalAccount;
+    }
+    return (
+      visibleAccounts.find((a) => String(a.id) === String(onboardingAccountId)) ||
+      accounts.find((a) => String(a.id) === String(onboardingAccountId)) ||
+      null
+    );
+  }, [integrationModalStacked, manageModalAccount, onboardingAccountId, visibleAccounts, accounts]);
+
+  const syncDetailsPresentation = useMemo(() => {
+    if (!syncContextAccount || !onboardingAccountId) return null;
+    if (String(syncContextAccount.id) !== String(onboardingAccountId)) return null;
+    return buildMercadoLivreSyncDetailsPresentation(syncContextAccount, syncStatusForPresentation, {
+      companiesById: integrationCompaniesById,
+      checklist: checklistRowsForSync,
+    });
+  }, [
+    syncContextAccount,
+    onboardingAccountId,
+    syncStatusForPresentation,
+    integrationCompaniesById,
+    checklistRowsForSync,
+  ]);
+
+  useEffect(() => {
+    const anyModalOpen =
+      Boolean(manageModalAccountId) || onboardingOpen || operationalImportModalOpen || integrationPickerOpen;
+    if (!anyModalOpen) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [manageModalAccountId, onboardingOpen, operationalImportModalOpen, integrationPickerOpen]);
+
+  if (loading) {
+    return (
+      <div className="dados-empresa-page ml-integrations-page">
+        <div className="profile-card ml-card ml-card-wide s7-ml-integrations-hero">
+          <p>Carregando integração...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   /** Após iniciar pipeline: usuário não precisa ficar no modal (sync no servidor). */
   const showBackgroundSyncNotice =
@@ -1162,14 +1257,8 @@ export default function MercadoLivre() {
     overall !== "error" &&
     overall !== "completed_with_errors";
 
-  const dismissOnboardingModal = () => {
-    if (awaitingPipelineStart) return;
-    setOnboardingDismissed(true);
-    setOnboardingOpen(false);
-  };
-
   return (
-    <div className="ml-container">
+    <div className="dados-empresa-page ml-integrations-page">
       {operationalImportModalOpen && onboardingAccountId ? (
         <div className="ml-operational-import-backdrop" onMouseDown={closeOperationalImportModal}>
           <div
@@ -1228,155 +1317,27 @@ export default function MercadoLivre() {
         </div>
       ) : null}
 
-      {onboardingOpen && onboardingAccountId && (
-        <div className="ml-onboarding-backdrop" onMouseDown={dismissOnboardingModal}>
-          <div
-            className="ml-onboarding-modal ml-onboarding-modal--technical"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ml-onboarding-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <h3 id="ml-onboarding-title" className="ml-onboarding-title">
-              Detalhes da sincronização
-            </h3>
-            {syncStatusPayload?.title ? (
-              <p className="ml-onboarding-subtitle">{syncStatusPayload.title}</p>
-            ) : null}
-            {visibleAccounts.length > 1 ? (
-              <div className="ml-onboarding-account-picker">
-                <label htmlFor="ml-sync-account-select">Conta</label>
-                <select
-                  id="ml-sync-account-select"
-                  className="ml-onboarding-account-select"
-                  value={onboardingAccountId || ""}
-                  onChange={async (e) => {
-                    const id = e.target.value;
-                    if (!id) return;
-                    const prev = onboardingAccountId;
-                    if (prev && String(prev) !== String(id)) {
-                      console.info("[ml/ui] discarded_stale_account_id", {
-                        previous_onboarding_account_id: String(prev),
-                        next_onboarding_account_id: id,
-                        source: "technical_modal_account_picker",
-                      });
-                    }
-                    setSyncStatusPayload(null);
-                    setOnboardingAccountId(id);
-                    const cached = syncSummariesByAccountId[id];
-                    if (cached) setSyncStatusPayload(cached);
-                    const url = buildApiUrl(`/api/marketplace/accounts/${encodeURIComponent(id)}/sync-status`);
-                    if (!url) return;
-                    console.info("[ml/ui] sync_poll_start_for_account", {
-                      marketplace_account_id: id,
-                      in_accounts_list: true,
-                      source: "technical_modal_account_picker",
-                    });
-                    const pr = await apiFetch(url, { method: "GET", cache: "no-store" });
-                    if (pr.ok && pr.data?.ok) {
-                      const pid = pr.data.marketplace_account_id;
-                      if (pid != null && String(pid) !== String(id)) {
-                        console.info("[ml/ui] sync_payload_discarded_wrong_account", {
-                          expected_marketplace_account_id: id,
-                          payload_marketplace_account_id: pid,
-                        });
-                      } else {
-                        const accRow = visibleAccounts.find((a) => String(a.id) === String(id));
-                        logSyncPayloadTokensMissing(pr.data, {
-                          marketplace_account_id: id,
-                          external_seller_id: accRow?.external_seller_id ?? null,
-                          seller_company_id: accRow?.seller_company_id ?? null,
-                        });
-                        setSyncStatusPayload(pr.data);
-                        setSyncSummariesByAccountId((prev) => ({ ...prev, [id]: pr.data }));
-                      }
-                    }
-                  }}
-                >
-                  {visibleAccounts.map((a) => {
-                    const lab =
-                      a.account_alias || a.ml_nickname || `Conta ${String(a.external_seller_id || "").slice(0, 8)}`;
-                    return (
-                      <option key={a.id} value={a.id}>
-                        {lab}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            ) : null}
-            <p className="ml-onboarding-text">
-              {syncStatusPayload?.description ||
-                "Conta Mercado Livre conectada com sucesso. Agora vamos sincronizar seus dados para preparar o Suse7."}
-            </p>
-            <ul className="ml-onboarding-checklist">
-              {checklistRows.map((item) => {
-                const st = String(item.status || "pending").toLowerCase();
-                const ux = item.key === "historical_sales" ? item.historical_ux : null;
-                const pt =
-                  item.progress_total != null && item.progress_total > 0 ? Number(item.progress_total) : null;
-                const pcRaw = typeof item.progress_current === "number" ? item.progress_current : null;
-                const pc = pt != null && pcRaw != null ? Math.min(pcRaw, pt) : pcRaw;
-                const showRawFraction = ux?.hide_raw_progress_fraction ? false : true;
-                const progressHint =
-                  showRawFraction && pt != null && pc != null ? ` (${pc}/${pt})` : "";
-                const primaryLabel =
-                  item.key === "historical_sales" &&
-                  typeof ux?.checklist_primary === "string" &&
-                  ux.checklist_primary.trim() !== ""
-                    ? ux.checklist_primary.trim()
-                    : item.label;
-                return (
-                  <li key={item.key} className={`ml-onboarding-row s-${st}`}>
-                    <span className="ml-onboarding-dot" aria-hidden />
-                    <div className="ml-onboarding-row-body">
-                      <span className="ml-onboarding-label">
-                        {primaryLabel}
-                        {progressHint}
-                      </span>
-                      {item.key === "historical_sales" &&
-                      Array.isArray(ux?.checklist_detail_lines) &&
-                      ux.checklist_detail_lines.length > 0 ? (
-                        <ul className="ml-hist-ux-sublines">
-                          {ux.checklist_detail_lines.map((line, li) => (
-                            <li key={`${li}-${String(line).slice(0, 48)}`}>{line}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                      {item.key === "historical_sales" && ux?.divergence_notice ? (
-                        <p className="ml-hist-ux-divergence">{ux.divergence_notice}</p>
-                      ) : null}
-                    </div>
-                    {st === "error" && item.error_message && (
-                      <span className="ml-onboarding-err">{String(item.error_message).slice(0, 160)}</span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-            {syncStatusPayload?.ml_historical_sales_ux?.institutional_message ? (
-              <details className="ml-hist-institutional">
-                <summary>Como o Suse7 preserva seu histórico de vendas</summary>
-                <div className="ml-hist-institutional-body">
-                  {String(syncStatusPayload.ml_historical_sales_ux.institutional_message)
-                    .split(/\n\n+/)
-                    .map((para, idx) => (
-                      <p key={idx} className="ml-onboarding-text">
-                        {para.trim()}
-                      </p>
-                    ))}
-                </div>
-              </details>
-            ) : null}
-            {awaitingPipelineStart ? (
-            <button
+      {onboardingOpen && onboardingAccountId && syncDetailsPresentation ? (
+        <MarketplaceSyncDetailsModal
+          key={`sync-details-${onboardingAccountId}`}
+          open
+          onClose={dismissOnboardingModal}
+          stackLayer="top"
+          contextMarketplaceAccountId={onboardingAccountId}
+          marketplaceLogoSrc={mercadoLivrePresentation.logoHeaderSrc}
+          marketplaceLogoAlt={mercadoLivrePresentation.logoAlt}
+          presentation={syncDetailsPresentation}
+          stepsLoading={syncStatusFetching}
+          footer={
+            awaitingPipelineStart ? (
+              <button
                 type="button"
                 className="ml-button primary ml-onboarding-cta"
                 disabled={onboardingSyncStarting}
                 onClick={() => handleStartInitialPipeline()}
               >
                 {onboardingSyncStarting ? "Iniciando…" : "Sincronizar"}
-            </button>
+              </button>
             ) : showBackgroundSyncNotice ? (
               <div className="ml-onboarding-background-sync">
                 <p className="ml-onboarding-text">
@@ -1392,229 +1353,223 @@ export default function MercadoLivre() {
                     ) : null}
                   </p>
                 )}
-                <button type="button" className="ml-button primary ml-onboarding-cta" onClick={dismissOnboardingModal}>
-                  Fechar e continuar usando o Suse7
-                </button>
                 <p className="ml-onboarding-footnote">
                   Status atualizado nesta página enquanto você navega. Não é necessário manter este modal aberto.
                 </p>
               </div>
-            ) : (
+            ) : overall === "done" && syncStatusPayload?.historical_backfill_active ? (
+              <p className="ml-onboarding-final-hint ml-onboarding-final-hint--muted" role="status">
+                {syncStatusPayload?.ml_historical_sales_ux?.processing_title ||
+                  "Importando histórico disponível de vendas…"}
+                {syncStatusPayload?.ml_historical_sales_ux?.processing_period_line
+                  ? ` ${syncStatusPayload.ml_historical_sales_ux.processing_period_line}`
+                  : ""}
+              </p>
+            ) : null
+          }
+        />
+      ) : null}
+
+      <MarketplaceIntegrationPageLayout
+        title={mercadoLivrePresentation.displayName}
+        accountGridRows={integrationAccountGridRows}
+        bannerError={
+          bannerError ? (
+            <div className="ml-banner-error" role="alert">
+              {bannerError}
+            </div>
+          ) : null
+        }
+        connectAction={
+          visibleAccounts.length > 0 ? (
+            <button
+              type="button"
+              className="s7-btn-nova-empresa"
+              onClick={handleConnectNewAccount}
+              disabled={!user}
+            >
+              Conectar nova conta
+            </button>
+          ) : null
+        }
+        securityContent={
+          <div className="ml-connect-description">
+            <p>{ML_INTEGRATION_OAUTH_INTRO}</p>
+            {ML_INTEGRATION_HISTORICAL_SALES_MESSAGE.split(/\n\n+/).map((para, idx) => (
+              <p key={idx}>{para.trim()}</p>
+            ))}
+          </div>
+        }
+        integrationsContent={
+          visibleAccounts.length === 0 ? (
+            <div className="ml-accounts-empty">
+              <p className="ml-accounts-empty__title">Nenhuma conta Mercado Livre conectada</p>
+              <p className="ml-accounts-empty__subtitle">
+                Conecte sua conta para começar a importar seus anúncios e vendas.
+              </p>
+              <button type="button" className="ml-button primary" onClick={handleConnectMyAccount} disabled={!user}>
+                Conectar minha conta
+              </button>
+            </div>
+          ) : (
+            <div className="s7-marketplace-integration-cards">
+              {visibleAccounts.map((acc) => {
+                const summary = syncSummariesByAccountId[acc.id] ?? null;
+                const linkedCompany = resolveLinkedCompanyPresentation(
+                  integrationCompaniesById,
+                  acc.seller_company_id,
+                  acc.company_trade_name || acc.company_name
+                );
+                const cardView = buildMercadoLivreIntegrationCardPresentation(acc, summary, {
+                  linkedCompany,
+                });
+                return (
+                  <MarketplaceIntegrationCard
+                    key={acc.id}
+                    marketplaceLabel={cardView.marketplaceLabel}
+                    logoSrc={mercadoLivrePresentation.logoCardSrc}
+                    logoAlt={mercadoLivrePresentation.logoAlt}
+                    logoFrameVariant={mercadoLivrePresentation.logoFrameVariant}
+                    accountName={cardView.accountName}
+                    companyName={cardView.companyName}
+                    statusHeadline={cardView.statusHeadline}
+                    statusBadge={cardView.statusBadge}
+                    linkedCompanyAvatarUrl={cardView.linkedCompany.avatarUrl}
+                    linkedCompanyAvatarAlt={cardView.linkedCompany.avatarAlt}
+                    linkedCompanyAvatarInitial={cardView.linkedCompany.avatarInitial}
+                    muted={cardView.muted}
+                    ariaLabel={cardView.ariaLabel}
+                    onActivate={() => openManageModal(acc.id)}
+                  />
+                );
+              })}
+            </div>
+          )
+        }
+        brandConnectionVisual={
+          <MarketplaceConnectionVisual
+            platformLogoSrc={mercadoLivrePresentation.connectionVisual.platformLogoSrc}
+            platformLogoAlt={mercadoLivrePresentation.connectionVisual.platformLogoAlt}
+            marketplaceLogoSrc={mercadoLivrePresentation.connectionVisual.marketplaceLogoSrc}
+            marketplaceLogoAlt={mercadoLivrePresentation.connectionVisual.marketplaceLogoAlt}
+            connectorSymbol={mercadoLivrePresentation.connectionVisual.connectorSymbol}
+          />
+        }
+      />
+
+      {manageModalAccount && manageModalPresentation ? (
+        <MarketplaceIntegrationModal
+          open={Boolean(manageModalAccountId)}
+          onClose={closeManageModal}
+          title={manageModalPresentation.modalTitle}
+          subtitle={manageModalPresentation.modalSubtitle}
+          logoSrc={mercadoLivrePresentation.logoHeaderSrc}
+          logoAlt="Mercado Livre"
+          accountName={manageModalPresentation.accountName}
+          linkedCompanyName={manageModalPresentation.linkedCompanyName}
+          linkedCompanyDocument={manageModalPresentation.linkedCompanyDocumentFormatted}
+          statusBadge={manageModalPresentation.statusBadge}
+          integrationStateRows={manageModalPresentation.integrationStateRows}
+          diagnosticLines={manageModalPresentation.diagnosticLines}
+          advancedOptionsResetKey={String(manageModalAccount.id)}
+          stackLayer="base"
+          isCovered={integrationModalStacked}
+          syncViewAction={
+            manageModalPresentation.showSyncViewLink
+              ? {
+                  label: ML_SYNC_DETAILS_CTA_LABEL,
+                  emphasis: manageModalPresentation.syncViewEmphasis,
+                  loading: syncDetailsOpeningAccountId === String(manageModalAccount.id),
+                  disabled:
+                    syncingId === manageModalAccount.id ||
+                    removingId === manageModalAccount.id ||
+                    syncDetailsOpeningAccountId === String(manageModalAccount.id),
+                  buttonRef: syncViewButtonRef,
+                  onClick: () => {
+                    void handleOpenSyncDetails(manageModalAccount.id);
+                  },
+                }
+              : null
+          }
+          advancedActions={
+            manageModalPresentation.isActive ? (
               <>
-                {overall === "error" && (
-                  <p className="ml-onboarding-final-hint ml-onboarding-final-hint--warn" role="status">
-                    Sincronização finalizada com pendências. Você pode continuar usando o app enquanto concluímos os
-                    ajustes em segundo plano.
-                  </p>
-                )}
-                {overall === "done" && syncStatusPayload?.historical_backfill_active ? (
-                  <p className="ml-onboarding-final-hint ml-onboarding-final-hint--muted" role="status">
-                    {syncStatusPayload?.ml_historical_sales_ux?.processing_title ||
-                      "Importando histórico disponível de vendas…"}
-                    {syncStatusPayload?.ml_historical_sales_ux?.processing_period_line
-                      ? ` ${syncStatusPayload.ml_historical_sales_ux.processing_period_line}`
-                      : ""}
-                  </p>
+                {manageModalPresentation.showReconnectAction ? (
+                  <button
+                    type="button"
+                    className="s7-marketplace-integration-modal__action-btn"
+                    disabled={
+                      syncingId === manageModalAccount.id ||
+                      removingId === manageModalAccount.id ||
+                      !manageModalAccount.seller_company_id ||
+                      syncDetailsOpeningAccountId === String(manageModalAccount.id)
+                    }
+                    onClick={() => startOAuth(manageModalAccount.seller_company_id)}
+                  >
+                    Reconectar conta
+                  </button>
                 ) : null}
-                {overall === "done" && !syncStatusPayload?.historical_backfill_active ? (
-                  <p className="ml-onboarding-final-hint ml-onboarding-final-hint--ok" role="status">
-                    {syncStatusPayload?.ml_historical_sales_ux?.completion_line_1 ||
-                      "Histórico disponível importado."}{" "}
-                    {syncStatusPayload?.ml_historical_sales_ux?.completion_line_2 ||
-                      "Novas vendas e atualizações serão monitoradas automaticamente."}
-                  </p>
+                {manageModalPresentation.showSyncDetailsAction ? (
+                  <button
+                    type="button"
+                    className={`s7-marketplace-integration-modal__action-btn${
+                      syncDetailsOpeningAccountId === String(manageModalAccount.id) ? " is-loading" : ""
+                    }`}
+                    disabled={
+                      syncingId === manageModalAccount.id ||
+                      removingId === manageModalAccount.id ||
+                      syncDetailsOpeningAccountId === String(manageModalAccount.id)
+                    }
+                    aria-busy={
+                      syncDetailsOpeningAccountId === String(manageModalAccount.id) ? "true" : undefined
+                    }
+                    onClick={() => {
+                      void handleOpenSyncDetails(manageModalAccount.id);
+                    }}
+                  >
+                    {syncDetailsOpeningAccountId === String(manageModalAccount.id) ? (
+                      <>
+                        <MarketplaceSyncDetailsOpeningIndicator compact />
+                        <span>{ML_SYNC_DETAILS_CTA_LABEL}</span>
+                      </>
+                    ) : (
+                      ML_SYNC_DETAILS_CTA_LABEL
+                    )}
+                  </button>
                 ) : null}
-                {overall === "done" && !syncStatusPayload?.historical_backfill_active ? (
-                  <p className="ml-onboarding-final-hint ml-onboarding-final-hint--muted ml-preline" role="status">
-                    {syncStatusPayload?.ml_historical_sales_ux?.modal_success_summary ||
-                      "O Mercado Livre limita o acesso retroativo; o Suse7 passa a armazenar suas vendas de forma permanente a partir desta integração."}
-                  </p>
-                ) : null}
-                <button type="button" className="ml-button primary ml-onboarding-cta" onClick={dismissOnboardingModal}>
-                  Continuar usando o app
+                <button
+                  type="button"
+                  className="s7-marketplace-integration-modal__action-btn"
+                  disabled={syncingId === manageModalAccount.id || removingId === manageModalAccount.id}
+                  onClick={() => handleSync(manageModalAccount.id)}
+                >
+                  {syncingId === manageModalAccount.id ? "Sincronizando…" : "Sincronizar anúncios"}
+                </button>
+                <button
+                  type="button"
+                  className="s7-marketplace-integration-modal__action-btn"
+                  disabled={
+                    syncingId === manageModalAccount.id ||
+                    removingId === manageModalAccount.id ||
+                    !manageModalAccount.seller_company_id
+                  }
+                  onClick={() => startOAuth(manageModalAccount.seller_company_id)}
+                >
+                  Renovar sessão (OAuth)
+                </button>
+                <button
+                  type="button"
+                  className="s7-marketplace-integration-modal__action-btn s7-marketplace-integration-modal__action-btn--danger"
+                  disabled={syncingId === manageModalAccount.id || removingId === manageModalAccount.id}
+                  onClick={() => handleRemove(manageModalAccount.id)}
+                >
+                  {removingId === manageModalAccount.id ? "Removendo…" : "Remover conta"}
                 </button>
               </>
-            )}
-    </div>
-        </div>
-      )}
-
-      <div className="ml-card ml-card-wide">
-        {bannerError && (
-          <div className="ml-banner-error" role="alert">
-            {bannerError}
-</div>
-        )}
-
-        <div className="ml-header">
-          <div className="ml-header-logos">
-            <img src={suse7Logo} alt="Suse7" className="ml-logo suse7" />
-            <span className="ml-header-arrow">↔</span>
-            <img src={mercadoLivreLogo} alt="Mercado Livre" className="ml-logo ml" />
-</div>
-</div>
-
-        <h3 className="ml-connect-title">Mercado Livre</h3>
-        <p className="ml-connect-description">
-          Cadastre e mantenha seus CNPJs em <strong>Perfil → Dados da Empresa</strong>. Aqui você apenas vincula cada
-          empresa a uma conta do Mercado Livre (no máximo <strong>uma conta por empresa</strong>). OAuth oficial —
-          nunca pedimos sua senha do Mercado Livre.
-        </p>
-
-        {visibleAccounts.length === 0 ? (
-          <div className="ml-accounts-empty">
-            <p>Nenhuma conta Mercado Livre conectada ainda.</p>
-            <p className="ml-security-hint">
-              Cadastre a empresa em <strong>Perfil → Dados da Empresa</strong> e volte aqui para conectar o Mercado
-              Livre à empresa desejada.
-            </p>
-            <button type="button" className="ml-button primary" onClick={handleConnectMyAccount} disabled={!user}>
-              Conectar minha conta
-            </button>
-  </div>
-        ) : (
-          <>
-            <div className="ml-accounts-toolbar">
-              <button type="button" className="ml-button primary" onClick={handleConnectNewAccount} disabled={!user}>
-                Conectar nova conta
-              </button>
-</div>
-            <div className="ml-accounts-grid">
-            {visibleAccounts.map((acc) => {
-              const alias = acc.account_alias || acc.ml_nickname || `Conta ${String(acc.external_seller_id || "").slice(0, 8)}`;
-              const companyLine = acc.company_trade_name || acc.company_name || "—";
-              const busy = syncingId === acc.id || removingId === acc.id;
-              const isActive = String(acc.status || "").toLowerCase() === "active";
-              const summary = syncSummariesByAccountId[acc.id] ?? null;
-              const connection = mergeMlConnection(acc, summary);
-              const integrationStage = summary?.integration_stage ?? readStoredMlIntegrationStage(acc.id);
-              const stageLine =
-                integrationStage?.label != null
-                  ? `${integrationStage.label}${integrationStage.detail ? ` — ${integrationStage.detail}` : ""}`
-                  : null;
-              const layerLines = mlHotHistoricalLines(summary);
-              const syncEmphasis = mlSyncViewNeedsEmphasis(summary);
-              const fullyStable = mlAccountFullyStable(summary, connection);
-              const headline =
-                connection.monitoring_headline ||
-                (isActive && !connection.show_reconnect ? "Monitoramento ativo" : null);
-              return (
-                <div key={acc.id} className={`ml-account-card ${!isActive ? "is-muted" : ""}`}>
-                  <div className="ml-account-card-head">
-                    <span className="ml-account-market">Mercado Livre</span>
-                    {isActive ? (
-                      <span
-                        className={`ml-connection-badge ${connection.show_reconnect ? "is-warn" : "is-ok"}`}
-                        title={connection.health || ""}
-                      >
-                        {connection.badge_label}
-                      </span>
-                    ) : (
-                      <span className={`ml-account-status s-${String(acc.status || "").toLowerCase()}`}>
-                        {statusLabel(acc.status)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="ml-account-alias">{alias}</div>
-                  {headline ? <div className="ml-account-monitor-headline">{headline}</div> : null}
-                  {connection.alert_message && connection.show_reconnect ? (
-                    <p className="ml-connection-alert">{connection.alert_message}</p>
-                  ) : null}
-                  {stageLine != null && stageLine.trim() !== "" ? (
-                    <div className="ml-account-sync-stage" role="status">
-                      {stageLine}
-                    </div>
-                  ) : null}
-                  {layerLines?.length ? (
-                    <div className="ml-account-sync-layers" role="status">
-                      {layerLines.map((line, idx) => (
-                        <div key={`${acc.id}-sync-layer-${idx}`} className="ml-account-sync-layer-line">
-                          {line}
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                  <div className="ml-account-company">{companyLine}</div>
-                  <div className="ml-account-cnpj">{acc.company_document_masked || "—"}</div>
-                  <div className="ml-account-sync">Último sync: {formatSyncAt(acc.last_sync_at)}</div>
-                  <div className="ml-account-card-primary-actions">
-                    {isActive ? (
-                      <>
-                        {!fullyStable ? (
-                          <button
-                            type="button"
-                            className={`ml-sync-view-link ${syncEmphasis ? "is-emphasis" : "is-muted"}`}
-                            disabled={busy}
-                            onClick={() => openTechnicalSyncDetails(acc.id)}
-                          >
-                            Ver sincronização
-                          </button>
-                        ) : null}
-                        {connection.show_reconnect ? (
-                          <button
-                            type="button"
-                            className="ml-button primary sm"
-                            disabled={busy || !acc.seller_company_id}
-                            onClick={() => startOAuth(acc.seller_company_id)}
-                          >
-                            Reconectar conta
-                          </button>
-                        ) : null}
-                      </>
-                    ) : null}
-                  </div>
-                  {isActive ? (
-                    <details className="ml-account-advanced">
-                      <summary>Opções avançadas</summary>
-                      <div className="ml-account-advanced-body">
-                        {fullyStable ? (
-                          <button
-                            type="button"
-                            className="ml-button ghost sm"
-                            disabled={busy}
-                            onClick={() => openOperationalImportModal(acc.id)}
-                          >
-                            Importação inteligente
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="ml-button ghost sm"
-                          disabled={busy}
-                          onClick={() => handleSync(acc.id)}
-                        >
-                          {syncingId === acc.id ? "Sincronizando…" : "Sincronizar anúncios"}
-                        </button>
-                        <button
-                          type="button"
-                          className="ml-button ghost sm"
-                          disabled={busy || !acc.seller_company_id}
-                          onClick={() => startOAuth(acc.seller_company_id)}
-                        >
-                          Renovar sessão (OAuth)
-                        </button>
-                        <button
-                          type="button"
-                          className="ml-button danger sm"
-                          disabled={busy}
-                          onClick={() => handleRemove(acc.id)}
-                        >
-                          {removingId === acc.id ? "Removendo…" : "Remover conta"}
-                        </button>
-                      </div>
-                    </details>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-          </>
-        )}
-
-        <p className="ml-security-hint" style={{ marginTop: 24 }}>
-          Conexão segura: tokens tratados apenas no backend; o Suse7 não armazena senha do marketplace.
-        </p>
-    </div>
+            ) : null
+          }
+        />
+      ) : null}
 
       <MarketplaceCompanyPickerModal
         open={integrationPickerOpen}
@@ -1623,6 +1578,7 @@ export default function MercadoLivre() {
         marketplaceLabel="Mercado Livre"
         companies={integrationCompanies}
         connectedSellerCompanyIds={mlConnectedSellerCompanyIds}
+        onCompaniesChanged={loadIntegrationCompanies}
         onSelectCompany={(sellerCompanyId) => {
           void startOAuth(sellerCompanyId);
         }}

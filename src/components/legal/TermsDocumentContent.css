@@ -1,0 +1,118 @@
+.s7-terms-document__title {
+  text-align: center;
+  font-size: 38px;
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.s7-terms-document__title--modal {
+  text-align: left;
+  font-size: 1.35rem;
+  margin: 0 0 4px;
+}
+
+.s7-terms-document__update {
+  text-align: center;
+  color: #666;
+  margin: 0 0 56px;
+  font-size: 0.9375rem;
+}
+
+.s7-terms-document--modal .s7-terms-document__update {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.s7-terms-document__title-highlight {
+  color: #0057ff;
+}
+
+.s7-terms-document--page {
+  width: 100%;
+  max-width: 100%;
+}
+
+.s7-terms-document__body {
+  color: #334155;
+  line-height: 1.65;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+}
+
+.s7-terms-document--modal .s7-terms-document__body {
+  max-width: 72ch;
+}
+
+.s7-terms-document__link {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.s7-terms-document__link:hover,
+.s7-terms-document__link:focus-visible {
+  color: #1e4ec9;
+  outline: none;
+}
+
+.s7-terms-document__contact {
+  margin: 0 0 12px;
+}
+
+.s7-terms-document__contact-line {
+  margin: 0 0 6px;
+}
+
+.s7-terms-document__paragraph {
+  margin: 0 0 14px;
+}
+
+.s7-terms-document__subtitle {
+  margin: 28px 0 10px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.s7-terms-document__subsubsection {
+  margin: 20px 0 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.s7-terms-document--page .s7-terms-document__paragraph,
+.s7-terms-document--page .s7-terms-document__list,
+.s7-terms-document--page .s7-terms-document__contact {
+  text-align: left;
+}
+
+.s7-terms-document--modal .s7-terms-document__subtitle {
+  font-size: 1.05rem;
+  margin-top: 18px;
+}
+
+.s7-terms-document__list {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.s7-terms-document__footer {
+  margin: 24px 0 0;
+  color: #555;
+}
+
+.s7-terms-document__footer--page {
+  text-align: center;
+  font-style: italic;
+}

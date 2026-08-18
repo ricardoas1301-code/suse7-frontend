@@ -1,0 +1,11 @@
+/* ======================================================================
+   Dashboard — ajustes do card Busca e filtros (base em VendasFiltersCard.css)
+   ====================================================================== */
+
+.dashboard-page .dashboard-filters-card {
+  margin: 0 0 calc(var(--s7-space-5, 20px) + 10px);
+}
+
+.dashboard-filters-card__row--executive {
+  align-items: flex-end;
+}

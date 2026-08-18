@@ -1,0 +1,43 @@
+.product-image-sync-modal__confirm {
+  margin: 0 18px 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.product-image-sync-modal__confirm--warn {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+
+.product-image-sync-modal__counts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  font-size: 0.86rem;
+  color: #64748b;
+}
+
+.product-image-sync-modal__foot {
+  flex-wrap: wrap;
+}
+
+.product-image-sync-modal__foot-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.product-image-sync-modal__meta-pictures,
+.product-image-sync-modal__meta-status {
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.product-image-sync-modal .s7-concorrencia-modal__pick-check {
+  margin-top: 18px;
+}

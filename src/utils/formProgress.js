@@ -386,3 +386,63 @@ export function calcWeightedFormProgress(params) {
 export function calcRequiredFormProgress(params) {
   return calcWeightedFormProgress(params);
 }
+
+/**
+ * Progresso do cadastro para a listagem de Produtos — mesma regra do Raio-X (`calcVisibleFormProgress`).
+ * Monta o contexto a partir da linha já carregada do catálogo (sem duplicar regra na UI).
+ *
+ * @param {Record<string, unknown> | null | undefined} product
+ * @returns {number}
+ */
+export function calcCatalogFormProgressPercentFromProductRow(product) {
+  if (!product || typeof product !== "object") return 0;
+
+  const format = product.format === "variants" ? "variants" : "simple";
+  const variantRowsRaw = Array.isArray(product.product_variants) ? product.product_variants : [];
+  const variantRows = variantRowsRaw.map((row) => ({
+    ...row,
+    stock_real: row?.stock_real ?? row?.stock_quantity,
+    stock_min: row?.stock_min ?? row?.stock_minimum,
+    stock_virtual: row?.stock_virtual ?? row?.virtual_stock_quantity,
+  }));
+
+  const links = Array.isArray(product.product_image_links) ? product.product_image_links : [];
+  const productLinks = links.filter((l) => l && (l.variant_key == null || l.variant_key === ""));
+
+  /** @type {Record<string, string>} */
+  const variantCostDigitsById = {};
+  variantRows.forEach((row) => {
+    const rowId = row?.id != null ? String(row.id) : "";
+    if (rowId) variantCostDigitsById[rowId] = apiMoneyValueToDigits(row?.cost_price);
+  });
+
+  const imageProgress = buildImageProgressSnapshot({
+    format,
+    variantRows,
+    productLinks,
+    variantLinksByRowId: {},
+  });
+
+  if (!imageProgress.productHasImage) {
+    const pi = product.product_images;
+    if (Array.isArray(pi) && pi.length > 0) {
+      imageProgress.productHasImage = true;
+    } else if (typeof pi === "string" && pi.trim() !== "") {
+      imageProgress.productHasImage = true;
+    }
+  }
+
+  const { percent } = calcVisibleFormProgress({
+    product,
+    variantRows,
+    variationAttributes: [],
+    simpleCostDigits: apiMoneyValueToDigits(product.cost_price),
+    variantCostDigitsById,
+    packagingDigits: apiMoneyValueToDigits(product.packaging_cost),
+    operationalDigits: apiMoneyValueToDigits(product.operational_cost),
+    skuBaseChips: [],
+    imageProgress,
+  });
+
+  return Math.max(0, Math.min(100, percent));
+}

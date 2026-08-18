@@ -1,0 +1,15 @@
+.product-edit-share-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 0;
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.product-edit-modal .product-edit-share-bar .vendas-sale-rayx__ops-actions {
+  margin: 0;
+  flex-shrink: 0;
+}

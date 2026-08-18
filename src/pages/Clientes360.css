@@ -241,30 +241,21 @@
 }
 
 .clientes360-table-wrap {
-  border-radius: 16px;
+  border-radius: var(--s7-list-table-radius, 10px);
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: #fff;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-  overflow: auto;
+  overflow: visible;
 }
 
 .clientes360-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 12px;
 }
 
-.clientes360-table thead th {
-  position: sticky;
-  top: 0;
-  background: linear-gradient(180deg, #ff8a3d 0%, #ef6d17 100%);
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 10px;
-  padding: 10px;
-  text-align: left;
-}
+/* Cabeçalho visual + sticky + cantos: styles/s7-list-table-head-shared.css */
 
 .clientes360-table tbody td {
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
@@ -497,7 +488,7 @@
   }
 
   .clientes360-table-wrap {
-    border-radius: 12px;
+    border-radius: var(--s7-list-table-radius, 16px);
   }
 
   .clientes360-table {

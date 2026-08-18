@@ -1,10 +1,10 @@
-﻿/** Mesmo debounce do modal individual. */
+/** Mesmo debounce do modal individual. */
 export const LISTING_SKU_LOOKUP_DEBOUNCE_MS = 320;
 
 export const LISTING_SKU_LOOKUP_MSG_SEARCHING = "Buscando produto para este SKU...";
 
 export const LISTING_SKU_LOOKUP_MSG_NOT_FOUND =
-  "Nenhum produto encontrado com este SKU no seu cat├ílogo.";
+  "Nenhum produto encontrado com este SKU no seu catálogo.";
 
 export const LISTING_SKU_LOOKUP_SAVE_ACTION_INDIVIDUAL = "Salvar";
 export const LISTING_SKU_LOOKUP_SAVE_ACTION_BATCH = "Salvar SKUs";
@@ -19,7 +19,7 @@ export function buildListingSkuLookupNotFoundMessage(saveActionLabel) {
 }
 
 /**
- * Match existente rejeitado pelo seller ÔÇö exige reset completo da resolu├º├úo.
+ * Match existente rejeitado pelo seller — exige reset completo da resolução.
  * @param {{
  *   productId: string;
  *   selectedProductId: string;
@@ -35,7 +35,7 @@ export function shouldRejectListingSkuExistingMatch({
 }
 
 /**
- * Normaliza SKU para consulta/persist├¬ncia: trim externo apenas (preserva zeros ├á esquerda).
+ * Normaliza SKU para consulta/persistência: trim externo apenas (preserva zeros à esquerda).
  * @param {unknown} value
  */
 export function normalizeListingSkuInput(value) {

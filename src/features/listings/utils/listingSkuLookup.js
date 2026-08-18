@@ -1,4 +1,4 @@
-﻿import { buildApiUrl, apiFetch } from "../../../config/api.js";
+import { buildApiUrl, apiFetch } from "../../../config/api.js";
 import { mapProdutoSkuLookup, normalizeListingSkuInput } from "./listingSkuLookupDomain.js";
 
 export {
@@ -37,7 +37,7 @@ export async function fetchListingSkuLookup(query) {
       error:
         typeof response.error === "string"
           ? response.error
-          : "N├úo foi poss├¡vel localizar o produto por SKU.",
+          : "Não foi possível localizar o produto por SKU.",
       products: [],
       query: normalized,
     };
