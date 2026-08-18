@@ -35,6 +35,4 @@ prod_schema.sql
 supabase/migrations/*remote_schema*.sql
 supabase/migrations/*baseline*.sql
 
-# Node lock (only if this repo does NOT version it)
-package-lock.json
 .vercel
