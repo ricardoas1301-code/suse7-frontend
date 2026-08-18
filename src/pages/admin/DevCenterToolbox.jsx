@@ -20,7 +20,8 @@ import {
   TOOLBOX_GROUPS,
 } from "../../components/devCenter/toolbox/devCenterToolboxTabs";
 import DocumentacaoVivaPanel from "../../components/devCenter/toolbox/documentacaoViva/DocumentacaoVivaPanel";
-import AdminGlobalPanel from "../../components/devCenter/toolbox/adminGlobal/AdminGlobalPanel";
+// Admin Global ainda não promovido ao main — stub local até pasta adminGlobal/ + APIs versionadas.
+// import AdminGlobalPanel from "../../components/devCenter/toolbox/adminGlobal/AdminGlobalPanel";
 import CentralTemplatesPanel from "../../components/devCenter/toolbox/centralTemplates/CentralTemplatesPanel";
 import ComunicacaoPanel from "../../components/devCenter/toolbox/comunicacao/ComunicacaoPanel";
 import "../../components/devCenter/toolbox/devCenterToolbox.css";
@@ -149,6 +150,11 @@ function ToolboxTabPlaceholder({ label }) {
       <p>Área prevista na Caixa de Ferramentas. Será habilitada em uma próxima fase.</p>
     </div>
   );
+}
+
+/** Placeholder da aba Administração Global até a frente ser promovida ao main. */
+function AdminGlobalPanel() {
+  return <ToolboxTabPlaceholder label="Administração Global (em preparação)" />;
 }
 
 /** Resolve o conteúdo da aba ativa. */
