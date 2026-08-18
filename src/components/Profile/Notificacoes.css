@@ -3,6 +3,8 @@
    Estilos isolados (padrão Suse7)
    ====================================================================== */
 
+@import "../notifications/center/notificationCenterVisualVariants.css";
+
 .notif-page {
   max-width: 980px;
 }
@@ -248,7 +250,7 @@
 }
 
 .notif-type-card--neutral {
-  border-left: 4px solid #93c5fd;
+  border-left: var(--s7-ncenter-left-accent-width) solid var(--s7-ncenter-left-accent-blue);
 }
 
 /* Resumo de roteamento (Fase 3) — dados de GET /api/notifications/routing-summary */

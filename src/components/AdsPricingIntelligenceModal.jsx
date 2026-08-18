@@ -158,7 +158,10 @@ export default function AdsPricingIntelligenceModal({ row, open, anchorRef, onCl
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      // S4.3.6.20 — Comparativo (camada superior) marca defaultPrevented no Escape.
+      if (e.defaultPrevented) return;
+      onClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);

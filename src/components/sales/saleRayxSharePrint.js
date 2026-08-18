@@ -10,14 +10,11 @@ import { buildSaleRayxSummaryPngBlob } from "./saleRayxSummaryImage";
 const PRINT_WINDOW_TITLE = "Suse7";
 
 /**
- * Quadrante superior esquerdo do A4 (folha em 4 partes: ½ largura × ½ altura útil).
- * A4 útil ~190×277 mm (margem 10 mm) → quadrante ~95×138 mm.
+ * Padrão premium A4 retrato — mesma escala do Relatório de Vendas (P_2.8.8A).
+ * O resumo ocupa a folha de forma proporcional e legível (não mais 1/4).
  */
-const PRINT_PAGE_MARGIN_MM = 10;
-const PRINT_PAGE_WIDTH_MM = 210;
-const PRINT_PAGE_HEIGHT_MM = 297;
-const PRINT_QUADRANT_WIDTH_MM = (PRINT_PAGE_WIDTH_MM - PRINT_PAGE_MARGIN_MM * 2) / 2;
-const PRINT_QUADRANT_HEIGHT_MM = (PRINT_PAGE_HEIGHT_MM - PRINT_PAGE_MARGIN_MM * 2) / 2;
+const PRINT_SHEET_MAX_WIDTH_MM = 160;
+const PRINT_SHEET_MAX_HEIGHT_MM = 265;
 
 /** @param {number} mm */
 function mmToCssPx(mm) {
@@ -151,7 +148,7 @@ export async function printSaleRayx(modelOrCtx) {
   <style>
     @page {
       size: A4 portrait;
-      margin: 10mm;
+      margin: 12mm;
     }
     html, body {
       margin: 0;
@@ -161,54 +158,35 @@ export async function printSaleRayx(modelOrCtx) {
     }
     body {
       display: flex;
-      justify-content: flex-start;
+      justify-content: center;
       align-items: flex-start;
-    }
-    .s7-rayx-print-root {
-      box-sizing: border-box;
-      width: ${PRINT_QUADRANT_WIDTH_MM}mm;
-      height: ${PRINT_QUADRANT_HEIGHT_MM}mm;
-      max-width: ${PRINT_QUADRANT_WIDTH_MM}mm;
-      max-height: ${PRINT_QUADRANT_HEIGHT_MM}mm;
-      overflow: hidden;
-      page-break-inside: avoid;
-      break-inside: avoid;
     }
     .s7-rayx-print-sheet {
       display: block;
-      width: 100%;
-      height: 100%;
-      max-width: ${PRINT_QUADRANT_WIDTH_MM}mm;
-      max-height: ${PRINT_QUADRANT_HEIGHT_MM}mm;
+      width: auto;
+      height: auto;
+      max-width: ${PRINT_SHEET_MAX_WIDTH_MM}mm;
+      max-height: ${PRINT_SHEET_MAX_HEIGHT_MM}mm;
       object-fit: contain;
-      object-position: top left;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     @media print {
       html, body {
         background: #fff !important;
-        height: auto;
-        overflow: hidden;
-      }
-      .s7-rayx-print-root {
-        width: ${PRINT_QUADRANT_WIDTH_MM}mm;
-        height: ${PRINT_QUADRANT_HEIGHT_MM}mm;
-        page-break-inside: avoid;
-        break-inside: avoid;
-        page-break-after: avoid;
       }
       .s7-rayx-print-sheet {
-        max-width: ${PRINT_QUADRANT_WIDTH_MM}mm !important;
-        max-height: ${PRINT_QUADRANT_HEIGHT_MM}mm !important;
+        max-width: ${PRINT_SHEET_MAX_WIDTH_MM}mm !important;
+        max-height: ${PRINT_SHEET_MAX_HEIGHT_MM}mm !important;
         object-fit: contain !important;
-        object-position: top left !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
     }
   </style>
 </head>
 <body>
-  <div class="s7-rayx-print-root">
-    <img class="s7-rayx-print-sheet" src="${dataUrl.replace(/"/g, "&quot;")}" alt="${escapeHtml(SALE_RAYX_BRAND_TITLE)}" />
-  </div>
+  <img class="s7-rayx-print-sheet" src="${dataUrl.replace(/"/g, "&quot;")}" alt="${escapeHtml(SALE_RAYX_BRAND_TITLE)}" />
 </body>
 </html>`);
   doc.close();
@@ -221,8 +199,8 @@ export async function printSaleRayx(modelOrCtx) {
     }
 
     const trigger = () => {
-      const maxW = mmToCssPx(PRINT_QUADRANT_WIDTH_MM);
-      const maxH = mmToCssPx(PRINT_QUADRANT_HEIGHT_MM);
+      const maxW = mmToCssPx(PRINT_SHEET_MAX_WIDTH_MM);
+      const maxH = mmToCssPx(PRINT_SHEET_MAX_HEIGHT_MM);
       if (img.naturalWidth > 0 && img.naturalHeight > 0) {
         const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
         img.style.width = `${Math.floor(img.naturalWidth * scale)}px`;

@@ -14,9 +14,9 @@ import {
   resolverContratoPainelCentral,
   resolverEstadoConfiguracaoInicial,
   secaoConfiguracaoDeveAparecer,
-} from "../src/features/dashboard/operationalTasks/operationalTasksPanelVisibility.js";
-import { CONFIGURATION_MILESTONE_PRESENTATION_ORDER } from "../src/features/dashboard/operationalTasks/operationalTasksMilestonePresentationRegistry.js";
-import { CONFIGURATION_MILESTONE_STATUS } from "../src/features/dashboard/operationalTasks/operationalTasksConfigurationTypes.js";
+} from "../src/features/dashboard/configurationOnboarding/configurationOnboardingPanelVisibility.js";
+import { CONFIGURATION_MILESTONE_PRESENTATION_ORDER } from "../src/features/dashboard/configurationOnboarding/configurationMilestonePresentationRegistry.js";
+import { CONFIGURATION_MILESTONE_STATUS } from "../src/features/dashboard/configurationOnboarding/configurationOnboardingTypes.js";
 import {
   estadoInicialRecolhidoPainelOperacional,
   devePersistirPreferenciaRecolhido,
@@ -29,7 +29,7 @@ import {
   readOperationalTasksCollapsedPreference,
   writeOperationalTasksCollapsedPreference,
 } from "../src/features/dashboard/operationalTasks/operationalTasksCollapseStorage.js";
-import { buildOperationalTasksPayload } from "../../../suse7-backend/src/domain/dashboard/operationalTasksPayload.js";
+import { buildOperationalTasksPayload } from "../../suse7-backend/src/domain/dashboard/operationalTasksPayload.js";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const read = (relativePath) => readFileSync(join(root, "..", relativePath), "utf8");
@@ -199,10 +199,12 @@ assert(
   panelSource.includes('mlInitialSyncPhase !== "awaiting_start"') && panelSource.includes("refreshing"),
 );
 
-// MIXED (Lote 2) — assertions do modal ML pré-confirmação excluídas neste PR.
+const preConfirmModal = read("src/features/dashboard/configurationOnboarding/ConfigurationMarketplacePreConfirmModal.jsx");
+assert("ML CTA Conectar ao Mercado Livre", preConfirmModal.includes("Conectar ao Mercado Livre"));
+assert("ML CTA old text removed", !preConfirmModal.includes("Continuar para o Mercado Livre"));
 
 const backendHandler = readFileSync(
-  join(root, "../../../suse7-backend/src/handlers/dashboard/operationalTasks.js"),
+  join(root, "../../suse7-backend/src/handlers/dashboard/operationalTasks.js"),
   "utf8",
 );
 assert("API expõe ml_initial_sync_phase", backendHandler.includes("ml_initial_sync_phase: mlSyncPhase.phase"));

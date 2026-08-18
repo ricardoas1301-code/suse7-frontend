@@ -5,8 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:env": "node ../scripts/print_vite_supabase_env.mjs",
+    "dev:login-probe": "node ../scripts/dev_login_probe.mjs",
+    "dev:clean": "node -e \"import('node:fs').then(fs=>{try{fs.rmSync('node_modules/.vite',{recursive:true,force:true})}catch(e){};try{fs.rmSync('dist',{recursive:true,force:true})}catch(e){};console.log('cache .vite e dist removidos')})\"",
     "build": "vite build",
     "lint": "eslint .",
+    "test:vendas-ao-vivo-presentation": "node ./scripts/test_vendas_ao_vivo_presentation_unit.mjs",
+    "test:termos-uso-public-page": "node ./scripts/test_termos_uso_public_page_unit.mjs",
+    "test:privacidade-public-page": "node ./scripts/test_privacidade_public_page_unit.mjs",
+    "test:signup-ux": "node ./scripts/test_signup_ux_unit.mjs",
+    "test:signup-marketing": "node ./scripts/test_signup_marketing_unit.mjs",
+    "test:signup-simplified-v2": "node ./scripts/test_signup_simplified_v2_unit.mjs",
+    "test:configuration-onboarding-ui": "node ./scripts/test_configuration_onboarding_ui_unit.mjs",
+    "test:configuration-onboarding-percent-input": "node ./scripts/test_configuration_onboarding_percent_input_unit.mjs",
+    "test:configuration-onboarding-gate-m6": "node ./scripts/test_configuration_onboarding_gate_m6_unit.mjs",
+    "test:configuration-onboarding-real-click": "node ./scripts/test_configuration_onboarding_real_click.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -16,6 +29,7 @@
     "@supabase/supabase-js": "^2.84.0",
     "decimal.js": "^10.6.0",
     "exceljs": "^4.4.0",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -30,6 +44,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "linkedom": "^0.18.13",
     "vite": "^7.2.4"
   }
 }

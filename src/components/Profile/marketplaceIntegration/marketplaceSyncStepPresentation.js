@@ -1,0 +1,98 @@
+import { resolveSyncStepStatusLabel } from "./marketplaceSyncExecutionSummary.js";
+import { resolveMarketplaceSyncStepVisualIdentity } from "./marketplaceSyncStepVisualIdentity.js";
+
+/**
+ * Monta view-model de etapa de sincronização a partir do checklist canônico.
+ * @param {Record<string, unknown>} item
+ * @returns {{
+ *   key: string;
+ *   label: string;
+ *   progressHint: string;
+ *   progressCurrent: number | null;
+ *   progressTotal: number | null;
+ *   progressPercent: number | null;
+ *   showProgressBar: boolean;
+ *   visualIdentity: string;
+ *   status: string;
+ *   statusLabel: string;
+ *   technicalDetail: string | null;
+ *   detailLines: string[];
+ *   divergenceNotice: string | null;
+ * }}
+ */
+export function buildMarketplaceSyncStepPresentation(item) {
+  const key = String(item?.key || "");
+  const status = String(item?.status || "pending").toLowerCase();
+  const ux = key === "historical_sales" ? item?.historical_ux : null;
+
+  const progressTotal =
+    item?.progress_total != null && Number(item.progress_total) > 0 ? Number(item.progress_total) : null;
+  const progressCurrentRaw = typeof item?.progress_current === "number" ? item.progress_current : null;
+  const progressCurrent =
+    progressTotal != null && progressCurrentRaw != null
+      ? Math.min(progressCurrentRaw, progressTotal)
+      : progressCurrentRaw;
+
+  const showRawFraction = ux?.hide_raw_progress_fraction ? false : true;
+  const progressHint =
+    status === "running"
+      ? ""
+      : showRawFraction && progressTotal != null && progressCurrent != null
+        ? ` (${progressCurrent}/${progressTotal})`
+        : "";
+
+  const progressPercent =
+    progressTotal != null && progressCurrent != null
+      ? Math.min(100, Math.round((progressCurrent / progressTotal) * 100))
+      : null;
+
+  const showProgressBar = status === "running";
+
+  const primaryLabel =
+    key === "historical_sales"
+      ? status === "done" || status === "running" || status === "pending" || status === "error"
+        ? "Histórico de vendas"
+        : String(item?.label || key || "Etapa")
+      : String(item?.label || key || "Etapa");
+
+  /** @type {string[]} */
+  const detailLines = [];
+  if (key === "historical_sales" && Array.isArray(ux?.checklist_detail_lines)) {
+    for (const line of ux.checklist_detail_lines) {
+      if (line != null && String(line).trim() !== "") detailLines.push(String(line).trim());
+    }
+  }
+
+  const technicalDetail =
+    status === "error" && item?.error_message != null && String(item.error_message).trim() !== ""
+      ? String(item.error_message).trim()
+      : null;
+
+  return {
+    key,
+    label: primaryLabel,
+    progressHint,
+    progressCurrent,
+    progressTotal,
+    progressPercent,
+    showProgressBar,
+    visualIdentity: resolveMarketplaceSyncStepVisualIdentity(key),
+    status,
+    statusLabel: resolveSyncStepStatusLabel(status),
+    technicalDetail,
+    detailLines,
+    divergenceNotice:
+      key === "historical_sales" && ux?.divergence_notice != null && String(ux.divergence_notice).trim() !== ""
+        ? String(ux.divergence_notice).trim()
+        : null,
+  };
+}
+
+/**
+ * @param {Array<Record<string, unknown>>} checklist
+ * @returns {ReturnType<typeof buildMarketplaceSyncStepPresentation>[]}
+ */
+export function buildMarketplaceSyncStepsPresentation(checklist) {
+  if (!Array.isArray(checklist)) return [];
+  return checklist.map((item) => buildMarketplaceSyncStepPresentation(item));
+}

@@ -7,7 +7,10 @@
 // ======================================================================
 
 import "./ProductFormRightPanel.css";
+import "../styles/tokens/s7-operational-thumb.css";
 import ProductHealthProgress from "./ProductHealthProgress";
+import S7CatalogListingHeadline from "./catalog/S7CatalogListingHeadline.jsx";
+import "./catalog/S7CatalogListingHeadline.css";
 
 /**
  * Painel lateral: etapas, progresso e ações.
@@ -26,6 +29,9 @@ import ProductHealthProgress from "./ProductHealthProgress";
  * @param {number} [props.progressPercent] — progresso detalhado do formulário (abas/campos)
  * @param {boolean} [props.stepsClickable]
  * @param {null | { src: string, title: string, ariaLabel: string, alt: string }} [props.panelProductThumb]
+ * @param {null | { productId: string, productName?: string, productSku?: string }} [props.panelProductHeadline]
+ * @param {boolean} [props.showFooterCancel]
+ * @param {string} [props.cancelLabel]
  */
 export default function ProductFormRightPanel({
   title = "Novo produto",
@@ -36,11 +42,14 @@ export default function ProductFormRightPanel({
   onSave,
   onClose,
   saveLabel = "Salvar produto",
+  cancelLabel = "Cancelar",
   saving = false,
   statusText = "",
   progressPercent = 0,
   stepsClickable = true,
   panelProductThumb = null,
+  panelProductHeadline = null,
+  showFooterCancel = false,
 }) {
   if (!Array.isArray(steps) || steps.length === 0) {
     return null;
@@ -71,12 +80,21 @@ export default function ProductFormRightPanel({
     }
   };
 
+  const headlineNome =
+    panelProductHeadline?.productName != null ? String(panelProductHeadline.productName).trim() : "";
+  const headlineSku =
+    panelProductHeadline?.productSku != null ? String(panelProductHeadline.productSku).trim() : "";
+  const showProductHeadline = Boolean(headlineNome || headlineSku);
+
   return (
-    <aside className="pf-right-panel" aria-label="Resumo do cadastro de produto">
+    <aside
+      className={`pf-right-panel${showProductHeadline ? " pf-right-panel--with-headline" : ""}`}
+      aria-label="Resumo do cadastro de produto"
+    >
       <div className="pf-right-header">
         <div className="pf-right-header-row">
           <h3 className="pf-right-title">{title}</h3>
-          {typeof onClose === "function" && (
+          {typeof onClose === "function" && !showFooterCancel && (
             <button type="button" className="pf-close" onClick={onClose}>
               Fechar
             </button>
@@ -93,12 +111,16 @@ export default function ProductFormRightPanel({
       {panelProductThumb ? (
         <div className="pf-right-progress-row pf-right-progress-row--with-thumb">
           <div
-            className="pf-product-thumb pf-right-panel-product-thumb pf-product-thumb--data-inline"
+            className="pf-product-thumb pf-right-panel-product-thumb pf-product-thumb--data-inline s7-operational-thumb-frame s7-operational-thumb-frame--circle"
             title={panelProductThumb.title}
             aria-label={panelProductThumb.ariaLabel}
           >
             {panelProductThumb.src ? (
-              <img src={panelProductThumb.src} alt={panelProductThumb.alt} />
+              <img
+                src={panelProductThumb.src}
+                alt={panelProductThumb.alt}
+                className="s7-operational-thumb"
+              />
             ) : (
               <span className="pf-product-thumb__placeholder">IMG</span>
             )}
@@ -128,6 +150,20 @@ export default function ProductFormRightPanel({
           />
         </div>
       )}
+
+      {showProductHeadline ? (
+        <div className="pf-right-product-headline">
+          <S7CatalogListingHeadline
+            title={headlineNome || "Produto"}
+            titleTooltip={headlineNome || undefined}
+            sku={headlineSku}
+            layout="stacked"
+            className="s7-catalog-headline--product pf-right-product-headline__headline"
+            copySkuFlashKey={`product-rayx-sku-${panelProductHeadline?.productId ?? "unknown"}`}
+            skuEntityType="product"
+          />
+        </div>
+      ) : null}
 
       <div className="pf-right-steps">
         <ol className="pf-right-steps-list">
@@ -160,22 +196,36 @@ export default function ProductFormRightPanel({
         </ol>
       </div>
 
-      {(statusText || typeof onSave === "function") && (
+      {(statusText || typeof onSave === "function" || (showFooterCancel && typeof onClose === "function")) && (
         <div className="pf-right-footer">
           {statusText && (
             <div className="pf-right-status">
               {statusText}
             </div>
           )}
-          {typeof onSave === "function" && (
-            <button
-              type="button"
-              className="s7-btn s7-btn--primary pf-right-save-btn"
-              onClick={handleSaveClick}
-              disabled={saving}
-            >
-              {saving ? "Salvando..." : saveLabel}
-            </button>
+          {(typeof onSave === "function" || (showFooterCancel && typeof onClose === "function")) && (
+            <div className="pf-right-footer-actions">
+              {showFooterCancel && typeof onClose === "function" ? (
+                <button
+                  type="button"
+                  className="s7-btn s7-btn--secondary pf-right-cancel-btn"
+                  onClick={onClose}
+                  disabled={saving}
+                >
+                  {cancelLabel}
+                </button>
+              ) : null}
+              {typeof onSave === "function" ? (
+                <button
+                  type="button"
+                  className="s7-btn s7-btn--primary pf-right-save-btn"
+                  onClick={handleSaveClick}
+                  disabled={saving}
+                >
+                  {saving ? "Salvando..." : saveLabel}
+                </button>
+              ) : null}
+            </div>
           )}
         </div>
       )}

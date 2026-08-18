@@ -100,7 +100,7 @@
 }
 
 .s7-seller-company-modal .s7-co-modal-actions .btn-primary {
-  flex: 1;
+  flex: 0 0 auto;
   margin-top: 0;
 }
 
@@ -123,4 +123,373 @@
 .s7-seller-company-modal .btn-ghost-s7:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ======================================================================
+   Modal empresa — layout horizontal compartilhado (create + edit)
+   ====================================================================== */
+
+.profile-modal.s7-seller-company-modal--form {
+  width: min(1040px, calc(100vw - 32px));
+  max-width: min(1040px, calc(100vw - 32px));
+  max-height: calc(100dvh - 24px);
+  padding: 14px 22px 18px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  scrollbar-gutter: stable;
+}
+
+.s7-seller-company-modal--form .s7-co-form-header {
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.s7-seller-company-modal--form .s7-co-form-header h2,
+.s7-seller-company-modal--form .s7-co-form-header p {
+  text-align: left;
+}
+
+.s7-seller-company-modal--form .s7-co-form-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.s7-seller-company-modal--form .s7-co-form-subtitle {
+  font-size: 12px;
+  margin: 0;
+  color: #374151;
+}
+
+.s7-co-required-legend {
+  font-size: 11px;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.s7-co-required {
+  color: var(--s7-color-error, #dc2626);
+  font-weight: 700;
+}
+
+.s7-co-form-aligned {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.s7-co-form-aligned__headers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+}
+
+.s7-co-form-aligned__section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b2d5c;
+  margin: 0 0 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e3e9f2;
+}
+
+.s7-co-form-aligned__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.s7-co-form-aligned__row--active {
+  margin-top: 2px;
+}
+
+.s7-co-form-aligned__cell {
+  min-width: 0;
+}
+
+.s7-co-form-aligned__cell--full {
+  grid-column: 1 / -1;
+}
+
+.s7-co-form-aligned__cell--logo {
+  padding-top: 0;
+  padding-bottom: 4px;
+}
+
+.s7-co-field-block {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.s7-co-field-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #333;
+  min-height: 18px;
+}
+
+.s7-co-field-label--with-tip {
+  display: flex;
+  align-items: center;
+  min-height: 18px;
+}
+
+.s7-seller-company-modal--form .profile-modal-form label {
+  margin-bottom: 2px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.s7-seller-company-modal--form .profile-modal-form input:not([type="checkbox"]):not([type="file"]):not([type="time"]) {
+  height: 38px;
+  min-height: 38px;
+  padding: 6px 10px;
+  margin-top: 3px;
+  line-height: 1.25;
+}
+
+.s7-seller-company-modal--form .profile-grid,
+.s7-seller-company-modal--form .profile-grid-3 {
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.s7-seller-company-modal--form .profile-grid.s7-co-form-city-uf {
+  grid-template-columns: minmax(0, 1fr) 88px;
+}
+
+.s7-co-label-with-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+}
+
+.s7-co-label-with-tip__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #0077ff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.s7-co-label-with-tip__btn:hover,
+.s7-co-label-with-tip__btn:focus-visible {
+  background: #eef5ff;
+  outline: none;
+}
+
+.s7-co-logo-avatar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 6px;
+}
+
+.s7-co-logo-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.s7-co-logo-avatar-btn {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  padding: 0;
+  border: 1px solid #cfd7e3;
+  border-radius: 50%;
+  background: #f5f8ff;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.s7-co-logo-avatar-btn:hover:not(:disabled),
+.s7-co-logo-avatar-btn:focus-visible {
+  border-color: #0077ff;
+  outline: 2px solid rgba(0, 119, 255, 0.25);
+  outline-offset: 2px;
+}
+
+.s7-co-logo-avatar-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.s7-co-logo-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: contain;
+  display: block;
+  background: #fff;
+}
+
+.s7-co-logo-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #4338ca;
+  background: linear-gradient(135deg, #e0e7ff, #eef5ff);
+}
+
+.s7-co-logo-avatar-fallback--icon {
+  color: #0077ff;
+}
+
+.s7-co-logo-avatar-edit {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0077ff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.s7-seller-company-modal--form .s7-co-file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.s7-seller-company-modal--form .s7-co-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.s7-seller-company-modal--form .s7-co-modal-actions {
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-top: 4px;
+}
+
+.s7-seller-company-modal--form .s7-co-modal-actions .btn-primary {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 156px;
+  max-width: 180px;
+  padding: 9px 20px;
+  font-size: 14px;
+}
+
+.s7-co-input-readonly,
+.s7-seller-company-modal--form input.s7-co-input-readonly:disabled,
+.s7-seller-company-modal--form input.s7-co-input-readonly[readonly] {
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.s7-seller-company-modal--form .s7-co-modal-actions .btn-ghost-s7 {
+  padding: 9px 18px;
+  font-size: 14px;
+}
+
+.s7-seller-company-modal .s7-co-percent-input {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-height: 38px;
+  width: 100%;
+  border: 1px solid #cfd7e3;
+  border-radius: 10px;
+  background: #f5f8ff;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.s7-seller-company-modal .s7-co-percent-input:focus-within {
+  border-color: #0077ff;
+  background: #eef5ff;
+}
+
+.s7-seller-company-modal .s7-co-percent-input__field {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 28px 8px 10px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+.s7-seller-company-modal .s7-co-percent-input__field:focus {
+  outline: none;
+}
+
+.s7-seller-company-modal .s7-co-percent-input .s7-percent-digits-input__suffix {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: rgba(15, 23, 42, 0.45);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+@media (max-width: 960px) {
+  .s7-co-form-aligned__headers,
+  .s7-co-form-aligned__row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-modal.s7-seller-company-modal--form {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    padding: 14px 16px 16px;
+    max-height: calc(100dvh - 16px);
+  }
+
+  .s7-seller-company-modal--form .profile-grid,
+  .s7-seller-company-modal--form .profile-grid-3,
+  .s7-seller-company-modal--form .profile-grid.s7-co-form-city-uf {
+    grid-template-columns: 1fr;
+  }
+
+  .s7-seller-company-modal--form .s7-co-modal-actions .btn-primary {
+    max-width: none;
+    min-width: 140px;
+  }
 }

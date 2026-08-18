@@ -1,0 +1,46 @@
+/* ======================================================================
+   Precificações — suspiro 12px entre blocos consecutivos (cirúrgico /precificacoes)
+   Central de saúde → Busca e filtros → Lista → fim da página
+   Paridade com Vendas/Anúncios: uma única margem entre blocos (sem flex gap duplo).
+====================================================================== */
+
+.page-content:has(.precificacoes-page) {
+  padding: 12px;
+  box-sizing: border-box;
+  --s7-sticky-filters-top: 12px;
+  --s7-listings-filters-list-gap: 12px;
+}
+
+.precificacoes-page {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Central de saúde → lista: paridade Vendas — respiro interno no sticky-top-spacer (12px) */
+.precificacoes-page > .s7-operational-executive-block {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.precificacoes-page > .listings-workspace--precificacoes {
+  margin: 0;
+}
+
+.precificacoes-page .anuncios-catalog {
+  padding: 0;
+}
+
+.precificacoes-page,
+.precificacoes-page > .listings-workspace--precificacoes,
+.precificacoes-page .anuncios-catalog {
+  overflow: visible;
+}
+
+@media (max-width: 768px) {
+  .page-content:has(.precificacoes-page) {
+    padding: 12px;
+  }
+}

@@ -59,16 +59,22 @@ export async function fetchBillingNotifications() {
   return apiFetch(built.url, { method: "GET" });
 }
 
-export async function requestSubscriptionCancellation() {
-  const built = billingUrl("/api/billing/subscription/cancel");
+export async function createSubscriptionCancelChallenge(payload = {}) {
+  const built = billingUrl("/api/billing/subscription/cancel/challenge");
   if (!built.url) return built;
-  return apiFetch(built.url, { method: "POST", body: {} });
+  return apiFetch(built.url, { method: "POST", body: payload });
 }
 
-export async function reactivateSubscription() {
+export async function requestSubscriptionCancellation(payload = {}) {
+  const built = billingUrl("/api/billing/subscription/cancel");
+  if (!built.url) return built;
+  return apiFetch(built.url, { method: "POST", body: payload });
+}
+
+export async function reactivateSubscription(payload = {}) {
   const built = billingUrl("/api/billing/subscription/reactivate");
   if (!built.url) return built;
-  return apiFetch(built.url, { method: "POST", body: {} });
+  return apiFetch(built.url, { method: "POST", body: payload });
 }
 
 /**
@@ -139,6 +145,7 @@ export async function fetchBillingBoletoDetails(payload) {
  *   card_type?: "credit" | "debit";
  *   set_default?: boolean;
  *   explicit_user_action?: boolean;
+ *   idempotency_key?: string;
  * }} payload
  */
 export async function createCardPaymentMethod(payload) {
@@ -192,6 +199,12 @@ export async function recordRenewalNoticeSeen(renewalCycleId, payload) {
   const built = billingUrl(`/api/billing/renewals/${encodeURIComponent(renewalCycleId)}/notice-seen`);
   if (!built.url) return built;
   return apiFetch(built.url, { method: "POST", body: payload });
+}
+
+export async function fetchRenewalExperience() {
+  const built = billingUrl("/api/billing/renewal/experience");
+  if (!built.url) return built;
+  return apiFetch(built.url, { method: "GET" });
 }
 
 export async function payRenewalCycle(renewalCycleId, payload) {

@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/tokens/z-index.css'
+import './styles/tokens/s7-operational-thumb.css'
 import './index.css'
 import App from './App.jsx'
 import { AuthBootstrapProvider } from './contexts/AuthBootstrapContext.jsx'

@@ -1,0 +1,335 @@
+/* ======================================================================
+   P_2.7 — Cards compactos da lista de vendas (mobile)
+   ====================================================================== */
+
+.vendas-page__mobile-list {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
+.vendas-page__mobile-list-card {
+  min-width: 0;
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--s7-orange) 42%, transparent);
+  background: var(--s7-bg, #fff);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 28px rgba(15, 23, 42, 0.07);
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.vendas-page__mobile-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: rgba(15, 23, 42, 0.5);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.vendas-mobile-sale-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  min-width: 0;
+}
+
+.vendas-mobile-sale-card--selected {
+  border-color: rgba(37, 99, 235, 0.28);
+  background: rgba(37, 99, 235, 0.03);
+}
+
+.vendas-mobile-sale-card__product .vendas-page__row-select {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 10px;
+}
+
+.vendas-mobile-sale-card__product {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.vendas-mobile-sale-card__thumb-wrap,
+.vendas-mobile-sale-card__thumb-slot {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.vendas-mobile-sale-card__thumb {
+  width: 48px;
+  height: 48px;
+  display: block;
+}
+
+.vendas-mobile-sale-card__thumb-slot {
+  display: block;
+  border-radius: 50%;
+}
+
+.vendas-mobile-sale-card__product-text,
+.vendas-mobile-sale-card__headline {
+  flex: 1;
+  min-width: 0;
+}
+
+.vendas-mobile-sale-card__headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.vendas-mobile-sale-card__title-slot {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.vendas-mobile-sale-card__title,
+.vendas-mobile-sale-card__title-link {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--s7-orange, #ff8533);
+  word-break: break-word;
+}
+
+.vendas-mobile-sale-card__listing-id {
+  flex: 0 0 auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.52);
+  white-space: nowrap;
+}
+
+.vendas-mobile-sale-card__sale-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.vendas-mobile-sale-card__sale-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.vendas-mobile-sale-card__field-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(100, 116, 139, 0.9);
+}
+
+.vendas-mobile-sale-card__sale-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--s7-text-secondary, #334155);
+  font-variant-numeric: tabular-nums;
+}
+
+.vendas-mobile-sale-card__meta {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(51, 65, 85, 0.72);
+}
+
+.vendas-mobile-sale-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.vendas-mobile-sale-card__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 6px;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.vendas-mobile-sale-card__metric-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(100, 116, 139, 0.88);
+  line-height: 1.2;
+}
+
+.vendas-mobile-sale-card__metric-value {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--s7-text-secondary, #334155);
+  line-height: 1.25;
+}
+
+.vendas-mobile-sale-card__metric-value--critical {
+  color: #dc2626;
+}
+
+.vendas-mobile-sale-card__metric-value--warn {
+  color: #d97706;
+}
+
+.vendas-mobile-sale-card__metric-value--healthy {
+  color: #10b981;
+}
+
+.vendas-mobile-sale-card__health {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--s7-text-secondary, #334155);
+}
+
+.vendas-mobile-sale-card__health-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+}
+
+.vendas-health-badge--healthy {
+  color: #059669;
+}
+
+.vendas-health-badge--critical {
+  color: #dc2626;
+}
+
+.vendas-health-badge--warn {
+  color: #d97706;
+}
+
+.vendas-health-badge--neutral,
+.vendas-health-badge--unknown {
+  color: rgba(100, 116, 139, 0.9);
+}
+
+.vendas-mobile-sale-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.vendas-mobile-sale-card__rayx-btn {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--s7-orange, #ff8533) 0%, #f97316 100%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 122, 33, 0.28);
+}
+
+.vendas-mobile-sale-card__rayx-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vendas-mobile-sale-card__status {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(51, 65, 85, 0.72);
+  text-align: right;
+  line-height: 1.3;
+}
+
+/* Código de cores do status (mesmo padrão da tabela) */
+.vendas-mobile-sale-card__status.vendas-status-tone--entregue {
+  color: #15803d;
+}
+
+.vendas-mobile-sale-card__status.vendas-status-tone--caminho {
+  color: #1d4ed8;
+}
+
+.vendas-mobile-sale-card__status.vendas-status-tone--cancelada {
+  color: #dc2626;
+}
+
+.vendas-mobile-sale-card__status.vendas-status-tone--enviar {
+  color: #ea580c;
+}
+
+@media (max-width: 768px) {
+  .vendas-page__table-block--desktop {
+    display: none;
+  }
+
+  .vendas-page__mobile-list {
+    display: flex;
+  }
+
+  .vendas-page__pagination {
+    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .vendas-page__pagination-summary {
+    display: block;
+    line-height: 1.45;
+  }
+
+  .vendas-page__pagination button {
+    flex: 1;
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 400px) {
+  .vendas-mobile-sale-card__metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vendas-mobile-sale-card__metric--health {
+    grid-column: 1;
+  }
+}

@@ -1,0 +1,417 @@
+// ======================================================
+// Hook — simulação oficial por tipo de anúncio (Clássico/Premium) na Precificação Inteligente.
+//
+// Responsável por: debounce (~600ms), cache por (anúncio, tipo, preço|margem),
+// descarte de resposta obsoleta (latest-wins), loading discreto por card e
+// manutenção do último cenário válido em caso de erro.
+//
+// Não calcula nada financeiro: apenas orquestra as chamadas ao resolver oficial
+// e devolve o cenário pronto para renderização.
+// ======================================================
+
+import { useEffect, useRef, useState } from "react";
+
+import {
+  chaveCacheSimulacaoOficial,
+  chaveExtrasPrecificacaoInteligente,
+  simularCenarioListingTypeOficial,
+} from "../../utils/simulateListingTypeScenarioOficial.js";
+import {
+  peekSimulacaoOficialCache,
+  setSimulacaoOficialCache,
+} from "../../utils/simulacaoOficialListingTypeCache.js";
+import { sanitizarCenarioSimuladoBrutoPromocao } from "../../features/pricing/promotions/aplicarReducaoTarifaPromocaoNoCenario.js";
+import {
+  publishBaselineScenario,
+  publishPromotionScenario,
+} from "./pricingFinancialScenarioStore.js";
+
+/** @typedef {import("./pricingListingTypeUi.js").ListingTypeChoice} ListingTypeChoice */
+/** @typedef {{ kind: "preco" | "margem"; value: number } | null} IntencaoSimulacao */
+/**
+ * @typedef {{
+ *   scenario: unknown;
+ *   loading: boolean;
+ *   erro: string | null;
+ *   resolvedPrice: number | null;
+ *   resolvedMargin: number | null;
+ *   commissionSource: string | null;
+ *   feePercent: string | null;
+ *   key: string | null;
+ * }} EstadoSimulacaoTipo
+ */
+
+const TIPOS = /** @type {ListingTypeChoice[]} */ (["classic", "premium"]);
+const DEBOUNCE_MS = 600;
+
+/** @returns {EstadoSimulacaoTipo} */
+function estadoVazio() {
+  return {
+    scenario: null,
+    loading: false,
+    erro: null,
+    resolvedPrice: null,
+    resolvedMargin: null,
+    commissionSource: null,
+    feePercent: null,
+    key: null,
+  };
+}
+
+/** @param {unknown} v */
+function num(v) {
+  if (v == null || v === "") return null;
+  const n = Number(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * @typedef {import("../../utils/simulateListingTypeScenarioOficial.js").ConfiguracaoFinanceiraExtras} ConfiguracaoFinanceiraExtras
+ */
+
+/**
+ * @param {{
+ *   listingExternalId?: string | null;
+ *   listingId?: string | null;
+ *   intents: Partial<Record<ListingTypeChoice, IntencaoSimulacao>>;
+ *   configuracaoFinanceira?: ConfiguracaoFinanceiraExtras | null;
+ *   promotionSelection?: ReturnType<typeof montarPayloadSelecaoPromocaoSimulacao>;
+ * }} p
+ * @returns {Record<ListingTypeChoice, EstadoSimulacaoTipo>}
+ */
+export function useSimulacaoOficialListingType({
+  listingExternalId,
+  listingId,
+  intents,
+  configuracaoFinanceira = null,
+  promotionSelection = null,
+}) {
+  const [estado, setEstado] = useState(
+    /** @type {Record<ListingTypeChoice, EstadoSimulacaoTipo>} */ ({
+      classic: estadoVazio(),
+      premium: estadoVazio(),
+    }),
+  );
+
+  const cacheRef = useRef(/** @type {Map<string, EstadoSimulacaoTipo>} */ (new Map()));
+  const timersRef = useRef(/** @type {Record<string, ReturnType<typeof setTimeout> | null>} */ ({}));
+  const seqRef = useRef(/** @type {Record<string, number>} */ ({ classic: 0, premium: 0 }));
+
+  const extrasKey = chaveExtrasPrecificacaoInteligente(configuracaoFinanceira);
+  const promotionIdKey =
+    promotionSelection?.promotion_id != null && String(promotionSelection.promotion_id).trim() !== ""
+      ? String(promotionSelection.promotion_id).trim()
+      : "none";
+  const intentClassicKey = chaveDaIntencao(
+    listingExternalId,
+    listingId,
+    "classic",
+    intents.classic,
+    configuracaoFinanceira,
+    promotionIdKey,
+  );
+  const intentPremiumKey = chaveDaIntencao(
+    listingExternalId,
+    listingId,
+    "premium",
+    intents.premium,
+    configuracaoFinanceira,
+    promotionIdKey,
+  );
+
+  useEffect(() => {
+    /** @type {Record<ListingTypeChoice, IntencaoSimulacao>} */
+    const intencoes = { classic: intents.classic ?? null, premium: intents.premium ?? null };
+
+    for (const tipo of TIPOS) {
+      const intent = intencoes[tipo];
+
+      // Sem intenção (card usa baseline oficial da API) → limpa estado simulado do tipo.
+      if (intent == null) {
+        if (timersRef.current[tipo]) {
+          clearTimeout(/** @type {ReturnType<typeof setTimeout>} */ (timersRef.current[tipo]));
+          timersRef.current[tipo] = null;
+        }
+        setEstado((prev) => (prev[tipo].scenario == null && !prev[tipo].loading && prev[tipo].erro == null
+          ? prev
+          : { ...prev, [tipo]: estadoVazio() }));
+        continue;
+      }
+
+      const key = chaveCacheSimulacaoOficial({
+        listingExternalId,
+        listingId,
+        listingType: tipo,
+        kind: intent.kind,
+        value: intent.value,
+        configuracaoFinanceira,
+        promotionId: promotionIdKey !== "none" ? promotionIdKey : null,
+      });
+
+      // S4.3.6.28 — publica no slot correto (BASELINE vs PROMOTION); sem colisão.
+      publicarSnapshotPorPapel({
+        listingExternalId,
+        listingId,
+        listingType: tipo,
+        kind: intent.kind,
+        value: intent.value,
+        salePrice: intent.kind === "preco" ? intent.value : null,
+        extrasKey,
+        cacheKey: key,
+        keepCacheKey: peekSimulacaoOficialCache(key) != null ? key : null,
+        promotionIdKey,
+      });
+
+      // Cache hit (local + compartilhado S4.3.6.22) → aplica imediatamente.
+      const cached = cacheRef.current.get(key) ?? peekSimulacaoOficialCache(key);
+      if (cached) {
+        if (timersRef.current[tipo]) {
+          clearTimeout(/** @type {ReturnType<typeof setTimeout>} */ (timersRef.current[tipo]));
+          timersRef.current[tipo] = null;
+        }
+        const scenarioCache =
+          cached.scenario != null ? sanitizarCenarioSimuladoBrutoPromocao(cached.scenario) : null;
+        const cachedSanitizado = { ...cached, scenario: scenarioCache };
+        cacheRef.current.set(key, cachedSanitizado);
+        setSimulacaoOficialCache(key, cachedSanitizado);
+        publicarSnapshotPorPapel({
+          listingExternalId,
+          listingId,
+          listingType: tipo,
+          kind: intent.kind,
+          value: intent.value,
+          salePrice:
+            intent.kind === "preco"
+              ? intent.value
+              : cachedSanitizado.resolvedPrice != null
+                ? cachedSanitizado.resolvedPrice
+                : null,
+          extrasKey,
+          cacheKey: key,
+          keepCacheKey: key,
+          promotionIdKey,
+        });
+        setEstado((prev) => (prev[tipo].key === key && !prev[tipo].loading
+          ? prev
+          : { ...prev, [tipo]: { ...cachedSanitizado, loading: false, erro: null, key } }));
+        continue;
+      }
+
+      // Loading discreto (mantém último cenário válido como fundo).
+      setEstado((prev) => ({ ...prev, [tipo]: { ...prev[tipo], loading: true, erro: null } }));
+
+      if (timersRef.current[tipo]) {
+        clearTimeout(/** @type {ReturnType<typeof setTimeout>} */ (timersRef.current[tipo]));
+      }
+      const reqSeq = seqRef.current[tipo] + 1;
+      seqRef.current[tipo] = reqSeq;
+
+      timersRef.current[tipo] = setTimeout(async () => {
+        const params = {
+          listingExternalId,
+          listingId,
+          listingType: tipo,
+          configuracaoFinanceira,
+          promotionSelection,
+          ...(intent.kind === "margem"
+            ? { targetMarginPct: intent.value }
+            : { salePrice: intent.value }),
+        };
+        const res = await simularCenarioListingTypeOficial(params);
+
+        // Descarta resposta obsoleta (chegou depois de uma edição mais nova).
+        if (seqRef.current[tipo] !== reqSeq) return;
+
+        if (!res.ok || res.data == null || res.data.scenario == null) {
+          setEstado((prev) => ({
+            ...prev,
+            [tipo]: {
+              ...prev[tipo],
+              loading: false,
+              erro: res.error ?? "Não foi possível atualizar este cenário agora.",
+            },
+          }));
+          return;
+        }
+
+        const data = /** @type {Record<string, unknown>} */ (res.data);
+        const scenarioBruto =
+          data.scenario != null && typeof data.scenario === "object"
+            ? sanitizarCenarioSimuladoBrutoPromocao(data.scenario)
+            : null;
+        if (scenarioBruto == null) {
+          setEstado((prev) => ({
+            ...prev,
+            [tipo]: {
+              ...prev[tipo],
+              loading: false,
+              erro: "Resposta de simulação inválida.",
+            },
+          }));
+          return;
+        }
+
+        const dataSanitizado = { ...data, scenario: scenarioBruto };
+        const scenario = scenarioBruto;
+        const financial =
+          data.financial != null && typeof data.financial === "object"
+            ? /** @type {Record<string, unknown>} */ (data.financial)
+            : null;
+        const resCenario =
+          scenario?.result != null && typeof scenario.result === "object"
+            ? /** @type {Record<string, unknown>} */ (scenario.result)
+            : null;
+        const resolvedPrice = num(
+          data.resolved_sale_price_brl ??
+            financial?.sale_price_brl ??
+            (scenario?.marketplace != null && typeof scenario.marketplace === "object"
+              ? /** @type {Record<string, unknown>} */ (scenario.marketplace).sale_price_brl
+              : null),
+        );
+        const resolvedMargin = num(
+          resCenario?.margin_pct ?? financial?.margin_percent ?? data.resolved_margin_pct,
+        );
+        if (import.meta.env.DEV && financial != null) {
+          console.info("[pricing-simulate] card", {
+            tipo,
+            sale_price_brl: financial.sale_price_brl,
+            official_fee_brl: financial.official_fee_brl,
+            shipping_cost_brl: financial.shipping_cost_brl,
+            shipping_source: financial.shipping_source,
+            payout_brl: financial.payout_brl,
+            shipping_is_fallback: financial.shipping_is_fallback,
+            promotion_reserve_brl: financial.promotion_reserve_brl,
+            affiliate_brl: financial.affiliate_brl,
+            ads_brl: financial.ads_brl,
+            operational_cost_brl: financial.operational_cost_brl,
+            profit_brl: financial.profit_brl,
+            margin_percent: financial.margin_percent,
+          });
+          console.info("[pricing-chart-sync] card", {
+            tipo,
+            profit_brl: financial.profit_brl,
+            margin_percent: financial.margin_percent,
+            payout_brl: financial.payout_brl,
+            extras_total_brl: financial.extras_total_brl,
+          });
+        }
+        if (import.meta.env.DEV) {
+          console.info("[pricing-bidirectional-sync] resolved", {
+            tipo,
+            intent: intent.kind,
+            resolved_sale_price_brl: resolvedPrice,
+            resolved_margin_pct: resolvedMargin,
+          });
+        }
+
+        /** @type {EstadoSimulacaoTipo} */
+        const novo = {
+          scenario: scenarioBruto,
+          loading: false,
+          erro: null,
+          resolvedPrice,
+          resolvedMargin,
+          commissionSource: dataSanitizado.commission_source != null ? String(dataSanitizado.commission_source) : null,
+          feePercent: dataSanitizado.official_fee_percent != null ? String(dataSanitizado.official_fee_percent) : null,
+          key,
+        };
+        cacheRef.current.set(key, novo);
+        setSimulacaoOficialCache(key, novo);
+        // S4.3.6.28 — snapshot reconciliado no slot do papel (não contamina baseline).
+        publicarSnapshotPorPapel({
+          listingExternalId,
+          listingId,
+          listingType: tipo,
+          kind: intent.kind,
+          value: intent.value,
+          salePrice: resolvedPrice ?? (intent.kind === "preco" ? intent.value : null),
+          extrasKey,
+          cacheKey: key,
+          keepCacheKey: key,
+          promotionIdKey,
+        });
+        setEstado((prev) => ({ ...prev, [tipo]: novo }));
+      }, DEBOUNCE_MS);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intentClassicKey, intentPremiumKey, listingExternalId, listingId, extrasKey, promotionIdKey]);
+
+  // Limpeza dos timers ao desmontar.
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      for (const t of Object.values(timers)) {
+        if (t) clearTimeout(/** @type {ReturnType<typeof setTimeout>} */ (t));
+      }
+    };
+  }, []);
+
+  return estado;
+}
+
+/**
+ * @param {string | null | undefined} ext
+ * @param {string | null | undefined} id
+ * @param {ListingTypeChoice} tipo
+ * @param {IntencaoSimulacao} intent
+ * @param {ConfiguracaoFinanceiraExtras | null | undefined} configuracaoFinanceira
+ * @param {string} promotionIdKey
+ */
+function chaveDaIntencao(ext, id, tipo, intent, configuracaoFinanceira, promotionIdKey) {
+  if (intent == null) {
+    return `${tipo}|none|promo:${promotionIdKey}|extras:${chaveExtrasPrecificacaoInteligente(configuracaoFinanceira)}`;
+  }
+  return chaveCacheSimulacaoOficial({
+    listingExternalId: ext,
+    listingId: id,
+    listingType: tipo,
+    kind: intent.kind,
+    value: intent.value,
+    configuracaoFinanceira,
+    promotionId: promotionIdKey !== "none" ? promotionIdKey : null,
+  });
+}
+
+/**
+ * S4.3.6.28 — promoções nunca publicam no slot BASELINE.
+ * @param {{
+ *   listingExternalId?: string | null;
+ *   listingId?: string | null;
+ *   listingType: ListingTypeChoice;
+ *   kind: "preco" | "margem";
+ *   value: number;
+ *   salePrice?: number | null;
+ *   extrasKey?: string;
+ *   cacheKey?: string | null;
+ *   keepCacheKey?: string | null;
+ *   promotionIdKey: string;
+ * }} p
+ */
+function publicarSnapshotPorPapel(p) {
+  const isPromo = p.promotionIdKey != null && p.promotionIdKey !== "" && p.promotionIdKey !== "none";
+  if (isPromo) {
+    return publishPromotionScenario({
+      listingExternalId: p.listingExternalId,
+      listingId: p.listingId,
+      listingType: p.listingType,
+      promotionId: p.promotionIdKey,
+      kind: p.kind,
+      value: p.value,
+      salePrice: p.salePrice,
+      extrasKey: p.extrasKey,
+      cacheKey: p.cacheKey,
+      keepCacheKey: p.keepCacheKey,
+    });
+  }
+  return publishBaselineScenario({
+    listingExternalId: p.listingExternalId,
+    listingId: p.listingId,
+    listingType: p.listingType,
+    kind: p.kind,
+    value: p.value,
+    salePrice: p.salePrice,
+    extrasKey: p.extrasKey,
+    cacheKey: p.cacheKey,
+    keepCacheKey: p.keepCacheKey,
+  });
+}

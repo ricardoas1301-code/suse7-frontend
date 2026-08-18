@@ -1,0 +1,238 @@
+/* ======================================================================
+   S7 Operational Row Card — Vendas (tabela HTML)
+   ====================================================================== */
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table-card.s7-operational-row-card-viewport {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table-body-scroll.s7-operational-row-card-stack {
+  background: var(--s7-bg-page, #f2f7ff);
+  padding: 6px 0;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell table.s7-operational-row-card-table.vendas-page__table--body {
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  background: transparent;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell table.s7-operational-row-card-table tbody tr.s7-operational-row-card-table-row {
+  cursor: pointer;
+  background: transparent;
+  transform: none;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell table.s7-operational-row-card-table tbody tr.s7-operational-row-card-table-row:hover {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row:not(:has(.vendas-page__empty))
+  td {
+  border-top: 1px solid rgba(148, 163, 184, 0.38);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.38);
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row:not(:has(.vendas-page__empty))
+  td:first-child {
+  border-left: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 10px 0 0 10px;
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row:not(:has(.vendas-page__empty))
+  td:last-child {
+  border-right: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 0 10px 10px 0;
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row:not(:has(.vendas-page__empty)):not(.vendas-page__row--pending-product):hover
+  td {
+  background: #f8fafc;
+  border-top-color: rgba(100, 116, 139, 0.52);
+  border-bottom-color: rgba(100, 116, 139, 0.52);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row:not(:has(.vendas-page__empty)):not(.vendas-page__row--pending-product):hover
+  td:first-child {
+  border-left-color: rgba(100, 116, 139, 0.52);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row:not(:has(.vendas-page__empty)):not(.vendas-page__row--pending-product):hover
+  td:last-child {
+  border-right-color: rgba(100, 116, 139, 0.52);
+}
+
+/* Linha com pendência de custos — paridade Precificações / Anúncios */
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--pending-product:not(:has(.vendas-page__empty))
+  td {
+  background: rgba(254, 202, 202, 0.32);
+  border-top-color: rgba(220, 38, 38, 0.34);
+  border-bottom-color: rgba(220, 38, 38, 0.34);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--pending-product:not(:has(.vendas-page__empty))
+  td:first-child {
+  border-left: 3px solid rgba(220, 38, 38, 0.45);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--pending-product:not(:has(.vendas-page__empty))
+  td:last-child {
+  border-right-color: rgba(220, 38, 38, 0.34);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--pending-product:not(:has(.vendas-page__empty)):hover
+  td {
+  background: rgba(254, 202, 202, 0.42);
+  border-top-color: rgba(220, 38, 38, 0.4);
+  border-bottom-color: rgba(220, 38, 38, 0.4);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--pending-product:not(:has(.vendas-page__empty)):hover
+  td:first-child {
+  border-left-color: rgba(220, 38, 38, 0.45);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--pending-product:not(:has(.vendas-page__empty)):hover
+  td:last-child {
+  border-right-color: rgba(220, 38, 38, 0.4);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--selected
+  td {
+  background: rgba(37, 99, 235, 0.08);
+  border-top-color: rgba(37, 99, 235, 0.42);
+  border-bottom-color: rgba(37, 99, 235, 0.42);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--selected
+  td:first-child {
+  border-left-color: rgba(37, 99, 235, 0.42);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--selected
+  td:last-child {
+  border-right-color: rgba(37, 99, 235, 0.42);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--selected:hover
+  td {
+  background: rgba(37, 99, 235, 0.11);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--selected.vendas-page__row--pending-product:not(
+      :has(.vendas-page__empty)
+    )
+  td {
+  background: rgba(37, 99, 235, 0.08);
+  border-top-color: rgba(37, 99, 235, 0.42);
+  border-bottom-color: rgba(37, 99, 235, 0.42);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--selected.vendas-page__row--pending-product:not(
+      :has(.vendas-page__empty)
+    )
+  td:first-child {
+  border-left: 3px solid rgba(220, 38, 38, 0.45);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row.vendas-page__row--selected.vendas-page__row--pending-product:not(
+      :has(.vendas-page__empty)
+    ):hover
+  td {
+  background: rgba(37, 99, 235, 0.11);
+}
+
+.vendas-page:not(.dashboard-page)
+  .vendas-page__operacao-shell
+  table.s7-operational-row-card-table
+  tbody
+  tr.s7-operational-row-card-table-row:has(.vendas-page__empty)
+  td {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #ffffff;
+}

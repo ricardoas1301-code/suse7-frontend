@@ -39,7 +39,7 @@
 /* ------------------------------------------------------------- */
 
 body {
-  background: #f5f7fa;
+  background: var(--s7-bg-page, #f2f7ff);
   color: var(--s7-dark);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
                Roboto, Arial, sans-serif;

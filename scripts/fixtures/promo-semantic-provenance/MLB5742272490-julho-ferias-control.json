@@ -1,0 +1,18 @@
+{
+  "fixture_id": "MLB5742272490-julho-ferias-control",
+  "listing_id": "MLB5742272490",
+  "promotion_id": "P-MLB17791012",
+  "promotion_name": "Julho de Ferias",
+  "promotion_type": "DEAL",
+  "ml_expected_final_price_brl": "321.67",
+  "canonical_contract_final_price_brl": "321.67",
+  "live_payload": {
+    "original_price": 338.6,
+    "price": 0,
+    "suggested_discounted_price": 321.67,
+    "max_discounted_price": 321.67,
+    "min_discounted_price": 135.44
+  },
+  "diagnosis": "ok",
+  "control_positive": true
+}

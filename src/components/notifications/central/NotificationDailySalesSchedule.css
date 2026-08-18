@@ -1,0 +1,241 @@
+.s7-ndaily-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.s7-ndaily-schedule__intro {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s7-muted, #64748b);
+  line-height: 1.45;
+}
+
+.s7-ndaily-schedule__block {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.s7-ndaily-schedule__block legend {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.s7-ndaily-schedule__channels {
+  display: grid;
+  gap: 8px;
+}
+
+.s7-ndaily-schedule__channel-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 10px 12px;
+}
+
+.s7-ndaily-schedule__channel-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.s7-ndaily-schedule__channel-copy strong {
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.s7-ndaily-schedule__channel-copy p {
+  margin: 0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.s7-ndaily-schedule__channel-lock-badge {
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.s7-ndaily-schedule__weekdays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.s7-ndaily-schedule__weekday {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+}
+
+.s7-ndaily-schedule__times {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.s7-ndaily-schedule__second-time {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.s7-ndaily-schedule__link-btn {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.s7-ndaily-schedule__link-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.s7-ndaily-schedule__link-btn--danger {
+  color: #dc2626;
+}
+
+.s7-ndaily-schedule__time {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.s7-ndaily-schedule__time input[type="time"] {
+  display: none;
+}
+
+.s7-ndaily-schedule__time-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 120px;
+  padding: 0 10px 0 0;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.s7-ndaily-schedule__time-field:hover:not(.s7-ndaily-schedule__time-field--disabled) {
+  border-color: #93c5fd;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+}
+
+.s7-ndaily-schedule__time-field:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.s7-ndaily-schedule__time-field--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.s7-ndaily-schedule__time-field--error {
+  border-color: #f87171;
+}
+
+.s7-ndaily-schedule__time-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+  padding: 8px 0 8px 10px;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.s7-ndaily-schedule__time-input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.s7-ndaily-schedule__time-input:focus {
+  outline: none;
+}
+
+.s7-ndaily-schedule__time-icon {
+  flex-shrink: 0;
+  font-size: 15px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.s7-ndaily-schedule__time-error {
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.s7-npref-group__schedule-badge {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #334155;
+  white-space: pre-line;
+  line-height: 1.4;
+}
+
+.s7-npref-group__rule-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.s7-npref-group__rule-badge--saved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.s7-npref-group__rule-badge--empty {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.s7-npref-group__rule-badge--disabled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.s7-npref-group__rule-badge--pending {
+  background: #fef9c3;
+  color: #854d0e;
+}

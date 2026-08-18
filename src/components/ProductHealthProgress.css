@@ -54,6 +54,14 @@
   color: var(--s7-orange, #ff8533);
 }
 
+.php-wrap--accent-orange {
+  --php-color-progress: var(--s7-orange, #ff8533);
+}
+
+.php-wrap--accent-orange.php-wrap--semi .php-percent {
+  color: var(--s7-orange, #ff8533);
+}
+
 .php-wrap--disabled {
   cursor: default;
 }

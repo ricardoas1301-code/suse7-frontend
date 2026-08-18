@@ -1,22 +1,32 @@
 import "./ContactModal.css";
-import { useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { postFaleConoscoContact } from "../services/faleConoscoContactApi.js";
+import { FALE_CONOSCO_SUBJECT_OPTIONS } from "../services/faleConoscoContactUi.js";
+import { useS7DialogFocus } from "./ui/useS7DialogFocus.js";
+import modalFaleConoscoAvatar from "../assets/profile/modal-fale-conosco-avatar.png";
 
-export default function ContactModal({ onClose }) {
+/**
+ * @param {{
+ *   onClose: () => void;
+ *   prefill?: { subject?: string; message?: string } | null;
+ *   context?: { source?: string; plan_key?: string } | null;
+ * }} props
+ */
+export default function ContactModal({ onClose, prefill = null, context = null }) {
+  const panelRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  useS7DialogFocus({ open: true, onClose, containerRef: panelRef });
+
+  const subjectDefault = String(prefill?.subject ?? "").trim();
+  const messageDefault = String(prefill?.message ?? "").trim();
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     setSuccess(false);
     setError("");
@@ -28,6 +38,8 @@ export default function ContactModal({ onClose }) {
       email: form.get("email"),
       subject: form.get("subject"),
       message: form.get("message"),
+      source: context?.source,
+      plan_key: context?.plan_key,
     };
 
     try {
@@ -38,11 +50,9 @@ export default function ContactModal({ onClose }) {
         setSuccess(true);
         e.target.reset();
 
-        // FECHAMENTO AUTOMÁTICO
         setTimeout(() => {
           onClose();
         }, 2000);
-
       } else {
         setError(data.error || "Erro ao enviar sua mensagem.");
       }
@@ -53,47 +63,78 @@ export default function ContactModal({ onClose }) {
     }
   }
 
+  const handleOverlayMouseDown = (event) => {
+    if (event.target === event.currentTarget && !loading) onClose();
+  };
+
   return (
-    <div className="modal-bg" onClick={onClose} role="presentation">
+    <div className="modal-bg" onMouseDown={handleOverlayMouseDown} role="presentation">
       <div
-        className="modal-box"
+        ref={panelRef}
+        className="modal-box contact-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="contact-modal-title"
-        onClick={(e) => e.stopPropagation()}
+        aria-describedby="contact-modal-desc"
+        onMouseDown={(event) => event.stopPropagation()}
       >
+        <div className="contact-modal__body">
+          <div className="contact-modal__main">
+            <header className="contact-modal__head">
+              <h2 id="contact-modal-title">Fale Conosco</h2>
+              <p id="contact-modal-desc">Envie sua mensagem</p>
+            </header>
 
-        <h2 id="contact-modal-title">Fale Conosco!</h2>
-        <p>Envie sua mensagem</p>
+            <form onSubmit={handleSubmit}>
+              <label className="label">Nome completo</label>
+              <input name="name" type="text" placeholder="Seu nome completo" required disabled={loading} />
 
-        <form onSubmit={handleSubmit}>
+              <label className="label">Seu e-mail</label>
+              <input name="email" type="email" placeholder="Seu e-mail" required disabled={loading} />
 
-          <label className="label">Nome completo</label>
-          <input name="name" type="text" placeholder="Seu nome completo" required />
+              <label className="label">Assunto</label>
+              <select name="subject" required defaultValue={subjectDefault} disabled={loading}>
+                <option value="">Selecione o assunto</option>
+                {FALE_CONOSCO_SUBJECT_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
 
-          <label className="label">Seu e-mail</label>
-          <input name="email" type="email" placeholder="Seu e-mail" required />
+              <label className="label">Mensagem</label>
+              <textarea
+                name="message"
+                placeholder="Digite sua mensagem"
+                required
+                defaultValue={messageDefault}
+                disabled={loading}
+                onInvalid={(event) => event.preventDefault()}
+              />
 
-          <label className="label">Assunto</label>
-          <select name="subject" required>
-            <option value="">Selecione o assunto</option>
-            <option value="Suporte técnico">Suporte técnico</option>
-            <option value="Dúvidas sobre assinatura">Dúvidas sobre assinatura</option>
-            <option value="Sugestão">Sugestão</option>
-            <option value="Problema com precificação">Problema com precificação</option>
-            <option value="Outro">Outro</option>
-          </select>
+              <button type="submit" disabled={loading}>
+                {loading ? "Enviando..." : "Enviar mensagem"}
+              </button>
+            </form>
 
-          <label className="label">Mensagem</label>
-          <textarea name="message" placeholder="Digite sua mensagem" required></textarea>
+            {error ? <p className="msg-error">{error}</p> : null}
+          </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Enviando..." : "Enviar mensagem"}
-          </button>
-        </form>
-
-        {success && <p className="msg-success">Mensagem enviada com sucesso! 🎉</p>}
-        {error && <p className="msg-error">{error}</p>}
+          <aside className="contact-modal__avatar-col">
+            <img
+              className="contact-modal__avatar"
+              src={modalFaleConoscoAvatar}
+              alt=""
+              decoding="async"
+              aria-hidden="true"
+            />
+            {success ? (
+              <p className="contact-modal__success msg-success" role="status" aria-live="polite">
+                Mensagem enviada com sucesso! 🎉
+              </p>
+            ) : null}
+          </aside>
+        </div>
       </div>
     </div>
   );

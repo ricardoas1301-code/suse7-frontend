@@ -1,6 +1,7 @@
 /**
  * Shell S7 — listagens por modo.
  * Estilos finos: a grade pesada continua em `Anuncios.css` para não duplicar tokens.
+ * List Sticky Chrome S7: s7-list-sticky-chrome.css
  */
 
 .listings-workspace {
@@ -11,5 +12,3 @@
 .listings-workspace--precificacoes .anuncios-catalog__kpis {
   border-radius: var(--products-catalog-table-radius, 16px);
 }
-
-/* Card de filtros: estilos em Products.css — classe .s7-catalog-filter-card no Anuncios.jsx */

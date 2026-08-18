@@ -1,0 +1,221 @@
+/* ======================================================================
+   List Sticky Chrome S7 — catálogos operacionais
+   (Produtos, Anúncios, Precificações, Concorrência)
+   Referência homologada: VendasPage.css (.vendas-page__list-sticky-chrome)
+====================================================================== */
+
+.page-content:has(.vendas-page:not(.dashboard-page)),
+.page-content:has(.products-catalog:not(.vendas-page)),
+.page-content:has(.anuncios-page),
+.page-content:has(.precificacoes-page),
+.page-content:has(.listings-workspace),
+.page-content:has(.concorrencia-catalog) {
+  --s7-page-rhythm: 12px;
+  /* Paridade Vendas — scrollport único, sem min-height 100vh do .s7-page */
+  min-height: 0;
+  background-color: var(--s7-bg-page, #f2f7ff);
+  box-sizing: border-box;
+}
+
+/* Top 10 / saúde → lista: respiro interno no spacer, não gap externo */
+.products-catalog > .s7-operational-executive-block,
+.concorrencia-catalog > .s7-operational-executive-block {
+  margin-bottom: 0;
+}
+
+.anuncios-catalog__operacao-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: visible;
+  position: static;
+}
+
+.anuncios-page .anuncios-catalog__operacao-stack,
+.precificacoes-page .anuncios-catalog__operacao-stack,
+.anuncios-catalog__operacao-stack > .products-catalog__table-block,
+.anuncios-page .anuncios-catalog__operacao-stack > .products-catalog__table-block,
+.precificacoes-page .anuncios-catalog__operacao-stack > .products-catalog__table-block,
+.anuncios-page .anuncios-catalog__operacao-stack .products-catalog__list-sticky-chrome,
+.precificacoes-page .anuncios-catalog__operacao-stack .products-catalog__list-sticky-chrome {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+  box-shadow: none;
+}
+
+.anuncios-catalog__operacao-stack > .products-catalog__sr-title {
+  margin: 0;
+}
+
+.products-catalog__table-block,
+.products-catalog__list-sticky-chrome,
+.anuncios-catalog__operacao-stack > .products-catalog__table-block {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+  box-shadow: none;
+}
+
+.products-catalog__table-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* top negativo compensa padding-top da .page-content — chrome flush no menu */
+.products-catalog__list-sticky-chrome {
+  position: sticky;
+  top: calc(-1 * var(--s7-page-rhythm, 12px));
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+  box-shadow: none;
+  background: var(--s7-bg-page, #f2f7ff);
+  overflow: visible;
+  isolation: isolate;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.products-catalog__sticky-top-spacer {
+  height: var(--s7-page-rhythm, 12px);
+  min-height: var(--s7-page-rhythm, 12px);
+  flex: 0 0 var(--s7-page-rhythm, 12px);
+  background: var(--s7-bg-page, #f2f7ff);
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* Filtros dentro do chrome — sem sticky individual nem margem externa */
+.products-catalog__list-sticky-chrome > .products-catalog__controls.s7-sticky-filters,
+.products-catalog__list-sticky-chrome > .products-filters-card.s7-sticky-filters,
+.products-catalog__list-sticky-chrome > .concorrencia-filters-card.s7-sticky-filters,
+.products-catalog__list-sticky-chrome > .anuncios-catalog__filters.s7-search-filters-card,
+.products-catalog__list-sticky-chrome > .s7-search-filters-card--single-row {
+  position: relative;
+  top: auto;
+  z-index: 3;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.products-catalog__list-sticky-chrome > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+.products-catalog__list-sticky-chrome > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible {
+  margin-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.products-catalog__list-header-slot .products-catalog__grid.products-catalog__grid--head {
+  overflow: visible;
+}
+
+.products-catalog__list-header-slot,
+.concorrencia-catalog .products-catalog__list-header-slot {
+  position: relative;
+  top: auto;
+  z-index: 3;
+  flex-shrink: 0;
+  margin-top: var(--s7-page-rhythm, 12px);
+  border-radius: var(--products-catalog-table-radius, 12px) var(--products-catalog-table-radius, 12px) 0 0;
+  /* visible: pseudo-tooltips do header extrapolam a caixa laranja (overflow:hidden cortava só a seta) */
+  overflow: visible;
+  background: linear-gradient(
+    180deg,
+    var(--s7-list-title-bar-bg-from) 0%,
+    var(--s7-list-title-bar-bg-to) 100%
+  );
+  box-shadow: var(--s7-list-table-head-shadow, none);
+}
+
+.products-catalog__list-operational {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+.products-catalog__list-operational .products-catalog__table-card--scroll-viewport,
+.concorrencia-catalog .products-catalog__list-operational .products-catalog__table-card {
+  border-top: none;
+  border-radius: 0;
+}
+
+.products-catalog__list-operational .products-catalog__body,
+.products-catalog__list-operational .products-catalog__table tbody,
+.products-catalog__list-operational .products-catalog__table tbody tr,
+.products-catalog__list-operational .concorrencia-catalog__body,
+.products-catalog__list-operational .concorrencia-catalog__body > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 769px) {
+  .products-catalog__list-header-slot .products-catalog__table-hscroll--head,
+  .products-catalog__list-operational .products-catalog__table-hscroll--body {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.products-catalog__table-block > .s7-pagination {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+  flex: 0 0 auto;
+  margin-top: var(--s7-page-rhythm, 12px);
+}
+
+/* ======================================================================
+   Fundo sólido no scroll — sem auréola de sombra (paridade Vendas)
+   ====================================================================== */
+
+.products-catalog__table-block {
+  --s7-list-table-card-shadow: none;
+}
+
+.products-catalog__list-sticky-chrome > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card,
+.products-catalog__list-sticky-chrome > .products-catalog__controls.s7-sticky-filters.s7-catalog-filter-card.anuncios-catalog__filters--collapsible,
+.products-catalog__list-sticky-chrome > .products-filters-card.s7-sticky-filters,
+.products-catalog__list-sticky-chrome > .concorrencia-filters-card.s7-sticky-filters,
+.products-catalog__list-sticky-chrome > .anuncios-catalog__filters.s7-search-filters-card,
+.products-catalog__list-sticky-chrome > .s7-search-filters-card--single-row {
+  box-shadow: none;
+}
+
+.products-catalog__list-operational .products-catalog__table-card,
+.products-catalog__list-operational .products-catalog__table-card--scroll-viewport,
+.concorrencia-catalog .products-catalog__list-operational .products-catalog__table-card {
+  box-shadow: none;
+}
+
+.products-catalog__table-block > .s7-pagination,
+.products-catalog__table-block > .s7-pagination .s7-pagination__btn {
+  box-shadow: none;
+}
+
+.products-catalog__table-block > .s7-pagination .s7-pagination__btn:hover:not(:disabled) {
+  box-shadow: none;
+}

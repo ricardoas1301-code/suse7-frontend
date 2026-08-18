@@ -38,9 +38,23 @@ export function getSaleHealthUi(f) {
       return { badgeClass: "vendas-health-badge--neutral", label: "Sem lucro", showDot: true };
     }
     if (Number.isFinite(marginN) && marginN < 5) {
-      return { badgeClass: "vendas-health-badge--warn", label: "Margem baixa", showDot: true };
+      return { badgeClass: "vendas-health-badge--warn", label: "Margem crítica", showDot: true };
     }
     return { badgeClass: "vendas-health-badge--warn", label: "Precisa atenção", showDot: true };
   }
   return { badgeClass: "vendas-health-badge--unknown", label: "Sem dados", showDot: false };
+}
+
+/**
+ * Tom visual de Lucro/Margem na lista — alinhado às faixas de saúde da venda (só leitura da margem %).
+ * @param {string | number | null | undefined} marginPercent
+ * @returns {string}
+ */
+export function getVendasTableFinancialHealthToneClass(marginPercent) {
+  if (marginPercent == null || String(marginPercent).trim() === "") return "vendas-page__fin--empty";
+  const n = Number(String(marginPercent).replace(",", "."));
+  if (!Number.isFinite(n)) return "vendas-page__fin--empty";
+  if (n < 0) return "vendas-page__fin--health-critical";
+  if (n <= 5) return "vendas-page__fin--health-warn";
+  return "vendas-page__fin--health-healthy";
 }

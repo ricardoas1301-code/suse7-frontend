@@ -17,8 +17,12 @@ import "./global.css";
 import "./styles/Suse7-Design-System.css";
 import "./styles/S7CoreKpis.css";
 import "./styles/s7-sticky-filters.css";
+import "./styles/s7-catalog-page-rhythm.css";
+import "./styles/s7-list-sticky-chrome.css";
+import "./styles/s7-list-select-column.css";
 
 import { useAuthBootstrap } from "./contexts/AuthBootstrapContext";
+import AuthCallbackGate from "./components/AuthCallbackGate.jsx";
 
 // Layout e páginas principais
 import Layout from "./components/Layout";
@@ -45,17 +49,19 @@ import FormasPagamento from "./components/Profile/FormasPagamento";
 import ExtratoConta from "./components/Profile/ExtratoConta";
 import PaymentHistory from "./components/Profile/PaymentHistory";
 import PlansPage from "./billing/pages/PlansPage";
+import PublicPlansPage from "./billing/pages/PublicPlansPage";
 import NotificacoesInboxPage from "./pages/NotificacoesInboxPage";
 import SubscriptionPage from "./billing/pages/SubscriptionPage";
 import CheckoutRedirectPage from "./billing/pages/CheckoutRedirectPage";
 import { BillingAccessProvider } from "./billing/hooks/useBillingAccess.jsx";
+import { BillingRenewalExperienceProvider } from "./billing/hooks/useBillingRenewalExperience.jsx";
 import { protectPremiumRoute } from "./billing/protectPremiumRoute.jsx";
 import Preferencias from "./components/Profile/Preferencias";
-import CentralNotificacoesHub from "./components/Profile/CentralNotificacoesHub";
-import LegacyNotificacoesRedirect from "./components/Profile/LegacyNotificacoesRedirect";
+import NotificationCenterLegacyRedirect from "./components/Profile/NotificationCenterLegacyRedirect";
+import NotificationCenterRecipientsPage from "./components/Profile/NotificationCenterRecipientsPage";
+import NotificationCenterCategoryPage from "./components/Profile/NotificationCenterCategoryPage";
 import NotificationHistorico from "./components/Profile/NotificationHistorico";
-import DestinatariosNotificacoes from "./components/Profile/DestinatariosNotificacoes";
-import AlertasPopup from "./components/Profile/AlertasPopup";
+import AlertasPopupLegacyRedirect from "./components/Profile/AlertasPopupLegacyRedirect";
 
 // Produtos (REAL)
 import Products from "./components/Products";
@@ -84,6 +90,7 @@ import RelatoriosPage from "./pages/RelatoriosPage";
 // Status de save (ampulheta global)
 import { SaveStatusProvider } from "./contexts/SaveStatusContext";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
+import { EasterEggProvider } from "./features/easter-eggs/EasterEggProvider.jsx";
 
 // Temporários
 const Faturas = () => <h1>Faturas</h1>;
@@ -93,10 +100,25 @@ const Configuracoes = () => <h1>Configurações</h1>;
 // AUTH WRAPPER
 // ======================================================================
 function AuthOutlet() {
-  const { loading, session } = useAuthBootstrap();
+  const { loading, session, callbackError } = useAuthBootstrap();
 
-  if (loading) return <div>Carregando...</div>;
-  return session ? <Outlet /> : <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <AuthCallbackGate>
+        <Outlet />
+      </AuthCallbackGate>
+    );
+  }
+
+  if (!session && !callbackError) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <AuthCallbackGate>
+      <Outlet />
+    </AuthCallbackGate>
+  );
 }
 
 // ======================================================================
@@ -123,6 +145,7 @@ function MLRedirectHandler({ children }) {
 const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
   { path: "/signup", element: <Signup /> },
+  { path: "/planos", element: <PublicPlansPage /> },
   { path: "/termos", element: <Terms /> },
   { path: "/privacidade", element: <Privacidade /> },
   { path: "/forgot-password", element: <PasswordForgot /> },
@@ -140,12 +163,16 @@ const router = createBrowserRouter([
       {
         element: (
           <BillingAccessProvider>
+            <BillingRenewalExperienceProvider>
             <SaveStatusProvider>
-              <>
-                <Layout />
-                <SaveStatusIndicator />
-              </>
+              <EasterEggProvider>
+                <>
+                  <Layout />
+                  <SaveStatusIndicator />
+                </>
+              </EasterEggProvider>
             </SaveStatusProvider>
+            </BillingRenewalExperienceProvider>
           </BillingAccessProvider>
         ),
         children: [
@@ -171,13 +198,13 @@ const router = createBrowserRouter([
             path: "preferencias",
             element: <Preferencias />,
             children: [
-              { index: true, element: <Navigate to="notificacoes" replace /> },
-              { path: "notificacoes", element: <CentralNotificacoesHub /> },
-              { path: "notificacoes/destinatarios", element: <Navigate to="/perfil/preferencias/notificacoes?tab=recipients" replace /> },
+              { index: true, element: <Navigate to="notificacoes/destinatarios" replace /> },
+              { path: "notificacoes", element: <NotificationCenterLegacyRedirect /> },
+              { path: "notificacoes/destinatarios", element: <NotificationCenterRecipientsPage /> },
               { path: "notificacoes/historico", element: <NotificationHistorico /> },
-              { path: "notificacoes/:category", element: <LegacyNotificacoesRedirect /> },
-              { path: "alertas-pop-up", element: <Navigate to="alertas-pop-up/sales" replace /> },
-              { path: "alertas-pop-up/:category", element: <AlertasPopup /> },
+              { path: "notificacoes/:slug", element: <NotificationCenterCategoryPage /> },
+              { path: "alertas-pop-up", element: <Navigate to="/perfil/preferencias/notificacoes/vendas" replace /> },
+              { path: "alertas-pop-up/:category", element: <AlertasPopupLegacyRedirect /> },
             ],
           },
         ],

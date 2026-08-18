@@ -1,0 +1,55 @@
+.s7-billing-cancel-modal.profile-modal {
+  width: min(480px, calc(100% - 24px));
+  max-width: 480px;
+  padding: 22px 22px 20px;
+  border-radius: 22px;
+  text-align: left;
+  border: 1.5px solid #fca5a5;
+  border-top: 4px solid var(--s7-danger, #ef4444);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(252, 165, 165, 0.28);
+}
+
+.s7-billing-cancel-modal h3 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: left;
+}
+
+.s7-billing-cancel-modal p {
+  margin: 0 0 10px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.s7-billing-cancel-modal__access-until {
+  margin: 4px 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #0f172a;
+  text-align: left;
+}
+
+.s7-billing-cancel-modal__actions {
+  margin-top: 16px;
+}
+
+.s7-billing-cancel-modal__actions .s7-btn {
+  width: 100%;
+}
+
+.s7-billing-cancel-modal .s7-destructive-confirmation-challenge {
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .s7-billing-cancel-modal__access-until {
+    font-size: 14px;
+  }
+}

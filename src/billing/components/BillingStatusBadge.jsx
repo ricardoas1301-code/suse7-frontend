@@ -1,3 +1,5 @@
+import S7StatusBadge from "../../components/ui/S7StatusBadge.jsx";
+
 const STATUS_MAP = {
   active: { label: "Ativa", tone: "success" },
   trialing: { label: "Período de teste", tone: "info" },
@@ -12,8 +14,14 @@ const STATUS_MAP = {
   inactive: { label: "Inativa", tone: "muted" },
 };
 
+export function resolveBillingStatusLabel(state, status) {
+  const key = String(state || status || "none").toLowerCase();
+  const meta = STATUS_MAP[key] ?? { label: key || "Status", tone: "muted" };
+  return meta.label;
+}
+
 export default function BillingStatusBadge({ state, status }) {
   const key = String(state || status || "none").toLowerCase();
   const meta = STATUS_MAP[key] ?? { label: key || "Status", tone: "muted" };
-  return <span className={`s7-billing-status-badge s7-billing-status-badge--${meta.tone}`}>{meta.label}</span>;
+  return <S7StatusBadge label={meta.label} tone={meta.tone} />;
 }

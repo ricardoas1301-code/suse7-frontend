@@ -1,66 +1,69 @@
-.s7-mcpick-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.s7-mcpick-modal {
-  width: min(560px, 100%);
+.s7-mcpick-modal.profile-modal {
+  width: min(666.4px, calc(100% - 24px));
   max-height: min(86vh, 720px);
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+  padding: 18px 22px 20px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
-.s7-mcpick-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 22px 22px 12px;
-  border-bottom: 1px solid #e8ecf4;
+.s7-mcpick-header.profile-modal-header {
+  text-align: left;
+  margin-bottom: 6px;
 }
 
-.s7-mcpick-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
+.s7-mcpick-header.profile-modal-header h2,
+.s7-mcpick-header.profile-modal-header p,
+.s7-mcpick-header.profile-modal-header .s7-mcpick-sub {
+  text-align: left;
+  width: 100%;
+}
+
+.s7-mcpick-header.profile-modal-header h2 {
+  margin-bottom: 6px;
 }
 
 .s7-mcpick-sub {
-  margin: 8px 0 0;
-  font-size: 0.9rem;
+  margin: 0;
+  font-size: 12px;
   line-height: 1.45;
-  color: #475569;
-}
-
-.s7-mcpick-close {
-  border: none;
-  background: transparent;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  color: #64748b;
-  padding: 4px 8px;
-  border-radius: 8px;
-}
-
-.s7-mcpick-close:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  color: #555;
+  text-align: left;
 }
 
 .s7-mcpick-body {
-  padding: 12px 16px 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  padding: 0 0 8px;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+.s7-mcpick-create-inline {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20.28px;
+}
+
+.s7-mcpick-all-connected {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  margin-bottom: 20.28px;
+  padding: 0;
+  color: #334155;
+}
+
+.s7-mcpick-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 0 0 8px;
+  color: #334155;
 }
 
 .s7-mcpick-list {
@@ -77,6 +80,8 @@
   border-radius: 12px;
   padding: 12px 14px;
   background: #fafbff;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .s7-mcpick-row.is-available {
@@ -85,14 +90,54 @@
 }
 
 .s7-mcpick-row.is-disabled {
-  opacity: 0.72;
+  opacity: 0.82;
+}
+
+.s7-mcpick-row.is-highlight {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+  background: #f8fbff;
 }
 
 .s7-mcpick-row-main {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
+}
+
+.s7-mcpick-row-title > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s7-mcpick-row .s7-company-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #3730a3;
+  font-size: 16px;
+}
+
+.s7-mcpick-row .s7-company-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.s7-mcpick-row-text {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .s7-mcpick-row-title {
@@ -104,17 +149,21 @@
   color: #0f172a;
 }
 
-.s7-mcpick-row-legal {
-  font-size: 0.85rem;
-  color: #64748b;
-  margin-top: 4px;
-}
-
 .s7-mcpick-row-cnpj {
   font-size: 0.85rem;
   color: #334155;
   margin-top: 6px;
   font-variant-numeric: tabular-nums;
+}
+
+.s7-mcpick-row-cnpj-label {
+  font-weight: 600;
+  color: #64748b;
+}
+
+.s7-mcpick-row-cnpj-value {
+  font-weight: 500;
+  color: #374151;
 }
 
 .s7-mcpick-badge {
@@ -140,6 +189,11 @@
 
 .s7-mcpick-row-action {
   flex-shrink: 0;
+  align-self: center;
+}
+
+.s7-mcpick-row-action-wrap {
+  display: inline-flex;
 }
 
 .s7-mcpick-btn {
@@ -160,6 +214,17 @@
   filter: brightness(1.05);
 }
 
+.s7-mcpick-btn--ghost {
+  background: #eef2ff;
+  color: #1d4ed8;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+.s7-mcpick-btn--ghost:hover {
+  background: #e0e7ff;
+}
+
 .s7-mcpick-btn--sm {
   padding: 8px 12px;
   font-size: 0.85rem;
@@ -173,29 +238,53 @@
   cursor: not-allowed;
 }
 
-.s7-mcpick-empty,
-.s7-mcpick-all-connected {
-  text-align: center;
-  padding: 24px 12px;
-  color: #334155;
-}
-
 .s7-mcpick-empty-hint,
 .s7-mcpick-all-connected-hint {
-  font-size: 0.9rem;
+  font-size: 12px;
   color: #64748b;
-  margin: 8px 0 16px;
+  margin: 6px 0 12px;
+  text-align: left;
+  width: 100%;
+  line-height: 1.45;
 }
 
 .s7-mcpick-all-connected-title {
+  margin: 0;
   font-weight: 600;
   color: #0f172a;
+  text-align: left;
+  width: 100%;
+  font-size: 12.5px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.profile-modal.s7-mcpick-modal .s7-mcpick-body,
+.profile-modal.s7-mcpick-modal .s7-mcpick-all-connected,
+.profile-modal.s7-mcpick-modal .s7-mcpick-all-connected-title,
+.profile-modal.s7-mcpick-modal .s7-mcpick-all-connected-hint,
+.profile-modal.s7-mcpick-modal .s7-mcpick-empty,
+.profile-modal.s7-mcpick-modal .s7-mcpick-empty-hint {
+  text-align: left;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.profile-modal.s7-mcpick-modal p.s7-mcpick-all-connected-title,
+.profile-modal.s7-mcpick-modal p.s7-mcpick-all-connected-hint {
+  text-align: left;
 }
 
 .s7-mcpick-footer {
-  padding: 12px 22px 18px;
+  padding: 12px 0 0;
   border-top: 1px solid #e8ecf4;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .s7-mcpick-link {
@@ -206,4 +295,33 @@
   cursor: pointer;
   font-size: 0.88rem;
   text-decoration: underline;
+}
+
+.s7-mcpick-list .s7-tooltip-portal-root {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .s7-mcpick-modal.profile-modal {
+    width: calc(100% - 16px);
+    padding: 16px 14px 18px;
+    max-height: 96vh;
+  }
+
+  .s7-mcpick-row-main {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .s7-mcpick-row-action {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  .profile-modal.s7-mcpick-modal .s7-mcpick-all-connected-title {
+    white-space: normal;
+    font-size: 12px;
+  }
 }

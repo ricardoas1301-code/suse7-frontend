@@ -2,6 +2,8 @@
 // Planos — identificação do plano atual e rótulos de CTA (UI only)
 // ======================================================================
 
+import { isQuotePlan } from "./planDisplay";
+
 /**
  * @param {unknown} source
  * @returns {string | null}
@@ -103,16 +105,6 @@ export function resolveCurrentPlanSnapshot(status, catalogPlans = []) {
 
 /**
  * @param {Record<string, unknown> | null | undefined} plan
- */
-export function isEnterprisePlan(plan) {
-  const key = normalizePlanKey(plan);
-  if (!key) return false;
-  if (key === "enterprise") return true;
-  return Boolean(plan?.contact_sales || plan?.requires_sales_contact);
-}
-
-/**
- * @param {Record<string, unknown> | null | undefined} plan
  * @param {ReturnType<typeof resolveCurrentPlanSnapshot> | null | undefined} currentPlan
  */
 export function isCurrentPlan(plan, currentPlan) {
@@ -122,27 +114,31 @@ export function isCurrentPlan(plan, currentPlan) {
   return Boolean(planKey && currentPlan.planKey && planKey === currentPlan.planKey);
 }
 
+export const PLAN_SELECT_CTA_LABEL = "Escolher este plano";
+
+/**
+ * Rótulo visível do CTA (não usar para regra de negócio).
+ * @param {Record<string, unknown> | null | undefined} plan
+ * @param {ReturnType<typeof resolveCurrentPlanSnapshot> | null | undefined} currentPlan
+ */
+export function getPlanCardDisplayLabel(plan, currentPlan) {
+  if (!plan) return "Selecionar plano";
+  if (isCurrentPlan(plan, currentPlan)) return null;
+  if (isQuotePlan(plan)) return "Falar com especialista";
+  return PLAN_SELECT_CTA_LABEL;
+}
+
 /**
  * @param {Record<string, unknown> | null | undefined} plan
  * @param {ReturnType<typeof resolveCurrentPlanSnapshot> | null | undefined} currentPlan
  * @param {Array<Record<string, unknown>>} [catalogPlans]
+ * @deprecated Preferir getPlanCardDisplayLabel — mantido para compatibilidade interna.
  */
 export function getPlanCtaLabel(plan, currentPlan, catalogPlans = []) {
-  if (!plan) return "Selecionar plano";
+  const display = getPlanCardDisplayLabel(plan, currentPlan);
+  if (display) return display;
   if (isCurrentPlan(plan, currentPlan)) return "Plano atual";
-  if (isEnterprisePlan(plan)) return "Falar com suporte";
-
-  if (plan.billing_required === false) return "Ativar plano gratuito";
-
-  const currentSort = resolvePlanSortOrder(currentPlan, catalogPlans, currentPlan?.plan);
-  const targetSort = resolvePlanSortOrder(null, catalogPlans, plan);
-
-  if (currentPlan?.isFree) return "Assinar plano";
-  if (currentSort != null && targetSort != null) {
-    if (targetSort > currentSort) return "Alterar plano";
-    if (targetSort < currentSort) return "Agendar downgrade";
-  }
-  return "Assinar plano";
+  return PLAN_SELECT_CTA_LABEL;
 }
 
 /**
@@ -152,12 +148,12 @@ export function getPlanCtaLabel(plan, currentPlan, catalogPlans = []) {
  */
 export function getPlanCardCtaState(plan, currentPlan, catalogPlans = []) {
   const current = isCurrentPlan(plan, currentPlan);
-  const enterprise = isEnterprisePlan(plan);
-  const label = getPlanCtaLabel(plan, currentPlan, catalogPlans);
+  const quote = isQuotePlan(plan);
+  const displayLabel = getPlanCardDisplayLabel(plan, currentPlan);
   const currentSort = resolvePlanSortOrder(currentPlan, catalogPlans, currentPlan?.plan);
   const targetSort = resolvePlanSortOrder(null, catalogPlans, plan);
   const changeKind =
-    !current && !enterprise && currentSort != null && targetSort != null
+    !current && !quote && currentSort != null && targetSort != null
       ? targetSort > currentSort
         ? "upgrade"
         : targetSort < currentSort
@@ -168,12 +164,14 @@ export function getPlanCardCtaState(plan, currentPlan, catalogPlans = []) {
         : "switch";
 
   return {
-    label,
+    label: displayLabel ?? "Plano atual",
+    displayLabel,
+    statusLabel: current ? "Plano atual" : null,
     disabled: current,
     badge: current ? "Seu plano" : null,
-    isEnterprise: enterprise,
+    isQuote: quote,
     isCurrent: current,
-    usesCheckout: !current && !enterprise && changeKind !== "downgrade",
+    usesCheckout: !current && !quote && changeKind !== "downgrade",
     changeKind,
   };
 }
@@ -181,8 +179,13 @@ export function getPlanCardCtaState(plan, currentPlan, catalogPlans = []) {
 /**
  * @param {Record<string, unknown> | null | undefined} plan
  */
-export function getEnterpriseContactHref(plan) {
-  const planName = plan?.marketing_name ?? plan?.display_name ?? plan?.name ?? plan?.plan_key ?? "Enterprise";
-  const subject = encodeURIComponent(`Suse7 — Plano ${planName}`);
+export function getCommercialContactHref(plan) {
+  const planName = plan?.marketing_name ?? plan?.display_name ?? plan?.name ?? plan?.plan_key ?? "Infinity";
+  const subject = encodeURIComponent(`SUSE7 — Plano ${planName}`);
   return `mailto:contato@suse7.com.br?subject=${subject}`;
+}
+
+/** @deprecated Use getCommercialContactHref */
+export function getEnterpriseContactHref(plan) {
+  return getCommercialContactHref(plan);
 }

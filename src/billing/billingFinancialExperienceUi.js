@@ -12,7 +12,7 @@ import {
 const REVENUE_HEALTH_PRESENTATION = {
   HEALTHY: {
     title: "Saúde financeira em dia",
-    description: "Sua assinatura está regular. Cobranças e renovações seguem o fluxo esperado.",
+    description: "Sua assinatura está regular. Cobranças e renovações seguem o fluxo normal.",
     insight: "Seu histórico financeiro está saudável.",
     recommendation: "Os pagamentos estão sendo processados normalmente.",
     badgeClass: "success",
@@ -24,7 +24,7 @@ const REVENUE_HEALTH_PRESENTATION = {
     insight: "Existe um ponto de atenção no ciclo financeiro.",
     recommendation: "Revise cobranças pendentes ou atualize a forma de pagamento.",
     badgeClass: "warning",
-    actionHint: "Revise cobranças pendentes ou atualize a forma de pagamento.",
+    actionHint: null,
   },
   RISK: {
     title: "Risco de interrupção",
@@ -43,6 +43,22 @@ const REVENUE_HEALTH_PRESENTATION = {
     actionHint: "Regularize o pagamento para reativar o acesso completo.",
   },
 };
+
+/** Labels visuais — valor técnico (`health_level`) permanece inalterado na API. */
+export const REVENUE_HEALTH_LEVEL_LABELS = {
+  HEALTHY: "SAUDÁVEL",
+  WARNING: "ATENÇÃO",
+  RISK: "ATENÇÃO",
+  CRITICAL: "CRÍTICA",
+};
+
+/**
+ * @param {unknown} level
+ */
+export function resolveRevenueHealthLevelLabel(level) {
+  const key = String(level ?? "HEALTHY").trim().toUpperCase();
+  return REVENUE_HEALTH_LEVEL_LABELS[key] ?? REVENUE_HEALTH_LEVEL_LABELS.HEALTHY;
+}
 
 const TIMELINE_EVENT_PRESENTATION = {
   PAYMENT_GENERATED: { icon: "payment", defaultTitle: "Cobrança gerada", defaultSummary: "Uma nova cobrança foi registrada." },
@@ -108,6 +124,7 @@ export function formatBillingDateTime(value) {
  */
 const REVENUE_HEALTH_FALLBACK = {
   level: "HEALTHY",
+  levelLabel: REVENUE_HEALTH_LEVEL_LABELS.HEALTHY,
   score: null,
   title: "Saúde financeira",
   description: "Não foi possível calcular o score agora. Consulte cobranças e timeline abaixo.",
@@ -135,6 +152,7 @@ export function normalizeRevenueHealth(payload) {
 
   return {
     level,
+    levelLabel: resolveRevenueHealthLevelLabel(level),
     score: safeScore,
     title: preset.title,
     description: preset.description,

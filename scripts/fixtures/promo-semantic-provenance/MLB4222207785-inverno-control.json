@@ -1,0 +1,9 @@
+{
+  "fixture_id": "MLB4222207785-inverno-control",
+  "listing_id": "MLB4222207785",
+  "promotion_name": "Inverno",
+  "ml_expected_final_price_brl": "126.93",
+  "canonical_contract_final_price_brl": "126.93",
+  "diagnosis": "ok",
+  "control_positive": true
+}

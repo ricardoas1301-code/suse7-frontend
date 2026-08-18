@@ -1,9 +1,39 @@
 /* Dimensões compartilhadas: modais Pix, Boleto e Cartão (layout 980px). */
+.s7-billing-pix-checkout-sheet.s7-billing-checkout-sheet,
+.s7-billing-boleto-checkout-sheet.s7-billing-checkout-sheet {
+  --s7-billing-wide-checkout-viewport-gutter-y: 12px;
+  inset: auto;
+  top: var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px));
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+  overflow: hidden;
+  padding:
+    var(--s7-billing-wide-checkout-viewport-gutter-y)
+    24px
+    max(var(--s7-billing-wide-checkout-viewport-gutter-y), env(safe-area-inset-bottom, 0px));
+}
+
+.s7-billing-pix-checkout-sheet .s7-billing-checkout-sheet__panel,
+.s7-billing-boleto-checkout-sheet .s7-billing-checkout-sheet__panel {
+  flex: 1 1 auto;
+  width: min(980px, calc(100vw - 48px));
+  min-height: 0;
+  margin: 0 auto;
+}
+
 .s7-billing-checkout-sheet__panel.s7-billing-boleto-checkout,
 .s7-billing-checkout-sheet__panel.s7-billing-card-checkout,
 .s7-billing-checkout-sheet__panel.s7-billing-pix-checkout {
-  width: min(980px, calc(100vw - 32px));
+  width: min(980px, calc(100vw - 48px));
   max-width: 980px;
+  max-height: calc(
+    100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) - 48px
+  );
   padding: 24px 28px 26px;
   border-radius: 20px;
   border: 1.5px solid #93c5fd;
@@ -11,7 +41,92 @@
     0 20px 50px rgba(15, 23, 42, 0.16),
     0 0 0 1px rgba(147, 197, 253, 0.28);
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/*
+ * Pix e Boleto — shell ocupa a área útil com 12px acima e abaixo.
+ */
+.s7-billing-checkout-sheet__panel.s7-billing-pix-checkout,
+.s7-billing-checkout-sheet__panel.s7-billing-boleto-checkout {
+  display: flex;
+  flex-direction: column;
+  height: calc(
+    100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) -
+      (var(--s7-billing-wide-checkout-viewport-gutter-y, 12px) * 2)
+  );
+  max-height: calc(
+    100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) -
+      (var(--s7-billing-wide-checkout-viewport-gutter-y, 12px) * 2)
+  );
+}
+
+/*
+ * Densidade interna — Pix e Boleto apenas (cartão preservado).
+ */
+.s7-billing-checkout-sheet__panel.s7-billing-pix-checkout,
+.s7-billing-checkout-sheet__panel.s7-billing-boleto-checkout {
+  --s7-billing-wide-density-layout-gap-y: clamp(12px, 1.8vh, 16px);
+  --s7-billing-wide-density-layout-gap-x: 12px;
+  --s7-billing-wide-density-summary-padding: clamp(14px, 2vh, 18px);
+  --s7-billing-wide-density-summary-gap: clamp(10px, 1.5vh, 14px);
+  --s7-billing-wide-density-header-gap: clamp(8px, 1.2vh, 10px);
+  --s7-billing-wide-density-brand-gap: clamp(6px, 1vh, 8px);
+  --s7-billing-wide-density-facts-gap: clamp(10px, 1.4vh, 14px);
+  --s7-billing-wide-density-fact-gap: 3px;
+  --s7-billing-wide-density-facts-offset-top: clamp(6px, 1vh, 10px);
+  --s7-billing-wide-density-title-size: clamp(20px, 2.6vh, 22px);
+  --s7-billing-wide-density-status-size: clamp(12px, 1.5vh, 13px);
+  --s7-billing-wide-density-label-size: clamp(11px, 1.4vh, 12px);
+  --s7-billing-wide-density-value-size: clamp(15px, 1.9vh, 16px);
+  --s7-billing-wide-density-highlight-size: clamp(24px, 3.6vh, 32px);
+  --s7-billing-wide-density-payment-col-gap: clamp(10px, 1.4vh, 12px);
+  --s7-billing-wide-density-action-card-padding: clamp(12px, 1.6vh, 16px);
+  --s7-billing-wide-density-action-card-gap: clamp(10px, 1.4vh, 12px);
+  --s7-billing-wide-density-visual-size: clamp(336px, 56vh, 560px);
+  --s7-billing-wide-density-visual-padding-y: clamp(4px, 0.8vh, 8px);
+  --s7-billing-wide-density-steps-padding-y: clamp(8px, 1.2vh, 10px);
+  --s7-billing-wide-density-steps-padding-x: clamp(10px, 1.2vw, 12px);
+  --s7-billing-wide-density-steps-indent: clamp(22px, 2.8vw, 26px);
+  --s7-billing-wide-density-steps-size: clamp(12px, 1.45vh, 13px);
+  --s7-billing-wide-density-steps-line-height: 1.4;
+  --s7-billing-wide-density-steps-item-gap: 3px;
+  --s7-billing-wide-density-footer-size: clamp(11px, 1.35vh, 12px);
+  --s7-billing-wide-density-footer-line-height: 1.4;
+  --s7-billing-wide-density-footer-padding-top: clamp(4px, 0.8vh, 8px);
+  --s7-billing-wide-density-logo-pix: clamp(64px, 9vh, 80px);
+  --s7-billing-wide-density-logo-boleto: clamp(72px, 10vh, 92px);
+  --s7-billing-wide-density-pix-icon: clamp(52px, 7vh, 64px);
+  --s7-billing-wide-density-title-offset-top: clamp(6px, 1vh, 10px);
+  --s7-billing-wide-density-caption-size: clamp(12px, 1.45vh, 13px);
+  --s7-billing-wide-density-actions-gap: clamp(8px, 1vh, 10px);
+}
+
+@media (max-height: 820px) {
+  .s7-billing-checkout-sheet__panel.s7-billing-pix-checkout,
+  .s7-billing-checkout-sheet__panel.s7-billing-boleto-checkout {
+    --s7-billing-wide-density-layout-gap-y: clamp(10px, 1.4vh, 12px);
+    --s7-billing-wide-density-summary-padding: clamp(12px, 1.6vh, 14px);
+    --s7-billing-wide-density-visual-size: clamp(304px, 48vh, 440px);
+    --s7-billing-wide-density-highlight-size: clamp(22px, 3vh, 28px);
+    --s7-billing-wide-density-logo-pix: clamp(56px, 7.5vh, 68px);
+    --s7-billing-wide-density-logo-boleto: clamp(64px, 8.5vh, 80px);
+    --s7-billing-wide-density-pix-icon: clamp(44px, 6vh, 56px);
+  }
+}
+
+@media (max-height: 700px) {
+  .s7-billing-checkout-sheet__panel.s7-billing-pix-checkout,
+  .s7-billing-checkout-sheet__panel.s7-billing-boleto-checkout {
+    --s7-billing-wide-density-layout-gap-y: 8px;
+    --s7-billing-wide-density-summary-padding: 10px;
+    --s7-billing-wide-density-visual-size: clamp(256px, 40vh, 336px);
+    --s7-billing-wide-density-highlight-size: clamp(20px, 2.8vh, 24px);
+    --s7-billing-wide-density-steps-size: 12px;
+    --s7-billing-wide-density-footer-size: 11px;
+    overflow-y: auto;
+  }
 }
 
 /*

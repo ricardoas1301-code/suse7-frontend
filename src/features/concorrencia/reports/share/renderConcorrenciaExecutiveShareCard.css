@@ -1,0 +1,235 @@
+/* ====================================================================
+   Card visual compartilhável — Relatório de Concorrência.
+   Tokens alinhados ao renderVendasExecutiveShareImage.css (420px).
+   ==================================================================== */
+
+.concorrencia-share-card {
+  box-sizing: border-box;
+  width: 420px;
+  max-width: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #0f172a;
+}
+
+.concorrencia-share-card * {
+  box-sizing: border-box;
+}
+
+.concorrencia-share-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.concorrencia-share-card__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: contain;
+  flex: none;
+}
+
+.concorrencia-share-card__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.concorrencia-share-card__brand-name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.concorrencia-share-card__brand-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f97316;
+  letter-spacing: 0.02em;
+}
+
+.concorrencia-share-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.concorrencia-share-card__meta-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.concorrencia-share-card__meta-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.concorrencia-share-card__meta-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  word-break: break-word;
+}
+
+.concorrencia-share-card__meta-value--count {
+  color: #f97316;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-share-card__section-title {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.concorrencia-share-card__dist-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.concorrencia-share-card__dist-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.concorrencia-share-card__dist-name {
+  color: #334155;
+  font-weight: 600;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.concorrencia-share-card__dist-count {
+  flex: none;
+  color: #f97316;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.concorrencia-share-card__kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.concorrencia-share-card__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  min-width: 0;
+}
+
+.concorrencia-share-card__kpi-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.concorrencia-share-card__kpi-value {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.concorrencia-share-card__ops {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.concorrencia-share-card__ops-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.03);
+  box-sizing: border-box;
+}
+
+.concorrencia-share-card__ops-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.concorrencia-share-card__ops-icon {
+  flex: none;
+}
+
+.concorrencia-share-card__ops-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.concorrencia-share-card__ops-value {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.concorrencia-share-card__footer {
+  margin-top: 2px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}
+
+.concorrencia-share-card__footer-line {
+  display: block;
+}

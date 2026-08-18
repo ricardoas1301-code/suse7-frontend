@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { S7Button, S7PageHeader } from "../../components/ui";
 import { useNotifications } from "../../contexts/NotificationContext";
 import BillingStatusGate from "../components/BillingStatusGate";
-import BillingUsageNotice from "../components/BillingUsageNotice";
 import SubscriptionPlanCard from "../components/SubscriptionPlanCard";
 import SubscriptionSummaryCard from "../components/SubscriptionSummaryCard";
 import SubscriptionUsageBar from "../components/SubscriptionUsageBar";
@@ -13,13 +12,21 @@ import BillingBoletoModal from "../components/BillingBoletoModal";
 import PixCheckoutModal from "../components/PixCheckoutModal";
 import RenewalCheckoutSheet from "../components/RenewalCheckoutSheet";
 import RenewalNoticePopup from "../components/RenewalNoticePopup";
-import { recordRenewalNoticeSeen } from "../services/billingApi";
+import S7BillingAlertBanner from "../components/S7BillingAlertBanner";
+import { resolveSubscriptionDisplayPriceMonthly } from "../billingPriceUi";
+import { recordRenewalNoticeSeen, payRenewalCycle } from "../services/billingApi";
 import { renewalNoticeBannerClass } from "../renewalNoticeUi";
-import { buildPendingPixCheckoutFromPayment, inferBillingSandboxFromUrl, pickPaymentBoletoUrl } from "../checkoutUi";
+import {
+  RENEWAL_EXPERIENCE_ACTION,
+  RENEWAL_EXPERIENCE_STATE,
+} from "../renewalExperienceUi";
+import { useBillingRenewalExperience } from "../hooks/useBillingRenewalExperience.jsx";
+import { buildPendingPixCheckoutFromPayment, inferBillingSandboxFromUrl, isCheckoutAwaitingPayment, pickCheckoutBoletoUrl, pickPaymentBoletoUrl } from "../checkoutUi";
 import { resolvePlanDisplayName } from "../billingFormatters";
 import { useBillingPlans } from "../hooks/useBillingPlans";
 import { useSubscriptionStatus } from "../hooks/useSubscriptionStatus";
-import { refreshBillingPaymentStatus, requestSubscriptionCancellation, reactivateSubscription } from "../services/billingApi";
+import SubscriptionCancelModal from "../components/SubscriptionCancelModal";
+import { reactivateSubscription } from "../services/billingApi";
 import { canRequestSubscriptionCancellation, resolveSubscriptionAccessEndLabel } from "../subscriptionCancelUi";
 import { canReactivateSubscription, resolvePlanChangeAccessEndLabel } from "../subscriptionPlanChangeUi";
 import {
@@ -27,7 +34,26 @@ import {
   resolveOverdueInvoiceUrl,
   shouldShowDelinquencyNotice,
 } from "../subscriptionDelinquencyUi";
+import { shouldShowFinancialStateAlert } from "../billingFinancialStateUi.js";
 import "../billing.css";
+
+const REACTIVATE_ERROR_MESSAGES = {
+  SUBSCRIPTION_NOT_FOUND: "Não foi possível localizar esta assinatura.",
+  SUBSCRIPTION_FORBIDDEN: "Você não possui permissão para reativar esta assinatura.",
+  SUBSCRIPTION_NOT_SCHEDULED_FOR_CANCELLATION: "Esta assinatura não possui cancelamento agendado.",
+  SUBSCRIPTION_ALREADY_ENDED: "Esta assinatura já foi encerrada. Escolha um plano para continuar.",
+  REACTIVATION_NOT_AVAILABLE: "Nenhuma assinatura elegível para reativação.",
+  PROVIDER_REACTIVATION_FAILED: "Não foi possível reativar a assinatura agora. Tente novamente em instantes.",
+  AUTH_SESSION_INVALID: "Sua sessão expirou. Entre novamente para continuar.",
+  SERVICE_UNAVAILABLE: "O serviço está temporariamente indisponível. Tente novamente em instantes.",
+};
+
+function resolveReactivateErrorMessage(code, fallback) {
+  if (code && REACTIVATE_ERROR_MESSAGES[code]) {
+    return REACTIVATE_ERROR_MESSAGES[code];
+  }
+  return fallback || REACTIVATE_ERROR_MESSAGES.SERVICE_UNAVAILABLE;
+}
 
 const PENDING_ACTION = {
   VIEW_PIX_QR: "VIEW_PIX_QR",
@@ -46,23 +72,31 @@ export default function SubscriptionPage() {
   const pendingCheckout = statusExtras?.pending_checkout ?? null;
   const renewalNotice = statusExtras?.renewal_notice ?? null;
   const pendingRenewal = statusExtras?.pending_renewal ?? renewalNotice;
+  const {
+    renewalExperience,
+    renewalCheckoutOpen,
+    setRenewalCheckoutOpen,
+    openRenewalCheckout,
+    pendingRenewalAlert,
+  } = useBillingRenewalExperience();
   const { plans } = useBillingPlans();
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
   const [reactivateLoading, setReactivateLoading] = useState(false);
   const [growthNoticeDismissed, setGrowthNoticeDismissed] = useState(false);
   const [boletoModalOpen, setBoletoModalOpen] = useState(false);
   const [pixModalOpen, setPixModalOpen] = useState(false);
-  const [renewalModalOpen, setRenewalModalOpen] = useState(false);
   const [renewalPopupOpen, setRenewalPopupOpen] = useState(false);
   const [renewalBannerHidden, setRenewalBannerHidden] = useState(false);
+  const [renewalPrimaryLoading, setRenewalPrimaryLoading] = useState(false);
+  const [renewalPixCheckout, setRenewalPixCheckout] = useState(null);
+  const [renewalPixModalOpen, setRenewalPixModalOpen] = useState(false);
+  const [renewalBoletoCheckout, setRenewalBoletoCheckout] = useState(null);
+  const [renewalBoletoModalOpen, setRenewalBoletoModalOpen] = useState(false);
+  const reactivateRequestRef = useRef(0);
 
   useEffect(() => {
-    if (renewalNotice?.should_show_popup) {
-      setRenewalPopupOpen(true);
-    } else {
-      setRenewalPopupOpen(false);
-    }
+    // Rotas financeiras: card contextual substitui popup automático de suspensão (S1.HF.6.5).
+    setRenewalPopupOpen(false);
   }, [renewalNotice?.renewal_cycle_id, renewalNotice?.should_show_popup, renewalNotice?.level]);
 
   const latestSubscription = activeSubscription ?? subscriptions?.[0] ?? null;
@@ -74,7 +108,13 @@ export default function SubscriptionPage() {
 
   const resolvedPlan = plan ?? catalogPlan;
   const planName = resolvePlanDisplayName(resolvedPlan) || latestSubscription?.plan_key || "—";
-  const planPriceMonthly = resolvedPlan?.price_monthly ?? latestSubscription?.amount;
+  const planPriceMonthly = resolveSubscriptionDisplayPriceMonthly({
+    renewalExperience,
+    catalogPlan,
+    resolvedPlan,
+    subscription: latestSubscription,
+  });
+  const pendingRenewalAlertResolved = pendingRenewalAlert;
   const salesLimitMonthly = limits?.monthly_sales_limit ?? resolvedPlan?.sales_limit_monthly ?? usage?.limit_sales_month;
   const canCancel = canRequestSubscriptionCancellation(latestSubscription, access);
   const canReactivate = canReactivateSubscription(latestSubscription);
@@ -88,7 +128,9 @@ export default function SubscriptionPage() {
     Boolean(scheduledPlanChangeTarget);
   const delinquencyNotice = resolveDelinquencyNoticeCopy(latestSubscription, { ...access, ...statusExtras });
   const overdueInvoiceUrl = resolveOverdueInvoiceUrl(statusExtras, latestSubscription, access);
-  const showDelinquencyNotice = shouldShowDelinquencyNotice(latestSubscription, { ...access, ...statusExtras });
+  const showDelinquencyNotice =
+    shouldShowDelinquencyNotice(latestSubscription, { ...access, ...statusExtras }) &&
+    !shouldShowFinancialStateAlert(renewalExperience);
   const pendingPlanName = useMemo(() => {
     if (!pendingCheckout?.plan_key) return null;
     const match = plans.find((item) => String(item.plan_key || item.slug).toLowerCase() === String(pendingCheckout.plan_key).toLowerCase());
@@ -101,10 +143,81 @@ export default function SubscriptionPage() {
     () => buildPendingPixCheckoutFromPayment(pendingPayment, pendingPlanName),
     [pendingPayment, pendingPlanName]
   );
+  const usageUnavailable = Boolean(statusExtras?.usage_fallback) || usage?.usage_status === "unavailable";
   const pendingBoletoSandbox = useMemo(
     () => inferBillingSandboxFromUrl(pickPaymentBoletoUrl(pendingPayment)),
     [pendingPayment]
   );
+  const renewalPlanName = renewalExperience?.plan?.name ?? planName;
+
+  async function openRenewalCheckoutSheet() {
+    const result = await openRenewalCheckout();
+    if (!result.ok) {
+      addNotification({
+        event_type: "BILLING_RENEWAL_ERROR",
+        entity_type: "billing",
+        title: "Renovação indisponível",
+        message: "Não foi possível carregar o ciclo de renovação. Atualize a página e tente novamente.",
+        severity: "error",
+      });
+    }
+  }
+
+  const renewalBoletoSandbox = useMemo(
+    () => inferBillingSandboxFromUrl(pickCheckoutBoletoUrl(renewalBoletoCheckout)),
+    [renewalBoletoCheckout]
+  );
+
+  async function handleRenewalChargeGenerated({ checkout, paymentMethod }) {
+    await refresh({ silent: true });
+    if (paymentMethod === "PIX") {
+      setRenewalPixCheckout(checkout);
+      setRenewalPixModalOpen(true);
+      return;
+    }
+    if (paymentMethod === "BOLETO") {
+      setRenewalBoletoCheckout(checkout);
+      setRenewalBoletoModalOpen(true);
+    }
+  }
+
+  async function handleRenewalPrimaryAction() {
+    const action = String(renewalExperience?.primary_action?.action || "");
+    if (action === RENEWAL_EXPERIENCE_ACTION.RENEW_SUBSCRIPTION) {
+      openRenewalCheckoutSheet();
+      return;
+    }
+    if (
+      action === RENEWAL_EXPERIENCE_ACTION.VIEW_PIX ||
+      action === RENEWAL_EXPERIENCE_ACTION.REISSUE_BOLETO
+    ) {
+      if (renewalPrimaryLoading || !renewalExperience?.renewal_cycle_id) return;
+      setRenewalPrimaryLoading(true);
+      const paymentMethod = action === RENEWAL_EXPERIENCE_ACTION.VIEW_PIX ? "PIX" : "BOLETO";
+      const res = await payRenewalCycle(String(renewalExperience.renewal_cycle_id), { payment_method: paymentMethod });
+      setRenewalPrimaryLoading(false);
+      if (!res.ok) {
+        addNotification({
+          event_type: "BILLING_RENEWAL_ERROR",
+          entity_type: "billing",
+          title: "Falha ao abrir cobrança",
+          message: res.error || res.data?.message || "Não foi possível recuperar a cobrança de renovação.",
+          severity: "error",
+        });
+        return;
+      }
+      const checkout =
+        res.data?.checkout && typeof res.data.checkout === "object" ? res.data.checkout : res.data;
+      if (!isCheckoutAwaitingPayment(checkout)) {
+        await refresh({ silent: true });
+        return;
+      }
+      await handleRenewalChargeGenerated({
+        checkout: /** @type {Record<string, unknown>} */ (checkout),
+        paymentMethod,
+      });
+    }
+  }
 
   function handlePendingPaymentAction() {
     if (pendingPayment?.can_open === false && pendingPayment?.open_error_message) {
@@ -160,7 +273,7 @@ export default function SubscriptionPage() {
       navigate("/perfil/assinatura/formas-de-pagamento");
       return;
     }
-    setRenewalModalOpen(true);
+    openRenewalCheckoutSheet();
   }
 
   async function dismissRenewalBanner() {
@@ -173,36 +286,22 @@ export default function SubscriptionPage() {
     setRenewalBannerHidden(true);
   }
 
-  async function handleRefreshStatus() {
-    const providerPaymentId = pendingCheckout?.payment?.provider_payment_id;
-    if (providerPaymentId) {
-      const payRes = await refreshBillingPaymentStatus({ provider_payment_id: providerPaymentId });
-      if (payRes.ok && payRes.data?.confirmed) {
-        await refresh();
-        addNotification({
-          event_type: "BILLING_PAYMENT_CONFIRMED",
-          entity_type: "billing",
-          title: "Pagamento confirmado",
-          message: "Seu novo plano foi ativado.",
-          severity: "success",
-        });
-        return;
-      }
-    }
-    await refresh({ silent: true });
-  }
-
   async function confirmReactivation() {
     if (reactivateLoading) return;
+    const requestId = ++reactivateRequestRef.current;
     setReactivateLoading(true);
-    const res = await reactivateSubscription();
+    const res = await reactivateSubscription({
+      subscription_id: latestSubscription?.id ?? access?.subscription_id ?? undefined,
+    });
+    if (requestId !== reactivateRequestRef.current) return;
     setReactivateLoading(false);
     if (!res.ok) {
+      const code = res.data?.code ?? res.error;
       addNotification({
         event_type: "BILLING_REACTIVATE_ERROR",
         entity_type: "billing",
         title: "Não foi possível reativar",
-        message: res.error || res.data?.message || "Falha ao reativar a assinatura.",
+        message: resolveReactivateErrorMessage(code, res.error || res.data?.message),
         severity: "error",
       });
       return;
@@ -212,27 +311,15 @@ export default function SubscriptionPage() {
       event_type: "BILLING_REACTIVATE_OK",
       entity_type: "billing",
       title: "Assinatura reativada",
-      message: "O cancelamento agendado foi removido. Sua assinatura segue ativa normalmente.",
+      message: "Seu plano continuará ativo normalmente.",
       severity: "success",
     });
   }
 
-  async function confirmCancellation() {
-    if (cancelLoading) return;
-    setCancelLoading(true);
-    const res = await requestSubscriptionCancellation();
-    setCancelLoading(false);
-    if (!res.ok) {
-      addNotification({
-        event_type: "BILLING_CANCEL_ERROR",
-        entity_type: "billing",
-        title: "Não foi possível cancelar",
-        message: res.error || res.data?.message || "Falha ao solicitar cancelamento da assinatura.",
-        severity: "error",
-      });
-      return;
-    }
-    setCancelOpen(false);
+  const billingPeriodStart = usage?.period_start ?? limits?.period_start ?? null;
+  const billingPeriodEnd = usage?.period_end ?? limits?.period_end ?? null;
+
+  async function handleCancellationCompleted() {
     await refresh();
     addNotification({
       event_type: "BILLING_CANCEL_OK",
@@ -244,24 +331,32 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="s7-billing-page">
+    <div className="dados-empresa-page minha-assinatura-page">
+      <div className="profile-card s7-minha-assinatura-hero">
+        <div className="s7-billing-page">
       <S7PageHeader
         title="Minha assinatura"
-        subtitle="Status financeiro, acesso e consumo consolidados pelo backend do Suse7."
+        subtitle="Status financeiro, acesso e consumo consolidados."
         actions={
-          <S7Button
-            variant="secondary"
-            onClick={handleRefreshStatus}
-            loading={loading || refreshing}
-            disabled={loading || refreshing}
-          >
-            Atualizar status
-          </S7Button>
+          <div className="s7-billing-subscription-header-actions">
+            <Link to="/perfil/assinatura/planos">
+              <S7Button variant="primary">Alterar plano</S7Button>
+            </Link>
+          </div>
         }
       />
 
       <BillingStatusGate />
-      <BillingUsageNotice />
+
+      {!loading && !error && pendingRenewalAlertResolved ? (
+        <S7BillingAlertBanner
+          title={pendingRenewalAlertResolved.title}
+          message={pendingRenewalAlertResolved.message}
+          ctaLabel={pendingRenewalAlertResolved.ctaLabel}
+          onCtaClick={openRenewalCheckoutSheet}
+          tone={pendingRenewalAlertResolved.tone ?? "warning"}
+        />
+      ) : null}
 
       {!loading && !error && statusExtras?.show_usage_growth_notice && !growthNoticeDismissed ? (
         <BillingUsageGrowthNotice onDismiss={() => setGrowthNoticeDismissed(true)} />
@@ -302,15 +397,15 @@ export default function SubscriptionPage() {
           </p>
           {canReactivate ? (
             <div className="s7-billing-cancel-notice__actions">
-              <S7Button variant="primary" onClick={confirmReactivation} loading={reactivateLoading}>
-                Reativar assinatura
+              <S7Button variant="primary" onClick={confirmReactivation} loading={reactivateLoading} disabled={reactivateLoading}>
+                {reactivateLoading ? "Reativando…" : "Reativar assinatura"}
               </S7Button>
             </div>
           ) : null}
         </section>
       ) : null}
 
-      {!loading && !error && renewalNotice?.should_show_banner && !renewalBannerHidden ? (
+      {!loading && !error && renewalNotice?.should_show_banner && !renewalBannerHidden && !shouldShowFinancialStateAlert(renewalExperience) ? (
         <section
           className={`s7-billing-pending-notice s7-billing-renewal-notice ${renewalNoticeBannerClass(renewalNotice.level)}`}
           aria-live="polite"
@@ -355,25 +450,37 @@ export default function SubscriptionPage() {
       ) : null}
 
       {!loading && !error ? (
-        <div className="s7-billing-subscription-panel">
-          <SubscriptionPlanCard
-            access={access}
-            subscription={latestSubscription}
-            plan={resolvedPlan}
-            planName={planName}
-            planPriceMonthly={planPriceMonthly}
-            salesLimitMonthly={salesLimitMonthly}
-          />
-          <SubscriptionUsageBar usage={usage} limits={limits} monthlySalesLimit={salesLimitMonthly} />
-          <SubscriptionSummaryCard
-            access={access}
-            subscription={latestSubscription}
+        <div className="s7-billing-subscription-layout">
+          <div className="s7-billing-subscription-layout__top">
+            <SubscriptionPlanCard
+              access={access}
+              subscription={latestSubscription}
+              plan={resolvedPlan}
+              planName={planName}
+              planPriceMonthly={planPriceMonthly}
+              salesLimitMonthly={salesLimitMonthly}
+              renewalExperience={renewalExperience}
+            />
+            <SubscriptionSummaryCard
+              access={access}
+              subscription={latestSubscription}
+              planName={planName}
+              planPriceMonthly={planPriceMonthly}
+              salesLimitMonthly={salesLimitMonthly}
+              billingPeriodStart={billingPeriodStart}
+              billingPeriodEnd={billingPeriodEnd}
+              renewalExperience={renewalExperience}
+            />
+          </div>
+          <div className="s7-billing-subscription-layout__usage">
+            <SubscriptionUsageBar
             usage={usage}
             limits={limits}
-            planName={planName}
-            planPriceMonthly={planPriceMonthly}
-            salesLimitMonthly={salesLimitMonthly}
-          />
+            monthlySalesLimit={salesLimitMonthly}
+            loading={loading || refreshing}
+            usageUnavailable={usageUnavailable}
+            />
+          </div>
         </div>
       ) : null}
 
@@ -386,14 +493,47 @@ export default function SubscriptionPage() {
         </div>
       ) : null}
 
-      <div className="s7-billing-page__actions">
-        <Link to="/perfil/assinatura/planos">
-          <S7Button variant="primary">Alterar plano</S7Button>
-        </Link>
+      <div className="s7-billing-page__actions s7-billing-page__actions--subscription-footer">
         <S7Button variant="secondary" disabled={!canCancel} onClick={() => setCancelOpen(true)}>
           Cancelar assinatura
         </S7Button>
       </div>
+        </div>
+      </div>
+
+      <RenewalCheckoutSheet
+        open={renewalCheckoutOpen}
+        renewalExperience={renewalExperience}
+        pendingRenewal={pendingRenewal}
+        planName={planName}
+        onClose={() => setRenewalCheckoutOpen(false)}
+        onPaymentConfirmed={() => refresh({ silent: true })}
+        onPixGenerated={handleRenewalChargeGenerated}
+        onBoletoGenerated={handleRenewalChargeGenerated}
+      />
+
+      <PixCheckoutModal
+        open={renewalPixModalOpen}
+        checkout={renewalPixCheckout}
+        planName={renewalPlanName ?? ""}
+        onClose={() => {
+          setRenewalPixModalOpen(false);
+          setRenewalPixCheckout(null);
+        }}
+        onPaymentConfirmed={() => refresh({ silent: true })}
+      />
+
+      <BillingBoletoModal
+        open={renewalBoletoModalOpen}
+        checkout={renewalBoletoCheckout}
+        planName={renewalPlanName ?? ""}
+        isSandbox={renewalBoletoSandbox}
+        onClose={() => {
+          setRenewalBoletoModalOpen(false);
+          setRenewalBoletoCheckout(null);
+        }}
+        onPaymentConfirmed={() => refresh({ silent: true })}
+      />
 
       <BillingBoletoModal
         open={boletoModalOpen}
@@ -412,13 +552,6 @@ export default function SubscriptionPage() {
         onPaymentConfirmed={() => refresh({ silent: true })}
       />
 
-      <RenewalCheckoutSheet
-        open={renewalModalOpen}
-        pendingRenewal={pendingRenewal}
-        onClose={() => setRenewalModalOpen(false)}
-        onPaymentConfirmed={() => refresh({ silent: true })}
-      />
-
       <RenewalNoticePopup
         open={renewalPopupOpen}
         renewalNotice={renewalNotice}
@@ -429,25 +562,13 @@ export default function SubscriptionPage() {
         onClose={() => setRenewalPopupOpen(false)}
       />
 
-      {cancelOpen ? (
-        <div className="s7-billing-checkout-sheet" role="dialog" aria-modal="true">
-          <div className="s7-billing-checkout-sheet__panel">
-            <h3>Cancelar assinatura?</h3>
-            <p>
-              Seu plano continuará ativo até o fim do ciclo atual. Depois disso, sua conta voltará para o plano Baby.
-            </p>
-            <p className="s7-billing-muted">Acesso garantido até {accessEndsLabel}.</p>
-            <div className="s7-billing-checkout-sheet__actions">
-              <S7Button variant="secondary" onClick={() => setCancelOpen(false)} disabled={cancelLoading}>
-                Manter assinatura
-              </S7Button>
-              <S7Button variant="primary" onClick={confirmCancellation} disabled={cancelLoading}>
-                {cancelLoading ? "Agendando cancelamento…" : "Cancelar ao fim do ciclo"}
-              </S7Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <SubscriptionCancelModal
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        accessEndsLabel={accessEndsLabel}
+        subscriptionId={latestSubscription?.id ?? access?.subscription_id ?? null}
+        onCancelled={handleCancellationCompleted}
+      />
     </div>
   );
 }

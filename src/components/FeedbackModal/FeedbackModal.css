@@ -39,6 +39,11 @@
   color: #16a34a;
 }
 
+.feedback-icon.error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 .feedback-modal h3 {
   font-size: 18px;
   font-weight: 700;

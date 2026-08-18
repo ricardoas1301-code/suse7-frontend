@@ -1,0 +1,47 @@
+{
+  "fixture_id": "MLB3471971233-inverno",
+  "listing_id": "MLB3471971233",
+  "marketplace_account_id": "234b633b-4726-429c-8ba5-45ac32c419ed",
+  "promotion_id": "P-MLB17795004",
+  "offer_id": null,
+  "promotion_name": "Inverno",
+  "promotion_type": "DEAL",
+  "sub_type": null,
+  "identity_key": "P-MLB17795004||DEAL||Inverno",
+  "status": "candidate",
+  "ml_expected_final_price_brl": "231.00",
+  "sus7_wrong_price_brl": "206.78",
+  "canonical_contract_final_price_brl": "231.00",
+  "live_payload": {
+    "original_price": 243.26,
+    "price": 0,
+    "suggested_discounted_price": 206.78,
+    "max_discounted_price": 218.94,
+    "min_discounted_price": 48.66
+  },
+  "candidates": [
+    {
+      "value": "206.78",
+      "raw_field_name": "suggested_discounted_price",
+      "full_field_path": "live_payload.suggested_discounted_price",
+      "semantic_role": "suggested_price",
+      "identity_match_level": "strong",
+      "is_range_boundary": false,
+      "is_suggested_price": true,
+      "selected_before_fix": true,
+      "selected_after_fix": false,
+      "rejection_reason": "aggressive_suggested_not_panel_final_when_contract_ssot_exists"
+    },
+    {
+      "value": "231.00",
+      "raw_field_name": "real_promotion_final_price_brl",
+      "full_field_path": "promotion_card_contract.real_promotion_final_price_brl",
+      "semantic_role": "official_participation_price",
+      "identity_match_level": "strong",
+      "is_contract_value": true,
+      "selected_before_fix": false,
+      "selected_after_fix": true
+    }
+  ],
+  "diagnosis": "candidate_semantic_role_error"
+}

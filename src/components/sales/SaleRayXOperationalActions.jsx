@@ -21,6 +21,10 @@ import {
 import { pickRayxManualWhatsAppRecipients } from "../../services/pickRayxManualWhatsAppRecipient";
 import { pickRayxManualEmailRecipients } from "../../services/pickRayxManualEmailRecipient.js";
 import {
+  finishManualWhatsAppMotorNotify,
+  notifyManualWhatsAppSending,
+} from "../../shared/notifications/finishManualWhatsAppMotorNotify.js";
+import {
   copySaleRayxShare,
   printSaleRayxShare,
   sendSaleRayxWhatsAppShare,
@@ -247,42 +251,10 @@ export default function SaleRayXOperationalActions({
           real_send_executed: data.real_send_executed,
           process_outbox_called: data.process_outbox_called,
           outbox_status_after: data.outbox_status_after,
-          provider_message_id: data.provider_message_id,
-          original_recipient_phone: data.original_recipient_phone,
-          normalized_destination_phone: data.normalized_destination_phone,
-          smoke_override_applied: data.smoke_override_applied,
-          live_destination_source: data.live_destination_source,
-          live_policy_applied: data.live_policy_applied,
-          sandbox_whitelist_applied: data.sandbox_whitelist_applied,
-          whitelist_bypass_reason: data.whitelist_bypass_reason,
         });
       }
 
-      const sent =
-        data?.real_send_executed === true ||
-        (data?.status === "sent" && data?.mocked === false);
-      const partial = data?.status === "partial" && data?.real_send_executed === true;
-
-      if (sent || partial) {
-        const count = data?.dispatches_created ?? data?.selected_recipient_phones?.length ?? 1;
-        notifyToast(
-          data?.multi && count > 1
-            ? `WhatsApp enviado para ${count} destinatários.`
-            : "WhatsApp enviado com sucesso.",
-          data?.provider_message_id ? `ID: ${data.provider_message_id}` : "Entrega confirmada pelo provedor.",
-        );
-      } else {
-        const remoteHint =
-          data?.backend_debug?.api_origin &&
-          /vercel\.app/i.test(String(data.backend_debug.api_origin))
-            ? "Backend remoto (Vercel) — sem live local."
-            : "";
-        const hint =
-          [data?.live_process_reason, remoteHint, data?.mocked ? "Modo seguro (mock)." : ""]
-            .filter(Boolean)
-            .join(" — ") || "Sem envio real.";
-        notifyToast("WhatsApp enfileirado com sucesso.", hint);
-      }
+      finishManualWhatsAppMotorNotify(notifyToast, { ok: res?.ok, error: res?.error, data });
       return;
     }
 
@@ -521,9 +493,7 @@ export default function SaleRayXOperationalActions({
       setLoadingKey(channel);
 
       if (channel === "whatsapp") {
-
-        notifyToast("Enviando WhatsApp…", "");
-
+        notifyManualWhatsAppSending(notifyToast);
       } else {
 
         notifyToast("Enviando e-mail…", "");

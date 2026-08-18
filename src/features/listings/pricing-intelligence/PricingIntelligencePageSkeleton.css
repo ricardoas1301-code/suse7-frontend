@@ -1,0 +1,62 @@
+.pricing-intelligence-page-skeleton__shell {
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  gap: var(--s7-pricing-page-gap-md, 10px);
+  min-height: 420px;
+}
+
+.pricing-intelligence-page-skeleton__rail,
+.pricing-intelligence-page-skeleton__main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pricing-intelligence-page-skeleton__block {
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  background-size: 200% 100%;
+  animation: pricing-intelligence-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.pricing-intelligence-page-skeleton__block--logo {
+  height: 36px;
+  width: 72%;
+}
+.pricing-intelligence-page-skeleton__block--thumb {
+  height: 88px;
+  width: 100%;
+}
+.pricing-intelligence-page-skeleton__block--title {
+  height: 40px;
+  width: 100%;
+}
+.pricing-intelligence-page-skeleton__block--line {
+  height: 120px;
+  width: 100%;
+}
+.pricing-intelligence-page-skeleton__block--tabs {
+  height: 34px;
+  width: 220px;
+}
+.pricing-intelligence-page-skeleton__block--panel {
+  flex: 1;
+  min-height: 360px;
+  width: 100%;
+}
+
+@keyframes pricing-intelligence-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .pricing-intelligence-page-skeleton__shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

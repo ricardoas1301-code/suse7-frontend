@@ -27,13 +27,27 @@ import {
 import { listLinks, relinkDraftToProduct } from "../services/images/imageRepository";
 import { updateVariantsSortOrder } from "../services/variants/variantRepository";
 import ProductFormImagesTab from "./ProductFormImagesTab";
+import ProductTitleSyncModal from "./products/ProductTitleSyncModal";
+import ProductDescriptionSyncModal from "./products/ProductDescriptionSyncModal";
+import { AD_TITLE_SYNC_MAX_CHARS } from "../services/productTitlesApi";
+import {
+  AD_TITLE_DUPLICATE_MESSAGE,
+  encontrarIdsTitulosDuplicados,
+  sanitizeAdTitlesForDisplay,
+  validarTitulosAnuncioSemDuplicidade,
+} from "../utils/adTitleValidation";
+import S7Icon from "./ui/S7Icon";
+import S7Tooltip from "./ui/S7Tooltip.jsx";
+import {
+  PRODUCT_EXPEDITION_SUPPLIES_LABEL,
+  PRODUCT_EXPEDITION_SUPPLIES_TOOLTIP,
+} from "../domain/costs/costSemanticsPresentation.js";
 import "./FieldLabel.css";
 import "./ProductAdTitlesTab.css";
 import { Trash2 } from "lucide-react";
 import { SeoKeywordsInput } from "./SeoKeywordsInput";
 import ProductHealthDetailsModal from "./ProductHealthDetailsModal";
 import { fetchProductMarketplaceListings } from "../services/productListingsService";
-import { fetchProductPerformance } from "../services/productPerformanceService";
 import { getProductHealth } from "../services/productHealthService";
 import { changeStatus } from "../services/productStatusService";
 import { getPreferences, setPreference } from "../services/userPreferencesService";
@@ -66,8 +80,11 @@ import {
   persistProductImagesAfterCreate,
   resolvePrimaryImageFromLinks,
 } from "../utils/productImagesPersistence";
-import { formatMarketplaceListingDisplayId } from "../utils/marketplaceListingId";
-import { formatCatalogBRL, marketplaceChipLabel } from "../utils/productCatalogRow";
+import ProductFinancialRayXPanel from "./products/ProductFinancialRayXPanel.jsx";
+import ProductSalesHistorySection from "./products/ProductSalesHistorySection.jsx";
+import ProductFormRayxCostsStockLayout from "./products/ProductFormRayxCostsStockLayout.jsx";
+import ProductLinkedListingsSection from "./products/ProductLinkedListingsSection.jsx";
+import { useOptionalProductEditFinancial } from "./products/ProductEditFinancialContext.jsx";
 import { computeVariantSkuErrors } from "../utils/variantSkuValidation";
 import {
   PRODUCT_CM_FIELDS,
@@ -186,9 +203,11 @@ export default function ProductForm({
   initialVariants = null, // lista de product_variants (quando edit, ordenada por sort_order)
   initialVariations = null, // alias para initialVariants
   initialTab = null, // ex: "stock" para deep link ?tab=stock
+  presentation = "page", // "page" | "modal"
   onCancel = null,
   onSubmit = null,
-  onSuccess = null, // opcional: após salvar + toast + redirect (ex.: analytics)
+  onSuccess = null, // opcional: após salvar + toast (ex.: fechar modal ou analytics)
+  onBindCloseController = null, // modal: ESC/backdrop delegam ao guard de saída
 }) {
   const navigate = useNavigate();
 
@@ -267,7 +286,7 @@ export default function ProductForm({
     // - Formato: [{ id, value }]
     // - Backend valida duplicidade e regras por marketplace
     // =========================
-    ad_titles: [{ id: createId(), value: "" }],
+    ad_titles: [],
 
     // =========================
     // SISTEMA
@@ -279,7 +298,9 @@ export default function ProductForm({
   // CONTROLE DE ABAS (nova ordem)
   // Variações só existe quando format=variants
   // ------------------------------------------------------
-  const [activeTab, setActiveTab] = useState(initialTab || "data");
+  const [activeTab, setActiveTab] = useState(
+    initialTab || (presentation === "modal" ? "performance" : "data"),
+  );
   const hasVariations = product?.format === "variants";
 
   // ======================================================
@@ -290,20 +311,34 @@ export default function ProductForm({
   const prevAvailableTabIdsRef = useRef(null);
 
   const availableTabs = useMemo(() => {
+    if (presentation === "modal") {
+      return [
+        { id: "performance", label: "Vendas" },
+        { id: "sales_history", label: "Histórico de vendas" },
+        { id: "ads", label: "Anúncios" },
+        { id: "data", label: "Dados" },
+        ...(hasVariations ? [{ id: "variations", label: "Variações" }] : []),
+        { id: "pricing_stock", label: "Custos e estoque" },
+        { id: "images", label: "Imagens" },
+        { id: "ad_titles", label: "Gerador de títulos" },
+        { id: "description", label: "Descrição" },
+        { id: "measures", label: "Pesos & medidas" },
+      ];
+    }
     const base = [
+      { id: "performance", label: "Vendas & desempenho" },
+      { id: "ads", label: "Anúncios" },
       { id: "data", label: "Dados" },
       ...(hasVariations ? [{ id: "variations", label: "Variações" }] : []),
-      { id: "pricing", label: "Custos & precificação" },
+      { id: "pricing", label: "Custos" },
       { id: "stock", label: "Estoque" },
       { id: "images", label: "Imagens" },
       { id: "ad_titles", label: "Título do anúncio" },
       { id: "description", label: "Descrição" },
       { id: "measures", label: "Pesos & medidas" },
-      { id: "ads", label: "Anúncios" },
-      { id: "performance", label: "Vendas & desempenho" },
     ];
     return base;
-  }, [hasVariations]);
+  }, [hasVariations, presentation]);
 
   const availableTabIds = useMemo(() => availableTabs.map((t) => t.id), [availableTabs]);
   const allStepsUnlocked = navigationMode === "free";
@@ -436,6 +471,8 @@ export default function ProductForm({
         return validateVariantsTab();
       case "pricing":
         return validatePricingTab();
+      case "pricing_stock":
+        return validatePricingTab() && validateStockTab();
       case "stock":
         return validateStockTab();
       default:
@@ -516,6 +553,10 @@ const [pendingNextChecked, setPendingNextChecked] = useState(false);
   // MODAL: confirmação exclusão de título do anúncio (padrão Suse7)
   // ------------------------------------------------------
   const [adTitleDeleteId, setAdTitleDeleteId] = useState(null);
+  const [selectedAdTitleId, setSelectedAdTitleId] = useState(null);
+  const [titleSyncModalOpen, setTitleSyncModalOpen] = useState(false);
+  const [descriptionSyncModalOpen, setDescriptionSyncModalOpen] = useState(false);
+  const focusAdTitleInputIdRef = useRef(null);
 
   // ------------------------------------------------------
   // HEALTH: progresso circular do cadastro (backend como fonte de verdade)
@@ -668,9 +709,6 @@ const hasAnyVariation = variationAttributes.length > 0;
 const [productAdsListings, setProductAdsListings] = useState(/** @type {unknown[]} */ ([]));
 const [productAdsListingsLoading, setProductAdsListingsLoading] = useState(false);
 const [productAdsListingsError, setProductAdsListingsError] = useState(/** @type {string | null} */ (null));
-const [productPerformance, setProductPerformance] = useState(null);
-const [productPerformanceLoading, setProductPerformanceLoading] = useState(false);
-const [productPerformanceError, setProductPerformanceError] = useState(/** @type {string | null} */ (null));
 
 // ----------------------------------------------------------------------
 // Guard: snapshot determinístico (evitar falso dirty)
@@ -734,15 +772,15 @@ useLayoutEffect(() => {
   if (initialProduct) {
     const toMerge = { ...initialProduct };
     // Normalizar ad_titles: backend pode retornar { id, title } ou { id, value }
-    // Regra: sempre iniciar com pelo menos 1 título
-    if (!toMerge.ad_titles || !Array.isArray(toMerge.ad_titles) || toMerge.ad_titles.length === 0) {
-      toMerge.ad_titles = [{ id: createId(), value: "" }];
+    if (!toMerge.ad_titles || !Array.isArray(toMerge.ad_titles)) {
+      toMerge.ad_titles = [];
     } else {
       toMerge.ad_titles = toMerge.ad_titles.map((t) => ({
         id: t.id || createId(),
         value: t.title !== undefined ? t.title : (t.value ?? ""),
       }));
     }
+    toMerge.ad_titles = sanitizeAdTitlesForDisplay(toMerge.ad_titles, toMerge.product_name);
     // Pesos & medidas: string mascarada (nunca number no state vindo da API)
     for (const k of PRODUCT_DECIMAL_MEASURE_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(toMerge, k)) {
@@ -979,6 +1017,20 @@ useLayoutEffect(() => {
     }
   };
 
+  const isDirtyRef = useRef(isDirty);
+  isDirtyRef.current = isDirty;
+  const handleCloseRef = useRef(handleClose);
+  handleCloseRef.current = handleClose;
+
+  useEffect(() => {
+    if (typeof onBindCloseController !== "function") return;
+    onBindCloseController({
+      requestClose: () => handleCloseRef.current(),
+      isDirty: () => isDirtyRef.current,
+    });
+    return () => onBindCloseController(null);
+  }, [onBindCloseController]);
+
   const handleExitModalCancel = () => {
     suppressNextBlockerModalRef.current = false;
     skipExitGuardRef.current = false;
@@ -1060,34 +1112,6 @@ useLayoutEffect(() => {
         return;
       }
       setProductAdsListings(Array.isArray(res.listings) ? res.listings : []);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [safeTab, product?.id]);
-
-  useEffect(() => {
-    if (safeTab !== "performance") return;
-    const pid = product?.id != null ? String(product.id).trim() : "";
-    if (!pid) {
-      setProductPerformance(null);
-      setProductPerformanceError(null);
-      setProductPerformanceLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setProductPerformanceLoading(true);
-    setProductPerformanceError(null);
-    void (async () => {
-      const res = await fetchProductPerformance(pid);
-      if (cancelled) return;
-      setProductPerformanceLoading(false);
-      if (!res.ok) {
-        setProductPerformance(null);
-        setProductPerformanceError(res.error ?? "Erro ao carregar desempenho");
-        return;
-      }
-      setProductPerformance(res.data ?? null);
     })();
     return () => {
       cancelled = true;
@@ -1200,15 +1224,16 @@ useLayoutEffect(() => {
   const handleAddTitle = () => {
     const list = product?.ad_titles ?? [];
     if (list.length >= 10) return;
+    const newId = createId();
+    focusAdTitleInputIdRef.current = newId;
     setProduct((prev) => ({
       ...prev,
-      ad_titles: [...(prev.ad_titles ?? []), { id: createId(), value: "" }],
+      ad_titles: [...(prev.ad_titles ?? []), { id: newId, value: "" }],
     }));
   };
 
   const handleRemoveTitle = (id) => {
-    const list = product?.ad_titles ?? [];
-    if (list.length <= 1) return;
+    setSelectedAdTitleId((prev) => (prev === id ? null : prev));
     setProduct((prev) => ({
       ...prev,
       ad_titles: (prev.ad_titles ?? []).filter((t) => t.id !== id),
@@ -1223,6 +1248,42 @@ useLayoutEffect(() => {
       ),
     }));
   };
+
+  const handleSelectAdTitle = (id) => {
+    setSelectedAdTitleId((prev) => (prev === id ? null : id));
+  };
+
+  const selectedAdTitleEntry = useMemo(() => {
+    if (!selectedAdTitleId) return null;
+    return (product?.ad_titles ?? []).find((t) => t.id === selectedAdTitleId) ?? null;
+  }, [product?.ad_titles, selectedAdTitleId]);
+
+  const selectedAdTitleText = String(selectedAdTitleEntry?.value ?? "").trim();
+  const selectedAdTitleOverLimit = selectedAdTitleText.length > AD_TITLE_SYNC_MAX_CHARS;
+  const duplicateAdTitleIds = useMemo(
+    () => encontrarIdsTitulosDuplicados(product?.ad_titles ?? []),
+    [product?.ad_titles],
+  );
+  const selectedAdTitleIsDuplicate =
+    selectedAdTitleId != null && duplicateAdTitleIds.has(selectedAdTitleId);
+  const canOpenTitleSync =
+    Boolean(product?.id) &&
+    selectedAdTitleText !== "" &&
+    !selectedAdTitleOverLimit &&
+    !selectedAdTitleIsDuplicate &&
+    duplicateAdTitleIds.size === 0;
+  const canOpenDescriptionSync =
+    Boolean(product?.id) && String(product?.description ?? "").trim() !== "";
+
+  useEffect(() => {
+    const focusId = focusAdTitleInputIdRef.current;
+    if (!focusId) return undefined;
+    focusAdTitleInputIdRef.current = null;
+    const timer = window.setTimeout(() => {
+      document.getElementById(`ad-title-input-${focusId}`)?.focus();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [product?.ad_titles?.length]);
 
   const handleImageProgressChange = useCallback((snapshot) => {
     setImageProgress(normalizeImageProgress(snapshot));
@@ -1276,16 +1337,6 @@ const FieldLabel = ({
   const copyText = copyValue != null ? String(copyValue).trim() : "";
   const showCopy = copyText !== "";
 
-  const infoTipClass = [
-    "s7-tip",
-    tipBottom ? "s7-tip-bottom" : "",
-    wrap ? "s7-tip-wrap" : "",
-    side === "right" ? "s7-tip-right" : "",
-    side === "left" ? "s7-tip-left" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
     <div className={`pf-label-row${showCopy ? " pf-label-row--copyable" : ""}`}>
       <div className="pf-label-left">
@@ -1295,14 +1346,20 @@ const FieldLabel = ({
         </span>
 
         {!!infoText && (
-          <button
-            type="button"
-            className={`pf-info-btn ${infoTipClass}`}
-            data-tip={infoText}
-            aria-label={`Informações sobre ${text}`}
+          <S7Tooltip
+            content={infoText}
+            placement={tipBottom ? "bottom-start" : "top-start"}
+            offset={6}
+            wrap={wrap}
           >
-            i
-          </button>
+            <button
+              type="button"
+              className="pf-info-btn"
+              aria-label={`Informações sobre ${text}`}
+            >
+              i
+            </button>
+          </S7Tooltip>
         )}
       </div>
 
@@ -2487,7 +2544,7 @@ const validatePricingTab = () => {
   // ------------------------------------------------------
   const okPricing = validatePricingTab();
   if (!okPricing) {
-    navigateToTabWithUnlock("pricing");
+    navigateToTabWithUnlock(pricingTabNavigateId);
     return;
   }
 
@@ -2499,6 +2556,17 @@ const validatePricingTab = () => {
       message: measureErr,
     });
     navigateToTabWithUnlock("measures");
+    return;
+  }
+
+  const adTitlesDupErr = validarTitulosAnuncioSemDuplicidade(product?.ad_titles ?? []);
+  if (adTitlesDupErr) {
+    addNotification({
+      type: "error",
+      title: "Gerador de títulos",
+      message: adTitlesDupErr,
+    });
+    navigateToTabWithUnlock("ad_titles");
     return;
   }
 
@@ -2678,8 +2746,10 @@ const validatePricingTab = () => {
           });
           skipExitGuardRef.current = true;
           suppressNextBlockerModalRef.current = true;
-          navigate("/produtos");
-          if (typeof onSuccess === "function") onSuccess();
+          if (presentation !== "modal") {
+            navigate("/produtos");
+          }
+          if (typeof onSuccess === "function") onSuccess(result);
         } catch (err) {
           const msg = err?.message ?? err?.error ?? "Erro ao salvar produto.";
           addNotification({ type: "error", title: "Erro ao salvar", message: msg });
@@ -2759,6 +2829,23 @@ const validatePricingTab = () => {
     };
   }, [mode, dataTabThumbUrl, product.format, firstVariantThumbUrl]);
 
+  const panelProductHeadline = useMemo(() => {
+    if (presentation !== "modal" || mode !== "edit" || !initialProduct?.id) return null;
+    const productId = String(initialProduct.id).trim();
+    if (!productId) return null;
+    return {
+      productId,
+      productName: String(initialProduct.product_name ?? "").trim(),
+      productSku: String(initialProduct.sku ?? "").trim(),
+    };
+  }, [
+    presentation,
+    mode,
+    initialProduct?.id,
+    initialProduct?.product_name,
+    initialProduct?.sku,
+  ]);
+
   // ------------------------------------------------------
   // Layout: helper para exibir atributos do variant row
   // ------------------------------------------------------
@@ -2801,16 +2888,39 @@ const validatePricingTab = () => {
     variantRows,
   ]);
 
+  const productFinancialCtx = useOptionalProductEditFinancial();
+  const listingMetricsLookup = productFinancialCtx?.listingMetricsLookup ?? null;
+  const isMergedCostsStockTab = safeTab === "pricing_stock";
+  const showPricingTabContent = safeTab === "pricing" || isMergedCostsStockTab;
+  const showStockTabContent = safeTab === "stock" || isMergedCostsStockTab;
+  const pricingTabNavigateId = presentation === "modal" ? "pricing_stock" : "pricing";
+  const stockTabNavigateId = presentation === "modal" ? "pricing_stock" : "stock";
+  const [costsStockMounts, setCostsStockMounts] = useState({ costs: null, stock: null });
+
+  const handleCostsStockCostsMount = useCallback((node) => {
+    setCostsStockMounts((prev) => (prev.costs === node ? prev : { ...prev, costs: node }));
+  }, []);
+
+  const handleCostsStockStockMount = useCallback((node) => {
+    setCostsStockMounts((prev) => (prev.stock === node ? prev : { ...prev, stock: node }));
+  }, []);
+
   return (
     <>
-    <div className="pf-page pf-page--bleed">
+    <div className={`pf-page pf-page--bleed${presentation === "modal" ? " pf-page--in-modal" : ""}`}>
       <div className="pf-wrap">
         {/* ==================================================
            LAYOUT PRINCIPAL: painel à esquerda + formulário à direita (Bling-like)
         ================================================== */}
         <div className="pf-layout">
           <ProductFormRightPanel
-            title={mode === "edit" ? "Editar produto" : "Novo produto"}
+            title={
+              mode === "edit"
+                ? presentation === "modal"
+                  ? "Raio-X do produto"
+                  : "Editar produto"
+                : "Novo produto"
+            }
             steps={availableTabs}
             activeId={safeTab}
             stepsClickable={!isSavingProduct}
@@ -2822,12 +2932,11 @@ const validatePricingTab = () => {
             onStepChange={handlePanelStepChange}
             progressPercent={sidePanelProgressPercent}
             panelProductThumb={panelProductThumb}
+            panelProductHeadline={panelProductHeadline}
           />
 
           <div className="pf-card pf-card--primary">
-      {/* ==================================================
-         HEADER: botão Fechar no topo direito
-      ================================================== */}
+      {presentation !== "modal" ? (
       <div className="pf-header-bar">
         <div className="pf-header-actions">
           <button type="button" className="pf-close" onClick={handleClose}>
@@ -2835,6 +2944,7 @@ const validatePricingTab = () => {
           </button>
         </div>
       </div>
+      ) : null}
 
         <div className="pf-form-area">
       <div
@@ -2848,8 +2958,9 @@ const validatePricingTab = () => {
             ABA: DADOS
         ======================= */}
         {safeTab === "data" && (
-          <div className="pf-container">
+          <div className="pf-container pf-container--data">
             <h2 className="pf-tab-title">Dados</h2>
+            <div className="pf-data-form-column">
             <div className="pf-product-name-fixed pf-product-name-fixed--in-data">
               <div className="pf-product-name-fields">
                 <FieldLabel
@@ -2883,8 +2994,8 @@ const validatePricingTab = () => {
               </div>
             </div>
 
-            {/* Linha 1: Formato + SKU */}
-            <div className="pf-row">
+            {/* Formato — oculto na UI por enquanto (regra e estado permanecem; catálogo simples) */}
+            <div className="pf-row pf-data-format-field" hidden aria-hidden="true">
               <div className="pf-group pf-data-col">
                 <FieldLabel
                   text="Formato"
@@ -2905,14 +3016,18 @@ const validatePricingTab = () => {
                   onChange={(e) => handleFormatChange(e.target.value)}
                   disabled={formatLocked}
                   title={formatLocked ? "Produto com variações não pode voltar para simples após salvo." : undefined}
+                  tabIndex={-1}
                 >
                   <option value="simple">Simples</option>
                   <option value="variants">Com variações</option>
                 </select>
               </div>
+            </div>
 
+            {/* Linha 2: SKU + EAN/GTIN + NCM */}
+            <div className="pf-row pf-row--data-identifiers">
               {product.format === "simple" && (
-                <div className="pf-group pf-data-col">
+                <div className="pf-group pf-data-col pf-data-col--tercio">
                   <FieldLabel
                     text="SKU"
                     required
@@ -2947,12 +3062,9 @@ const validatePricingTab = () => {
                   )}
                 </div>
               )}
-            </div>
 
-            {/* Linha 2: EAN/GTIN + NCM */}
-            <div className="pf-row">
               {product.format === "simple" && (
-                <div className="pf-group pf-data-col">
+                <div className="pf-group pf-data-col pf-data-col--tercio">
                   <FieldLabel
                     text="EAN / GTIN"
                     copyValue={product.gtin}
@@ -2975,7 +3087,7 @@ const validatePricingTab = () => {
                 </div>
               )}
 
-              <div className="pf-group pf-data-col">
+              <div className="pf-group pf-data-col pf-data-col--tercio">
                 <FieldLabel
                   text="NCM"
                   copyValue={product.ncm}
@@ -3022,7 +3134,7 @@ const validatePricingTab = () => {
             </div>
 
             {/* Linha 4: Palavras-chave SEO */}
-            <div className="pf-row">
+            <div className="pf-row pf-row--data-seo">
               <div className="pf-group pf-group--full pf-group--seo">
                 <FieldLabel
                   text="Palavras-chave SEO"
@@ -3045,8 +3157,16 @@ const validatePricingTab = () => {
                 </div>
               </div>
             </div>
+            </div>
           </div>
         )}
+
+        {isMergedCostsStockTab ? (
+          <ProductFormRayxCostsStockLayout
+            onCostsMount={handleCostsStockCostsMount}
+            onStockMount={handleCostsStockStockMount}
+          />
+        ) : null}
 
         {/* ==================================================================
             ABA: Custos & precificação (padrão premium)
@@ -3054,9 +3174,9 @@ const validatePricingTab = () => {
             - Mesma pegada visual do “Combinações geradas” (cards)
             - Consistência SaaS premium
         ================================================================== */}
-        {safeTab === "pricing" && (
-          <div className="pf-container">
-            <h2 className="pf-tab-title">Custos & precificação</h2>
+        {showPricingTabContent && (() => {
+          const pricingTabInner = (
+            <>
             {/* SIMPLE: campos em coluna */}
             {product.format === "simple" && (
               <div className="pf-pricing-simple-column">
@@ -3067,9 +3187,9 @@ const validatePricingTab = () => {
                       text="Custo do produto"
                       required
                       infoText="Este é o principal custo da sua operação. Ele impacta diretamente sua margem de lucro e a precificação ideal do produto."
-                      tipBottom={true}
+                      tipBottom={false}
                       wrap={true}
-                      side="left"
+                      side="center"
                     />
                     <S7Input
                       type="text"
@@ -3104,8 +3224,9 @@ const validatePricingTab = () => {
                     <FieldLabel
                       text="Custo Embalagem"
                       infoText="Inclua caixa, saco, plástico bolha e outros materiais. Esses custos somados influenciam o lucro final de cada venda."
-                      tipBottom={true}
+                      tipBottom={false}
                       wrap={true}
+                      side="center"
                     />
                     <input
                       className="s7-input"
@@ -3126,10 +3247,11 @@ const validatePricingTab = () => {
                 <div className="pf-row">
                   <div className="pf-group pf-pricing-global-group">
                     <FieldLabel
-                      text="Custo Operacional"
-                      infoText="Inclui etiquetas, insumos, mão de obra e tempo operacional. Pequenos valores acumulados podem reduzir seu lucro no final do mês."
-                      tipBottom={true}
+                      text={PRODUCT_EXPEDITION_SUPPLIES_LABEL}
+                      infoText={PRODUCT_EXPEDITION_SUPPLIES_TOOLTIP}
+                      tipBottom={false}
                       wrap={true}
+                      side="center"
                     />
                     <input
                       className="s7-input"
@@ -3158,8 +3280,9 @@ const validatePricingTab = () => {
                     <FieldLabel
                       text="Custo Embalagem"
                       infoText="Inclua caixa, saco, plástico bolha e outros materiais. Esses custos somados influenciam o lucro final de cada venda."
-                      tipBottom={true}
+                      tipBottom={false}
                       wrap={true}
+                      side="center"
                     />
                     <input
                       className="s7-input"
@@ -3178,10 +3301,11 @@ const validatePricingTab = () => {
                   {/* Custo Operacional */}
                   <div className="pf-group pf-pricing-global-group">
                     <FieldLabel
-                      text="Custo Operacional"
-                      infoText="Inclui etiquetas, insumos, mão de obra e tempo operacional. Pequenos valores acumulados podem reduzir seu lucro no final do mês."
-                      tipBottom={true}
+                      text={PRODUCT_EXPEDITION_SUPPLIES_LABEL}
+                      infoText={PRODUCT_EXPEDITION_SUPPLIES_TOOLTIP}
+                      tipBottom={false}
                       wrap={true}
+                      side="center"
                     />
                     <input
                       className="s7-input"
@@ -3227,8 +3351,8 @@ const validatePricingTab = () => {
                                 text="Custo do produto"
                                 required
                                 infoText="Este é o principal custo da sua operação. Ele impacta diretamente sua margem de lucro e a precificação ideal do produto."
-                                side="left"
-                                tipBottom={true}
+                                side="center"
+                                tipBottom={false}
                                 wrap={true}
                               />
 
@@ -3316,14 +3440,26 @@ const validatePricingTab = () => {
                 </div>
               </>
             )}
-          </div>
-        )}
+            </>
+          );
+          if (isMergedCostsStockTab) {
+            return costsStockMounts.costs
+              ? createPortal(pricingTabInner, costsStockMounts.costs)
+              : null;
+          }
+          return (
+            <div className="pf-container pf-container--pricing">
+              <h2 className="pf-tab-title">Custos</h2>
+              {pricingTabInner}
+            </div>
+          );
+        })()}
 
         {/* =======================
             ABA: IMAGENS (mantém)
         ======================= */}
         {safeTab === "images" && (
-          <div className="pf-container">
+          <div className="pf-container pf-container--images">
             <h2 className="pf-tab-title">Imagens</h2>
             {product.format === "variants" && variantRows.length === 0 ? (
               <div className="s7-alert s7-alert--warning" style={{ marginTop: 10 }}>
@@ -3413,29 +3549,46 @@ const validatePricingTab = () => {
         ======================= */}
         {safeTab === "description" && (
           <div className="pf-container pf-container--description">
-            <h2 className="pf-tab-title">Descrição</h2>
-            <div className="pf-description-section">
-              <div className="pf-label-row pf-label-row--copyable">
-                <div className="pf-label-left">
-                  <label className="s7-label" htmlFor="pf-description-textarea">
-                    Descrição do produto
-                  </label>
-                </div>
+            <div className="pf-description-tab-head">
+              <div className="pf-description-tab-title-group">
+                <h2 className="pf-tab-title">Descrição</h2>
                 {String(product?.description ?? "").trim() !== "" ? (
                   <S7CopyButton
                     value={product.description}
                     ariaLabel="Copiar descrição"
                     tooltipText="Copiar descrição"
                     toastLabel="Descrição"
+                    toastPreviewText={
+                      String(product?.description ?? "")
+                        .split(/\r?\n/)
+                        .map((line) => line.trim())
+                        .find(Boolean) ?? ""
+                    }
                     showToast={true}
                     iconMode="unicode"
                     flashMs={S7_COPY_OFFICIAL_FLASH_MS}
                     flashKey="pf-description"
                     toastEntityType="product"
+                    className="pf-description-copy-btn"
                   />
                 ) : null}
               </div>
-
+              {product?.id ? (
+                <div className="pf-description-tab-sync">
+                  <button
+                    type="button"
+                    className="s7-btn s7-btn--secondary s7-ad-titles-sync-btn s7-ad-title-add-btn"
+                    onClick={() => setDescriptionSyncModalOpen(true)}
+                    disabled={!canOpenDescriptionSync}
+                    title={!canOpenDescriptionSync ? "Salve uma descrição válida para sincronizar" : undefined}
+                  >
+                    <S7Icon name="external" size={14} className="s7-ad-titles-sync-btn__icon" />
+                    Sincronizar nos anúncios
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <div className="pf-description-section">
               <div className="pf-description-wrapper">
                 <textarea
                   id="pf-description-textarea"
@@ -3456,9 +3609,9 @@ const validatePricingTab = () => {
           {/* =======================
             ABA: ESTOQUE (v2)
           ======================= */}
-        {safeTab === "stock" && (
-          <div className="pf-container">
-            <h2 className="pf-tab-title">Estoque</h2>
+        {showStockTabContent && (() => {
+          const stockTabInner = (
+            <>
             {/* ===============================
                 ESTOQUE — FORMATO SIMPLES
                =============================== */}
@@ -3484,9 +3637,9 @@ const validatePricingTab = () => {
                               text="Estoque"
                               required
                               infoText="Quantidade disponível para venda. Manter o estoque atualizado evita cancelamentos e melhora a reputação nos marketplaces."
-                              tipBottom={true}
+                              tipBottom={false}
                               wrap={true}
-                              side="left"
+                              side="center"
                             />
                             <S7Input
                               inputMode="numeric"
@@ -3521,9 +3674,9 @@ const validatePricingTab = () => {
                             <FieldLabel
                               text="Estoque mínimo"
                               infoText="Quando o estoque atinge esse valor, você pode ser alertado para reabastecer e evitar perder vendas por ruptura."
-                              tipBottom={true}
+                              tipBottom={false}
                               wrap={true}
-                              side="right"
+                              side="center"
                             />
                             <input
                               className="s7-input"
@@ -3556,9 +3709,9 @@ const validatePricingTab = () => {
                               <FieldLabel
                                 text="Estoque virtual"
                                 infoText="Este estoque será sincronizado com os marketplaces. O estoque real do produto será controlado automaticamente para evitar vendas acima do disponível."
-                                tipBottom={true}
+                                tipBottom={false}
                                 wrap={true}
-                                side="right"
+                                side="center"
                               />
                             </div>
                             <input
@@ -3596,9 +3749,9 @@ const validatePricingTab = () => {
                               text="Estoque"
                               required
                               infoText="Quantidade disponível para venda. Manter o estoque atualizado evita cancelamentos e melhora a reputação nos marketplaces."
-                              tipBottom={true}
+                              tipBottom={false}
                               wrap={true}
-                              side="left"
+                              side="center"
                             />
                             <S7Input
                               inputMode="numeric"
@@ -3631,9 +3784,9 @@ const validatePricingTab = () => {
                             <FieldLabel
                               text="Estoque mínimo"
                               infoText="Quando o estoque atinge esse valor, você pode ser alertado para reabastecer e evitar perder vendas por ruptura."
-                              tipBottom={true}
+                              tipBottom={false}
                               wrap={true}
-                              side="right"
+                              side="center"
                             />
                             <input
                               className="s7-input"
@@ -3664,9 +3817,9 @@ const validatePricingTab = () => {
                               <FieldLabel
                                 text="Estoque virtual"
                                 infoText="Este estoque será sincronizado com os marketplaces. O estoque real do produto será controlado automaticamente para evitar vendas acima do disponível."
-                                tipBottom={true}
+                                tipBottom={false}
                                 wrap={true}
-                                side="right"
+                                side="center"
                               />
                             </div>
                             <input
@@ -3692,8 +3845,20 @@ const validatePricingTab = () => {
                 ))}
               </div>
             ) : null}
-          </div>
-        )}
+            </>
+          );
+          if (isMergedCostsStockTab) {
+            return costsStockMounts.stock
+              ? createPortal(stockTabInner, costsStockMounts.stock)
+              : null;
+          }
+          return (
+            <div className="pf-container pf-container--stock">
+              <h2 className="pf-tab-title">Estoque</h2>
+              {stockTabInner}
+            </div>
+          );
+        })()}
 
         {/* =======================
             ABA: PESOS & MEDIDAS (mantém)
@@ -3877,11 +4042,15 @@ const validatePricingTab = () => {
               ======================= */}
               {safeTab === "ad_titles" && (
                 <div className="pf-container">
-                  <h2 className="pf-tab-title">Título do anúncio</h2>
+                  <h2 className="pf-tab-title">
+                    {presentation === "modal" ? "Gerador de título de anúncio" : "Título do anúncio"}
+                  </h2>
                   <div className="s7-local-section-header">
                     <div className="s7-local-section-header-left">
                       <span className="s7-local-section-title">
-                        Crie até 10 títulos por produto
+                        {presentation === "modal"
+                          ? "Crie até 10 variações de título para este produto"
+                          : "Crie até 10 títulos por produto"}
                       </span>
 
                       <span
@@ -3892,7 +4061,29 @@ const validatePricingTab = () => {
                       </span>
                     </div>
 
-                    <div className="s7-local-section-actions">
+                    <div className="s7-local-section-actions s7-ad-titles-sync-actions">
+                      {product?.id ? (
+                        <button
+                          type="button"
+                          className="s7-btn s7-btn--secondary s7-ad-titles-sync-btn s7-ad-title-add-btn"
+                          onClick={() => setTitleSyncModalOpen(true)}
+                          disabled={!canOpenTitleSync}
+                          title={
+                            !selectedAdTitleId
+                              ? "Selecione um título para sincronizar"
+                              : selectedAdTitleText === ""
+                                ? "O título selecionado está vazio"
+                                : selectedAdTitleOverLimit
+                                  ? `Título excede ${AD_TITLE_SYNC_MAX_CHARS} caracteres`
+                                  : selectedAdTitleIsDuplicate || duplicateAdTitleIds.size > 0
+                                    ? AD_TITLE_DUPLICATE_MESSAGE
+                                    : undefined
+                          }
+                        >
+                          <S7Icon name="external" size={14} className="s7-ad-titles-sync-btn__icon" />
+                          Sincronizar no anúncio
+                        </button>
+                      ) : null}
                       {(product?.ad_titles ?? []).length < 10 && (
                         <button
                           type="button"
@@ -3905,58 +4096,105 @@ const validatePricingTab = () => {
                     </div>
                   </div>
 
+                  {(product?.ad_titles ?? []).length === 0 ? (
+                    <p className="s7-ad-titles-empty-hint">
+                      Crie variações de título para testar alternativas nos anúncios deste produto.
+                    </p>
+                  ) : null}
+
                   {/* Lista de cards (um por título) */}
                   <div className="s7-ad-titles-cards">
-                    {(product?.ad_titles ?? []).map((item, idx) => (
-                      <div key={item.id} className="s7-card s7-ad-titles-card">
-                        {/* Título N e ícone copiar na mesma linha; copiar no final (direita), acima do input */}
+                    {(product?.ad_titles ?? []).map((item, idx) => {
+                      const isSelected = selectedAdTitleId === item.id;
+                      const titleLen = item.value?.length ?? 0;
+                      const isOverLimit = titleLen > AD_TITLE_SYNC_MAX_CHARS;
+                      const isDuplicate = duplicateAdTitleIds.has(item.id);
+                      return (
+                      <div
+                        key={item.id}
+                        className={`s7-card s7-ad-titles-card${isSelected ? " s7-ad-titles-card--selected" : ""}${isDuplicate ? " s7-ad-titles-card--duplicate" : ""}`}
+                      >
+                        <div className="s7-ad-title-select-row">
+                          <label className="s7-ad-title-select-label">
+                            <input
+                              type="radio"
+                              name="ad-title-selection"
+                              className="s7-ad-title-select-radio"
+                              checked={isSelected}
+                              onChange={() => handleSelectAdTitle(item.id)}
+                              onClick={() => {
+                                if (selectedAdTitleId === item.id) handleSelectAdTitle(item.id);
+                              }}
+                              aria-label={`Selecionar título ${idx + 1}`}
+                            />
+                            <span>{isSelected ? "Selecionado" : "Selecionar"}</span>
+                          </label>
+                        </div>
+                        {/* Título N e ícone copiar na mesma linha, imediatamente à direita do label */}
                         <div className="s7-ad-title-copy-row">
                           <span className="s7-label s7-ad-titles-card-label">Título {idx + 1}</span>
-                          <div className="s7-ad-title-copy-wrap">
-                            {String(item.value ?? "").trim() !== "" ? (
-                              <S7CopyButton
-                                value={item.value}
-                                ariaLabel="Copiar título"
-                                tooltipText="Copiar título"
-                                toastLabel="Título"
-                                showToast={true}
-                                iconMode="unicode"
-                                flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-                                flashKey={`ad_title_${item.id}`}
-                                toastEntityType="product"
-                              />
-                            ) : null}
-                          </div>
-                        </div>
-                        <div className="s7-ad-title-row">
-                          <div className="s7-ad-title-input-wrap">
-                            <input
-                              type="text"
-                              className="s7-input s7-ad-title-input"
-                              placeholder="Ex: Produto XYZ - Marca - Modelo"
+                          {String(item.value ?? "").trim() !== "" ? (
+                            <S7CopyButton
                               value={item.value}
-                              onChange={(e) => handleChangeTitle(item.id, e.target.value)}
+                              ariaLabel="Copiar título"
+                              tooltipText="Copiar título"
+                              toastLabel="Título"
+                              showToast={true}
+                              iconMode="unicode"
+                              flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                              flashKey={`ad_title_${item.id}`}
+                              toastEntityType="product"
                             />
-                            <span className="s7-ad-title-count">
-                              {item.value?.length ?? 0} caracteres
+                          ) : null}
+                        </div>
+                        <div className="s7-ad-title-input-line">
+                          <input
+                            id={`ad-title-input-${item.id}`}
+                            type="text"
+                            className={`s7-input s7-ad-title-input${isDuplicate ? " s7-ad-title-input--duplicate" : ""}`}
+                            placeholder="Ex: Produto XYZ - Marca - Modelo"
+                            value={item.value}
+                            onChange={(e) => handleChangeTitle(item.id, e.target.value)}
+                            aria-invalid={isDuplicate || undefined}
+                          />
+                          <span className={`s7-ad-title-count${isOverLimit ? " s7-ad-title-count--over" : ""}`}>
+                            {titleLen} caracteres
+                            {isOverLimit ? ` (máx. ${AD_TITLE_SYNC_MAX_CHARS} para sync)` : ""}
+                          </span>
+                          {isDuplicate ? (
+                            <span className="s7-ad-title-duplicate-msg" role="alert">
+                              {AD_TITLE_DUPLICATE_MESSAGE}
                             </span>
-                          </div>
-                          {(product?.ad_titles ?? []).length > 1 && (
-                            <button
-                              type="button"
-                              className="s7-title-delete-btn"
-                              onClick={() => setAdTitleDeleteId(item.id)}
-                              aria-label="Excluir título"
-                            >
-                              <Trash2 size={18} strokeWidth={2} />
-                            </button>
-                          )}
+                          ) : null}
+                          <button
+                            type="button"
+                            className="s7-title-delete-btn"
+                            onClick={() => setAdTitleDeleteId(item.id)}
+                            aria-label="Excluir título"
+                          >
+                            <Trash2 size={18} strokeWidth={2} />
+                          </button>
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 </div>
               )}
+
+              <ProductTitleSyncModal
+                open={titleSyncModalOpen}
+                productId={product?.id != null ? String(product.id) : null}
+                selectedTitle={selectedAdTitleText}
+                onClose={() => setTitleSyncModalOpen(false)}
+              />
+
+              <ProductDescriptionSyncModal
+                open={descriptionSyncModalOpen}
+                productId={product?.id != null ? String(product.id) : null}
+                selectedDescription={String(product?.description ?? "")}
+                onClose={() => setDescriptionSyncModalOpen(false)}
+              />
 
               {/* Modal confirmação exclusão título do anúncio (padrão Suse7) */}
               {adTitleDeleteId != null &&
@@ -4176,174 +4414,58 @@ const validatePricingTab = () => {
               ABA: ANÚNCIOS (placeholder)
               ======================= */}
               {safeTab === "ads" && (
-                <div className="pf-container">
+                <div className="pf-container pf-container--ads">
                   <h2 className="pf-tab-title">Anúncios</h2>
-                  <div className="section">
-                    <div className="section-header">
-                      <h3>Anúncios vinculados</h3>
-                      <p className="section-subtitle">
-                        Dados consolidados no servidor para cada anúncio associado a este produto (multi-marketplace).
-                      </p>
-                    </div>
-                    {!product?.id ? (
-                      <p className="hint">Salve o produto para listar os anúncios vinculados.</p>
-                    ) : productAdsListingsLoading ? (
-                      <p className="hint">Carregando anúncios…</p>
-                    ) : productAdsListingsError ? (
-                      <p className="hint" role="alert">
-                        {productAdsListingsError}
-                      </p>
-                    ) : productAdsListings.length === 0 ? (
-                      <p className="hint">Nenhum anúncio vinculado a este produto ainda.</p>
-                    ) : (
-                      <div className="pf-product-ads-table-wrap">
-                        <table className="pf-product-ads-table">
-                          <thead>
-                            <tr>
-                              <th scope="col">Marketplace</th>
-                              <th scope="col">Anúncio</th>
-                              <th scope="col">Título</th>
-                              <th scope="col">SKU</th>
-                              <th scope="col">Status</th>
-                              <th scope="col">Preço</th>
-                              <th scope="col">Promoção</th>
-                              <th scope="col">Última sync</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {productAdsListings.map((raw) => {
-                              const L = raw && typeof raw === "object" ? /** @type {Record<string, unknown>} */ (raw) : {};
-                              const m = L.marketplace != null ? String(L.marketplace) : "";
-                              const extRaw = L.external_listing_id != null ? String(L.external_listing_id) : "";
-                              const adNo = formatMarketplaceListingDisplayId(m, extRaw) || extRaw || "—";
-                              const title = L.title != null && String(L.title).trim() !== "" ? String(L.title) : "—";
-                              const sku = L.sku != null && String(L.sku).trim() !== "" ? String(L.sku) : "—";
-                              const status = L.status != null && String(L.status).trim() !== "" ? String(L.status) : "—";
-                              const priceBrl = L.price_brl != null ? String(L.price_brl).trim() : "";
-                              const priceNum = priceBrl !== "" ? Number(priceBrl.replace(",", ".")) : NaN;
-                              const priceDisplay = Number.isFinite(priceNum) ? formatCatalogBRL(priceNum) : "—";
-                              const onPromo = Boolean(L.is_on_promotion);
-                              const syncRaw = L.last_sync_at != null ? String(L.last_sync_at) : "";
-                              let syncDisplay = "—";
-                              if (syncRaw) {
-                                const d = new Date(syncRaw);
-                                syncDisplay = Number.isNaN(d.getTime()) ? syncRaw : d.toLocaleString("pt-BR");
-                              }
-                              const rowKey =
-                                L.id != null && String(L.id).trim() !== ""
-                                  ? String(L.id)
-                                  : `${m || "mkt"}-${extRaw || "ad"}`;
-                              return (
-                                <tr key={rowKey}>
-                                  <td>{marketplaceChipLabel(m || "—")}</td>
-                                  <td>{adNo}</td>
-                                  <td className="pf-product-ads-table__title" title={title}>
-                                    {title}
-                                  </td>
-                                  <td>{sku}</td>
-                                  <td>{status}</td>
-                                  <td>{priceDisplay}</td>
-                                  <td>{onPromo ? "Sim" : "Não"}</td>
-                                  <td>{syncDisplay}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                  <div className="pf-rayx-list-subhead">
+                    <span className="pf-rayx-list-subhead__label">Total de anúncios</span>
+                    {productAdsListings.length > 0 ? (
+                      <span className="pf-rayx-list-subhead__count">
+                        {productAdsListings.length.toLocaleString("pt-BR")}
+                      </span>
+                    ) : null}
                   </div>
+                  <ProductLinkedListingsSection
+                    listings={productAdsListings}
+                    listingMetricsLookup={listingMetricsLookup}
+                    loading={productAdsListingsLoading}
+                    error={productAdsListingsError}
+                    hasProduct={Boolean(product?.id)}
+                  />
                 </div>
               )}
 
              {/* =======================
-             ABA: VENDAS & DESEMPENHO (placeholder)
+             ABA: HISTÓRICO DE VENDAS
+             ======================= */}
+             {safeTab === "sales_history" && productFinancialCtx ? (
+               <div className="pf-container pf-container--sales-history">
+                 <h2 className="pf-tab-title">Histórico de vendas</h2>
+                 <ProductSalesHistorySection
+                   embedded
+                   hideSectionTitle
+                   rows={productFinancialCtx.salesHistoryRows}
+                   total={productFinancialCtx.salesHistoryTotal}
+                   salesCount={productFinancialCtx.salesCountCanonical}
+                   page={productFinancialCtx.salesHistoryPage}
+                   totalPages={productFinancialCtx.salesHistoryTotalPages}
+                   loading={productFinancialCtx.salesHistoryLoading}
+                   error={productFinancialCtx.salesHistoryError}
+                   onPageChange={productFinancialCtx.goSalesHistoryPage}
+                 />
+               </div>
+             ) : null}
+
+             {/* =======================
+             ABA: VENDAS
              ======================= */}
              {safeTab === "performance" && (
-             <div className="pf-container">
-              <h2 className="pf-tab-title">Vendas & desempenho</h2>
-              <div className="section">
-              <div className="section-header">
-                <h3>Vendas & desempenho</h3>
-                <p className="section-subtitle">Painel do produto: histórico de vendas, desempenho por canal e indicadores.</p>
-              </div>
-              {productPerformanceLoading ? (
-                <p className="hint">Carregando desempenho…</p>
-              ) : productPerformanceError ? (
-                <p className="hint pf-performance-error">{productPerformanceError}</p>
-              ) : (
-                <>
-                  <div className="pf-performance-cards">
-                    <div className="pf-performance-card">
-                      <span>Vendas</span>
-                      <strong>{productPerformance?.total_orders ?? 0}</strong>
-                    </div>
-                    <div className="pf-performance-card">
-                      <span>Receita</span>
-                      <strong>{formatCatalogBRL(Number(productPerformance?.total_revenue ?? 0))}</strong>
-                    </div>
-                    <div className="pf-performance-card">
-                      <span>Ticket médio</span>
-                      <strong>{formatCatalogBRL(Number(productPerformance?.avg_ticket ?? 0))}</strong>
-                    </div>
-                  </div>
-
-                  <div className="pf-performance-timeseries">
-                    <h4>Vendas no tempo</h4>
-                    {Array.isArray(productPerformance?.sales_over_time) &&
-                    productPerformance.sales_over_time.length > 0 ? (
-                      <div className="pf-performance-table-wrap">
-                        {(() => {
-                          const series = productPerformance.sales_over_time;
-                          const maxY = Math.max(1, ...series.map((p) => Number(p.value || 0)));
-                          const w = 640;
-                          const h = 180;
-                          const stepX = series.length > 1 ? (w - 24) / (series.length - 1) : 0;
-                          const points = series
-                            .map((p, idx) => {
-                              const x = 12 + idx * stepX;
-                              const y = h - 12 - (Math.max(0, Number(p.value || 0)) / maxY) * (h - 24);
-                              return `${x},${y}`;
-                            })
-                            .join(" ");
-                          return (
-                            <svg className="pf-performance-chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label="Linha temporal de vendas">
-                              <line x1="12" y1={h - 12} x2={w - 12} y2={h - 12} className="pf-performance-chart-axis" />
-                              <polyline points={points} className="pf-performance-chart-line" />
-                            </svg>
-                          );
-                        })()}
-                        <table className="pf-performance-table" aria-label="Série temporal de desempenho">
-                          <thead>
-                            <tr>
-                              <th>Data</th>
-                              <th>Vendas</th>
-                              <th>Receita</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {productPerformance.sales_over_time.map((pt, idx) => {
-                              const rev = Array.isArray(productPerformance?.revenue_over_time)
-                                ? productPerformance.revenue_over_time[idx]
-                                : null;
-                              return (
-                                <tr key={`${pt.date}-${idx}`}>
-                                  <td>{pt.date}</td>
-                                  <td>{pt.value ?? 0}</td>
-                                  <td>{formatCatalogBRL(Number(rev?.value ?? 0))}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="hint">Sem snapshots suficientes para exibir série temporal.</p>
-                    )}
-                  </div>
-                </>
-              )}
-             </div>
+             <div className="pf-container pf-container--performance s7-rayx-sales-host">
+              <ProductFinancialRayXPanel
+                compact360
+                productId={product?.id ?? null}
+                tabTitle={presentation === "modal" ? "Vendas" : "Vendas & desempenho"}
+                showSalesHistory={false}
+              />
              </div>
              )}
 
@@ -4352,10 +4474,27 @@ const validatePricingTab = () => {
         </div>
         <div
           className={
-            allStepsUnlocked ? "pf-body-footer pf-body-footer--save-only" : "pf-body-footer"
+            allStepsUnlocked
+              ? presentation === "modal"
+                ? "pf-body-footer pf-body-footer--save-only pf-body-footer--modal-actions"
+                : "pf-body-footer pf-body-footer--save-only"
+              : "pf-body-footer"
           }
         >
           {allStepsUnlocked ? (
+            presentation === "modal" ? (
+              <S7Button
+                type="button"
+                variant="primary"
+                className="pf-body-footer-btn"
+                loading={isSavingProduct}
+                loadingLabel="Salvando..."
+                disabled={!isDirty || isSavingProduct}
+                onClick={handleSubmit}
+              >
+                {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
+              </S7Button>
+            ) : (
             <S7Button
               type="button"
               variant="primary"
@@ -4367,6 +4506,7 @@ const validatePricingTab = () => {
             >
               {mode === "edit" ? "Salvar alterações" : "Salvar produto"}
             </S7Button>
+            )
           ) : (
             <>
               <div>
@@ -4523,7 +4663,7 @@ const validatePricingTab = () => {
                 });
                 setZeroStockAttention(Object.keys(variants).length > 0 ? { simple: false, variants } : null);
               }
-              navigateToTabWithUnlock("stock");
+              navigateToTabWithUnlock(stockTabNavigateId);
             }}
           >
             Voltar e ajustar

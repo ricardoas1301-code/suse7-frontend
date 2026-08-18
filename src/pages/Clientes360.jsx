@@ -13,6 +13,23 @@ const DASH = "—";
 
 const SELLER_CUSTOMERS_LIST_API = CUSTOMERS_DOMAIN_SELLER.officialApis.list;
 const SELLER_CUSTOMERS_INGEST_API = CUSTOMERS_DOMAIN_SELLER.officialApis.ingest;
+
+/** Itens por página na grade (fatiamento client-side; não altera contrato/backend). */
+const CLIENTES_PAGE_SIZE = 100;
+
+/** Itens de paginação com elipses (mesmo padrão do catálogo de Produtos). */
+function buildClientesPaginationItems(current, total) {
+  if (total <= 1) return [1];
+  const set = new Set([1, total, current, current - 1, current + 1]);
+  const sorted = [...set].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const out = [];
+  for (let i = 0; i < sorted.length; i += 1) {
+    const p = sorted[i];
+    if (i > 0 && p - sorted[i - 1] > 1) out.push(null);
+    out.push(p);
+  }
+  return out;
+}
 const STATUS_FILTER_CHIPS = [
   { id: "", label: "Todos", icon: "catalog_filter_all", iconTone: "neutral" },
   { id: "recorrente", label: "Recorrentes", icon: "catalog_filter_with_sales", iconTone: "success" },
@@ -94,6 +111,7 @@ export default function Clientes360() {
   const [ingesting, setIngesting] = useState(false);
   const [ingestMsg, setIngestMsg] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     // -------------------------------------------------------------------------
@@ -194,53 +212,31 @@ export default function Clientes360() {
     setStatusFilter("");
   };
 
+  // Paginação client-side (100 itens/página). Volta à página 1 sempre que a lista muda (busca/filtro/recarga).
+  const totalClientes = rows.length;
+  const totalClientePages = Math.max(1, Math.ceil(totalClientes / CLIENTES_PAGE_SIZE));
+
+  useEffect(() => {
+    setPage(1);
+  }, [rows]);
+
+  const paginatedRows = useMemo(() => {
+    const start = (page - 1) * CLIENTES_PAGE_SIZE;
+    return rows.slice(start, start + CLIENTES_PAGE_SIZE);
+  }, [rows, page]);
+
+  const clientePaginationItems = useMemo(
+    () => buildClientesPaginationItems(page, totalClientePages),
+    [page, totalClientePages],
+  );
+
+  const clienteRangeStart = totalClientes === 0 ? 0 : (page - 1) * CLIENTES_PAGE_SIZE + 1;
+  const clienteRangeEnd = Math.min(page * CLIENTES_PAGE_SIZE, totalClientes);
+
   return (
     <div className="clientes360-page">
       <h1 className="products-catalog__sr-title">Clientes 360</h1>
       {ingestMsg ? <p className="clientes360-inline-msg">{ingestMsg}</p> : null}
-
-      <section className="s7-core-kpis anuncios-catalog__kpis" aria-label="Indicadores de clientes">
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-blue">
-          <header className="anuncios-catalog__kpi-head">
-            <h2 className="anuncios-catalog__kpi-title">Top 10 — clientes</h2>
-          </header>
-          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
-        </article>
-
-        <article className="anuncios-catalog__kpi-card anuncios-catalog__kpi-card--large anuncios-catalog__kpi-card--accent-orange">
-          <header className="anuncios-catalog__kpi-head">
-            <h2 className="anuncios-catalog__kpi-title">Top 10 — relacionamento</h2>
-          </header>
-          <div className="anuncios-catalog__kpi-body anuncios-catalog__kpi-body--empty" />
-        </article>
-
-        <div className="anuncios-catalog__kpi-minis" aria-label="Sinais dos clientes">
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--profit">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Ativos</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--warn">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Receita</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--decline">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Dados incompletos</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-          <article className="anuncios-catalog__kpi-mini anuncios-catalog__kpi-mini--sales">
-            <div className="anuncios-catalog__kpi-mini-head">
-              <h3 className="anuncios-catalog__kpi-mini-title">Ticket medio</h3>
-            </div>
-            <div className="anuncios-catalog__kpi-mini-body anuncios-catalog__kpi-mini-body--empty" />
-          </article>
-        </div>
-      </section>
 
       <div className="products-catalog__controls s7-sticky-filters s7-catalog-filter-card">
         <div className="products-catalog__controls-top">
@@ -375,7 +371,7 @@ export default function Clientes360() {
                 <td colSpan={10}>Nenhum cliente encontrado para os filtros atuais.</td>
               </tr>
             ) : (
-              rows.map((row) => (
+              paginatedRows.map((row) => (
                 <tr key={row.id}>
                   <td>{row.name || "Cliente não identificado"}</td>
                   <td>{row.document || DASH}</td>
@@ -422,6 +418,54 @@ export default function Clientes360() {
           </tbody>
         </table>
       </div>
+
+      {!loading && totalClientes > 0 ? (
+        <footer className="products-catalog__pagination" aria-label="Paginação de clientes">
+          <p className="products-catalog__pagination-meta">
+            Mostrando <strong>{clienteRangeStart}</strong>–<strong>{clienteRangeEnd}</strong> de{" "}
+            <strong>{totalClientes}</strong> {totalClientes === 1 ? "cliente" : "clientes"}
+          </p>
+          {totalClientePages > 1 ? (
+            <nav className="products-catalog__pagination-nav" aria-label="Páginas">
+              <button
+                type="button"
+                className="products-catalog__pagination-btn"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Anterior
+              </button>
+              <div className="products-catalog__pagination-pages">
+                {clientePaginationItems.map((item, idx) =>
+                  item == null ? (
+                    <span key={`e-${idx}`} className="products-catalog__pagination-ellipsis" aria-hidden>
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`products-catalog__pagination-page${item === page ? " products-catalog__pagination-page--current" : ""}`}
+                      aria-current={item === page ? "page" : undefined}
+                      onClick={() => setPage(item)}
+                    >
+                      {item}
+                    </button>
+                  ),
+                )}
+              </div>
+              <button
+                type="button"
+                className="products-catalog__pagination-btn products-catalog__pagination-btn--next"
+                disabled={page >= totalClientePages}
+                onClick={() => setPage((p) => Math.min(totalClientePages, p + 1))}
+              >
+                Próximo
+              </button>
+            </nav>
+          ) : null}
+        </footer>
+      ) : null}
 
       {selectedCustomerId ? (
         <div className="clientes360-drawer-backdrop" onClick={() => setSelectedCustomerId(null)}>

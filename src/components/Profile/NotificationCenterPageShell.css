@@ -1,0 +1,93 @@
+/* S1.PERFIL-NOTIFICACOES.2 — shell canônico (paridade Planos / Minha assinatura) */
+
+.s7-notification-center-page {
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.s7-notification-center-page .profile-card.s7-notification-center-hero {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: auto;
+  height: auto;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px 12px;
+}
+
+.s7-notification-center-hero__head {
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.s7-notification-center-hero__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.s7-notification-center-hero__title-row h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--s7-text, #0f172a);
+  min-width: 0;
+}
+
+.s7-notification-center-hero__actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.s7-notification-center-hero__head p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--s7-muted, #64748b);
+  line-height: 1.5;
+  max-width: 720px;
+}
+
+.s7-notification-center-hero__body {
+  flex: 0 0 auto;
+  min-height: auto;
+  min-width: 0;
+  height: auto;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .s7-notification-center-page .profile-card.s7-notification-center-hero {
+    padding: 16px 16px 12px;
+  }
+
+  .s7-notification-center-hero__title-row {
+    flex-wrap: wrap;
+  }
+
+  .s7-notification-center-hero__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

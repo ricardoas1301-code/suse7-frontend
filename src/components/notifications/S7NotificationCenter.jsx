@@ -11,6 +11,7 @@ import {
   formatRelativeTime,
   severityTone,
 } from "../../billing/notificationInboxUi";
+import { emitOpenDailySalesSummaryModal } from "./central/dailySalesSummaryModalBus";
 import "./S7NotificationCenter.css";
 
 function InboxIcon({ item }) {
@@ -22,7 +23,15 @@ function InboxIcon({ item }) {
   return <Info size={18} aria-hidden />;
 }
 
-export default function S7NotificationCenter() {
+function isDailySalesSummaryItem(item) {
+  const eventType = String(item?.event_type_key ?? "").toUpperCase();
+  if (eventType === "SALES:DAILY_SALES_SUMMARY") return true;
+  const category = String(item?.category_code ?? "").toUpperCase();
+  const type = String(item?.type_key ?? "").toUpperCase();
+  return category === "SALES" && type === "DAILY_SALES_SUMMARY";
+}
+
+export default function S7NotificationCenter({ interactionLocked = false }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const navigate = useNavigate();
@@ -54,16 +63,43 @@ export default function S7NotificationCenter() {
   const openItem = async (item) => {
     if (!item?.is_read) await markOneRead(item.id);
     setOpen(false);
+    if (isDailySalesSummaryItem(item)) {
+      emitOpenDailySalesSummaryModal(item, "inbox_click");
+      return;
+    }
     const link = item?.deep_link;
     if (link && String(link).startsWith("/")) navigate(link);
   };
 
+  useEffect(() => {
+    if (interactionLocked && open) setOpen(false);
+  }, [interactionLocked, open]);
+
+  const handleBellClick = () => {
+    if (interactionLocked) return;
+    setOpen((v) => !v);
+  };
+
+  const handleBellKeyDown = (event) => {
+    if (interactionLocked) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+
   return (
-    <div className="s7-nc" ref={rootRef}>
+    <div
+      className={["s7-nc", interactionLocked ? "s7-nc--locked" : ""].filter(Boolean).join(" ")}
+      ref={rootRef}
+    >
       <button
         type="button"
         className="s7-nc__bell"
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleBellClick}
+        onKeyDown={handleBellKeyDown}
+        disabled={interactionLocked}
+        tabIndex={interactionLocked ? -1 : undefined}
+        aria-disabled={interactionLocked || undefined}
         aria-expanded={open}
         aria-haspopup="true"
         aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ""}`}
@@ -77,9 +113,9 @@ export default function S7NotificationCenter() {
       </button>
 
       {open && (
-        <div className="s7-nc__panel" role="dialog" aria-label="Notificações recentes">
+        <div className="s7-nc__panel" role="dialog" aria-label="Central de notificações">
           <div className="s7-nc__head">
-            <h2>Notificações</h2>
+            <h2>Central de notificações</h2>
             {unreadCount > 0 && (
               <button type="button" className="s7-nc__mark-all" onClick={() => markAllRead()}>
                 Marcar todas

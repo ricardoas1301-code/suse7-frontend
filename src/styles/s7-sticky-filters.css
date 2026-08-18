@@ -2,7 +2,7 @@
    s7-sticky-filters — bloco busca + filtros (chips) fixo ao rolar
    Uso: adicionar a classe junto a `.products-catalog__controls`.
    O scroll principal é `.page-content` (Layout); `top: 0` = colado ao
-   topo do conteúdo (abaixo da navbar de 64px).
+   topo do conteúdo (abaixo da navbar de 48px).
 ====================================================================== */
 
 .page-content .s7-sticky-filters {
@@ -13,7 +13,8 @@
 }
 
 /* Faixa sticky “full bleed” (legado) — não usar em listagens com card branco */
-.page-content .s7-sticky-filters:not(.s7-catalog-filter-card) {
+/* Card dedicado Vendas — fora do padrão products-catalog__controls */
+.page-content .s7-sticky-filters:not(.s7-catalog-filter-card):not(.vendas-filters-card):not(.concorrencia-filters-card) {
   padding-top: 6px;
   padding-bottom: 10px;
   background: var(--s7-bg-page, #f2f7ff);

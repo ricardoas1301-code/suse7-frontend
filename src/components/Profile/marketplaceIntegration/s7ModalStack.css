@@ -1,0 +1,21 @@
+/* Stack de modais SUSE7 — camada base + camada superior */
+.profile-modal-backdrop.s7-modal-stack-base {
+  z-index: var(--s7-z-modal-base, 9999);
+}
+
+.profile-modal-backdrop.s7-modal-stack-base.is-covered {
+  pointer-events: none;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.profile-modal-backdrop.s7-modal-stack-base.is-covered .profile-modal {
+  pointer-events: none;
+  opacity: 0.55;
+  filter: saturate(0.92);
+}
+
+.profile-modal-backdrop.s7-modal-stack-top,
+.ml-onboarding-backdrop.s7-modal-stack-top {
+  z-index: var(--s7-z-modal-stack-top, 10050);
+}

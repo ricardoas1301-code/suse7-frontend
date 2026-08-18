@@ -6,6 +6,8 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { ensureSellerCompaniesHydratedFromProfile } from "../services/sellerCompanyBootstrapApi";
+import { DEFAULT_OPERATIONAL_WORKING_DAYS, normalizeOperationalWorkingDays } from "../features/dashboard/operationalWorkingDays.js";
+import OperationalWorkingDaysField from "./Profile/OperationalWorkingDaysField.jsx";
 import "./CompleteProfileModal.css";
 import suse7Logo from "../assets/suse7-logo-redonda.png";
 
@@ -28,6 +30,8 @@ export default function CompleteProfileModal({ show, profileId, onClose }) {
     cidade: "",
     estado: "",
     imposto_percentual: "",
+    operational_day_closes_at: "18:00",
+    operational_working_days: DEFAULT_OPERATIONAL_WORKING_DAYS,
   });
 
   const [errors, setErrors] = useState({});
@@ -250,7 +254,9 @@ const validateForm = () => {
         .from("profiles")
         .update({
           ...form,
-          imposto_percentual: impostoNumerico, // 👈 AQUI
+          imposto_percentual: impostoNumerico,
+          operational_day_closes_at: form.operational_day_closes_at || "18:00",
+          operational_working_days: normalizeOperationalWorkingDays(form.operational_working_days),
           primeiro_login: false,
           last_login: new Date(),
         })
@@ -446,6 +452,28 @@ const formatCpfCnpj = (value) => {
               )}
             </label>
 
+          </div>
+
+          <div className="profile-grid">
+            <label>
+              Hora de encerramento operacional
+              <input
+                type="time"
+                name="operational_day_closes_at"
+                value={form.operational_day_closes_at}
+                onChange={handleChange}
+              />
+              <small className="field-help">
+                Usaremos esse horário junto com os dias de operação para calcular seu Resumo Diário no Dashboard.
+              </small>
+            </label>
+          </div>
+
+          <div className="profile-grid">
+            <OperationalWorkingDaysField
+              value={form.operational_working_days}
+              onChange={(days) => setForm((prev) => ({ ...prev, operational_working_days: days }))}
+            />
           </div>
 
           {/* ============================================================= */}

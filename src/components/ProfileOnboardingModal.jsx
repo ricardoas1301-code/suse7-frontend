@@ -6,6 +6,8 @@
 import React, { useEffect, useState } from "react";         // React + Hooks
 import { supabase } from "../supabaseClient";               // Cliente Supabase
 import { ensureSellerCompaniesHydratedFromProfile } from "../services/sellerCompanyBootstrapApi";
+import { DEFAULT_OPERATIONAL_WORKING_DAYS, normalizeOperationalWorkingDays } from "../features/dashboard/operationalWorkingDays.js";
+import OperationalWorkingDaysField from "./Profile/OperationalWorkingDaysField.jsx";
 import SuseLogo from "../assets/suse7-logo-redonda.png";    // Logo Suse7 redonda
 
 
@@ -163,6 +165,8 @@ const ProfileOnboardingModal = () => {
     estado: "",                                             // UF (estado, ex: SP)
     cpf_cnpj: "",                                           // Documento (CPF ou CNPJ)
     imposto_percentual: "",                                 // Percentual de imposto (em %)
+    operational_day_closes_at: "18:00",
+    operational_working_days: DEFAULT_OPERATIONAL_WORKING_DAYS,
   });
 
   /* -----------------------------------------------------------
@@ -328,6 +332,7 @@ const handleSubmit = async (e) => {
         form.imposto_percentual !== "" 
           ? Number(form.imposto_percentual)
           : null,
+      operational_working_days: normalizeOperationalWorkingDays(form.operational_working_days),
       primeiro_login: false,
     };
 
@@ -419,6 +424,28 @@ const handleSubmit = async (e) => {
       Imposto (%) *
       <input type="number" name="imposto_percentual" value={form.imposto_percentual} onChange={handleChange} required />
     </label>
+  </div>
+
+  <div className="profile-grid">
+    <label>
+      Hora de encerramento operacional
+      <input
+        type="time"
+        name="operational_day_closes_at"
+        value={form.operational_day_closes_at}
+        onChange={handleChange}
+      />
+      <small>
+        Usaremos esse horário junto com os dias de operação para calcular seu Resumo Diário no Dashboard.
+      </small>
+    </label>
+  </div>
+
+  <div className="profile-grid">
+    <OperationalWorkingDaysField
+      value={form.operational_working_days}
+      onChange={(days) => setForm((prev) => ({ ...prev, operational_working_days: days }))}
+    />
   </div>
 
   {/* LINHA 3 — WhatsApp + Telefone */}

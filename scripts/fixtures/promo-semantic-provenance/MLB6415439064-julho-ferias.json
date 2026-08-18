@@ -1,0 +1,48 @@
+{
+  "fixture_id": "MLB6415439064-julho-ferias",
+  "listing_id": "MLB6415439064",
+  "marketplace_account_id": "9d1fc827-b7a2-4241-9adc-4040141efb07",
+  "promotion_id": "P-MLB17791012",
+  "offer_id": null,
+  "promotion_name": "Julho de Ferias",
+  "promotion_type": "DEAL",
+  "sub_type": null,
+  "identity_key": "P-MLB17791012||DEAL||Julho de Ferias",
+  "status": "candidate",
+  "ml_expected_final_price_brl": "62.00",
+  "sus7_wrong_price_brl": "72.48",
+  "canonical_contract_final_price_brl": "62.00",
+  "live_payload": {
+    "original_price": 76.3,
+    "price": 0,
+    "suggested_discounted_price": 62,
+    "max_discounted_price": 72.48,
+    "min_discounted_price": 26.65
+  },
+  "sibling_prices": ["62.00"],
+  "candidates": [
+    {
+      "value": "72.48",
+      "raw_field_name": "max_discounted_price",
+      "full_field_path": "live_payload.max_discounted_price",
+      "semantic_role": "range_boundary",
+      "identity_match_level": "strong",
+      "is_range_boundary": true,
+      "selected_before_fix": true,
+      "selected_after_fix": false,
+      "rejection_reason": "panel:deal_modest_max_tier_boundary_not_panel_final"
+    },
+    {
+      "value": "62.00",
+      "raw_field_name": "suggested_discounted_price",
+      "full_field_path": "live_payload.suggested_discounted_price",
+      "semantic_role": "official_participation_price",
+      "identity_match_level": "strong",
+      "is_suggested_price": true,
+      "selected_before_fix": false,
+      "selected_after_fix": true,
+      "selection_rule": "panel:deal_suggested_matches_listing_sibling"
+    }
+  ],
+  "diagnosis": "range_boundary_selected_as_final_price"
+}

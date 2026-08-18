@@ -1,3 +1,6 @@
+import { formatWhatsAppBr } from "./recipientContactUi";
+import S7StatusBadge from "../../ui/S7StatusBadge";
+import "../center/notificationCenterVisualVariants.css";
 import "./NotificationRecipientCard.css";
 
 function maskEmail(email) {
@@ -13,53 +16,81 @@ function maskWhatsApp(digits) {
   return `••••${d.slice(-4)}`;
 }
 
-export default function NotificationRecipientCard({ group, onEdit, onToggleActive, onDelete, busy }) {
+function displayEmail(email, showFullContact) {
+  const value = String(email ?? "").trim();
+  if (!value) return "—";
+  return showFullContact ? value : maskEmail(value);
+}
+
+function displayWhatsApp(digits, showFullContact) {
+  const value = String(digits ?? "").trim();
+  if (!value) return "—";
+  return showFullContact ? formatWhatsAppBr(value) : maskWhatsApp(value);
+}
+
+export default function NotificationRecipientCard({
+  group,
+  onEdit,
+  onDelete,
+  busy,
+  showFullContact = false,
+}) {
   if (!group) return null;
 
   const email = group.channels?.email;
   const whatsapp = group.channels?.whatsapp;
+  const isPrimary = Boolean(group.is_primary);
+  const roleLabel = group.role_tag != null && String(group.role_tag).trim() !== "" ? String(group.role_tag) : "—";
+
+  const emailDisplay = displayEmail(email?.destination, showFullContact);
+  const whatsappDisplay = displayWhatsApp(whatsapp?.destination, showFullContact);
 
   return (
-    <article className={`s7-nrec-card ${group.is_active === false ? "s7-nrec-card--inactive" : ""}`}>
+    <article
+      className={`s7-nrec-card s7-ncenter-card--left-accent-blue ${group.is_active === false ? "s7-nrec-card--inactive" : ""} ${isPrimary ? "s7-nrec-card--primary" : ""}`}
+    >
       <header className="s7-nrec-card__head">
-        <div>
-          <h4>{group.label}</h4>
-          {group.role_tag ? <span className="s7-nrec-card__role">{group.role_tag}</span> : null}
+        <div className="s7-nrec-card__head-main">
+          <div className="s7-nrec-card__title-row">
+            <h4>{group.label}</h4>
+            {isPrimary ? (
+              <span className="s7-nrec-card__primary-badge" title="Destinatário padrão da empresa principal">
+                Principal
+              </span>
+            ) : null}
+          </div>
         </div>
-        <span className={group.is_active === false ? "s7-nrec-card__status-off" : "s7-nrec-card__status-on"}>
-          {group.is_active === false ? "Inativo" : "Ativo"}
-        </span>
+        <S7StatusBadge
+          label={group.is_active === false ? "Inativo" : "Ativo"}
+          tone={group.is_active === false ? "muted" : "success"}
+        />
       </header>
 
-      <ul className="s7-nrec-card__channels">
-        <li className={email ? "s7-nrec-card__ch s7-nrec-card__ch--on" : "s7-nrec-card__ch"}>
-          <span>E-mail</span>
-          <em>{email ? maskEmail(email.destination) : "—"}</em>
-        </li>
-        <li className={whatsapp ? "s7-nrec-card__ch s7-nrec-card__ch--on" : "s7-nrec-card__ch"}>
-          <span>WhatsApp</span>
-          <em>{whatsapp ? maskWhatsApp(whatsapp.destination) : "—"}</em>
-        </li>
-      </ul>
+      <dl className="s7-nrec-card__facts">
+        <div className="s7-nrec-card__fact">
+          <dt>Função</dt>
+          <dd>{roleLabel}</dd>
+        </div>
+        <div className="s7-nrec-card__fact s7-nrec-card__fact--email">
+          <dt>E-mail</dt>
+          <dd className={showFullContact ? "s7-nrec-card__value-full" : undefined}>{emailDisplay}</dd>
+        </div>
+        <div className="s7-nrec-card__fact">
+          <dt>WhatsApp</dt>
+          <dd className={showFullContact ? "s7-nrec-card__value-full" : undefined}>{whatsappDisplay}</dd>
+        </div>
+      </dl>
 
       <footer className="s7-nrec-card__actions">
         <button type="button" className="s7-nrec-card__btn" disabled={busy} onClick={() => onEdit?.(group)}>
           Editar
         </button>
-        <button
-          type="button"
-          className="s7-nrec-card__btn s7-nrec-card__btn--ghost"
-          disabled={busy}
-          onClick={() => onToggleActive?.(group)}
-        >
-          {group.is_active === false ? "Ativar" : "Desativar"}
-        </button>
-        {onDelete ? (
+        {!isPrimary && onDelete ? (
           <button
             type="button"
             className="s7-nrec-card__btn s7-nrec-card__btn--danger"
             disabled={busy}
-            onClick={() => onDelete?.(group)}
+            onClick={(event) => onDelete?.(group, event)}
           >
             Remover
           </button>

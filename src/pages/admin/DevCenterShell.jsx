@@ -5,7 +5,8 @@
 
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
+import { useAuthBootstrap } from "../../contexts/AuthBootstrapContext";
+import { fetchUserProfileSummary } from "../../services/userProfileApi.js";
 import DevCenterTopNav from "../../components/devCenter/layout/DevCenterTopNav";
 import { resolveDevCenterActiveNavItem } from "../../components/devCenter/layout/devCenterNavItems";
 import "./DevCenterShell.css";
@@ -13,26 +14,28 @@ import "./DevCenterModules.css";
 
 export default function DevCenterShell() {
   const location = useLocation();
+  const { ready: authReady } = useAuthBootstrap();
   const [empresaNome, setEmpresaNome] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
 
   useEffect(() => {
+    if (!authReady) return;
+
     const loadProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase.from("profiles").select("nome_loja, photo_url").eq("id", user.id).single();
-
-      if (data) {
-        setEmpresaNome(data.nome_loja || "");
-        setLogoUrl(data.photo_url || "");
+      try {
+        const res = await fetchUserProfileSummary();
+        if (res.ok) {
+          setEmpresaNome(res.nome_loja || res.display_name || "");
+          setLogoUrl(res.photo_url || "");
+        }
+      } catch {
+        setEmpresaNome("");
+        setLogoUrl("");
       }
     };
 
-    loadProfile();
-  }, []);
+    void loadProfile();
+  }, [authReady]);
 
   const activeItem = resolveDevCenterActiveNavItem(location.pathname);
 

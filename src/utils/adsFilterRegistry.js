@@ -166,13 +166,25 @@ export function applyAdsCatalogFilter(rows, filterId) {
   if (filterId === "all") return rows;
 
   if (filterId === "top_sales") {
-    const test = rowPassesTopTier(rows, "salesCount", 0.4);
-    return rows.filter((row) => test(row));
+    return [...rows].sort((a, b) => {
+      const aSales = Number(a?.salesCount ?? 0) || 0;
+      const bSales = Number(b?.salesCount ?? 0) || 0;
+      if (bSales !== aSales) return bSales - aSales;
+      const aId = String(a?.id ?? a?.externalId ?? "");
+      const bId = String(b?.id ?? b?.externalId ?? "");
+      return aId.localeCompare(bId, undefined, { numeric: true });
+    });
   }
 
   if (filterId === "top_profit") {
-    const test = rowPassesTopTier(rows, "profit", 0.4);
-    return rows.filter((row) => test(row));
+    return [...rows].sort((a, b) => {
+      const aProfit = Number(a?.profit ?? 0) || 0;
+      const bProfit = Number(b?.profit ?? 0) || 0;
+      if (bProfit !== aProfit) return bProfit - aProfit;
+      const aId = String(a?.id ?? a?.externalId ?? "");
+      const bId = String(b?.id ?? b?.externalId ?? "");
+      return aId.localeCompare(bId, undefined, { numeric: true });
+    });
   }
 
   if (filterId === "visit_volume") {

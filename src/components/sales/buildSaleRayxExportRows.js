@@ -164,6 +164,8 @@ export function buildSaleRayxExportRows(ctx) {
     headers,
     row,
     saleNumber,
-    xlsxFilename: `raio-x-venda-${buildSaleRayxExportBasename(saleNumber)}.xlsx`,
+    xlsxFilename: `Suse7 - Raio-X da Venda ${String(saleNumber ?? "")
+      .replace(/^#/, "")
+      .trim() || "venda"}.xlsx`,
   };
 }

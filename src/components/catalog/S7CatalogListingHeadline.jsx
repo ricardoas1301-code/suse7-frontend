@@ -1,5 +1,5 @@
-﻿// ======================================================================
-// Cabe├ºalho operacional ÔÇö coluna An├║ncio / Produto (padr├úo lista Vendas).
+// ======================================================================
+// Cabeçalho operacional — coluna Anúncio / Produto (padrão lista Vendas).
 // ======================================================================
 
 import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../ui/S7CopyButton.jsx";
@@ -52,13 +52,13 @@ export default function S7CatalogListingHeadline({
   listingEntityType = "marketplace_listing",
   skuEntityType = "marketplace_listing",
   showSkuWhenEmpty = false,
-  skuEmptyLabel = "ÔÇö",
+  skuEmptyLabel = "—",
   metaExtra = null,
   footer = null,
   actions = null,
   className = "",
 }) {
-  const titulo = String(title || "").trim() || "ÔÇö";
+  const titulo = String(title || "").trim() || "—";
   const lid = String(listingId || "").trim();
   const sk = String(sku || "").trim();
   const tituloCopiar = String(titleCopyValue || "").trim();
@@ -106,12 +106,12 @@ export default function S7CatalogListingHeadline({
   );
 
   const titleCopyButton =
-    tituloCopiar && titulo !== "ÔÇö" ? (
+    tituloCopiar && titulo !== "—" ? (
       <S7CopyButton
         value={tituloCopiar}
-        ariaLabel="Copiar nome do an├║ncio"
-        tooltipText="Copiar nome do an├║ncio"
-        toastLabel="Nome do an├║ncio"
+        ariaLabel="Copiar nome do anúncio"
+        tooltipText="Copiar nome do anúncio"
+        toastLabel="Nome do anúncio"
         showToast={true}
         iconMode="unicode"
         flashMs={S7_COPY_OFFICIAL_FLASH_MS}
@@ -129,14 +129,14 @@ export default function S7CatalogListingHeadline({
         onKeyDown={(e) => e.stopPropagation()}
       >
         <span className="s7-catalog-headline__meta-value vendas-page__meta-value vendas-page__meta-value--listing">
-          {lid || "ÔÇö"}
+          {lid || "—"}
         </span>
         {lidCopiar ? (
           <S7CopyButton
             value={lidCopiar}
-            ariaLabel="Copiar ID do an├║ncio"
-            tooltipText="Copiar ID do an├║ncio"
-            toastLabel="ID do an├║ncio"
+            ariaLabel="Copiar ID do anúncio"
+            tooltipText="Copiar ID do anúncio"
+            toastLabel="ID do anúncio"
             showToast={true}
             iconMode="unicode"
             flashMs={S7_COPY_OFFICIAL_FLASH_MS}
@@ -193,7 +193,7 @@ export default function S7CatalogListingHeadline({
         {metaExtra}
       </div>
     ) : (
-      <span className="s7-catalog-headline__meta--muted vendas-page__product-meta--muted">ÔÇö</span>
+      <span className="s7-catalog-headline__meta--muted vendas-page__product-meta--muted">—</span>
     );
 
   const rootClass = [
@@ -240,7 +240,7 @@ export default function S7CatalogListingHeadline({
 }
 
 /**
- * Coluna Produto ÔÇö mesma tipografia da coluna An├║ncio (nome + SKU).
+ * Coluna Produto — mesma tipografia da coluna Anúncio (nome + SKU).
  * @param {{
  *   title: string;
  *   sku?: string;
@@ -285,27 +285,30 @@ export function S7CatalogProductHeadline({
   );
 
   return (
-    <div className="s7-catalog-headline s7-catalog-headline--stacked s7-catalog-headline--product">
-      <div className="s7-catalog-headline__title-row products-catalog__name-row">
-        <span className="s7-catalog-headline__title-slot vendas-page__product-title-slot products-catalog__name-inline">
-          {titleNode}
-          <S7CopyButton
-            value={nome}
-            ariaLabel={`Copiar nome ${nome}`}
-            tooltipText="Copiar nome"
-            toastLabel="Nome do produto"
-            showToast={true}
-            iconMode="unicode"
-            flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-            flashKey={copyNameFlashKey}
-            toastEntityType="product"
-          />
-        </span>
-      </div>
-      <div className="s7-catalog-headline__meta s7-catalog-headline__meta--stacked products-catalog__sku-row">
-        <span className="s7-copy-group s7-catalog-headline__meta-sku">
+    <div className="s7-catalog-headline s7-catalog-headline--product vendas-page__product-headline products-catalog__headline-vendas-parity">
+      <span className="s7-catalog-headline__title-slot vendas-page__product-title-slot products-catalog__name-inline">
+        {titleNode}
+        <S7CopyButton
+          value={nome}
+          ariaLabel={`Copiar nome ${nome}`}
+          tooltipText="Copiar nome"
+          toastLabel="Nome do produto"
+          showToast={true}
+          iconMode="unicode"
+          flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+          flashKey={copyNameFlashKey}
+          toastEntityType="product"
+        />
+      </span>
+      <div className="s7-catalog-headline__meta vendas-page__product-meta products-catalog__sku-row">
+        <span
+          className="s7-copy-group s7-catalog-headline__meta-sku vendas-page__product-meta-sku"
+          role="presentation"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <span className="anuncios-ad-sku-label">SKU</span>
-          <span className="anuncios-ad-sku-value s7-catalog-headline__meta-value">{sk || "ÔÇö"}</span>
+          <span className="anuncios-ad-sku-value s7-catalog-headline__meta-value vendas-page__meta-value">{sk || "—"}</span>
           {sk ? (
             <S7CopyButton
               value={sk}

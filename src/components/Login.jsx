@@ -3,9 +3,15 @@
 // Estrutura fiel à build original + assets locais
 // ======================================================================
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ContactModal from "./ContactModal";
-import { supabase } from "../supabaseClient";
+import { mapSupabaseAuthErrorMessage } from "../lib/supabaseEnv.js";
+import { getSupabaseLoginDebug, supabase, supabaseProjectRef } from "../supabaseClient";
+import {
+  clearIntroSessionFlags,
+  logIntroAuthDev,
+  markIntroPendingForNextLogin,
+} from "../auth/introAuthSession.js";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 
@@ -52,7 +58,9 @@ export default function Login() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-
+  useEffect(() => {
+    console.info("[Suse7][Login] mount", getSupabaseLoginDebug());
+  }, []);
 
   // --------------------------------------------------------
   // Login com e-mail e senha
@@ -60,17 +68,45 @@ export default function Login() {
   const handleLogin = async () => {
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    });
-
-    if (error) {
-      setError("E-mail ou senha inválidos");
+    const authDebug = getSupabaseLoginDebug();
+    console.info("[Suse7][Login] antes do signIn", authDebug);
+    if (authDebug.usesLocalhost) {
+      setError(
+        "Configuração inválida: Supabase apontando para localhost. Pare o Vite, apague node_modules/.vite, confira .env.development e suba npm run dev de novo."
+      );
       return;
     }
 
-    navigate("/");
+    let authError = null;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha,
+      });
+      authError = error;
+    } catch (err) {
+      authError = err;
+    }
+
+    if (authError) {
+      console.warn("[Suse7][Login] signIn erro", {
+        message: authError?.message,
+        name: authError?.name,
+        status: authError?.status,
+        authDebug,
+      });
+      setError(
+        mapSupabaseAuthErrorMessage(authError, {
+          projectRef: supabaseProjectRef,
+        })
+      );
+      return;
+    }
+
+    console.info("[Suse7][Login] signIn ok", { projectRef: supabaseProjectRef });
+    markIntroPendingForNextLogin("password_login");
+    logIntroAuthDev("auth_login_success", { provider: "password" });
+    navigate("/", { replace: true });
   };
 
   // --------------------------------------------------------
@@ -81,6 +117,8 @@ export default function Login() {
     const redirectTo =
       import.meta.env.VITE_FRONTEND_URL || window.location.origin;
 
+    markIntroPendingForNextLogin("oauth_google_start");
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -89,7 +127,16 @@ export default function Login() {
     });
 
     if (error) {
-      setError("Erro ao entrar com Google");
+      logIntroAuthDev("intro_skipped_reason", {
+        reason: "oauth_start_failed",
+        message: error?.message ?? null,
+      });
+      clearIntroSessionFlags("oauth_start_failed");
+      setError(
+        mapSupabaseAuthErrorMessage(error, {
+          projectRef: supabaseProjectRef,
+        })
+      );
     }
   };
 
@@ -116,33 +163,43 @@ export default function Login() {
 
 
         {/* E-mail */}
-        <label className="login-label">E-mail ou usuário</label>
-        <input
-          className={`login-input ${error ? "login-input-error" : ""}`}
-          type="email"
-          placeholder="Digite seu e-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div className="login-field">
+          <label className="login-label" htmlFor="login-email">
+            E-mail ou usuário
+          </label>
+          <input
+            id="login-email"
+            className={`login-input ${error ? "login-input-error" : ""}`}
+            type="email"
+            placeholder="Digite seu e-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
         {/* Senha */}
-        <label className="login-label">Senha</label>
-        <div className="password-wrapper">
-          <input
-            className={`login-input-password ${error ? "login-input-error" : ""}`}
-            type={showPassword ? "text" : "password"}
-            placeholder="Digite sua senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-          />
-          <button
-            type="button"
-            className="password-toggle-btn"
-            onClick={() => setShowPassword(!showPassword)}
-            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-          >
-            {showPassword ? <IconEyeOff /> : <IconEye />}
-          </button>
+        <div className="login-field">
+          <label className="login-label" htmlFor="login-senha">
+            Senha
+          </label>
+          <div className="password-wrapper">
+            <input
+              id="login-senha"
+              className={`login-input-password ${error ? "login-input-error" : ""}`}
+              type={showPassword ? "text" : "password"}
+              placeholder="Digite sua senha"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+            />
+            <button
+              type="button"
+              className="password-toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            >
+              {showPassword ? <IconEyeOff /> : <IconEye />}
+            </button>
+          </div>
         </div>
 
         {/* Esqueci senha */}
@@ -191,7 +248,7 @@ export default function Login() {
 )}
 
         <Link to="/termos">Termos de uso</Link> |{" "}
-        <Link to="/privacidade">Segurança e privacidade</Link>
+        <Link to="/privacidade">Política de Privacidade</Link>
         <span className="login-copy">
           Suse7 2026 © Todos os direitos reservados
         </span>

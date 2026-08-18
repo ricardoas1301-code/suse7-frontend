@@ -27,6 +27,11 @@ import {
 } from "./SaleRayXShareLayout.js";
 import type { SaleHealthVisualState } from "./saleRayxShareHealthVisual.js";
 
+// Refino UX: respiro extra entre linhas/grupos de Receita e Custos Internos,
+// igualando o conforto vertical do bloco Resultado (que usa a linha de valor maior).
+// As linhas auxiliares (ex.: "Premium 16,5%", "Alíquota 6%") permanecem coladas à principal.
+const FINANCIAL_ENTRY_BREATHING = SHARE_FIN_VALUE_LINE_HEIGHT - SHARE_FIN_LINE_HEIGHT;
+
 function loadImage(src: string, useCors = true): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -251,7 +256,11 @@ function drawHeaderProductImage(
     ctx.beginPath();
     ctx.arc(productCenterX, productCenterY, r, 0, Math.PI * 2);
     ctx.clip();
-    drawCoverImage(ctx, productImg, productX, productY, productSize, productSize);
+    // Refino UX: imagem de capa completa dentro do círculo (object-fit: contain),
+    // centralizada e sem zoom/recorte das laterais. Fundo branco para o "respiro" do contain.
+    ctx.fillStyle = SHARE_COLORS.white;
+    ctx.fillRect(productX, productY, productSize, productSize);
+    drawContainImage(ctx, productImg, productX, productY, productSize, productSize);
     ctx.restore();
     return;
   }
@@ -426,6 +435,30 @@ function drawCoverImage(
 }
 
 /**
+ * object-fit: contain — imagem inteira visível, centralizada, sem recorte/zoom.
+ */
+function drawContainImage(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+
+  const scale = Math.min(w / iw, h / ih);
+  const dw = iw * scale;
+  const dh = ih * scale;
+  const dx = x + (w - dw) / 2;
+  const dy = y + (h - dh) / 2;
+
+  ctx.drawImage(img, 0, 0, iw, ih, dx, dy, dw, dh);
+}
+
+/**
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x
  * @param {number} y
@@ -489,6 +522,7 @@ function estimateFinancialHeight(
     else if (row.kind === "money") {
       h += row.variant === "resultado" ? SHARE_FIN_VALUE_LINE_HEIGHT : SHARE_FIN_LINE_HEIGHT;
       if (row.detail) h += SHARE_FIN_DETAIL_LINE_HEIGHT;
+      if (row.variant !== "resultado") h += FINANCIAL_ENTRY_BREATHING;
     } else if (row.kind === "text") {
       ctx.font = SHARE_FINANCIAL_FONTS.body;
       h += wrapText(ctx, row.text, innerWidth).length * SHARE_FIN_LINE_HEIGHT;
@@ -692,6 +726,8 @@ export async function exportSaleRayxShareImage(opts: ExportShareImageOptions): P
         ctx.fillText(row.detail, cardInnerX, fy + 12);
         fy += SHARE_FIN_DETAIL_LINE_HEIGHT;
       }
+      // Respiro entre grupos financeiros (Receita/Custos); auxiliar fica colada acima.
+      if (!isResultado) fy += FINANCIAL_ENTRY_BREATHING;
       continue;
     }
     if (row.kind === "text") {

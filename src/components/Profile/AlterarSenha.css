@@ -1,90 +1,247 @@
-/* =====================================================
-   ALTERAR SENHA — layout em coluna única
-===================================================== */
-.form-grid.form-single-column {
+/* ======================================================================
+   SUSE7 — ALTERAR SENHA (layout refinado, padrão Perfil da Empresa)
+====================================================================== */
+
+.alterar-senha-page {
+  --s7-alterar-senha-field-width: 378px; /* 10% menor que 420px */
+  --s7-alterar-senha-illustration-max-h: 432px; /* 10% menor que 480px */
+
+  width: 100%;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  align-items: center; /* centraliza o bloco inteiro */
 }
 
-/* =====================================================
-   ALTERAR SENHA — header centralizado
-===================================================== */
-.form-header {
+.alterar-senha-page .profile-card.s7-alterar-senha-hero {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  max-width: none;
+  width: 100%;
+  /* S1.PERFIL-NOTIFICACOES.6 — respiro inferior via gutter do profile-content (12px); margin extra gerava ~12px de scroll */
+  margin-bottom: 0;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: auto;
+  height: auto;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 28px;
+}
+
+.s7-alterar-senha-body {
+  flex: 0 0 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
+  gap: 20px;
+  align-items: center;
+}
+
+.s7-alterar-senha-body__form {
+  min-width: 0;
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 8px;
+}
+
+.s7-alterar-senha-frame {
+  width: 100%;
+  max-width: calc(var(--s7-alterar-senha-field-width) + 80px);
+  margin-left: 0;
+  margin-right: auto;
+  padding: 22px 24px 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafbfc;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.s7-alterar-senha-body__illustration {
+  min-width: 0;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.s7-alterar-senha-illustration {
+  width: auto;
+  max-width: 90%;
+  height: auto;
+  max-height: var(--s7-alterar-senha-illustration-max-h);
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Cabeçalho interno — centralizado dentro da moldura */
+.s7-alterar-senha-header {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   margin-bottom: 20px;
-}
-
-.form-header h2 {
+  width: 100%;
   text-align: center;
 }
 
-.required-hint {
+.s7-alterar-senha-header__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.s7-alterar-senha-header__subtitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.s7-alterar-senha-header__required {
   font-size: 13px;
+  font-weight: 600;
   color: #e53935;
 }
 
-/* =====================================================
-   ALTERAR SENHA — campo de senha (label + input)
-===================================================== */
-.password-field {
+/* Formulário — centralizado na moldura */
+.s7-alterar-senha-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: var(--s7-alterar-senha-field-width);
+}
+
+.s7-alterar-senha-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  align-items: center; /* 🔥 centralização real */
+  max-width: var(--s7-alterar-senha-field-width);
 }
 
-/* =====================================================
-   ALTERAR SENHA — wrapper controla a largura REAL
-   (escopo .alterar-senha-page: evita max-width global no Login/Signup)
-===================================================== */
+.s7-alterar-senha-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  text-align: left;
+  width: 100%;
+}
+
 .alterar-senha-page .password-wrapper {
   position: relative;
   width: 100%;
-  max-width: 320px; /* largura final do campo nesta página */
+  max-width: var(--s7-alterar-senha-field-width);
+  display: block;
 }
 
-/* =====================================================
-   ALTERAR SENHA — input
-===================================================== */
 .alterar-senha-page .password-wrapper input {
   width: 100%;
-  padding: 6px 40px 6px 8px; /* espaço correto pro ícone */
-  border-radius: 8px;
-  font-size: 14px;
   box-sizing: border-box;
+  padding: 6px 40px 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* =====================================================
-   ALTERAR SENHA — ícone dentro do input
-===================================================== */
-.toggle-password {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 16px;
-  color: #6b7280;
-  line-height: 1;
-  user-select: none;
+.alterar-senha-page .password-wrapper input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background: #ffffff;
 }
 
-.toggle-password:hover {
-  color: #2563eb;
-}
-
-/* =====================================================
-   ALTERAR SENHA — botão alinhado aos inputs
-===================================================== */
-.profile-card .btn-primary {
-  max-width: 320px;
+/* Botão principal — alinhado aos inputs dentro da moldura */
+.alterar-senha-page .btn-primary.s7-alterar-senha-submit {
   width: 100%;
-  margin: 10px auto 0;
+  max-width: var(--s7-alterar-senha-field-width);
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
   display: block;
+}
+
+.alterar-senha-page .btn-primary.s7-alterar-senha-submit:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.alterar-senha-page .btn-primary.s7-alterar-senha-submit:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Responsivo */
+@media (max-width: 960px) {
+  .s7-alterar-senha-body {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .s7-alterar-senha-body__form {
+    order: 1;
+    justify-content: center;
+    padding-left: 0;
+  }
+
+  .s7-alterar-senha-frame {
+    margin-left: 0;
+    max-width: 100%;
+  }
+
+  .s7-alterar-senha-body__illustration {
+    order: 2;
+    padding: 0;
+  }
+
+  .s7-alterar-senha-illustration {
+    max-height: calc(var(--s7-alterar-senha-illustration-max-h) * 0.65);
+    max-width: 72%;
+  }
+
+  .s7-alterar-senha-form,
+  .alterar-senha-page .btn-primary.s7-alterar-senha-submit,
+  .alterar-senha-page .password-wrapper,
+  .s7-alterar-senha-field {
+    max-width: min(var(--s7-alterar-senha-field-width), 100%);
+  }
+}
+
+@media (max-width: 768px) {
+  .alterar-senha-page .profile-card.s7-alterar-senha-hero {
+    padding: 16px;
+  }
+
+  .s7-alterar-senha-header__title {
+    font-size: 24px;
+  }
+
+  .s7-alterar-senha-frame {
+    padding: 18px 16px 20px;
+  }
 }

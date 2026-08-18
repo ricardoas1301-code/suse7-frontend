@@ -208,24 +208,27 @@
   color: var(--s7-text, #111827);
 }
 
-/* Linha: "Título N" à esquerda + copiar no final (direita), acima do input */
+/* Linha: "Título N" + copiar imediatamente à direita do label */
 .s7-ad-title-copy-row {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
+  max-width: 100%;
+  position: relative;
+  z-index: 40;
+  overflow: visible;
 }
 
 .s7-ad-title-copy-row .s7-ad-titles-card-label {
   margin: 0;
+  flex-shrink: 0;
 }
 
 .s7-ad-title-copy-wrap {
-  flex: 1;
-  min-width: 0;
-  max-width: 700px;
-  display: flex;
-  justify-content: flex-end;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .s7-ad-title-copy-wrap .pf-copy-btn {
@@ -233,7 +236,7 @@
   background: transparent;
   border-radius: 0;
   padding: 0;
-  margin-right: 59px;
+  margin-right: 0;
   font-size: 14px;
   color: var(--s7-copy-btn-color, rgba(15, 23, 42, 0.38));
 }
@@ -242,36 +245,34 @@
   color: var(--s7-copy-btn-color-active, var(--s7-text, #0f172a));
 }
 
-/* Linha: input + contador abaixo + lixeira */
-.s7-ad-title-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-/* Wrapper do input: input + contador abaixo */
-.s7-ad-title-input-wrap {
-  flex: 1;
+/* Input + contador (coluna do campo) + lixeira colada à direita do input */
+.s7-ad-title-input-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 0;
+  row-gap: 4px;
+  align-items: center;
   min-width: 0;
   max-width: 700px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  width: 100%;
 }
 
-.s7-ad-title-input-wrap .s7-ad-title-input {
+.s7-ad-title-input-line .s7-ad-title-input {
+  grid-column: 1;
+  grid-row: 1;
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
-/* Contador: canto inferior direito do input */
+/* Contador: mesma coluna do input, alinhado à borda direita do campo */
 .s7-ad-title-count {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: end;
   font-size: 12px;
   color: var(--s7-muted, #6b7280);
   white-space: nowrap;
-  align-self: flex-end;
 }
 
 .s7-ad-title-input {
@@ -298,22 +299,47 @@
   min-width: 0;
 }
 
-/* Botão excluir título — ícone minimalista (Trash2) */
+/* Botão excluir título — ícone minimalista (Trash2); reveal no hover do card inteiro */
 .s7-title-delete-btn {
+  grid-column: 2;
+  grid-row: 1;
   background: none;
   border: none;
   color: #9ca3af;
   cursor: pointer;
-  padding: 4px;
+  padding: 0;
+  margin: 0 0 0 -1px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 26px;
+  height: 26px;
   border-radius: 4px;
-  transition: color 0.15s ease;
+  flex-shrink: 0;
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
 
 .s7-title-delete-btn:hover {
   color: #ef4444;
+}
+
+/* Touch / pointer grosso: lixeira levemente visível (hover não confiável) */
+.s7-ad-titles-card .s7-title-delete-btn {
+  opacity: 0.52;
+  pointer-events: auto;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .s7-ad-titles-card .s7-title-delete-btn {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .s7-ad-titles-card:hover .s7-title-delete-btn,
+  .s7-ad-titles-card:focus-within .s7-title-delete-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .s7-ad-titles-card .s7-ad-titles-counter {
@@ -341,4 +367,98 @@
   background: rgba(37, 99, 235, 0.12);
   color: var(--s7-primary, #2563eb);
   transform: scale(1.04);
+}
+
+.s7-ad-titles-sync-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.s7-ad-titles-sync-btn {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 400;
+  border-radius: var(--s7-radius-sm, 6px);
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--s7-text);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.s7-ad-titles-sync-btn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--s7-primary, #2563eb);
+  transform: scale(1.04);
+}
+
+.s7-ad-titles-sync-btn__icon {
+  flex-shrink: 0;
+}
+
+.s7-ad-titles-sync-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.s7-ad-titles-empty-hint {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--s7-muted, #6b7280);
+}
+
+.s7-ad-titles-card--duplicate {
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+.s7-ad-title-input--duplicate {
+  border-color: var(--s7-danger, #ef4444) !important;
+}
+
+.s7-ad-title-duplicate-msg {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--s7-danger, #ef4444);
+}
+
+.s7-ad-titles-card--selected {
+  border-color: var(--s7-primary, #2563eb);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+.s7-ad-title-select-row {
+  margin-bottom: 8px;
+}
+
+.s7-ad-title-select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--s7-primary, #2563eb);
+  cursor: pointer;
+  user-select: none;
+}
+
+.s7-ad-title-select-radio {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--s7-primary, #2563eb);
+  cursor: pointer;
+}
+
+.s7-ad-title-count--over {
+  color: var(--s7-danger, #ef4444);
+  font-weight: 600;
 }

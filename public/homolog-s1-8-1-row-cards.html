@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1366" />
+  <title>S1.8.1 — Row Cards Visual Fixture</title>
+  <style>
+    :root {
+      --s7-bg-page: #f2f7ff;
+      --s7-list-row-gap: 6px;
+      --s7-list-row-radius: 10px;
+      --s7-list-row-border: rgba(148, 163, 184, 0.28);
+      --s7-list-row-background: #ffffff;
+      --s7-list-row-hover-border: rgba(100, 116, 139, 0.42);
+      --s7-list-row-hover-background: #f8fafc;
+      --s7-list-row-selected-background: rgba(37, 99, 235, 0.08);
+      --s7-list-row-selected-border: rgba(37, 99, 235, 0.38);
+      --s7-list-row-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --s7-list-row-stack-padding-y: 6px;
+      --s7-list-row-attention-border: rgba(220, 38, 38, 0.34);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: var(--s7-bg-page);
+      font-family: Inter, system-ui, sans-serif;
+      color: #334155;
+    }
+    h1 { font-size: 14px; margin: 0 0 12px; }
+    section { margin-bottom: 28px; max-width: 1320px; }
+    .head {
+      height: 32px;
+      border-radius: 10px 10px 4px 4px;
+      background: linear-gradient(180deg, #ff8a3d, #ef6d17);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .products-catalog__list-operational > .products-catalog__table-card--scroll-viewport {
+      background: transparent; border: none; box-shadow: none; border-radius: 0;
+    }
+    .products-catalog__list-operational .products-catalog__body,
+    .concorrencia-catalog .products-catalog__list-operational .concorrencia-catalog__body {
+      display: flex; flex-direction: column; gap: var(--s7-list-row-gap); row-gap: var(--s7-list-row-gap);
+      background: var(--s7-bg-page); padding: var(--s7-list-row-stack-padding-y) 0;
+    }
+    .products-catalog__list-operational .products-catalog__body > .products-catalog__row,
+    .products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row,
+    .concorrencia-catalog .products-catalog__list-operational .concorrencia-catalog__body > .concorrencia-catalog__row {
+      display: grid; align-items: center; min-height: 44px; padding: 8px 14px;
+      background: var(--s7-list-row-background); border: 1px solid var(--s7-list-row-border);
+      border-radius: var(--s7-list-row-radius); box-shadow: var(--s7-list-row-shadow); overflow: clip;
+    }
+    .products-catalog__row--incomplete-catalog,
+    .anuncios-catalog__row--pending-product {
+      background: rgba(254, 202, 202, 0.28);
+      border-color: var(--s7-list-row-attention-border);
+      border-left: 3px solid rgba(220, 38, 38, 0.45);
+    }
+    .products-catalog__row--selected { background: var(--s7-list-row-selected-background); border-color: var(--s7-list-row-selected-border); }
+    .vendas-page__operacao-shell .vendas-page__table-body-scroll { background: var(--s7-bg-page); padding: 6px 0; }
+    .vendas-page__operacao-shell .vendas-page__table--body {
+      width: 100%; border-collapse: separate; border-spacing: 0 6px; background: transparent;
+    }
+    .vendas-page__operacao-shell .vendas-page__table--body td {
+      padding: 8px 12px; background: #fff; border-top: 1px solid var(--s7-list-row-border);
+      border-bottom: 1px solid var(--s7-list-row-border); font-size: 12px;
+    }
+    .vendas-page__operacao-shell .vendas-page__table--body td:first-child {
+      border-left: 1px solid var(--s7-list-row-border);
+      border-radius: 10px 0 0 10px;
+    }
+    .vendas-page__operacao-shell .vendas-page__table--body td:last-child {
+      border-right: 1px solid var(--s7-list-row-border);
+      border-radius: 0 10px 10px 0;
+    }
+    .label { font-size: 11px; color: #64748b; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <h1>S1.8.1 — List Row Cards (fixture 1366×768)</h1>
+
+  <section>
+    <div class="label">/produtos — grid</div>
+    <div class="head">Cabeçalho laranja contínuo</div>
+    <div class="products-catalog__list-operational">
+      <div class="products-catalog__table-card products-catalog__table-card--scroll-viewport">
+        <div class="products-catalog__body">
+          <div class="products-catalog__row">Produto A — linha card branca</div>
+          <div class="products-catalog__row products-catalog__row--selected">Produto B — selecionado (azul)</div>
+          <div class="products-catalog__row products-catalog__row--incomplete-catalog">Produto C — crítico (rosa)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="vendas-page vendas-page__operacao-shell">
+    <div class="label">/vendas — tabela HTML</div>
+    <div class="head">Cabeçalho laranja contínuo</div>
+    <div class="vendas-page__table-body-scroll">
+      <table class="vendas-page__table vendas-page__table--body">
+        <tbody>
+          <tr><td>Pedido #1001</td><td>Anúncio X</td><td>Lucro R$</td><td>Status</td></tr>
+          <tr class="vendas-page__row--selected"><td>Pedido #1002</td><td>Anúncio Y</td><td>Lucro R$</td><td>Status</td></tr>
+          <tr><td>Pedido #1003</td><td>Anúncio Z</td><td>Lucro R$</td><td>Status</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="concorrencia-catalog">
+    <div class="label">/concorrencia — grid</div>
+    <div class="head">Cabeçalho laranja contínuo</div>
+    <div class="products-catalog__list-operational">
+      <div class="products-catalog__table-card products-catalog__table-card--scroll-viewport">
+        <div class="concorrencia-catalog__body">
+          <div class="concorrencia-catalog__row">Anúncio monitorado 1</div>
+          <div class="concorrencia-catalog__row">Anúncio monitorado 2</div>
+          <div class="concorrencia-catalog__row">Anúncio monitorado 3</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

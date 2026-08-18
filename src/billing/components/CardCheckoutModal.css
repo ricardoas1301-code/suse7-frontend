@@ -1,11 +1,231 @@
 @import "./billingWideCheckoutLayout.css";
 
-.s7-billing-card-checkout-sheet {
+.s7-billing-card-checkout-sheet.s7-billing-checkout-sheet {
+  inset: auto;
+  top: var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px));
+  right: 0;
+  bottom: 0;
+  left: 0;
   cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding:
+    16px
+    16px
+    max(16px, env(safe-area-inset-bottom, 0px));
+}
+
+.s7-billing-card-checkout-sheet.s7-billing-card-checkout-sheet--viewport-fill {
+  --s7-billing-card-checkout-viewport-gutter-y: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  padding:
+    var(--s7-billing-card-checkout-viewport-gutter-y)
+    12px
+    max(var(--s7-billing-card-checkout-viewport-gutter-y), env(safe-area-inset-bottom, 0px));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__fit-host {
+  flex: 1 1 auto;
+  width: min(980px, calc(100vw - 24px));
+  max-width: 980px;
+  max-height: none;
+  height: auto;
+  min-height: 0;
+  margin: 0 auto;
+  align-self: stretch;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill
+  .s7-billing-card-checkout__fit-host
+  > .s7-billing-checkout-sheet__panel.s7-billing-card-checkout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  height: calc(
+    100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) -
+      (var(--s7-billing-card-checkout-viewport-gutter-y, 12px) * 2)
+  );
+  max-height: calc(
+    100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) -
+      (var(--s7-billing-card-checkout-viewport-gutter-y, 12px) * 2)
+  );
+  overflow: hidden;
+  zoom: 1 !important;
+  transform: none !important;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  align-content: stretch;
+  --s7-billing-card-checkout-layout-gap-y: clamp(12px, 1.8vh, 18px);
+  gap: var(--s7-billing-card-checkout-layout-gap-y) 12px;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__summary-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: clamp(14px, 2vh, 18px);
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__summary-col--save-mode .s7-billing-card-checkout__facts {
+  margin-top: clamp(16px, 3vh, 28px);
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__facts {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(12px, 2vh, 18px);
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__payment-col {
+  flex: 1 1 auto;
+  min-height: 0;
+  --s7-card-checkout-payment-density: 0.94;
+  gap: calc(clamp(10px, 1.6vh, 14px) * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__form-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  padding:
+    calc(clamp(12px, 1.6vh, 16px) * var(--s7-card-checkout-payment-density))
+    calc(clamp(12px, 1.4vw, 14px) * var(--s7-card-checkout-payment-density));
+  gap: calc(clamp(10px, 1.4vh, 12px) * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__form-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__form {
+  flex: 1 1 auto;
+  gap: calc(clamp(8px, 1.3vh, 12px) * var(--s7-card-checkout-payment-density));
+  align-content: start;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__field {
+  gap: calc(4px * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__field-label {
+  font-size: calc(13px * var(--s7-card-checkout-payment-density));
+  line-height: 1.3;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__field input {
+  margin-top: calc(2px * var(--s7-card-checkout-payment-density));
+  padding:
+    calc(7px * var(--s7-card-checkout-payment-density))
+    calc(9px * var(--s7-card-checkout-payment-density));
+  font-size: calc(10.5px * var(--s7-card-checkout-payment-density));
+  border-radius: calc(10px * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__field-row {
+  gap: calc(8px * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__field-error {
+  font-size: calc(12px * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__checkbox {
+  gap: calc(8px * var(--s7-card-checkout-payment-density));
+  font-size: calc(12px * var(--s7-card-checkout-payment-density));
+  line-height: 1.35;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__banner-error {
+  padding:
+    calc(10px * var(--s7-card-checkout-payment-density))
+    calc(12px * var(--s7-card-checkout-payment-density));
+  font-size: calc(13px * var(--s7-card-checkout-payment-density));
+  line-height: 1.4;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__actions {
+  gap: calc(8px * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__actions .s7-btn {
+  min-height: calc(40px * var(--s7-card-checkout-payment-density));
+  font-size: calc(14px * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__steps {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding:
+    calc(clamp(10px, 1.4vh, 12px) * var(--s7-card-checkout-payment-density))
+    calc(clamp(10px, 1.2vw, 12px) * var(--s7-card-checkout-payment-density))
+    calc(clamp(10px, 1.4vh, 12px) * var(--s7-card-checkout-payment-density))
+    calc(clamp(24px, 2.8vw, 28px) * var(--s7-card-checkout-payment-density));
+  font-size: calc(13px * var(--s7-card-checkout-payment-density));
+  line-height: 1.4;
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__steps li + li {
+  margin-top: calc(4px * var(--s7-card-checkout-payment-density));
+}
+
+.s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__footer {
+  flex: 0 0 auto;
+  padding-top: clamp(4px, 0.8vh, 8px);
+}
+
+@media (max-height: 700px) {
+  .s7-billing-card-checkout-sheet--viewport-fill
+    .s7-billing-card-checkout__fit-host
+    > .s7-billing-checkout-sheet__panel.s7-billing-card-checkout {
+    overflow-y: auto;
+  }
+
+  .s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__form-body {
+    overflow-y: auto;
+  }
 }
 
 .s7-billing-card-checkout-sheet .s7-billing-checkout-sheet__panel {
   cursor: default;
+}
+
+.s7-billing-card-checkout__fit-host {
+  flex-shrink: 0;
+  margin: auto;
+  max-height: calc(
+    100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) - 32px
+  );
+  max-width: calc(100vw - 32px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s7-billing-card-checkout__fit-host > .s7-billing-checkout-sheet__panel.s7-billing-card-checkout {
+  --s7-card-checkout-base-reduction: 0.84;
+  max-height: none !important;
+  overflow: visible !important;
 }
 .s7-billing-card-checkout__layout {
   display: grid;
@@ -29,6 +249,10 @@
   border: 1px solid #e2e8f0;
   background: #fff;
   box-sizing: border-box;
+}
+
+.s7-billing-card-checkout__summary-col--save-mode .s7-billing-card-checkout__facts {
+  margin-top: 20px;
 }
 
 .s7-billing-card-checkout__summary-header {
@@ -379,6 +603,23 @@
 }
 
 @media (max-width: 760px) {
+  .s7-billing-card-checkout-sheet--viewport-fill .s7-billing-card-checkout__fit-host {
+    width: min(100%, calc(100vw - 24px));
+  }
+
+  .s7-billing-card-checkout-sheet--viewport-fill
+    .s7-billing-card-checkout__fit-host
+    > .s7-billing-checkout-sheet__panel.s7-billing-card-checkout {
+    height: calc(
+      100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) -
+        (var(--s7-billing-card-checkout-viewport-gutter-y, 12px) * 2)
+    );
+    max-height: calc(
+      100dvh - var(--s7-topnav-bar-height, var(--s7-topnav-bar-height-fallback, 64px)) -
+        (var(--s7-billing-card-checkout-viewport-gutter-y, 12px) * 2)
+    );
+  }
+
   .s7-billing-checkout-sheet__panel.s7-billing-card-checkout {
     width: min(100%, calc(100vw - 24px));
     padding: 18px 16px 20px;

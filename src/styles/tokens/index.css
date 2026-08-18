@@ -8,6 +8,7 @@ Centraliza todos os tokens do sistema
 @import "./radius.css";
 @import "./shadow.css";
 @import "./typography.css";
+@import "./list-table-head.css";
 @import "./topnav.css";
 @import "./z-index.css";
 @import "./admin.css";

@@ -1,61 +1,104 @@
 import { S7Button } from "../../components/ui";
-import { formatPlanPriceBRL, formatSalesLimit, resolvePlanDisplayName } from "../billingFormatters";
+import { resolvePlanDisplayName } from "../billingFormatters";
+import {
+  PLAN_ARSENAL_BUTTON_LABEL,
+  PLAN_BABY_FREE_LABEL,
+  PLAN_FREE_TRIAL_LABEL,
+  PLAN_INCLUDED_FEATURES,
+  PLAN_INCLUDED_FEATURES_TITLE,
+} from "../planIncludedFeatures";
+import {
+  formatPlanCardPrice,
+  formatPlanCardPriceSuffix,
+  formatPlanCardSalesLimit,
+  isQuotePlan,
+} from "../planDisplay";
 import { getPlanCardCtaState } from "../planCta";
-import { getPlanPresentation } from "../planPresentation";
+import { resolvePlanSupportLabel } from "../planSupportChannels";
+import { PLANS_ARSENAL_MODAL_ID } from "./PlansArsenalModal";
 
-export default function PlanCard({ plan, currentPlan, catalogPlans, onSelect }) {
-  const presentation = getPlanPresentation(plan.plan_key ?? plan.slug);
+/**
+ * @param {{
+ *   plan: Record<string, unknown>;
+ *   currentPlan: ReturnType<typeof import("../planCta").resolveCurrentPlanSnapshot> | null;
+ *   catalogPlans: Record<string, unknown>[];
+ *   onSelect: (plan: Record<string, unknown>, cta: ReturnType<typeof getPlanCardCtaState>) => void;
+ *   onOpenArsenal: () => void;
+ * }} props
+ */
+export default function PlanCard({ plan, currentPlan, catalogPlans, onSelect, onOpenArsenal }) {
   const cta = getPlanCardCtaState(plan, currentPlan, catalogPlans);
+  const planKey = String(plan.plan_key ?? plan.slug ?? "").toLowerCase();
+  const priceSuffix = formatPlanCardPriceSuffix(plan);
+  const isBabyPlan = planKey === "baby";
 
   return (
     <article
-      className={`s7-billing-plan-card${presentation.recommended ? " s7-billing-plan-card--recommended" : ""}${cta.isCurrent ? " s7-billing-plan-card--current" : ""}`}
+      className={`s7-billing-plan-card${cta.isCurrent ? " s7-billing-plan-card--current" : ""}${isQuotePlan(plan) ? " s7-billing-plan-card--quote" : ""}`}
     >
-      <header className="s7-billing-plan-card__header">
-        <PlanCardTitle plan={plan} presentation={presentation} />
-        {cta.badge ? <span className="s7-billing-plan-card__pill">{cta.badge}</span> : null}
-      </header>
+      <div className="s7-billing-plan-card__body">
+        <header className="s7-billing-plan-card__header">
+          <div className="s7-billing-plan-card__title">
+            <h3>{resolvePlanDisplayName(plan)}</h3>
+          </div>
+          {cta.badge ? <span className="s7-billing-plan-card__pill">{cta.badge}</span> : null}
+        </header>
 
-      <p className="s7-billing-plan-card__price">
-        {formatPlanPriceBRL(plan.price_monthly)}
-        <span>/mês</span>
-      </p>
-      <p className="s7-billing-plan-card__limit">{formatSalesLimit(plan.sales_limit_monthly)}</p>
+        <p className="s7-billing-plan-card__price">
+          {formatPlanCardPrice(plan)}
+          {priceSuffix ? <span>{priceSuffix}</span> : null}
+        </p>
+        {isBabyPlan ? (
+          <p className="s7-billing-plan-card__features-title s7-billing-plan-card__trial">
+            {PLAN_BABY_FREE_LABEL}
+          </p>
+        ) : (
+          <p className="s7-billing-plan-card__features-title s7-billing-plan-card__trial">
+            {PLAN_FREE_TRIAL_LABEL}
+          </p>
+        )}
+        <p className="s7-billing-plan-card__limit">{formatPlanCardSalesLimit(plan)}</p>
 
-      <ul className="s7-billing-plan-card__highlights">
-        {presentation.highlights.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
+        <div className="s7-billing-plan-card__features">
+          <p className="s7-billing-plan-card__features-title">{PLAN_INCLUDED_FEATURES_TITLE}</p>
+          <ul className="s7-billing-plan-card__highlights">
+            {PLAN_INCLUDED_FEATURES.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="s7-billing-plan-card__arsenal-link"
+            aria-haspopup="dialog"
+            aria-controls={PLANS_ARSENAL_MODAL_ID}
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenArsenal();
+            }}
+          >
+            {PLAN_ARSENAL_BUTTON_LABEL}
+          </button>
+        </div>
+      </div>
 
-      <PlanCardMeta presentation={presentation} />
-
-      <S7Button
-        variant={presentation.recommended ? "primary" : "secondary"}
-        className="s7-billing-plan-card__cta"
-        disabled={cta.disabled}
-        onClick={() => onSelect(plan, cta)}
-      >
-        {cta.label}
-      </S7Button>
+      <div className="s7-billing-plan-card__footer">
+        <p className="s7-billing-plan-card__support">
+          Suporte: {resolvePlanSupportLabel(planKey)}
+        </p>
+        {cta.isCurrent ? (
+          <p className="s7-billing-plan-card__current-status" aria-current="true">
+            {cta.statusLabel}
+          </p>
+        ) : (
+          <S7Button
+            variant="primary"
+            className="s7-billing-plan-card__cta"
+            onClick={() => onSelect(plan, cta)}
+          >
+            {cta.displayLabel}
+          </S7Button>
+        )}
+      </div>
     </article>
-  );
-}
-
-function PlanCardTitle({ plan, presentation }) {
-  return (
-    <div className="s7-billing-plan-card__title">
-      <h3>{resolvePlanDisplayName(plan)}</h3>
-      <span className="s7-billing-plan-card__tier">{presentation.tier}</span>
-    </div>
-  );
-}
-
-function PlanCardMeta({ presentation }) {
-  return (
-    <div className="s7-billing-plan-card__meta">
-      <span>Marketplaces: {presentation.marketplaces}</span>
-      <span>Suporte: {presentation.support}</span>
-    </div>
   );
 }

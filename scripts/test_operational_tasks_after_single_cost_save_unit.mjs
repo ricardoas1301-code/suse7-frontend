@@ -21,9 +21,9 @@ const bulkModalSource = readFileSync(
   "utf8",
 );
 
-// MIXED (fora Lote 1) — QuickProductCostsModal no main ainda não dispara refresh OT.
-// assert.match(quickModalSource, /refreshOperationalTasksAfterProductCostsSaved/);
-// assert.match(quickModalSource, /await refreshOperationalTasksAfterProductCostsSaved\(\)/);
+// Save individual dispara refresh canônico (não decremento manual).
+assert.match(quickModalSource, /refreshOperationalTasksAfterProductCostsSaved/);
+assert.match(quickModalSource, /await refreshOperationalTasksAfterProductCostsSaved\(\)/);
 assert.doesNotMatch(refreshSource, /remainingCount\s*-\s*1/);
 assert.doesNotMatch(refreshSource, /previous\s*=>\s*previous\s*-/);
 assert.match(refreshSource, /fetchPendingProductCosts/);

@@ -41,3 +41,14 @@
   color: #64748b;
   font-size: 32px;
 }
+
+.avatar-placeholder--icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: inherit;
+}
+
+.suse7-avatar.logo-sm .avatar-placeholder {
+  font-size: 16px;
+}
