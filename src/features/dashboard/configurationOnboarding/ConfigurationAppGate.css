@@ -1,0 +1,57 @@
+.s7-config-app-gate {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.s7-config-app-gate__content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.s7-config-app-gate--locked .s7-config-app-gate__content {
+  opacity: 0.42;
+  filter: saturate(0.82);
+  pointer-events: none;
+  user-select: none;
+}
+
+.s7-config-app-gate__veil {
+  display: none;
+}
+
+.s7-config-app-gate--locked .s7-config-app-gate__veil {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(8, 15, 31, 0.08);
+  pointer-events: auto;
+  cursor: default;
+}
+
+.navbar-premium.s7-config-app-gate-nav--locked .nav-center {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.navbar-premium.s7-config-app-gate-nav--locked .nav-center .nav-item {
+  cursor: not-allowed;
+}
+
+.navbar-premium.s7-config-app-gate-nav--locked .nav-logo-tip {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.navbar-premium.s7-config-app-gate-nav--locked .nav-right {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.navbar-premium.s7-config-app-gate-nav--locked .nav-right .s7-nc__bell,
+.navbar-premium.s7-config-app-gate-nav--locked .nav-right .avatar-menu-trigger {
+  cursor: not-allowed;
+}

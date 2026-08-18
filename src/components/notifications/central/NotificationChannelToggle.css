@@ -77,6 +77,15 @@
   font-weight: 600;
 }
 
+.s7-nch-toggle--mandatory-info {
+  cursor: default;
+}
+
+.s7-nch-toggle--mandatory-info:hover {
+  border-color: var(--s7-divider, #e2e8f0);
+  box-shadow: none;
+}
+
 .s7-nch-toggle--disabled {
   opacity: 0.65;
   cursor: not-allowed;
@@ -84,4 +93,22 @@
 
 .s7-nch-toggle--future {
   opacity: 0.55;
+}
+
+.s7-nch-toggle--compact-in-card {
+  padding: 8px 10px;
+  gap: 10px;
+}
+
+.s7-nch-toggle--compact-in-card .s7-nch-toggle__track {
+  margin-top: 0;
+}
+
+.s7-nch-toggle--compact-in-card .s7-nch-toggle__copy strong {
+  font-size: 12px;
+}
+
+.s7-nch-toggle--compact-in-card .s7-nch-toggle__copy small {
+  font-size: 10px;
+  line-height: 1.3;
 }

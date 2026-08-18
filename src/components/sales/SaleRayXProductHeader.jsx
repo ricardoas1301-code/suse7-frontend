@@ -1,12 +1,8 @@
 // ======================================================
-// Topo do Raio-x da venda — título + toolbar (padrão Anúncios).
+// Topo do Raio-x da venda — identificadores MLB / SKU.
 // ======================================================
 
-import { useCallback } from "react";
-import precificaS7Icon from "../../assets/precifica-s7-icon.png";
-import comparativoOfertasS7Icon from "../../assets/comparativo-ofertas-s7-icon.png";
 import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../ui/S7CopyButton";
-import { openPricingIntelligenceInNewTab } from "../../utils/openPricingIntelligenceInNewTab.js";
 import { DASH } from "./saleRayxFormat";
 
 /**
@@ -15,8 +11,6 @@ import { DASH } from "./saleRayxFormat";
  *   general?: Record<string, unknown> | null;
  *   listingId?: string | null;
  *   sku?: string | null;
- *   listingInternalId?: string | null;
- *   onOpenOfferCompare?: () => void;
  *   placement?: "modal" | "card";
  * }} props
  */
@@ -25,8 +19,6 @@ export default function SaleRayXProductHeader({
   general,
   listingId,
   sku,
-  listingInternalId,
-  onOpenOfferCompare,
   placement = "modal",
 }) {
   const listingCopyText =
@@ -46,19 +38,6 @@ export default function SaleRayXProductHeader({
         : general?.sku_display != null && String(general.sku_display).trim() !== ""
           ? String(general.sku_display).trim()
           : "";
-  const pricingListingId =
-    listingInternalId != null && String(listingInternalId).trim() !== ""
-      ? String(listingInternalId).trim()
-      : "";
-
-  const openPricing = useCallback(() => {
-    if (pricingListingId === "") return;
-    openPricingIntelligenceInNewTab(pricingListingId);
-  }, [pricingListingId]);
-
-  const openCompare = useCallback(() => {
-    onOpenOfferCompare?.();
-  }, [onOpenOfferCompare]);
 
   const rowClass =
     placement === "card"
@@ -66,51 +45,14 @@ export default function SaleRayXProductHeader({
       : "anuncios-raiox-compare--spacious vendas-sale-rayx__toolbar-row";
 
   return (
-    <div className={rowClass} aria-label="Ações do anúncio">
+    <div className={rowClass} aria-label="Identificadores do anúncio">
       <div className="anuncios-raiox-compare__toolbar">
-        <button
-          type="button"
-          className="anuncios-raiox-compare__pricing-btn s7-tip s7-tip-bottom s7-tip-left"
-          data-tip={pricingListingId !== "" ? "Precificação inteligente" : "Vincule o anúncio para abrir a Precificação Inteligente"}
-          aria-label="Abrir precificação inteligente"
-          disabled={pricingListingId === ""}
-          onClick={(e) => {
-            e.stopPropagation();
-            openPricing();
-          }}
-        >
-          <img
-            src={precificaS7Icon}
-            alt=""
-            className="anuncios-raiox-compare__pricing-btn-icon"
-            loading="lazy"
-            decoding="async"
-          />
-        </button>
-        <button
-          type="button"
-          className="anuncios-raiox-compare__chart-btn anuncios-raiox-compare__chart-btn--icon-only s7-tip s7-tip-bottom s7-tip-left"
-          data-tip="Comparativo de ofertas S7"
-          aria-label="Abrir Comparativo de ofertas S7"
-          onClick={(e) => {
-            e.stopPropagation();
-            openCompare();
-          }}
-        >
-          <img
-            src={comparativoOfertasS7Icon}
-            alt=""
-            className="anuncios-raiox-compare__chart-btn-icon"
-            loading="lazy"
-            decoding="async"
-          />
-        </button>
         <div
           className="anuncios-raiox-compare__toolbar-meta anuncios-raiox-compare__toolbar-meta--with-copy"
           role="group"
           aria-label="Identificadores do anúncio"
         >
-            <span className="anuncios-raiox-compare__toolbar-meta-block anuncios-raiox-compare__copy-target">
+          <span className="anuncios-raiox-compare__toolbar-meta-block anuncios-raiox-compare__copy-target">
             <span className="anuncios-raiox-compare__toolbar-meta-text">{listingDisplay}</span>
             {listingCopyText !== "" ? (
               <S7CopyButton

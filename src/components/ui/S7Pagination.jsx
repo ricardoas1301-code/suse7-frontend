@@ -1,8 +1,8 @@
-﻿// ======================================================================
-// S7Pagination ÔÇö pagina├º├úo padr├úo Suse7 (modelo da p├ígina Vendas)
-// Exibe: "P├ígina X de Y ┬À Z {noun} no total" + bot├Áes Anterior / Pr├│xima.
-// Componente ├║nico reaproveitado por Vendas, Produtos, An├║ncios,
-// Precifica├º├Áes e Concorr├¬ncia para manter a experi├¬ncia consistente.
+// ======================================================================
+// S7Pagination — paginação padrão Suse7 (modelo da página Vendas)
+// Exibe: "Página X de Y · Z {noun} no total" + botões Anterior / Próxima.
+// Componente único reaproveitado por Vendas, Produtos, Anúncios,
+// Precificações e Concorrência para manter a experiência consistente.
 // ======================================================================
 
 import "./S7Pagination.css";
@@ -29,7 +29,7 @@ export default function S7Pagination({
   onNext,
   disabled = false,
   className = "",
-  ariaLabel = "Pagina├º├úo",
+  ariaLabel = "Paginação",
 }) {
   const safeTotalPages = Math.max(1, Number(totalPages) || 1);
   const safePage = Math.min(Math.max(1, Number(page) || 1), safeTotalPages);
@@ -38,10 +38,14 @@ export default function S7Pagination({
   const safeTotal = Number(total) || 0;
 
   return (
-    <nav className={`s7-pagination${className ? ` ${className}` : ""}`} aria-label={ariaLabel}>
+    <nav
+      className={`s7-pagination${className ? ` ${className}` : ""}`}
+      aria-label={ariaLabel}
+      data-s7-list-bottom-chrome
+    >
       <span className="s7-pagination__summary">
-        P├ígina {safePage} de {safeTotalPages}
-        {safeTotal > 0 ? ` ┬À ${safeTotal.toLocaleString("pt-BR")} ${noun} no total` : ""}
+        Página {safePage} de {safeTotalPages}
+        {safeTotal > 0 ? ` · ${safeTotal.toLocaleString("pt-BR")} ${noun} no total` : ""}
       </span>
       <button
         type="button"
@@ -57,7 +61,7 @@ export default function S7Pagination({
         disabled={disabled || !hasNext}
         onClick={onNext}
       >
-        Pr├│xima
+        Próxima
       </button>
     </nav>
   );

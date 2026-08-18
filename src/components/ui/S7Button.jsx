@@ -24,6 +24,8 @@ export default function S7Button({
   loadingLabel = "Salvando...",
   className = "",
   title = "",
+  form = undefined,
+  id = undefined,
 }) {
   const isBusy = loading || disabled;
   const classes = [
@@ -54,6 +56,8 @@ export default function S7Button({
   return (
     <button
       type={type}
+      id={id}
+      form={form}
       onClick={loading ? undefined : onClick}
       disabled={isBusy}
       className={classes}

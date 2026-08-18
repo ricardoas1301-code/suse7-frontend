@@ -1,5 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import "../center/notificationCenterVisualVariants.css";
+import NotificationRecipientRulesContent from "./NotificationRecipientRulesContent";
+import NotificationCardFooter from "./NotificationCardFooter";
+import NotificationEventRulesStatusBadge from "./NotificationEventRulesStatusBadge";
 import "./NotificationEventRecipientRules.css";
+import "./NotificationCardFooter.css";
 
 /**
  * @param {string} categoryCode
@@ -7,6 +12,13 @@ import "./NotificationEventRecipientRules.css";
  * @param {Array<Record<string, unknown>>} groups
  * @param {Array<Record<string, unknown>>} rules
  * @param {boolean} saving
+ * @param {string} [expandLabel]
+ * @param {boolean} [hideStatusBadge]
+ * @param {boolean} [compact]
+ * @param {boolean} [canonicalFooter]
+ * @param {boolean} [recipientRowAccent]
+ * @param {import("react").ReactNode} [scheduleSlot]
+ * @param {(open: boolean) => void} [onExpandedChange]
  * @param {(updates: Array<Record<string, unknown>>) => void | Promise<void>} onChange
  */
 export default function NotificationEventRecipientRules({
@@ -15,18 +27,24 @@ export default function NotificationEventRecipientRules({
   groups,
   rules,
   saving,
+  expandLabel = "Destinatários",
+  hideStatusBadge = false,
+  compact = false,
+  canonicalFooter = false,
+  recipientRowAccent = false,
+  scheduleSlot = null,
+  onExpandedChange,
   onChange,
 }) {
   const [open, setOpen] = useState(false);
+  const panelId = `s7-nevent-rules-panel-${String(categoryCode)}-${String(typeKey)}`;
 
-  const ruleMap = useMemo(() => {
-    const map = new Map();
-    for (const r of rules ?? []) {
-      if (String(r.category_code) !== categoryCode || String(r.type_key) !== typeKey) continue;
-      map.set(`${r.recipient_group_id}:${r.channel}`, Boolean(r.enabled));
-    }
-    return map;
-  }, [rules, categoryCode, typeKey]);
+  useEffect(() => {
+    onExpandedChange?.(open);
+    return () => {
+      onExpandedChange?.(false);
+    };
+  }, [open, onExpandedChange]);
 
   const hasSavedRules = useMemo(
     () =>
@@ -37,9 +55,10 @@ export default function NotificationEventRecipientRules({
     [rules, categoryCode, typeKey]
   );
 
-  const activeGroups = (groups ?? []).filter((g) => g.is_active !== false);
+  const visibleGroups = groups ?? [];
+  const hasAnyRecipient = visibleGroups.length > 0;
 
-  if (activeGroups.length === 0) {
+  if (!hasAnyRecipient && !scheduleSlot) {
     return (
       <div className="s7-nevent-rules s7-nevent-rules--empty">
         <p>Cadastre destinatários na aba Destinatários para escolher quem recebe este evento.</p>
@@ -47,81 +66,68 @@ export default function NotificationEventRecipientRules({
     );
   }
 
-  const toggle = (groupId, channel, enabled) => {
-    onChange?.([
-      {
-        category_code: categoryCode,
-        type_key: typeKey,
-        recipient_group_id: groupId,
-        channel,
-        enabled,
-      },
-    ]);
-  };
+  const toggleButton = (
+    <button
+      type="button"
+      className="s7-nevent-rules__toggle"
+      onClick={() => setOpen((v) => !v)}
+      aria-expanded={open}
+      aria-controls={panelId}
+    >
+      {open ? "▼" : "▶"} {expandLabel}
+    </button>
+  );
 
-  const isEnabled = (groupId, channel, hasChannel) => {
-    if (!hasChannel) return false;
-    const key = `${groupId}:${channel}`;
-    if (ruleMap.has(key)) return ruleMap.get(key);
-    return false;
-  };
+  const statusBadge =
+    !hideStatusBadge ? (
+      <NotificationEventRulesStatusBadge saving={saving} hasSavedRules={hasSavedRules} />
+    ) : saving ? (
+      <NotificationEventRulesStatusBadge saving hasSavedRules={false} />
+    ) : null;
+
+  const expandedPanel = open ? (
+    <div
+      id={panelId}
+      role="group"
+      aria-label={expandLabel}
+      className={`s7-nevent-rules__panel s7-nevent-rules__panel--neutral ${canonicalFooter ? "s7-npref-group__footer-panel" : ""}`}
+    >
+      {scheduleSlot}
+      <NotificationRecipientRulesContent
+        categoryCode={categoryCode}
+        typeKey={typeKey}
+        groups={groups}
+        rules={rules}
+        saving={saving}
+        compact={compact}
+        recipientRowAccent={recipientRowAccent}
+        onChange={onChange}
+      />
+    </div>
+  ) : null;
+
+  if (canonicalFooter) {
+    return (
+      <NotificationCardFooter
+        actions={
+          <>
+            {toggleButton}
+            {statusBadge}
+          </>
+        }
+      >
+        {expandedPanel}
+      </NotificationCardFooter>
+    );
+  }
 
   return (
-    <div className="s7-nevent-rules">
+    <div className={`s7-nevent-rules ${compact ? "s7-nevent-rules--compact" : ""}`}>
       <div className="s7-nevent-rules__head">
-        <button
-          type="button"
-          className="s7-nevent-rules__toggle"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-        >
-          {open ? "▼" : "▶"} Destinatários
-        </button>
-        {saving ? (
-          <span className="s7-nevent-rules__status s7-nevent-rules__status--saving">Salvando...</span>
-        ) : !hasSavedRules ? (
-          <span className="s7-nevent-rules__status s7-nevent-rules__status--muted">Sem regras salvas</span>
-        ) : (
-          <span className="s7-nevent-rules__status">Regras salvas</span>
-        )}
+        {toggleButton}
+        {statusBadge}
       </div>
-
-      {open ? (
-        <div className="s7-nevent-rules__table" role="group" aria-label="Destinatários por canal">
-          {activeGroups.map((g) => {
-            const gid = String(g.group_id);
-            const hasEmail = Boolean(g.channels?.email?.destination);
-            const hasWa = Boolean(g.channels?.whatsapp?.destination);
-            return (
-              <div key={gid} className="s7-nevent-rules__row">
-                <span className="s7-nevent-rules__name">{g.label}</span>
-                <label
-                  className={`s7-nevent-rules__chip ${!hasEmail ? "s7-nevent-rules__chip--disabled" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    disabled={saving || !hasEmail}
-                    checked={isEnabled(gid, "email", hasEmail)}
-                    onChange={(e) => toggle(gid, "email", e.target.checked)}
-                  />
-                  E-mail
-                </label>
-                <label
-                  className={`s7-nevent-rules__chip ${!hasWa ? "s7-nevent-rules__chip--disabled" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    disabled={saving || !hasWa}
-                    checked={isEnabled(gid, "whatsapp", hasWa)}
-                    onChange={(e) => toggle(gid, "whatsapp", e.target.checked)}
-                  />
-                  WhatsApp
-                </label>
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
+      {expandedPanel}
     </div>
   );
 }

@@ -14,18 +14,17 @@
   backdrop-filter: blur(4px);
 }
 
-/* Card compacto: altura segue o conteúdo (sem “respiro” vazio no topo/rodapé) */
 .modal-box {
   position: relative;
-  width: min(100%, 400px);
-  max-width: 100%;
+  width: min(900px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  min-width: 0;
   height: auto;
   min-height: 0;
-  max-height: min(92dvh, 640px);
+  max-height: min(760px, calc(100dvh - 32px));
   margin: auto;
   box-sizing: border-box;
-  /* Menos respiro vertical no container; laterais intactos */
-  padding: 14px 18px 12px;
+  padding: 18px 22px 16px;
   border-radius: 14px;
   background: #fff;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
@@ -38,10 +37,66 @@
   animation: modalShow 0.22s ease;
 }
 
-.modal-box > form {
+.contact-modal__head {
+  flex-shrink: 0;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.contact-modal__head h2,
+.contact-modal__head p {
+  text-align: center;
+}
+
+.contact-modal__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.85fr);
+  gap: 28px;
+  align-items: center;
+  min-width: 0;
+}
+
+.contact-modal__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-modal__main > form {
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
+  min-width: 0;
+}
+
+.contact-modal__avatar-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 0 4px 4px;
+  pointer-events: none;
+}
+
+.contact-modal__avatar-col .contact-modal__success {
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.contact-modal__avatar {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  max-height: min(430px, 58vh);
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+  user-select: none;
 }
 
 @keyframes modalShow {
@@ -61,15 +116,13 @@
   font-size: clamp(18px, 4vw, 22px);
   font-weight: 700;
   color: #222;
-  text-align: center;
 }
 
-.modal-box > p {
+.contact-modal__head > p {
   flex-shrink: 0;
-  margin: 0 0 14px 0;
+  margin: 0;
   font-size: 13px;
   color: #666;
-  text-align: center;
 }
 
 .modal-box .label {
@@ -85,23 +138,25 @@
 .modal-box select,
 .modal-box textarea {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
   padding: 9px 11px;
   border-radius: 8px;
   border: 1px solid #dcdcdc;
   margin-bottom: 10px;
   font-size: 14px;
+  line-height: 1.45;
   color: #333;
   background: #fafafa;
   transition: border-color 0.2s, background 0.2s;
 }
 
 .modal-box textarea {
-  /* Área de mensagem maior; demais campos inalterados */
-  height: 132px;
-  min-height: 132px;
-  max-height: 132px;
+  min-height: 180px;
+  max-height: none;
   resize: none;
+  overflow-y: auto;
 }
 
 .modal-box input:focus,
@@ -154,3 +209,36 @@
   color: #c20808;
 }
 
+@media (max-width: 860px) {
+  .contact-modal__body {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .contact-modal__avatar-col {
+    order: 2;
+    padding: 0;
+  }
+
+  .contact-modal__avatar {
+    max-width: min(280px, 72vw);
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 560px) {
+  .modal-box {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    padding: 16px 16px 14px;
+  }
+
+  .contact-modal__avatar {
+    max-width: min(240px, 68vw);
+    max-height: 200px;
+  }
+
+  .modal-box textarea {
+    min-height: 160px;
+  }
+}

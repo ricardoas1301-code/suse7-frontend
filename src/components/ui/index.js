@@ -28,3 +28,4 @@ export { default as S7Toggle } from "./S7Toggle";
 export { default as S7PageHeader } from "./S7PageHeader";
 export { default as S7Table } from "./S7Table";
 export { default as S7RankingCard } from "./S7RankingCard";
+export { default as S7StatusBadge } from "./S7StatusBadge";

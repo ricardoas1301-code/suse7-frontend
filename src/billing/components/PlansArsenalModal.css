@@ -1,0 +1,77 @@
+.s7-plans-arsenal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.s7-plans-arsenal-modal.profile-modal {
+  width: min(760px, calc(100% - 24px));
+  max-width: 760px;
+  max-height: min(92vh, 920px);
+  margin: 0;
+  padding: 22px 24px 20px;
+  text-align: left;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.s7-plans-arsenal-modal__title {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.s7-plans-arsenal-modal__body {
+  overflow-y: auto;
+  padding-top: 16px;
+  padding-right: 4px;
+  display: grid;
+  gap: 18px;
+}
+
+.s7-plans-arsenal-modal__section h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.s7-plans-arsenal-modal__section ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.s7-plans-arsenal-modal__section li + li {
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .s7-plans-arsenal-modal-overlay {
+    padding: 12px;
+  }
+
+  .s7-plans-arsenal-modal.profile-modal {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    padding: 18px 16px 16px;
+  }
+
+  .s7-plans-arsenal-modal__title {
+    font-size: 20px;
+  }
+}

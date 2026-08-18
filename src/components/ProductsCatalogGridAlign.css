@@ -1,0 +1,286 @@
+/* ======================================================================
+   Página Produtos — alinhamento header ↔ body (contrato data-col)
+   Importado após VendasPage.css para vencer text-align/align-items right.
+   Causa raiz anterior: head com column-gap 14px + padding horizontal; body com gap 0.
+   ====================================================================== */
+
+.products-catalog {
+  --products-catalog-grid-inset-x: clamp(14px, 2vw, 22px);
+}
+
+/* Paridade geométrica — mesmo grid que as linhas do corpo */
+.products-catalog .products-catalog__grid.products-catalog__grid--head {
+  column-gap: 0;
+}
+
+.products-catalog .products-catalog__row {
+  padding-left: var(--products-catalog-grid-inset-x);
+  padding-right: var(--products-catalog-grid-inset-x);
+  box-sizing: border-box;
+}
+
+/* Padding lateral das células métricas (exceto select/thumb) */
+.products-catalog .products-catalog__row > .products-catalog__cell:not([data-col="select"]):not([data-col="thumb"]) {
+  box-sizing: border-box;
+  padding-left: var(--s7-list-table-head-padding-x, 6px);
+  padding-right: var(--s7-list-table-head-padding-x, 6px);
+}
+
+/* -----------------------------------------------------------------------
+   Coluna seleção — checkbox header + linhas
+   ----------------------------------------------------------------------- */
+.products-catalog [data-col="select"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+  width: var(--s7-list-select-col-width, 40px);
+  min-width: var(--s7-list-select-col-width, 40px);
+  max-width: var(--s7-list-select-col-width, 40px);
+  box-sizing: border-box;
+}
+
+.products-catalog__grid--head [data-col="select"] {
+  height: 100%;
+  padding-top: var(--s7-list-table-head-padding-y, 6px);
+  padding-bottom: var(--s7-list-table-head-padding-y, 6px);
+}
+
+.products-catalog [data-col="select"] .anuncios-catalog__select-checkbox {
+  display: block;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------------------
+   Colunas numéricas/operacionais — Anúncios → Estoque
+   ----------------------------------------------------------------------- */
+.products-catalog [data-col="listings"],
+.products-catalog [data-col="sales"],
+.products-catalog [data-col="revenue"],
+.products-catalog [data-col="avg-ticket"],
+.products-catalog [data-col="profit-brl"],
+.products-catalog [data-col="profit-percent"],
+.products-catalog [data-col="payout"],
+.products-catalog [data-col="stock"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: stretch;
+  text-align: center;
+  min-width: 0;
+}
+
+.products-catalog__grid--head [data-col="listings"],
+.products-catalog__grid--head [data-col="sales"],
+.products-catalog__grid--head [data-col="revenue"],
+.products-catalog__grid--head [data-col="avg-ticket"],
+.products-catalog__grid--head [data-col="profit-brl"],
+.products-catalog__grid--head [data-col="profit-percent"],
+.products-catalog__grid--head [data-col="payout"],
+.products-catalog__grid--head [data-col="stock"] {
+  height: 100%;
+}
+
+.products-catalog__grid--head [data-col="listings"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="sales"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="revenue"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="avg-ticket"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="profit-brl"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="profit-percent"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="payout"] .products-catalog__head-tooltip,
+.products-catalog__grid--head [data-col="stock"] .products-catalog__head-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+}
+
+/* Corpo — vence VendasPage (.vendas-page__num-stack align-items: flex-end) */
+.products-catalog [data-col="listings"] .vendas-page__num-stack,
+.products-catalog [data-col="sales"] .vendas-page__num-stack,
+.products-catalog [data-col="revenue"] .vendas-page__num-stack,
+.products-catalog [data-col="avg-ticket"] .vendas-page__num-stack,
+.products-catalog [data-col="profit-brl"] .vendas-page__num-stack,
+.products-catalog [data-col="profit-percent"] .vendas-page__num-stack,
+.products-catalog [data-col="payout"] .vendas-page__num-stack,
+.products-catalog [data-col="stock"] .vendas-page__num-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.products-catalog [data-col="listings"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="sales"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="revenue"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="avg-ticket"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="profit-brl"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="profit-percent"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="payout"] .vendas-page__num-stack-primary,
+.products-catalog [data-col="stock"] .vendas-page__num-stack-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.products-catalog [data-col="listings"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="sales"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="revenue"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="avg-ticket"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="profit-brl"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="profit-percent"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="payout"] .vendas-page__num-stack-secondary-slot,
+.products-catalog [data-col="stock"] .vendas-page__num-stack-secondary-slot {
+  text-align: center;
+}
+
+.products-catalog [data-col="profit-brl"] .vendas-page__fin-value-row,
+.products-catalog [data-col="profit-percent"] .vendas-page__fin-value-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.products-catalog [data-col="listings"].vendas-page__num-cell,
+.products-catalog [data-col="sales"].vendas-page__num-cell,
+.products-catalog [data-col="revenue"].vendas-page__num-cell,
+.products-catalog [data-col="avg-ticket"].vendas-page__num-cell,
+.products-catalog [data-col="profit-brl"].vendas-page__num-cell,
+.products-catalog [data-col="profit-percent"].vendas-page__num-cell,
+.products-catalog [data-col="payout"].vendas-page__num-cell,
+.products-catalog [data-col="stock"].vendas-page__num-cell {
+  text-align: center;
+}
+
+/* ======================================================================
+   Coluna Produto — paridade lista Vendas / Anúncios / Precificações
+   Tipografia, clamp 2 linhas, gap nome→SKU e altura-base da linha.
+   ====================================================================== */
+
+.products-catalog__headline-vendas-parity.s7-catalog-headline.vendas-page__product-headline {
+  gap: 2px 0.5rem;
+  align-items: flex-end;
+}
+
+.products-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot.vendas-page__product-title-slot.products-catalog__name-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.products-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-slot
+  .s7-tooltip-portal-root {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  display: block;
+}
+
+.products-catalog__headline-vendas-parity
+  .s7-catalog-headline__meta.vendas-page__product-meta.products-catalog__sku-row {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+.products-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.products-catalog__headline-vendas-parity
+  .s7-catalog-headline__title,
+.products-catalog__headline-vendas-parity
+  .vendas-page__product-title,
+.products-catalog__headline-vendas-parity
+  .products-catalog__product-name-tip {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  white-space: normal;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--s7-list-row-identity-title-size, 12px);
+  font-weight: var(--s7-list-row-identity-title-weight, 600);
+  color: var(--s7-orange, #ff8533);
+  line-height: var(--s7-list-row-identity-title-line-height, 1.3);
+  letter-spacing: normal;
+  max-height: calc(var(--s7-list-row-identity-title-line-height, 1.3) * 2em);
+}
+
+.products-catalog__headline-vendas-parity
+  .s7-catalog-headline__title-tip.s7-catalog-headline__title--incomplete,
+.products-catalog__headline-vendas-parity
+  .products-catalog__product-name-tip.s7-catalog-headline__title--incomplete {
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.products-catalog__headline-vendas-parity .products-catalog__product-actions {
+  flex: 1 1 100%;
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* Altura-base da linha — SSOT lista Vendas (7px + 44px + 7px = 58px) */
+.products-catalog__row.s7-operational-row-card {
+  min-height: var(--s7-vendas-list-row-min-height, 58px);
+  padding-top: var(--s7-list-table-row-padding-y, 7px);
+  padding-bottom: var(--s7-list-table-row-padding-y, 7px);
+  align-items: center;
+}
+
+.products-catalog__row.s7-operational-row-card .products-catalog__thumb-wrap,
+.products-catalog__row.s7-operational-row-card .products-catalog__thumb-img,
+.products-catalog__row.s7-operational-row-card .products-catalog__thumb-slot {
+  width: var(--s7-vendas-list-row-thumb-size, 44px);
+  height: var(--s7-vendas-list-row-thumb-size, 44px);
+}
+
+.products-catalog__row.s7-operational-row-card [data-col="thumb"],
+.products-catalog__row.s7-operational-row-card [data-col="product"] {
+  align-self: center;
+}
+
+.products-catalog__row.s7-operational-row-card:has(.products-catalog__complete-product-btn) {
+  min-height: 0;
+  align-items: start;
+}
+
+@media (min-width: 769px) {
+  .products-catalog__headline-vendas-parity.s7-catalog-headline.vendas-page__product-headline {
+    align-items: baseline;
+    gap: 1px 0.4rem;
+  }
+
+  .products-catalog__headline-vendas-parity .vendas-page__product-title,
+  .products-catalog__headline-vendas-parity
+    .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+  .products-catalog__headline-vendas-parity .products-catalog__product-name-tip {
+    font-size: 11px;
+  }
+}

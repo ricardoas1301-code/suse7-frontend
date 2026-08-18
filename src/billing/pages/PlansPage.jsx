@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
-import { S7Button, S7PageHeader } from "../../components/ui";
+import ContactModal from "../../components/ContactModal";
+import { S7Button } from "../../components/ui";
 import { useNotifications } from "../../contexts/NotificationContext";
-import PlanCard from "../components/PlanCard";
+import PlansCatalogSection from "../components/PlansCatalogSection";
+import PlansArsenalModal from "../components/PlansArsenalModal";
+import SubscriptionDowngradeModal from "../components/SubscriptionDowngradeModal";
 import {
   inferBillingSandboxFromUrl,
   isCardCheckoutApproved,
@@ -16,7 +19,8 @@ import CheckoutPaymentMethodSelector from "../components/CheckoutPaymentMethodSe
 import { useBillingPlans } from "../hooks/useBillingPlans";
 import { usePaymentMethods } from "../hooks/usePaymentMethods";
 import { useSubscriptionStatus } from "../hooks/useSubscriptionStatus";
-import { getEnterpriseContactHref, resolveCurrentPlanSnapshot } from "../planCta";
+import { resolveCurrentPlanSnapshot } from "../planCta";
+import { INFINITY_SUPPORT_CONTEXT, INFINITY_SUPPORT_PREFILL } from "../planInfinitySupport";
 import { changeSubscriptionPlan, startBillingCheckout, startCardBillingCheckout } from "../services/billingApi";
 import { resolveBillingCardErrorMessage } from "../billingCheckoutErrors";
 import { resolvePlanChangeAccessEndLabel } from "../subscriptionPlanChangeUi";
@@ -45,6 +49,8 @@ export default function PlansPage() {
   const { methods: savedPaymentMethods, refresh: refreshPaymentMethods } = usePaymentMethods();
   const [downgradePlan, setDowngradePlan] = useState(null);
   const [downgradeLoading, setDowngradeLoading] = useState(false);
+  const [supportModalOpen, setSupportModalOpen] = useState(false);
+  const [arsenalOpen, setArsenalOpen] = useState(false);
   const statusPayload = useMemo(
     () => ({ plan, subscriptions, access, active_subscription: statusExtras?.active_subscription }),
     [plan, subscriptions, access, statusExtras?.active_subscription]
@@ -90,8 +96,8 @@ export default function PlansPage() {
 
   function handlePlanSelect(plan, cta) {
     if (cta.disabled) return;
-    if (cta.isEnterprise) {
-      window.location.href = getEnterpriseContactHref(plan);
+    if (cta.isQuote) {
+      setSupportModalOpen(true);
       return;
     }
     if (cta.changeKind === "downgrade") {
@@ -277,35 +283,21 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="s7-billing-page">
-      <S7PageHeader
-        title="Planos"
-        subtitle="Escolha o plano ideal para o seu momento. Limites e preços vêm do catálogo oficial do Suse7."
-      />
-
-      {loading ? <p className="s7-billing-muted">Carregando planos e status da assinatura…</p> : null}
-      {error ? (
-        <section className="s7-billing-page__state s7-billing-page__state--error" aria-live="polite">
-          <p className="s7-billing-error">{error}</p>
-          <S7Button variant="secondary" onClick={retryLoad}>
-            Tentar novamente
-          </S7Button>
-        </section>
-      ) : null}
-
-      {!loading && !error ? (
-        <section className="s7-billing-plans-grid" aria-label="Catálogo de planos">
-          {plans.map((catalogPlan) => (
-            <PlanCard
-              key={catalogPlan.id}
-              plan={catalogPlan}
-              currentPlan={currentPlan}
-              catalogPlans={plans}
-              onSelect={handlePlanSelect}
-            />
-          ))}
-        </section>
-      ) : null}
+    <div className="dados-empresa-page minha-assinatura-page s7-planos-page">
+      <div className="profile-card s7-minha-assinatura-hero s7-planos-hero">
+        <div className="s7-billing-page">
+          <PlansCatalogSection
+            loading={loading}
+            error={error}
+            plans={plans}
+            currentPlan={currentPlan}
+            onRetry={retryLoad}
+            onPlanSelect={handlePlanSelect}
+            onOpenArsenal={() => setArsenalOpen(true)}
+            loadingMessage="Carregando planos e status da assinatura…"
+          />
+        </div>
+      </div>
 
       {selectedPlan && cardApproved ? (
         <div className="s7-billing-checkout-sheet" role="dialog" aria-modal="true">
@@ -401,25 +393,25 @@ export default function PlansPage() {
       />
 
       {downgradePlan ? (
-        <div className="s7-billing-checkout-sheet" role="dialog" aria-modal="true">
-          <div className="s7-billing-checkout-sheet__panel">
-            <h3>Agendar downgrade?</h3>
-            <p>
-              Seu plano atual continua ativo até {planChangeAccessEndLabel}. Depois disso, sua assinatura passará para{" "}
-              {downgradePlan.name}.
-            </p>
-            <p className="s7-billing-muted">Nenhuma cobrança extra é gerada agora. O histórico financeiro é preservado.</p>
-            <div className="s7-billing-checkout-sheet__actions">
-              <S7Button variant="secondary" onClick={resetDowngradeSheet} disabled={downgradeLoading}>
-                Manter plano atual
-              </S7Button>
-              <S7Button variant="primary" onClick={confirmScheduledDowngrade} disabled={downgradeLoading}>
-                {downgradeLoading ? "Agendando downgrade…" : "Agendar downgrade"}
-              </S7Button>
-            </div>
-          </div>
-        </div>
+        <SubscriptionDowngradeModal
+          open
+          planName={downgradePlan.name}
+          accessEndLabel={planChangeAccessEndLabel}
+          loading={downgradeLoading}
+          onClose={resetDowngradeSheet}
+          onConfirm={confirmScheduledDowngrade}
+        />
       ) : null}
+
+      {supportModalOpen ? (
+        <ContactModal
+          onClose={() => setSupportModalOpen(false)}
+          prefill={INFINITY_SUPPORT_PREFILL}
+          context={INFINITY_SUPPORT_CONTEXT}
+        />
+      ) : null}
+
+      <PlansArsenalModal open={arsenalOpen} onClose={() => setArsenalOpen(false)} />
     </div>
   );
 }

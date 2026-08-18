@@ -7,7 +7,7 @@ import { fetchSubscriptionStatus } from "../services/billingApi";
 const BillingAccessContext = createContext(null);
 
 export function BillingAccessProvider({ children }) {
-  const { ready: authReady } = useAuthBootstrap();
+  const { ready: authReady, loading: authLoading } = useAuthBootstrap();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -67,6 +67,7 @@ export function BillingAccessProvider({ children }) {
       pending_checkout: payload.pending_checkout ?? null,
       pending_renewal: payload.pending_renewal ?? null,
       renewal_notice: payload.renewal_notice ?? null,
+      renewal_experience: payload.renewal_experience ?? null,
       subscription_status: payload.subscription_status ?? null,
       access_status: payload.access_status ?? "FULL",
       access_restrictions: payload.access_restrictions ?? {
@@ -75,9 +76,14 @@ export function BillingAccessProvider({ children }) {
         blocked_path_prefixes: [],
         reason: null,
       },
+      subscription_entitlement: payload.subscription_entitlement ?? null,
+      entitlement_capabilities: payload.entitlement_capabilities ?? null,
+      access_profile:
+        payload.access_profile ?? payload.subscription_entitlement?.access_profile ?? null,
       grace_period_until: payload.grace_period_until ?? null,
       show_usage_growth_notice: payload.show_usage_growth_notice ?? false,
       usage_growth_grace: payload.usage_growth_grace ?? null,
+      usage_fallback: Boolean(payload.usage_fallback),
     });
     setError("");
     setConnectionError(false);
@@ -97,7 +103,15 @@ export function BillingAccessProvider({ children }) {
   );
 
   useEffect(() => {
-    if (!authReady) return;
+    if (authLoading) return;
+
+    if (!authReady) {
+      setLoading(false);
+      setRefreshing(false);
+      setError("");
+      setConnectionError(false);
+      return;
+    }
 
     let active = true;
     (async () => {
@@ -112,7 +126,7 @@ export function BillingAccessProvider({ children }) {
     return () => {
       active = false;
     };
-  }, [authReady, applyStatusPayload]);
+  }, [authLoading, authReady, applyStatusPayload]);
 
   const ux = useMemo(
     () => resolveBillingUx(access, subscriptions, statusExtras),

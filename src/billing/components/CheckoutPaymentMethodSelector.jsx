@@ -11,6 +11,7 @@ import "./CheckoutPaymentMethodSelector.css";
  *   planName?: string | null;
  *   title?: string;
  *   subtitle?: string;
+ *   availableMethods?: string[] | null;
  * }} props
  */
 export default function CheckoutPaymentMethodSelector({
@@ -20,8 +21,15 @@ export default function CheckoutPaymentMethodSelector({
   planName,
   title = "Pagamento",
   subtitle,
+  availableMethods = null,
 }) {
   const selected = normalizeCheckoutPaymentMethod(value);
+  const allowed = Array.isArray(availableMethods) && availableMethods.length > 0
+    ? new Set(availableMethods.map((method) => String(method).toUpperCase()))
+    : null;
+  const options = CHECKOUT_PAYMENT_METHOD_OPTIONS.filter(
+    (option) => !allowed || allowed.has(option.id)
+  );
   const resolvedSubtitle =
     subtitle ||
     (planName
@@ -43,7 +51,7 @@ export default function CheckoutPaymentMethodSelector({
       </header>
 
       <div className="s7-checkout-payment-selector__grid" role="radiogroup" aria-label="Métodos de pagamento">
-        {CHECKOUT_PAYMENT_METHOD_OPTIONS.map((option) => (
+        {options.map((option) => (
           <CheckoutPaymentMethodCard
             key={option.id}
             id={option.id}

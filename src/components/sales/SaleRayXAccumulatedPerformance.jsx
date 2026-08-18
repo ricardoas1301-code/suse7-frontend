@@ -2,82 +2,42 @@
 // Bloco DESEMPENHO ACUMULADO — card esquerdo do Raio-x da venda.
 // ======================================================
 
-import { DASH, formatBrlApi } from "./saleRayxFormat";
-
-/**
- * @param {unknown} raw
- */
-function formatQtyApi(raw) {
-  if (raw == null || String(raw).trim() === "") return DASH;
-  const n = Number(String(raw).replace(",", "."));
-  if (!Number.isFinite(n)) return DASH;
-  return Math.trunc(n).toLocaleString("pt-BR");
-}
-
-/**
- * @param {{ label: string; value: string }} props
- */
-function PerformanceMetricLine({ label, value }) {
-  const empty = value === DASH;
-  return (
-    <div className="vendas-sale-rayx__accumulated-line">
-      <span className="vendas-sale-rayx__accumulated-metric-kind">{label}</span>
-      <span
-        className={[
-          "vendas-sale-rayx__accumulated-value",
-          empty ? "anuncios-sell-popover__value--empty" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-/**
- * @param {{
- *   title: string;
- *   qty: string;
- *   amount: string;
- * }} props
- */
-function PerformanceScopeSection({ title, qty, amount }) {
-  return (
-    <div className="vendas-sale-rayx__accumulated-scope-block">
-      <span className="vendas-sale-rayx__accumulated-scope">{title}</span>
-      <div className="vendas-sale-rayx__accumulated-metrics-row">
-        <PerformanceMetricLine label="Quantidade vendida" value={qty} />
-        <PerformanceMetricLine label="Valor vendido" value={amount} />
-      </div>
-    </div>
-  );
-}
+import AccumulatedPerformanceBlock from "../shared/AccumulatedPerformanceBlock.jsx";
 
 /**
  * @param {{ metrics?: Record<string, unknown> | null }} props
  */
 export default function SaleRayXAccumulatedPerformance({ metrics }) {
   const m = metrics && typeof metrics === "object" ? metrics : {};
+  const accumulated =
+    m.accumulated_performance != null && typeof m.accumulated_performance === "object"
+      ? /** @type {Record<string, unknown>} */ (m.accumulated_performance)
+      : null;
 
-  const listingQty = formatQtyApi(m.listing_sales_quantity);
-  const listingAmount = formatBrlApi(
-    m.listing_sales_amount_brl != null ? String(m.listing_sales_amount_brl) : null,
-  );
-  const productQty = formatQtyApi(m.product_sales_quantity);
-  const productAmount = formatBrlApi(
-    m.product_sales_amount_brl != null ? String(m.product_sales_amount_brl) : null,
-  );
+  const listingScope =
+    accumulated?.listing != null && typeof accumulated.listing === "object"
+      ? /** @type {Record<string, unknown>} */ (accumulated.listing)
+      : {
+          sales_quantity: m.listing_sales_quantity ?? null,
+          sales_amount_brl: m.listing_sales_amount_brl ?? null,
+          sales_profit_brl: m.listing_sales_profit_brl ?? null,
+          sales_profit_percent: m.listing_sales_profit_percent ?? null,
+        };
+
+  const productScope =
+    accumulated?.product != null && typeof accumulated.product === "object"
+      ? /** @type {Record<string, unknown>} */ (accumulated.product)
+      : {
+          sales_quantity: m.product_sales_quantity ?? null,
+          sales_amount_brl: m.product_sales_amount_brl ?? null,
+          sales_profit_brl: m.product_sales_profit_brl ?? null,
+          sales_profit_percent: m.product_sales_profit_percent ?? null,
+        };
 
   return (
-    <section className="vendas-sale-rayx__accumulated-performance" aria-label="Desempenho acumulado">
-      <h4 className="vendas-sale-rayx__accumulated-performance-title">Desempenho acumulado</h4>
-      <div className="vendas-sale-rayx__accumulated-performance-stack">
-        <PerformanceScopeSection title="Anúncio" qty={listingQty} amount={listingAmount} />
-        <hr className="vendas-sale-rayx__accumulated-scope-divider" aria-hidden />
-        <PerformanceScopeSection title="Produto" qty={productQty} amount={productAmount} />
-      </div>
-    </section>
+    <AccumulatedPerformanceBlock
+      listingScope={listingScope}
+      productScope={productScope}
+    />
   );
 }

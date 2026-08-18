@@ -8,9 +8,18 @@ import "./BillingRevenueHealthCard.css";
  *   loading?: boolean;
  *   error?: string;
  *   onRetry?: () => void;
+ *   onRenewClick?: (() => void) | null;
+ *   showRenewalCta?: boolean;
  * }} props
  */
-export default function BillingRevenueHealthCard({ health, loading = false, error = "", onRetry }) {
+export default function BillingRevenueHealthCard({
+  health,
+  loading = false,
+  error = "",
+  onRetry,
+  onRenewClick = null,
+  showRenewalCta = false,
+}) {
   if (loading) {
     return (
       <section className="s7-billing-revenue-health s7-billing-revenue-health--loading" aria-busy="true">
@@ -60,7 +69,15 @@ export default function BillingRevenueHealthCard({ health, loading = false, erro
           <p className="s7-billing-revenue-health__description">{health.description}</p>
           <p className="s7-billing-revenue-health__recommendation">{health.recommendation}</p>
 
-          {health.actionHint ? <p className="s7-billing-revenue-health__action">{health.actionHint}</p> : null}
+          {showRenewalCta && onRenewClick ? (
+            <div className="s7-billing-revenue-health__cta">
+              <S7Button variant="primary" onClick={onRenewClick}>
+                Renovar assinatura
+              </S7Button>
+            </div>
+          ) : health.actionHint ? (
+            <p className="s7-billing-revenue-health__action">{health.actionHint}</p>
+          ) : null}
         </div>
 
         <div className="s7-billing-revenue-health__score-panel">
@@ -75,7 +92,7 @@ export default function BillingRevenueHealthCard({ health, loading = false, erro
           <span
             className={`s7-billing-status-badge s7-billing-status-badge--${health.badgeClass === "success" ? "success" : health.badgeClass === "danger" ? "danger" : "warning"}`}
           >
-            {health.level}
+            {health.levelLabel ?? resolveRevenueHealthLevelLabel(health.level)}
           </span>
           <div className="s7-billing-revenue-health__progress" aria-hidden="true">
             <span className="s7-billing-revenue-health__progress-fill" style={{ width: `${scorePercent}%` }} />

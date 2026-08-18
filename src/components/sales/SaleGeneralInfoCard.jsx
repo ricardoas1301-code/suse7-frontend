@@ -2,6 +2,8 @@
 // Dados gerais da venda (somente leitura, sem card).
 // ======================================================
 
+import { getSaleStatusToneClass } from "../../features/vendas/utils/saleStatusToneClass.js";
+import { pickSaleOperationalStatusLabel } from "./saleRayxFinancialPickers";
 import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../ui/S7CopyButton";
 import { getMarketplaceBadgeAsset } from "../../utils/marketplaceBadge";
 import { DASH, formatDatePt, truncateWordsDisplay } from "./saleRayxFormat";
@@ -11,9 +13,7 @@ import {
   pickSaleNumberDisplay,
   pickSaleTypeDisplay,
   pickSaleShippingDisplayCompact,
-  pickSaleStatusLabel,
 } from "./saleRayxGeneralDisplay";
-import { getSaleStatusColor } from "./saleRayxStatusColor";
 import { resolveMoneyReleaseDate } from "./saleRayxMoneyRelease";
 import SaleRayXProductHeader from "./SaleRayXProductHeader";
 import SaleRayXProductPhoto from "./SaleRayXProductPhoto";
@@ -77,6 +77,7 @@ function InfoLineStack({ label, value }) {
  *   truncateValue?: boolean;
  *   tone?: "success" | "warning" | "danger" | "neutral";
  *   statusColor?: string | null;
+ *   valueExtraClass?: string;
  * }} props
  */
 function InfoLine({
@@ -87,6 +88,7 @@ function InfoLine({
   truncateValue = false,
   tone = "neutral",
   statusColor = null,
+  valueExtraClass = "",
 }) {
   const empty = value === DASH;
   const toneClass =
@@ -117,6 +119,7 @@ function InfoLine({
           "vendas-sale-rayx__info-value-line--emphasis",
           truncateValue ? "vendas-sale-rayx__info-value-line--truncate" : "",
           toneClass,
+          valueExtraClass,
           empty ? "anuncios-sell-popover__value--empty" : "",
         ]
           .filter(Boolean)
@@ -306,8 +309,6 @@ function SaleShippingInfoBlock({ shipping }) {
  *   listingTitle?: string | null;
  *   itemId?: string | null;
  *   saleContextMetrics?: Record<string, unknown> | null;
- *   listingInternalId?: string | null;
- *   onOpenOfferCompare?: () => void;
  * }} props
  */
 export default function SaleGeneralInfoLines({
@@ -318,15 +319,11 @@ export default function SaleGeneralInfoLines({
   listingTitle,
   itemId,
   saleContextMetrics,
-  listingInternalId: listingInternalIdProp,
-  onOpenOfferCompare,
 }) {
   const g = general && typeof general === "object" ? general : {};
   const saleNumberDisplay = pickSaleNumberDisplay(g);
   const saleNumberCopy = pickSaleNumberCopyText(g);
-  const saleStatusLabel = pickSaleStatusLabel(g);
-  const saleStatusRaw = g.sale_status ?? g.order_status ?? saleStatusLabel;
-  const { tone: saleStatusTone, color: saleStatusColor } = getSaleStatusColor(saleStatusRaw);
+  const saleStatusLabel = pickSaleOperationalStatusLabel(g);
   const saleTypeDisplay = pickSaleTypeDisplay(g);
   const fulfillmentDisplay = pickFulfillmentDisplay(g);
   const shippingCompact = pickSaleShippingDisplayCompact(g.shipping_display_compact);
@@ -338,11 +335,6 @@ export default function SaleGeneralInfoLines({
       : product?.title != null && String(product.title).trim() !== ""
         ? String(product.title).trim()
         : null;
-
-  const listingInternalId =
-    listingInternalIdProp != null && String(listingInternalIdProp).trim() !== ""
-      ? String(listingInternalIdProp).trim()
-      : null;
 
   const buyerName = truncateWordsDisplay(
     g.buyer_display_name != null ? String(g.buyer_display_name) : null,
@@ -360,8 +352,6 @@ export default function SaleGeneralInfoLines({
         general={general}
         listingId={product?.listing_id_display ?? general?.listing_id_display ?? null}
         sku={product?.sku_display ?? general?.sku_display ?? null}
-        listingInternalId={listingInternalId}
-        onOpenOfferCompare={onOpenOfferCompare}
       />
       <div className="vendas-sale-rayx__left-blocks">
         <div className="vendas-sale-rayx__sale-data-hero">
@@ -393,8 +383,7 @@ export default function SaleGeneralInfoLines({
                 label="Status da venda"
                 value={saleStatusLabel ?? DASH}
                 emphasis
-                tone={saleStatusTone}
-                statusColor={saleStatusColor}
+                valueExtraClass={getSaleStatusToneClass(saleStatusLabel)}
               />
               <InfoLine
                 label="Data da venda"

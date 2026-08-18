@@ -5,11 +5,17 @@
 
 import "./FeedbackModal.css";
 
-export default function FeedbackModal({ title, message, onClose }) {
+export default function FeedbackModal({ type = "success", title, message, onClose }) {
+  const isError = type === "error";
+  const iconClass = isError ? "error" : "success";
+  const iconGlyph = isError ? "✕" : "✓";
+
   return (
     <div className="feedback-overlay">
       <div className="feedback-modal">
-        <div className="feedback-icon success">✓</div>
+        <div className={`feedback-icon ${iconClass}`} aria-hidden="true">
+          {iconGlyph}
+        </div>
 
         <h3>{title}</h3>
         <p>{message}</p>

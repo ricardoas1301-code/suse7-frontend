@@ -1,6 +1,11 @@
 import { ATTENTION_REASON_SKU_PENDING_ML } from "../../../constants/listingAttention.js";
 import { formatMarketplaceListingDisplayId } from "../../../utils/marketplaceListingId.js";
 import { DASH } from "./catalogFormatters.js";
+export {
+  getListingProductLinkActions,
+  isAnunciosCatalogRowPending,
+  shouldShowCadastrarCustosListaRow,
+} from "./listingProductLinkActions.js";
 
 /** @param {string | null | undefined} status */
 function mlStatusToUi(status) {
@@ -12,54 +17,24 @@ function mlStatusToUi(status) {
   return { statusKey: "active", statusLabel: status ? String(status) : "—" };
 }
 
-export function isAnunciosCatalogRowPending(row) {
-  const ph =
-    row.pricingContext != null && typeof row.pricingContext === "object"
-      ? /** @type {{ product_health?: { product_health_status?: string } }} */ (row.pricingContext).product_health
-      : null;
-  const st = ph?.product_health_status != null ? String(ph.product_health_status) : null;
-  if (st === "MISSING_PRODUCT") return true;
-  if (row.skuPending) return true;
-  if (!row.productId) return true;
-  if (row.isProductReady === true) return false;
-  if (row.isProductReady === false) return true;
-  if (row.isProductReady == null && st === "INCOMPLETE_PRODUCT") return true;
-  return false;
+function pickString(...values) {
+  for (const value of values) {
+    if (value != null && String(value).trim() !== "") return String(value).trim();
+  }
+  return null;
 }
 
-/**
- * Ações de vínculo na linha (espelha health + campos já expostos na grid).
- * @param {{ attentionReason?: string | null; pricingContext?: Record<string, unknown> | null; productId?: string | null; isProductReady?: boolean | null }} row
- * @param {(r: typeof row) => void} [onInformSku]
- */
-export function getListingProductLinkActions(row, onInformSku) {
-  const isSkuPendingMl = row.attentionReason === ATTENTION_REASON_SKU_PENDING_ML;
-  const phSt =
-    row.pricingContext != null && typeof row.pricingContext === "object"
-      ? /** @type {{ product_health?: { product_health_status?: string } }} */ (row.pricingContext).product_health
-          ?.product_health_status
-      : null;
-  const healthSt = phSt != null ? String(phSt) : null;
-  const hasInform = typeof onInformSku === "function";
-  const pid = row.productId != null && String(row.productId).trim() !== "" ? String(row.productId).trim() : "";
-  const incompletoCadastroMinimo =
-    row.isProductReady === true
-      ? false
-      : typeof row.isProductReady === "boolean"
-        ? row.isProductReady === false
-        : healthSt === "INCOMPLETE_PRODUCT";
-  return {
-    isSkuPendingMl,
-    healthSt,
-    showInformSkuMl: hasInform && isSkuPendingMl,
-    showVincular:
-      hasInform &&
-      !isSkuPendingMl &&
-      (healthSt === "MISSING_PRODUCT" || !pid) &&
-      healthSt !== "INCOMPLETE_PRODUCT",
-    showCompletar: Boolean(pid) && incompletoCadastroMinimo,
-  };
+function pickInt(...values) {
+  for (const value of values) {
+    if (value != null && Number.isFinite(Number(value))) return Math.trunc(Number(value));
+  }
+  return null;
 }
+
+import {
+  hydrateCatalogRowCanonicalListingQuality,
+  parseListingQualityScoreFromGridPayload,
+} from "../domain/health/listingQualityHydration.js";
 
 /** Payload consolidado GET /api/ml/listings (grid). */
 /** @param {Record<string, unknown>} g */
@@ -79,17 +54,29 @@ export function mapGridApiToCatalogRow(g) {
   const picN = g.pictures_count != null ? Number(g.pictures_count) : null;
   const varN = g.variations_count != null ? Number(g.variations_count) : null;
 
-  const salesCount = g.sold_quantity != null ? Math.trunc(Number(g.sold_quantity)) || 0 : 0;
+  const legacyMetrics =
+    g.legacy_imported_orders_metrics != null && typeof g.legacy_imported_orders_metrics === "object"
+      ? /** @type {{ qty_sold_total?: unknown; gross_revenue_brl?: unknown }} */ (g.legacy_imported_orders_metrics)
+      : null;
+  const salesCount = pickInt(
+    g.qty_sold_total,
+    legacyMetrics?.qty_sold_total,
+    g.sold_quantity
+  );
   const soldQtyMl =
     g.sold_quantity_ml_listing != null && Number.isFinite(Number(g.sold_quantity_ml_listing))
       ? Math.trunc(Number(g.sold_quantity_ml_listing))
       : null;
   const grossMissing = Boolean(g.gross_revenue_missing);
+  const grossSalesRaw = pickString(
+    g.gross_sales_brl,
+    g.gross_revenue_brl,
+    legacyMetrics?.gross_revenue_brl
+  );
   const revenueNumeric =
-    !grossMissing && g.gross_revenue_brl != null ? Number(g.gross_revenue_brl) : grossMissing ? 0 : Number(g.gross_revenue_brl) || 0;
+    !grossMissing && grossSalesRaw != null ? Number(grossSalesRaw) : grossMissing ? 0 : Number(grossSalesRaw) || 0;
 
-  const qScore = g.health_listing_quality_score;
-  const qScoreNum = qScore != null && Number.isFinite(Number(qScore)) ? Number(qScore) : null;
+  const qScoreNum = parseListingQualityScoreFromGridPayload(g);
   const qStatus = g.health_listing_quality_status != null ? String(g.health_listing_quality_status) : null;
   const expStatus = g.health_experience_status != null ? String(g.health_experience_status) : null;
 
@@ -97,13 +84,28 @@ export function mapGridApiToCatalogRow(g) {
   if ((healthNum != null && healthNum < 40) || /basic|bajo|baix/i.test(qStatus || "")) {
     uiFlags.needs_attention = true;
   }
-  if (Boolean(g.needs_attention)) uiFlags.needs_attention = true;
-  if (Boolean(g.sku_pending)) uiFlags.needs_attention = true;
+  if (g.needs_attention) uiFlags.needs_attention = true;
+  if (g.sku_pending) uiFlags.needs_attention = true;
+  if (g.sku_dependency_pending) uiFlags.needs_attention = true;
 
   const attentionReason = g.attention_reason != null ? String(g.attention_reason) : null;
+  const skuDependencyReason =
+    g.sku_dependency_reason === "ml_missing_sku" ||
+    g.sku_dependency_reason === "product_link_missing"
+      ? String(g.sku_dependency_reason)
+      : null;
 
-  const visitsAbsent = Boolean(g.visits_absent);
-  const visitCountForFilter = visitsAbsent || g.visits == null ? 0 : Number(g.visits) || 0;
+  const visitsRaw = pickString(
+    g.visits,
+    g.visits_count,
+    g.total_visits,
+    g.listing_visits,
+    g.metrics != null && typeof g.metrics === "object"
+      ? /** @type {Record<string, unknown>} */ (g.metrics).visits
+      : null
+  );
+  const visitsAbsent = Boolean(g.visits_absent) && visitsRaw == null;
+  const visitCountForFilter = visitsAbsent || visitsRaw == null ? 0 : Number(visitsRaw) || 0;
 
   const m = String(g.marketplace || "");
   const marketplaceSlug = m === "mercado_livre" ? "mercadolivre" : m || "mercadolivre";
@@ -124,6 +126,30 @@ export function mapGridApiToCatalogRow(g) {
       : g.marketplace_account_logo_url != null && String(g.marketplace_account_logo_url).trim() !== ""
         ? String(g.marketplace_account_logo_url).trim()
         : null;
+  const accountAvatarUrl =
+    g.account_avatar_url != null && String(g.account_avatar_url).trim() !== ""
+      ? String(g.account_avatar_url).trim()
+      : null;
+  const profileImageUrl =
+    g.profile_image != null && String(g.profile_image).trim() !== ""
+      ? String(g.profile_image).trim()
+      : null;
+  const sellerLogoUrl =
+    g.seller_logo_url != null && String(g.seller_logo_url).trim() !== ""
+      ? String(g.seller_logo_url).trim()
+      : null;
+  const storeLogoUrl =
+    g.store_logo != null && String(g.store_logo).trim() !== ""
+      ? String(g.store_logo).trim()
+      : null;
+  const companyLogoUrl =
+    g.company_logo_url != null && String(g.company_logo_url).trim() !== ""
+      ? String(g.company_logo_url).trim()
+      : null;
+  const sellerCompanyLogoUrl =
+    g.seller_company_logo_url != null && String(g.seller_company_logo_url).trim() !== ""
+      ? String(g.seller_company_logo_url).trim()
+      : null;
   const marketplaceLabelDisplay =
     g.marketplace_label != null && String(g.marketplace_label).trim() !== ""
       ? String(g.marketplace_label).trim()
@@ -149,7 +175,7 @@ export function mapGridApiToCatalogRow(g) {
     coverDirect != null && String(coverDirect).trim() !== "" ? String(coverDirect).trim() : null;
   const coverThumbnailUrl = coverTrimmed ?? (galleryImageUrls[0] != null ? String(galleryImageUrls[0]).trim() : null);
 
-  return {
+  const catalogRow = {
     id: String(g.id),
     sku: g.sku != null && String(g.sku).trim() !== "" ? String(g.sku).trim() : null,
     adCount: 0,
@@ -163,6 +189,17 @@ export function mapGridApiToCatalogRow(g) {
     marketplaceAccountId,
     accountAlias,
     accountLogoUrl,
+    account_logo_url: accountLogoUrl,
+    marketplace_account_logo_url:
+      g.marketplace_account_logo_url != null && String(g.marketplace_account_logo_url).trim() !== ""
+        ? String(g.marketplace_account_logo_url).trim()
+        : null,
+    account_avatar_url: accountAvatarUrl,
+    profile_image: profileImageUrl,
+    seller_logo_url: sellerLogoUrl,
+    store_logo: storeLogoUrl,
+    company_logo_url: companyLogoUrl,
+    seller_company_logo_url: sellerCompanyLogoUrl,
     sellerCompanyId,
     companyName,
     companyDocumentMasked,
@@ -188,11 +225,20 @@ export function mapGridApiToCatalogRow(g) {
     soldQuantityMlListing: soldQtyMl,
     revenue: revenueNumeric,
     grossRevenueMissing: grossMissing,
-    grossRevenueBrl: g.gross_revenue_brl != null ? String(g.gross_revenue_brl) : null,
+    grossRevenueBrl: grossSalesRaw,
+    grossSalesBrl: grossSalesRaw,
+    contributionProfitBrl: pickString(g.contribution_profit_brl, g.net_profit_brl),
+    netProfitBrl: pickString(g.net_profit_brl, g.contribution_profit_brl),
+    contributionMarginPercent: pickString(g.contribution_margin_percent),
+    averageTicketBrl: pickString(g.average_ticket_brl),
+    youReceiveBrl: pickString(g.you_receive_brl, g.net_received_brl, g.net_revenue_total_brl, legacyMetrics?.net_revenue_total_brl),
     profit: 0,
     marginPct: 0,
     statusKey,
     statusLabel,
+    listingStatusRaw: g.status != null ? String(g.status) : null,
+    availableQuantity: pickInt(g.available_quantity),
+    needsAttention: Boolean(g.needs_attention),
     healthBand,
     healthLabel,
     healthPercent: healthNum != null && Number.isFinite(healthNum) ? Math.round(healthNum) : null,
@@ -209,7 +255,7 @@ export function mapGridApiToCatalogRow(g) {
     coverThumbnailUrl,
     visitCount: visitCountForFilter,
     visitsAbsent,
-    visitsText: g.visits != null ? String(g.visits) : null,
+    visitsText: visitsRaw,
     netReceiveBrl:
       g.marketplace_payout_amount != null && String(g.marketplace_payout_amount).trim() !== ""
         ? String(g.marketplace_payout_amount)
@@ -218,8 +264,11 @@ export function mapGridApiToCatalogRow(g) {
       g.marketplace_payout_source != null && String(g.marketplace_payout_source).trim() !== ""
         ? String(g.marketplace_payout_source).trim()
         : "unresolved",
-    /** Protocolo v1: payout e preço vêm dos campos explícitos; net_proceeds não é usado na UI. */
-    netProceeds: null,
+    /** Protocolo v1: payout e preço vêm dos campos explícitos; net_proceeds auxiliar para breakdown unitário. */
+    netProceeds:
+      g.net_proceeds != null && typeof g.net_proceeds === "object"
+        ? /** @type {Record<string, unknown>} */ (g.net_proceeds)
+        : null,
     commissionPercent: g.commission_percent != null ? String(g.commission_percent) : null,
     commissionAmountBrl: g.commission_amount_brl != null ? String(g.commission_amount_brl) : null,
     shippingCostBrl: g.shipping_cost_brl != null ? String(g.shipping_cost_brl) : null,
@@ -302,6 +351,8 @@ export function mapGridApiToCatalogRow(g) {
             ? String(g.list_or_original_price_brl).trim()
             : null,
     listingTypeLabel: g.listing_type_label != null ? String(g.listing_type_label) : null,
+    listingTypeId: g.listing_type_id != null ? String(g.listing_type_id).trim() : null,
+    listing_type_id: g.listing_type_id != null ? String(g.listing_type_id).trim() : null,
     wholesaleMinQuantity:
       g.wholesale_min_quantity != null && Number.isFinite(Number(g.wholesale_min_quantity))
         ? Math.trunc(Number(g.wholesale_min_quantity))
@@ -324,6 +375,11 @@ export function mapGridApiToCatalogRow(g) {
         ? String(g.financial_analysis_hint).trim()
         : null,
     attentionReason,
+    skuDependencyPending:
+      typeof g.sku_dependency_pending === "boolean"
+        ? g.sku_dependency_pending
+        : undefined,
+    skuDependencyReason,
     skuPending:
       attentionReason === ATTENTION_REASON_SKU_PENDING_ML || Boolean(g.sku_pending),
     /** URLs HTTP da tabela `marketplace_listing_pictures` (diagnóstico; ex.: /anuncios-2). */
@@ -339,6 +395,10 @@ export function mapGridApiToCatalogRow(g) {
       g.pricing_context != null && typeof g.pricing_context === "object"
         ? /** @type {Record<string, unknown>} */ (g.pricing_context)
         : null,
+    pricingCurrentState:
+      g.pricing_current_state != null && typeof g.pricing_current_state === "object"
+        ? /** @type {Record<string, unknown>} */ (g.pricing_current_state)
+        : null,
     productId:
       g.product_id != null && String(g.product_id).trim() !== "" ? String(g.product_id).trim() : null,
     isProductReady: typeof g.is_product_ready === "boolean" ? g.is_product_ready : null,
@@ -349,10 +409,41 @@ export function mapGridApiToCatalogRow(g) {
       g.product_completeness_score != null && Number.isFinite(Number(g.product_completeness_score))
         ? Math.round(Number(g.product_completeness_score))
         : null,
+    /** SSOT desempenho acumulado — GET /api/ml/listings (backend). */
+    accumulated_performance:
+      g.accumulated_performance != null && typeof g.accumulated_performance === "object"
+        ? /** @type {Record<string, unknown>} */ (g.accumulated_performance)
+        : null,
     /** View-model GET /api/ml/listings (Suse7 DB); não recalcular no front. */
     product_card_metrics:
       g.product_card_metrics != null && typeof g.product_card_metrics === "object"
         ? /** @type {Record<string, unknown>} */ (g.product_card_metrics)
         : null,
+    mlAccountAlias:
+      g.ml_account_alias != null && String(g.ml_account_alias).trim() !== ""
+        ? String(g.ml_account_alias).trim()
+        : null,
+    /** Contagens opcionais da grid (read-model futuro); fallback no resolver da lista. */
+    promotionsCount: pickInt(g.active_promotions_count, g.promotions_count),
+    activePromotionsCount: pickInt(g.active_promotions_count),
+    competitorsCount: pickInt(g.competitors_count, g.monitored_competitors_count),
+    monitoredCompetitorsCount: pickInt(g.monitored_competitors_count),
+    competitorsAboveCount: pickInt(g.competitors_above_count),
+    competitorsBelowCount: pickInt(g.competitors_below_count),
+    competitionListSource:
+      g.competition_list_source != null && String(g.competition_list_source).trim() !== ""
+        ? String(g.competition_list_source).trim()
+        : null,
+    health_listing_quality_score: g.health_listing_quality_score ?? null,
+    listing_quality_score: g.listing_quality_score ?? g.health_listing_quality_score ?? null,
+    listing_quality_score_percent: g.listing_quality_score_percent ?? null,
+    listing_quality_source:
+      g.listing_quality_source != null ? String(g.listing_quality_source) : null,
+    listing_quality_fetched_at:
+      g.listing_quality_fetched_at != null ? String(g.listing_quality_fetched_at) : null,
+    listing_quality_sync_status:
+      g.listing_quality_sync_status != null ? String(g.listing_quality_sync_status) : null,
   };
+
+  return hydrateCatalogRowCanonicalListingQuality(catalogRow);
 }

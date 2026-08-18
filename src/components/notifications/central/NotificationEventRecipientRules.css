@@ -63,9 +63,80 @@
   background: #f8fafc;
 }
 
+.s7-nevent-rules__row-content {
+  min-width: 0;
+}
+
+.s7-nevent-rules__row-content--inactive {
+  opacity: 0.58;
+}
+
+.s7-nevent-rules__row-content--inactive .s7-nevent-rules__chip input:disabled,
+.s7-nevent-rules__row-content--inactive .s7-nevent-rules__chip input:disabled + span {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 .s7-nevent-rules__name {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
   font-weight: 600;
+}
+
+.s7-nevent-rules__row--inactive .s7-nevent-rules__name {
+  color: #64748b;
+}
+
+.s7-nevent-rules__table .s7-tooltip-portal-root {
+  display: block;
+  width: 100%;
+}
+
+/* Tooltip mergeia .s7-tooltip-trigger no row — restaura mini-card compacto (inativos) */
+.s7-nevent-rules__row--compact.s7-nevent-rules__row--inactive.s7-tooltip-trigger,
+.s7-nevent-rules__row--compact.s7-nevent-rules__inactive-tooltip-target.s7-tooltip-trigger {
+  display: block;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+  box-sizing: border-box;
+  color: inherit;
+}
+
+.s7-nevent-rules__row--compact.s7-ncenter-recipient--left-accent-orange.s7-tooltip-trigger {
+  border-left: var(--s7-ncenter-left-accent-width) solid var(--s7-orange, #ff8533);
+  background: #fff;
+}
+
+.s7-nevent-rules__row.s7-nevent-rules__inactive-tooltip-target.s7-tooltip-trigger {
+  color: inherit;
+  cursor: help;
+}
+
+.s7-nevent-rules__row.s7-nevent-rules__inactive-tooltip-target.s7-tooltip-trigger:hover,
+.s7-nevent-rules__row.s7-nevent-rules__inactive-tooltip-target.s7-tooltip-trigger:focus-visible {
+  color: inherit;
+}
+
+.s7-nevent-rules__row--inactive-tooltip-target:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.s7-nevent-rules__inactive-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .s7-nevent-rules__chip {
@@ -80,4 +151,56 @@
 .s7-nevent-rules__chip input:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.s7-nevent-rules__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--s7-muted, #64748b);
+}
+
+.s7-nevent-rules--compact {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.s7-nevent-rules--compact .s7-nevent-rules__table {
+  gap: 6px;
+}
+
+.s7-nevent-rules__row--compact {
+  display: block;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+/* Após border shorthand — faixa laranja individual (paridade primitive) */
+.s7-nevent-rules__row.s7-ncenter-recipient--left-accent-orange,
+.s7-nevent-rules__row--compact.s7-ncenter-recipient--left-accent-orange {
+  border-left: var(--s7-ncenter-left-accent-width) solid var(--s7-orange, #ff8533);
+  background: #fff;
+}
+
+.s7-nevent-rules__recipient {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.s7-nevent-rules__channels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.s7-nevent-rules__row--compact .s7-nevent-rules__name {
+  font-size: 12px;
+}
+
+.s7-nevent-rules__row--compact .s7-nevent-rules__chip {
+  font-size: 11px;
 }

@@ -1,7 +1,8 @@
 /* Histórico de notificações — Fase 3 (escopo local, alinhado ao perfil Suse7) */
 
 .s7-notif-historico {
-  max-width: 960px;
+  max-width: none;
+  width: 100%;
 }
 
 .s7-notif-historico__header h2 {

@@ -3,6 +3,7 @@
 // ======================================================
 
 import { apiFetch, buildApiUrl } from "../config/api";
+import { formatarPercentualParaInput } from "../components/pricing/pricingPercentInputUi.js";
 
 /**
  * @param {string} listingId
@@ -15,7 +16,17 @@ export async function fetchListingPricingSimulationConfig(listingId) {
   const res = await apiFetch(url, { method: "GET" });
   if (!res.ok) return { ok: false, config: {} };
   const config = res.data?.config && typeof res.data.config === "object" ? res.data.config : {};
-  return { ok: true, config };
+  return {
+    ok: true,
+    config,
+    company_operational_cost_percent:
+      res.data?.company_operational_cost_percent != null
+        ? String(res.data.company_operational_cost_percent)
+        : null,
+    safety_reserve_source:
+      res.data?.safety_reserve_source != null ? String(res.data.safety_reserve_source) : null,
+    seller_company_id: res.data?.seller_company_id != null ? String(res.data.seller_company_id) : null,
+  };
 }
 
 /**
@@ -105,8 +116,22 @@ export async function savePricingFinancialSettings(listingId, state) {
 
 /**
  * @param {Record<string, unknown> | undefined} config
+ * @param {{
+ *   setPlannedPromoEnabled: (v: boolean) => void;
+ *   setPlannedPromoPct: (v: string) => void;
+ *   setMlAdsEnabled: (v: boolean) => void;
+ *   setMlAdsPct: (v: string) => void;
+ *   setAffiliatesEnabled: (v: boolean) => void;
+ *   setAffiliatesPct: (v: string) => void;
+ *   setSafetyReserveEnabled: (v: boolean) => void;
+ *   setSafetyReservePct: (v: string) => void;
+ * }} setters
+ * @param {{
+ *   company_operational_cost_percent?: string | null;
+ *   safety_reserve_source?: string | null;
+ * } | undefined} meta
  */
-export function applyPricingSimulationConfigToState(config, setters) {
+export function applyPricingSimulationConfigToState(config, setters, meta = {}) {
   const c = config && typeof config === "object" ? config : {};
   const read = (key) => {
     const node = c[key];
@@ -114,7 +139,7 @@ export function applyPricingSimulationConfigToState(config, setters) {
     const n = /** @type {Record<string, unknown>} */ (node);
     return {
       enabled: n.enabled === true || String(n.enabled ?? "").toLowerCase() === "true",
-      percent: n.percent != null ? String(n.percent) : "",
+      percent: formatarPercentualParaInput(n.percent),
     };
   };
 
@@ -122,6 +147,8 @@ export function applyPricingSimulationConfigToState(config, setters) {
   const ads = read("ml_ads");
   const aff = read("affiliates");
   const reserve = read("safety_reserve");
+  const companyPct = formatarPercentualParaInput(meta.company_operational_cost_percent);
+  const hasListingOverride = meta.safety_reserve_source === "listing_override";
 
   setters.setPlannedPromoEnabled(promo.enabled);
   setters.setPlannedPromoPct(promo.enabled ? promo.percent : "");
@@ -129,8 +156,17 @@ export function applyPricingSimulationConfigToState(config, setters) {
   setters.setMlAdsPct(ads.enabled ? ads.percent : "");
   setters.setAffiliatesEnabled(aff.enabled);
   setters.setAffiliatesPct(aff.enabled ? aff.percent : "");
-  setters.setSafetyReserveEnabled(reserve.enabled);
-  setters.setSafetyReservePct(reserve.enabled ? reserve.percent : "");
+
+  if (hasListingOverride) {
+    setters.setSafetyReserveEnabled(reserve.enabled);
+    setters.setSafetyReservePct(reserve.percent || companyPct || "");
+  } else if (companyPct) {
+    setters.setSafetyReserveEnabled(true);
+    setters.setSafetyReservePct(companyPct);
+  } else {
+    setters.setSafetyReserveEnabled(reserve.enabled);
+    setters.setSafetyReservePct(reserve.percent || "");
+  }
 }
 
 /**

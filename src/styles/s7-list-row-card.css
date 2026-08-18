@@ -1,0 +1,216 @@
+/* ======================================================
+   S7 — List Row Card ENFORCEMENT (S1.8.1)
+   Especificidade elevada — vence CSS legado das páginas.
+   ====================================================== */
+
+/*
+ * Precedência visual:
+ * 1. Selecionado
+ * 2. Crítico / atenção
+ * 3. Hover
+ * 4. Padrão
+ */
+
+/* --- Neutraliza moldura branca contínua do container legado --- */
+.products-catalog__list-operational > .products-catalog__table-card,
+.products-catalog__list-operational > .products-catalog__table-card--scroll-viewport,
+.concorrencia-catalog .products-catalog__list-operational > .products-catalog__table-card,
+.concorrencia-catalog .products-catalog__list-operational > .products-catalog__table-card--scroll-viewport,
+.vendas-page__operacao-shell .vendas-page__list-operational > .vendas-page__table-card,
+.vendas-page__operacao-shell .vendas-page__list-operational > .vendas-page__table-card--scroll-viewport {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.products-catalog__list-operational .products-catalog__table-hscroll--body,
+.concorrencia-catalog .products-catalog__list-operational .products-catalog__table-hscroll--body {
+  background: var(--s7-bg-page, #f2f7ff);
+}
+
+/* --- Container das linhas: fundo da página + gap real --- */
+.products-catalog__list-operational .products-catalog__body,
+.concorrencia-catalog .products-catalog__list-operational .concorrencia-catalog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-list-row-gap);
+  row-gap: var(--s7-list-row-gap);
+  background: var(--s7-bg-page, #f2f7ff);
+  padding: var(--s7-list-row-stack-padding-y) 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table-body-scroll {
+  background: var(--s7-bg-page, #f2f7ff);
+  padding: var(--s7-list-row-stack-padding-y) 0;
+}
+
+/* --- Shell card: grades operacionais --- */
+.products-catalog__list-operational .products-catalog__body > .products-catalog__row,
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row,
+.concorrencia-catalog .products-catalog__list-operational .concorrencia-catalog__body > .concorrencia-catalog__row {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--s7-list-row-background);
+  border: 1px solid var(--s7-list-row-border);
+  border-radius: var(--s7-list-row-radius);
+  box-shadow: var(--s7-list-row-shadow);
+  border-bottom: 1px solid var(--s7-list-row-border);
+  overflow: clip;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+/* Neutraliza radius/borda só do último filho (legado tabela contínua) */
+.products-catalog__list-operational .products-catalog__body > .products-catalog__row:last-child,
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row:last-child,
+.concorrencia-catalog .products-catalog__list-operational .concorrencia-catalog__body > .concorrencia-catalog__row:last-child {
+  border-bottom: 1px solid var(--s7-list-row-border);
+  border-radius: var(--s7-list-row-radius);
+}
+
+.products-catalog__list-operational .products-catalog__body > .products-catalog__row:hover,
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row:hover:not(.anuncios-catalog__row--pending-product),
+.concorrencia-catalog .products-catalog__list-operational .concorrencia-catalog__body > .concorrencia-catalog__row:hover {
+  background: var(--s7-list-row-hover-background);
+  border-color: var(--s7-list-row-hover-border);
+  box-shadow: var(--s7-list-row-hover-shadow);
+  transform: none;
+}
+
+/* Seleção — Produtos */
+.products-catalog__list-operational .products-catalog__body > .products-catalog__row--selected,
+.products-catalog__list-operational .products-catalog__body > .products-catalog__row--selected:hover {
+  background: var(--s7-list-row-selected-background);
+  border-color: var(--s7-list-row-selected-border);
+}
+
+/* Seleção — Anúncios / Precificações / Concorrência */
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row:has(.anuncios-catalog__select-checkbox:checked),
+.concorrencia-catalog .products-catalog__list-operational .concorrencia-catalog__body > .concorrencia-catalog__row:has(.vendas-page__row-select-checkbox:checked) {
+  background: var(--s7-list-row-selected-background);
+  border-color: var(--s7-list-row-selected-border);
+}
+
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row:has(.anuncios-catalog__select-checkbox:checked):hover,
+.concorrencia-catalog .products-catalog__list-operational .concorrencia-catalog__body > .concorrencia-catalog__row:has(.vendas-page__row-select-checkbox:checked):hover {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: var(--s7-list-row-selected-border);
+}
+
+/* Estados críticos — preserva fundo semântico da página */
+.products-catalog__list-operational .products-catalog__body > .products-catalog__row--incomplete-catalog {
+  background: rgba(254, 202, 202, 0.28);
+  border-color: var(--s7-list-row-attention-border);
+  border-left: 3px solid rgba(220, 38, 38, 0.45);
+}
+
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row--pending-product {
+  background: rgba(254, 202, 202, 0.28);
+  border-color: var(--s7-list-row-attention-border);
+  border-left: 3px solid rgba(220, 38, 38, 0.45);
+}
+
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row--pending-product:hover {
+  background: rgba(254, 202, 202, 0.4);
+  border-color: rgba(220, 38, 38, 0.38);
+}
+
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row--sku-pending {
+  background: rgba(255, 165, 0, 0.08);
+  border-color: rgba(245, 158, 11, 0.34);
+}
+
+.products-catalog__list-operational .products-catalog__body > .products-catalog__row--selected.products-catalog__row--incomplete-catalog,
+.products-catalog__list-operational .products-catalog__body > .anuncios-catalog__row--pending-product:has(.anuncios-catalog__select-checkbox:checked) {
+  background: var(--s7-list-row-selected-background);
+  border-color: var(--s7-list-row-selected-border);
+  border-left: 3px solid rgba(220, 38, 38, 0.45);
+}
+
+/* --- Vendas: tabela HTML do corpo --- */
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body {
+  border-collapse: separate;
+  border-spacing: 0 var(--s7-list-row-gap);
+  background: transparent;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr {
+  cursor: pointer;
+  background: transparent;
+  transform: none;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr:hover {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr:not(:has(.vendas-page__empty)) td {
+  border-top: 1px solid var(--s7-list-row-border);
+  border-bottom: 1px solid var(--s7-list-row-border);
+  background: var(--s7-list-row-background);
+  box-shadow: none;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr:not(:has(.vendas-page__empty)) td:first-child {
+  border-left: 1px solid var(--s7-list-row-border);
+  border-radius: var(--s7-list-row-radius) 0 0 var(--s7-list-row-radius);
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr:not(:has(.vendas-page__empty)) td:last-child {
+  border-right: 1px solid var(--s7-list-row-border);
+  border-radius: 0 var(--s7-list-row-radius) var(--s7-list-row-radius) 0;
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr:not(:has(.vendas-page__empty)):hover td {
+  background: var(--s7-list-row-hover-background);
+  border-top-color: var(--s7-list-row-hover-border);
+  border-bottom-color: var(--s7-list-row-hover-border);
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr:not(:has(.vendas-page__empty)):hover td:first-child {
+  border-left-color: var(--s7-list-row-hover-border);
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr:not(:has(.vendas-page__empty)):hover td:last-child {
+  border-right-color: var(--s7-list-row-hover-border);
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr.vendas-page__row--selected td {
+  background: var(--s7-list-row-selected-background);
+  border-top-color: var(--s7-list-row-selected-border);
+  border-bottom-color: var(--s7-list-row-selected-border);
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr.vendas-page__row--selected td:first-child {
+  border-left-color: var(--s7-list-row-selected-border);
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr.vendas-page__row--selected td:last-child {
+  border-right-color: var(--s7-list-row-selected-border);
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr.vendas-page__row--selected:hover td {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.vendas-page:not(.dashboard-page) .vendas-page__operacao-shell .vendas-page__table--body tbody tr:has(.vendas-page__empty) td {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--s7-list-row-background);
+}
+
+/* Respiro após cabeçalho laranja — primeiro card não colado */
+.products-catalog__list-operational .products-catalog__table-card--scroll-viewport .products-catalog__body,
+.concorrencia-catalog .products-catalog__list-operational .products-catalog__table-card--scroll-viewport .concorrencia-catalog__body {
+  padding-top: var(--s7-list-row-gap);
+}

@@ -161,11 +161,27 @@ export function getPaymentMethodStatusTone(method) {
 export function getPaymentMethodActionLabels() {
   return {
     makeDefault: "Tornar principal",
+    primary: "Principal",
     remove: "Remover",
     update: "Atualizar cartão",
     details: "Ver detalhes",
     retryCharge: "Tentar cobrança novamente",
   };
+}
+
+/**
+ * @param {BillingPaymentMethod | null | undefined} method
+ * @param {number} totalMethodsCount
+ */
+export function buildPaymentMethodRemoveDescription(method, totalMethodsCount) {
+  const maskedTitle = formatPaymentMethodTitle(method);
+  const hasOtherMethods = Number(totalMethodsCount) > 1;
+
+  if (hasOtherMethods) {
+    return `O cartão ${maskedTitle} será removido. As próximas cobranças usarão outra forma de pagamento disponível.`;
+  }
+
+  return `O cartão ${maskedTitle} será removido. Depois disso, não haverá uma forma de pagamento cadastrada para futuras cobranças.`;
 }
 
 /**

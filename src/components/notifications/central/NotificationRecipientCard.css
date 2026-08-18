@@ -4,6 +4,13 @@
   border: 1px solid var(--s7-divider, #dbe5f2);
   background: #fff;
   box-shadow: 0 3px 14px rgba(15, 23, 42, 0.04);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Após border shorthand — faixa azul canônica (paridade Vendas / pop-ups) */
+.s7-nrec-card.s7-ncenter-card--left-accent-blue {
+  border-left: var(--s7-ncenter-left-accent-width) solid var(--s7-ncenter-left-accent-blue);
 }
 
 .s7-nrec-card--inactive {
@@ -12,121 +19,97 @@
 }
 
 .s7-nrec-card__head {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
-  margin-bottom: 8px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.s7-nrec-card__head .s7-status-badge {
+  justify-self: end;
+  flex-shrink: 0;
+}
+
+.s7-nrec-card__head-main {
+  min-width: 0;
 }
 
 .s7-nrec-card__head h4 {
   margin: 0;
   font-size: 15px;
   font-weight: 700;
+  line-height: 1.3;
+  word-break: break-word;
 }
 
-.s7-nrec-card__role {
-  display: inline-block;
-  margin-top: 4px;
-  font-size: 11px;
-  color: var(--s7-muted, #64748b);
+.s7-nrec-card__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
-.s7-nrec-card__channel {
+.s7-nrec-card__primary-badge {
+  display: inline-flex;
+  align-items: center;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 4px 8px;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
   border-radius: 999px;
-  background: #e2e8f0;
-  color: #334155;
-}
-
-.s7-nrec-card__channel--email {
-  background: #dbeafe;
+  background: #eff6ff;
   color: #1d4ed8;
+  flex-shrink: 0;
 }
 
-.s7-nrec-card__channel--whatsapp {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.s7-nrec-card__channels {
-  list-style: none;
+.s7-nrec-card__facts {
   margin: 0 0 12px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  gap: 8px;
 }
 
-.s7-nrec-card__ch {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
+.s7-nrec-card__fact {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.s7-nrec-card__fact dt {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--s7-muted, #64748b);
 }
 
-.s7-nrec-card__ch--on em {
-  color: #0f172a;
-  font-style: normal;
+.s7-nrec-card__fact dd {
+  margin: 0;
+  font-size: 13px;
   font-weight: 600;
+  color: #0f172a;
+  min-width: 0;
 }
 
-.s7-nrec-card__status-on,
-.s7-nrec-card__status-off {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border-radius: 999px;
-}
-
-.s7-nrec-card__status-on {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.s7-nrec-card__status-off {
-  background: #f1f5f9;
-  color: #64748b;
+.s7-nrec-card__fact--email dd,
+.s7-nrec-card__value-full {
+  font-size: clamp(11px, 0.82vw + 10px, 13px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .s7-nrec-card__btn--danger {
   color: #b91c1c;
 }
 
-.s7-nrec-card__dest {
-  margin: 0 0 10px;
-  font-size: 13px;
-  color: var(--s7-text, #0f172a);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-.s7-nrec-card__scopes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.s7-nrec-card__scope {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #475569;
-}
-
-.s7-nrec-card__scope-muted {
-  font-size: 11px;
-  color: var(--s7-muted, #94a3b8);
-}
-
 .s7-nrec-card__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -150,4 +133,19 @@
 .s7-nrec-card__btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .s7-nrec-card__fact--email dd,
+  .s7-nrec-card__value-full {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .s7-nrec-card__fact {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
 }

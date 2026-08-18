@@ -1,0 +1,50 @@
+.s7-ncenter-delivery__head h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.s7-ncenter-delivery--embedded {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.s7-ncenter-delivery__head p {
+  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.s7-ncenter-delivery__loading {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.s7-ncenter-delivery__list {
+  display: grid;
+  gap: 14px;
+}
+
+.s7-ncenter-delivery__list--grid {
+  gap: 12px;
+}
+
+.s7-ncenter-delivery__list--grid .s7-ncenter-delivery__item {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.s7-ncenter-delivery__list--grid .s7-ncenter-delivery__item > .s7-npref-group {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.s7-ncenter-delivery__item--highlighted .s7-npref-group {
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.35);
+  border-radius: 12px;
+}

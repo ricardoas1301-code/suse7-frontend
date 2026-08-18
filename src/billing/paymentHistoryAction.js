@@ -2,114 +2,64 @@
 // Histórico de pagamentos — ação contextual por status/método
 // ======================================================================
 
-/**
- * @typedef {'pix_qr' | 'boleto_second_copy' | 'pay_generic' | 'invoice_nf' | 'canceled_label' | 'unavailable'} PaymentHistoryActionKind
- */
+import {
+  getCanonicalBusinessDateKey,
+  resolvePaymentHistoryRowPresentation,
+} from "./paymentHistoryPresentation.js";
+
+export {
+  BILLING_CANONICAL_TIMEZONE,
+  PAYMENT_HISTORY_ACTION_LABELS,
+  PAYMENT_HISTORY_EXPIRED_ACTION_LABEL,
+  PAYMENT_HISTORY_EXPIRED_TOOLTIP,
+  formatPaymentHistoryDueDateLabel,
+  formatPaymentHistoryPaidDateLabel,
+  getCanonicalBusinessDateKey,
+  getCanonicalBusinessDateParts,
+  isPaymentDueDateBeforeBusinessDate,
+  msUntilNextCanonicalMidnight,
+  normalizePaymentHistoryMethod,
+  normalizePaymentHistoryStatus,
+  parseCivilDateParts,
+  paymentHistoryPresentationStatusClass,
+  resolveBillingDisplayStatus,
+  resolvePaymentHistoryRowPresentation,
+} from "./paymentHistoryPresentation.js";
+
+/** Rótulo da ação de nota fiscal (desabilitada até emissão automática). */
+export const PAYMENT_HISTORY_INVOICE_NF_LABEL = "Baixar nota fiscal";
+
+export const PAYMENT_HISTORY_INVOICE_NF_TOOLTIP = {
+  title: "Nota fiscal",
+  text: "A nota fiscal estará disponível para download após a implementação da emissão automática.",
+};
 
 /**
- * @typedef {{
- *   kind: PaymentHistoryActionKind;
- *   label: string;
- *   actionable: boolean;
- *   disabled?: boolean;
- *   tooltip?: string | null;
- * }} PaymentHistoryAction
+ * @typedef {import("./paymentHistoryPresentation").PaymentHistoryActionPresentation} PaymentHistoryAction
  */
-
-/**
- * @param {unknown} status
- */
-export function normalizePaymentHistoryStatus(status) {
-  const raw = String(status || "")
-    .trim()
-    .toLowerCase();
-  if (!raw) return "PENDING";
-  if (["received", "confirmed", "received_in_cash", "paid", "pago"].includes(raw)) return "PAID";
-  if (["pending", "pendente", "awaiting_payment"].includes(raw)) return "PENDING";
-  if (["overdue", "vencido", "past_due"].includes(raw)) return "OVERDUE";
-  if (["canceled", "cancelled", "deleted", "cancelado"].includes(raw)) return "CANCELED";
-  if (["refunded", "estornado", "refund"].includes(raw)) return "REFUNDED";
-  if (["failed", "falhou", "chargeback", "chargeback_requested"].includes(raw)) return "FAILED";
-  return raw.toUpperCase();
-}
-
-/**
- * @param {unknown} method
- */
-export function normalizePaymentHistoryMethod(method) {
-  const raw = String(method || "")
-    .trim()
-    .toUpperCase();
-  if (!raw) return "UNKNOWN";
-  if (raw.includes("PIX")) return "PIX";
-  if (raw.includes("BOLETO") || raw.includes("BANK_SLIP") || raw.includes("BANKSLIP")) return "BOLETO";
-  if (raw.includes("CREDIT") || raw.includes("CARD") || raw.includes("CARTAO") || raw.includes("CARTÃO")) {
-    return "CREDIT_CARD";
-  }
-  return raw;
-}
-
-/**
- * @param {{ status?: string | null } | null | undefined} payment
- */
-export function isPaymentHistoryPayable(payment) {
-  const status = normalizePaymentHistoryStatus(payment?.status);
-  return status === "PENDING" || status === "OVERDUE";
-}
 
 /**
  * @param {Record<string, unknown> | null | undefined} payment
+ * @param {{ businessDateKey?: string | null }} [options]
  * @returns {PaymentHistoryAction}
  */
-export function getPaymentHistoryAction(payment) {
-  const status = normalizePaymentHistoryStatus(payment?.status);
-  const method = normalizePaymentHistoryMethod(payment?.payment_method_type);
+export function getPaymentHistoryAction(payment, options = {}) {
+  return resolvePaymentHistoryRowPresentation({
+    payment,
+    businessDateKey: options.businessDateKey ?? getCanonicalBusinessDateKey(),
+  }).action;
+}
 
-  if (status === "PAID") {
-    return {
-      kind: "invoice_nf",
-      label: "Gerar nota fiscal",
-      actionable: false,
-      disabled: true,
-      tooltip: "Disponível em breve",
-    };
-  }
-
-  if (status === "CANCELED") {
-    return {
-      kind: "canceled_label",
-      label: "Cancelado",
-      actionable: false,
-    };
-  }
-
-  if (status === "PENDING" || status === "OVERDUE") {
-    if (method === "PIX") {
-      return {
-        kind: "pix_qr",
-        label: "Visualizar QR Code",
-        actionable: Boolean(payment?.provider_payment_id),
-      };
-    }
-    if (method === "BOLETO") {
-      return {
-        kind: "boleto_second_copy",
-        label: "Gerar 2ª via",
-        actionable: Boolean(payment?.invoice_url || payment?.provider_payment_id),
-      };
-    }
-    return {
-      kind: "pay_generic",
-      label: "Pagar",
-      actionable: Boolean(payment?.invoice_url),
-    };
-  }
-
-  return {
-    kind: "unavailable",
-    label: "—",
-    actionable: false,
-  };
+/**
+ * @param {{ status?: string | null; due_date?: string | null } | null | undefined} payment
+ * @param {{ businessDateKey?: string | null }} [options]
+ */
+export function isPaymentHistoryPayable(payment, options = {}) {
+  const presentation = resolvePaymentHistoryRowPresentation({
+    payment,
+    businessDateKey: options.businessDateKey ?? getCanonicalBusinessDateKey(),
+  });
+  return presentation.action.actionable && !presentation.action.disabled;
 }
 
 /**
@@ -150,12 +100,19 @@ export function buildPaymentHistoryBoletoPayment(payment) {
 }
 
 /**
- * Bloqueia abertura de link/modal quando status não é pagável.
+ * Bloqueia abertura de link/modal quando a ação não é executável.
  * @param {Record<string, unknown> | null | undefined} payment
- * @param {PaymentHistoryActionKind} expectedKind
+ * @param {import("./paymentHistoryPresentation").PaymentHistoryActionKind} expectedKind
+ * @param {{ businessDateKey?: string | null }} [options]
  */
-export function canExecutePaymentHistoryAction(payment, expectedKind) {
-  if (!isPaymentHistoryPayable(payment)) return false;
-  const action = getPaymentHistoryAction(payment);
-  return action.actionable && action.kind === expectedKind;
+export function canExecutePaymentHistoryAction(payment, expectedKind, options = {}) {
+  if (
+    expectedKind === "pay_monthly" &&
+    String(payment?.billing_state || "").toLowerCase() === "awaiting_generation" &&
+    payment?.renewal_cycle_id
+  ) {
+    return true;
+  }
+  const action = getPaymentHistoryAction(payment, options);
+  return action.actionable && !action.disabled && action.kind === expectedKind;
 }

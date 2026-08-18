@@ -9,13 +9,14 @@ export default function NotificationChannelToggle({
   locked,
   future,
   saving,
+  compactInCard = false,
   onChange,
 }) {
   const isDisabled = disabled || locked || future || saving;
 
   return (
     <label
-      className={`s7-nch-toggle ${enabled ? "s7-nch-toggle--on" : ""} ${isDisabled ? "s7-nch-toggle--disabled" : ""} ${future ? "s7-nch-toggle--future" : ""}`}
+      className={`s7-nch-toggle ${enabled ? "s7-nch-toggle--on" : ""} ${isDisabled ? "s7-nch-toggle--disabled" : ""} ${future ? "s7-nch-toggle--future" : ""} ${compactInCard ? "s7-nch-toggle--compact-in-card" : ""}`}
     >
       <input
         type="checkbox"

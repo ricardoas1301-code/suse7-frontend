@@ -1,0 +1,37 @@
+.auth-callback-gate {
+  min-height: 40vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.auth-callback-gate--error {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.auth-callback-gate__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.auth-callback-gate__message {
+  margin: 0;
+  color: var(--s7-text-muted, #5f6368);
+}
+
+.auth-callback-gate__link {
+  margin-top: 8px;
+  color: var(--s7-primary, #1a73e8);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-callback-gate__link:hover {
+  text-decoration: underline;
+}

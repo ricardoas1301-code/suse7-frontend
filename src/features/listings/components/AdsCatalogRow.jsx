@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHref, useNavigate } from "react-router-dom";
+import Decimal from "decimal.js";
 import precificaS7Icon from "../../../assets/precifica-s7-icon.png";
 import raioxTriggerIcon from "../../../assets/raiox-trigger-icon.png";
 import comparativoOfertasS7Icon from "../../../assets/comparativo-ofertas-s7-icon.png";
@@ -12,10 +13,12 @@ import { buildApiUrl, apiFetch } from "../../../config/api";
 import { getMarketplaceTheme, getMarketplaceThemeCssVars } from "../../../theme/marketplaceTheme.js";
 import S7Button from "../../../components/ui/S7Button";
 import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../../../components/ui/S7CopyButton.jsx";
+import S7CatalogListingHeadline from "../../../components/catalog/S7CatalogListingHeadline.jsx";
 import S7Icon from "../../../components/ui/S7Icon";
 import S7Tooltip from "../../../components/ui/S7Tooltip";
 import S7CatalogAccountCell, {
   S7CatalogChannelCell,
+  pickCatalogAccountFields,
 } from "../../../components/catalog/S7CatalogAccountCell.jsx";
 import { MercadoLivrePricingScenarioComparePanel } from "../../../components/MercadoLivrePricingScenarioComparePanel.jsx";
 import RaioxOfferComparisonChartModal from "../../../components/rayx/RaioxOfferComparisonChartModal.jsx";
@@ -28,7 +31,17 @@ import {
   shouldSaleXrayDebugTrace,
   wrapPricingScenariosApiAsSaleXrayModalPayload,
 } from "../../../components/mercadoLivrePricingScenarioCompareShared.js";
-import { formatCatalogBRL } from "../../../utils/productCatalogRow";
+import { getVendasTableFinancialHealthToneClass } from "../../../utils/saleHealthUi.js";
+import {
+  CatalogMetricCell,
+  CatalogMetricMissing,
+  CatalogMetricNumSingle,
+  CatalogProfitHealthHint,
+  catalogVendasFinValueClass,
+  formatCatalogPctVendasStyle,
+  renderCatalogMoneyDisplay,
+} from "../../../components/catalog/CatalogFinancialMetricUi.jsx";
+import { salvarLinhaPrecificacaoInteligenteCache } from "../pricing-intelligence/pricingIntelligenceRowCache.js";
 import {
   DASH,
   SEM_DADO,
@@ -43,8 +56,17 @@ import {
   qualityBadgeClass,
   experienceBadgeClass,
 } from "../utils/catalogFormatters.js";
-import { ADS_PAGE_MODE, listingsPageModes } from "../config/listingsPageModes.js";
-import { getListingProductLinkActions, isAnunciosCatalogRowPending } from "../utils/mlListingsGridMapping.js";
+import { ADS_PAGE_MODE, PRICING_PAGE_MODE, listingsPageModes } from "../config/listingsPageModes.js";
+import { ANUNCIOS_COL } from "../layout/anunciosCatalogColumns.js";
+import { PRECIFICACOES_COL } from "../layout/precificacoesCatalogColumns.js";
+import { formatarQuantidadeVendasListaPrecificacoesDaLinha } from "../layout/formatPrecificacoesListSalesCount.js";
+import {
+  resolvePrecificacoesListCurrentState,
+} from "../utils/resolvePrecificacoesListCellMetrics.js";
+import { getListingProductLinkActions, isAnunciosCatalogRowPending, shouldShowCadastrarCustosListaRow } from "../utils/mlListingsGridMapping.js";
+import { resolveCanonicalListingQualityScore } from "../domain/health/resolveCanonicalListingQualityScore.js";
+import ListingQualityGauge from "./ListingQualityGauge.jsx";
+import { montarClassesLinhaOperationalRowCard } from "../../../components/s7OperationalRowCardClasses.js";
 import {
   ADS_RAIOX_POPOVER_WIDTH_PX,
   ADS_RAIOX_POPOVER_MAX_H_PX,
@@ -96,7 +118,47 @@ export function ListingCoverThumb({ url }) {
   return <ListingCoverThumbInner key={trimmed || "__empty__"} trimmed={trimmed} />;
 }
 
-const COMPLETE_PRODUCT_TOOLTIP = "Cadastrar os custos do produto.";
+/**
+ * @param {unknown} raw
+ * @returns {Decimal | null}
+ */
+function parseApiDecimal(raw) {
+  if (raw == null) return null;
+  const text = String(raw).trim();
+  if (!text) return null;
+  try {
+    const dec = new Decimal(text.replace(",", "."));
+    return dec.isFinite() ? dec : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param {unknown} raw
+ */
+function parseNonNegativeInt(raw) {
+  if (raw == null) return 0;
+  const n = Number.parseInt(String(raw), 10);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+const COMPLETE_PRODUCT_COSTS_LABEL = "Cadastrar Custos";
+const COMPLETE_PRODUCT_TOOLTIP = "Cadastrar custos do produto para calcular lucro e margem.";
+
+function classeBadgeTipoAnuncioLista(tipoLabel) {
+  const text = tipoLabel != null ? String(tipoLabel).trim().toLowerCase() : "";
+  if (text === "premium") return "premium";
+  if (text === "clássico" || text === "classico") return "classic";
+  if (text === "grátis" || text === "gratis") return "free";
+  return "neutral";
+}
+
+function normalizarTipoAnuncioLista(tipoLabel) {
+  const text = tipoLabel != null ? String(tipoLabel).trim() : "";
+  if (!text || text === DASH) return null;
+  return text;
+}
 
 /**
  * Coluna “Você vende por” (vista minimal): preço de tabela, promoção, atacado, “você recebe” + Raio-x ao lado do preço principal.
@@ -1467,11 +1529,41 @@ function AdsMinimalSellColumn({ row, onInformSku, onOpenPricing }) {
 
 const PRECIFICA_S7_ICON_SRC = precificaS7Icon;
 
+/** Célula numérica compacta — valor + detalhe (paridade Vendas / tokens vendas-page__num-stack). */
+function CatalogTableNumStack({ primary, secondary, primaryClassName = "", secondaryClassName = "" }) {
+  const hasSecondary =
+    secondary != null && (typeof secondary !== "string" || String(secondary).trim() !== "");
+  const primaryNode =
+    primaryClassName && typeof primary === "string" ? (
+      <span className={primaryClassName}>{primary}</span>
+    ) : (
+      primary
+    );
+  const secondaryNode =
+    typeof secondary === "string" ? (
+      <span className={["vendas-page__num-stack-secondary", secondaryClassName].filter(Boolean).join(" ")}>
+        {secondary}
+      </span>
+    ) : (
+      secondary
+    );
+  return (
+    <div className="vendas-page__num-stack">
+      <span className="vendas-page__num-stack-primary">{primaryNode}</span>
+      <span className="vendas-page__num-stack-secondary-slot" aria-hidden={hasSecondary ? undefined : true}>
+        {hasSecondary ? secondaryNode : null}
+      </span>
+    </div>
+  );
+}
+
 /**
  * @param {{
  *   row: ReturnType<typeof mapGridApiToCatalogRow>;
  *   onInformSku?: (r: ReturnType<typeof mapGridApiToCatalogRow>) => void;
  *   onListingsRefresh?: () => void | Promise<void>;
+ *   onOpenPricingIntelligence?: (row: ReturnType<typeof mapGridApiToCatalogRow>) => void;
+ *   onOpenListingRayX?: (row: ReturnType<typeof mapGridApiToCatalogRow>) => void;
  *   minimal?: boolean;
  *   selected?: boolean;
  *   onToggleSelected?: (listingId: string) => void;
@@ -1485,7 +1577,9 @@ const PRECIFICA_S7_ICON_SRC = precificaS7Icon;
 export function AdsCatalogRow({
   row,
   onInformSku,
-  onListingsRefresh, // eslint-disable-line no-unused-vars -- refresh pós-aplicar preço ocorre na página dedicada
+  onListingsRefresh,
+  onOpenPricingIntelligence,
+  onOpenListingRayX,
   minimal = false,
   selected = false,
   onToggleSelected,
@@ -1497,7 +1591,7 @@ export function AdsCatalogRow({
 }) {
   const rowClickAction =
     rowClickActionProp ??
-    (listingsWorkspaceMode === "precificacoes" ? "openPricingIntelligence" : "openListingEditor");
+    (listingsWorkspaceMode === "precificacoes" ? "openPricingIntelligence" : "openListingRayX");
   const catalogColumnLayout =
     catalogColumnLayoutProp ?? (listingsWorkspaceMode === "precificacoes" ? "pricing_focus" : "full_catalog");
   const navigate = useNavigate();
@@ -1511,13 +1605,25 @@ export function AdsCatalogRow({
   const [quickCostsModalOpen, setQuickCostsModalOpen] = useState(false);
 
   const goToPricingIntelligencePage = useCallback(() => {
+    if (pricingIntelligenceOpenTarget === "modal") {
+      salvarLinhaPrecificacaoInteligenteCache(String(row.id), row);
+      onOpenPricingIntelligence?.(row);
+      return;
+    }
     if (pricingIntelligenceOpenTarget === "new_tab") {
+      salvarLinhaPrecificacaoInteligenteCache(String(row.id), row);
       const absUrl = new URL(pricingIntelligenceHref, window.location.href).toString();
       window.open(absUrl, "_blank", "noopener,noreferrer");
       return;
     }
     navigate(pricingIntelligenceHref);
-  }, [navigate, pricingIntelligenceHref, pricingIntelligenceOpenTarget]);
+  }, [
+    navigate,
+    onOpenPricingIntelligence,
+    pricingIntelligenceHref,
+    pricingIntelligenceOpenTarget,
+    row,
+  ]);
 
   /** Clique no corpo da linha: `openPricingIntelligence` → página S7; caso contrário → gestão (produto / SKU / ML). */
   const handleRowShellClick = useCallback(() => {
@@ -1525,8 +1631,12 @@ export function AdsCatalogRow({
       goToPricingIntelligencePage();
       return;
     }
+    if (rowClickAction === "openListingRayX") {
+      onOpenListingRayX?.(row);
+      return;
+    }
     const linkAct = getListingProductLinkActions(row, onInformSku);
-    if (linkAct.showCompletar && row.productId) {
+    if (shouldShowCadastrarCustosListaRow(row)) {
       setQuickCostsModalOpen(true);
       return;
     }
@@ -1541,7 +1651,7 @@ export function AdsCatalogRow({
     if (row.listingPermalink) {
       window.open(row.listingPermalink, "_blank", "noopener,noreferrer");
     }
-  }, [rowClickAction, navigate, onInformSku, goToPricingIntelligencePage, row]);
+  }, [rowClickAction, navigate, onInformSku, onOpenListingRayX, goToPricingIntelligencePage, row]);
 
   const listingIdCopyText =
     row.listingNumber !== DASH ? String(row.listingNumber).trim() : "";
@@ -1568,11 +1678,7 @@ export function AdsCatalogRow({
       ? `${Math.round(Number(row.listingQualityScore) <= 1 ? Number(row.listingQualityScore) * 100 : Number(row.listingQualityScore))}%`
       : null);
 
-  const metaParts = [
-    row.sku ? `SKU: ${row.sku}` : null,
-    row.picturesCount != null ? `${row.picturesCount} foto(s)` : null,
-    row.variationsCount != null ? `${row.variationsCount} var.` : null,
-  ].filter(Boolean);
+  const metaParts = [row.variationsCount != null ? `${row.variationsCount} var.` : null].filter(Boolean);
 
   const visitsCell =
     row.visitsAbsent ? DASH : row.visitsText == null ? SEM_DADO : row.visitsText;
@@ -1583,14 +1689,554 @@ export function AdsCatalogRow({
   const revenueCell = row.grossRevenueMissing ? DASH : formatBrlFromApiString(row.grossRevenueBrl);
 
   const linkAct = getListingProductLinkActions(row, onInformSku);
+  const isAnunciosMainList = listingsWorkspaceMode === "anuncios";
+  const grossSalesDec = parseApiDecimal(row.grossSalesBrl ?? row.grossRevenueBrl);
+  const contributionProfitDec = parseApiDecimal(row.contributionProfitBrl ?? row.netProfitBrl);
+  const contributionMarginDec = parseApiDecimal(row.contributionMarginPercent);
+  const ticketFromApiDec = parseApiDecimal(row.averageTicketBrl);
+  const repasseDec = parseApiDecimal(row.youReceiveBrl ?? row.netReceiveBrl);
+  const soldUnitsInt = parseNonNegativeInt(row.salesCount);
+  const soldUnitsText = row.salesCount != null ? String(row.salesCount) : DASH;
+  const lucroBrlText =
+    contributionProfitDec != null
+      ? formatBrlFromApiString(contributionProfitDec.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2))
+      : DASH;
+  const marginPctNum =
+    contributionMarginDec != null
+      ? contributionMarginDec.toNumber()
+      : contributionProfitDec != null && grossSalesDec != null && !grossSalesDec.isZero()
+        ? contributionProfitDec.div(grossSalesDec).times(100).toNumber()
+        : null;
+  const hasListingSalesHistory =
+    soldUnitsInt > 0 && grossSalesDec != null && !grossSalesDec.isZero() && !row.grossRevenueMissing;
+  const listingFinancialToneClass = hasListingSalesHistory
+    ? getVendasTableFinancialHealthToneClass(marginPctNum)
+    : "vendas-page__fin--empty";
+  const listingFinancialValueClass = catalogVendasFinValueClass(listingFinancialToneClass);
+  const lucroPercentDisplay = formatCatalogPctVendasStyle(marginPctNum);
+  const ticketMedioText =
+    ticketFromApiDec != null
+      ? formatBrlFromApiString(ticketFromApiDec.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2))
+      : grossSalesDec != null && soldUnitsInt > 0
+        ? formatBrlFromApiString(grossSalesDec.div(soldUnitsInt).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2))
+        : DASH;
+  const repasseText =
+    repasseDec != null
+      ? formatBrlFromApiString(repasseDec.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2))
+      : DASH;
+  const canonicalQualityScore = resolveCanonicalListingQualityScore(row);
+  const precoAtualText =
+    row.promotionActive && row.promotionSalePriceBrl
+      ? formatBrlFromApiString(row.promotionSalePriceBrl)
+      : row.effectiveSalePriceBrl
+        ? formatBrlFromApiString(row.effectiveSalePriceBrl)
+        : row.listingPriceBrl
+          ? formatBrlFromApiString(row.listingPriceBrl)
+          : DASH;
+  const precoOriginalText =
+    row.promotionActive && row.listingSalePriceBrl && row.promotionSalePriceBrl
+      ? formatBrlFromApiString(row.listingSalePriceBrl)
+      : null;
+  const tipoAnuncioListaLabel = normalizarTipoAnuncioLista(row.listingTypeLabel);
+  const tipoAnuncioListaTone = classeBadgeTipoAnuncioLista(tipoAnuncioListaLabel);
+  const tipoAnuncioListaBadge = tipoAnuncioListaLabel ? (
+    <span
+      className={`anuncios-catalog__listing-type-badge anuncios-catalog__listing-type-badge--${tipoAnuncioListaTone}`}
+      title={row.listingTypeTooltip || `Tipo do anúncio: ${tipoAnuncioListaLabel}`}
+    >
+      {tipoAnuncioListaLabel}
+    </span>
+  ) : null;
 
-  if (minimal) {
+  const accountFields = pickCatalogAccountFields(row);
+
+  if (minimal && listingsWorkspaceMode === PRICING_PAGE_MODE) {
+    const state = resolvePrecificacoesListCurrentState(row);
+    const { price } = state;
+
     return (
       <>
         <div
-          className={`anuncios-catalog__row anuncios-catalog__row--minimal anuncios-catalog--dense${
-            rowPending ? " anuncios-catalog__row--pending-product" : ""
-          }${!showPrecificaS7Column ? " anuncios-catalog__row--no-precifica-col" : ""} anuncios-catalog__row--interactive`}
+          className={montarClassesLinhaOperationalRowCard(
+            [
+              "anuncios-catalog__row",
+              "anuncios-catalog__row--minimal",
+              "anuncios-catalog__row--precificacoes-minimal",
+              "anuncios-catalog--dense",
+              rowPending && "anuncios-catalog__row--pending-product",
+              "anuncios-catalog__row--no-precifica-col",
+              "anuncios-catalog__row--interactive",
+            ],
+            { selected, critical: rowPending },
+          )}
+          role="row"
+          onClick={handleRowShellClick}
+        >
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--select"
+            data-col={PRECIFICACOES_COL.select}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <input
+              type="checkbox"
+              className="anuncios-catalog__select-checkbox"
+              checked={selected}
+              disabled={selectionDisabled}
+              onChange={() => onToggleSelected?.(row.id)}
+              aria-label={`Selecionar oferta ${row.listingNumberDisplay !== DASH ? row.listingNumberDisplay : row.id}`}
+            />
+          </div>
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--thumb"
+            data-col={PRECIFICACOES_COL.cover}
+            title={row.adTitle}
+          >
+            <ListingCoverThumb url={row.coverThumbnailUrl} />
+          </div>
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--minimal-listing anuncios-catalog__cell--anuncio"
+            data-col={PRECIFICACOES_COL.listing}
+          >
+            <div className="anuncios-ad-main">
+              <S7CatalogListingHeadline
+                className="anuncios-catalog__headline-vendas-parity"
+                title={row.adTitle && row.adTitle !== DASH ? row.adTitle : "Sem título"}
+                titleTooltip={row.adTitle && row.adTitle !== DASH ? String(row.adTitle) : ""}
+                titleHref={row.listingPermalink}
+                listingId={row.listingNumber === DASH ? "" : String(row.listingNumberDisplay || "")}
+                listingIdCopyValue={listingIdCopyText}
+                sku={row.sku ? String(row.sku) : ""}
+                skuCopyValue={skuCopyText}
+                showSkuWhenEmpty
+                skuEmptyLabel="não informado"
+                stopTitlePropagation
+                copyListingFlashKey="ad-id"
+                copySkuFlashKey="ad-sku"
+              />
+              <div
+                className="anuncios-catalog__minimal-title-actions"
+                onClick={(e) => e.stopPropagation()}
+                role="presentation"
+              >
+                {linkAct.showInformSkuMl ? (
+                  <S7Button
+                    type="button"
+                    variant="warning"
+                    size="sm"
+                    className="anuncios-ad-line-action-btn"
+                    onClick={() => onInformSku?.(row)}
+                  >
+                    Cadastrar SKU
+                  </S7Button>
+                ) : null}
+                {linkAct.showVincular ? (
+                  <S7Button
+                    type="button"
+                    variant="warning"
+                    size="sm"
+                    className="anuncios-ad-line-action-btn"
+                    onClick={() => onInformSku?.(row)}
+                  >
+                    Vincular produto
+                  </S7Button>
+                ) : null}
+                {shouldShowCadastrarCustosListaRow(row) ? (
+                  <span className="anuncios-completar-inline">
+                    <S7Tooltip content={COMPLETE_PRODUCT_TOOLTIP} placement="bottom-start" offset={6} wrap>
+                      <span className="anuncios-completar-tooltip-anchor">
+                        <S7Button
+                          type="button"
+                          variant="warning"
+                          size="sm"
+                          className="anuncios-ad-line-action-btn"
+                          onClick={() => setQuickCostsModalOpen(true)}
+                        >
+                          {COMPLETE_PRODUCT_COSTS_LABEL}
+                        </S7Button>
+                      </span>
+                    </S7Tooltip>
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--listing-type"
+            data-col={PRECIFICACOES_COL.listingType}
+          >
+            {tipoAnuncioListaBadge ?? <span className="anuncios-catalog__listing-type-empty">—</span>}
+          </div>
+          <div className="products-catalog__cell anuncios-catalog__cell--account" data-col={PRECIFICACOES_COL.account}>
+            <S7CatalogAccountCell
+              marketplaceAccountId={accountFields.marketplaceAccountId}
+              accountAlias={accountFields.accountAlias}
+              accountLogoUrl={accountFields.accountLogoUrl}
+              compact
+            />
+          </div>
+          <div className="products-catalog__cell anuncios-catalog__cell--channel" data-col={PRECIFICACOES_COL.channel}>
+            <S7CatalogChannelCell
+              marketplace={row.marketplaceRaw || row.marketplaceSlug}
+              marketplaceLabel={row.marketplaceLabelDisplay}
+            />
+          </div>
+          <CatalogMetricCell columnClass="products-catalog__cell--num" dataCol={PRECIFICACOES_COL.sales} variant="num">
+            <CatalogMetricNumSingle>
+              <span className="precificacoes-catalog__sales-cell">
+                {formatarQuantidadeVendasListaPrecificacoesDaLinha(row)}
+              </span>
+            </CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--money anuncios-catalog__cell--precificacoes-result"
+            dataCol={PRECIFICACOES_COL.profitBrl}
+            variant="profit"
+            toneClass={state.toneClass}
+          >
+            <CatalogMetricNumSingle>
+              <span className="vendas-page__fin-value-row">
+                <span className={`vendas-page__fin-value ${state.valueClass}`}>
+                  {renderCatalogMoneyDisplay(state.lucroBrlText)}
+                </span>
+                {state.hasProjectedFinancials && state.toneClass !== "vendas-page__fin--empty" ? (
+                  <CatalogProfitHealthHint toneClass={state.toneClass} />
+                ) : null}
+              </span>
+            </CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--pct"
+            dataCol={PRECIFICACOES_COL.profitPercent}
+            variant="margin"
+            toneClass={state.toneClass}
+          >
+            <CatalogMetricNumSingle>
+              <span className="vendas-page__fin-value-row">
+                <span className={`vendas-page__fin-value ${state.valueClass}`}>
+                  {state.lucroPercentDisplay != null ? (
+                    state.lucroPercentDisplay
+                  ) : (
+                    <CatalogMetricMissing />
+                  )}
+                </span>
+                {state.hasProjectedFinancials && state.toneClass !== "vendas-page__fin--empty" ? (
+                  <CatalogProfitHealthHint toneClass={state.toneClass} />
+                ) : null}
+              </span>
+            </CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--money"
+            dataCol={PRECIFICACOES_COL.currentPrice}
+            variant="money"
+          >
+            <CatalogTableNumStack
+              primary={renderCatalogMoneyDisplay(price.currentPriceBrl)}
+              secondary={price.regularPriceBrl ? price.regularPriceBrl : null}
+              secondaryClassName="precificacoes-catalog__price-secondary"
+            />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.commission} variant="money">
+            <CatalogTableNumStack
+              primary={renderCatalogMoneyDisplay(state.commissionBrlText)}
+              secondary={state.commissionSecondary}
+            />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.shipping} variant="money">
+            <CatalogTableNumStack
+              primary={renderCatalogMoneyDisplay(state.shippingBrlText)}
+              secondary={state.shippingSecondary}
+            />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.payout} variant="money">
+            <CatalogTableNumStack primary={renderCatalogMoneyDisplay(state.payoutBrlText)} />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.cost} variant="money">
+            <CatalogTableNumStack
+              primary={renderCatalogMoneyDisplay(state.costBrlText)}
+              secondary={state.costSecondary}
+            />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.tax} variant="money">
+            <CatalogTableNumStack
+              primary={renderCatalogMoneyDisplay(state.taxBrlText)}
+              secondary={state.taxSecondary}
+            />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--num" dataCol={PRECIFICACOES_COL.competitors}>
+            <S7Tooltip content={state.competitorsTooltip} placement="bottom" offset={6} wrap>
+              <CatalogTableNumStack
+                primary={
+                  <span
+                    className={`precificacoes-catalog__competitors-total${
+                      state.competitorsCount > 0 ? " precificacoes-catalog__competitors-total--active" : ""
+                    }`}
+                  >
+                    {state.competitorsCount}
+                  </span>
+                }
+                secondary={
+                  state.competitorsAbove > 0 || state.competitorsBelow > 0 ? (
+                    <span className="precificacoes-catalog__competitors-secondary">
+                      {state.competitorsAbove > 0 ? (
+                        <span className="precificacoes-catalog__competitors-detail precificacoes-catalog__competitors-detail--above">
+                          ↑ {state.competitorsAbove} acima
+                        </span>
+                      ) : null}
+                      {state.competitorsBelow > 0 ? (
+                        <span className="precificacoes-catalog__competitors-detail precificacoes-catalog__competitors-detail--below">
+                          ↓ {state.competitorsBelow} abaixo
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : null
+                }
+              />
+            </S7Tooltip>
+          </CatalogMetricCell>
+        </div>
+        <QuickProductCostsModal
+          open={quickCostsModalOpen}
+          productId={row.productId ? String(row.productId) : null}
+          sku={row.sku}
+          productTitle={row.adTitle && row.adTitle !== DASH ? String(row.adTitle) : "Produto"}
+          productImageUrl={row.coverThumbnailUrl ? String(row.coverThumbnailUrl) : null}
+          onClose={() => setQuickCostsModalOpen(false)}
+          onSaved={async () => {
+            await onListingsRefresh?.();
+          }}
+        />
+      </>
+    );
+  }
+
+  if (minimal && isAnunciosMainList) {
+    return (
+      <>
+        <div
+          className={montarClassesLinhaOperationalRowCard(
+            [
+              "anuncios-catalog__row",
+              "anuncios-catalog__row--minimal",
+              "anuncios-catalog__row--anuncios-analytic",
+              "anuncios-catalog--dense",
+              rowPending && "anuncios-catalog__row--pending-product",
+              !showPrecificaS7Column && "anuncios-catalog__row--no-precifica-col",
+              "anuncios-catalog__row--interactive",
+            ],
+            { selected, critical: rowPending },
+          )}
+          role="row"
+          onClick={handleRowShellClick}
+        >
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--select"
+            data-col={ANUNCIOS_COL.select}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <input
+              type="checkbox"
+              className="anuncios-catalog__select-checkbox"
+              checked={selected}
+              disabled={selectionDisabled}
+              onChange={() => onToggleSelected?.(row.id)}
+              aria-label={`Selecionar anúncio ${row.listingNumberDisplay !== DASH ? row.listingNumberDisplay : row.id}`}
+            />
+          </div>
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--thumb"
+            data-col={ANUNCIOS_COL.cover}
+            title={row.adTitle}
+          >
+            <ListingCoverThumb url={row.coverThumbnailUrl} />
+          </div>
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--minimal-listing anuncios-catalog__cell--anuncio"
+            data-col={ANUNCIOS_COL.listing}
+          >
+            <div className="anuncios-ad-main">
+              <S7CatalogListingHeadline
+                className="anuncios-catalog__headline-vendas-parity"
+                title={row.adTitle && row.adTitle !== DASH ? row.adTitle : "Sem título"}
+                titleTooltip={row.adTitle && row.adTitle !== DASH ? String(row.adTitle) : ""}
+                titleHref={row.listingPermalink}
+                listingId={row.listingNumber === DASH ? "" : String(row.listingNumberDisplay || "")}
+                listingIdCopyValue={listingIdCopyText}
+                sku={row.sku ? String(row.sku) : ""}
+                skuCopyValue={skuCopyText}
+                showSkuWhenEmpty
+                skuEmptyLabel="não informado"
+                stopTitlePropagation
+                copyListingFlashKey="ad-id"
+                copySkuFlashKey="ad-sku"
+              />
+              <div
+                className="anuncios-catalog__minimal-title-actions"
+                onClick={(e) => e.stopPropagation()}
+                role="presentation"
+              >
+                {linkAct.showInformSkuMl ? (
+                  <S7Button
+                    type="button"
+                    variant="warning"
+                    size="sm"
+                    className="anuncios-ad-line-action-btn"
+                    onClick={() => onInformSku?.(row)}
+                  >
+                    Cadastrar SKU
+                  </S7Button>
+                ) : null}
+                {linkAct.showVincular ? (
+                  <S7Button
+                    type="button"
+                    variant="warning"
+                    size="sm"
+                    className="anuncios-ad-line-action-btn"
+                    onClick={() => onInformSku?.(row)}
+                  >
+                    Vincular produto
+                  </S7Button>
+                ) : null}
+                {linkAct.showCompletar && row.productId ? (
+                  <span className="anuncios-completar-inline">
+                    <S7Tooltip content={COMPLETE_PRODUCT_TOOLTIP} placement="bottom-start" offset={6} wrap>
+                      <span className="anuncios-completar-tooltip-anchor">
+                        <S7Button
+                          type="button"
+                          variant="warning"
+                          size="sm"
+                          className="anuncios-ad-line-action-btn"
+                          onClick={() => setQuickCostsModalOpen(true)}
+                        >
+                          {COMPLETE_PRODUCT_COSTS_LABEL}
+                        </S7Button>
+                      </span>
+                    </S7Tooltip>
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--listing-type"
+            data-col={ANUNCIOS_COL.listingType}
+          >
+            {tipoAnuncioListaBadge ?? <span className="anuncios-catalog__listing-type-empty">—</span>}
+          </div>
+          <div className="products-catalog__cell anuncios-catalog__cell--account" data-col={ANUNCIOS_COL.account}>
+            <S7CatalogAccountCell
+              marketplaceAccountId={accountFields.marketplaceAccountId}
+              accountAlias={accountFields.accountAlias}
+              accountLogoUrl={accountFields.accountLogoUrl}
+              compact
+            />
+          </div>
+          <div className="products-catalog__cell anuncios-catalog__cell--channel" data-col={ANUNCIOS_COL.channel}>
+            <S7CatalogChannelCell
+              marketplace={row.marketplaceRaw || row.marketplaceSlug}
+              marketplaceLabel={row.marketplaceLabelDisplay}
+            />
+          </div>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--money"
+            dataCol={ANUNCIOS_COL.profitBrl}
+            variant="profit"
+            toneClass={listingFinancialToneClass}
+          >
+            <CatalogMetricNumSingle>
+              <span className="vendas-page__fin-value-row">
+                <span className={`vendas-page__fin-value ${listingFinancialValueClass}`}>
+                  {renderCatalogMoneyDisplay(lucroBrlText)}
+                </span>
+                {hasListingSalesHistory && listingFinancialToneClass !== "vendas-page__fin--empty" ? (
+                  <CatalogProfitHealthHint toneClass={listingFinancialToneClass} />
+                ) : null}
+              </span>
+            </CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--pct"
+            dataCol={ANUNCIOS_COL.profitPercent}
+            variant="margin"
+            toneClass={listingFinancialToneClass}
+          >
+            <CatalogMetricNumSingle>
+              <span className="vendas-page__fin-value-row">
+                <span className={`vendas-page__fin-value ${listingFinancialValueClass}`}>
+                  {lucroPercentDisplay != null ? lucroPercentDisplay : <CatalogMetricMissing />}
+                </span>
+                {hasListingSalesHistory && listingFinancialToneClass !== "vendas-page__fin--empty" ? (
+                  <CatalogProfitHealthHint toneClass={listingFinancialToneClass} />
+                ) : null}
+              </span>
+            </CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--money"
+            dataCol={ANUNCIOS_COL.salePrice}
+            variant="money"
+          >
+            <CatalogTableNumStack
+              primary={renderCatalogMoneyDisplay(precoAtualText)}
+              secondary={precoOriginalText ? precoOriginalText : null}
+              secondaryClassName="precificacoes-catalog__price-secondary"
+            />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--num" dataCol={ANUNCIOS_COL.sales}>
+            <CatalogTableNumStack primary={soldUnitsText} />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.revenue} variant="money">
+            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(revenueCell)}</CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.avgTicket} variant="money">
+            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(ticketMedioText)}</CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.payout} variant="money">
+            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(repasseText)}</CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <div
+            className="products-catalog__cell anuncios-catalog__cell--quality"
+            data-col={ANUNCIOS_COL.quality}
+          >
+            <ListingQualityGauge scorePercent={canonicalQualityScore} variant="tableCompact" />
+          </div>
+        </div>
+        <QuickProductCostsModal
+          open={quickCostsModalOpen}
+          productId={row.productId ? String(row.productId) : null}
+          sku={row.sku}
+          productTitle={row.adTitle && row.adTitle !== DASH ? String(row.adTitle) : "Produto"}
+          productImageUrl={row.coverThumbnailUrl ? String(row.coverThumbnailUrl) : null}
+          onClose={() => setQuickCostsModalOpen(false)}
+          onSaved={async () => {
+            await onListingsRefresh?.();
+          }}
+        />
+      </>
+    );
+  }
+
+  if (minimal) {
+    const isPrecificacoesMinimal = showPrecificaS7Column;
+    return (
+      <>
+        <div
+          className={montarClassesLinhaOperationalRowCard(
+            [
+              "anuncios-catalog__row",
+              "anuncios-catalog__row--minimal",
+              "anuncios-catalog--dense",
+              rowPending && "anuncios-catalog__row--pending-product",
+              !showPrecificaS7Column && "anuncios-catalog__row--no-precifica-col",
+              isPrecificacoesMinimal && "anuncios-catalog__row--precificacoes-minimal",
+              "anuncios-catalog__row--interactive",
+            ],
+            { selected, critical: rowPending },
+          )}
           role="row"
           onClick={handleRowShellClick}
         >
@@ -1637,48 +2283,22 @@ export function AdsCatalogRow({
           </div>
         <div className="products-catalog__cell anuncios-catalog__cell--minimal-listing">
           <div className="anuncios-ad-main">
-            <div className="anuncios-ad-id-row">
-              <span className="anuncios-ad-id-text">
-                {row.listingNumber === DASH ? row.listingNumber : row.listingNumberDisplay}
-              </span>
-              {listingIdCopyText !== "" ? (
-                <S7CopyButton
-                  value={listingIdCopyText}
-                  ariaLabel="Copiar ID completo do anúncio"
-                  tooltipText="Copiar ID do anúncio"
-                  toastLabel="ID do anúncio"
-                  showToast={true}
-                  iconMode="unicode"
-                  flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-                  flashKey="ad-id"
-                  toastEventType="LISTING_ID_COPIED"
-                  toastFailEventType="LISTING_ID_COPY_FAILED"
-                  toastEntityType="marketplace_listing"
-                />
-              ) : null}
-            </div>
+            <S7CatalogListingHeadline
+              className="anuncios-catalog__headline-vendas-parity"
+              title={row.adTitle && row.adTitle !== DASH ? row.adTitle : "Sem título"}
+              titleHref={row.listingPermalink}
+              listingId={row.listingNumber === DASH ? "" : String(row.listingNumberDisplay || "")}
+              listingIdCopyValue={listingIdCopyText}
+              sku={row.sku ? String(row.sku) : ""}
+              skuCopyValue={skuCopyText}
+              showSkuWhenEmpty
+              skuEmptyLabel="não informado"
+              stopTitlePropagation
+              copyListingFlashKey="ad-id"
+              copySkuFlashKey="ad-sku"
+            />
             <div className="anuncios-catalog__minimal-title-toolbar">
-              <div className="anuncios-catalog__minimal-title-grow">
-                {row.adTitle && row.adTitle !== DASH ? (
-                  row.listingPermalink ? (
-                    <a
-                      href={row.listingPermalink}
-                      className="anuncios-ad-title-link anuncios-ad-title-link--toolbar"
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      title={`Abrir no Mercado Livre — ${row.adTitle}`}
-                    >
-                      {row.adTitle}
-                    </a>
-                  ) : (
-                    <span className="anuncios-ad-title-link anuncios-ad-title-link--static anuncios-ad-title-link--toolbar" title={row.adTitle}>
-                      {row.adTitle}
-                    </span>
-                  )
-                ) : (
-                  <span className="anuncios-catalog__minimal-title-placeholder">Sem título</span>
-                )}
-              </div>
+              <div className="anuncios-catalog__minimal-title-grow" aria-hidden />
               <div
                 className="anuncios-catalog__minimal-title-actions"
                 onClick={(e) => e.stopPropagation()}
@@ -1692,7 +2312,7 @@ export function AdsCatalogRow({
                     className="anuncios-ad-line-action-btn"
                     onClick={() => onInformSku?.(row)}
                   >
-                    Informar SKU
+                    Cadastrar SKU
                   </S7Button>
                 ) : null}
                 {linkAct.showVincular ? (
@@ -1722,68 +2342,30 @@ export function AdsCatalogRow({
                           className="anuncios-ad-line-action-btn"
                           onClick={() => setQuickCostsModalOpen(true)}
                         >
-                          Completar cadastro do produto
+                          {COMPLETE_PRODUCT_COSTS_LABEL}
                         </S7Button>
                       </span>
                     </S7Tooltip>
                   </span>
                 ) : null}
               </div>
-              <div className="anuncios-catalog__minimal-account-channel">
-                <S7CatalogAccountCell
-                  marketplaceAccountId={row.marketplaceAccountId}
-                  accountAlias={row.accountAlias}
-                  accountLogoUrl={row.accountLogoUrl}
-                  compact
-                />
-                <S7CatalogChannelCell
-                  marketplace={row.marketplaceRaw || row.marketplaceSlug}
-                  marketplaceLabel={row.marketplaceLabelDisplay}
-                />
-              </div>
             </div>
             <div className="anuncios-ad-sku-row">
-              <span className="anuncios-ad-sku-pair">
-                <span className="anuncios-ad-sku-label">SKU</span>
-                {row.sku ? (
-                  <>
-                    <span className="anuncios-ad-sku-value">{row.sku}</span>
-                    <S7CopyButton
-                      value={skuCopyText}
-                      ariaLabel="Copiar SKU"
-                      tooltipText="Copiar SKU"
-                      toastLabel="SKU"
-                      showToast={true}
-                      iconMode="unicode"
-                      flashMs={S7_COPY_OFFICIAL_FLASH_MS}
-                      flashKey="ad-sku"
-                      toastEventType="LISTING_SKU_COPIED"
-                      toastFailEventType="LISTING_SKU_COPY_FAILED"
-                      toastEntityType="marketplace_listing"
-                    />
-                  </>
-                ) : (
-                  <span className="anuncios-ad-sku-value anuncios-ad-sku-value--empty">não informado</span>
-                )}
-              </span>
               {row.picturesCount != null ? (
                 <>
-                  <span className="anuncios-ad-sku-sep" aria-hidden>
-                    ·
-                  </span>
                   <span className="anuncios-ad-meta-inline">
                     {row.picturesCount} {row.picturesCount === 1 ? "foto" : "fotos"}
                   </span>
+                  <span className="anuncios-ad-sku-sep" aria-hidden>
+                    ·
+                  </span>
                 </>
               ) : null}
-              <span className="anuncios-ad-sku-sep" aria-hidden>
-                ·
-              </span>
               <span
                 className="anuncios-ad-meta-inline"
                 title="Visitas ao anúncio no Mercado Livre, quando a API expõe o dado."
               >
-                {visitsCell} visitas
+                {visitsCell === DASH ? "Sem dado visitas" : `${visitsCell} visitas`}
               </span>
               <span className="anuncios-ad-sku-sep" aria-hidden>
                 ·
@@ -1797,6 +2379,27 @@ export function AdsCatalogRow({
             </div>
           </div>
         </div>
+          {isPrecificacoesMinimal ? (
+            <>
+              <div className="products-catalog__cell anuncios-catalog__cell--account">
+                <S7CatalogAccountCell
+                  marketplaceAccountId={row.marketplaceAccountId}
+                  accountAlias={row.accountAlias}
+                  accountLogoUrl={row.accountLogoUrl}
+                  compact
+                />
+              </div>
+              <div className="products-catalog__cell anuncios-catalog__cell--channel">
+                <S7CatalogChannelCell
+                  marketplace={row.marketplaceRaw || row.marketplaceSlug}
+                  marketplaceLabel={row.marketplaceLabelDisplay}
+                />
+              </div>
+              <div className="products-catalog__cell anuncios-catalog__cell--listing-type">
+                {tipoAnuncioListaBadge ?? <span className="anuncios-catalog__listing-type-empty">—</span>}
+              </div>
+            </>
+          ) : null}
         <div className="products-catalog__cell anuncios-catalog__cell--minimal-sell">
           <AdsMinimalSellColumn row={row} onInformSku={onInformSku} onOpenPricing={goToPricingIntelligencePage} />
         </div>
@@ -1819,11 +2422,17 @@ export function AdsCatalogRow({
   return (
     <>
     <div
-      className={`anuncios-catalog__row anuncios-catalog--dense${
-        rowPending ? " anuncios-catalog__row--pending-product" : ""
-      }${!showPrecificaS7Column ? " anuncios-catalog__row--no-precifica-col" : ""}${
-        catalogColumnLayout === "pricing_focus" ? " anuncios-catalog__row--pricing-columns" : ""
-      } anuncios-catalog__row--interactive`}
+      className={montarClassesLinhaOperationalRowCard(
+        [
+          "anuncios-catalog__row",
+          "anuncios-catalog--dense",
+          rowPending && "anuncios-catalog__row--pending-product",
+          !showPrecificaS7Column && "anuncios-catalog__row--no-precifica-col",
+          catalogColumnLayout === "pricing_focus" && "anuncios-catalog__row--pricing-columns",
+          "anuncios-catalog__row--interactive",
+        ],
+        { selected, critical: rowPending },
+      )}
       role="row"
       onClick={handleRowShellClick}
     >
@@ -1868,12 +2477,12 @@ export function AdsCatalogRow({
       <div className="products-catalog__cell anuncios-catalog__cell--thumb" title={row.adTitle}>
         <ListingCoverThumb url={row.coverThumbnailUrl} />
       </div>
-      <div className="products-catalog__cell anuncios-catalog__cell--listing-no">
+      <div className="products-catalog__cell anuncios-catalog__cell--listing-no s7-catalog-headline">
         {row.listingNumber === DASH ? (
           row.listingNumber
         ) : (
-          <div className="anuncios-ad-id-row">
-            <span className="anuncios-ad-id-text">{row.listingNumberDisplay}</span>
+          <span className="s7-copy-group s7-catalog-headline__meta-ad">
+            <span className="s7-catalog-headline__meta-value anuncios-ad-id-text">{row.listingNumberDisplay}</span>
             <S7CopyButton
               value={listingIdCopyText}
               ariaLabel={`Copiar ID do anúncio ${row.listingNumberDisplay}`}
@@ -1887,14 +2496,27 @@ export function AdsCatalogRow({
               toastFailEventType="LISTING_ID_COPY_FAILED"
               toastEntityType="marketplace_listing"
             />
-          </div>
+          </span>
         )}
       </div>
-      <div className="products-catalog__cell anuncios-catalog__cell--title">
+      <div className="products-catalog__cell anuncios-catalog__cell--title s7-catalog-headline">
         <div className="anuncios-catalog__title-heading-row">
-          <span className="anuncios-catalog__ad-title anuncios-catalog__ad-title--inline" title={row.adTitle}>
-            {row.adTitle}
-          </span>
+          {row.adTitle && row.adTitle !== DASH && row.listingPermalink ? (
+            <a
+              href={row.listingPermalink}
+              className="anuncios-catalog__ad-title anuncios-catalog__ad-title--inline anuncios-ad-title-link s7-catalog-headline__title-link s7-catalog-headline__title"
+              target="_blank"
+              rel="noreferrer noopener"
+              title={`Abrir no Mercado Livre — ${row.adTitle}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {row.adTitle}
+            </a>
+          ) : (
+            <span className="anuncios-catalog__ad-title anuncios-catalog__ad-title--inline s7-catalog-headline__title" title={row.adTitle}>
+              {row.adTitle}
+            </span>
+          )}
           <div
             className="anuncios-catalog__title-heading-actions"
             onClick={(e) => e.stopPropagation()}
@@ -1908,7 +2530,7 @@ export function AdsCatalogRow({
                 className="anuncios-ad-line-action-btn"
                 onClick={() => onInformSku?.(row)}
               >
-                Informar SKU
+                Cadastrar SKU
               </S7Button>
             ) : null}
             {linkAct.showVincular ? (
@@ -1938,7 +2560,7 @@ export function AdsCatalogRow({
                       className="anuncios-ad-line-action-btn"
                       onClick={() => setQuickCostsModalOpen(true)}
                     >
-                      Completar cadastro do produto
+                      {COMPLETE_PRODUCT_COSTS_LABEL}
                     </S7Button>
                   </span>
                 </S7Tooltip>
@@ -1946,6 +2568,34 @@ export function AdsCatalogRow({
             ) : null}
           </div>
         </div>
+        {row.sku ? (
+          <div className="s7-catalog-headline__meta s7-catalog-headline__meta--stacked">
+            <span
+              className="s7-copy-group s7-catalog-headline__meta-sku"
+              role="presentation"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <span className="anuncios-ad-sku-label">SKU</span>
+              <span className="anuncios-ad-sku-value s7-catalog-headline__meta-value">{row.sku}</span>
+              {skuCopyText ? (
+                <S7CopyButton
+                  value={skuCopyText}
+                  ariaLabel="Copiar SKU"
+                  tooltipText="Copiar SKU"
+                  toastLabel="SKU"
+                  showToast={true}
+                  iconMode="unicode"
+                  flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                  flashKey="ad-sku-full"
+                  toastEventType="LISTING_SKU_COPIED"
+                  toastFailEventType="LISTING_SKU_COPY_FAILED"
+                  toastEntityType="marketplace_listing"
+                />
+              ) : null}
+            </span>
+          </div>
+        ) : null}
         {metaParts.length > 0 ? <span className="anuncios-catalog__ad-meta">{metaParts.join(" · ")}</span> : null}
         {row.financialAnalysisHint ? (
           <span className="anuncios-catalog__financial-hint" role="note">
@@ -1995,7 +2645,7 @@ export function AdsCatalogRow({
             : undefined
         }
       >
-        {row.salesCount}
+        {row.salesCount != null ? row.salesCount : DASH}
       </div>
       <div
         className="products-catalog__cell products-catalog__cell--money"

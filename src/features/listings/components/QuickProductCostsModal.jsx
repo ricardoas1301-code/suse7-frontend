@@ -1,35 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../../../supabaseClient";
 import S7Input from "../../../components/ui/S7Input";
-
-function formatBrlTypingWithSymbol(raw) {
-  const digits = String(raw ?? "").replace(/\D/g, "");
-  if (digits === "") return "";
-  const cents = Number(digits);
-  if (!Number.isFinite(cents)) return "";
-  return `R$ ${(cents / 100).toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function formatBrlFromApiValue(raw) {
-  if (raw == null || raw === "") return "";
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return "";
-  return `R$ ${n.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function normalizeDecimalInput(raw) {
-  const digits = String(raw ?? "").replace(/\D/g, "");
-  if (digits === "") return "";
-  const cents = Number(digits);
-  if (!Number.isFinite(cents)) return "";
-  return (cents / 100).toFixed(2);
-}
+import S7Button from "../../../components/ui/S7Button.jsx";
+import S7Icon from "../../../components/ui/S7Icon.jsx";
+import S7Tooltip from "../../../components/ui/S7Tooltip.jsx";
+import {
+  PRODUCT_EXPEDITION_SUPPLIES_LABEL,
+  PRODUCT_EXPEDITION_SUPPLIES_TOOLTIP,
+} from "../../../domain/costs/costSemanticsPresentation.js";
+import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../../../components/ui/S7CopyButton.jsx";
+import quickProductCostsIllustration from "../../../assets/modals/quick-product-costs-illustration.png";
+import BulkProductCostsModal from "../../products/costs/BulkProductCostsModal.jsx";
+import {
+  formatBrlFromApiValue,
+  formatBrlTypingWithSymbol,
+  validateProductCostsDraft,
+} from "../../products/costs/productCostsDomain.js";
+import { saveSingleProductCosts } from "../../products/costs/productCostsApi.js";
+import { refreshOperationalTasksAfterProductCostsSaved } from "../../dashboard/operationalTasks/refreshOperationalTasksAfterProductCostsSaved.js";
+import "../../../styles/tokens/s7-operational-thumb.css";
 
 /**
  * @param {{
@@ -51,6 +41,7 @@ export default function QuickProductCostsModal({
   onClose,
   onSaved,
 }) {
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -58,7 +49,6 @@ export default function QuickProductCostsModal({
   const [packagingCost, setPackagingCost] = useState("");
   const [operationalCost, setOperationalCost] = useState("");
   const [resolvedSku, setResolvedSku] = useState("");
-  const [skuCopied, setSkuCopied] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({
     costPrice: "",
     packagingCost: "",
@@ -72,7 +62,11 @@ export default function QuickProductCostsModal({
   }, [productTitle]);
 
   useEffect(() => {
-    if (!open || !productId) return;
+    if (!open) {
+      setBulkOpen(false);
+      return;
+    }
+    if (!productId) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -98,25 +92,41 @@ export default function QuickProductCostsModal({
     };
   }, [open, productId]);
 
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   if (!open) return null;
+
+  if (bulkOpen) {
+    return <BulkProductCostsModal open onClose={onClose} onSaved={onSaved} />;
+  }
 
   const handleSave = async () => {
     if (!productId) return;
     setError("");
     setFieldErrors({ costPrice: "", packagingCost: "", operationalCost: "" });
-    const productCostNorm = normalizeDecimalInput(costPrice);
-    const packagingCostNorm = normalizeDecimalInput(packagingCost);
-    const operationalCostNorm = normalizeDecimalInput(operationalCost);
-    const nextFieldErrors = {
-      costPrice: productCostNorm ? "" : "Custo do produto deve ser maior que zero",
-      packagingCost: packagingCostNorm ? "" : "Custo embalagem é obrigatório",
-      operationalCost: operationalCostNorm ? "" : "Custo operacional é obrigatório",
-    };
-    if (nextFieldErrors.costPrice || nextFieldErrors.packagingCost || nextFieldErrors.operationalCost) {
-      setFieldErrors(nextFieldErrors);
-      const firstMissingFieldName = !productCostNorm
+
+    const validation = validateProductCostsDraft({
+      cost_price: costPrice,
+      packaging_cost: packagingCost,
+      operational_cost: operationalCost,
+    });
+
+    if (!validation.ok) {
+      setFieldErrors({
+        costPrice: validation.fieldErrors?.cost_price || "",
+        packagingCost: validation.fieldErrors?.packaging_cost || "",
+        operationalCost: validation.fieldErrors?.operational_cost || "",
+      });
+      const firstMissingFieldName = validation.fieldErrors?.cost_price
         ? "quick-product-cost-price"
-        : !packagingCostNorm
+        : validation.fieldErrors?.packaging_cost
           ? "quick-product-packaging-cost"
           : "quick-product-operational-cost";
       const firstMissingInput = modalRef.current?.querySelector(`input[name="${firstMissingFieldName}"]`);
@@ -125,53 +135,30 @@ export default function QuickProductCostsModal({
     }
 
     setSaving(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user?.id) {
-      setSaving(false);
-      setError("Sessão inválida. Faça login novamente.");
-      return;
-    }
-
-    const payload = {
-      cost_price: productCostNorm,
-      packaging_cost: packagingCostNorm,
-      operational_cost: operationalCostNorm,
-    };
-
-    const trimmedSku = String(resolvedSku || sku || "").trim();
-    let updateQuery = supabase.from("products").update(payload).eq("user_id", user.id);
-    if (trimmedSku) {
-      updateQuery = updateQuery.eq("sku", trimmedSku);
-    } else {
-      updateQuery = updateQuery.eq("id", productId);
-    }
-
-    const { error: saveError } = await updateQuery;
+    const result = await saveSingleProductCosts({
+      product_id: String(productId),
+      ...validation.costs,
+    });
     setSaving(false);
-    if (saveError) {
-      setError(saveError.message || "Não foi possível salvar os custos.");
+
+    if (!result.ok || (result.failed || []).length > 0) {
+      const failMsg =
+        result.failed?.[0]?.message ||
+        result.error ||
+        "Não foi possível salvar os custos.";
+      setError(failMsg);
       return;
     }
 
-    await onSaved?.();
     onClose();
+    await refreshOperationalTasksAfterProductCostsSaved();
+    void onSaved?.();
   };
 
-  const handleCopySku = async () => {
-    const text = String(resolvedSku || sku || "").trim();
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      setSkuCopied(true);
-      window.setTimeout(() => setSkuCopied(false), 1800);
-    } catch {
-      setError("Não foi possível copiar o SKU.");
-    }
-  };
+  const skuText = String(resolvedSku || sku || "").trim();
+  const skuCopyFlashKey = `quick-product-costs-sku-${productId || "unknown"}`;
 
-  return (
+  const modalNode = (
     <div className="anuncios-quick-cost-modal__overlay" onMouseDown={() => (!saving ? onClose() : undefined)} role="presentation">
       <div
         ref={modalRef}
@@ -182,87 +169,135 @@ export default function QuickProductCostsModal({
       >
         <div className="anuncios-quick-cost-modal__header">
           <h3 className="anuncios-quick-cost-modal__title">Cadastrar os custos do produto</h3>
-          <button
+          <S7Button
             type="button"
-            className="anuncios-quick-cost-modal__close"
-            onClick={onClose}
-            aria-label="Fechar"
-            disabled={saving}
+            variant="warning"
+            size="sm"
+            className="anuncios-quick-cost-modal__bulk-btn vendas-page__complete-product-btn"
+            onClick={() => setBulkOpen(true)}
+            disabled={loading || saving}
           >
-            Fechar
-          </button>
+            Cadastrar custos em lote
+          </S7Button>
         </div>
         <div className="anuncios-quick-cost-modal__footer-summary">
           <div className="anuncios-quick-cost-modal__product anuncios-quick-cost-modal__product--footer">
             {productImageUrl ? (
-              <img src={productImageUrl} alt="" className="anuncios-quick-cost-modal__thumb" loading="lazy" decoding="async" />
+              <div className="anuncios-quick-cost-modal__thumb-wrap s7-operational-thumb-frame s7-operational-thumb-frame--circle">
+                <img
+                  src={productImageUrl}
+                  alt=""
+                  className="anuncios-quick-cost-modal__thumb s7-operational-thumb"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             ) : (
-              <div className="anuncios-quick-cost-modal__thumb anuncios-quick-cost-modal__thumb--placeholder" />
+              <div
+                className="anuncios-quick-cost-modal__thumb-wrap anuncios-quick-cost-modal__thumb--placeholder s7-operational-thumb-frame s7-operational-thumb-frame--circle"
+                aria-hidden
+              />
             )}
             <div className="anuncios-quick-cost-modal__identity-text">
               <p className="anuncios-quick-cost-modal__name" title={title}>
                 {title}
               </p>
-              <div className="anuncios-quick-cost-modal__sku-row">
+              <div
+                className="s7-copy-group anuncios-quick-cost-modal__sku-row"
+                role="presentation"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 <span className="anuncios-ad-sku-label">SKU</span>
-                <span className="anuncios-ad-sku-value">{String(resolvedSku || sku || "não informado")}</span>
-                <button
-                  type="button"
-                  className={`products-catalog__copy-btn s7-tip s7-tip-bottom s7-tip-left anuncios-quick-cost-modal__sku-copy${
-                    skuCopied ? " products-catalog__copy-btn--ok" : ""
-                  }`}
-                  data-tip={skuCopied ? "Copiado!" : "Copiar SKU"}
-                  onClick={handleCopySku}
-                  aria-label="Copiar SKU"
-                  disabled={saving}
-                >
-                  {skuCopied ? "✓" : "⧉"}
-                </button>
+                <span className="anuncios-ad-sku-value">{skuText || "não informado"}</span>
+                {skuText ? (
+                  <S7CopyButton
+                    value={skuText}
+                    ariaLabel={`Copiar SKU ${skuText}`}
+                    tooltipText="Copiar SKU"
+                    toastLabel="SKU"
+                    showToast={true}
+                    iconMode="unicode"
+                    flashMs={S7_COPY_OFFICIAL_FLASH_MS}
+                    flashKey={skuCopyFlashKey}
+                    toastEventType="LISTING_SKU_COPIED"
+                    toastFailEventType="LISTING_SKU_COPY_FAILED"
+                    toastEntityType="product"
+                    className="anuncios-quick-cost-modal__sku-copy"
+                  />
+                ) : null}
               </div>
             </div>
           </div>
         </div>
         <div className="anuncios-quick-cost-modal__body">
-          <div className="anuncios-quick-cost-modal__costs-col">
-            <S7Input
-              label="Custo do produto"
-              required
-              name="quick-product-cost-price"
-              value={costPrice}
-              onChange={(e) => {
-                setCostPrice(formatBrlTypingWithSymbol(e.target.value));
-                setFieldErrors((prev) => ({ ...prev, costPrice: "" }));
-              }}
-              placeholder="R$ 0,00"
-              disabled={loading || saving}
-              error={fieldErrors.costPrice}
-            />
-            <S7Input
-              label="Custo embalagem"
-              required
-              name="quick-product-packaging-cost"
-              value={packagingCost}
-              onChange={(e) => {
-                setPackagingCost(formatBrlTypingWithSymbol(e.target.value));
-                setFieldErrors((prev) => ({ ...prev, packagingCost: "" }));
-              }}
-              placeholder="R$ 0,00"
-              disabled={loading || saving}
-              error={fieldErrors.packagingCost}
-            />
-            <S7Input
-              label="Custo operacional"
-              required
-              name="quick-product-operational-cost"
-              value={operationalCost}
-              onChange={(e) => {
-                setOperationalCost(formatBrlTypingWithSymbol(e.target.value));
-                setFieldErrors((prev) => ({ ...prev, operationalCost: "" }));
-              }}
-              placeholder="R$ 0,00"
-              disabled={loading || saving}
-              error={fieldErrors.operationalCost}
-            />
+          <div className="anuncios-quick-cost-modal__body-row">
+            <div className="anuncios-quick-cost-modal__costs-col">
+              <S7Input
+                label="Custo do produto"
+                required
+                name="quick-product-cost-price"
+                value={costPrice}
+                onChange={(e) => {
+                  setCostPrice(formatBrlTypingWithSymbol(e.target.value));
+                  setFieldErrors((prev) => ({ ...prev, costPrice: "" }));
+                }}
+                placeholder="R$ 0,00"
+                disabled={loading || saving}
+                error={fieldErrors.costPrice}
+              />
+              <S7Input
+                label="Custo embalagem"
+                required
+                name="quick-product-packaging-cost"
+                value={packagingCost}
+                onChange={(e) => {
+                  setPackagingCost(formatBrlTypingWithSymbol(e.target.value));
+                  setFieldErrors((prev) => ({ ...prev, packagingCost: "" }));
+                }}
+                placeholder="R$ 0,00"
+                disabled={loading || saving}
+                error={fieldErrors.packagingCost}
+              />
+              <div className="anuncios-quick-cost-modal__field-with-tip">
+                <label className="s7-input__label" htmlFor="quick-product-operational-cost">
+                  <span>{PRODUCT_EXPEDITION_SUPPLIES_LABEL}</span>
+                  <span className="anuncios-quick-cost-modal__required" aria-hidden>
+                    *
+                  </span>
+                  <S7Tooltip content={PRODUCT_EXPEDITION_SUPPLIES_TOOLTIP} placement="top-start" offset={6} wrap>
+                    <button
+                      type="button"
+                      className="anuncios-quick-cost-modal__info-btn"
+                      aria-label={`Informações sobre ${PRODUCT_EXPEDITION_SUPPLIES_LABEL}`}
+                    >
+                      <S7Icon name="info" size={12} strokeWidth={2} />
+                    </button>
+                  </S7Tooltip>
+                </label>
+                <S7Input
+                  required
+                  name="quick-product-operational-cost"
+                  value={operationalCost}
+                  onChange={(e) => {
+                    setOperationalCost(formatBrlTypingWithSymbol(e.target.value));
+                    setFieldErrors((prev) => ({ ...prev, operationalCost: "" }));
+                  }}
+                  placeholder="R$ 0,00"
+                  disabled={loading || saving}
+                  error={fieldErrors.operationalCost}
+                />
+              </div>
+            </div>
+            <div className="anuncios-quick-cost-modal__illustration" aria-hidden="true">
+              <img
+                src={quickProductCostsIllustration}
+                alt=""
+                className="anuncios-quick-cost-modal__illustration-img"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
           </div>
           {error ? <p className="anuncios-quick-cost-modal__error">{error}</p> : null}
         </div>
@@ -274,4 +309,6 @@ export default function QuickProductCostsModal({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(modalNode, document.body) : modalNode;
 }
