@@ -1,0 +1,48 @@
+﻿.s7-clear-filters-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 2px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 33px;
+  box-sizing: border-box;
+}
+
+.s7-clear-filters-action__icon {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.s7-clear-filters-action:hover:not(:disabled) {
+  color: #0f172a;
+}
+
+.s7-clear-filters-action:hover:not(:disabled) .s7-clear-filters-action__icon {
+  color: #334155;
+}
+
+.s7-clear-filters-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-radius: 6px;
+}
+
+.s7-clear-filters-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+  color: #94a3b8;
+}
+
+.s7-clear-filters-action:disabled .s7-clear-filters-action__icon {
+  color: #94a3b8;
+}

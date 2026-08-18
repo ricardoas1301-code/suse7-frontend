@@ -1,0 +1,31 @@
+﻿.s7-search-input-busy-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.s7-search-input-busy-indicator__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(37, 99, 235, 0.22);
+  border-top-color: var(--s7-primary, #2563eb);
+  border-radius: 50%;
+  animation: s7-search-input-busy-spin 0.65s linear infinite;
+}
+
+@keyframes s7-search-input-busy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s7-search-input-busy-indicator__spinner {
+    animation: none;
+    border-top-color: var(--s7-primary, #2563eb);
+    opacity: 0.75;
+  }
+}
