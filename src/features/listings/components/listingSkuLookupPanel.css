@@ -1,0 +1,181 @@
+.anuncios-sku-modal__lookup {
+  margin-top: 8px;
+}
+
+.anuncios-sku-modal__lookup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anuncios-sku-modal__lookup-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.anuncios-sku-modal__lookup-item--compact {
+  padding: 6px 8px;
+}
+
+.anuncios-sku-modal__lookup-item--selected {
+  border-color: var(--s7-orange, #f97316);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.anuncios-sku-modal__lookup-item input[type="checkbox"] {
+  margin-top: 2px;
+}
+
+.anuncios-sku-modal__lookup-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.06);
+  flex: 0 0 34px;
+  margin-top: 1px;
+}
+
+.anuncios-sku-modal__lookup-item--compact .anuncios-sku-modal__lookup-thumb {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+}
+
+.anuncios-sku-modal__lookup-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #ffffff;
+  display: block;
+}
+
+.anuncios-sku-modal__lookup-thumb-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(71, 85, 105, 0.7);
+}
+
+.anuncios-sku-modal__lookup-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+  flex: 1;
+}
+
+.anuncios-sku-modal__lookup-text strong {
+  font-size: 12px;
+  line-height: 1.28;
+  color: var(--s7-orange, #f97316);
+  text-align: left;
+  word-break: break-word;
+}
+
+.anuncios-sku-modal__lookup-text span {
+  font-size: 11px;
+  line-height: 1.3;
+  color: #64748b;
+  text-align: left;
+}
+
+.anuncios-sku-modal__lookup-sku {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.anuncios-sku-modal__lookup-state {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.anuncios-sku-modal__lookup-state--error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.anuncios-sku-modal__confirm-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #64748b;
+}
+
+.listing-sku-lookup-panel {
+  width: 100%;
+}
+
+/* Lote — anúncio + resultado = uma única unidade de vínculo */
+.bulk-listing-sku-modal__row-wrap--has-resolution {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--s7-orange, #ff8533);
+  border-radius: 10px;
+  background: #fff;
+  overflow: clip;
+}
+
+.bulk-listing-sku-modal__row-wrap--has-resolution .bulk-listing-sku-modal__row.s7-operational-row-card {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.bulk-listing-sku-modal__row-wrap--has-resolution .bulk-listing-sku-modal__row.s7-operational-row-card:hover {
+  background: #f8fafc;
+  border-color: transparent;
+}
+
+.bulk-listing-sku-modal__row-wrap--has-resolution .bulk-listing-sku-modal__row--error.s7-operational-row-card {
+  background: rgba(254, 202, 202, 0.14);
+}
+
+.bulk-listing-sku-modal__row-wrap--ready.bulk-listing-sku-modal__row-wrap--has-resolution {
+  box-shadow: 0 2px 10px rgba(255, 133, 51, 0.14);
+}
+
+.bulk-listing-sku-modal__row-resolution {
+  margin: 0;
+  padding: 6px 12px 10px 64px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.bulk-listing-sku-modal__row-resolution .anuncios-sku-modal__lookup {
+  margin-top: 0;
+}
+
+/* Card interno — contorno cinza; laranja fica só na moldura externa */
+.bulk-listing-sku-modal__row-resolution .anuncios-sku-modal__lookup-item {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: #f8fafc;
+}
+
+.bulk-listing-sku-modal__row-resolution .anuncios-sku-modal__lookup-item--selected {
+  border-color: rgba(100, 116, 139, 0.55);
+  background: #f1f5f9;
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .bulk-listing-sku-modal__row-resolution {
+    padding-left: 12px;
+  }
+}

@@ -1,0 +1,393 @@
+/* ======================================================================
+   S7CatalogListingHeadline — tipografia padrão coluna Anúncio / Produto
+   Referência: lista de Vendas (título laranja + MLB/SKU compactos).
+   ====================================================================== */
+
+.vendas-page__product-headline,
+.s7-catalog-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 2px 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.s7-catalog-headline--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s7-list-row-identity-stacked-gap, 4px);
+}
+
+.vendas-page__product-title-slot,
+.s7-catalog-headline__title-slot {
+  flex: 1 1 6rem;
+  min-width: 0;
+  max-width: 100%;
+  text-align: left;
+}
+
+.s7-catalog-headline__title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.s7-catalog-headline__title-row > .s7-tooltip-portal-root {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  display: block;
+}
+
+.s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--s7-orange, #ff8533);
+  padding: 0;
+  cursor: inherit;
+  font: inherit;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  background: transparent;
+  box-shadow: none;
+  color: var(--s7-orange, #ff8533);
+}
+
+.s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: #c2410c;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* Inline (Vendas / Anúncios / Precificações): tooltip no title-slot — laranja, não azul DS */
+.vendas-page__product-title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  white-space: normal;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--s7-orange, #ff8533);
+  padding: 0;
+  cursor: inherit;
+  text-align: left;
+  font-size: var(--s7-list-row-identity-title-size, 12px);
+  font-weight: var(--s7-list-row-identity-title-weight, 600);
+  line-height: var(--s7-list-row-identity-title-line-height, 1.3);
+  letter-spacing: normal;
+  max-height: calc(var(--s7-list-row-identity-title-line-height, 1.3) * 2em);
+}
+
+.vendas-page__product-title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.vendas-page__product-title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  background: transparent;
+  box-shadow: none;
+  color: var(--s7-orange, #ff8533);
+}
+
+.vendas-page__product-title-slot .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.vendas-page__product-title-slot .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-catalog-headline__title-link.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  color: #c2410c;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.vendas-page__product-title-slot .anuncios-ad-title-link,
+.s7-catalog-headline__title-slot .anuncios-ad-title-link,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-link {
+  color: var(--s7-orange, #ff8533);
+}
+
+.vendas-page__product-title-slot .vendas-page__product-title,
+.vendas-page__product-title-slot .vendas-page__product-title-link,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-link,
+.s7-catalog-headline .anuncios-ad-title-link,
+.s7-catalog-headline .anuncios-catalog__ad-title,
+.s7-catalog-headline__title,
+.s7-catalog-headline__title-link {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+  margin: 0;
+  font-size: var(--s7-list-row-identity-title-size, 12px);
+  font-weight: var(--s7-list-row-identity-title-weight, 600);
+  color: var(--s7-orange, #ff8533);
+  line-height: var(--s7-list-row-identity-title-line-height, 1.3);
+  letter-spacing: normal;
+  text-decoration: none;
+  max-width: 100%;
+}
+
+/* Anúncios stacked: título em 1 linha. Produtos (--product): mantém 2 linhas (padrão Vendas). */
+.s7-catalog-headline--stacked:not(.s7-catalog-headline--product) .s7-catalog-headline__title,
+.s7-catalog-headline--stacked:not(.s7-catalog-headline--product) .s7-catalog-headline__title-link,
+.s7-catalog-headline--stacked:not(.s7-catalog-headline--product) .anuncios-ad-title-link,
+.s7-catalog-headline--stacked:not(.s7-catalog-headline--product) .anuncios-catalog__ad-title {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s7-catalog-headline--stacked.s7-catalog-headline--product .s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger {
+  overflow: hidden;
+  text-overflow: unset;
+  white-space: normal;
+}
+
+.vendas-page__product-title-link.anuncios-ad-title-link,
+.s7-catalog-headline__title-link.anuncios-ad-title-link {
+  cursor: pointer;
+}
+
+.s7-catalog-headline__title-link:hover,
+.s7-catalog-headline .anuncios-ad-title-link:hover {
+  color: #c2410c;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.s7-catalog-headline__title--incomplete {
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+/* Produtos: mesma tipografia do título em Vendas (peso 600). */
+.s7-catalog-headline--product .s7-catalog-headline__title:not(.s7-catalog-headline__title--incomplete),
+.s7-catalog-headline--product .s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:not(.s7-catalog-headline__title--incomplete),
+.s7-catalog-headline--product .s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:not(.s7-catalog-headline__title--incomplete) {
+  color: var(--s7-orange, #ff8533);
+  font-weight: var(--s7-list-row-identity-title-weight, 600);
+}
+
+.s7-catalog-headline--product .s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:not(.s7-catalog-headline__title--incomplete):hover,
+.s7-catalog-headline--product .s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:not(.s7-catalog-headline__title--incomplete):focus-visible,
+.s7-catalog-headline--product .s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:not(.s7-catalog-headline__title--incomplete):hover,
+.s7-catalog-headline--product .s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-tooltip.s7-tip.s7-tooltip-trigger:not(.s7-catalog-headline__title--incomplete):focus-visible {
+  color: var(--s7-orange, #ff8533);
+}
+
+.s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-catalog-headline__title--incomplete.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-catalog-headline__title--incomplete.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-catalog-headline__title-row .s7-catalog-headline__title-tip.s7-catalog-headline__title--incomplete.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-catalog-headline__title--incomplete.s7-tooltip.s7-tip.s7-tooltip-trigger,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-catalog-headline__title--incomplete.s7-tooltip.s7-tip.s7-tooltip-trigger:hover,
+.s7-catalog-headline__title-slot .s7-catalog-headline__title-tip.s7-catalog-headline__title--incomplete.s7-tooltip.s7-tip.s7-tooltip-trigger:focus-visible {
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.s7-catalog-headline__actions.products-catalog__product-actions {
+  margin-top: 6px;
+  align-self: flex-start;
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+}
+
+.vendas-page__product-meta,
+.s7-catalog-headline__meta {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0 var(--s7-list-row-identity-meta-gap, 0.45rem);
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(15, 23, 42, 0.48);
+  line-height: 1.35;
+  overflow: visible;
+}
+
+.s7-catalog-headline__meta--stacked {
+  flex-wrap: wrap;
+  gap: 0 var(--s7-list-row-identity-meta-gap, 0.45rem);
+}
+
+/* Separador oficial SUSE7: ID | SKU */
+.vendas-page__product-meta-sep,
+.s7-catalog-headline__meta-sep,
+.concorrencia-catalog__sku-sep {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  margin: 0 0.15rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.28);
+  line-height: 1;
+  user-select: none;
+}
+
+.vendas-page__product-meta-sep::before,
+.s7-catalog-headline__meta-sep::before,
+.concorrencia-catalog__sku-sep::before {
+  content: "|";
+}
+
+.vendas-page__product-meta--muted,
+.s7-catalog-headline__meta--muted {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.35);
+}
+
+.vendas-page__product-meta-ad,
+.vendas-page__product-meta-sku,
+.s7-catalog-headline__meta-ad,
+.s7-catalog-headline__meta-sku {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.vendas-page__meta-value,
+.s7-catalog-headline__meta-value,
+.s7-catalog-headline .anuncios-ad-id-text {
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.52);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+.s7-catalog-headline .anuncios-ad-sku-label,
+.vendas-page__product-meta .anuncios-ad-sku-label,
+.s7-catalog-headline__meta .anuncios-ad-sku-label {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(15, 23, 42, 0.52);
+  margin-right: 0;
+}
+
+.s7-catalog-headline .anuncios-ad-sku-value,
+.vendas-page__product-meta .anuncios-ad-sku-value,
+.s7-catalog-headline__meta .anuncios-ad-sku-value {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.52);
+  line-height: 1.35;
+  word-break: break-all;
+  min-width: 0;
+}
+
+.s7-catalog-headline .anuncios-ad-sku-value--empty {
+  font-style: italic;
+  color: rgba(15, 23, 42, 0.4);
+}
+
+.s7-catalog-headline__footer {
+  width: 100%;
+  min-width: 0;
+}
+
+.s7-catalog-headline__actions {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .s7-catalog-headline .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .s7-catalog-headline__title-row:hover .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .s7-catalog-headline__title-row:focus-within .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .s7-catalog-headline__title-slot:hover .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok),
+  .s7-catalog-headline__title-slot:focus-within .products-catalog__copy-btn:not(.products-catalog__copy-btn--ok) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (min-width: 769px) {
+  .vendas-page__product-headline,
+  .s7-catalog-headline:not(.s7-catalog-headline--stacked) {
+    align-items: baseline;
+    gap: 1px 0.4rem;
+  }
+
+  .vendas-page__product-meta,
+  .s7-catalog-headline__meta {
+    flex-wrap: nowrap;
+    overflow: visible;
+    max-width: 100%;
+  }
+
+  .vendas-page__meta-value--listing,
+  .s7-catalog-headline__meta-value {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  .vendas-page__product-title,
+  .vendas-page__product-title-link.vendas-page__product-title,
+  .s7-catalog-headline__title,
+  .s7-catalog-headline__title-link {
+    font-size: 11px;
+  }
+}

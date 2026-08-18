@@ -1,0 +1,28 @@
+/* ======================================================
+   S7 — Miniaturas operacionais
+   Priorizar identificação completa do produto (contain).
+   Uso: listas, rankings operacionais, células de venda.
+   Não substituir capas promocionais/catalog que usem cover.
+   ====================================================== */
+
+.s7-operational-thumb {
+  object-fit: contain;
+  object-position: center;
+}
+
+.s7-operational-thumb-frame {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.s7-operational-thumb-frame--circle {
+  border-radius: 50%;
+}
+
+.s7-operational-thumb-frame .s7-operational-thumb {
+  width: 100%;
+  height: 100%;
+}
