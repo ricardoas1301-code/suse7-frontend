@@ -1,4 +1,4 @@
-﻿/* Shell compartilhado ÔÇö Busca e filtros (S1.2 alinhamento + densidade ~10%) */
+/* Shell compartilhado — Busca e filtros (S1.2 alinhamento + densidade ~10%) */
 
 .s7-search-filters-card {
 
@@ -50,7 +50,7 @@
 
 
 
-/* Neutraliza legado .products-catalog__controls (n├úo deve afetar o shell S1) */
+/* Neutraliza legado .products-catalog__controls (não deve afetar o shell S1) */
 
 .s7-search-filters-card--single-row.products-catalog__controls,
 
@@ -344,7 +344,7 @@
 
 
 
-/* Per├¡odo compacto na linha ├║nica */
+/* Período compacto na linha única */
 
 .s7-search-filters-card--single-row .vendas-period-picker {
 
@@ -388,7 +388,7 @@
 
 
 
-/* Dropdowns compactos na linha ├║nica */
+/* Dropdowns compactos na linha única */
 
 .s7-search-filters-card--single-row .s7-quick-filters-dropdown,
 

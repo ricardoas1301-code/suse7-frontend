@@ -21,6 +21,7 @@ const S7_COPY_LEGACY_FLASH_MS = 1600;
  *   tooltipText?: string;
  *   copiedTooltipText?: string;
  *   toastLabel?: string;
+ *   toastPreviewText?: string;
  *   showToast?: boolean;
  *   toastEventType?: string;
  *   toastFailEventType?: string;
@@ -38,6 +39,7 @@ export default function S7CopyButton({
   tooltipText = "Copiar",
   copiedTooltipText = "Copiado!",
   toastLabel,
+  toastPreviewText,
   showToast = false,
   toastEventType,
   toastFailEventType,
@@ -68,12 +70,13 @@ export default function S7CopyButton({
         flashKey,
         showToast,
         toastLabel: label,
+        toastPreviewText,
         toastEventType,
         toastFailEventType,
         toastEntityType,
       });
     },
-    [value, copy, flashKey, showToast, toastLabel, toastEventType, toastFailEventType, toastEntityType, ariaLabel],
+    [value, copy, flashKey, showToast, toastLabel, toastPreviewText, toastEventType, toastFailEventType, toastEntityType, ariaLabel],
   );
 
   const tip = flashing ? copiedTooltipText : tooltipText;

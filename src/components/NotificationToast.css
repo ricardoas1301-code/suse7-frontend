@@ -4,12 +4,18 @@
 
    Padrão UX: barra = --s7-contextual-accent / --s7-orange (tokens em colors.css).
    --info / --warning: mesmo tom “atenção amigável”. --critical: erro grave.
+   Toasts adaptam-se acima da Central de Tarefas quando visível.
 ====================================================================== */
 
 .s7-notification-toast-container{
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  right: var(--s7-floating-anchor-right, max(16px, env(safe-area-inset-right, 0px)));
+  bottom: calc(
+    var(--s7-floating-anchor-bottom, max(16px, env(safe-area-inset-bottom, 0px)))
+    + var(--s7-page-bottom-safe-area, 0px)
+    + var(--s7-operational-tasks-panel-height, 0px)
+    + var(--s7-toast-panel-gap, 10px)
+  );
   z-index: var(--s7-z-toast, 300000);
   display: flex;
   flex-direction: column;

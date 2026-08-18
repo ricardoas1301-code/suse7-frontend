@@ -1,0 +1,401 @@
+/* ======================================================================
+   S7BlockFiltersPanel — filtros recolhíveis por bloco (Dashboard)
+   ====================================================================== */
+
+.s7-block-filters-panel {
+  overflow: hidden;
+  transition: max-height 0.22s ease, opacity 0.18s ease, margin 0.22s ease;
+}
+
+.s7-block-filters-panel--collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.s7-block-filters-panel--expanded {
+  max-height: 420px;
+  opacity: 1;
+  margin-top: 14px;
+  margin-bottom: 14px;
+}
+
+.s7-block-filters-panel__body {
+  padding-top: 0;
+  border-top: none;
+}
+
+.s7-block-filters-panel .vendas-filters-card__body {
+  padding: 0;
+}
+
+.s7-block-filters-panel--inline {
+  max-height: none;
+  opacity: 1;
+  pointer-events: auto;
+  margin: 0;
+  overflow: visible;
+}
+
+.s7-block-filters-panel--inline .s7-block-filters-panel__body {
+  padding: 0;
+}
+
+.s7-block-filters-panel--inline .s7-block-filters-panel__filters-row--inline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.s7-block-filters-panel--inline .s7-block-filters-panel__field--period {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(100%, 360px);
+}
+
+.s7-block-filters-panel--inline .s7-block-filters-panel__field--account {
+  flex: 0 1 178px;
+  width: 178px;
+  min-width: 0;
+  max-width: 178px;
+}
+
+.s7-block-filters-panel--inline .vendas-filters-card__row--primary {
+  align-items: center;
+  gap: 10px;
+}
+
+.s7-block-filters-panel--inline .vendas-filters-card__field--period {
+  max-width: min(100%, 360px);
+}
+
+/* Dashboard inline — sem rótulo "Período" (quebra alinhamento da linha executiva) */
+.s7-block-filters-panel--inline .vendas-period-picker > .vendas-filters-card__label {
+  display: none;
+}
+
+.s7-block-filters-panel--inline .vendas-filters-card__field--period .vendas-period-picker {
+  gap: 0;
+}
+
+.s7-block-filters-panel--inline .vendas-period-picker__trigger {
+  min-height: 30px;
+  height: 30px;
+  padding: 0 10px;
+}
+
+.s7-block-filters-panel--inline .s7-account-select__trigger {
+  min-height: 30px;
+  height: 30px;
+}
+
+.s7-dashboard-block-head--inline-filters {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.s7-dashboard-block-head__title-row--with-filters {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 32px;
+  min-width: 0;
+}
+
+.s7-dashboard-block-head__inline-filters {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 8px;
+}
+
+.s7-dashboard-block-head--inline-filters .s7-daily-summary__title {
+  flex-shrink: 0;
+}
+
+.s7-dashboard-block-head--inline-filters .s7-top10-block__title {
+  flex-shrink: 0;
+}
+
+.s7-daily-summary__live-title {
+  display: flex;
+  justify-content: center;
+  justify-self: center;
+  min-width: 0;
+}
+
+.s7-daily-summary__live-title .s7-daily-summary__title {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 4px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+  font-size: calc(1.05rem * 1.16);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #0f172a;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.s7-daily-summary .s7-dashboard-block-head--inline-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.s7-daily-summary .s7-dashboard-block-head__title-row--with-filters {
+  display: block;
+  min-width: 0;
+}
+
+.s7-daily-summary .s7-dashboard-block-head__inline-filters {
+  width: 100%;
+  margin-left: 0;
+}
+
+.s7-daily-summary .s7-daily-summary__live-title {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.s7-daily-summary .s7-dashboard-block-head__period-aside {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  margin-left: 0;
+}
+
+.s7-top10-block:has(.s7-dashboard-block-head--inline-filters) .s7-dashboard-section-panel__body {
+  gap: var(--s7-section-panel-body-gap, 14px);
+}
+
+.s7-daily-summary:has(.s7-dashboard-block-head--inline-filters) .s7-daily-summary__body {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .s7-daily-summary .s7-dashboard-block-head--inline-filters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .s7-daily-summary .s7-daily-summary__live-title,
+  .s7-daily-summary .s7-dashboard-block-head__period-aside {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .s7-daily-summary .s7-dashboard-block-head__period-aside {
+    justify-self: start;
+  }
+
+  .s7-dashboard-block-head--inline-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .s7-dashboard-block-head__title-row--with-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .s7-dashboard-block-head--inline-filters .s7-dashboard-block-head__period-aside {
+    align-items: flex-start;
+    text-align: left;
+    margin-left: 0;
+  }
+
+  .s7-dashboard-block-head--inline-filters .s7-dashboard-block-head__period-aside--with-jump {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .s7-dashboard-block-head--inline-filters .s7-dashboard-block-head__period-aside-copy {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .s7-block-filters-panel--inline .s7-block-filters-panel__filters-row--inline {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .s7-block-filters-panel--inline .s7-block-filters-panel__field--period,
+  .s7-block-filters-panel--inline .s7-block-filters-panel__field--account {
+    max-width: 100%;
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+.s7-block-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 133, 51, 0.12);
+  color: var(--s7-orange, #ff8533);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.s7-block-filter-toggle:hover {
+  background: rgba(255, 133, 51, 0.18);
+  color: var(--s7-orange, #ff8533);
+}
+
+.s7-block-filter-toggle--active {
+  background: rgba(255, 133, 51, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 133, 51, 0.35);
+  color: var(--s7-orange, #ff8533);
+}
+
+.s7-block-filter-toggle:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.s7-dashboard-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.s7-dashboard-block-head--clickable {
+  cursor: pointer;
+}
+
+.s7-dashboard-block-head--clickable:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.s7-dashboard-block-head__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.s7-dashboard-block-head__title-row .s7-daily-summary__title,
+.s7-dashboard-block-head__title-row .s7-top10-block__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.s7-dashboard-block-head__period-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  margin-left: auto;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.s7-dashboard-block-head__period-aside--with-jump {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.s7-dashboard-block-head__period-aside-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: right;
+}
+
+.s7-top10-block {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.s7-top10-block__head,
+.s7-daily-summary__head {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.s7-top10-block__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.s7-top10-block__period-label,
+.s7-top10-block__period-preset,
+.s7-daily-summary__period-chip,
+.s7-daily-summary__period-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+  background: rgba(148, 163, 184, 0.14);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  line-height: 1.2;
+}
+
+.s7-top10-block__period-date,
+.s7-daily-summary__period-range {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+.s7-daily-summary__filters-wrap {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .s7-dashboard-block-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .s7-dashboard-block-head__period-aside {
+    align-items: flex-start;
+    text-align: left;
+    margin-left: 0;
+  }
+}

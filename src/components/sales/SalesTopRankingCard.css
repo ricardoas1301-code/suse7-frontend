@@ -6,10 +6,16 @@
   --str-metric: #ea580c;
   --str-accent: #2563eb;
   --str-title: #0f172a;
-  --str-podium-float-gap: 10px;
+  --str-head-divider: #eef2f7;
+  --str-podium-float-gap: 8px;
   --str-podium-star-size: 20px;
-  --str-podium-col-gap: 1px;
+  --str-podium-col-gap: 0;
   --str-podium-col-w: 67px;
+  --str-podium-h-rank-1: 118px;
+  --str-podium-h-rank-2: 81px;
+  --str-podium-h-rank-3: 60px;
+  --str-podium-seam-overlap: 2px;
+  --str-podium-rank-1-top-radius: 10px;
   /* Referência: distância 1º↔3º; 2º↔1º recebe pull extra (bolha do 1º é maior). */
   --str-podium-col-pull-ref: 5px;
   --str-podium-col-pull-2-to-1: 9px;
@@ -31,7 +37,8 @@
   min-height: 0;
   padding: 0;
   border-radius: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
+  border-top: 3px solid var(--str-accent);
   background: #ffffff;
   overflow: hidden;
   box-shadow:
@@ -40,18 +47,21 @@
 }
 
 .sales-top-ranking--tone-quantity {
-  --str-accent: #2563eb;
+  --str-accent: #16a34a;
   --str-metric: #ea580c;
+  --str-head-bg: #e7f6ef;
 }
 
 .sales-top-ranking--tone-revenue {
-  --str-accent: #15803d;
+  --str-accent: #2563eb;
   --str-metric: #15803d;
+  --str-head-bg: #e9f2fd;
 }
 
 .sales-top-ranking--tone-profit {
   --str-accent: #ea580c;
   --str-metric: #ea580c;
+  --str-head-bg: #fef1e8;
 }
 
 .sales-top-ranking__head {
@@ -61,34 +71,71 @@
   gap: 10px 12px;
   min-width: 0;
   flex: 0 0 auto;
-  padding: 9px 14px 10px;
-  background: var(--str-accent);
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+  padding: 7px 12px 6px;
+  background: var(--str-head-bg, #ffffff);
+  border-bottom: 1px solid var(--str-head-divider, #eef2f7);
+  box-shadow: none;
 }
 
 .sales-top-ranking__title {
   margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #ffffff;
+  color: #1e293b;
   line-height: 1.2;
-  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.22);
+  text-shadow: none;
 }
 
 .sales-top-ranking__period-badge {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: 999px;
   font-size: 10px;
   font-weight: 600;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #475569;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   white-space: nowrap;
+}
+
+/* POC — título externo ao card (Dashboard / mLabs) */
+.sales-top-ranking-stack--titulo-externo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.sales-top-ranking__head--external {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 2px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.sales-top-ranking__head--external .sales-top-ranking__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.sales-top-ranking__head--external.sales-top-ranking__head--skeleton {
+  margin: 0;
+  padding: 0 2px;
+}
+
+.sales-top-ranking-stack--titulo-externo > .sales-top-ranking {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .sales-top-ranking__stage {
@@ -108,7 +155,7 @@
   width: min(62%, 168px);
   height: 12px;
   border-radius: 6px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.42) 45%, rgba(255, 255, 255, 0.22) 100%);
+  background: linear-gradient(90deg, #eef2f7 0%, #f8fafc 45%, #eef2f7 100%);
   background-size: 200% 100%;
   animation: sales-top-ranking-shimmer 1.35s ease-in-out infinite;
 }
@@ -118,7 +165,7 @@
   width: 72px;
   height: 22px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.34) 45%, rgba(255, 255, 255, 0.16) 100%);
+  background: linear-gradient(90deg, #eef2f7 0%, #f8fafc 45%, #eef2f7 100%);
   background-size: 200% 100%;
   animation: sales-top-ranking-shimmer 1.35s ease-in-out infinite;
 }
@@ -129,7 +176,7 @@
   justify-content: center;
   flex: 1 1 auto;
   min-height: 0;
-  padding: 8px 12px 12px;
+  padding: 4px 10px 6px;
 }
 
 .sales-top-ranking__state-center {
@@ -137,11 +184,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
   max-width: 280px;
   margin: 0 auto;
-  padding: 18px 12px;
+  padding: 10px 10px;
   text-align: center;
   border-radius: 12px;
   border: 1px dashed rgba(15, 23, 42, 0.08);
@@ -161,6 +208,11 @@
   opacity: 0.9;
 }
 
+.sales-top-ranking__state-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
 .sales-top-ranking__state-message {
   margin: 0;
   font-size: 12px;
@@ -174,21 +226,37 @@
 }
 
 .sales-top-ranking__state-actions {
-  min-height: 32px;
+  min-height: 24px;
   width: 100%;
   max-width: 160px;
+}
+
+.sales-top-ranking__retry-btn {
+  appearance: none;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sales-top-ranking__retry-btn:hover {
+  background: #f8fafc;
 }
 
 /* Corpo: pódio ~58% | lista ~42% */
 .sales-top-ranking__body {
   display: grid;
   grid-template-columns: minmax(0, 58%) minmax(0, 42%);
-  gap: 6px;
+  gap: 5px;
   align-items: stretch;
   min-width: 0;
   flex: 1;
   min-height: 0;
-  padding: 2px 6px 8px;
+  padding: 1px 5px 5px;
   overflow: visible;
 }
 
@@ -212,51 +280,88 @@
 }
 
 .sales-top-ranking__podium {
-  display: flex;
-  align-items: flex-end;
+  display: inline-grid;
+  grid-template-columns: repeat(3, var(--str-podium-col-w));
+  column-gap: 0;
+  row-gap: 0;
+  align-items: end;
   justify-content: center;
-  gap: var(--str-podium-col-gap);
   min-width: 0;
-  width: 100%;
-  max-width: max-content;
+  width: max-content;
+  max-width: 100%;
   margin-inline: auto;
 }
 
 /* ---- Pódio: foto FORA do bloco ---- */
 .sales-top-ranking__podium-col {
   position: relative;
-  flex: 0 0 auto;
-  width: var(--str-podium-col-w);
-  max-width: calc(var(--str-podium-col-w) + 3px);
+  width: 100%;
+  max-width: none;
   min-width: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-end;
   cursor: default;
+  outline: none;
+  z-index: 0;
+  transition: opacity 0.18s ease;
+}
+
+.sales-top-ranking__podium-col--dimmed {
+  opacity: 0.48;
+}
+
+.sales-top-ranking__podium-col--podium-highlight {
+  opacity: 1;
+  z-index: 4;
+}
+
+.sales-top-ranking__podium-col--podium-highlight .sales-top-ranking__podium-pedestal {
+  transform: translateY(-2px) scale(1.03);
+  filter: drop-shadow(0 4px 12px rgba(15, 23, 42, 0.16));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 8px 18px rgba(15, 23, 42, 0.14);
+}
+
+/* Foto do pódio sobe junto para o pedestal não encobrir */
+.sales-top-ranking__podium-col--podium-highlight .sales-top-ranking__podium-hero {
+  transform: translateX(-50%) translateY(-4px) scale(1.02);
+}
+
+.sales-top-ranking__podium-col:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
 .sales-top-ranking__podium-col--rank-1 {
-  --str-podium-float-gap: 12px;
+  --str-podium-float-gap: 10px;
   --str-podium-star-size: 22px;
-  z-index: 2;
+  z-index: 3;
 }
 
 .sales-top-ranking__podium-col--rank-2 {
   --str-podium-float-gap: 10px;
   --str-podium-star-size: 18px;
-  margin-inline-end: calc(-1 * var(--str-podium-col-pull-2-to-1));
   z-index: 1;
 }
 
 .sales-top-ranking__podium-col--rank-3 {
   --str-podium-float-gap: 10px;
   --str-podium-star-size: 16px;
-  margin-inline-start: calc(-1 * var(--str-podium-col-pull-ref));
   z-index: 1;
 }
 
-/* Estrela + foto flutuam acima do pedestal */
+.sales-top-ranking__podium-col--rank-1.sales-top-ranking__podium-col--podium-highlight,
+.sales-top-ranking__podium-col--rank-2.sales-top-ranking__podium-col--podium-highlight,
+.sales-top-ranking__podium-col--rank-3.sales-top-ranking__podium-col--podium-highlight {
+  z-index: 4;
+}
+
+/* Estrela + foto flutuam acima do pedestal — centralizadas na coluna */
 .sales-top-ranking__podium-hero {
   position: absolute;
   left: 50%;
@@ -264,7 +369,9 @@
   transform: translateX(-50%);
   z-index: 3;
   width: max-content;
+  max-width: calc(100% + 12px);
   pointer-events: auto;
+  transition: transform 0.18s ease, filter 0.18s ease;
 }
 
 .sales-top-ranking__podium-photo-stack {
@@ -279,7 +386,7 @@
   display: block;
   width: var(--str-podium-star-size);
   height: var(--str-podium-star-size);
-  margin: 0 auto 5px;
+  margin: 0 auto 4px;
   object-fit: contain;
   object-position: center;
   flex: 0 0 auto;
@@ -325,17 +432,17 @@
 }
 
 .sales-top-ranking__podium-col--rank-1 .sales-top-ranking__podium-rank-badge {
-  background: linear-gradient(145deg, #fbbf24, #d97706);
+  background: #ef4444;
   color: #ffffff;
 }
 
 .sales-top-ranking__podium-col--rank-2 .sales-top-ranking__podium-rank-badge {
-  background: linear-gradient(145deg, #e2e8f0, #94a3b8);
+  background: #ef4444;
   color: #ffffff;
 }
 
 .sales-top-ranking__podium-col--rank-3 .sales-top-ranking__podium-rank-badge {
-  background: linear-gradient(145deg, #fdba74, #c2410c);
+  background: #ef4444;
   color: #ffffff;
 }
 
@@ -343,28 +450,43 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  border-radius: 14px 14px 10px 10px;
   box-sizing: border-box;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  padding-top: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  padding-top: 5px;
+  transform-origin: center bottom;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
 .sales-top-ranking__podium-col--rank-1 .sales-top-ranking__podium-pedestal {
-  min-height: 130px;
-  background: linear-gradient(180deg, #fff3c4 0%, #ffe9a8 100%);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  min-height: var(--str-podium-h-rank-1);
+  background: linear-gradient(180deg, #ffd54f 0%, #ffb300 100%);
+  border: 1px solid rgba(255, 143, 0, 0.45);
+  border-left: none;
+  border-right: none;
+  border-radius: var(--str-podium-rank-1-top-radius) var(--str-podium-rank-1-top-radius) 0 0;
+  z-index: 2;
+  margin-inline: calc(-1 * var(--str-podium-seam-overlap));
+  width: calc(100% + (2 * var(--str-podium-seam-overlap)));
 }
 
 .sales-top-ranking__podium-col--rank-2 .sales-top-ranking__podium-pedestal {
-  min-height: 104px;
-  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  min-height: var(--str-podium-h-rank-2);
+  background: linear-gradient(180deg, #7c3aed 0%, #4c1d95 100%);
+  border: 1px solid rgba(76, 29, 149, 0.55);
+  border-radius: 14px 0 0 0;
+  border-right: none;
+  margin-right: calc(-1 * var(--str-podium-seam-overlap));
+  width: calc(100% + var(--str-podium-seam-overlap));
 }
 
 .sales-top-ranking__podium-col--rank-3 .sales-top-ranking__podium-pedestal {
-  min-height: 77px;
-  background: linear-gradient(180deg, #ffedd5 0%, #fed7aa 100%);
-  border: 1px solid rgba(234, 88, 12, 0.15);
+  min-height: var(--str-podium-h-rank-3);
+  background: linear-gradient(180deg, #7c3aed 0%, #4c1d95 100%);
+  border: 1px solid rgba(76, 29, 149, 0.55);
+  border-radius: 0 14px 0 0;
+  border-left: none;
+  margin-left: calc(-1 * var(--str-podium-seam-overlap));
+  width: calc(100% + var(--str-podium-seam-overlap));
 }
 
 .sales-top-ranking__podium-col--rank-3 .sales-top-ranking__podium-pedestal-inner {
@@ -387,7 +509,9 @@
 
 .sales-top-ranking__podium-pedestal-inner {
   width: 100%;
-  padding: 4px 2px 6px;
+  height: 100%;
+  min-height: inherit;
+  padding: 2px 2px 6px;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -396,8 +520,27 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-between;
   text-align: center;
   min-width: 0;
+  gap: 4px;
+}
+
+.sales-top-ranking__podium-prize {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 2px;
+  color: rgba(255, 255, 255, 0.96);
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.18));
+}
+
+.sales-top-ranking__podium-col--rank-1 .sales-top-ranking__podium-prize {
+  color: rgba(255, 255, 255, 0.98);
+  padding-top: 4px;
+  transform: translateY(-2px);
 }
 
 .sales-top-ranking__podium-stats {
@@ -419,7 +562,7 @@
   font-size: 9.5px;
   font-weight: 600;
   line-height: 1.12;
-  color: var(--s7-primary, #2563eb);
+  color: rgba(255, 255, 255, 0.96);
   white-space: normal;
   word-break: normal;
   overflow-wrap: normal;
@@ -444,7 +587,7 @@
   font-size: clamp(7.5px, 2.1vw, 9px);
   font-weight: 600;
   line-height: 1.1;
-  color: #15803d;
+  color: rgba(255, 255, 255, 0.98);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
   white-space: normal;
@@ -461,7 +604,7 @@
   font-size: clamp(7px, 1.9vw, 8px);
   font-weight: 600;
   line-height: 1.05;
-  color: #15803d;
+  color: rgba(255, 255, 255, 0.92);
   letter-spacing: 0.01em;
 }
 
@@ -489,6 +632,20 @@
   gap: 1px;
 }
 
+.sales-top-ranking__podium-col--rank-1 .sales-top-ranking__podium-bubble-inner .sales-top-ranking__thumb--bubble,
+.sales-top-ranking__podium-col--rank-1 .sales-top-ranking__podium-bubble-inner .sales-top-ranking__thumb--placeholder {
+  border: 2px solid #fbbf24;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.14);
+}
+
+.sales-top-ranking__podium-col--rank-2 .sales-top-ranking__podium-bubble-inner .sales-top-ranking__thumb--bubble,
+.sales-top-ranking__podium-col--rank-2 .sales-top-ranking__podium-bubble-inner .sales-top-ranking__thumb--placeholder,
+.sales-top-ranking__podium-col--rank-3 .sales-top-ranking__podium-bubble-inner .sales-top-ranking__thumb--bubble,
+.sales-top-ranking__podium-col--rank-3 .sales-top-ranking__podium-bubble-inner .sales-top-ranking__thumb--placeholder {
+  border: 2px solid #7c3aed;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.14);
+}
+
 .sales-top-ranking__thumb--bubble,
 .sales-top-ranking__thumb--square {
   display: block;
@@ -509,13 +666,13 @@
 }
 
 .sales-top-ranking__thumb--podium-lg {
-  width: 58px;
-  height: 58px;
+  width: 54px;
+  height: 54px;
 }
 
 .sales-top-ranking__thumb--podium-sm {
-  width: 50px;
-  height: 50px;
+  width: 46px;
+  height: 46px;
 }
 
 .sales-top-ranking__title-text {
@@ -556,7 +713,7 @@
   height: 100%;
   flex: 1;
   overflow: visible;
-  padding: 0 2px 2px 0;
+  padding: 0 1px 1px 0;
   margin-left: 0;
   align-self: stretch;
 }
@@ -564,7 +721,7 @@
 .sales-top-ranking__list {
   list-style: none;
   margin: 0;
-  padding: 3px 0 8px;
+  padding: 2px 0 4px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -584,7 +741,7 @@
   justify-content: flex-start;
   column-gap: 3px;
   row-gap: 0;
-  padding: 4px 0;
+  padding: 3px 0;
   margin: 0;
   min-width: 0;
   flex: 0 0 auto;
@@ -674,13 +831,20 @@
   cursor: default;
 }
 
-/* Popover premium — lista 4–10 */
+/* Pódio — tooltip só na foto do produto, não no pedestal */
+.sales-top-ranking__podium-hero .sales-top-ranking__listing-popover-root--custom {
+  display: inline-block;
+  width: auto;
+  max-width: none;
+}
+
+/* Popover premium — lista 4–10 / Dashboard Top 3 */
 .sales-top-ranking__listing-popover {
   position: fixed;
   box-sizing: border-box;
   width: max-content;
   min-width: min(240px, calc(100vw - 20px));
-  max-width: min(280px, calc(100vw - 16px));
+  max-width: min(300px, calc(100vw - 16px));
   max-height: min(240px, calc(100dvh - 16px));
   overflow-x: hidden;
   overflow-y: auto;
@@ -694,16 +858,55 @@
   box-shadow:
     0 10px 28px rgba(15, 23, 42, 0.12),
     0 2px 8px rgba(15, 23, 42, 0.06);
+  pointer-events: none;
+}
+
+.sales-top-ranking__listing-popover__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sales-top-ranking__listing-popover__content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sales-top-ranking__listing-popover__company-mark {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sales-top-ranking__listing-popover__company-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sales-top-ranking__listing-popover__company-fallback {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3730a3;
+  line-height: 1;
+}
+
+.sales-top-ranking__listing-popover__inline-copy,
+.sales-top-ranking__listing-popover__inline-copy .s7-copy-btn,
+.sales-top-ranking__listing-popover__inline-copy .products-catalog__copy-btn {
   pointer-events: auto;
 }
 
-.sales-top-ranking__listing-popover::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -8px;
-  height: 8px;
+.sales-top-ranking__listing-popover--left-center::before,
+.sales-top-ranking__listing-popover--right-center::before {
+  display: none;
 }
 
 .sales-top-ranking__listing-popover__title {
@@ -830,8 +1033,15 @@
 
 /* Skeleton */
 .sales-top-ranking__podium--skeleton {
-  gap: var(--str-podium-col-gap);
-  align-items: flex-end;
+  display: inline-grid;
+  grid-template-columns: repeat(3, var(--str-podium-col-w));
+  column-gap: 0;
+  row-gap: 0;
+  align-items: end;
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
 }
 
 .sales-top-ranking__skeleton-podium-col {
@@ -840,9 +1050,9 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--str-podium-float-gap);
-  width: var(--str-podium-col-w);
-  max-width: calc(var(--str-podium-col-w) + 3px);
-  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
 }
 
 .sales-top-ranking__skeleton-bubble {
@@ -864,22 +1074,30 @@
 
 .sales-top-ranking__skeleton-pedestal {
   width: 100%;
-  border-radius: 14px 14px 10px 10px;
   background: linear-gradient(90deg, #eef2f7 0%, #f8fafc 45%, #eef2f7 100%);
   background-size: 200% 100%;
   animation: sales-top-ranking-shimmer 1.35s ease-in-out infinite;
 }
 
 .sales-top-ranking__skeleton-pedestal--rank-1 {
-  height: 130px;
+  height: var(--str-podium-h-rank-1);
+  border-radius: var(--str-podium-rank-1-top-radius) var(--str-podium-rank-1-top-radius) 0 0;
+  background: linear-gradient(180deg, #ffd54f 0%, #ffb300 100%);
+  animation: none;
 }
 
 .sales-top-ranking__skeleton-pedestal--rank-2 {
-  height: 104px;
+  height: var(--str-podium-h-rank-2);
+  border-radius: 14px 0 0 0;
+  background: linear-gradient(180deg, #7c3aed 0%, #4c1d95 100%);
+  animation: none;
 }
 
 .sales-top-ranking__skeleton-pedestal--rank-3 {
-  height: 77px;
+  height: var(--str-podium-h-rank-3);
+  border-radius: 0 14px 0 0;
+  background: linear-gradient(180deg, #7c3aed 0%, #4c1d95 100%);
+  animation: none;
 }
 
 .sales-top-ranking__list-panel--skeleton {
@@ -953,12 +1171,17 @@
   }
 
   .sales-top-ranking__podium {
+    display: inline-grid;
+    grid-template-columns: repeat(3, var(--str-podium-col-w));
+    column-gap: 0;
     max-width: 100%;
-    gap: 0;
   }
 
   .sales-top-ranking {
     --str-podium-col-w: 62px;
+    --str-podium-h-rank-1: 112px;
+    --str-podium-h-rank-2: 77px;
+    --str-podium-h-rank-3: 57px;
     --str-podium-col-pull-ref: 4px;
     --str-podium-col-pull-2-to-1: 7px;
     --str-list-copy-size: 9px;
@@ -975,27 +1198,27 @@
   }
 
   .sales-top-ranking__podium-col--rank-1 .sales-top-ranking__podium-pedestal {
-    min-height: 124px;
+    min-height: var(--str-podium-h-rank-1);
   }
 
   .sales-top-ranking__podium-col--rank-2 .sales-top-ranking__podium-pedestal {
-    min-height: 100px;
+    min-height: var(--str-podium-h-rank-2);
   }
 
   .sales-top-ranking__podium-col--rank-3 .sales-top-ranking__podium-pedestal {
-    min-height: 74px;
+    min-height: var(--str-podium-h-rank-3);
   }
 
   .sales-top-ranking__skeleton-pedestal--rank-1 {
-    height: 124px;
+    height: var(--str-podium-h-rank-1);
   }
 
   .sales-top-ranking__skeleton-pedestal--rank-2 {
-    height: 100px;
+    height: var(--str-podium-h-rank-2);
   }
 
   .sales-top-ranking__skeleton-pedestal--rank-3 {
-    height: 74px;
+    height: var(--str-podium-h-rank-3);
   }
 }
 
@@ -1013,7 +1236,7 @@
     --str-podium-float-gap: 8px;
   }
 
-  .sales-top-ranking__head {
+  .sales-top-ranking__head:not(.sales-top-ranking__head--external) {
     padding: 8px 10px 9px;
   }
 
@@ -1092,14 +1315,14 @@
 @media (max-width: 1180px) {
   .sales-top-ranking__body {
     grid-template-columns: minmax(0, 58%) minmax(0, 42%);
-    gap: 8px;
+    gap: 6px;
   }
 }
 
 @media (max-width: 900px) {
-  .sales-top-ranking__head {
+  .sales-top-ranking__head:not(.sales-top-ranking__head--external) {
     gap: 8px;
-    padding: 8px 12px 9px;
+    padding: 6px 10px 6px;
   }
 
   .sales-top-ranking__period-badge {
@@ -1110,17 +1333,21 @@
 
 @media (max-width: 768px) {
   .sales-top-ranking__body--state {
-    padding: 6px 8px 10px;
+    padding: 4px 8px 6px;
   }
 
   .sales-top-ranking__state-center {
-    padding: 14px 10px;
+    padding: 8px 10px;
   }
 }
 
 @media (max-width: 640px) {
   .sales-top-ranking__title {
     font-size: 11px;
+  }
+
+  .sales-top-ranking__head--external .sales-top-ranking__title {
+    font-size: 13px;
   }
 
   .sales-top-ranking__thumb--podium-lg {
@@ -1157,11 +1384,30 @@
 }
 
 @media (max-width: 480px) {
-  .sales-top-ranking__head {
-    padding: 8px 10px 9px;
+  .sales-top-ranking__head:not(.sales-top-ranking__head--external) {
+    padding: 6px 10px 6px;
   }
 
   .sales-top-ranking__body {
-    padding: 2px 4px 6px;
+    padding: 1px 4px 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sales-top-ranking__podium-col,
+  .sales-top-ranking__podium-pedestal,
+  .sales-top-ranking__podium-hero {
+    transition: none;
+  }
+
+  .sales-top-ranking__podium-col--podium-highlight .sales-top-ranking__podium-pedestal,
+  .sales-top-ranking__podium-col--podium-highlight .sales-top-ranking__podium-hero {
+    transform: none;
+    filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  }
+
+  .sales-top-ranking__podium-hero {
+    transform: translateX(-50%);
   }
 }

@@ -308,6 +308,17 @@ export function shortenListingTitleToTwoWords(title) {
 }
 
 /**
+ * Converte ISO (YYYY-MM-DD) para padrão BR com hífen (DD-MM-YYYY).
+ * @param {unknown} iso
+ */
+function formatIsoToBrDashed(iso) {
+  const s = iso != null ? String(iso).trim() : "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (!m) return s;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+/**
  * @param {Record<string, unknown> | null | undefined} period
  */
 export function formatExecutivePeriodLabel(period) {
@@ -321,9 +332,10 @@ export function formatExecutivePeriodLabel(period) {
   if (preset === "today") return "Hoje";
   if (preset === "month") return "Mês atual";
   if (preset === "custom") {
-    const start = period?.start_date != null ? String(period.start_date) : "";
-    const end = period?.end_date != null ? String(period.end_date) : "";
-    if (start && end) return `${start} — ${end}`;
+    const start = formatIsoToBrDashed(period?.start_date);
+    const end = formatIsoToBrDashed(period?.end_date);
+    if (start && end) return `${start} - ${end}`;
+    if (start) return start;
     return "Período customizado";
   }
   return "60 dias";
@@ -401,7 +413,7 @@ export function formatRankingProfitBrl(item) {
  */
 export function formatRankingValueLine(item, metric) {
   if (metric === "net_profit") {
-    return `${formatRankingProfitBrl(item)} lucro`;
+    return formatRankingProfitBrl(item);
   }
   return formatRankingGrossBrl(item);
 }
@@ -412,12 +424,9 @@ export function formatRankingValueLine(item, metric) {
  * @param {"quantity" | "gross_revenue" | "net_profit"} metric
  */
 export function getTopRankingPodiumDisplay(item, metric) {
-  const isProfit = metric === "net_profit";
   return {
     salesLine: formatRankingQuantityPhrase(item),
     valueLine: formatRankingValueLine(item, metric),
-    valueAmountLine: isProfit ? formatRankingProfitBrl(item) : formatRankingGrossBrl(item),
-    showProfitSuffix: isProfit,
   };
 }
 
@@ -436,6 +445,34 @@ export function getTopRankingListMetricLine(item, metric) {
  */
 export function formatTopRankingMetricLabel(item, metric) {
   return getTopRankingListMetricLine(item, metric);
+}
+
+/**
+ * Posição exibida no Top 10 — deriva do índice no array ordenado (contrato visual).
+ * @param {{ arrayIndex: number; fallbackRank?: unknown; metricKey?: string }} params
+ */
+export function resolveTopRankingDisplayRank({ arrayIndex, fallbackRank, metricKey = "ranking" }) {
+  const fromIndex =
+    Number.isFinite(arrayIndex) && arrayIndex >= 0 && arrayIndex < 10 ? arrayIndex + 1 : null;
+  const parsed = Number.parseInt(String(fallbackRank ?? ""), 10);
+  const fromPayload = Number.isFinite(parsed) && parsed >= 1 && parsed <= 10 ? parsed : null;
+
+  if (fromIndex != null && fromPayload != null && fromPayload !== fromIndex) {
+    if (import.meta.env?.DEV) {
+      console.warn(
+        `[top10-rank] rank inconsistente em ${metricKey}: payload=${fromPayload}, esperado=${fromIndex}`,
+      );
+    }
+  }
+
+  return fromIndex ?? fromPayload ?? (Number.isFinite(arrayIndex) ? arrayIndex + 1 : 0);
+}
+
+/**
+ * @param {number} rank
+ */
+export function isTopRankingDisplayRankValid(rank) {
+  return Number.isFinite(rank) && rank >= 1 && rank <= 10;
 }
 
 /**

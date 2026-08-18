@@ -19,10 +19,10 @@ import {
   pickListingTitle,
   pickTopRankingFallbackImageUrl,
   rankingItemAsThumbRecord,
+  resolveTopRankingDisplayRank,
   topRankingThumbCacheKey,
 } from "./salesTopRankingUtils";
 import S7Icon from "../ui/S7Icon";
-import podiumStarUrl from "../../assets/rankings/podium-star.png";
 import {
   EXECUTIVE_PANEL_EMPTY_RANKING_MESSAGE,
   EXECUTIVE_PANEL_ERROR_MESSAGE,
@@ -184,31 +184,44 @@ function TopRankingThumbFromItem({ item, title, className = "", variant = "squar
   );
 }
 
-/** @param {{ item: Record<string, unknown>; metric: "quantity" | "gross_revenue" | "net_profit" }} props */
-export function SalesTopRankingPodium({ item, metric }) {
-  const rank = typeof item.rank === "number" ? item.rank : Number.parseInt(String(item.rank ?? ""), 10) || 0;
+/** @param {{ item: Record<string, unknown>; metric: "quantity" | "gross_revenue" | "net_profit"; displayRank: number; isHighlighted?: boolean; isDimmed?: boolean; onHoverStart?: () => void; onHoverEnd?: () => void; }} props */
+export function SalesTopRankingPodium({
+  item,
+  metric,
+  displayRank,
+  isHighlighted = false,
+  isDimmed = false,
+  onHoverStart,
+  onHoverEnd,
+}) {
+  const rank = displayRank;
   const fullTitle = pickListingTitle(item);
   const podiumLines = getTopRankingPodiumDisplay(item, metric);
   const thumbSize = rank === 1 ? "podium-lg" : "podium-sm";
 
   return (
-    <TopRankingListingPopover item={item} placement="top-start">
-      <article
-        className={`sales-top-ranking__podium-col sales-top-ranking__podium-col--rank-${rank}`}
-        aria-label={`${rank}º lugar — ${fullTitle}`}
-      >
-        <div className="sales-top-ranking__podium-pedestal">
-          <div className="sales-top-ranking__podium-hero">
-            <div className="sales-top-ranking__podium-photo-stack">
-              <img
-                className="sales-top-ranking__podium-star"
-                src={podiumStarUrl}
-                alt=""
-                width={22}
-                height={22}
-                decoding="async"
-                draggable={false}
-              />
+    <article
+      className={[
+        `sales-top-ranking__podium-col sales-top-ranking__podium-col--rank-${rank}`,
+        isHighlighted ? "sales-top-ranking__podium-col--podium-highlight" : "",
+        isDimmed ? "sales-top-ranking__podium-col--dimmed" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-label={`${rank}º lugar — ${fullTitle}`}
+      onMouseEnter={onHoverStart}
+      onMouseLeave={onHoverEnd}
+      onFocus={onHoverStart}
+      onBlur={onHoverEnd}
+      tabIndex={0}
+    >
+      <div className="sales-top-ranking__podium-pedestal">
+        <div className="sales-top-ranking__podium-hero">
+          <TopRankingListingPopover item={item} placement="top-start">
+            <div
+              className="sales-top-ranking__podium-photo-stack"
+              aria-label={`${rank}º lugar — ${fullTitle}`}
+            >
               <div className="sales-top-ranking__podium-bubble-inner">
                 <TopRankingThumbFromItem
                   item={item}
@@ -222,35 +235,28 @@ export function SalesTopRankingPodium({ item, metric }) {
                 </span>
               </div>
             </div>
-          </div>
-          <div className="sales-top-ranking__podium-pedestal-inner">
-            <div
-              className={[
-                "sales-top-ranking__podium-stats",
-                metric === "net_profit" ? "sales-top-ranking__podium-stats--profit" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <p className="sales-top-ranking__podium-sales">{podiumLines.salesLine}</p>
-              {podiumLines.showProfitSuffix ? (
-                <div className="sales-top-ranking__podium-value-stack">
-                  <p className="sales-top-ranking__podium-value">{podiumLines.valueAmountLine}</p>
-                  <p className="sales-top-ranking__podium-value-suffix">lucro</p>
-                </div>
-              ) : (
-                <p className="sales-top-ranking__podium-value">{podiumLines.valueLine}</p>
-              )}
-            </div>
-          </div>
+          </TopRankingListingPopover>
         </div>
-      </article>
-    </TopRankingListingPopover>
+          <div className="sales-top-ranking__podium-pedestal-inner">
+            <div className="sales-top-ranking__podium-stats">
+              <p className="sales-top-ranking__podium-sales">{podiumLines.salesLine}</p>
+              <p className="sales-top-ranking__podium-value">{podiumLines.valueLine}</p>
+            </div>
+            <span className="sales-top-ranking__podium-prize" aria-hidden="true">
+              {rank === 1 ? (
+                <S7Icon name="podium_trophy" size={28} strokeWidth={1.85} />
+              ) : (
+                <S7Icon name="podium_medal" size={rank === 2 ? 24 : 22} strokeWidth={1.85} />
+              )}
+            </span>
+        </div>
+      </div>
+    </article>
   );
 }
 
-/** @param {{ items: Record<string, unknown>[]; metric: "quantity" | "gross_revenue" | "net_profit" }} props */
-export function SalesTopRankingList({ items, metric }) {
+/** @param {{ items: Record<string, unknown>[]; metric: "quantity" | "gross_revenue" | "net_profit"; popoverPlacement?: "bottom-start" | "top-start" | "left-center" | "right-center" }} props */
+export function SalesTopRankingList({ items, metric, popoverPlacement = "left-center" }) {
   if (!items.length) {
     return <div className="sales-top-ranking__list-placeholder" aria-hidden />;
   }
@@ -258,8 +264,12 @@ export function SalesTopRankingList({ items, metric }) {
   return (
     <div className="sales-top-ranking__list-panel">
       <ol className="sales-top-ranking__list" aria-label="Posições 4 a 10">
-        {items.map((item) => {
-          const rank = typeof item.rank === "number" ? item.rank : Number.parseInt(String(item.rank ?? ""), 10) || 0;
+        {items.map((item, listIndex) => {
+          const rank = resolveTopRankingDisplayRank({
+            arrayIndex: listIndex + 3,
+            fallbackRank: item.rank,
+            metricKey: "lista-lateral",
+          });
           const fullTitle = pickListingTitle(item);
           const metricLine = getTopRankingListMetricLine(item, metric);
           const key =
@@ -283,7 +293,7 @@ export function SalesTopRankingList({ items, metric }) {
               </div>
               <div className="sales-top-ranking__list-copy">
                 <div className="sales-top-ranking__list-name">
-                  <TopRankingListingPopover item={item} />
+                  <TopRankingListingPopover item={item} placement={popoverPlacement} />
                 </div>
                 <p className="sales-top-ranking__list-metric">{metricLine}</p>
               </div>
@@ -295,9 +305,18 @@ export function SalesTopRankingList({ items, metric }) {
   );
 }
 
-function TopRankingSkeletonHeader() {
+function TopRankingSkeletonHeader({ external = false } = {}) {
   return (
-    <div className="sales-top-ranking__head sales-top-ranking__head--skeleton" aria-hidden>
+    <div
+      className={[
+        "sales-top-ranking__head",
+        "sales-top-ranking__head--skeleton",
+        external ? "sales-top-ranking__head--external" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-hidden
+    >
       <span className="sales-top-ranking__skeleton-head-title" />
       <span className="sales-top-ranking__skeleton-head-badge" />
     </div>
@@ -341,9 +360,9 @@ function TopRankingSkeleton() {
 }
 
 /**
- * @param {{ variant: "empty" | "error"; message: string }} props
+ * @param {{ variant: "empty" | "error"; message: string; onRetry?: () => void }} props
  */
-function TopRankingPanelState({ variant, message }) {
+function TopRankingPanelState({ variant, message, onRetry }) {
   return (
     <div
       className={`sales-top-ranking__body sales-top-ranking__body--state sales-top-ranking__body--state-${variant} vendas-executive-state-fade-in`}
@@ -356,8 +375,12 @@ function TopRankingPanelState({ variant, message }) {
           </span>
         ) : null}
         <p className="sales-top-ranking__state-message">{message}</p>
-        {variant === "error" ? (
-          <div className="sales-top-ranking__state-actions" aria-hidden="true" />
+        {variant === "error" && onRetry ? (
+          <div className="sales-top-ranking__state-actions">
+            <button type="button" className="sales-top-ranking__retry-btn" onClick={onRetry}>
+              Tentar novamente
+            </button>
+          </div>
         ) : null}
       </div>
     </div>
@@ -371,6 +394,9 @@ export default function SalesTopRankingCard({
   loading = false,
   error = null,
   periodLabel = null,
+  tituloExterno = false,
+  onRetry,
+  showEmptyState = false,
 }) {
   const { user } = useAuthBootstrap();
   const [thumbByListingId, setThumbByListingId] = useState(/** @type {Record<string, string>} */ ({}));
@@ -404,15 +430,16 @@ export default function SalesTopRankingCard({
 
   const topThree = hydrated.slice(0, 3);
   const rest = hydrated.slice(3, 10);
-  const first = topThree.find((r) => r.rank === 1) ?? topThree[0] ?? null;
-  const second = topThree.find((r) => r.rank === 2) ?? topThree[1] ?? null;
-  const third = topThree.find((r) => r.rank === 3) ?? topThree[2] ?? null;
+  const podiumCenter = topThree[0] ?? null;
+  const podiumLeft = topThree[1] ?? null;
+  const podiumRight = topThree[2] ?? null;
 
   const showLoading = Boolean(loading);
   const showError = Boolean(error) && !showLoading;
-  const showEmpty = !showLoading && !showError && normalized.length === 0;
-  const showContent = !showLoading && !showError && normalized.length > 0;
+  const showEmpty = Boolean(showEmptyState) && !showLoading && !showError;
+  const showContent = !showLoading && !showError && !showEmpty && normalized.length > 0;
   const panelErrorMessage = error ? EXECUTIVE_PANEL_ERROR_MESSAGE : null;
+  const [activePodiumRank, setActivePodiumRank] = useState(/** @type {number | null} */ (null));
   const toneClass =
     metric === "gross_revenue"
       ? "sales-top-ranking--tone-revenue"
@@ -420,7 +447,24 @@ export default function SalesTopRankingCard({
         ? "sales-top-ranking--tone-profit"
         : "sales-top-ranking--tone-quantity";
 
-  return (
+  const headerNode =
+    showLoading ? (
+      <TopRankingSkeletonHeader external={tituloExterno} />
+    ) : (
+      <header
+        className={[
+          "sales-top-ranking__head",
+          tituloExterno ? "sales-top-ranking__head--external" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <h2 className="sales-top-ranking__title">{title}</h2>
+        {periodLabel ? <span className="sales-top-ranking__period-badge">{periodLabel}</span> : null}
+      </header>
+    );
+
+  const cardShell = (
     <div
       className={[
         "sales-top-ranking",
@@ -430,19 +474,12 @@ export default function SalesTopRankingCard({
         .filter(Boolean)
         .join(" ")}
     >
-      {showLoading ? (
-        <TopRankingSkeletonHeader />
-      ) : (
-        <header className="sales-top-ranking__head">
-          <h2 className="sales-top-ranking__title">{title}</h2>
-          {periodLabel ? <span className="sales-top-ranking__period-badge">{periodLabel}</span> : null}
-        </header>
-      )}
+      {!tituloExterno ? headerNode : null}
 
       <div className="sales-top-ranking__stage">
         {showLoading ? <TopRankingSkeleton /> : null}
         {showError && panelErrorMessage ? (
-          <TopRankingPanelState variant="error" message={panelErrorMessage} />
+          <TopRankingPanelState variant="error" message={panelErrorMessage} onRetry={onRetry} />
         ) : null}
         {showEmpty ? (
           <TopRankingPanelState variant="empty" message={EXECUTIVE_PANEL_EMPTY_RANKING_MESSAGE} />
@@ -450,9 +487,51 @@ export default function SalesTopRankingCard({
         {showContent ? (
           <div className="sales-top-ranking__body vendas-executive-state-fade-in">
             <div className="sales-top-ranking__podium" aria-label="Top 3 anúncios">
-              {second ? <SalesTopRankingPodium item={second} metric={metric} /> : null}
-              {first ? <SalesTopRankingPodium item={first} metric={metric} /> : null}
-              {third ? <SalesTopRankingPodium item={third} metric={metric} /> : null}
+              {podiumLeft ? (
+                <SalesTopRankingPodium
+                  item={podiumLeft}
+                  metric={metric}
+                  displayRank={resolveTopRankingDisplayRank({
+                    arrayIndex: 1,
+                    fallbackRank: podiumLeft.rank,
+                    metricKey: metric,
+                  })}
+                  isHighlighted={activePodiumRank === 2}
+                  isDimmed={activePodiumRank != null && activePodiumRank !== 2}
+                  onHoverStart={() => setActivePodiumRank(2)}
+                  onHoverEnd={() => setActivePodiumRank(null)}
+                />
+              ) : null}
+              {podiumCenter ? (
+                <SalesTopRankingPodium
+                  item={podiumCenter}
+                  metric={metric}
+                  displayRank={resolveTopRankingDisplayRank({
+                    arrayIndex: 0,
+                    fallbackRank: podiumCenter.rank,
+                    metricKey: metric,
+                  })}
+                  isHighlighted={activePodiumRank === 1}
+                  isDimmed={activePodiumRank != null && activePodiumRank !== 1}
+                  onHoverStart={() => setActivePodiumRank(1)}
+                  onHoverEnd={() => setActivePodiumRank(null)}
+                />
+              ) : null}
+              {podiumRight ? (
+                <SalesTopRankingPodium
+                  item={podiumRight}
+                  metric={metric}
+                  displayRank={resolveTopRankingDisplayRank({
+                    arrayIndex: 2,
+                    fallbackRank: podiumRight.rank,
+                    metricKey: metric,
+                  })}
+                  isHighlighted={activePodiumRank === 3}
+                  isDimmed={activePodiumRank != null && activePodiumRank !== 3}
+                  onHoverStart={() => setActivePodiumRank(3)}
+                  onHoverEnd={() => setActivePodiumRank(null)}
+                />
+              ) : null}
             </div>
             <SalesTopRankingList items={rest} metric={metric} />
           </div>
@@ -460,4 +539,15 @@ export default function SalesTopRankingCard({
       </div>
     </div>
   );
+
+  if (tituloExterno) {
+    return (
+      <div className="sales-top-ranking-stack sales-top-ranking-stack--titulo-externo">
+        {headerNode}
+        {cardShell}
+      </div>
+    );
+  }
+
+  return cardShell;
 }

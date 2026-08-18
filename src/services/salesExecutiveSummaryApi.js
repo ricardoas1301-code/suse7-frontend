@@ -4,6 +4,27 @@
 
 import { buildApiUrl, apiFetch } from "../config/api";
 
+/** @type {Map<string, Promise<{ ok: boolean; data?: Record<string, unknown> | null; error?: string; status: number; timedOut?: boolean; aborted?: boolean }>>} */
+const inFlightExecutiveSummaryByKey = new Map();
+
+/**
+ * Cancela requisições em voo (testes / reset explícito).
+ */
+export function abortInFlightExecutiveSummaryFetch() {
+  inFlightExecutiveSummaryByKey.clear();
+}
+
+/**
+ * Executa fetch do executive-summary com deduplicação por query key.
+ * Não usa AbortController global — cada chamador controla seu próprio signal.
+ * @template T
+ * @param {() => Promise<T>} task
+ * @returns {Promise<T>}
+ */
+export function runExecutiveSummaryFetchSerialized(task) {
+  return task();
+}
+
 /**
  * @typedef {{
  *   marketplace?: string;
@@ -14,9 +35,12 @@ import { buildApiUrl, apiFetch } from "../config/api";
  *   period_preset?: string;
  *   start_date?: string;
  *   end_date?: string;
+ *   start_datetime?: string;
+ *   end_datetime?: string;
  *   period_start?: string;
  *   period_end?: string;
  *   ranking_limit?: number;
+ *   product_id?: string;
  * }} SalesExecutiveSummaryParams
  */
 
@@ -60,11 +84,47 @@ export function buildSalesExecutiveSummaryQuery(params) {
         : null;
   if (startDate) qs.set("start_date", startDate);
   if (endDate) qs.set("end_date", endDate);
+  const startDatetime =
+    p.start_datetime != null && String(p.start_datetime).trim() !== ""
+      ? String(p.start_datetime).trim()
+      : null;
+  const endDatetime =
+    p.end_datetime != null && String(p.end_datetime).trim() !== ""
+      ? String(p.end_datetime).trim()
+      : null;
+  if (startDatetime) qs.set("start_datetime", startDatetime);
+  if (endDatetime) qs.set("end_datetime", endDatetime);
   if (p.ranking_limit != null && Number.isFinite(Number(p.ranking_limit))) {
     qs.set("ranking_limit", String(Math.min(10, Math.max(1, Math.floor(Number(p.ranking_limit))))));
   }
+  if (p.product_id != null && String(p.product_id).trim() !== "") {
+    qs.set("product_id", String(p.product_id).trim());
+  }
 
   return qs;
+}
+
+/**
+ * Chave determinística para deduplicação de requests (primitiva, estável).
+ * @param {SalesExecutiveSummaryParams | null | undefined} params
+ */
+export function buildSalesExecutiveSummaryQueryKey(params) {
+  const p = params ?? {};
+  const parts = [
+    ["marketplace", p.marketplace ?? ""],
+    ["marketplace_account_id", p.marketplace_account_id ?? ""],
+    ["seller_company_id", p.seller_company_id ?? ""],
+    ["q", p.q ?? ""],
+    ["filter", p.filter ?? ""],
+    ["period_preset", p.period_preset ?? ""],
+    ["start_date", p.start_date ?? p.period_start ?? ""],
+    ["end_date", p.end_date ?? p.period_end ?? ""],
+    ["start_datetime", p.start_datetime ?? ""],
+    ["end_datetime", p.end_datetime ?? ""],
+    ["ranking_limit", p.ranking_limit ?? ""],
+    ["product_id", p.product_id ?? ""],
+  ];
+  return parts.map(([k, v]) => `${k}=${String(v).trim()}`).join("&");
 }
 
 /**
@@ -81,9 +141,62 @@ export function buildSalesExecutiveSummaryUrl(params) {
 
 /**
  * @param {SalesExecutiveSummaryParams | null | undefined} [params]
- * @returns {Promise<{ ok: boolean; data?: Record<string, unknown> | null; error?: string; status: number }>}
+ * @param {{ signal?: AbortSignal; dedupe?: boolean }} [options]
+ * @returns {Promise<{ ok: boolean; data?: Record<string, unknown> | null; error?: string; status: number; timedOut?: boolean; aborted?: boolean }>}
  */
-export async function fetchSalesExecutiveSummary(params) {
+export async function fetchSalesExecutiveSummary(params, options = {}) {
+  const queryKey = buildSalesExecutiveSummaryQueryKey(params);
+  const useDedupe = options.dedupe !== false;
+
+  if (useDedupe) {
+    const existing = inFlightExecutiveSummaryByKey.get(queryKey);
+    if (existing) {
+      if (import.meta.env.DEV) {
+        console.info("[Suse7][API sales executive-summary] dedupe in-flight", { query_key: queryKey });
+      }
+      const shared = await existing;
+      if (options.signal?.aborted) {
+        return {
+          ok: false,
+          error: "Requisição cancelada.",
+          status: 499,
+          data: null,
+          timedOut: false,
+          aborted: true,
+        };
+      }
+      return shared;
+    }
+  }
+
+  const promise = fetchSalesExecutiveSummaryOnce(params).finally(() => {
+    if (inFlightExecutiveSummaryByKey.get(queryKey) === promise) {
+      inFlightExecutiveSummaryByKey.delete(queryKey);
+    }
+  });
+
+  if (useDedupe) {
+    inFlightExecutiveSummaryByKey.set(queryKey, promise);
+  }
+
+  const result = await promise;
+  if (options.signal?.aborted) {
+    return {
+      ok: false,
+      error: "Requisição cancelada.",
+      status: 499,
+      data: null,
+      timedOut: false,
+      aborted: true,
+    };
+  }
+  return result;
+}
+
+/**
+ * @param {SalesExecutiveSummaryParams | null | undefined} [params]
+ */
+async function fetchSalesExecutiveSummaryOnce(params) {
   const url = buildSalesExecutiveSummaryUrl(params);
   if (!url) {
     return { ok: false, error: "Configure VITE_API_BASE_URL.", status: 0, data: null };
@@ -92,6 +205,7 @@ export async function fetchSalesExecutiveSummary(params) {
   if (import.meta.env.DEV) {
     console.info("[Suse7][API sales executive-summary]", {
       url,
+      query_key: buildSalesExecutiveSummaryQueryKey(params),
       period_preset: params?.period_preset ?? null,
       ranking_limit: params?.ranking_limit ?? null,
       marketplace: params?.marketplace ?? null,
@@ -101,8 +215,19 @@ export async function fetchSalesExecutiveSummary(params) {
     });
   }
 
+  // Timeout local apenas — abort do consumidor NÃO cancela a rede compartilhada (dedupe).
   const res = await apiFetch(url, { method: "GET", timeoutMs: 45000 });
   if (!res.ok) {
+    if (res.aborted) {
+      return {
+        ok: false,
+        error: res.error ?? "Requisição cancelada.",
+        status: res.status,
+        data: res.data ?? null,
+        timedOut: false,
+        aborted: true,
+      };
+    }
     if (import.meta.env.DEV) {
       console.warn("[Suse7][API sales executive-summary] failed", {
         status: res.status,

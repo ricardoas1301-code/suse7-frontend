@@ -1,8 +1,8 @@
-﻿import S7Icon from "../ui/S7Icon";
+import S7Icon from "../ui/S7Icon";
 import "./S7ClearFiltersAction.css";
 
 /**
- * A├º├úo textual discreta ÔÇö Limpar filtros (fora do dropdown de filtros r├ípidos).
+ * Ação textual discreta — Limpar filtros (fora do dropdown de filtros rápidos).
  * @param {{
  *   disabled?: boolean;
  *   onClick?: () => void;
