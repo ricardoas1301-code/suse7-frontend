@@ -24,7 +24,10 @@ import {
   createSellerCompanyForConfiguration,
   saveOperationalCycleConfirmation,
 } from "./configurationOnboardingWriteApi.js";
-import { buildConfigurationCompanyDataCreateBody } from "./configurationOnboardingFormHelpers.js";
+import {
+  buildConfigurationCompanyDataCreateBody,
+  buildConfigurationCompanyDataPatchBody,
+} from "./configurationOnboardingFormHelpers.js";
 import {
   montarUrlRotaMlConnectFrontend,
   validarSessaoParaConexaoMl,
@@ -249,10 +252,12 @@ export default function ConfigurationOnboardingActionsHost({
   );
 
   const handleSaveCompany = useCallback(
-    async (body) => {
+    async (form) => {
       if (companyDataMode === CONFIGURATION_COMPANY_DATA_MODAL_STATE.FIRST_CREATE) {
         await runSaveFlow(async () => {
-          const result = await createSellerCompanyForConfiguration(buildConfigurationCompanyDataCreateBody(body));
+          const result = await createSellerCompanyForConfiguration(
+            buildConfigurationCompanyDataCreateBody(form),
+          );
           return { ok: result.ok, error: result.error };
         });
         return;
@@ -263,7 +268,10 @@ export default function ConfigurationOnboardingActionsHost({
         return;
       }
       await runSaveFlow(async () => {
-        const result = await patchSellerCompanyForConfiguration(companyId, body);
+        const result = await patchSellerCompanyForConfiguration(
+          companyId,
+          buildConfigurationCompanyDataPatchBody(form),
+        );
         return { ok: result.ok, error: result.error };
       });
     },
@@ -373,7 +381,7 @@ export default function ConfigurationOnboardingActionsHost({
         error={error}
         onClose={onClose}
         onSave={handleSaveTaxRate}
-        placeholder="6,00"
+        placeholder="0,00"
       />
     );
   }
@@ -395,7 +403,7 @@ export default function ConfigurationOnboardingActionsHost({
         onClose={onClose}
         onSave={handleSaveOperationalCost}
         showNotApplicable
-        placeholder="1,00"
+        placeholder="0,00"
       />
     );
   }

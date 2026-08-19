@@ -8,7 +8,7 @@
 
   width: 100%;
   box-sizing: border-box;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -20,13 +20,12 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
   max-width: none;
   width: 100%;
-  /* S1.PERFIL-NOTIFICACOES.6 — respiro inferior via gutter do profile-content (12px); margin extra gerava ~12px de scroll */
   margin-bottom: 0;
   box-sizing: border-box;
-  flex: 0 0 auto;
-  min-height: auto;
+  flex: 1 1 auto;
+  min-height: 0;
   height: auto;
-  overflow: visible;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   padding: 24px 28px;

@@ -116,6 +116,26 @@ export function buildConfigurationPercentPatchValue(raw) {
 }
 
 /**
+ * Indica se há percentual persistido (distinto de ausência de cadastro).
+ * @param {unknown} raw
+ */
+export function configurationPercentHasPersistedValue(raw) {
+  return raw != null && String(raw).trim() !== "";
+}
+
+/**
+ * Valor inicial do input percentual no onboarding.
+ * Sem dado persistido → value vazio (placeholder visual separado).
+ * @param {unknown} raw
+ */
+export function resolveConfigurationPercentInitialDisplay(raw) {
+  if (!configurationPercentHasPersistedValue(raw)) {
+    return "";
+  }
+  return formatSellerCompanyPercentInputFromApi(raw);
+}
+
+/**
  * @param {{ closesAt?: string; workingDays?: number[] }} payload
  */
 export function validateConfigurationOperationalCycleForm(payload) {

@@ -40,11 +40,12 @@ export default function S7ConfigurationOnboardingSection({
     navigate("/login");
   };
 
-  const renderLogoutButton = () => (
-    <button type="button" className="s7-configuration-onboarding__logout" onClick={() => void handleLogout()}>
-      Sair da conta
-    </button>
-  );
+  const renderLogoutButton = (hideLogout = false) =>
+    hideLogout ? null : (
+      <button type="button" className="s7-configuration-onboarding__logout" onClick={() => void handleLogout()}>
+        Sair da conta
+      </button>
+    );
 
   if (initialLoading) {
     return (
@@ -107,6 +108,7 @@ export default function S7ConfigurationOnboardingSection({
     <section
       className={[
         "s7-configuration-onboarding",
+        concluido ? "s7-configuration-onboarding--complete" : "",
         refreshing ? "s7-configuration-onboarding--refreshing" : "",
       ]
         .filter(Boolean)
@@ -116,9 +118,18 @@ export default function S7ConfigurationOnboardingSection({
     >
       <div className="s7-configuration-onboarding__header">
         {concluido ? (
-          <p id={`${sectionId}-intro`} className="s7-configuration-onboarding__intro">
-            Preparação inicial concluída. Sua SUSE7 já está liberada para operar.
-          </p>
+          <div
+            id={`${sectionId}-intro`}
+            className="s7-configuration-onboarding__completion-card"
+            role="status"
+          >
+            <p className="s7-configuration-onboarding__completion-line">
+              Preparação inicial concluída.
+            </p>
+            <p className="s7-configuration-onboarding__completion-line">
+              O SUSE7 está liberado para sua operação.
+            </p>
+          </div>
         ) : (
           <S7ImportantNotice id={`${sectionId}-intro`}>
             Completar estas etapas é essencial para preparar sua operação e começar a usar o SUSE7. Essa etapa leva menos de dois minutos.
@@ -127,7 +138,7 @@ export default function S7ConfigurationOnboardingSection({
       </div>
 
       <div className="s7-configuration-onboarding__main">
-        <div className="s7-configuration-onboarding__next-spacer" aria-hidden="true" />
+        {concluido ? null : <div className="s7-configuration-onboarding__next-spacer" aria-hidden="true" />}
 
         <ul id={`${sectionId}-checklist`} className="s7-configuration-onboarding__checklist">
         {milestones.map((milestone) => {
@@ -167,7 +178,11 @@ export default function S7ConfigurationOnboardingSection({
           );
 
           return (
-            <li key={id || presentation.label} className={itemClassName}>
+            <li
+              key={id || presentation.label}
+              className={itemClassName}
+              aria-disabled={isVisuallyLocked ? true : undefined}
+            >
               {isClickable ? (
                 <button
                   type="button"
@@ -214,7 +229,7 @@ export default function S7ConfigurationOnboardingSection({
           </div>
         ) : null}
 
-        {renderLogoutButton()}
+        {renderLogoutButton(concluido)}
       </footer>
     </section>
   );

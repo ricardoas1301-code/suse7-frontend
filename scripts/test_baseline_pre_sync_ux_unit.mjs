@@ -38,6 +38,7 @@ const termsSource = read("../src/components/legal/TermsAcceptanceModal.jsx");
 const contactSource = read("../src/components/ContactModal.jsx");
 const contactCss = read("../src/components/ContactModal.css");
 const dashboardSource = read("../src/components/Dashboard.jsx");
+const dashboardCssSource = read("../src/components/Dashboard.css");
 const executiveEmptySource = read("../src/components/sales/ExecutiveCardEmptyState.jsx");
 const pricingPieSource = read("../src/features/dashboard/components/PricingHealthSlicedPieCard.jsx");
 const productProfitSource = read("../src/features/dashboard/components/ProductProfitabilityCard.jsx");
@@ -78,7 +79,7 @@ assert.ok(panelSource.includes("onClick={collapsible ? toggleCollapsed : undefin
 
 assert.ok(popoverSource.includes("onMouseEnter={openNow}"), "popover hover bridge missing");
 assert.ok(!termsSource.includes("Abrir Termos em nova aba"), "external terms link should be removed");
-assert.ok(termsSource.includes("Role os Termos de Uso até o final"), "terms tooltip copy missing");
+assert.ok(termsSource.includes("Leia o documento integralmente para habilitar o aceite."), "terms tooltip copy missing");
 
 assert.equal(shouldShowOperationalTasks("/promocoes"), true);
 assert.equal(shouldShowOperationalTasks("/central-mensagens"), true);
@@ -130,6 +131,17 @@ assert.ok(
 assert.doesNotMatch(competitionHealthSource, /:\s*"—"/);
 
 assert.ok(dashboardSource.includes("sectionJumpDownTargetRef={dashboardNextSectionRef}"), "dashboard top10 scroll ref missing");
+assert.ok(
+  dashboardCssSource.includes(".page-content:has(.vendas-page.dashboard-page)") &&
+    dashboardCssSource.includes("padding: 12px") &&
+    dashboardCssSource.includes("gap: var(--s7-catalog-block-gap, 12px)") &&
+    dashboardCssSource.includes(".dashboard-page__top10-block"),
+  "dashboard top10 outer page frame 12px",
+);
+assert.ok(
+  !dashboardCssSource.includes(":has(> .vendas-page.dashboard-page)"),
+  "dashboard frame must use descendant selector (ConfigurationAppGateShell)",
+);
 assert.ok(!dashboardSource.includes('navigate("/vendas")'), "dashboard top10 must not navigate to vendas");
 assert.ok(!dashboardSource.includes("Ir para Vendas"), "dashboard top10 vendas tooltip removed");
 

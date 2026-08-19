@@ -313,8 +313,8 @@
   display: flex;
   flex-direction: column;
   height: auto;
-  max-height: calc(100vh - 32px);
-  overflow: visible;
+  max-height: min(520px, calc(100vh - 32px));
+  overflow: hidden;
   animation: s7-operational-tasks-onboarding-in 0.32s ease-out;
 }
 
@@ -327,8 +327,9 @@
   flex: 1 1 auto;
   min-height: 0;
   max-height: none;
-  overflow: visible;
-  padding-bottom: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 12px;
 }
 
 .s7-operational-tasks-panel__celebration-backdrop {

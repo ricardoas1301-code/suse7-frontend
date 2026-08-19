@@ -98,7 +98,7 @@
 
 .configuration-onboarding-modal-form__field--time input[type="time"] {
   width: 100%;
-  max-width: 220px;
+  max-width: 110px;
   border: 1px solid rgba(15, 23, 42, 0.14);
   border-radius: 10px;
   padding: 10px 12px;

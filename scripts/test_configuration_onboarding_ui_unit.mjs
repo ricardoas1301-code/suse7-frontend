@@ -487,14 +487,15 @@ assert("01D.4 shared percent util", percentInputUtil.includes("formatarPercentua
 assert("01D.4 percent modal uses direct input", readFileSync(join(feRoot, "../src/features/dashboard/configurationOnboarding/ConfigurationPercentModal.jsx"), "utf8").includes("S7PercentDirectInput"));
 assert("01D.4 not cents mask", percentInputUtil.includes("NÃO máscara centésimal"));
 assert("01D.4 suffix non editable", percentInputComponent.includes("s7-percent-direct-input__suffix"));
-assert("01D.4 M3 placeholder", actionsHostJsx.includes('placeholder="6,00"'));
-assert("01D.4 M4 placeholder", actionsHostJsx.includes('placeholder="1,00"'));
+assert("01D.4 M3 placeholder", actionsHostJsx.includes('placeholder="0,00"'));
+assert("01D.4 M4 placeholder", actionsHostJsx.includes('placeholder="0,00"'));
 assert("01D.4 pending blue border", sectionCss.includes("border: 1.5px solid #5f9bff"));
 assert("01D.4 pending smaller square", sectionCss.includes("width: 11px") && sectionCss.includes("height: 11px"));
 
 assert("01D action registry M3", CONFIGURATION_MILESTONE_ACTION_REGISTRY.TAX_RATE.actionType === CONFIGURATION_MILESTONE_ACTION_TYPES.MODAL_TAX_RATE);
 assert("01D M6 not clickable when locked", milestoneAcaoClicavel("FIRST_MARKETPLACE_CONNECTION", "PENDING", snapshotWithPercent(50, 3).milestones) === false);
-assert("01D M3 clickable when pending", milestoneAcaoClicavel("TAX_RATE", "PENDING", snapshotWithPercent(50, 3).milestones) === true);
+assert("01D M4 clickable when sequential gate open", milestoneAcaoClicavel("OPERATIONAL_COST", "PENDING", snapshotWithPercent(50, 3).milestones) === true);
+assert("01D M3 blocked before company data", milestoneAcaoClicavel("TAX_RATE", "PENDING", snapshotWithPercent(17, 1).milestones) === false);
 assert("01D M3 not clickable when completed", milestoneAcaoClicavel("TAX_RATE", "COMPLETED", snapshotWithPercent(50, 3).milestones) === false);
 assert("01D M2 legal reuse", resolverAcaoMilestone("LEGAL_ACCEPTANCE").actionType === CONFIGURATION_MILESTONE_ACTION_TYPES.LEGAL_FLOW);
 
@@ -610,6 +611,16 @@ assert(
 );
 assert("01D.6 onboarding logout", sectionJsx.includes("Sair da conta"));
 assert("01D.6 progress footer", sectionJsx.includes('className="s7-configuration-onboarding__footer"') && sectionJsx.indexOf("s7-configuration-onboarding__progress") > sectionJsx.indexOf("s7-configuration-onboarding__checklist"));
+assert(
+  "01D.6 logout respiro abaixo do resumo",
+  sectionCss.includes(".s7-configuration-onboarding__footer .s7-configuration-onboarding__logout") &&
+    sectionCss.includes("--s7-onboarding-separated-gap: 16px"),
+);
+assert(
+  "01D.6 importante respiro acima da checklist",
+  sectionCss.includes(".s7-configuration-onboarding__main") &&
+    sectionCss.includes("margin-top: calc(var(--s7-onboarding-separated-gap) - 10px)"),
+);
 assert("01D.6 centered main block", sectionCss.includes("s7-configuration-onboarding__main"));
 assert("01D.6 header lock bell", readFileSync(join(feRoot, "../src/components/notifications/S7NotificationCenter.jsx"), "utf8").includes("interactionLocked"));
 assert("01D.6 header lock avatar", readFileSync(join(feRoot, "../src/components/AvatarMenu.jsx"), "utf8").includes("interactionLocked"));
@@ -658,7 +669,7 @@ assert("M6-UX-PREOAUTH modal white surface", preConfirmModal.includes('bodySurfa
 assert("M6-UX-PREOAUTH modal historical copy SSOT", preConfirmModal.includes("ML_INTEGRATION_HISTORICAL_SALES_MESSAGE"));
 assert("M6-UX-PREOAUTH modal channel badge prefix", preConfirmModal.includes('channelBadgePrefix="Conecte sua conta ao"'));
 assert("M6-UX-PREOAUTH modal connect title a11y", preConfirmModal.includes("Conecte sua conta ao Mercado Livre"));
-assert("M6-UX-PREOAUTH onboarding section spacing", readFileSync(join(feRoot, "../src/features/dashboard/configurationOnboarding/S7ConfigurationOnboardingSection.css"), "utf8").includes("gap: 18px"));
+assert("M6-UX-PREOAUTH onboarding section spacing", readFileSync(join(feRoot, "../src/features/dashboard/configurationOnboarding/S7ConfigurationOnboardingSection.css"), "utf8").includes("gap: 10px"));
 assert("M6-UX-PREOAUTH panel illustration right aligned", readFileSync(join(feRoot, "../src/features/dashboard/operationalTasks/S7OperationalTasksPanel.css"), "utf8").includes("margin-left: auto"));
 assert("M6-UX-PREOAUTH modal ml theme class applied", readFileSync(join(feRoot, "../src/features/dashboard/configurationOnboarding/ConfigurationTaskModalShell.jsx"), "utf8").includes("configuration-task-modal-shell--${marketplaceTheme.resolvedKey}"));
 assert("M6-UX-PREOAUTH modal no raiox shell class leak", !readFileSync(join(feRoot, "../src/features/dashboard/configurationOnboarding/ConfigurationTaskModalShell.jsx"), "utf8").includes("shellModifierClass"));

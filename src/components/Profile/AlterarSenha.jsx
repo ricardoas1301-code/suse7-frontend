@@ -167,7 +167,7 @@ export default function AlterarSenha() {
   };
 
   return (
-    <div className="dados-empresa-page alterar-senha-page">
+    <div className="alterar-senha-page">
       <div className="profile-card s7-alterar-senha-hero">
         <div className="s7-alterar-senha-body">
           <aside className="s7-alterar-senha-body__illustration" aria-hidden="true">

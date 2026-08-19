@@ -6,7 +6,6 @@ import { formatCpfCnpjBr, formatPhoneBr } from "../../../utils/profileInputMasks
 import ConfigurationTaskModalShell from "./ConfigurationTaskModalShell.jsx";
 import { CONFIGURATION_TASK_MODAL_SIZE } from "./configurationTaskModalSizes.js";
 import {
-  buildConfigurationCompanyDataPatchBody,
   mapConfigurationCompanyDataForm,
   validateConfigurationCompanyDataForm,
 } from "./configurationOnboardingFormHelpers.js";
@@ -69,7 +68,7 @@ export default function ConfigurationCompanyDataModal({
         showConfigurationFieldValidation(formRef.current, validation.field, validation.message);
         return;
       }
-      await onSave(buildConfigurationCompanyDataPatchBody(form));
+      await onSave(form);
     },
     [addNotification, form, onSave],
   );
@@ -81,7 +80,7 @@ export default function ConfigurationCompanyDataModal({
     <ConfigurationTaskModalShell
       open={open}
       title="Dados da Loja"
-      subtitle="Informe os dados principais da loja para continuar."
+      subtitle="Preencha as informações da sua loja"
       onClose={onClose}
       error={error}
       closeDisabled={busy}

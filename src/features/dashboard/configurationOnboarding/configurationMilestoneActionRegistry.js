@@ -1,5 +1,5 @@
 import { CONFIGURATION_MILESTONE_IDS, CONFIGURATION_MILESTONE_STATUS } from "./configurationOnboardingTypes.js";
-import { milestoneM6Elegivel } from "./configurationMilestoneEligibility.js";
+import { milestoneSequencialmenteHabilitado } from "./configurationMilestoneEligibility.js";
 
 /** Tipos de ação — separados da apresentação visual. */
 export const CONFIGURATION_MILESTONE_ACTION_TYPES = /** @type {const} */ ({
@@ -72,10 +72,7 @@ export function milestoneAcaoClicavel(milestoneId, status, milestones = null) {
   const action = resolverAcaoMilestone(milestoneId);
   if (!action.implemented || !action.clickableWhenPending) return false;
   if (status !== CONFIGURATION_MILESTONE_STATUS.PENDING) return false;
-  const id = String(milestoneId ?? "");
-  if (id === CONFIGURATION_MILESTONE_IDS.FIRST_MARKETPLACE_CONNECTION) {
-    if (!milestones || !milestoneM6Elegivel(milestones)) return false;
-  }
+  if (!milestones || !milestoneSequencialmenteHabilitado(milestoneId, milestones)) return false;
   return true;
 }
 

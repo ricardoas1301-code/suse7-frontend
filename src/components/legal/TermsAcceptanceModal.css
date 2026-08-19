@@ -68,7 +68,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px 16px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+}
+
+.s7-terms-modal__actions--inline {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .s7-terms-modal__accept {

@@ -1,15 +1,19 @@
-const SIGNUP_PLANS_CANONICAL_PATH = "/planos";
+import { Link } from "react-router-dom";
+
+import { SIGNUP_PLANS_CANONICAL_PATH } from "../billing/plansCatalogPaths.js";
+
+export { SIGNUP_PLANS_CANONICAL_PATH };
+
 /**
  * @param {{ children: import("react").ReactNode; className?: string }} props
  */
 function SignupPlansLink({ children, className = "signup-plans-link" }) {
   return (
-    <a href={SIGNUP_PLANS_CANONICAL_PATH} target="_blank" rel="noopener noreferrer" className={className}>
+    <Link to={SIGNUP_PLANS_CANONICAL_PATH} className={className}>
       {children}
-    </a>
+    </Link>
   );
 }
-
 export default function SignupMarketingColumn() {
   return (
     <div className="signup-left">

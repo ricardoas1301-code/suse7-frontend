@@ -187,24 +187,24 @@
 ===================================================== */
 
 
-.dados-empresa-page {
+.dados-empresa-page:not(.ml-integrations-page):not(.s7-notification-center-page) {
   width: 100%;
   box-sizing: border-box;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.dados-empresa-page .profile-card.s7-empresa-hero {
+.dados-empresa-page:not(.ml-integrations-page):not(.s7-notification-center-page) .profile-card.s7-empresa-hero {
   max-width: none;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   box-sizing: border-box;
-  flex: 0 0 auto;
-  min-height: auto;
+  flex: 1 1 auto;
+  min-height: 0;
   height: auto;
-  overflow: visible;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   padding: 28px;

@@ -31,13 +31,20 @@ function assert(name, cond) {
 }
 
 const empresaHero =
-  files.dadosEmpresaCss.match(/\.dados-empresa-page \.profile-card\.s7-empresa-hero\s*\{[^}]+\}/s)?.[0] ?? "";
+  files.dadosEmpresaCss.match(
+    /\.dados-empresa-page:not\(\.ml-integrations-page\):not\(\.s7-notification-center-page\) \.profile-card\.s7-empresa-hero\s*\{[^}]+\}/s,
+  )?.[0] ?? "";
 const alterarHero =
   files.alterarSenhaCss.match(/\.alterar-senha-page \.profile-card\.s7-alterar-senha-hero\s*\{[^}]+\}/s)?.[0] ?? "";
 
-assert("dados empresa hero untouched margin-bottom 12px", /margin-bottom:\s*12px/.test(empresaHero));
-assert("alterar senha hero margin-bottom removed", /margin-bottom:\s*0/.test(alterarHero));
+assert("dados empresa hero no bottom inset margin hack", !/margin-bottom:\s*12px/.test(empresaHero));
+assert("alterar senha hero no bottom inset margin hack", !/margin-bottom:\s*12px/.test(alterarHero));
 assert("alterar senha scoped shell rule", files.profileCss.includes(":has(> .profile-content > .alterar-senha-page)"));
+assert(
+  "compact profile pages use shell padding for bottom inset",
+  files.profileCss.includes("padding: var(--s7-empresa-page-gutter, 12px)") &&
+    !/\.profile-content:has\(> \.alterar-senha-page\)[\s\S]*padding-bottom:\s*0/.test(files.profileCss),
+);
 
 assert("modal avatar asset import", files.recipientModal.includes("modal-editar-destinatario-avatar.png"));
 try {

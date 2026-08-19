@@ -129,7 +129,7 @@ export default function TermsAcceptanceModal({ open, onClose, onAccepted }) {
               />
               {!podeMarcarAceite ? (
                 <S7Tooltip
-                  content="Role os Termos de Uso até o final para habilitar esta opção."
+                  content="Leia o documento integralmente para habilitar o aceite."
                   placement="top-start"
                   offset={6}
                   wrap
@@ -140,17 +140,17 @@ export default function TermsAcceptanceModal({ open, onClose, onAccepted }) {
                 <span>Li e aceito os Termos de Uso</span>
               )}
             </label>
-          </div>
 
-          <div className="s7-terms-modal__actions">
-            <S7Button
-              variant="primary"
-              type="button"
-              disabled={!podeConfirmar || catalogLoading || Boolean(catalogError)}
-              onClick={handleConfirmar}
-            >
-              Aceitar e continuar
-            </S7Button>
+            <div className="s7-terms-modal__actions s7-terms-modal__actions--inline">
+              <S7Button
+                variant="primary"
+                type="button"
+                disabled={!podeConfirmar || catalogLoading || Boolean(catalogError)}
+                onClick={handleConfirmar}
+              >
+                Aceitar e continuar
+              </S7Button>
+            </div>
           </div>
         </footer>
       </div>

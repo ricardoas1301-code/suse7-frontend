@@ -37,6 +37,8 @@ import {
 
 import { buildCollapsedOperationalTasksLabel } from "./operationalTaskDescriptions.js";
 
+import { cliqueForaPainelOperacional } from "./operationalTasksPanelOutsideClick.js";
+
 import OperationalTasksPanelIcon from "./OperationalTasksPanelIcon.jsx";
 
 import "./S7OperationalTasksPanel.css";
@@ -363,7 +365,7 @@ export default function S7OperationalTasksPanel({
 
 
 
-  const recolherPainelAntesAcao = useCallback(() => {
+  const recolherPainel = useCallback(() => {
 
     if (!collapsible) return;
 
@@ -375,7 +377,51 @@ export default function S7OperationalTasksPanel({
       collapsed: true,
     });
 
+    if (import.meta.env.DEV) {
+
+      console.info("[task_collapsed]", { scope: "operational_tasks", reason: "collapse" });
+
+    }
+
   }, [collapsible, userId, mlInitialSyncPhase]);
+
+
+
+  useEffect(() => {
+
+    if (!collapsible || isCollapsed) {
+
+      return undefined;
+
+    }
+
+
+
+    const handlePointerDownOutside = (/** @type {PointerEvent} */ event) => {
+
+      if (!cliqueForaPainelOperacional(panelRef.current, event.target)) return;
+
+      recolherPainel();
+
+    };
+
+
+
+    document.addEventListener("pointerdown", handlePointerDownOutside);
+
+
+
+    return () => {
+
+      document.removeEventListener("pointerdown", handlePointerDownOutside);
+
+    };
+
+  }, [collapsible, isCollapsed, recolherPainel]);
+
+
+
+  const recolherPainelAntesAcao = recolherPainel;
 
 
 
