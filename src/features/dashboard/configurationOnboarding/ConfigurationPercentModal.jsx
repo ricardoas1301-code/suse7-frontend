@@ -10,7 +10,7 @@ import ConfigurationTaskModalShell from "./ConfigurationTaskModalShell.jsx";
 import { CONFIGURATION_TASK_MODAL_SIZE } from "./configurationTaskModalSizes.js";
 import {
   buildConfigurationPercentPatchValue,
-  formatConfigurationPercentInputFromApi,
+  resolveConfigurationPercentInitialDisplay,
   validateConfigurationPercentInput,
 } from "./configurationOnboardingFormHelpers.js";
 import {
@@ -66,7 +66,7 @@ export default function ConfigurationPercentModal({
 
   useEffect(() => {
     if (!open) return;
-    setValue(formatConfigurationPercentInputFromApi(initialValue));
+    setValue(resolveConfigurationPercentInitialDisplay(initialValue));
     clearConfigurationFieldValidityForField(formRef.current, "percent");
   }, [open, initialValue]);
 

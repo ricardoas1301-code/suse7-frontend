@@ -3,6 +3,7 @@
 // ======================================================================
 
 import { useMemo, useState } from "react";
+import ExecutiveCardEmptyState from "../../../components/sales/ExecutiveCardEmptyState.jsx";
 import ProductHealthDonutCenter, {
   resolveProductHealthDonutSegmentState,
 } from "./ProductHealthDonutCenter.jsx";
@@ -358,7 +359,7 @@ export default function ProductProfitabilityCard({ profitCard, totalProducts }) 
       <div className="s7-products-health-center__main-card-body s7-products-health-center__main-card-body--profit">
         <HealthPodiumTotalLine totalProducts={totalProducts} />
         {!hasData ? (
-          <p className="s7-products-health-center__empty">Nenhum produto monitorado.</p>
+          <ExecutiveCardEmptyState message="Nenhum produto monitorado." />
         ) : (
           <>
             <div

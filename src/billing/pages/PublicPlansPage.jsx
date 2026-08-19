@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ContactModal from "../../components/ContactModal";
+import PublicLegalHeader from "../../components/legal/PublicLegalHeader.jsx";
 import { useAuthBootstrap } from "../../contexts/AuthBootstrapContext";
 import PlansCatalogSection from "../components/PlansCatalogSection";
 import PlansArsenalModal from "../components/PlansArsenalModal";
@@ -8,6 +9,7 @@ import { resolveCheckoutPlanSlug } from "../checkoutUi";
 import { useBillingPlans } from "../hooks/useBillingPlans";
 import { INFINITY_SUPPORT_CONTEXT, INFINITY_SUPPORT_PREFILL } from "../planInfinitySupport";
 import { AUTHENTICATED_PLANS_PATH } from "../plansCatalogPaths";
+import "../../components/legal/publicLegalPage.css";
 import "../billing.css";
 import "./PublicPlansPage.css";
 
@@ -17,6 +19,11 @@ export default function PublicPlansPage() {
   const { loading, error, plans, refresh } = useBillingPlans();
   const [arsenalOpen, setArsenalOpen] = useState(false);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.add("public-legal-page-active");
+    return () => document.body.classList.remove("public-legal-page-active");
+  }, []);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -41,12 +48,10 @@ export default function PublicPlansPage() {
   }
 
   return (
-    <main className="s7-public-plans-page">
-      <div className="s7-public-plans-page__inner">
-        <p className="s7-public-plans-page__back">
-          <Link to="/signup">← Voltar ao cadastro</Link>
-        </p>
+    <div className="public-legal-page s7-public-plans-page">
+      <PublicLegalHeader />
 
+      <main className="public-legal-container s7-public-plans-page__container">
         <div className="s7-public-plans-page__card">
           <div className="s7-billing-page s7-planos-page">
             <PlansCatalogSection
@@ -61,7 +66,7 @@ export default function PublicPlansPage() {
             />
           </div>
         </div>
-      </div>
+      </main>
 
       {supportModalOpen ? (
         <ContactModal
@@ -72,6 +77,6 @@ export default function PublicPlansPage() {
       ) : null}
 
       <PlansArsenalModal open={arsenalOpen} onClose={() => setArsenalOpen(false)} />
-    </main>
+    </div>
   );
 }

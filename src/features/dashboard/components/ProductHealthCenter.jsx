@@ -11,6 +11,7 @@ import VendasExecutiveKpiCard from "../../../components/sales/VendasExecutiveKpi
 import S7DashboardSectionPanel from "../../../components/dashboard/S7DashboardSectionPanel.jsx";
 import S7SectionJumpButton from "../../../components/ui/S7SectionJumpButton.jsx";
 import "../../../components/sales/VendasExecutiveKpiCard.css";
+import ExecutiveCardEmptyState from "../../../components/sales/ExecutiveCardEmptyState.jsx";
 import ProductStockCoverageCard from "./ProductStockCoverageCard.jsx";
 import ProductProfitabilityCard from "./ProductProfitabilityCard.jsx";
 import ProductHealthDonutCenter, {
@@ -498,7 +499,7 @@ function ProductAbcCurveCard({ abcCard, totalProducts }) {
       <div className="s7-products-health-center__main-card-body s7-products-health-center__main-card-body--abc">
         <HealthPodiumTotalLine totalProducts={totalProducts} />
         {!hasData ? (
-          <p className="s7-products-health-center__empty">Nenhum produto monitorado.</p>
+          <ExecutiveCardEmptyState message="Nenhum produto monitorado." />
         ) : (
           <div
             className="s7-products-health-center__abc-split"
@@ -576,7 +577,7 @@ function ProductDistributionCard({
       <div className={`s7-products-health-center__main-card-body ${cardClass}`}>
         <HealthPodiumTotalLine totalProducts={totalProducts} />
         {!hasData ? (
-          <p className="s7-products-health-center__empty">Nenhum produto monitorado.</p>
+          <ExecutiveCardEmptyState message="Nenhum produto monitorado." />
         ) : (
           <div className="s7-products-health-center__distribution-podium" role="img" aria-label={title}>
             {sorted.map((row, index) => (

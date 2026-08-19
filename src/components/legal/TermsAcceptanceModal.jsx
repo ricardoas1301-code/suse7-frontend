@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
 import S7Button from "../ui/S7Button.jsx";
+import S7Tooltip from "../ui/S7Tooltip.jsx";
 import { useS7DialogFocus } from "../ui/useS7DialogFocus.js";
 import TermsDocumentContent from "./TermsDocumentContent.jsx";
 import { useScrollAteFinal } from "./useScrollAteFinal.js";
@@ -127,23 +127,30 @@ export default function TermsAcceptanceModal({ open, onClose, onAccepted }) {
                 disabled={!podeMarcarAceite}
                 onChange={(event) => setAceiteInterno(event.target.checked)}
               />
-              <span>Li e aceito os Termos de Uso</span>
+              {!podeMarcarAceite ? (
+                <S7Tooltip
+                  content="Leia o documento integralmente para habilitar o aceite."
+                  placement="top-start"
+                  offset={6}
+                  wrap
+                >
+                  <span>Li e aceito os Termos de Uso</span>
+                </S7Tooltip>
+              ) : (
+                <span>Li e aceito os Termos de Uso</span>
+              )}
             </label>
 
-            <Link to="/termos" target="_blank" rel="noopener noreferrer" className="s7-terms-modal__external-link">
-              Abrir Termos em nova aba
-            </Link>
-          </div>
-
-          <div className="s7-terms-modal__actions">
-            <S7Button
-              variant="primary"
-              type="button"
-              disabled={!podeConfirmar || catalogLoading || Boolean(catalogError)}
-              onClick={handleConfirmar}
-            >
-              Aceitar e continuar
-            </S7Button>
+            <div className="s7-terms-modal__actions s7-terms-modal__actions--inline">
+              <S7Button
+                variant="primary"
+                type="button"
+                disabled={!podeConfirmar || catalogLoading || Boolean(catalogError)}
+                onClick={handleConfirmar}
+              >
+                Aceitar e continuar
+              </S7Button>
+            </div>
           </div>
         </footer>
       </div>

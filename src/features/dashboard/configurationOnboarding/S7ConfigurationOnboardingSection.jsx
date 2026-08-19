@@ -9,7 +9,6 @@ import { obterApresentacaoMilestone, ordenarMilestonesParaApresentacao } from ".
 import {
   configuracaoEstaCompleta,
   extrairResumoProgresso,
-  selecionarProximoMilestonePendente,
 } from "./configurationOnboardingSelectors.js";
 import "./S7ConfigurationOnboardingSection.css";
 
@@ -41,11 +40,12 @@ export default function S7ConfigurationOnboardingSection({
     navigate("/login");
   };
 
-  const renderLogoutButton = () => (
-    <button type="button" className="s7-configuration-onboarding__logout" onClick={() => void handleLogout()}>
-      Sair da conta
-    </button>
-  );
+  const renderLogoutButton = (hideLogout = false) =>
+    hideLogout ? null : (
+      <button type="button" className="s7-configuration-onboarding__logout" onClick={() => void handleLogout()}>
+        Sair da conta
+      </button>
+    );
 
   if (initialLoading) {
     return (
@@ -102,20 +102,13 @@ export default function S7ConfigurationOnboardingSection({
       ? { ...milestone, status: CONFIGURATION_MILESTONE_STATUS.COMPLETED }
       : milestone,
   );
-  const proximo = concluido ? null : selecionarProximoMilestonePendente(milestones);
   const safePercent = Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
-  const proximoClicavel =
-    proximo?.milestone?.id &&
-    milestoneAcaoClicavel(
-      String(proximo.milestone.id),
-      String(proximo.milestone.status ?? ""),
-      milestones,
-    );
 
   return (
     <section
       className={[
         "s7-configuration-onboarding",
+        concluido ? "s7-configuration-onboarding--complete" : "",
         refreshing ? "s7-configuration-onboarding--refreshing" : "",
       ]
         .filter(Boolean)
@@ -125,9 +118,18 @@ export default function S7ConfigurationOnboardingSection({
     >
       <div className="s7-configuration-onboarding__header">
         {concluido ? (
-          <p id={`${sectionId}-intro`} className="s7-configuration-onboarding__intro">
-            Preparação inicial concluída. Sua SUSE7 já está liberada para operar.
-          </p>
+          <div
+            id={`${sectionId}-intro`}
+            className="s7-configuration-onboarding__completion-card"
+            role="status"
+          >
+            <p className="s7-configuration-onboarding__completion-line">
+              Preparação inicial concluída.
+            </p>
+            <p className="s7-configuration-onboarding__completion-line">
+              O SUSE7 está liberado para sua operação.
+            </p>
+          </div>
         ) : (
           <S7ImportantNotice id={`${sectionId}-intro`}>
             Completar estas etapas é essencial para preparar sua operação e começar a usar o SUSE7. Essa etapa leva menos de dois minutos.
@@ -136,26 +138,7 @@ export default function S7ConfigurationOnboardingSection({
       </div>
 
       <div className="s7-configuration-onboarding__main">
-        {proximo ? (
-          <div className="s7-configuration-onboarding__next">
-            <p className="s7-configuration-onboarding__next-label">Próxima etapa</p>
-            {proximoClicavel && onMilestoneAction ? (
-              <button
-                type="button"
-                className="s7-configuration-onboarding__next-action"
-                onClick={() => onMilestoneAction(String(proximo.milestone.id))}
-                disabled={refreshing}
-              >
-                <span className="s7-configuration-onboarding__next-title">{proximo.presentation.label}</span>
-              </button>
-            ) : (
-              <p className="s7-configuration-onboarding__next-title">{proximo.presentation.label}</p>
-            )}
-            {proximo.presentation.description ? (
-              <p className="s7-configuration-onboarding__next-description">{proximo.presentation.description}</p>
-            ) : null}
-          </div>
-        ) : null}
+        {concluido ? null : <div className="s7-configuration-onboarding__next-spacer" aria-hidden="true" />}
 
         <ul id={`${sectionId}-checklist`} className="s7-configuration-onboarding__checklist">
         {milestones.map((milestone) => {
@@ -195,7 +178,11 @@ export default function S7ConfigurationOnboardingSection({
           );
 
           return (
-            <li key={id || presentation.label} className={itemClassName}>
+            <li
+              key={id || presentation.label}
+              className={itemClassName}
+              aria-disabled={isVisuallyLocked ? true : undefined}
+            >
               {isClickable ? (
                 <button
                   type="button"
@@ -242,7 +229,7 @@ export default function S7ConfigurationOnboardingSection({
           </div>
         ) : null}
 
-        {renderLogoutButton()}
+        {renderLogoutButton(concluido)}
       </footer>
     </section>
   );

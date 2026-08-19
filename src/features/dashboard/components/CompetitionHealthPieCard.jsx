@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import CompetitionHealthPieCenter, {
   resolveCompetitionHealthPieSegmentState,
 } from "./CompetitionHealthPieCenter.jsx";
+import ExecutiveCardEmptyState from "../../../components/sales/ExecutiveCardEmptyState.jsx";
 import "./CompetitionHealthCenter.css";
 
 const COMPETITION_HEALTH_ALERT_CORAL = "#e8a4a4";
@@ -364,7 +365,7 @@ export default function CompetitionHealthPieCard({
       >
         <HealthCardHeaderLine headerMode={headerMode} totalListings={totalListings} cardData={cardData} />
         {!hasData ? (
-          <p className="s7-competition-health-center__empty">{emptyMessage}</p>
+          <ExecutiveCardEmptyState message={emptyMessage} />
         ) : (
           <div
             className="s7-competition-health-center__split"

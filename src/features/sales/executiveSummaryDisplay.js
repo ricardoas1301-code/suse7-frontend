@@ -111,8 +111,16 @@ export function buildHighestSaleMetric(summary) {
  * @param {unknown} raw
  */
 export function formatExecutiveCostMoneyOrDash(raw) {
+  if (raw == null || String(raw).trim() === "") {
+    return formatBrlFromApiString("0");
+  }
+  const n = Number(String(raw).replace(",", "."));
+  if (!Number.isFinite(n) || n === 0) {
+    return formatBrlFromApiString("0");
+  }
   const negative = formatNegativeBrlFromApiString(raw);
-  return negative ?? "—";
+  if (negative != null) return negative;
+  return formatBrlFromApiString(String(raw));
 }
 
 /**
@@ -229,11 +237,12 @@ const EXECUTIVE_NOMINAL_COST_FIELDS = [
  */
 export function buildExecutiveCostsBlockMetrics(summary) {
   if (!summary) {
+    const zeroValue = formatExecutiveCostMoneyOrDash("0");
     return EXECUTIVE_COSTS_PLACEHOLDER_METRICS.map(({ id, label, labelTip }) => ({
       id,
       label,
-      value: "—",
-      sharePercent: "—",
+      value: zeroValue,
+      sharePercent: "0,00%",
       tone: "danger",
       ...(labelTip ? { labelTip } : {}),
     }));

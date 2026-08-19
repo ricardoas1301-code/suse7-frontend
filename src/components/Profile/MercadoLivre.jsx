@@ -124,9 +124,7 @@ export default function MercadoLivre() {
   const syncDetailsFetchGenRef = useRef(0);
   const syncDetailsOpeningAccountIdRef = useRef(null);
   const [syncDetailsOpeningAccountId, setSyncDetailsOpeningAccountId] = useState(null);
-  /** Após OAuth com ml_awaiting_sync: confirmação antes de enfileirar sync. */
-  const [postConnectReadyOpen, setPostConnectReadyOpen] = useState(false);
-
+  /** Após OAuth com ml_awaiting_sync: redireciona ao Dashboard (sem modal intermediário). */
   const navigate = useNavigate();
   const location = useLocation();
   const { addNotification } = useNotifications();
@@ -335,10 +333,9 @@ export default function MercadoLivre() {
             setOnboardingDismissed(false);
             setOnboardingSyncStarting(false);
             setInitialPipelineEngaged(false);
-            setPostConnectReadyOpen(false);
             if (mlAwaitingSync) {
               setOperationalImportModalOpen(false);
-        } else {
+            } else {
               setOperationalImportModalOpen(true);
             }
 
@@ -378,8 +375,13 @@ export default function MercadoLivre() {
               const accRow = latestAccounts.find((a) => String(a.id) === targetId);
               const inList = Boolean(accRow);
               if (mlAwaitingSync) {
-                setPostConnectReadyOpen(true);
-              } else if (inList) {
+                navigate(
+                  `/?ml_onboarding=connected&marketplace_account_id=${encodeURIComponent(targetId)}`,
+                  { replace: true },
+                );
+                return;
+              }
+              if (inList) {
                 const stUrl = buildApiUrl(`/api/marketplace/accounts/${encodeURIComponent(targetId)}/sync-status`);
                 if (stUrl) {
                   console.info("[ml/ui] sync_poll_start_for_account", {
@@ -511,19 +513,39 @@ export default function MercadoLivre() {
     };
   }, [location.search, navigate, loadAccounts]);
 
-  /** Abre modal pós-conexão (Iniciar sincronização) via card flutuante — não dispara sync. */
+  /** Central de Pendências → abre modal técnico de sync (sem camada intermediária pós-OAuth). */
   useEffect(() => {
     const sp = new URLSearchParams(location.search);
     const mid = sp.get(ML_POST_CONNECT_QS)?.trim();
     if (!mid || !ML_ACCOUNT_UUID_RE.test(mid)) return undefined;
     let cancelled = false;
     (async () => {
+      console.info("[ml/ui] oauth_target_account_id", { marketplace_account_id: mid, source: "ml_post_connect_qs" });
+      setSyncStatusPayload(null);
       setOnboardingAccountId(mid);
-      setPostConnectReadyOpen(true);
       setOnboardingOpen(false);
+      setOnboardingDismissed(false);
+
       let list = await loadAccounts({ noCache: true });
       if (cancelled) return;
       setAccounts(list);
+      let found = list.some((a) => String(a.id) === String(mid));
+      if (!found) {
+        setOauthAwaitingAccountInList(true);
+        for (let attempt = 0; attempt < 20 && !found && !cancelled; attempt++) {
+          await new Promise((r) => setTimeout(r, 400));
+          list = await loadAccounts({ noCache: true });
+          if (cancelled) return;
+          setAccounts(list);
+          found = list.some((a) => String(a.id) === String(mid));
+        }
+        setOauthAwaitingAccountInList(false);
+      }
+
+      if (!cancelled && found) {
+        void openTechnicalSyncDetails(mid);
+      }
+
       const next = new URLSearchParams(location.search);
       next.delete(ML_POST_CONNECT_QS);
       const q = next.toString();
@@ -1097,23 +1119,6 @@ export default function MercadoLivre() {
     }
   };
 
-  const handleConfirmPostConnectStartSync = async () => {
-    const id = onboardingAccountId;
-    setPostConnectReadyOpen(false);
-    if (!id) return;
-    await openTechnicalSyncDetails(id);
-    await handleStartInitialPipeline();
-  };
-
-  useEffect(() => {
-    if (!postConnectReadyOpen) return undefined;
-    const onKey = (e) => {
-      if (e.key === "Escape") e.preventDefault();
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [postConnectReadyOpen]);
-
   useEffect(() => {
     const ids = visibleAccountIdsKey ? visibleAccountIdsKey.split("|").filter(Boolean) : [];
     if (!ids.length) return undefined;
@@ -1584,39 +1589,6 @@ export default function MercadoLivre() {
         }}
       />
 
-      {postConnectReadyOpen && onboardingAccountId ? (
-        <div className="ml-operational-import-backdrop" role="presentation" aria-hidden="false">
-          <div
-            className="ml-operational-import-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ml-postconnect-title"
-            onMouseDown={(e) => e.stopPropagation()}
-            style={{ maxWidth: 440 }}
-          >
-            <div className="ml-operational-import-top">
-              <div className="ml-operational-import-head-text">
-                <h2 id="ml-postconnect-title" className="ml-operational-import-title">
-                  Conta conectada
-                </h2>
-                <p className="ml-operational-import-lead">
-                  Sua conta Mercado Livre está conectada. Para concluir a integração, inicie a sincronização inicial
-                  desta conta — os dados só passam a valer no Suse7 após esse passo.
-                </p>
-      </div>
-            </div>
-            <div className="ml-operational-import-footer" style={{ borderTop: "1px solid #e8ecf4" }}>
-              <button
-                type="button"
-                className="ml-button primary"
-                onClick={() => void handleConfirmPostConnectStartSync()}
-              >
-                Iniciar sincronização
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

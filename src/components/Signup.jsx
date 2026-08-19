@@ -9,6 +9,7 @@ import { useNotifications } from "../contexts/NotificationContext.jsx";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes.js";
 import { supabase } from "../supabaseClient";
 import GoogleIcon from "../assets/google.png";
+import { formatPhoneBr } from "../utils/profileInputMasks.js";
 import "./Signup.css";
 import Suse7Alert from "../components/Suse7Alert";
 import SignupMarketingColumn from "./SignupMarketingColumn.jsx";
@@ -259,10 +260,7 @@ export default function Signup() {
     const onlyNumbers = value.replace(/\D/g, "");
 
     if (field === 'whatsapp' || field === 'telefone') {
-      formattedValue = onlyNumbers.slice(0, 11)
-        .replace(/^(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{4})(\d{4})$/, '$1-$2')
-        .replace(/(\d{5})(\d{4})$/, '$1-$2');
+      formattedValue = formatPhoneBr(onlyNumbers);
     } else if (field === 'cpf_cnpj') {
       if (onlyNumbers.length <= 11) { 
         formattedValue = onlyNumbers.slice(0, 11)
@@ -611,7 +609,7 @@ export default function Signup() {
                 type="tel"
                 value={form.telefone}
                 onChange={(e) => update("telefone", e.target.value)}
-                maxLength={14}
+                maxLength={15}
                 inputMode="tel"
                 autoComplete="tel"
               />

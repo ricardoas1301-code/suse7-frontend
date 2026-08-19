@@ -353,11 +353,13 @@ export default function SellerCompanyFormBody({
               <CoFieldLabel>Estado (UF)</CoFieldLabel>
               <input
                 name="address_state"
+                maxLength={2}
                 value={String(form.address_state ?? "")}
                 onChange={onChange}
-                maxLength={2}
-                placeholder="SP"
                 disabled={disabled}
+                readOnly
+                aria-readonly="true"
+                autoComplete="address-level1"
               />
             </label>
           </div>

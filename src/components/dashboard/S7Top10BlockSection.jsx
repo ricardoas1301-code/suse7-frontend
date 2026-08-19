@@ -26,12 +26,14 @@ function dashboardMlAccountLabel(a) {
  * @param {{
  *   className?: string;
  *   sectionJumpDownTargetRef?: import("react").RefObject<Element | null>;
+ *   sectionJumpDownOnClick?: (event: import("react").MouseEvent<HTMLElement>) => void;
  *   sectionJumpDownAriaLabel?: string;
  * }} props
  */
 export default function S7Top10BlockSection({
   className = "",
   sectionJumpDownTargetRef = null,
+  sectionJumpDownOnClick = null,
   sectionJumpDownAriaLabel = "Ir para busca e filtros",
 }) {
   const scope = useDashboardScope();
@@ -83,6 +85,8 @@ export default function S7Top10BlockSection({
     />
   );
 
+  const showSectionJump = Boolean(sectionJumpDownTargetRef || sectionJumpDownOnClick);
+
   return (
     <section className={["s7-top10-block", className].filter(Boolean).join(" ")} aria-label="Top 10">
       <S7DashboardSectionPanel>
@@ -91,11 +95,11 @@ export default function S7Top10BlockSection({
             <h2 className="s7-top10-block__title">Top 10</h2>
             <div className="s7-dashboard-block-head__inline-filters">{filterPanel}</div>
           </div>
-          {scope.top10.top10ChipLabel || top10DateLabel || sectionJumpDownTargetRef ? (
+          {scope.top10.top10ChipLabel || top10DateLabel || showSectionJump ? (
             <div
               className={[
                 "s7-dashboard-block-head__period-aside",
-                sectionJumpDownTargetRef ? "s7-dashboard-block-head__period-aside--with-jump" : "",
+                showSectionJump ? "s7-dashboard-block-head__period-aside--with-jump" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -113,10 +117,11 @@ export default function S7Top10BlockSection({
                   ) : null}
                 </div>
               ) : null}
-              {sectionJumpDownTargetRef ? (
+              {showSectionJump ? (
                 <S7SectionJumpButton
                   direction="down"
-                  targetRef={sectionJumpDownTargetRef}
+                  targetRef={sectionJumpDownTargetRef ?? undefined}
+                  onClick={sectionJumpDownOnClick ?? undefined}
                   ariaLabel={sectionJumpDownAriaLabel}
                 />
               ) : null}

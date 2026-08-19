@@ -37,6 +37,8 @@ import {
 
 import { buildCollapsedOperationalTasksLabel } from "./operationalTaskDescriptions.js";
 
+import { cliqueForaPainelOperacional } from "./operationalTasksPanelOutsideClick.js";
+
 import OperationalTasksPanelIcon from "./OperationalTasksPanelIcon.jsx";
 
 import "./S7OperationalTasksPanel.css";
@@ -363,7 +365,7 @@ export default function S7OperationalTasksPanel({
 
 
 
-  const recolherPainelAntesAcao = useCallback(() => {
+  const recolherPainel = useCallback(() => {
 
     if (!collapsible) return;
 
@@ -375,7 +377,51 @@ export default function S7OperationalTasksPanel({
       collapsed: true,
     });
 
+    if (import.meta.env.DEV) {
+
+      console.info("[task_collapsed]", { scope: "operational_tasks", reason: "collapse" });
+
+    }
+
   }, [collapsible, userId, mlInitialSyncPhase]);
+
+
+
+  useEffect(() => {
+
+    if (!collapsible || isCollapsed) {
+
+      return undefined;
+
+    }
+
+
+
+    const handlePointerDownOutside = (/** @type {PointerEvent} */ event) => {
+
+      if (!cliqueForaPainelOperacional(panelRef.current, event.target)) return;
+
+      recolherPainel();
+
+    };
+
+
+
+    document.addEventListener("pointerdown", handlePointerDownOutside);
+
+
+
+    return () => {
+
+      document.removeEventListener("pointerdown", handlePointerDownOutside);
+
+    };
+
+  }, [collapsible, isCollapsed, recolherPainel]);
+
+
+
+  const recolherPainelAntesAcao = recolherPainel;
 
 
 
@@ -531,9 +577,25 @@ export default function S7OperationalTasksPanel({
               className={[
                 "s7-operational-tasks-panel__title",
                 showOnboardingExpandedHeader ? "" : "s7-operational-tasks-panel__title--stacked",
+                collapsible ? "s7-operational-tasks-panel__title--collapsible" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
+              onClick={collapsible ? toggleCollapsed : undefined}
+              onKeyDown={
+                collapsible
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        toggleCollapsed();
+                      }
+                    }
+                  : undefined
+              }
+              role={collapsible ? "button" : undefined}
+              tabIndex={collapsible ? 0 : undefined}
+              aria-expanded={collapsible ? true : undefined}
+              aria-controls={collapsible ? `${panelId}-content` : undefined}
             >
               {!showOnboardingExpandedHeader ? <OperationalTasksPanelIcon variant="expanded" /> : null}
               <span className="s7-operational-tasks-panel__title-block">

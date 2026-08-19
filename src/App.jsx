@@ -84,8 +84,10 @@ import DevCenterCustomersGlobal from "./pages/admin/DevCenterCustomersGlobal";
 import DevCenterFeatureFlags from "./pages/admin/DevCenterFeatureFlags";
 import DevCenterToolbox from "./pages/admin/DevCenterToolbox";
 import ConcorrenciaPage from "./pages/ConcorrenciaPage";
-import Clientes360 from "./pages/Clientes360";
 import RelatoriosPage from "./pages/RelatoriosPage";
+import CentralMensagensPage from "./pages/CentralMensagensPage";
+import GestaoFullPage from "./pages/GestaoFullPage";
+import PromocoesPage from "./pages/PromocoesPage";
 
 // Status de save (ampulheta global)
 import { SaveStatusProvider } from "./contexts/SaveStatusContext";
@@ -94,7 +96,6 @@ import { EasterEggProvider } from "./features/easter-eggs/EasterEggProvider.jsx"
 
 // Temporários
 const Faturas = () => <h1>Faturas</h1>;
-const Registros = () => <h1>Registros</h1>;
 const Configuracoes = () => <h1>Configurações</h1>;
 // ======================================================================
 // AUTH WRAPPER
@@ -213,12 +214,15 @@ const router = createBrowserRouter([
       { path: "anuncios-2", element: protectPremiumRoute(<AnunciosTeste />, "anuncios") },
       { path: "anuncios/debug-importacao", element: protectPremiumRoute(<MlListingImportDebug />, "anuncios") },
       { path: "produtos", element: protectPremiumRoute(<Products />, "produtos") },
-      { path: "clientes", element: <Clientes360 /> },
       { path: "faturas", element: <Faturas /> },
       { path: "relatorios", element: protectPremiumRoute(<RelatoriosPage />, "relatorios") },
       { path: "concorrencia", element: protectPremiumRoute(<ConcorrenciaPage />, "concorrencia") },
       { path: "monitoramento", element: <Navigate to="/concorrencia" replace /> },
-      { path: "registros", element: <Registros /> },
+      { path: "clientes", element: <Navigate to="/" replace /> },
+      { path: "registros", element: <Navigate to="/central-mensagens" replace /> },
+      { path: "central-mensagens", element: <CentralMensagensPage /> },
+      { path: "gestao-full", element: <GestaoFullPage /> },
+      { path: "promocoes", element: <PromocoesPage /> },
       { path: "configuracoes", element: <Navigate to="/perfil" replace /> },
       { path: "notificacoes", element: <NotificacoesInboxPage /> },
       { path: "vendas", element: protectPremiumRoute(<VendasPage />, "vendas") },

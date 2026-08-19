@@ -8,6 +8,7 @@ import S7Tooltip from "../../../components/ui/S7Tooltip.jsx";
 import ProductHealthDonutCenter, {
   resolveProductHealthDonutSegmentState,
 } from "./ProductHealthDonutCenter.jsx";
+import ExecutiveCardEmptyState from "../../../components/sales/ExecutiveCardEmptyState.jsx";
 import "./ProductHealthCenter.css";
 
 const STOCK_BUCKET_ORDER = ["rupture", "critical", "low", "healthy", "no_turnover"];
@@ -360,7 +361,7 @@ export default function ProductStockCoverageCard({ stockCard, totalProducts }) {
           </p>
         ) : null}
         {!hasData ? (
-          <p className="s7-products-health-center__empty">Nenhum produto monitorado.</p>
+          <ExecutiveCardEmptyState message="Nenhum produto monitorado." />
         ) : (
           <div
             className="s7-products-health-center__abc-split s7-products-health-center__stock-split"

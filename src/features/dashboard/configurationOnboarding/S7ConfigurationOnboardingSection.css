@@ -1,19 +1,22 @@
 /* Configuração Inicial — seção do card flutuante */
 
 .s7-configuration-onboarding {
+  --s7-onboarding-separated-gap: 16px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 10px;
   padding-bottom: 0;
+  min-height: 0;
 }
 
 .s7-configuration-onboarding__main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
-  margin-top: 2px;
+  /* Paridade footer: summary-row → logout = gap 8px + margin 8px = 16px */
+  margin-top: calc(var(--s7-onboarding-separated-gap) - 10px);
 }
 
 .s7-configuration-onboarding__next,
@@ -29,6 +32,40 @@
 
 .s7-configuration-onboarding__header {
   width: 100%;
+}
+
+.s7-configuration-onboarding--complete {
+  gap: 8px;
+}
+
+.s7-configuration-onboarding--complete .s7-configuration-onboarding__main {
+  margin-top: 0;
+  gap: 6px;
+}
+
+.s7-configuration-onboarding__completion-card {
+  width: 100%;
+  max-width: 288px;
+  margin: 0 auto;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(239, 246, 255, 0.95);
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  box-sizing: border-box;
+}
+
+.s7-configuration-onboarding__completion-line {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--s7-navy, #0b2d5c);
+}
+
+.s7-configuration-onboarding__completion-line + .s7-configuration-onboarding__completion-line {
+  margin-top: 4px;
+  font-weight: 500;
+  color: var(--s7-text, #334155);
 }
 
 .s7-configuration-onboarding__intro {
@@ -81,6 +118,10 @@
   border-radius: 10px;
   background: rgba(239, 246, 255, 0.95);
   border: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+.s7-configuration-onboarding__next-spacer {
+  display: none;
 }
 
 .s7-configuration-onboarding__next-label {
@@ -192,6 +233,7 @@
 
 .s7-configuration-onboarding__checklist-item--locked {
   color: rgba(107, 114, 128, 0.72);
+  cursor: not-allowed;
 }
 
 .s7-configuration-onboarding__checklist-item--locked .s7-configuration-onboarding__checklist-label {
@@ -265,13 +307,18 @@
 }
 
 .s7-configuration-onboarding__footer {
-  margin-top: 4px;
-  padding-top: 12px;
+  margin-top: 2px;
+  padding-top: 10px;
   border-top: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  flex-shrink: 0;
+}
+
+.s7-configuration-onboarding__footer .s7-configuration-onboarding__logout {
+  margin-top: calc(var(--s7-onboarding-separated-gap) - 8px);
 }
 
 .s7-configuration-onboarding__footer--minimal {

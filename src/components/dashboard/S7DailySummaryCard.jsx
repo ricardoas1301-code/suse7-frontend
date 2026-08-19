@@ -8,6 +8,7 @@ import S7DashboardSectionPanel from "./S7DashboardSectionPanel.jsx";
 import { S7_DAILY_SUMMARY_MOCK } from "./s7DailySummaryMock.js";
 import S7Icon from "../ui/S7Icon";
 import S7Tooltip from "../ui/S7Tooltip";
+import S7SectionJumpButton from "../ui/S7SectionJumpButton.jsx";
 import S7DailySummaryAdaptiveMetricValue from "./S7DailySummaryAdaptiveMetricValue.jsx";
 import { renderExecutiveRayxKpiMetricIcon } from "../../features/sales/executiveRayxKpiMetricIcons.jsx";
 import EasterEggTitleTrigger from "../../features/easter-eggs/components/EasterEggTitleTrigger.jsx";
@@ -27,6 +28,8 @@ import EasterEggTitleTrigger from "../../features/easter-eggs/components/EasterE
  *   filtersLayout?: "collapsible" | "inline";
  *   filterPanel?: import("react").ReactNode;
  *   titleEasterEggId?: string | null;
+ *   sectionJumpDownTargetRef?: import("react").RefObject<Element | null>;
+ *   sectionJumpDownAriaLabel?: string;
  *   slots?: {
  *     salesFooter?: import("react").ReactNode;
  *   };
@@ -47,6 +50,8 @@ export default function S7DailySummaryCard({
   filtersLayout = "collapsible",
   filterPanel = null,
   titleEasterEggId = null,
+  sectionJumpDownTargetRef = null,
+  sectionJumpDownAriaLabel = "Ir para busca e filtros",
   slots = {},
   className = "",
 }) {
@@ -128,15 +133,34 @@ export default function S7DailySummaryCard({
             <h2 className="s7-daily-summary__title">{title}</h2>
           )}
         </div>
-        {(periodChipLabel || periodLabel || periodDateLabel) ? (
-          <div className="s7-dashboard-block-head__period-aside" aria-label="Período do resumo">
-            {periodChipLabel ? (
-              <span className="s7-daily-summary__period-chip">{periodChipLabel}</span>
-            ) : periodLabel ? (
-              <span className="s7-daily-summary__period-label">{periodLabel}</span>
+        {(periodChipLabel || periodLabel || periodDateLabel || sectionJumpDownTargetRef) ? (
+          <div
+            className={[
+              "s7-dashboard-block-head__period-aside",
+              sectionJumpDownTargetRef ? "s7-dashboard-block-head__period-aside--with-jump" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-label="Período do resumo"
+          >
+            {periodChipLabel || periodLabel || periodDateLabel ? (
+              <div className="s7-dashboard-block-head__period-aside-copy">
+                {periodChipLabel ? (
+                  <span className="s7-daily-summary__period-chip">{periodChipLabel}</span>
+                ) : periodLabel ? (
+                  <span className="s7-daily-summary__period-label">{periodLabel}</span>
+                ) : null}
+                {periodDateLabel ? (
+                  <span className="s7-daily-summary__period-range">{periodDateLabel}</span>
+                ) : null}
+              </div>
             ) : null}
-            {periodDateLabel ? (
-              <span className="s7-daily-summary__period-range">{periodDateLabel}</span>
+            {sectionJumpDownTargetRef ? (
+              <S7SectionJumpButton
+                direction="down"
+                targetRef={sectionJumpDownTargetRef}
+                ariaLabel={sectionJumpDownAriaLabel}
+              />
             ) : null}
           </div>
         ) : null}

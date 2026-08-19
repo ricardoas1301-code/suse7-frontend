@@ -26,26 +26,35 @@ function assert(name, cond) {
 }
 
 const heroBlock =
-  files.dadosEmpresaCss.match(/\.dados-empresa-page \.profile-card\.s7-empresa-hero\s*\{[^}]+\}/s)?.[0] ?? "";
+  files.dadosEmpresaCss.match(
+    /\.dados-empresa-page:not\(\.ml-integrations-page\):not\(\.s7-notification-center-page\) \.profile-card\.s7-empresa-hero\s*\{[^}]+\}/s,
+  )?.[0] ?? "";
 
-assert("empresa hero sizes to content", /min-height:\s*auto/.test(heroBlock));
+assert("empresa hero flex shell min-height", /min-height:\s*0/.test(heroBlock));
 assert("empresa hero no viewport calc", !/min-height:\s*calc\(/.test(heroBlock));
-assert("empresa hero keeps 12px margin-bottom", /margin-bottom:\s*12px/.test(heroBlock));
+assert("empresa hero no bottom inset margin hack", !/margin-bottom:\s*12px/.test(heroBlock));
 
 assert(
-  "profile shell compact pages do not stretch",
+  "profile shell empresa fills viewport with padding inset",
   files.profileCss.includes(
-    ".profile-content:has(> .dados-empresa-page:not(.s7-notification-center-page))"
-  ) && files.profileCss.includes("flex: 0 0 auto")
+    ".profile-content:has(> .dados-empresa-page:not(.s7-notification-center-page):not(.ml-integrations-page))",
+  ) && files.profileCss.includes("flex: 1 1 auto"),
 );
 assert(
-  "profile layout compact pages do not stretch",
+  "profile shell owns bottom inset via padding",
+  files.profileCss.includes("padding: var(--s7-empresa-page-gutter, 12px)") &&
+    !/\.profile-content:has\(> \.dados-empresa-page:not\(\.s7-notification-center-page\)\)[\s\S]*padding-bottom:\s*0/.test(
+      files.profileCss,
+    ),
+);
+assert(
+  "profile layout empresa fills viewport shell",
   files.profileCss.includes(
-    ".profile-layout--full:has(> .profile-content > .dados-empresa-page:not(.s7-notification-center-page))"
-  ) && files.profileCss.includes("flex: 0 1 auto")
+    ".profile-layout.profile-layout--full:has(> .profile-content > .dados-empresa-page:not(.s7-notification-center-page):not(.ml-integrations-page))",
+  ) && files.profileCss.includes("flex: 1 1 auto"),
 );
 assert("no global overflow hidden in profile css", !/overflow-y:\s*hidden/.test(files.profileCss));
-assert("alterar senha hero min-height auto", /min-height:\s*auto/.test(files.alterarSenhaCss));
+assert("alterar senha hero min-height flex shell", /min-height:\s*0/.test(files.alterarSenhaCss));
 
 assert("modal required legend", files.recipientModal.includes("Campos obrigatórios"));
 assert("modal required legend css", files.recipientModalCss.includes(".s7-nrec-modal__required-legend"));

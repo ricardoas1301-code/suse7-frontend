@@ -20,8 +20,9 @@
   min-height: auto;
 }
 
-/* Dashboard (/) — suspiro lateral 12px; cards em largura total dentro do frame */
-.page-content:has(> .vendas-page.dashboard-page) {
+/* Dashboard (/) — suspiro externo 12px (paridade s7-catalog-page-rhythm + Vendas ao Vivo).
+   Descendente: ConfigurationAppGateShell fica entre .page-content e .vendas-page.dashboard-page. */
+.page-content:has(.vendas-page.dashboard-page) {
   padding: 12px;
   scrollbar-gutter: auto;
   box-sizing: border-box;
@@ -32,12 +33,17 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7-catalog-block-gap, 12px);
 }
 
-.page-content:has(> .vendas-page.dashboard-page) .dashboard-page__daily-summary,
-.page-content:has(> .vendas-page.dashboard-page) .dashboard-page__import-panel,
-.page-content:has(> .vendas-page.dashboard-page) .s7-daily-summary,
-.page-content:has(> .vendas-page.dashboard-page) .s7-import-intel--dashboard {
+.page-content:has(.vendas-page.dashboard-page) .dashboard-page__daily-summary,
+.page-content:has(.vendas-page.dashboard-page) .dashboard-page__top10-block,
+.page-content:has(.vendas-page.dashboard-page) .s7-top10-block,
+.page-content:has(.vendas-page.dashboard-page) .dashboard-page__import-panel,
+.page-content:has(.vendas-page.dashboard-page) .s7-daily-summary,
+.page-content:has(.vendas-page.dashboard-page) .s7-import-intel--dashboard {
   width: 100%;
   max-width: 100%;
   margin-left: 0;
@@ -821,7 +827,7 @@ body.modal-open{
 }
 
 @media (max-width: 768px) {
-  .page-content:has(> .vendas-page.dashboard-page) {
+  .page-content:has(.vendas-page.dashboard-page) {
     padding-left: 12px;
     padding-right: 12px;
     padding-top: 12px;

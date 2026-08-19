@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import PricingHealthPieCenter, {
   resolvePricingHealthPieSegmentState,
 } from "./PricingHealthPieCenter.jsx";
+import ExecutiveCardEmptyState from "../../../components/sales/ExecutiveCardEmptyState.jsx";
 import "./PricingHealthCenter.css";
 
 const SLICE_GAP_DEG = 1.4;
@@ -343,7 +344,7 @@ export default function PricingHealthSlicedPieCard({
       >
         <HealthCardHeaderLine totalListings={totalListings} cardData={cardData} />
         {!hasData ? (
-          <p className="s7-pricing-health-center__empty">{emptyMessage}</p>
+          <ExecutiveCardEmptyState message={emptyMessage} />
         ) : (
           <div
             className="s7-pricing-health-center__split"

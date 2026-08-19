@@ -74,7 +74,7 @@ import {
   mergeListingCatalogPricingHealthBucketsRow,
 } from "../services/listingCatalogPricingHealthBucketsApi.js";
 import { notifyPricingHealthSummaryRefresh } from "../features/dashboard/api/pricingHealthSummaryRefreshEvents.js";
-import { ADS_PAGE_MODE, PRICING_PAGE_MODE } from "../features/listings/config/listingsPageModes.js";
+import { ADS_PAGE_MODE, PRICING_PAGE_MODE, LISTINGS_EMPTY_CATALOG_MESSAGE } from "../features/listings/config/listingsPageModes.js";
 
 /** Rótulo de exibição de uma conta marketplace (nickname → alias → seller id). */
 function listingsAccountLabel(a) {
@@ -933,36 +933,21 @@ export default function Anuncios({
                   {(() => {
                     const hasSearch = adsSearchQuery.trim().length > 0;
                     const { nounPlural } = listingsViewConfig.emptyStateNouns;
-                    const { noneInFilter, noneFound, noneImported } = listingsViewConfig.emptyStateTitles;
+                    const { noneInFilter, noneFound } = listingsViewConfig.emptyStateTitles;
                     let title = noneInFilter;
                     let description = "Ajuste os filtros ou limpe para ver a listagem completa.";
                     const trulyEmptyCatalog =
                       catalogRows.length === 0 && !hasSearch && adsFilterId === "top_sales" && !listError;
                     if (trulyEmptyCatalog) {
-                      title = noneImported;
-                      description =
-                        "Importe ou vincule anúncios pelo Mercado Livre. Se já importou, aguarde a sincronização ou tente recarregar.";
+                      title = LISTINGS_EMPTY_CATALOG_MESSAGE;
+                      description = "";
                     } else if (hasSearch && searchFiltered.length === 0) {
                       title = noneFound;
                       description = "Nenhum item corresponde à busca. Tente outro termo ou limpe o campo.";
                     } else if (hasSearch && searchFiltered.length > 0) {
                       description = `Nenhum item corresponde à combinação de busca e filtros nesta visão de ${nounPlural}.`;
                     }
-                    return (
-                      <>
-                        <S7EmptyState title={title} description={description} />
-                        <button
-                          type="button"
-                          className="products-catalog__filter-empty-btn"
-                          onClick={() => {
-                            setAdsFilterId("top_sales");
-                            setAdsSearchQuery("");
-                          }}
-                        >
-                          Mostrar todos
-                        </button>
-                      </>
-                    );
+                    return <S7EmptyState title={title} description={description} />;
                   })()}
                 </div>
               ) : null}
