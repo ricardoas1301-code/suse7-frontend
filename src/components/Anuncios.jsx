@@ -1000,9 +1000,7 @@ export default function Anuncios({
                 <AdsCatalogHeadCell
                   columnClass="anuncios-catalog__cell--thumb"
                   dataCol={listingsWorkspaceMode === "precificacoes" ? PRECIFICACOES_COL.cover : ANUNCIOS_COL.cover}
-                >
-                  <span className="products-catalog__sr-only">Capa</span>
-                </AdsCatalogHeadCell>
+                />
                 {effectiveViewMode === "minimal" ? (
                   listingsWorkspaceMode === "precificacoes" ? (
                     <>
@@ -1037,22 +1035,10 @@ export default function Anuncios({
                         Vendas
                       </AdsCatalogHeadCell>
                       <AdsCatalogHeadCell
-                        columnClass="products-catalog__cell--money anuncios-catalog__cell--precificacoes-result"
-                        dataCol={PRECIFICACOES_COL.profitBrl}
-                      >
-                        Lucro R$
-                      </AdsCatalogHeadCell>
-                      <AdsCatalogHeadCell
-                        columnClass="products-catalog__cell--pct"
-                        dataCol={PRECIFICACOES_COL.profitPercent}
-                      >
-                        Lucro %
-                      </AdsCatalogHeadCell>
-                      <AdsCatalogHeadCell
                         columnClass="products-catalog__cell--money"
                         dataCol={PRECIFICACOES_COL.currentPrice}
                       >
-                        Preço atual
+                        Preço
                       </AdsCatalogHeadCell>
                       <AdsCatalogHeadCell
                         columnClass="products-catalog__cell--money"
@@ -1071,6 +1057,18 @@ export default function Anuncios({
                       </AdsCatalogHeadCell>
                       <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={PRECIFICACOES_COL.tax}>
                         Imposto
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money anuncios-catalog__cell--precificacoes-result"
+                        dataCol={PRECIFICACOES_COL.profitBrl}
+                      >
+                        Lucro R$
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--pct"
+                        dataCol={PRECIFICACOES_COL.profitPercent}
+                      >
+                        Lucro %
                       </AdsCatalogHeadCell>
                       <AdsCatalogHeadCell
                         columnClass="products-catalog__cell--num"
@@ -1098,6 +1096,25 @@ export default function Anuncios({
                       <AdsCatalogHeadCell columnClass="anuncios-catalog__cell--channel" dataCol={ANUNCIOS_COL.channel}>
                         Canal
                       </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--num" dataCol={ANUNCIOS_COL.sales}>
+                        Vendas
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.salePrice}>
+                        Preço
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money"
+                        dataCol={ANUNCIOS_COL.revenue}
+                        lines={["Fatura-", "mento"]}
+                      />
+                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.payout}>
+                        Repasse
+                      </AdsCatalogHeadCell>
+                      <AdsCatalogHeadCell
+                        columnClass="products-catalog__cell--money"
+                        dataCol={ANUNCIOS_COL.avgTicket}
+                        lines={["Ticket", "Médio"]}
+                      />
                       <AdsCatalogHeadCell
                         columnClass="products-catalog__cell--money"
                         dataCol={ANUNCIOS_COL.profitBrl}
@@ -1105,25 +1122,6 @@ export default function Anuncios({
                       />
                       <AdsCatalogHeadCell columnClass="products-catalog__cell--pct" dataCol={ANUNCIOS_COL.profitPercent}>
                         Lucro (%)
-                      </AdsCatalogHeadCell>
-                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.salePrice}>
-                        Preço
-                      </AdsCatalogHeadCell>
-                      <AdsCatalogHeadCell columnClass="products-catalog__cell--num" dataCol={ANUNCIOS_COL.sales}>
-                        Vendas
-                      </AdsCatalogHeadCell>
-                      <AdsCatalogHeadCell
-                        columnClass="products-catalog__cell--money"
-                        dataCol={ANUNCIOS_COL.revenue}
-                        lines={["Fatura-", "mento"]}
-                      />
-                      <AdsCatalogHeadCell
-                        columnClass="products-catalog__cell--money"
-                        dataCol={ANUNCIOS_COL.avgTicket}
-                        lines={["Ticket", "Médio"]}
-                      />
-                      <AdsCatalogHeadCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.payout}>
-                        Repasse
                       </AdsCatalogHeadCell>
                       <AdsCatalogHeadCell
                         columnClass="anuncios-catalog__cell--quality"

@@ -551,6 +551,26 @@
   padding: 0;
 }
 
+.vendas-page__product-cell--text-only {
+  display: block;
+}
+
+.vendas-page__table th.vendas-page__col-thumb,
+.vendas-page__table td.vendas-page__col-thumb {
+  text-align: center;
+  vertical-align: middle;
+  width: 52px;
+  min-width: 52px;
+  max-width: 52px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.vendas-page__col-thumb .vendas-page__product-thumb-wrap,
+.vendas-page__col-thumb .vendas-page__product-thumb-slot {
+  margin-inline: auto;
+}
+
 .vendas-page__product-thumb-wrap {
   flex-shrink: 0;
   width: var(--s7-vendas-list-row-thumb-size, 44px);
@@ -1324,12 +1344,12 @@
 
   .vendas-page__table thead th.vendas-page__col-venda,
   .vendas-page__table tbody td.vendas-page__col-venda {
-    width: 8.5%;
-    max-width: 172px;
+    width: 7.5%;
+    max-width: 152px;
   }
 
   .vendas-page__table tbody td.vendas-page__col-venda {
-    min-width: 112px;
+    min-width: 100px;
     max-width: none;
     padding-right: var(--vendas-gap-venda-ad-end);
   }
@@ -3746,11 +3766,15 @@
 }
 
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-venda {
-  width: 8.5%;
+  width: 7.5%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-thumb {
+  width: 52px;
 }
 
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-product {
-  width: 19%;
+  width: 17%;
 }
 
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-account,
@@ -3759,12 +3783,15 @@
 }
 
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-profit,
-.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-margin,
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-sale-value,
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-shipping,
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-payout,
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-cost {
   width: 5.75%;
+}
+
+.vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-margin {
+  width: 6.75%;
 }
 
 .vendas-page__operacao-shell .vendas-page__table col.vendas-page__col-fee,

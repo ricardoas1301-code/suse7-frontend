@@ -1,0 +1,15 @@
+# S3 — Promoção refino canônico das listas (DEV Local homologado → DEV Hospedado)
+# Baseline: DEV Local homologado 100% pelo Rico (2026-08-19)
+# Rollback origin/dev: 819f5f4408e7fe623337b3fa9d23ef5cd0bf044b
+
+# Formato: arquivo | classificação | motivo
+
+src/pages/VendasPage.jsx | A | ordem canônica Vendas + labels Nº Venda/Preço + col thumb
+src/features/vendas/components/VendasTableColgroup.jsx | A | colgroup alinhado header/body Vendas
+src/styles/VendasPage.css | A | larguras colunas incl. Nº Venda 7.5% e Lucro (%) 6.75%
+src/components/Anuncios.jsx | A | headers Precificações/Anúncios + Preço canônico + IMG sem label
+src/features/listings/components/AdsCatalogRow.jsx | A | ordem células Precificações/Anúncios
+src/components/Products.jsx | A | ordem colunas Produtos (Repasse antes Ticket Médio)
+src/components/Products.css | A | grid widths Produtos alinhado à ordem homologada
+src/features/listings/layout/listColumnsCanonicalOrder.js | B | contrato canônico SSOT das cinco listas
+scripts/test_list_columns_canonical_order_unit.mjs | B | regression guard ordem + width contract Vendas

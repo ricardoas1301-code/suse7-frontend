@@ -954,21 +954,13 @@ function VendasPageContent() {
                           />
                         </label>
                       </th>
-                      <th className="vendas-page__col-venda">Venda</th>
+                      <th className="vendas-page__col-venda">Nº Venda</th>
+                      <th className="vendas-page__col-thumb" aria-hidden="true" />
                       <th className="vendas-page__col-product">Anúncio</th>
                       <th className="vendas-page__col-account vendas-page__col-center">Loja</th>
                       <th className="vendas-page__col-channel vendas-page__col-center">Canal</th>
-                      <th className="vendas-page__col-profit vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--profit vendas-page__col-center">
-                        Lucro (R$)
-                      </th>
-                      <th className="vendas-page__col-margin vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--margin vendas-page__col-center">
-                        Lucro (%)
-                      </th>
                       <th className="vendas-page__col-sale-value vendas-page__num-col vendas-page__num-col--sale vendas-page__col-center">
-                        Venda
-                      </th>
-                      <th className="vendas-page__col-payout vendas-page__num-col vendas-page__num-col--received vendas-page__col-center">
-                        Repasse
+                        Preço
                       </th>
                       <th className="vendas-page__col-fee vendas-page__num-col vendas-page__num-col--commission vendas-page__col-center">
                         Comissão
@@ -976,11 +968,20 @@ function VendasPageContent() {
                       <th className="vendas-page__col-shipping vendas-page__num-col vendas-page__num-col--shipping vendas-page__col-center">
                         Frete
                       </th>
-                      <th className="vendas-page__col-tax vendas-page__num-col vendas-page__num-col--tax vendas-page__col-center">
-                        Imposto
+                      <th className="vendas-page__col-payout vendas-page__num-col vendas-page__num-col--received vendas-page__col-center">
+                        Repasse
                       </th>
                       <th className="vendas-page__col-cost vendas-page__num-col vendas-page__num-col--product-cost vendas-page__col-center">
                         Custo
+                      </th>
+                      <th className="vendas-page__col-tax vendas-page__num-col vendas-page__num-col--tax vendas-page__col-center">
+                        Imposto
+                      </th>
+                      <th className="vendas-page__col-profit vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--profit vendas-page__col-center">
+                        Lucro R$
+                      </th>
+                      <th className="vendas-page__col-margin vendas-page__num-col vendas-page__th-nowrap vendas-page__num-col--margin vendas-page__col-center">
+                        Lucro (%)
                       </th>
                       <th className="vendas-page__col-sale-status">Status</th>
                 </tr>
@@ -1008,13 +1009,13 @@ function VendasPageContent() {
                 <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={14} className="vendas-page__empty">
+                    <td colSpan={15} className="vendas-page__empty">
                       Carregando…
                     </td>
                   </tr>
                 ) : rows.length === 0 ? (
                   <tr>
-                    <td colSpan={14} className="vendas-page__empty">
+                    <td colSpan={15} className="vendas-page__empty">
                       Nenhuma venda encontrada para os filtros atuais.
                     </td>
                   </tr>
@@ -1184,9 +1185,11 @@ function VendasPageContent() {
                             )}
                           </div>
                         </td>
+                        <td className="vendas-page__col-thumb vendas-page__cell-align-main">
+                          <VendasSalesProductThumb row={r} />
+                        </td>
                         <td className="vendas-page__col-product vendas-page__cell-align-stack">
-                          <div className="vendas-page__product-cell">
-                            <VendasSalesProductThumb row={r} />
+                          <div className="vendas-page__product-cell vendas-page__product-cell--text-only">
                             <div className="vendas-page__product-text">
                               <VendasProductHeadline
                                 title={productTitleDisplay}
@@ -1250,6 +1253,36 @@ function VendasPageContent() {
                             marketplaceLabel={channelLabelDisplay}
                           />
                         </td>
+                        <td className="vendas-page__col-sale-value vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--sale vendas-page__cell-align-main">
+                          <VendasTableNumSingle>{formatBrlApi(f.sale_price)}</VendasTableNumSingle>
+                        </td>
+                        <td className="vendas-page__col-fee vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--commission vendas-page__cell-align-main">
+                          <VendasTableNumStack
+                            primary={renderBrlValueCell(commissionBrl ?? f.commission)}
+                            secondary={commissionDetail}
+                          />
+                        </td>
+                        <td className="vendas-page__col-shipping vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--shipping vendas-page__cell-align-main">
+                          <VendasTableNumStack
+                            primary={renderBrlValueCell(f.shipping_cost)}
+                            secondary={freteSecondary}
+                          />
+                        </td>
+                        <td className="vendas-page__col-payout vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--received vendas-page__cell-align-main">
+                          <VendasTableNumSingle>{renderBrlValueCell(f.net_received)}</VendasTableNumSingle>
+                        </td>
+                        <td className="vendas-page__col-cost vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--product-cost vendas-page__cell-align-main">
+                          <VendasTableNumStack
+                            primary={renderBrlValueCell(r.product_cost_only_brl)}
+                            secondary={custoSecondary}
+                          />
+                        </td>
+                        <td className="vendas-page__col-tax vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--tax vendas-page__cell-align-main">
+                          <VendasTableNumStack
+                            primary={renderBrlValueCell(internalTaxBrl)}
+                            secondary={impostoSecondary}
+                          />
+                        </td>
                         <td
                           className={`vendas-page__col-profit vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--profit vendas-page__cell-align-main ${financialHealthTone}`}
                         >
@@ -1285,36 +1318,6 @@ function VendasPageContent() {
                               </span>
                             </span>
                           </VendasTableNumSingle>
-                        </td>
-                        <td className="vendas-page__col-sale-value vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--sale vendas-page__cell-align-main">
-                          <VendasTableNumSingle>{formatBrlApi(f.sale_price)}</VendasTableNumSingle>
-                        </td>
-                        <td className="vendas-page__col-payout vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--received vendas-page__cell-align-main">
-                          <VendasTableNumSingle>{renderBrlValueCell(f.net_received)}</VendasTableNumSingle>
-                        </td>
-                        <td className="vendas-page__col-fee vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--commission vendas-page__cell-align-main">
-                          <VendasTableNumStack
-                            primary={renderBrlValueCell(commissionBrl ?? f.commission)}
-                            secondary={commissionDetail}
-                          />
-                        </td>
-                        <td className="vendas-page__col-shipping vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--shipping vendas-page__cell-align-main">
-                          <VendasTableNumStack
-                            primary={renderBrlValueCell(f.shipping_cost)}
-                            secondary={freteSecondary}
-                          />
-                        </td>
-                        <td className="vendas-page__col-tax vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--tax vendas-page__cell-align-main">
-                          <VendasTableNumStack
-                            primary={renderBrlValueCell(internalTaxBrl)}
-                            secondary={impostoSecondary}
-                          />
-                        </td>
-                        <td className="vendas-page__col-cost vendas-page__col-center vendas-page__num-cell vendas-page__num-cell--product-cost vendas-page__cell-align-main">
-                          <VendasTableNumStack
-                            primary={renderBrlValueCell(r.product_cost_only_brl)}
-                            secondary={custoSecondary}
-                          />
                         </td>
                         <td className="vendas-page__col-sale-status vendas-page__cell-align-main">
                           <VendasTableNumSingle>

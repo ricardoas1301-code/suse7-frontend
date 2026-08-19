@@ -426,6 +426,9 @@ function ProductCatalogRow({
       <CatalogMetricCell dataCol={PRODUTOS_COL.revenue} columnClass="products-catalog__cell--money" variant="money">
         <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(revenueDisplay)}</CatalogMetricNumSingle>
       </CatalogMetricCell>
+      <CatalogMetricCell dataCol={PRODUTOS_COL.payout} columnClass="products-catalog__cell--money" variant="money">
+        <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(repasseDisplay)}</CatalogMetricNumSingle>
+      </CatalogMetricCell>
       <CatalogMetricCell dataCol={PRODUTOS_COL.avgTicket} columnClass="products-catalog__cell--money" variant="money">
         <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(ticketDisplay)}</CatalogMetricNumSingle>
       </CatalogMetricCell>
@@ -456,9 +459,6 @@ function ProductCatalogRow({
             ) : null}
           </span>
         </CatalogMetricNumSingle>
-      </CatalogMetricCell>
-      <CatalogMetricCell dataCol={PRODUTOS_COL.payout} columnClass="products-catalog__cell--money" variant="money">
-        <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(repasseDisplay)}</CatalogMetricNumSingle>
       </CatalogMetricCell>
       <CatalogMetricCell dataCol={PRODUTOS_COL.stock} columnClass="products-catalog__cell--num" variant="money">
         <CatalogMetricNumSingle>
@@ -1363,6 +1363,9 @@ export default function Products() {
       <CatalogHeadCell dataCol={PRODUTOS_COL.revenue} columnClass="products-catalog__cell--money">
         Faturamento
       </CatalogHeadCell>
+      <CatalogHeadCell dataCol={PRODUTOS_COL.payout} columnClass="products-catalog__cell--money">
+        Repasse
+      </CatalogHeadCell>
       <CatalogHeadCell
         dataCol={PRODUTOS_COL.avgTicket}
         columnClass="products-catalog__cell--money"
@@ -1375,9 +1378,6 @@ export default function Products() {
       />
       <CatalogHeadCell dataCol={PRODUTOS_COL.profitPercent} columnClass="products-catalog__cell--pct">
         Lucro (%)
-      </CatalogHeadCell>
-      <CatalogHeadCell dataCol={PRODUTOS_COL.payout} columnClass="products-catalog__cell--money">
-        Repasse
       </CatalogHeadCell>
       <CatalogHeadCell dataCol={PRODUTOS_COL.stock} columnClass="products-catalog__cell--num">
         Estoque
