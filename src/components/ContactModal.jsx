@@ -116,8 +116,6 @@ export default function ContactModal({ onClose, prefill = null, context = null }
                 {loading ? "Enviando..." : "Enviar mensagem"}
               </button>
             </form>
-
-            {error ? <p className="msg-error">{error}</p> : null}
           </div>
 
           <aside className="contact-modal__avatar-col">
@@ -133,6 +131,10 @@ export default function ContactModal({ onClose, prefill = null, context = null }
                 {success ? (
                   <p className="contact-modal__success msg-success" role="status">
                     Mensagem enviada com sucesso! 🎉
+                  </p>
+                ) : error ? (
+                  <p className="contact-modal__feedback msg-error" role="alert">
+                    {error}
                   </p>
                 ) : null}
               </div>

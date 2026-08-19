@@ -86,6 +86,18 @@ assert.equal(shouldShowOperationalTasks("/gestao-full"), true);
 
 assert.ok(contactSource.includes("contact-modal__avatar-stack"), "fale conosco avatar stack missing");
 assert.ok(contactCss.includes("justify-content: center"), "fale conosco column centering missing");
+assert.ok(contactCss.includes("contact-modal__success-slot"), "fale conosco feedback slot missing");
+const mainColumnBlock =
+  contactSource.match(
+    /className="contact-modal__main">([\s\S]*?)<\/div>\s*\n\s*<aside className="contact-modal__avatar-col"/,
+  )?.[1] ?? "";
+assert.doesNotMatch(mainColumnBlock, /msg-error/, "fale conosco error must not render in form column");
+assert.ok(
+  contactSource.includes("contact-modal__success-slot") &&
+    contactSource.includes("contact-modal__feedback msg-error"),
+  "fale conosco error feedback slot missing",
+);
+assert.ok(contactSource.includes("Mensagem enviada com sucesso! 🎉"), "fale conosco success copy missing");
 assert.match(
   executiveDisplaySource,
   /formatExecutiveCostMoneyOrDash[\s\S]*formatBrlFromApiString\("0"\)/,

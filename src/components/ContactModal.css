@@ -99,7 +99,8 @@
   flex-shrink: 0;
 }
 
-.contact-modal__avatar-col .contact-modal__success {
+.contact-modal__avatar-col .contact-modal__success,
+.contact-modal__avatar-col .contact-modal__feedback {
   margin: 0;
   max-width: 280px;
   line-height: 1.45;
