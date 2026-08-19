@@ -1890,44 +1890,6 @@ export function AdsCatalogRow({
             </CatalogMetricNumSingle>
           </CatalogMetricCell>
           <CatalogMetricCell
-            columnClass="products-catalog__cell--money anuncios-catalog__cell--precificacoes-result"
-            dataCol={PRECIFICACOES_COL.profitBrl}
-            variant="profit"
-            toneClass={state.toneClass}
-          >
-            <CatalogMetricNumSingle>
-              <span className="vendas-page__fin-value-row">
-                <span className={`vendas-page__fin-value ${state.valueClass}`}>
-                  {renderCatalogMoneyDisplay(state.lucroBrlText)}
-                </span>
-                {state.hasProjectedFinancials && state.toneClass !== "vendas-page__fin--empty" ? (
-                  <CatalogProfitHealthHint toneClass={state.toneClass} />
-                ) : null}
-              </span>
-            </CatalogMetricNumSingle>
-          </CatalogMetricCell>
-          <CatalogMetricCell
-            columnClass="products-catalog__cell--pct"
-            dataCol={PRECIFICACOES_COL.profitPercent}
-            variant="margin"
-            toneClass={state.toneClass}
-          >
-            <CatalogMetricNumSingle>
-              <span className="vendas-page__fin-value-row">
-                <span className={`vendas-page__fin-value ${state.valueClass}`}>
-                  {state.lucroPercentDisplay != null ? (
-                    state.lucroPercentDisplay
-                  ) : (
-                    <CatalogMetricMissing />
-                  )}
-                </span>
-                {state.hasProjectedFinancials && state.toneClass !== "vendas-page__fin--empty" ? (
-                  <CatalogProfitHealthHint toneClass={state.toneClass} />
-                ) : null}
-              </span>
-            </CatalogMetricNumSingle>
-          </CatalogMetricCell>
-          <CatalogMetricCell
             columnClass="products-catalog__cell--money"
             dataCol={PRECIFICACOES_COL.currentPrice}
             variant="money"
@@ -1964,6 +1926,44 @@ export function AdsCatalogRow({
               primary={renderCatalogMoneyDisplay(state.taxBrlText)}
               secondary={state.taxSecondary}
             />
+          </CatalogMetricCell>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--money anuncios-catalog__cell--precificacoes-result"
+            dataCol={PRECIFICACOES_COL.profitBrl}
+            variant="profit"
+            toneClass={state.toneClass}
+          >
+            <CatalogMetricNumSingle>
+              <span className="vendas-page__fin-value-row">
+                <span className={`vendas-page__fin-value ${state.valueClass}`}>
+                  {renderCatalogMoneyDisplay(state.lucroBrlText)}
+                </span>
+                {state.hasProjectedFinancials && state.toneClass !== "vendas-page__fin--empty" ? (
+                  <CatalogProfitHealthHint toneClass={state.toneClass} />
+                ) : null}
+              </span>
+            </CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--pct"
+            dataCol={PRECIFICACOES_COL.profitPercent}
+            variant="margin"
+            toneClass={state.toneClass}
+          >
+            <CatalogMetricNumSingle>
+              <span className="vendas-page__fin-value-row">
+                <span className={`vendas-page__fin-value ${state.valueClass}`}>
+                  {state.lucroPercentDisplay != null ? (
+                    state.lucroPercentDisplay
+                  ) : (
+                    <CatalogMetricMissing />
+                  )}
+                </span>
+                {state.hasProjectedFinancials && state.toneClass !== "vendas-page__fin--empty" ? (
+                  <CatalogProfitHealthHint toneClass={state.toneClass} />
+                ) : null}
+              </span>
+            </CatalogMetricNumSingle>
           </CatalogMetricCell>
           <CatalogMetricCell columnClass="products-catalog__cell--num" dataCol={PRECIFICACOES_COL.competitors}>
             <S7Tooltip content={state.competitorsTooltip} placement="bottom" offset={6} wrap>
@@ -2141,6 +2141,29 @@ export function AdsCatalogRow({
               marketplaceLabel={row.marketplaceLabelDisplay}
             />
           </div>
+          <CatalogMetricCell columnClass="products-catalog__cell--num" dataCol={ANUNCIOS_COL.sales}>
+            <CatalogTableNumStack primary={soldUnitsText} />
+          </CatalogMetricCell>
+          <CatalogMetricCell
+            columnClass="products-catalog__cell--money"
+            dataCol={ANUNCIOS_COL.salePrice}
+            variant="money"
+          >
+            <CatalogTableNumStack
+              primary={renderCatalogMoneyDisplay(precoAtualText)}
+              secondary={precoOriginalText ? precoOriginalText : null}
+              secondaryClassName="precificacoes-catalog__price-secondary"
+            />
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.revenue} variant="money">
+            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(revenueCell)}</CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.payout} variant="money">
+            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(repasseText)}</CatalogMetricNumSingle>
+          </CatalogMetricCell>
+          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.avgTicket} variant="money">
+            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(ticketMedioText)}</CatalogMetricNumSingle>
+          </CatalogMetricCell>
           <CatalogMetricCell
             columnClass="products-catalog__cell--money"
             dataCol={ANUNCIOS_COL.profitBrl}
@@ -2174,29 +2197,6 @@ export function AdsCatalogRow({
                 ) : null}
               </span>
             </CatalogMetricNumSingle>
-          </CatalogMetricCell>
-          <CatalogMetricCell
-            columnClass="products-catalog__cell--money"
-            dataCol={ANUNCIOS_COL.salePrice}
-            variant="money"
-          >
-            <CatalogTableNumStack
-              primary={renderCatalogMoneyDisplay(precoAtualText)}
-              secondary={precoOriginalText ? precoOriginalText : null}
-              secondaryClassName="precificacoes-catalog__price-secondary"
-            />
-          </CatalogMetricCell>
-          <CatalogMetricCell columnClass="products-catalog__cell--num" dataCol={ANUNCIOS_COL.sales}>
-            <CatalogTableNumStack primary={soldUnitsText} />
-          </CatalogMetricCell>
-          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.revenue} variant="money">
-            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(revenueCell)}</CatalogMetricNumSingle>
-          </CatalogMetricCell>
-          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.avgTicket} variant="money">
-            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(ticketMedioText)}</CatalogMetricNumSingle>
-          </CatalogMetricCell>
-          <CatalogMetricCell columnClass="products-catalog__cell--money" dataCol={ANUNCIOS_COL.payout} variant="money">
-            <CatalogMetricNumSingle>{renderCatalogMoneyDisplay(repasseText)}</CatalogMetricNumSingle>
           </CatalogMetricCell>
           <div
             className="products-catalog__cell anuncios-catalog__cell--quality"
