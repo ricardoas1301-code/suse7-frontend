@@ -338,6 +338,8 @@ export default function TopRankingListingPopover({
           .join(" ")}
         role="tooltip"
         style={panelStyle}
+        onMouseEnter={openNow}
+        onMouseLeave={scheduleClose}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <TopRankingListingPopoverPanel meta={meta} company={company} />

@@ -9,7 +9,6 @@ import { obterApresentacaoMilestone, ordenarMilestonesParaApresentacao } from ".
 import {
   configuracaoEstaCompleta,
   extrairResumoProgresso,
-  selecionarProximoMilestonePendente,
 } from "./configurationOnboardingSelectors.js";
 import "./S7ConfigurationOnboardingSection.css";
 
@@ -102,15 +101,7 @@ export default function S7ConfigurationOnboardingSection({
       ? { ...milestone, status: CONFIGURATION_MILESTONE_STATUS.COMPLETED }
       : milestone,
   );
-  const proximo = concluido ? null : selecionarProximoMilestonePendente(milestones);
   const safePercent = Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
-  const proximoClicavel =
-    proximo?.milestone?.id &&
-    milestoneAcaoClicavel(
-      String(proximo.milestone.id),
-      String(proximo.milestone.status ?? ""),
-      milestones,
-    );
 
   return (
     <section
@@ -136,26 +127,7 @@ export default function S7ConfigurationOnboardingSection({
       </div>
 
       <div className="s7-configuration-onboarding__main">
-        {proximo ? (
-          <div className="s7-configuration-onboarding__next">
-            <p className="s7-configuration-onboarding__next-label">Próxima etapa</p>
-            {proximoClicavel && onMilestoneAction ? (
-              <button
-                type="button"
-                className="s7-configuration-onboarding__next-action"
-                onClick={() => onMilestoneAction(String(proximo.milestone.id))}
-                disabled={refreshing}
-              >
-                <span className="s7-configuration-onboarding__next-title">{proximo.presentation.label}</span>
-              </button>
-            ) : (
-              <p className="s7-configuration-onboarding__next-title">{proximo.presentation.label}</p>
-            )}
-            {proximo.presentation.description ? (
-              <p className="s7-configuration-onboarding__next-description">{proximo.presentation.description}</p>
-            ) : null}
-          </div>
-        ) : null}
+        <div className="s7-configuration-onboarding__next-spacer" aria-hidden="true" />
 
         <ul id={`${sectionId}-checklist`} className="s7-configuration-onboarding__checklist">
         {milestones.map((milestone) => {

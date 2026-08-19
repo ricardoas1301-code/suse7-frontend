@@ -121,18 +121,22 @@ export default function ContactModal({ onClose, prefill = null, context = null }
           </div>
 
           <aside className="contact-modal__avatar-col">
-            <img
-              className="contact-modal__avatar"
-              src={modalFaleConoscoAvatar}
-              alt=""
-              decoding="async"
-              aria-hidden="true"
-            />
-            {success ? (
-              <p className="contact-modal__success msg-success" role="status" aria-live="polite">
-                Mensagem enviada com sucesso! 🎉
-              </p>
-            ) : null}
+            <div className="contact-modal__avatar-stack">
+              <img
+                className="contact-modal__avatar"
+                src={modalFaleConoscoAvatar}
+                alt=""
+                decoding="async"
+                aria-hidden="true"
+              />
+              <div className="contact-modal__success-slot" aria-live="polite">
+                {success ? (
+                  <p className="contact-modal__success msg-success" role="status">
+                    Mensagem enviada com sucesso! 🎉
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </aside>
         </div>
       </div>

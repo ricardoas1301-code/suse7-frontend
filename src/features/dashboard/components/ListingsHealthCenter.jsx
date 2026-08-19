@@ -14,6 +14,7 @@ import S7SectionJumpButton from "../../../components/ui/S7SectionJumpButton.jsx"
 import ListingHealthMiniGauge from "./ListingHealthMiniGauge.jsx";
 import "./ListingHealthMiniGauge.css";
 import "../../../components/sales/VendasExecutiveKpiCard.css";
+import ExecutiveCardEmptyState from "../../../components/sales/ExecutiveCardEmptyState.jsx";
 import "./ListingsHealthCenter.css";
 
 /** Mensagem amigável quando a API falha (HTTP ou payload ok:false). */
@@ -293,7 +294,7 @@ function RegistrationHealthCard({
       <div className="s7-listings-health-center__main-card-body s7-listings-health-center__main-card-body--registration">
         {hasData ? <HealthPodiumTotalLine totalListings={totalListings} /> : null}
         {!hasData || sorted.length === 0 ? (
-          <p className="s7-listings-health-center__empty">{emptyLabel}</p>
+          <ExecutiveCardEmptyState message={emptyLabel} />
         ) : (
           <div className="s7-listings-health-center__registration-podium" role="img" aria-label="Distribuição da saúde de cadastro por faixa">
             {sorted.map((row, index) => {
@@ -406,7 +407,7 @@ function OperationalHealthCard({
       <div className="s7-listings-health-center__main-card-body s7-listings-health-center__main-card-body--operational">
         {hasData ? <HealthPodiumTotalLine totalListings={totalListings} /> : null}
         {!hasData || sorted.length === 0 ? (
-          <p className="s7-listings-health-center__empty">{emptyLabel}</p>
+          <ExecutiveCardEmptyState message={emptyLabel} />
         ) : (
           <div
             className="s7-listings-health-center__operational-podium"
@@ -526,7 +527,7 @@ function CommercialHealthCard({ title, distribution, totalListings, emptyLabel =
       <div className="s7-listings-health-center__main-card-body s7-listings-health-center__main-card-body--commercial">
         {hasData ? <HealthPodiumTotalLine totalListings={totalListings} /> : null}
         {!hasData || sorted.length === 0 ? (
-          <p className="s7-listings-health-center__empty">{emptyLabel}</p>
+          <ExecutiveCardEmptyState message={emptyLabel} />
         ) : (
           <div
             className="s7-listings-health-center__commercial-podium"
@@ -775,11 +776,6 @@ export default function ListingsHealthCenter({
           </>
         ) : null}
 
-        {!loading && !error && Number(summary.total_listings ?? 0) === 0 ? (
-          <p className="s7-listings-health-center__empty" role="status">
-            Nenhum anúncio encontrado para este filtro.
-          </p>
-        ) : null}
       </S7DashboardSectionPanel>
     </section>
   );

@@ -82,6 +82,10 @@
   gap: 12px;
 }
 
+.s7-operational-tasks-panel__title--collapsible {
+  cursor: pointer;
+}
+
 .s7-operational-tasks-panel__title-text {
   display: block;
   flex: 0 1 auto;

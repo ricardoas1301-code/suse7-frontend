@@ -40,9 +40,17 @@ function dashboardMlAccountLabel(a) {
 }
 
 /**
- * @param {{ className?: string }} props
+ * @param {{
+ *   className?: string;
+ *   sectionJumpDownTargetRef?: import("react").RefObject<Element | null>;
+ *   sectionJumpDownAriaLabel?: string;
+ * }} props
  */
-export default function S7DailySummarySection({ className = "" }) {
+export default function S7DailySummarySection({
+  className = "",
+  sectionJumpDownTargetRef = null,
+  sectionJumpDownAriaLabel = "Ir para busca e filtros",
+}) {
   const scope = useDashboardScope();
   const {
     dailySummaryFilters,
@@ -225,6 +233,8 @@ export default function S7DailySummarySection({ className = "" }) {
       filtersLayout="inline"
       filterPanel={filterPanel}
       slots={{ salesFooter }}
+      sectionJumpDownTargetRef={sectionJumpDownTargetRef}
+      sectionJumpDownAriaLabel={sectionJumpDownAriaLabel}
       className={className}
     />
   );

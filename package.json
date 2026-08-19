@@ -20,6 +20,7 @@
     "test:configuration-onboarding-percent-input": "node ./scripts/test_configuration_onboarding_percent_input_unit.mjs",
     "test:configuration-onboarding-gate-m6": "node ./scripts/test_configuration_onboarding_gate_m6_unit.mjs",
     "test:configuration-onboarding-real-click": "node ./scripts/test_configuration_onboarding_real_click.mjs",
+    "test:baseline-pre-sync-ux": "node ./scripts/test_baseline_pre_sync_ux_unit.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

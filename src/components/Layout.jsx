@@ -20,9 +20,10 @@ import {
   Calculator,
   ShoppingBag,
   Activity,
-  Users,
   BarChart3,
-  FileText,
+  MessageSquare,
+  Layers,
+  Percent,
   Code2,
 } from "lucide-react";
 
@@ -106,12 +107,13 @@ useEffect(() => {
   const navItems = [
     { path: "/vendas", label: "Vendas", icon: ShoppingBag },
     { path: "/precificacoes", label: "Precificações", icon: Calculator },
+    { path: "/promocoes", label: "Promoções", icon: Percent },
+    { path: "/gestao-full", label: "Gestão Full", icon: Layers },
     { path: "/anuncios", label: "Anúncios", icon: Tag },
     { path: "/produtos", label: "Produtos", icon: Box },
     { path: "/concorrencia", label: "Concorrência", icon: Activity },
-    { path: "/clientes", label: "Clientes 360 S7", icon: Users },
+    { path: "/central-mensagens", label: "Central de Mensagens", icon: MessageSquare },
     { path: "/relatorios", label: "Relatórios", icon: BarChart3 },
-    { path: "/registros", label: "Registros", icon: FileText },
   ];
 
   // -----------------------------------------------------

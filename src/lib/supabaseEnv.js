@@ -203,5 +203,15 @@ export function mapSupabaseAuthErrorMessage(error, ctx = {}) {
   if (/email not confirmed|confirm your email|email address has not been confirmed/i.test(msg)) {
     return "Confirme seu e-mail para continuar.";
   }
+  if (
+    /email.*(or|and).*phone|phone.*(or|and).*email|missing email|missing phone|email or phone|phone or email/i.test(
+      msg,
+    )
+  ) {
+    return "E-mail ou telefone ausente.";
+  }
+  if (/email.*required|phone.*required|password.*required/i.test(msg)) {
+    return "Preencha os campos obrigatórios para continuar.";
+  }
   return msg || "Não foi possível entrar. Tente novamente.";
 }

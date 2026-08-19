@@ -71,6 +71,10 @@
  * @property {"same_tab" | "new_tab" | "modal"} [pricingIntelligenceOpenTarget] — destino ao abrir PI a partir da grade. `modal` = modal 95vw (Precificações); `new_tab` = fallback legado; `same_tab` = navega na rota.
  */
 
+/** Texto canônico — catálogo ainda sem anúncios importados/vinculados. */
+export const LISTINGS_EMPTY_CATALOG_MESSAGE =
+  "Importe ou vincule seus anúncios. Se já importou, aguarde a sincronização ou tente recarregar.";
+
 /** Modo da rota `/anuncios`. */
 export const ADS_PAGE_MODE = /** @type {const} */ ("anuncios");
 

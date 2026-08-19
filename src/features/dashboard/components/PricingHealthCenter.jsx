@@ -57,6 +57,7 @@ function readPercentKpi(raw, fallbackTitle) {
       subtitle: "",
       percent: null,
       display_value: null,
+      count: 0,
       data_available: false,
     };
   }
@@ -74,6 +75,7 @@ function readPercentKpi(raw, fallbackTitle) {
     subtitle: String(record.subtitle ?? ""),
     percent: percentRaw != null ? String(percentRaw) : null,
     display_value: formatPricingHealthPercentDisplay(percentRaw),
+    count: readCount(record.count),
     data_available: record.data_available !== false,
   };
 }
@@ -227,11 +229,7 @@ export default function PricingHealthCenter({
               <VendasExecutiveKpiCard
                 title={freeShippingListings.title}
                 tone="conversion"
-                value={
-                  freeShippingListings.data_available && freeShippingListings.display_value
-                    ? freeShippingListings.display_value
-                    : "—"
-                }
+                value={freeShippingListings.display_value ?? formatCount(freeShippingListings.count)}
                 subtitle={freeShippingListings.subtitle}
                 cardClassName="s7-kpi-chrome--pricing-shipping"
                 valueIcon={

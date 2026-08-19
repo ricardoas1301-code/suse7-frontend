@@ -9,7 +9,7 @@ export const EXECUTIVE_PANEL_ERROR_MESSAGE = "Não foi possível carregar os dad
 export const EXECUTIVE_PANEL_EMPTY_RANKING_MESSAGE = "Nenhuma venda encontrada";
 
 /** Placeholder neutro nos KPIs quando não há vendas no período. */
-export const EXECUTIVE_PANEL_EMPTY_KPI_VALUE = "—";
+export const EXECUTIVE_PANEL_EMPTY_KPI_VALUE = "0,00";
 
 /**
  * Sinal negativo vindo da API (somente para classe visual; sem recálculo financeiro).

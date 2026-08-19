@@ -83,6 +83,12 @@
   border: 1px solid rgba(37, 99, 235, 0.12);
 }
 
+.s7-configuration-onboarding__next-spacer {
+  flex-shrink: 0;
+  width: 100%;
+  min-height: 72px;
+}
+
 .s7-configuration-onboarding__next-label {
   margin: 0 0 4px;
   font-size: 11px;

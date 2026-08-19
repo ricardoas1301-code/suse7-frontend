@@ -25,6 +25,7 @@ import S7CopyButton, { S7_COPY_OFFICIAL_FLASH_MS } from "../components/ui/S7Copy
 import S7CatalogListingHeadline from "../components/catalog/S7CatalogListingHeadline.jsx";
 import { CatalogProfitHealthHint } from "../components/catalog/CatalogFinancialMetricUi.jsx";
 import S7Button from "../components/ui/S7Button";
+import S7EmptyState from "../components/ui/S7EmptyState";
 import S7Tooltip from "../components/ui/S7Tooltip";
 import QuickProductCostsModal from "../features/listings/components/QuickProductCostsModal.jsx";
 import { formatVendasTableTitleCase } from "../features/vendas/utils/vendasTableDisplayFormat.js";
@@ -58,6 +59,7 @@ import { bindVendasListHorizontalScroll } from "../features/vendas/layout/vendas
 import { useBillingEntitlement } from "../billing/hooks/useBillingEntitlement.js";
 import { BILLING_ENTITLEMENT_CAPABILITY } from "../billing/billingEntitlementCapabilities.js";
 import { S7OperationalListsGate } from "../billing/components/S7EntitlementGates.jsx";
+import { LISTINGS_EMPTY_CATALOG_MESSAGE } from "../features/listings/config/listingsPageModes.js";
 import { useBillingEntitlementProfileTransition } from "../billing/hooks/useBillingEntitlementProfileTransition.js";
 import VendasTableColgroup from "../features/vendas/components/VendasTableColgroup.jsx";
 import {
@@ -376,6 +378,16 @@ function VendasPageContent() {
       !executiveError &&
       isExecutiveSummaryEmptyForFilters(executiveSummary),
     [executiveLoading, executiveError, executiveSummary],
+  );
+
+  const trulyEmptyVendasCatalog = useMemo(
+    () =>
+      !loading &&
+      rows.length === 0 &&
+      executivePanelEmpty &&
+      filter === "all" &&
+      debouncedSearch.trim() === "",
+    [loading, rows.length, executivePanelEmpty, filter, debouncedSearch],
   );
 
   useEffect(() => {
@@ -874,7 +886,11 @@ function VendasPageContent() {
       <h1 className="products-catalog__sr-title">Vendas</h1>
 
       <S7OperationalExecutiveBlock ref={vendasExecutiveRef}>
-        <S7DailySummarySection className="dashboard-page__daily-summary" />
+        <S7DailySummarySection
+          className="dashboard-page__daily-summary"
+          sectionJumpDownTargetRef={vendasFiltersRef}
+          sectionJumpDownAriaLabel="Ir para busca e filtros"
+        />
       </S7OperationalExecutiveBlock>
 
       <S7OperationalListsGate>
@@ -981,6 +997,11 @@ function VendasPageContent() {
             className="vendas-page__table-body-scroll s7-operational-row-card-stack"
             aria-label="Corpo da lista de vendas"
           >
+            {!loading && rows.length === 0 && trulyEmptyVendasCatalog ? (
+              <div className="products-catalog__filter-empty-card" role="status">
+                <S7EmptyState title={LISTINGS_EMPTY_CATALOG_MESSAGE} />
+              </div>
+            ) : (
             <div className="vendas-page__table-hscroll">
               <table className="vendas-page__table vendas-page__table--body s7-operational-row-card-table">
                 <VendasTableColgroup />
@@ -1313,6 +1334,7 @@ function VendasPageContent() {
               </tbody>
               </table>
             </div>
+            )}
           </div>
         </div>
         </div>
@@ -1323,7 +1345,13 @@ function VendasPageContent() {
           {loading ? (
             <p className="vendas-page__mobile-empty">Carregando…</p>
           ) : rows.length === 0 ? (
-            <p className="vendas-page__mobile-empty">Nenhuma venda encontrada para os filtros atuais.</p>
+            trulyEmptyVendasCatalog ? (
+              <div className="products-catalog__filter-empty-card" role="status">
+                <S7EmptyState title={LISTINGS_EMPTY_CATALOG_MESSAGE} />
+              </div>
+            ) : (
+              <p className="vendas-page__mobile-empty">Nenhuma venda encontrada para os filtros atuais.</p>
+            )
           ) : (
             rows.map((r, rowIndex) => {
               const selectionId = pickVendasSaleRowId(/** @type {Record<string, unknown>} */ (r));

@@ -175,9 +175,9 @@ export default function CompetitionHealthCenter({
                 title={freeShipping.title}
                 tone="profit"
                 value={
-                  freeShipping.data_available && freeShipping.percent != null
+                  freeShipping.percent != null
                     ? formatPercentFromBackend(freeShipping.percent)
-                    : "—"
+                    : formatCount(0)
                 }
                 subtitle={freeShipping.subtitle}
                 cardClassName="s7-kpi-chrome--health-active"
@@ -190,9 +190,9 @@ export default function CompetitionHealthCenter({
                 title={fullCompetitors.title}
                 tone="revenue"
                 value={
-                  fullCompetitors.data_available && fullCompetitors.percent != null
+                  fullCompetitors.percent != null
                     ? formatPercentFromBackend(fullCompetitors.percent)
-                    : "—"
+                    : formatCount(0)
                 }
                 subtitle={fullCompetitors.subtitle}
                 cardClassName="s7-kpi-chrome--competition-full"
@@ -215,7 +215,11 @@ export default function CompetitionHealthCenter({
               <VendasExecutiveKpiCard
                 title={maxPricePressure.title}
                 tone="conversion"
-                value={maxPricePressure.has_value && maxPricePressure.display_value ? maxPricePressure.display_value : "—"}
+                value={
+                  maxPricePressure.has_value && maxPricePressure.display_value
+                    ? maxPricePressure.display_value
+                    : formatCount(0)
+                }
                 subtitle={maxPricePressure.subtitle}
                 cardClassName="s7-kpi-chrome--competition-pressure"
                 valueIcon={

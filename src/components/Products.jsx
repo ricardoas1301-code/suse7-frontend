@@ -1453,7 +1453,12 @@ export default function Products() {
             <div className="products-catalog__empty-card">
               <S7EmptyState
                 title="Nenhum produto cadastrado"
-                description="Cadastre itens para precificar, vincular anúncios e acompanhar resultados por marketplace. Use o botão Novo produto na barra de filtros."
+                description="Cadastre itens para precificar, vincular anúncios e acompanhar resultados por marketplace."
+                action={
+                  <S7Button type="button" variant="primary" onClick={() => navigate("/produtos/novo")}>
+                    Novo produto
+                  </S7Button>
+                }
               />
             </div>
           ) : displayProducts.length === 0 ? (

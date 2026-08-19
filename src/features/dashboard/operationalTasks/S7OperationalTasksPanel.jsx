@@ -531,9 +531,25 @@ export default function S7OperationalTasksPanel({
               className={[
                 "s7-operational-tasks-panel__title",
                 showOnboardingExpandedHeader ? "" : "s7-operational-tasks-panel__title--stacked",
+                collapsible ? "s7-operational-tasks-panel__title--collapsible" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
+              onClick={collapsible ? toggleCollapsed : undefined}
+              onKeyDown={
+                collapsible
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        toggleCollapsed();
+                      }
+                    }
+                  : undefined
+              }
+              role={collapsible ? "button" : undefined}
+              tabIndex={collapsible ? 0 : undefined}
+              aria-expanded={collapsible ? true : undefined}
+              aria-controls={collapsible ? `${panelId}-content` : undefined}
             >
               {!showOnboardingExpandedHeader ? <OperationalTasksPanelIcon variant="expanded" /> : null}
               <span className="s7-operational-tasks-panel__title-block">
