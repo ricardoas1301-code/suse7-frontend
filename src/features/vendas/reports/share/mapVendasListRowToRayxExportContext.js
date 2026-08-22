@@ -40,9 +40,11 @@ export function mapVendasListRowToRayxExportContext(row) {
   const saleNumber =
     row.sale_display_code != null && String(row.sale_display_code).trim() !== ""
       ? String(row.sale_display_code).trim()
-      : row.external_order_id != null
-        ? String(row.external_order_id).trim()
-        : null;
+      : row.external_pack_id != null && String(row.external_pack_id).trim() !== ""
+        ? String(row.external_pack_id).trim()
+        : row.external_order_id != null
+          ? String(row.external_order_id).trim()
+          : null;
 
   const productTitle =
     row.product_display_title != null && String(row.product_display_title).trim() !== ""

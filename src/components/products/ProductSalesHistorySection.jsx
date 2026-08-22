@@ -83,9 +83,11 @@ function pickSaleHistorySaleCode(row) {
   const code =
     row.sale_display_code != null && String(row.sale_display_code).trim() !== ""
       ? String(row.sale_display_code).trim()
-      : row.external_order_id != null && String(row.external_order_id).trim() !== ""
-        ? String(row.external_order_id).trim()
-        : "";
+      : row.external_pack_id != null && String(row.external_pack_id).trim() !== ""
+        ? String(row.external_pack_id).trim()
+        : row.external_order_id != null && String(row.external_order_id).trim() !== ""
+          ? String(row.external_order_id).trim()
+          : "";
   return code || null;
 }
 
@@ -311,7 +313,7 @@ export default function ProductSalesHistorySection({
                     <th scope="col">Data</th>
                     <th scope="col">Nº Venda</th>
                     <th scope="col">Anúncio</th>
-                    <th scope="col">Conta</th>
+                    <th scope="col">Loja</th>
                     <th scope="col">Canal</th>
                     <th scope="col">Preço</th>
                     <th scope="col">Lucro (R$)</th>

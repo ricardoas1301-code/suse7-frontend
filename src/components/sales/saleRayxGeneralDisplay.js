@@ -14,7 +14,10 @@ export function pickSaleNumberDisplay(general) {
   const g = general && typeof general === "object" ? general : {};
   const fromApi = safeStr(g.sale_number_display);
   if (fromApi) return fromApi;
-  const raw = safeStr(g.sale_number) ?? safeStr(g.external_order_id);
+  const raw =
+    safeStr(g.sale_number) ??
+    safeStr(g.external_pack_id) ??
+    safeStr(g.external_order_id);
   if (!raw) return null;
   return raw.startsWith("#") ? raw : `#${raw}`;
 }
@@ -24,7 +27,10 @@ export function pickSaleNumberDisplay(general) {
  */
 export function pickSaleNumberCopyText(general) {
   const g = general && typeof general === "object" ? general : {};
-  const raw = safeStr(g.sale_number) ?? safeStr(g.external_order_id);
+  const raw =
+    safeStr(g.sale_number) ??
+    safeStr(g.external_pack_id) ??
+    safeStr(g.external_order_id);
   if (!raw) return null;
   return raw.replace(/^#/, "");
 }
