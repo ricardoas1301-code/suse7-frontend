@@ -13,7 +13,7 @@ import {
 
 /** Menu superior oficial — ordem fixa UX refino top nav */
 export const DEV_CENTER_NAV_ITEMS = Object.freeze([
-  { to: "/admin/dev-center", end: true, label: "Dev Center", icon: LayoutDashboard, homeBrand: true },
+  { to: "/admin/dev-center", end: true, label: "Central de Controle", icon: LayoutDashboard, homeBrand: true },
   { to: "/admin/dev-center/sellers", label: "Sellers", icon: Users },
   { to: "/admin/dev-center/subscriptions", label: "Assinaturas", icon: CreditCard },
   { to: "/admin/dev-center/finance", label: "Financeiro", icon: Wallet },

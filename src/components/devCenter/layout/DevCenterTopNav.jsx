@@ -67,13 +67,13 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
           className="dc-topnav__menu-btn"
           aria-expanded={mobileOpen}
           aria-controls={drawerId}
-          aria-label={mobileOpen ? "Fechar menu Dev Center" : "Abrir menu Dev Center"}
+          aria-label={mobileOpen ? "Fechar menu Central de Controle" : "Abrir menu Central de Controle"}
           onClick={() => setMobileOpen((v) => !v)}
         >
           {mobileOpen ? <X aria-hidden /> : <Menu aria-hidden />}
         </button>
 
-        <nav className="dc-topnav__menu" aria-label="Módulos Dev Center">
+        <nav className="dc-topnav__menu" aria-label="Módulos Central de Controle">
           {DEV_CENTER_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
@@ -107,7 +107,7 @@ export default function DevCenterTopNav({ empresaNome, logoUrl }) {
       <aside
         id={drawerId}
         className="dc-topnav__drawer"
-        aria-label="Menu mobile Dev Center"
+        aria-label="Menu mobile Central de Controle"
         aria-hidden={!mobileOpen}
         inert={!mobileOpen}
       >

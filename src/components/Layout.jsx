@@ -252,7 +252,7 @@ className={`nav-item ${
               className={`nav-item ${location.pathname.startsWith("/admin/dev-center") ? "active" : ""}`}
             >
               <Code2 className="nav-icon" />
-              <span>Dev Center</span>
+              <span>Central de Controle</span>
             </Link>
           )}
         </div>
