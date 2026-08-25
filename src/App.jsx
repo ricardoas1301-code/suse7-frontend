@@ -83,6 +83,7 @@ import DevCenterFinance from "./pages/admin/DevCenterFinance";
 import DevCenterCustomersGlobal from "./pages/admin/DevCenterCustomersGlobal";
 import DevCenterFeatureFlags from "./pages/admin/DevCenterFeatureFlags";
 import DevCenterToolbox from "./pages/admin/DevCenterToolbox";
+import DevCenterMs7 from "./pages/admin/DevCenterMs7";
 import ConcorrenciaPage from "./pages/ConcorrenciaPage";
 import RelatoriosPage from "./pages/RelatoriosPage";
 import CentralMensagensPage from "./pages/CentralMensagensPage";
@@ -249,6 +250,7 @@ const router = createBrowserRouter([
           { path: "feature-flags", element: <DevCenterFeatureFlags /> },
           { path: "tickets", element: <SellerTicketsPage /> },
           { path: "toolbox", element: <DevCenterToolbox /> },
+          { path: "ms7", element: <DevCenterMs7 /> },
           { path: "missions", element: <Navigate to="/admin/dev-center/tickets" replace /> },
           { path: "*", element: <Navigate to="/admin/dev-center" replace /> },
         ],
