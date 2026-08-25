@@ -3,6 +3,7 @@
 // ======================================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { subscribeSsotSalesDataRefresh } from "../features/sales/ssotSalesDataRefresh.js";
 import { buildApiUrl, apiFetch } from "../config/api";
 import { useSalesExecutiveSummary } from "../hooks/useSalesExecutiveSummary";
 import { fetchMercadoLivreMarketplaceAccounts } from "../services/marketplaceAccountsApi";
@@ -462,7 +463,8 @@ function VendasPageContent() {
 
   const hasPreviousPage = page > 1;
   const hasNextPage = page < totalPages;
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts = {}) => {
+    const silent = opts.silent === true;
     if (!canFetchSalesList) {
       setRows([]);
       setTotalRows(0);
@@ -520,7 +522,9 @@ function VendasPageContent() {
       });
     }
 
-    setLoading(true);
+    if (!silent) {
+      setLoading(true);
+    }
     setErr(null);
     const resList = await apiFetch(listUrl, { method: "GET", signal: controller.signal });
 
@@ -630,6 +634,12 @@ function VendasPageContent() {
       listAbortRef.current?.abort();
     };
   }, [load, entitlementLoading]);
+
+  useEffect(() => {
+    return subscribeSsotSalesDataRefresh(() => {
+      void load({ silent: true });
+    });
+  }, [load]);
 
   useEffect(() => {
     setPage(1);

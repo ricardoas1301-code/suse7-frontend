@@ -14,6 +14,10 @@ import S7EmptyState from "../../../components/ui/S7EmptyState.jsx";
 import { S7ClearFiltersAction, S7SearchInputBusyIndicator } from "../../../components/searchFilters";
 import { useNotifications } from "../../../contexts/NotificationContext.jsx";
 import { NOTIFICATION_SEVERITY } from "../../../services/notificationTypes.js";
+import {
+  clearSignupFieldValidityForField,
+  showSignupFieldValidation,
+} from "../../../components/signupFormPresentation.js";
 import { useProductMainImageSrc } from "../../../utils/productImageDisplayUrl.js";
 import {
   formatBrlFromApiValue,
@@ -31,13 +35,14 @@ import "../../../components/searchFilters/S7SearchInputBusyIndicator.css";
 import "./BulkProductCostsModal.css";
 
 const PAGE_SIZE = 25;
+const PRODUCT_COST_REQUIRED_MSG = "Informe o custo do produto.";
 
 const HEAD_COLUMNS = [
   { key: "thumb", label: "", align: "center" },
   { key: "product", label: "Produto", align: "center" },
   { key: "sku", label: "SKU", align: "center" },
   { key: "listings", label: "Anúncios", align: "center" },
-  { key: "cost_price", label: "Custo do produto", align: "center" },
+  { key: "cost_price", label: "Custo do produto", align: "center", required: true },
   { key: "packaging_cost", label: "Custo da embalagem", align: "center" },
   { key: "operational_cost", label: PRODUCT_EXPEDITION_SUPPLIES_LABEL_COMPACT, align: "center", tooltip: PRODUCT_EXPEDITION_SUPPLIES_TOOLTIP },
 ];
@@ -128,6 +133,9 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
 
   /** @type {React.MutableRefObject<Map<string, string>>} */
   const rowErrorsRef = useRef(new Map());
+  /** @type {React.MutableRefObject<Set<string>>} */
+  const attemptedInvalidCostRef = useRef(new Set());
+  const formRef = useRef(/** @type {HTMLFormElement | null} */ (null));
 
   const isListBusy = initialLoading || refreshing;
   const isSearchFetching = isListBusy && hasLoadedOnce;
@@ -253,6 +261,10 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
     const prev = draftsRef.current.get(pid) || { dirty: false, cost_price: "", packaging_cost: "", operational_cost: "" };
     draftsRef.current.set(pid, { ...prev, ...patch, dirty: true });
     rowErrorsRef.current.delete(pid);
+    if (Object.prototype.hasOwnProperty.call(patch, "cost_price")) {
+      attemptedInvalidCostRef.current.delete(pid);
+      clearSignupFieldValidityForField(formRef.current, `bulk-cost-${pid}-product`);
+    }
     setDraftTick((n) => n + 1);
   }, []);
 
@@ -273,7 +285,40 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
   const readyCount = readyDrafts.length;
 
   const handleSave = async () => {
-    if (saving || readyCount === 0) return;
+    if (saving) return;
+
+    void draftTick;
+    /** @type {string[]} */
+    const invalidDirtyIds = [];
+    for (const [productId, draft] of draftsRef.current.entries()) {
+      if (!draft.dirty) continue;
+      const validation = validateProductCostsDraft(draft);
+      if (!validation.ok) {
+        invalidDirtyIds.push(productId);
+        rowErrorsRef.current.set(productId, PRODUCT_COST_REQUIRED_MSG);
+      }
+    }
+    if (invalidDirtyIds.length > 0) {
+      for (const id of invalidDirtyIds) attemptedInvalidCostRef.current.add(id);
+      setDraftTick((n) => n + 1);
+      addNotification({
+        event_type: "PRODUCT_COSTS_REQUIRED",
+        entity_type: "product",
+        entity_id: null,
+        title: "Campos obrigatórios",
+        message: PRODUCT_COST_REQUIRED_MSG,
+        severity: NOTIFICATION_SEVERITY.ERROR,
+      });
+      const firstPid = invalidDirtyIds[0];
+      showSignupFieldValidation(
+        formRef.current,
+        `bulk-cost-${firstPid}-product`,
+        PRODUCT_COST_REQUIRED_MSG,
+      );
+      return;
+    }
+
+    if (readyCount === 0) return;
     setSaving(true);
     setError("");
     const result = await saveProductCostsBatch(readyDrafts);
@@ -413,7 +458,15 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
           </p>
         </div>
 
-        <div className="bulk-product-costs-modal__list-area">
+        <form
+          ref={formRef}
+          className="bulk-product-costs-modal__list-area"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSave();
+          }}
+        >
           <div className="bulk-product-costs-modal__content-gutter">
             <div className="bulk-product-costs-modal__list-shell">
               <div
@@ -437,7 +490,15 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
                 >
                   {col.tooltip ? (
                     <span className="bulk-product-costs-modal__head-label-wrap">
-                      <span>{col.label}</span>
+                      <span>
+                        {col.label}
+                        {col.required ? (
+                          <span className="s7-input__required" aria-hidden="true">
+                            {" "}
+                            *
+                          </span>
+                        ) : null}
+                      </span>
                       <S7Tooltip content={col.tooltip} placement="top" offset={6} wrap>
                         <button
                           type="button"
@@ -449,7 +510,15 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
                       </S7Tooltip>
                     </span>
                   ) : (
-                    col.label
+                    <span>
+                      {col.label}
+                      {col.required ? (
+                        <span className="s7-input__required" aria-hidden="true">
+                          {" "}
+                          *
+                        </span>
+                      ) : null}
+                    </span>
                   )}
                 </div>
               ))}
@@ -492,7 +561,8 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
                     const draft = getDraftForRow(row);
                     const rowError = rowErrorsRef.current.get(pid) || "";
                     const validation = validateProductCostsDraft(draft);
-                    const fieldErrors = draft.dirty && !validation.ok ? validation.fieldErrors || {} : {};
+                    const showCostRequiredUx =
+                      attemptedInvalidCostRef.current.has(pid) && draft.dirty && !validation.ok;
                     const productName = String(row.product_name || "Sem nome").trim() || "Sem nome";
                     const skuText = String(row.sku || "").trim();
                     const linkedCount = Math.max(0, Number(row.linked_listings_count) || 0);
@@ -601,7 +671,7 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
                             }
                             placeholder="R$ 0,00"
                             disabled={saving}
-                            error={fieldErrors.cost_price || ""}
+                            error={Boolean(showCostRequiredUx)}
                           />
                         </div>
 
@@ -615,7 +685,7 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
                             }
                             placeholder="R$ 0,00"
                             disabled={saving}
-                            error={fieldErrors.packaging_cost || ""}
+                            error={false}
                           />
                         </div>
 
@@ -629,7 +699,7 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
                             }
                             placeholder="R$ 0,00"
                             disabled={saving}
-                            error={fieldErrors.operational_cost || ""}
+                            error={false}
                           />
                         </div>
                       </div>
@@ -653,7 +723,7 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
               </div>
             </div>
           </div>
-        </div>
+        </form>
 
         <div className="bulk-product-costs-modal__footer">
           <span className="bulk-product-costs-modal__footer-summary" aria-live="polite">
@@ -665,7 +735,7 @@ export default function BulkProductCostsModal({ open, onClose, onSaved }) {
             type="button"
             variant="primary"
             size="sm"
-            disabled={isListBusy || saving || readyCount === 0}
+            disabled={isListBusy || saving}
             onClick={() => void handleSave()}
           >
             {saving ? "Salvando custos…" : "Salvar custos"}

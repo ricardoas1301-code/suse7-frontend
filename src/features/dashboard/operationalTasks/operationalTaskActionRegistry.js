@@ -11,6 +11,7 @@ import { OPERATIONAL_TASK_ACTION_TYPES } from "./operationalTaskTypes.js";
  * @property {() => void} [open_bulk_product_costs]
  * @property {() => void} [open_ml_initial_sync_modal]
  * @property {() => void} [open_ml_sync_modal]
+ * @property {() => void} [open_marketplace_connect]
  * @property {() => void} [open_company_edit]
  * @property {() => void} [open_profile_avatar]
  * @property {() => void} [open_profile_contact]
@@ -44,6 +45,11 @@ export function executeOperationalTaskAction(actionType, handlers) {
 
   if (actionType === OPERATIONAL_TASK_ACTION_TYPES.OPEN_ML_SYNC_MODAL) {
     handlers.open_ml_sync_modal?.();
+    return true;
+  }
+
+  if (actionType === OPERATIONAL_TASK_ACTION_TYPES.OPEN_MARKETPLACE_CONNECT) {
+    handlers.open_marketplace_connect?.();
     return true;
   }
 

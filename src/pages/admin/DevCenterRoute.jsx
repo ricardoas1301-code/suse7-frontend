@@ -1,5 +1,5 @@
 // ======================================================================
-// Gate Dev Center — bootstrap.allowed (S_4.8.3 + correção hidratação S_5)
+// Gate Central de Controle — bootstrap.allowed (S_4.8.3 + correção hidratação S_5)
 // Aguarda sessão Supabase antes de avaliar; só redireciona em deny explícito.
 // ======================================================================
 
@@ -34,7 +34,7 @@ export default function DevCenterRoute({ children }) {
         error: result.error ?? null,
         loading: false,
       });
-      setErrorMessage(result.error || "Não foi possível verificar o acesso ao Dev Center.");
+      setErrorMessage(result.error || "Não foi possível verificar o acesso ao Central de Controle.");
       setPhase("error");
       return;
     }
@@ -146,7 +146,7 @@ export default function DevCenterRoute({ children }) {
     return (
       <div className="dev-center dev-center--loading dev-center--gate" role="status" aria-live="polite">
         <div className="dev-center__spinner" aria-hidden="true" />
-        <p className="dev-center__muted">Verificando acesso ao Dev Center…</p>
+        <p className="dev-center__muted">Verificando acesso ao Central de Controle…</p>
       </div>
     );
   }

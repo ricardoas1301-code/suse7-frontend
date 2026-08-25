@@ -22,6 +22,7 @@ export const OPERATIONAL_TASK_ACTION_TYPES = {
   OPEN_BULK_PRODUCT_COSTS: "open_bulk_product_costs",
   OPEN_ML_INITIAL_SYNC_MODAL: "open_ml_initial_sync_modal",
   OPEN_ML_SYNC_MODAL: "open_ml_sync_modal",
+  OPEN_MARKETPLACE_CONNECT: "open_marketplace_connect",
   OPEN_COMPANY_EDIT: "open_company_edit",
   /** @deprecated compat — redireciona para open_company_edit */
   OPEN_PROFILE_AVATAR: "open_profile_avatar",

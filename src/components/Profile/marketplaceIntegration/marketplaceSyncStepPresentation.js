@@ -24,10 +24,32 @@ export function buildMarketplaceSyncStepPresentation(item) {
   const key = String(item?.key || "");
   const status = String(item?.status || "pending").toLowerCase();
   const ux = key === "historical_sales" ? item?.historical_ux : null;
+  const metadata =
+    item?.metadata && typeof item.metadata === "object" && !Array.isArray(item.metadata)
+      ? /** @type {Record<string, unknown>} */ (item.metadata)
+      : {};
 
-  const progressTotal =
+  let progressTotal =
     item?.progress_total != null && Number(item.progress_total) > 0 ? Number(item.progress_total) : null;
-  const progressCurrentRaw = typeof item?.progress_current === "number" ? item.progress_current : null;
+  let progressCurrentRaw = typeof item?.progress_current === "number" ? item.progress_current : null;
+
+  // S1.03 — card Produtos: universo de produtos (não anúncios / não “s/ vínculo”).
+  if (key === "products") {
+    const productsUniverse =
+      metadata.products_universe_total != null && Number(metadata.products_universe_total) > 0
+        ? Number(metadata.products_universe_total)
+        : null;
+    if (status === "done" && productsUniverse != null) {
+      progressTotal = productsUniverse;
+      progressCurrentRaw = productsUniverse;
+    } else if (productsUniverse != null) {
+      progressTotal = productsUniverse;
+      if (progressCurrentRaw == null || progressCurrentRaw > productsUniverse) {
+        progressCurrentRaw = productsUniverse;
+      }
+    }
+  }
+
   const progressCurrent =
     progressTotal != null && progressCurrentRaw != null
       ? Math.min(progressCurrentRaw, progressTotal)
@@ -53,7 +75,9 @@ export function buildMarketplaceSyncStepPresentation(item) {
       ? status === "done" || status === "running" || status === "pending" || status === "error"
         ? "Histórico de vendas"
         : String(item?.label || key || "Etapa")
-      : String(item?.label || key || "Etapa");
+      : key === "products"
+        ? "Produtos"
+        : String(item?.label || key || "Etapa");
 
   /** @type {string[]} */
   const detailLines = [];

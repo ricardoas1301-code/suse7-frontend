@@ -63,10 +63,28 @@ export function isAnunciosCatalogRowPending(row) {
 }
 
 /**
- * @param {{ skuDependencyPending?: boolean; skuDependencyReason?: string | null; sku?: string | null; skuPending?: boolean; attentionReason?: string | null; pricingContext?: Record<string, unknown> | null; productId?: string | null; isProductReady?: boolean | null }} row
+ * @param {{ skuDependencyPending?: boolean; skuDependencyReason?: string | null; sku?: string | null; skuPending?: boolean; attentionReason?: string | null; pricingContext?: Record<string, unknown> | null; productId?: string | null; isProductReady?: boolean | null; initialSyncUniverseStable?: boolean | null }} row
  * @param {(r: typeof row) => void} [onInformSku]
  */
 export function getListingProductLinkActions(row, onInformSku) {
+  const universeStable = row.initialSyncUniverseStable !== false;
+  if (!universeStable) {
+    return {
+      isSkuPendingMl: false,
+      isProductLinkPending: false,
+      skuDependencyPending: false,
+      skuDependencyReason: null,
+      skuDependencySource: "universe_gate",
+      healthSt: null,
+      showInformSkuMl: false,
+      showVincular: false,
+      showCompletar: false,
+      primaryCtaLabel: null,
+      blockedByInitialSyncUniverse: true,
+      blockedReason: "Sincronização estrutural em andamento",
+    };
+  }
+
   const skuDependency = resolveListingSkuDependency(row);
   const isSkuPendingMl =
     skuDependency.pending && skuDependency.reason === SKU_DEPENDENCY_REASON.ML_MISSING_SKU;
@@ -103,6 +121,8 @@ export function getListingProductLinkActions(row, onInformSku) {
       : isProductLinkPending
         ? "Vincular produto"
         : null,
+    blockedByInitialSyncUniverse: false,
+    blockedReason: null,
   };
 }
 

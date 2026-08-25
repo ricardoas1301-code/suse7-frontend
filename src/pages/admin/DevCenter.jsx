@@ -1,5 +1,5 @@
 // ======================================================================
-// Dev Center — centro de comando (MVP: ricardo@suse7.com.br)
+// Central de Controle — centro de comando (MVP: ricardo@suse7.com.br)
 // ======================================================================
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -217,7 +217,7 @@ export default function DevCenter() {
   const notifyOk = (msg) =>
     addNotification({
       event_type: "DEV_CENTER",
-      title: "Dev Center",
+      title: "Central de Controle",
       message: msg,
       severity: NOTIFICATION_SEVERITY.INFO,
     });
@@ -225,7 +225,7 @@ export default function DevCenter() {
   const notifyErr = (msg) =>
     addNotification({
       event_type: "DEV_CENTER",
-      title: "Dev Center",
+      title: "Central de Controle",
       message: msg,
       severity: NOTIFICATION_SEVERITY.WARNING,
     });
@@ -564,7 +564,7 @@ export default function DevCenter() {
     return (
       <div className="dev-center dev-center--loading">
         <div className="dev-center__spinner" />
-        <p className="dev-center__muted">Carregando Dev Center…</p>
+        <p className="dev-center__muted">Carregando Central de Controle…</p>
       </div>
     );
   }
@@ -575,7 +575,7 @@ export default function DevCenter() {
         <ShieldAlert size={48} strokeWidth={1.25} />
         <h1 className="s7-title">Acesso restrito</h1>
         <p className="dev-center__muted">
-          O Dev Center está disponível apenas para contas autorizadas (administrador interno ou e-mail na allowlist).
+          O Central de Controle está disponível apenas para contas autorizadas (administrador interno ou e-mail na allowlist).
           O acesso é validado no servidor.
         </p>
       </div>
@@ -590,7 +590,7 @@ export default function DevCenter() {
             <Sparkles size={14} />
             Admin dev · acesso restrito
           </span>
-          <h1 className="dev-center__title">Dev Center</h1>
+          <h1 className="dev-center__title">Central de Controle</h1>
           <p className="dev-center__subtitle">Centro de comando do desenvolvimento Suse7</p>
         </div>
         <div className="dev-center__topbar-actions">

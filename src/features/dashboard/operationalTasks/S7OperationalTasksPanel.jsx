@@ -451,6 +451,8 @@ export default function S7OperationalTasksPanel({
 
         open_ml_sync_modal: () => onTaskAction(actionType, task),
 
+        open_marketplace_connect: () => onTaskAction(actionType, task),
+
         open_company_edit: () => onTaskAction(actionType, task),
 
         open_profile_avatar: () => onTaskAction(actionType, task),

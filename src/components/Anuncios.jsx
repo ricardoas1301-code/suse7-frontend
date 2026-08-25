@@ -7,6 +7,7 @@
 // ======================================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useOperationalTasks } from "../features/dashboard/operationalTasks/useOperationalTasks.js";
 import { useNotifications } from "../contexts/NotificationContext";
 import { NOTIFICATION_SEVERITY } from "../services/notificationTypes";
 import SkuInputModal from "./SkuInputModal";
@@ -125,6 +126,7 @@ export default function Anuncios({
   sectionJumpUpTargetRef = null,
   sectionJumpUpAriaLabel = "Voltar para o resumo da página",
 } = {}) {
+  const { initialSyncUniverseStable } = useOperationalTasks({ enabled: true });
   const listingsViewConfig = listingsViewConfigProp ?? listingsViewConfigs[listingsWorkspaceMode];
   const { addNotification } = useNotifications();
   const [adsFilterId, setAdsFilterId] = useState("top_sales");
@@ -1205,7 +1207,7 @@ export default function Anuncios({
               ? paginatedRows.map((row) => (
                   <AdsCatalogRow
                     key={row.id}
-                    row={row}
+                    row={{ ...row, initialSyncUniverseStable }}
                     minimal={effectiveViewMode === "minimal"}
                     onInformSku={(r) => openSkuModal(r)}
                     onListingsRefresh={handleListingsRefreshAfterCosts}

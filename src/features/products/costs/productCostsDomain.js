@@ -1,6 +1,11 @@
 // ======================================================================
 // Custos de produto — domínio frontend (espelha productCatalogCompleteness.js)
 // SINCRONIZAÇÃO: suse7-backend/src/domain/productCatalogCompleteness.js
+//
+// Semântica (S1.10):
+// - cost_price = Custo do Produto (obrigatório > 0)
+// - packaging_cost = Embalagem (opcional)
+// - operational_cost = Insumo / expedição (opcional) — NÃO é custo operacional (%) da empresa
 // ======================================================================
 
 import Decimal from "decimal.js";
@@ -9,10 +14,10 @@ import { isCostPositive } from "../../../utils/productReadiness.js";
 
 /**
  * @param {unknown} costPrice
- * @param {unknown} packagingCost
- * @param {unknown} operationalCost
+ * @param {unknown} [_packagingCost]
+ * @param {unknown} [_operationalCostInsumo]
  */
-export function hasRequiredProductCosts(costPrice, packagingCost, operationalCost) {
+export function hasRequiredProductCosts(costPrice, _packagingCost, _operationalCostInsumo) {
   const parse = (v) => {
     if (v == null || v === "") return NaN;
     try {
@@ -23,9 +28,7 @@ export function hasRequiredProductCosts(costPrice, packagingCost, operationalCos
     }
   };
   const cp = parse(costPrice);
-  const pk = parse(packagingCost);
-  const op = parse(operationalCost);
-  return Number.isFinite(cp) && cp > 0 && Number.isFinite(pk) && pk >= 0 && Number.isFinite(op) && op >= 0;
+  return Number.isFinite(cp) && cp > 0;
 }
 
 /**
@@ -67,7 +70,7 @@ export function normalizeDecimalInput(raw) {
 /**
  * @param {{ cost_price?: string; packaging_cost?: string; operational_cost?: string }} draft
  */
-const CUSTO_OBRIGATORIO_MENSAGEM = "Custo obrigatório";
+const CUSTO_OBRIGATORIO_MENSAGEM = "Informe o custo do produto.";
 
 export function validateProductCostsDraft(draft) {
   const costNorm = normalizeDecimalInput(draft?.cost_price);
@@ -76,11 +79,11 @@ export function validateProductCostsDraft(draft) {
 
   const fieldErrors = {
     cost_price: costNorm && isCostPositive(costNorm) ? "" : CUSTO_OBRIGATORIO_MENSAGEM,
-    packaging_cost: packagingNorm !== "" ? "" : CUSTO_OBRIGATORIO_MENSAGEM,
-    operational_cost: operationalNorm !== "" ? "" : CUSTO_OBRIGATORIO_MENSAGEM,
+    packaging_cost: "",
+    operational_cost: "",
   };
 
-  if (fieldErrors.cost_price || fieldErrors.packaging_cost || fieldErrors.operational_cost) {
+  if (fieldErrors.cost_price) {
     return { ok: false, fieldErrors };
   }
 
@@ -89,8 +92,8 @@ export function validateProductCostsDraft(draft) {
       ok: false,
       fieldErrors: {
         cost_price: CUSTO_OBRIGATORIO_MENSAGEM,
-        packaging_cost: fieldErrors.packaging_cost,
-        operational_cost: fieldErrors.operational_cost,
+        packaging_cost: "",
+        operational_cost: "",
       },
     };
   }
@@ -99,8 +102,8 @@ export function validateProductCostsDraft(draft) {
     ok: true,
     costs: {
       cost_price: costNorm,
-      packaging_cost: packagingNorm,
-      operational_cost: operationalNorm,
+      packaging_cost: packagingNorm !== "" ? packagingNorm : "0.00",
+      operational_cost: operationalNorm !== "" ? operationalNorm : "0.00",
     },
     fieldErrors,
   };

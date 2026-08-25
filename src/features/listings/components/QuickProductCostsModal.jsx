@@ -19,7 +19,16 @@ import {
 } from "../../products/costs/productCostsDomain.js";
 import { saveSingleProductCosts } from "../../products/costs/productCostsApi.js";
 import { refreshOperationalTasksAfterProductCostsSaved } from "../../dashboard/operationalTasks/refreshOperationalTasksAfterProductCostsSaved.js";
+import { useNotifications } from "../../../contexts/NotificationContext.jsx";
+import { NOTIFICATION_SEVERITY } from "../../../services/notificationTypes.js";
+import {
+  clearSignupFieldValidityForField,
+  showSignupFieldValidation,
+} from "../../../components/signupFormPresentation.js";
 import "../../../styles/tokens/s7-operational-thumb.css";
+
+const PRODUCT_COST_FIELD_NAME = "quick-product-cost-price";
+const PRODUCT_COST_REQUIRED_MSG = "Informe o custo do produto.";
 
 /**
  * @param {{
@@ -41,6 +50,7 @@ export default function QuickProductCostsModal({
   onClose,
   onSaved,
 }) {
+  const { addNotification } = useNotifications();
   const [bulkOpen, setBulkOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -50,11 +60,12 @@ export default function QuickProductCostsModal({
   const [operationalCost, setOperationalCost] = useState("");
   const [resolvedSku, setResolvedSku] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
-    costPrice: "",
-    packagingCost: "",
-    operationalCost: "",
+    costPrice: false,
+    packagingCost: false,
+    operationalCost: false,
   });
   const modalRef = useRef(null);
+  const formRef = useRef(null);
 
   const title = useMemo(() => {
     const t = String(productTitle || "").trim();
@@ -110,7 +121,7 @@ export default function QuickProductCostsModal({
   const handleSave = async () => {
     if (!productId) return;
     setError("");
-    setFieldErrors({ costPrice: "", packagingCost: "", operationalCost: "" });
+    setFieldErrors({ costPrice: false, packagingCost: false, operationalCost: false });
 
     const validation = validateProductCostsDraft({
       cost_price: costPrice,
@@ -119,18 +130,24 @@ export default function QuickProductCostsModal({
     });
 
     if (!validation.ok) {
+      const costMissing = Boolean(validation.fieldErrors?.cost_price);
       setFieldErrors({
-        costPrice: validation.fieldErrors?.cost_price || "",
-        packagingCost: validation.fieldErrors?.packaging_cost || "",
-        operationalCost: validation.fieldErrors?.operational_cost || "",
+        costPrice: costMissing,
+        packagingCost: false,
+        operationalCost: false,
       });
-      const firstMissingFieldName = validation.fieldErrors?.cost_price
-        ? "quick-product-cost-price"
-        : validation.fieldErrors?.packaging_cost
-          ? "quick-product-packaging-cost"
-          : "quick-product-operational-cost";
-      const firstMissingInput = modalRef.current?.querySelector(`input[name="${firstMissingFieldName}"]`);
-      firstMissingInput?.focus();
+      const firstMsg = costMissing
+        ? PRODUCT_COST_REQUIRED_MSG
+        : validation.fieldErrors?.cost_price || PRODUCT_COST_REQUIRED_MSG;
+      addNotification({
+        event_type: "PRODUCT_COSTS_REQUIRED",
+        entity_type: "product",
+        entity_id: productId != null ? String(productId) : null,
+        title: "Campos obrigatórios",
+        message: firstMsg,
+        severity: NOTIFICATION_SEVERITY.ERROR,
+      });
+      showSignupFieldValidation(formRef.current, PRODUCT_COST_FIELD_NAME, firstMsg);
       return;
     }
 
@@ -230,41 +247,46 @@ export default function QuickProductCostsModal({
             </div>
           </div>
         </div>
-        <div className="anuncios-quick-cost-modal__body">
+        <form
+          ref={formRef}
+          className="anuncios-quick-cost-modal__body"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSave();
+          }}
+        >
           <div className="anuncios-quick-cost-modal__body-row">
             <div className="anuncios-quick-cost-modal__costs-col">
               <S7Input
                 label="Custo do produto"
                 required
-                name="quick-product-cost-price"
+                name={PRODUCT_COST_FIELD_NAME}
                 value={costPrice}
                 onChange={(e) => {
+                  clearSignupFieldValidityForField(formRef.current, PRODUCT_COST_FIELD_NAME);
                   setCostPrice(formatBrlTypingWithSymbol(e.target.value));
-                  setFieldErrors((prev) => ({ ...prev, costPrice: "" }));
+                  setFieldErrors((prev) => ({ ...prev, costPrice: false }));
                 }}
                 placeholder="R$ 0,00"
                 disabled={loading || saving}
-                error={fieldErrors.costPrice}
+                error={Boolean(fieldErrors.costPrice)}
               />
               <S7Input
                 label="Custo embalagem"
-                required
                 name="quick-product-packaging-cost"
                 value={packagingCost}
                 onChange={(e) => {
                   setPackagingCost(formatBrlTypingWithSymbol(e.target.value));
-                  setFieldErrors((prev) => ({ ...prev, packagingCost: "" }));
+                  setFieldErrors((prev) => ({ ...prev, packagingCost: false }));
                 }}
                 placeholder="R$ 0,00"
                 disabled={loading || saving}
-                error={fieldErrors.packagingCost}
+                error={Boolean(fieldErrors.packagingCost)}
               />
               <div className="anuncios-quick-cost-modal__field-with-tip">
                 <label className="s7-input__label" htmlFor="quick-product-operational-cost">
                   <span>{PRODUCT_EXPEDITION_SUPPLIES_LABEL}</span>
-                  <span className="anuncios-quick-cost-modal__required" aria-hidden>
-                    *
-                  </span>
                   <S7Tooltip content={PRODUCT_EXPEDITION_SUPPLIES_TOOLTIP} placement="top-start" offset={6} wrap>
                     <button
                       type="button"
@@ -276,16 +298,15 @@ export default function QuickProductCostsModal({
                   </S7Tooltip>
                 </label>
                 <S7Input
-                  required
                   name="quick-product-operational-cost"
                   value={operationalCost}
                   onChange={(e) => {
                     setOperationalCost(formatBrlTypingWithSymbol(e.target.value));
-                    setFieldErrors((prev) => ({ ...prev, operationalCost: "" }));
+                    setFieldErrors((prev) => ({ ...prev, operationalCost: false }));
                   }}
                   placeholder="R$ 0,00"
                   disabled={loading || saving}
-                  error={fieldErrors.operationalCost}
+                  error={Boolean(fieldErrors.operationalCost)}
                 />
               </div>
             </div>
@@ -300,9 +321,14 @@ export default function QuickProductCostsModal({
             </div>
           </div>
           {error ? <p className="anuncios-quick-cost-modal__error">{error}</p> : null}
-        </div>
+        </form>
         <div className="anuncios-quick-cost-modal__actions">
-          <button type="button" className="anuncios-quick-cost-modal__btn anuncios-quick-cost-modal__btn--primary" onClick={handleSave} disabled={loading || saving}>
+          <button
+            type="button"
+            className="anuncios-quick-cost-modal__btn anuncios-quick-cost-modal__btn--primary"
+            onClick={() => void handleSave()}
+            disabled={loading || saving}
+          >
             {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>

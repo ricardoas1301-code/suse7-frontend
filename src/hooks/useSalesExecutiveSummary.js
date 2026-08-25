@@ -4,6 +4,7 @@ import {
   buildSalesExecutiveSummaryQueryKey,
   fetchSalesExecutiveSummary,
 } from "../services/salesExecutiveSummaryApi";
+import { subscribeSsotSalesDataRefresh } from "../features/sales/ssotSalesDataRefresh.js";
 
 /** Evita flicker quando a API responde muito rápido (skeleton some suave). */
 const EXECUTIVE_SUMMARY_MIN_LOADING_MS = 280;
@@ -196,6 +197,13 @@ export function useSalesExecutiveSummary(params, options = {}) {
       if (abortRef.current === controller) abortRef.current = null;
     };
   }, [applyStaleAbortState, enabled, finishLoadingAfterMinDelay, params, paramsKey]);
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+    return subscribeSsotSalesDataRefresh(() => {
+      void refetch();
+    });
+  }, [enabled, refetch]);
 
   const summary = useMemo(() => {
     const s = data?.summary;

@@ -44,6 +44,8 @@ import { subscribeOperationalTaskActions } from "./operationalTaskActionRequests
 
 import { useGlobalSellerCompanyModal } from "./globalSellerCompanyModalContext.jsx";
 
+import MarketplaceSyncDetailsHost from "./MarketplaceSyncDetailsHost.jsx";
+
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -96,6 +98,8 @@ export default function DashboardOperationalTasks({ visible = true }) {
   } = operational;
 
   const [bulkCostsOpen, setBulkCostsOpen] = useState(false);
+
+  const [syncDetailsHost, setSyncDetailsHost] = useState({ open: false, accountId: null, mode: "view" });
 
   const [bulkListingSkusOpen, setBulkListingSkusOpen] = useState(false);
 
@@ -265,20 +269,19 @@ export default function DashboardOperationalTasks({ visible = true }) {
 
 
 
-      if (actionType === OPERATIONAL_TASK_ACTION_TYPES.OPEN_ML_INITIAL_SYNC_MODAL && accountQs) {
-
-        navigate(`/perfil/integracoes/mercado-livre?ml_post_connect=${accountQs}`);
-
+      if (actionType === OPERATIONAL_TASK_ACTION_TYPES.OPEN_ML_INITIAL_SYNC_MODAL && accountId && UUID_RE.test(accountId)) {
+        setSyncDetailsHost({ open: true, accountId, mode: "start" });
         return;
-
       }
 
-      if (actionType === OPERATIONAL_TASK_ACTION_TYPES.OPEN_ML_SYNC_MODAL && accountQs) {
-
-        navigate(`/perfil/integracoes/mercado-livre?ml_sync_modal=${accountQs}`);
-
+      if (actionType === OPERATIONAL_TASK_ACTION_TYPES.OPEN_ML_SYNC_MODAL && accountId && UUID_RE.test(accountId)) {
+        setSyncDetailsHost({ open: true, accountId, mode: "view" });
         return;
+      }
 
+      if (actionType === OPERATIONAL_TASK_ACTION_TYPES.OPEN_MARKETPLACE_CONNECT) {
+        navigate("/perfil/integracoes/mercado-livre");
+        return;
       }
 
       if (
@@ -486,6 +489,15 @@ export default function DashboardOperationalTasks({ visible = true }) {
       />
 
 
+
+      {syncDetailsHost.open ? (
+        <MarketplaceSyncDetailsHost
+          open={syncDetailsHost.open}
+          marketplaceAccountId={syncDetailsHost.accountId}
+          mode={syncDetailsHost.mode}
+          onClose={() => setSyncDetailsHost({ open: false, accountId: null, mode: "view" })}
+        />
+      ) : null}
 
       <BulkProductCostsModal open={bulkCostsOpen} onClose={handleBulkClose} onSaved={handleBulkSaved} />
 

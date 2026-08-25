@@ -1,13 +1,12 @@
 import { CONFIGURATION_MILESTONE_IDS } from "./configurationOnboardingTypes.js";
 
-/** Ordem canônica de apresentação (UI only). */
+/** Ordem canônica de apresentação do onboarding bloqueante (UI — S1.09 sem M6). */
 export const CONFIGURATION_MILESTONE_PRESENTATION_ORDER = [
   CONFIGURATION_MILESTONE_IDS.COMPANY_DATA,
   CONFIGURATION_MILESTONE_IDS.LEGAL_ACCEPTANCE,
   CONFIGURATION_MILESTONE_IDS.TAX_RATE,
   CONFIGURATION_MILESTONE_IDS.OPERATIONAL_COST,
   CONFIGURATION_MILESTONE_IDS.OPERATIONAL_CYCLE,
-  CONFIGURATION_MILESTONE_IDS.FIRST_MARKETPLACE_CONNECTION,
 ];
 
 /** @type {Record<string, { label: string; description: string; icon: string; order: number; actionVisualType: string }>} */
@@ -79,14 +78,18 @@ export function obterApresentacaoMilestone(milestoneId) {
 }
 
 /**
+ * Modal “Sua operação começa aqui” — somente trilha bloqueante M1–M5 (S1.09).
+ * M6 (Conectar marketplace) não entra na lista visual do modal.
  * @param {readonly Record<string, unknown>[]} milestones
  */
 export function ordenarMilestonesParaApresentacao(milestones) {
   const rows = Array.isArray(milestones) ? milestones : [];
   const orderMap = new Map(CONFIGURATION_MILESTONE_PRESENTATION_ORDER.map((id, index) => [id, index]));
-  return [...rows].sort((a, b) => {
-    const ai = orderMap.get(String(a?.id ?? "")) ?? 999;
-    const bi = orderMap.get(String(b?.id ?? "")) ?? 999;
-    return ai - bi;
-  });
+  return rows
+    .filter((m) => orderMap.has(String(m?.id ?? "")))
+    .sort((a, b) => {
+      const ai = orderMap.get(String(a?.id ?? "")) ?? 999;
+      const bi = orderMap.get(String(b?.id ?? "")) ?? 999;
+      return ai - bi;
+    });
 }
