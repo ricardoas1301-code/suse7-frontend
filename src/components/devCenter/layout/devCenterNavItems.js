@@ -7,6 +7,7 @@ import {
   Flag,
   Ticket,
   Wrench,
+  Command,
 } from "lucide-react";
 
 /** @typedef {{ to: string; end?: boolean; label: string; icon: import("react").ComponentType<{ className?: string; "aria-hidden"?: boolean }> }} DevCenterNavItem */
@@ -21,6 +22,7 @@ export const DEV_CENTER_NAV_ITEMS = Object.freeze([
   { to: "/admin/dev-center/feature-flags", label: "Feature Flags", icon: Flag },
   { to: "/admin/dev-center/tickets", label: "Tickets do Seller", icon: Ticket },
   { to: "/admin/dev-center/toolbox", label: "Caixa de Ferramentas", icon: Wrench },
+  { to: "/admin/dev-center/ms7", label: "MS7", icon: Command },
 ]);
 
 /**
