@@ -47,7 +47,7 @@ export default function DevCenterShell() {
         <header className="dc-shell__header">
           <div className="dc-shell__header-main">
             <nav className="dc-shell__breadcrumb" aria-label="Breadcrumb">
-              <Link to="/admin/dev-center">Dev Center</Link>
+              <Link to="/admin/dev-center">Central de Controle</Link>
               <span className="dc-shell__breadcrumb-sep" aria-hidden>
                 /
               </span>

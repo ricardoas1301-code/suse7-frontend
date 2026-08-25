@@ -34,7 +34,7 @@ export default function DevCenterRoute({ children }) {
         error: result.error ?? null,
         loading: false,
       });
-      setErrorMessage(result.error || "Não foi possível verificar o acesso ao Dev Center.");
+      setErrorMessage(result.error || "Não foi possível verificar o acesso à Central de Controle.");
       setPhase("error");
       return;
     }
@@ -146,7 +146,7 @@ export default function DevCenterRoute({ children }) {
     return (
       <div className="dev-center dev-center--loading dev-center--gate" role="status" aria-live="polite">
         <div className="dev-center__spinner" aria-hidden="true" />
-        <p className="dev-center__muted">Verificando acesso ao Dev Center…</p>
+        <p className="dev-center__muted">Verificando acesso à Central de Controle…</p>
       </div>
     );
   }
