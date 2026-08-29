@@ -28,7 +28,7 @@ import "./S7Tooltip.css";
 
 /** @param {import("react").ReactNode} props.children */
 export default function S7Tooltip({
-  /** Texto exibido no tooltip (modo legado .s7-tip + data-tip) */
+  /** Texto ou nó exibido no tooltip portal (modo copy / DS) */
   content = "",
   /** Conteúdo estruturado (fundo claro; não usa data-tip) */
   richContent,
@@ -38,6 +38,11 @@ export default function S7Tooltip({
   offset = 6,
   /** Permite quebra de linha em textos longos (.s7-tip-wrap) */
   wrap = false,
+  /**
+   * Largura pelo conteúdo (sem ellipsis) — frases curtas canônicas.
+   * Mantém max-width com teto de viewport; portal continua com flip/clamp.
+   */
+  fitContent = false,
   /** Fração 0–1 da altura do gatilho para ancorar top-start (ex.: pódio com coluna alta) */
   anchorTopRatio = null,
   className = "",
@@ -81,6 +86,7 @@ export default function S7Tooltip({
         placement={placement}
         offset={offset}
         wrap={wrap}
+        fitContent={fitContent}
         anchorTopRatio={anchorTopRatio}
         triggerClassName={mergedClass}
         style={style}
@@ -96,6 +102,7 @@ export default function S7Tooltip({
       placement={placement}
       offset={offset}
       wrap={wrap}
+      fitContent={fitContent}
       anchorTopRatio={anchorTopRatio}
       triggerClassName={mergedClass}
       style={style}
@@ -108,13 +115,24 @@ export default function S7Tooltip({
 /**
  * Tooltip textual via portal (position: fixed) — evita clip por overflow/stacking do Raio-x e modais.
  */
-function S7TooltipTextPortal({ children, content, placement, offset, wrap, anchorTopRatio, triggerClassName, style }) {
+function S7TooltipTextPortal({
+  children,
+  content,
+  placement,
+  offset,
+  wrap,
+  fitContent = false,
+  anchorTopRatio,
+  triggerClassName,
+  style,
+}) {
   const rootRef = useRef(null);
   const bubbleRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [active, setActive] = useState(false);
   const [bubbleStyle, setBubbleStyle] = useState(/** @type {import("react").CSSProperties} */ ({}));
 
   const isBottomStart = placement === "bottom-start";
+  const preferExpandRight = isBottomStart || fitContent;
   const gap = Math.max(0, Number(offset) || 6);
   const anchorTopRatioSafe =
     anchorTopRatio != null && Number.isFinite(Number(anchorTopRatio))
@@ -135,20 +153,26 @@ function S7TooltipTextPortal({ children, content, placement, offset, wrap, ancho
     const anchorTop =
       anchorTopRatioSafe != null ? rect.top + rect.height * anchorTopRatioSafe : rect.top;
 
-    if (isBottomStart) {
+    if (isBottomStart || preferExpandRight) {
       let left = rect.left;
       if (left + bubbleRect.width > vw - pad) {
         left = vw - pad - bubbleRect.width;
       }
       if (left < pad) left = pad;
 
-      let top = rect.bottom + gap;
-      const fitsBelow = top + bubbleRect.height <= vh - pad;
-      const topAbove = anchorTop - gap - bubbleRect.height;
-      const fitsAbove = topAbove >= pad;
+      let top = isBottomStart ? rect.bottom + gap : anchorTop - gap - bubbleRect.height;
+      if (!isBottomStart) {
+        if (top < pad) {
+          top = rect.bottom + gap;
+        }
+      } else {
+        const fitsBelow = top + bubbleRect.height <= vh - pad;
+        const topAbove = anchorTop - gap - bubbleRect.height;
+        const fitsAbove = topAbove >= pad;
 
-      if (!fitsBelow && fitsAbove) {
-        top = topAbove;
+        if (!fitsBelow && fitsAbove) {
+          top = topAbove;
+        }
       }
 
       setBubbleStyle({
@@ -179,7 +203,7 @@ function S7TooltipTextPortal({ children, content, placement, offset, wrap, ancho
       zIndex: "var(--s7-z-tooltip, 290000)",
       ["--s7-tooltip-arrow-left"]: `${Math.min(Math.max(rect.right - 14 - left, 10), Math.max(bubbleRect.width - 18, 10))}px`,
     });
-  }, [anchorTopRatioSafe, gap, isBottomStart]);
+  }, [anchorTopRatioSafe, gap, isBottomStart, preferExpandRight]);
 
   useLayoutEffect(() => {
     if (!active) return;
@@ -208,6 +232,7 @@ function S7TooltipTextPortal({ children, content, placement, offset, wrap, ancho
         "s7-tooltip-portal__bubble",
         isBottomStart ? "s7-tooltip-portal__bubble--bottom-start" : "s7-tooltip-portal__bubble--top-start",
         wrap ? "s7-tooltip-portal__bubble--wrap" : "",
+        fitContent ? "s7-tooltip-portal__bubble--fit-content" : "",
       ]
         .filter(Boolean)
         .join(" ")}

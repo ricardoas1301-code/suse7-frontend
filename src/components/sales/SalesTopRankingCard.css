@@ -403,6 +403,12 @@
   vertical-align: bottom;
 }
 
+.sales-top-ranking__podium-photo-stack,
+.sales-top-ranking__podium-ranked-thumb,
+.sales-top-ranking__list-ranked-thumb {
+  overflow: visible;
+}
+
 .sales-top-ranking__podium-bubble-inner .sales-top-ranking__thumb--bubble,
 .sales-top-ranking__podium-bubble-inner .sales-top-ranking__thumb--placeholder {
   display: block;
@@ -749,6 +755,44 @@
   box-sizing: border-box;
 }
 
+.sales-top-ranking__list-item--quantity-trophy {
+  grid-template-columns: 28px 24px minmax(0, 1fr);
+  column-gap: 4px;
+}
+
+/* Dashboard Top 10 — lista 4–10 com troféu contextual menor (encaixe do 10º) */
+.sales-top-ranking__list--compact-trophy .sales-top-ranking__list-item--quantity-trophy {
+  grid-template-columns: 24px 24px minmax(0, 1fr);
+  column-gap: 3px;
+  padding: 1px 0;
+}
+
+.sales-top-ranking__list--compact-trophy .sales-top-ranking__list-rank--trophy {
+  min-width: 24px;
+}
+
+/* Top 3 do dia: [nº dia] [img] [troféu 30d?] [dados] — nº nunca cede lugar ao troféu */
+.sales-top-ranking__list-item--trophy-after-thumb {
+  grid-template-columns: max-content 24px minmax(0, 1fr);
+  column-gap: 6px;
+}
+
+.sales-top-ranking__list-item--trophy-after-thumb-has-badge {
+  grid-template-columns: max-content 24px 28px minmax(0, 1fr);
+  column-gap: 6px;
+}
+
+.sales-top-ranking__list-trophy-after {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  align-self: center;
+  min-width: 28px;
+  line-height: 0;
+  overflow: visible;
+}
+
 .sales-top-ranking__list-item:not(:last-child) {
   border-bottom: 1px solid rgba(148, 163, 184, 0.25);
   margin-bottom: 1px;
@@ -769,6 +813,16 @@
   min-width: 10px;
 }
 
+.sales-top-ranking__list-rank--trophy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  line-height: 0;
+  color: inherit !important;
+  overflow: visible;
+}
+
 .sales-top-ranking__list-thumb-cell {
   display: flex;
   align-items: center;
@@ -776,6 +830,7 @@
   flex: 0 0 auto;
   align-self: center;
   line-height: 0;
+  overflow: visible;
 }
 
 .sales-top-ranking__thumb--list {
@@ -963,6 +1018,23 @@
   color: #334155;
   font-variant-numeric: tabular-nums;
   word-break: break-all;
+}
+
+.sales-top-ranking__listing-popover__multi-listings {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  max-width: 220px;
+}
+
+.sales-top-ranking__listing-popover__multi-listings-ids {
+  display: block;
+  font-size: 0.72em;
+  line-height: 1.25;
+  color: #64748b;
+  word-break: break-word;
 }
 
 .sales-top-ranking__listing-popover__inline-copy--disabled .sales-top-ranking__listing-popover__inline-value {
@@ -1260,6 +1332,22 @@
     grid-template-columns: max-content 22px minmax(0, 1fr);
     column-gap: 2px;
     padding: 3px 0;
+  }
+
+  .sales-top-ranking__list-item--quantity-trophy {
+    grid-template-columns: 26px 22px minmax(0, 1fr);
+  }
+
+  .sales-top-ranking__list--compact-trophy .sales-top-ranking__list-item--quantity-trophy {
+    grid-template-columns: 22px 22px minmax(0, 1fr);
+  }
+
+  .sales-top-ranking__list-item--trophy-after-thumb {
+    grid-template-columns: max-content 22px minmax(0, 1fr);
+  }
+
+  .sales-top-ranking__list-item--trophy-after-thumb-has-badge {
+    grid-template-columns: max-content 22px 26px minmax(0, 1fr);
   }
 
   .sales-top-ranking__thumb--list {

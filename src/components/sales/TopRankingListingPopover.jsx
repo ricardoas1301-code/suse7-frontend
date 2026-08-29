@@ -97,17 +97,32 @@ export function TopRankingListingPopoverPanel({ meta, company = null }) {
         <p className="sales-top-ranking__listing-popover__title">{meta.fullTitle}</p>
         <p className="sales-top-ranking__listing-popover__meta-line">
           <span className="sales-top-ranking__listing-popover__meta-group">
-            <span className="sales-top-ranking__listing-popover__meta-label">Anúncio:</span>
-            <TopRankingPopoverCopyControl
-              displayValue={meta.listingIdDisplay}
-              copyValue={meta.listingId}
-              canCopy={meta.canCopyListingId}
-              flashKey={`top-rank-listing-${meta.listingId || meta.fullTitle}`}
-              ariaLabel="Copiar número do anúncio"
-              toastLabel="Nº do anúncio"
-              toastEventType="LISTING_ID_COPIED"
-              toastFailEventType="LISTING_ID_COPY_FAILED"
-            />
+            <span className="sales-top-ranking__listing-popover__meta-label">
+              {meta.listingMetaLabel ?? "Anúncio:"}
+            </span>
+            {meta.isMultiListing ? (
+              <span className="sales-top-ranking__listing-popover__multi-listings">
+                <span className="sales-top-ranking__listing-popover__inline-value">
+                  {meta.listingIdDisplay}
+                </span>
+                {meta.linkedListingIdsDisplay ? (
+                  <span className="sales-top-ranking__listing-popover__multi-listings-ids">
+                    {meta.linkedListingIdsDisplay}
+                  </span>
+                ) : null}
+              </span>
+            ) : (
+              <TopRankingPopoverCopyControl
+                displayValue={meta.listingIdDisplay}
+                copyValue={meta.listingId}
+                canCopy={meta.canCopyListingId}
+                flashKey={`top-rank-listing-${meta.listingId || meta.fullTitle}`}
+                ariaLabel="Copiar número do anúncio"
+                toastLabel="Nº do anúncio"
+                toastEventType="LISTING_ID_COPIED"
+                toastFailEventType="LISTING_ID_COPY_FAILED"
+              />
+            )}
           </span>
           <span className="sales-top-ranking__listing-popover__meta-sep" aria-hidden>
             |
@@ -179,6 +194,10 @@ export default function TopRankingListingPopover({
       listingId,
       sku,
       listingIdDisplay: listingId || "não informado",
+      linkedListingIds: listingId ? [listingId] : [],
+      linkedListingIdsDisplay: "",
+      isMultiListing: false,
+      listingMetaLabel: "Anúncio:",
       skuDisplay: sku || "não informado",
       canCopyListingId: listingId !== "",
       canCopySku: sku !== "",

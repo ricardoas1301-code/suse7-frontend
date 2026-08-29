@@ -91,6 +91,7 @@ export default function VendasExecutivePanel({
           error={executivePanelError}
           periodLabel={cardPeriodLabel}
           tituloExterno={tituloExternoTop10}
+          listTrophySize={tituloExternoTop10 ? 22 : 26}
           onRetry={onRetry}
           showEmptyState={showEmptyState}
         />

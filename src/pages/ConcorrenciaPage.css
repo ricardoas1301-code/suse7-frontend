@@ -1164,6 +1164,11 @@
 
 .concorrencia-catalog__row .products-catalog__cell--thumb {
   min-height: var(--s7-concorrencia-catalog-thumb-size, 38px);
+  overflow: visible;
+}
+
+.concorrencia-catalog__ranked-thumb {
+  overflow: visible;
 }
 
 .concorrencia-catalog__row .concorrencia-catalog__cell--action {

@@ -132,6 +132,13 @@
   animation: s7-tooltip-portal-in 0.15s ease-out;
 }
 
+/* Frases curtas canônicas (ex.: ranking Top 10) — largura pelo conteúdo, sem reticências */
+.s7-tooltip-portal__bubble--fit-content {
+  max-width: min(420px, calc(100vw - 16px));
+  overflow: visible;
+  text-overflow: unset;
+}
+
 .s7-tooltip-portal__bubble--wrap {
   white-space: pre-line;
   overflow: visible;

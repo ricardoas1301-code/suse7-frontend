@@ -85,7 +85,8 @@ import {
   resolveRaioxPortalShellLayoutPx,
 } from "../utils/raioxCatalogLayout.js";
 import QuickProductCostsModal from "./QuickProductCostsModal.jsx";
-
+import { S7RankedThumbnail } from "../../../components/top10/S7Top10Badge.jsx";
+import { buildTop10BadgeAriaLabel } from "../../top10/buildTop10QuantityRankLookup.js";
 
 function ListingCoverThumbInner({ trimmed }) {
   const [broken, setBroken] = useState(false);
@@ -113,9 +114,27 @@ function ListingCoverThumbInner({ trimmed }) {
 }
 
 /** Troca de URL remonta o inner — evita `setState` síncrono em effect (lint) e reseta fallback de imagem. */
-export function ListingCoverThumb({ url }) {
+export function ListingCoverThumb({ url, top10Rank = null, top10SalesCount = null, badgeSize = 26 }) {
   const trimmed = url != null && String(url).trim() !== "" ? String(url).trim() : "";
-  return <ListingCoverThumbInner key={trimmed || "__empty__"} trimmed={trimmed} />;
+  const thumb = <ListingCoverThumbInner key={trimmed || "__empty__"} trimmed={trimmed} />;
+  const numericRank = Number(top10Rank);
+  if (!Number.isInteger(numericRank) || numericRank < 1 || numericRank > 10) {
+    return thumb;
+  }
+  return (
+    <S7RankedThumbnail
+      rank={numericRank}
+      size={badgeSize}
+      salesCount={top10SalesCount}
+      ariaLabel={buildTop10BadgeAriaLabel(numericRank, {
+        mode: "last_30_days",
+        salesCount: top10SalesCount,
+      })}
+      className="anuncios-ad-ranked-thumb"
+    >
+      {thumb}
+    </S7RankedThumbnail>
+  );
 }
 
 /**
@@ -1572,6 +1591,8 @@ function CatalogTableNumStack({ primary, secondary, primaryClassName = "", secon
  *   rowClickAction?: import("../config/listingsPageModes.js").ListingsRowClickAction;
  *   catalogColumnLayout?: import("../config/listingsPageModes.js").ListingsColumnLayout;
  *   showPrecificaS7Column?: boolean;
+ *   top10Rank?: number | null;
+ *   top10SalesCount?: number | null;
  * }} props
  */
 export function AdsCatalogRow({
@@ -1588,6 +1609,8 @@ export function AdsCatalogRow({
   rowClickAction: rowClickActionProp,
   catalogColumnLayout: catalogColumnLayoutProp,
   showPrecificaS7Column = true,
+  top10Rank = null,
+  top10SalesCount = null,
 }) {
   const rowClickAction =
     rowClickActionProp ??
@@ -1793,7 +1816,7 @@ export function AdsCatalogRow({
             data-col={PRECIFICACOES_COL.cover}
             title={row.adTitle}
           >
-            <ListingCoverThumb url={row.coverThumbnailUrl} />
+            <ListingCoverThumb url={row.coverThumbnailUrl} top10Rank={top10Rank} top10SalesCount={top10SalesCount} />
           </div>
           <div
             className="products-catalog__cell anuncios-catalog__cell--minimal-listing anuncios-catalog__cell--anuncio"
@@ -2052,7 +2075,7 @@ export function AdsCatalogRow({
             data-col={ANUNCIOS_COL.cover}
             title={row.adTitle}
           >
-            <ListingCoverThumb url={row.coverThumbnailUrl} />
+            <ListingCoverThumb url={row.coverThumbnailUrl} top10Rank={top10Rank} top10SalesCount={top10SalesCount} />
           </div>
           <div
             className="products-catalog__cell anuncios-catalog__cell--minimal-listing anuncios-catalog__cell--anuncio"
@@ -2279,7 +2302,7 @@ export function AdsCatalogRow({
             </div>
           ) : null}
           <div className="products-catalog__cell anuncios-catalog__cell--thumb" title={row.adTitle}>
-            <ListingCoverThumb url={row.coverThumbnailUrl} />
+            <ListingCoverThumb url={row.coverThumbnailUrl} top10Rank={top10Rank} top10SalesCount={top10SalesCount} />
           </div>
         <div className="products-catalog__cell anuncios-catalog__cell--minimal-listing">
           <div className="anuncios-ad-main">
@@ -2475,7 +2498,7 @@ export function AdsCatalogRow({
         </div>
       ) : null}
       <div className="products-catalog__cell anuncios-catalog__cell--thumb" title={row.adTitle}>
-        <ListingCoverThumb url={row.coverThumbnailUrl} />
+        <ListingCoverThumb url={row.coverThumbnailUrl} top10Rank={top10Rank} top10SalesCount={top10SalesCount} />
       </div>
       <div className="products-catalog__cell anuncios-catalog__cell--listing-no s7-catalog-headline">
         {row.listingNumber === DASH ? (

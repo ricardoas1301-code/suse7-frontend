@@ -54,6 +54,7 @@ import { PRECIFICACOES_COL } from "../features/listings/layout/precificacoesCata
 import { ListingsTable } from "../features/listings/components/ListingsTable";
 import { listingsViewConfigs } from "../features/listings/config/listingsViewConfigs";
 import { AdsCatalogRow } from "../features/listings/components/AdsCatalogRow.jsx";
+import { useS7Top10Ranking } from "../features/top10/useS7Top10Ranking.js";
 import ListingRayXModal from "../features/listings/components/ListingRayXModal.jsx";
 import { useListingsCatalogFetch } from "../features/listings/hooks/useListingsCatalogFetch.js";
 import { DASH } from "../features/listings/utils/catalogFormatters.js";
@@ -151,6 +152,10 @@ export default function Anuncios({
   const showAccountFilter = listingsViewConfig.showAccountFilter === true;
   const [mlAccounts, setMlAccounts] = useState(/** @type {Record<string, unknown>[]} */ ([]));
   const [mlAccountFilter, setMlAccountFilter] = useState("");
+
+  const { getEntryForRow } = useS7Top10Ranking({
+    marketplaceAccountId: showAccountFilter ? mlAccountFilter : "",
+  });
 
   useEffect(() => {
     if (!showAccountFilter) return undefined;
@@ -1204,7 +1209,9 @@ export default function Anuncios({
           }
           tableBody={
             displayRows.length > 0
-              ? paginatedRows.map((row) => (
+              ? paginatedRows.map((row) => {
+                  const top10Entry = getEntryForRow(/** @type {Record<string, unknown>} */ (row));
+                  return (
                   <AdsCatalogRow
                     key={row.id}
                     row={{ ...row, initialSyncUniverseStable }}
@@ -1220,8 +1227,11 @@ export default function Anuncios({
                     rowClickAction={listingsViewConfig.rowClickAction}
                     catalogColumnLayout={listingsViewConfig.columnLayout}
                     showPrecificaS7Column={listingsViewConfig.showPrecificaS7Column}
+                    top10Rank={top10Entry?.rank ?? null}
+                    top10SalesCount={top10Entry?.quantitySold ?? null}
                   />
-                ))
+                  );
+                })
               : null
           }
           paginationFooter={

@@ -87,6 +87,9 @@ import S7OperationalExecutiveBlock from "../components/dashboard/S7OperationalEx
 import { S7OperationalListsGate } from "../billing/components/S7EntitlementGates.jsx";
 import { useBillingEntitlement } from "../billing/hooks/useBillingEntitlement.js";
 import { useBillingEntitlementProfileTransition } from "../billing/hooks/useBillingEntitlementProfileTransition.js";
+import { S7RankedThumbnail } from "../components/top10/S7Top10Badge.jsx";
+import { useS7Top10Ranking } from "../features/top10/useS7Top10Ranking.js";
+import { buildTop10BadgeAriaLabel } from "../features/top10/buildTop10QuantityRankLookup.js";
 import { BILLING_ENTITLEMENT_CAPABILITY } from "../billing/billingEntitlementCapabilities.js";
 
 const CONCORRENCIA_PAGE_SIZE = 100;
@@ -120,6 +123,22 @@ function anuncioAtendeContaFiltro(row, accountId) {
   const rowAccountId =
     row?.marketplace_account_id != null ? String(row.marketplace_account_id).trim() : "";
   return rowAccountId === selectedId;
+}
+
+/**
+ * Identidade canônica do anúncio do seller (monitorado) para lookup Top 10.
+ * @param {Record<string, unknown> | null | undefined} row
+ * @param {Record<string, unknown> | null | undefined} ownListing
+ */
+function resolverListingIdCanonicoConcorrencia(row, ownListing) {
+  const fromOwn = extrairIdAnuncioProprio(ownListing);
+  if (fromOwn) return fromOwn;
+  for (const key of ["external_listing_id", "listing_id", "item_id"]) {
+    const raw = row?.[key];
+    const id = raw != null ? String(raw).trim() : "";
+    if (id) return id;
+  }
+  return "";
 }
 
 function produtoAtendeMarketplaceFiltro(ownListing, marketplaceId) {
@@ -264,6 +283,8 @@ function ConcorrenciaCatalogRow({
   marketplaceAccountId,
   accountLogoUrl,
   listingThumbnail,
+  top10Rank = null,
+  top10SalesCount = null,
   onManage,
   onOpenCompetitorDetail,
   rowSelected = false,
@@ -306,6 +327,44 @@ function ConcorrenciaCatalogRow({
     [competitors, contextualFilterId, ownListing],
   );
 
+  const thumbInner = imgUrl ? (
+    <span
+      className="concorrencia-catalog__thumb s7-operational-thumb-frame s7-operational-thumb-frame--circle"
+      aria-hidden
+    >
+      <img
+        className="s7-operational-thumb"
+        src={imgUrl}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+      />
+    </span>
+  ) : (
+    <span className="concorrencia-catalog__thumb-slot" aria-hidden />
+  );
+
+  const numericTop10Rank = Number(top10Rank);
+  const showTop10Badge =
+    Number.isInteger(numericTop10Rank) && numericTop10Rank >= 1 && numericTop10Rank <= 10;
+  const thumbNode = showTop10Badge ? (
+    <S7RankedThumbnail
+      rank={numericTop10Rank}
+      size={26}
+      salesCount={top10SalesCount}
+      ariaLabel={buildTop10BadgeAriaLabel(numericTop10Rank, {
+        mode: "last_30_days",
+        salesCount: top10SalesCount,
+      })}
+      className="concorrencia-catalog__ranked-thumb"
+    >
+      {thumbInner}
+    </S7RankedThumbnail>
+  ) : (
+    thumbInner
+  );
+
   return (
     <div
       className={montarClassesLinhaOperationalRowCard(["concorrencia-catalog__row"], {
@@ -320,25 +379,7 @@ function ConcorrenciaCatalogRow({
           onChange={() => onToggleSelect?.(id)}
         />
       </div>
-      <div className="products-catalog__cell products-catalog__cell--thumb">
-        {imgUrl ? (
-          <span
-            className="concorrencia-catalog__thumb s7-operational-thumb-frame s7-operational-thumb-frame--circle"
-            aria-hidden
-          >
-            <img
-              className="s7-operational-thumb"
-              src={imgUrl}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              referrerPolicy="no-referrer"
-            />
-          </span>
-        ) : (
-          <span className="concorrencia-catalog__thumb-slot" aria-hidden />
-        )}
-      </div>
+      <div className="products-catalog__cell products-catalog__cell--thumb">{thumbNode}</div>
 
       <div className="products-catalog__cell products-catalog__cell--product">
         <S7CatalogListingHeadline
@@ -472,6 +513,10 @@ export default function ConcorrenciaPage() {
   const [mlAccounts, setMlAccounts] = useState([]);
   const [mlAccountsReady, setMlAccountsReady] = useState(false);
   const [page, setPage] = useState(1);
+
+  const { getEntryForListingId } = useS7Top10Ranking({
+    marketplaceAccountId: accountFilterId,
+  });
   const [manageProduct, setManageProduct] = useState(null);
   const [removeMonitoredTarget, setRemoveMonitoredTarget] = useState(null);
   const [removingMonitoredId, setRemovingMonitoredId] = useState(null);
@@ -642,9 +687,23 @@ export default function ConcorrenciaPage() {
       if (row?.marketplace_account_id != null && String(row.marketplace_account_id).trim() !== "") {
         return String(row.marketplace_account_id).trim();
       }
-      return null;
+      return "";
     },
     [competitionByMonitored]
+  );
+
+  const getTop10EntryForMonitoredRow = useCallback(
+    (row) => {
+      const ownListing = getOwnListing(row);
+      const listingId = resolverListingIdCanonicoConcorrencia(row, ownListing);
+      if (!listingId) return null;
+      const marketplace =
+        ownListing?.marketplace != null && String(ownListing.marketplace).trim() !== ""
+          ? String(ownListing.marketplace).trim()
+          : "mercado_livre";
+      return getEntryForListingId(listingId, marketplace);
+    },
+    [getEntryForListingId, getOwnListing],
   );
 
   const getListingThumbnail = (row) =>
@@ -1124,7 +1183,9 @@ export default function ConcorrenciaPage() {
             <div className="products-catalog__table-card products-catalog__table-card--scroll-viewport s7-operational-row-card-viewport">
               <div className="products-catalog__table-hscroll products-catalog__table-hscroll--body">
                 <div className="concorrencia-catalog__body s7-operational-row-card-stack">
-                  {paginatedRows.map((row) => (
+                  {paginatedRows.map((row) => {
+                    const top10Entry = getTop10EntryForMonitoredRow(row);
+                    return (
                     <ConcorrenciaCatalogRow
                       key={row.monitored_listing_id}
                       product={row.product}
@@ -1135,6 +1196,8 @@ export default function ConcorrenciaPage() {
                       marketplaceAccountId={getMarketplaceAccountId(row)}
                       accountLogoUrl={getAccountLogoUrl(row)}
                       listingThumbnail={getListingThumbnail(row)}
+                      top10Rank={top10Entry?.rank ?? null}
+                      top10SalesCount={top10Entry?.quantitySold ?? null}
                       onManage={setManageProduct}
                       rowSelected={isSelected(pickConcorrenciaProductRowId(row))}
                       onToggleSelect={toggleRowSelection}
@@ -1151,7 +1214,8 @@ export default function ConcorrenciaPage() {
                         handleOpenCompetitorDetail(row, competitor, numeroConcorrente)
                       }
                     />
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

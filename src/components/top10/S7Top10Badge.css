@@ -1,0 +1,165 @@
+.s7-top10-badge {
+  --badge-size: 38px;
+  --metal-light: #fff2a6;
+  --metal-main: #ffc52f;
+  --metal-dark: #d88700;
+  --rank-bg: #fff;
+  --rank-color: #5c3300;
+
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--badge-size);
+  height: calc(var(--badge-size) * 1.25);
+  flex: 0 0 auto;
+  line-height: 0;
+  isolation: isolate;
+  vertical-align: middle;
+}
+
+.s7-top10-badge[data-rank="2"] {
+  --metal-light: #ffffff;
+  --metal-main: #dce5ef;
+  --metal-dark: #7a889b;
+  --rank-color: #243042;
+}
+
+.s7-top10-badge[data-rank="3"] {
+  --metal-light: #ffd8bd;
+  --metal-main: #d9915a;
+  --metal-dark: #81411c;
+  --rank-color: #4a1f0a;
+}
+
+.s7-top10-badge[data-rank="4"],
+.s7-top10-badge[data-rank="5"],
+.s7-top10-badge[data-rank="6"],
+.s7-top10-badge[data-rank="7"],
+.s7-top10-badge[data-rank="8"],
+.s7-top10-badge[data-rank="9"],
+.s7-top10-badge[data-rank="10"] {
+  --metal-light: #f1e9ff;
+  --metal-main: #9a6af5;
+  --metal-dark: #5d2bc1;
+  --rank-color: #35137a;
+}
+
+.s7-top10-badge__fire,
+.s7-top10-badge__trophy {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.s7-top10-badge__fire {
+  z-index: 0;
+  /* Ajuste fino global: chama levemente à esquerda; troféu permanece no inset original. */
+  transform: translateX(-2.5px);
+  filter:
+    drop-shadow(0 0 10px rgba(255, 90, 0, 0.75))
+    drop-shadow(0 0 3px rgba(255, 180, 0, 0.9));
+}
+
+.s7-top10-badge__trophy {
+  z-index: 1;
+  filter: drop-shadow(0 3px 4px rgba(30, 15, 0, 0.28));
+}
+
+.s7-top10-badge__fire-body,
+.s7-top10-badge__fire-inner,
+.s7-top10-badge__fire-core,
+.s7-top10-badge__spark {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.s7-top10-badge__fire-body {
+  animation: s7-fire-breathe 0.75s ease-in-out infinite alternate;
+}
+
+.s7-top10-badge__fire-inner {
+  animation: s7-fire-pulse 0.48s ease-in-out infinite alternate;
+}
+
+.s7-top10-badge__fire-core {
+  animation: s7-fire-pulse 0.35s ease-in-out infinite alternate-reverse;
+}
+
+.s7-top10-badge__spark {
+  transform-origin: 50% 50%;
+  animation: s7-fire-spark 0.85s ease-in-out infinite;
+}
+
+@keyframes s7-fire-breathe {
+  from {
+    transform: scaleX(0.92) scaleY(0.95) translateY(2px);
+  }
+  to {
+    transform: scaleX(1.1) scaleY(1.12) translateY(-2px);
+  }
+}
+
+@keyframes s7-fire-pulse {
+  from {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes s7-fire-spark {
+  0%,
+  100% {
+    transform: translateY(3px) scale(0.8);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-5px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s7-top10-badge * {
+    animation: none !important;
+  }
+}
+
+.s7-ranked-thumb {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  overflow: visible;
+  vertical-align: middle;
+  line-height: 0;
+}
+
+.s7-ranked-thumb__media {
+  display: block;
+  line-height: 0;
+  overflow: visible;
+}
+
+.s7-ranked-thumb__badge {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translate(-42%, -50%);
+  z-index: 3;
+  pointer-events: auto;
+  line-height: 0;
+}
+
+/* Quantidade no tooltip do troféu — mesma verde de vendas (#16a34a) */
+.s7-top10-badge__tip-sales {
+  color: #16a34a;
+  font-weight: 600;
+}

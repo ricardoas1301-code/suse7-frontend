@@ -277,22 +277,94 @@ export function pickTopRankingSku(item) {
 }
 
 /**
+ * Coleção de anúncios vinculados ao produto (contrato rankings.products).
+ * @param {Record<string, unknown> | null | undefined} item
+ * @returns {string[]}
+ */
+export function normalizeLinkedListingIds(item) {
+  const raw = item?.linked_listing_ids;
+  if (!Array.isArray(raw)) return [];
+  /** @type {string[]} */
+  const out = [];
+  const seen = new Set();
+  for (const v of raw) {
+    const id = v != null ? String(v).trim() : "";
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
+/**
  * Metadados do popover da lista lateral (somente leitura / cópia).
  * @param {Record<string, unknown> | null | undefined} item
  */
 export function getTopRankingListingPopoverMeta(item) {
   const fullTitle = pickListingTitle(item);
-  const listingId = pickTopRankingListingId(item);
+  const linkedListingIds = normalizeLinkedListingIds(item);
+  const marketplace =
+    item?.marketplace != null && String(item.marketplace).trim() !== ""
+      ? String(item.marketplace).trim()
+      : "mercado_livre";
+
+  let listingId = pickTopRankingListingId(item);
+  if (!listingId && linkedListingIds.length === 1) {
+    listingId = linkedListingIds[0];
+  }
+
   const sku = pickTopRankingSku(item);
+  const isMultiListing = linkedListingIds.length > 1;
+
+  if (isMultiListing) {
+    const displayIds = linkedListingIds.map((id) => formatListingIdForPopoverDisplay(id, marketplace));
+    return {
+      fullTitle,
+      listingId: "",
+      sku,
+      listingIdDisplay: String(linkedListingIds.length),
+      linkedListingIds,
+      linkedListingIdsDisplay: displayIds.join(", "),
+      isMultiListing: true,
+      listingMetaLabel: "Anúncios vinculados:",
+      skuDisplay: sku || "não informado",
+      canCopyListingId: false,
+      canCopySku: sku !== "",
+    };
+  }
+
+  const listingIdDisplay = formatListingIdForPopoverDisplay(listingId, marketplace);
   return {
     fullTitle,
     listingId,
     sku,
-    listingIdDisplay: listingId || "não informado",
+    listingIdDisplay,
+    linkedListingIds: listingId ? [listingId] : linkedListingIds,
+    linkedListingIdsDisplay: "",
+    isMultiListing: false,
+    listingMetaLabel: "Anúncio:",
     skuDisplay: sku || "não informado",
     canCopyListingId: listingId !== "",
     canCopySku: sku !== "",
   };
+}
+
+/**
+ * @param {string} listingId
+ * @param {string} marketplace
+ */
+function formatListingIdForPopoverDisplay(listingId, marketplace) {
+  const raw = listingId != null ? String(listingId).trim() : "";
+  if (!raw) return "não informado";
+  const m = String(marketplace || "")
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, "_");
+  const isMl = m === "mercado_livre" || m === "mercadolivre";
+  if (!isMl) return raw;
+  if (/^MLB\d+$/i.test(raw)) return `MLB${raw.replace(/^MLB/i, "")}`;
+  if (/^\d+$/.test(raw)) return `MLB${raw}`;
+  return raw;
 }
 
 /**

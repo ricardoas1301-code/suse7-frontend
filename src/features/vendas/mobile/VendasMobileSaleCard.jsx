@@ -13,6 +13,8 @@ import {
   pickVendasListingMercadoLivreUrl,
   VENDAS_LIST_DASH,
 } from "../utils/vendasListRowDisplay.js";
+import { S7RankedThumbnail } from "../../../components/top10/S7Top10Badge.jsx";
+import { buildTop10BadgeAriaLabel } from "../../top10/buildTop10QuantityRankLookup.js";
 import "./VendasMobileSaleCard.css";
 import VendasRowSelectCheckbox from "../selection/VendasRowSelectCheckbox.jsx";
 
@@ -60,8 +62,8 @@ function finValueClass(toneClass) {
   return "";
 }
 
-/** @param {{ row: Record<string, unknown> }} props */
-function VendasMobileProductThumb({ row }) {
+/** @param {{ row: Record<string, unknown>; top10Rank?: number | null; top10SalesCount?: number | null }} props */
+function VendasMobileProductThumb({ row, top10Rank = null, top10SalesCount = null }) {
   const [src, setSrc] = useState("");
   const [broken, setBroken] = useState(false);
   const cacheKey = useMemo(() => salesRowThumbCacheKey(row), [row]);
@@ -79,8 +81,8 @@ function VendasMobileProductThumb({ row }) {
     };
   }, [cacheKey, row]);
 
-  if (src !== "" && !broken) {
-    return (
+  const thumbInner =
+    src !== "" && !broken ? (
       <span
         className="vendas-mobile-sale-card__thumb-wrap s7-operational-thumb-frame s7-operational-thumb-frame--circle"
         aria-hidden
@@ -95,9 +97,28 @@ function VendasMobileProductThumb({ row }) {
           onError={() => setBroken(true)}
         />
       </span>
+    ) : (
+      <span className="vendas-mobile-sale-card__thumb-slot" aria-hidden />
     );
+
+  const numericRank = Number(top10Rank);
+  if (!Number.isInteger(numericRank) || numericRank < 1 || numericRank > 10) {
+    return thumbInner;
   }
-  return <span className="vendas-mobile-sale-card__thumb-slot" aria-hidden />;
+
+  return (
+    <S7RankedThumbnail
+      rank={numericRank}
+      size={26}
+      salesCount={top10SalesCount}
+      ariaLabel={buildTop10BadgeAriaLabel(numericRank, {
+        mode: "last_30_days",
+        salesCount: top10SalesCount,
+      })}
+    >
+      {thumbInner}
+    </S7RankedThumbnail>
+  );
 }
 
 /**
@@ -139,6 +160,8 @@ function VendasMobileProductTitle({ title, listingMercadoLivreUrl, listingId }) 
  *   onToggleSelect?: () => void;
  *   selectionDisabled?: boolean;
  *   selectionAriaLabel?: string;
+ *   top10Rank?: number | null;
+ *   top10SalesCount?: number | null;
  * }} props
  */
 export default function VendasMobileSaleCard({
@@ -148,6 +171,8 @@ export default function VendasMobileSaleCard({
   onToggleSelect,
   selectionDisabled = false,
   selectionAriaLabel = "Selecionar venda",
+  top10Rank = null,
+  top10SalesCount = null,
 }) {
   const f = /** @type {Record<string, unknown>} */ (row.financials ?? {});
   const detailItemId = pickSaleRayxDetailItemId(row);
@@ -182,7 +207,7 @@ export default function VendasMobileSaleCard({
           onChange={() => onToggleSelect?.()}
           ariaLabel={selectionAriaLabel}
         />
-        <VendasMobileProductThumb row={row} />
+        <VendasMobileProductThumb row={row} top10Rank={top10Rank} top10SalesCount={top10SalesCount} />
         <VendasMobileProductTitle
           title={productTitleDisplay}
           listingMercadoLivreUrl={listingMercadoLivreUrl}

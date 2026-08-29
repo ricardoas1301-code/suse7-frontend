@@ -38,6 +38,11 @@ import {
   pickVendasImpostoSecondaryLabel,
 } from "../features/vendas/utils/vendasTableSaleSharePercentDisplay.js";
 import { resolveSalesRowProductThumbUrl, salesRowThumbCacheKey } from "../utils/resolveSalesRowProductThumbUrl.js";
+import { S7RankedThumbnail } from "../components/top10/S7Top10Badge.jsx";
+import { useS7Top10Ranking } from "../features/top10/useS7Top10Ranking.js";
+import {
+  buildTop10BadgeAriaLabel,
+} from "../features/top10/buildTop10QuantityRankLookup.js";
 import { getSaleStatusToneClass } from "../features/vendas/utils/saleStatusToneClass.js";
 import { filtroRapidoVendasAfetaResumoExecutivo } from "../features/vendas/filters/vendasQuickFiltersConfig.js";
 import VendasFiltersCard from "../features/vendas/filters/VendasFiltersCard.jsx";
@@ -108,7 +113,7 @@ function formatSaleDateTimeLine(parts) {
 }
 
 /** Thumbnail do produto — mesma resolução que catálogo (https + galeria + links + raw ML). */
-function VendasSalesProductThumb({ row }) {
+function VendasSalesProductThumb({ row, top10Rank = null, top10SalesCount = null }) {
   const [src, setSrc] = useState("");
   const [broken, setBroken] = useState(false);
   const cacheKey = useMemo(() => salesRowThumbCacheKey(/** @type {Record<string, unknown>} */ (row)), [row]);
@@ -131,25 +136,44 @@ function VendasSalesProductThumb({ row }) {
   }, [src]);
 
   const showImg = src !== "" && !broken;
-  if (showImg) {
-    return (
-      <span
-        className="vendas-page__product-thumb-wrap s7-operational-thumb-frame s7-operational-thumb-frame--circle"
-        aria-hidden
-      >
-        <img
-          className="vendas-page__product-thumb s7-operational-thumb"
-          src={src}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          referrerPolicy="no-referrer"
-          onError={() => setBroken(true)}
-        />
-      </span>
-    );
+  const thumbInner = showImg ? (
+    <span
+      className="vendas-page__product-thumb-wrap s7-operational-thumb-frame s7-operational-thumb-frame--circle"
+      aria-hidden
+    >
+      <img
+        className="vendas-page__product-thumb s7-operational-thumb"
+        src={src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        onError={() => setBroken(true)}
+      />
+    </span>
+  ) : (
+    <span className="vendas-page__product-thumb-slot" aria-hidden />
+  );
+
+  const numericRank = Number(top10Rank);
+  if (!Number.isInteger(numericRank) || numericRank < 1 || numericRank > 10) {
+    return thumbInner;
   }
-  return <span className="vendas-page__product-thumb-slot" aria-hidden />;
+
+  return (
+    <S7RankedThumbnail
+      rank={numericRank}
+      size={26}
+      salesCount={top10SalesCount}
+      ariaLabel={buildTop10BadgeAriaLabel(numericRank, {
+        mode: "last_30_days",
+        salesCount: top10SalesCount,
+      })}
+      className="vendas-page__product-ranked-thumb"
+    >
+      {thumbInner}
+    </S7RankedThumbnail>
+  );
 }
 
 /**
@@ -276,6 +300,11 @@ function VendasPageContent() {
   const { applyTop10Period, setTop10AccountId } = useDashboardBlockFilters();
   const { loading: entitlementLoading, can } = useBillingEntitlement();
   const canFetchSalesList = can(BILLING_ENTITLEMENT_CAPABILITY.VIEW_STORED_LISTS);
+
+  const { getEntryForRow } = useS7Top10Ranking({
+    marketplaceAccountId: vendasFilters.marketplaceAccountId,
+    enabled: canFetchSalesList,
+  });
 
   /** Contas marketplace para o filtro “Conta”. */
   const [mlAccounts, setMlAccounts] = useState(/** @type {Record<string, unknown>[]} */ ([]));
@@ -1060,6 +1089,7 @@ function VendasPageContent() {
                       r.listing_id_display != null && String(r.listing_id_display).trim() !== ""
                         ? String(r.listing_id_display).trim()
                         : "";
+                    const top10Entry = getEntryForRow(/** @type {Record<string, unknown>} */ (r));
                     const listingMercadoLivreUrl = pickVendasListingMercadoLivreUrl(
                       /** @type {Record<string, unknown>} */ (r),
                       listingIdForMeta,
@@ -1196,7 +1226,11 @@ function VendasPageContent() {
                           </div>
                         </td>
                         <td className="vendas-page__col-thumb vendas-page__cell-align-main">
-                          <VendasSalesProductThumb row={r} />
+                          <VendasSalesProductThumb
+                            row={r}
+                            top10Rank={top10Entry?.rank ?? null}
+                            top10SalesCount={top10Entry?.quantitySold ?? null}
+                          />
                         </td>
                         <td className="vendas-page__col-product vendas-page__cell-align-stack">
                           <div className="vendas-page__product-cell vendas-page__product-cell--text-only">
@@ -1373,6 +1407,7 @@ function VendasPageContent() {
                 r.sale_display_code != null && String(r.sale_display_code).trim() !== ""
                   ? String(r.sale_display_code).trim()
                   : selectionId ?? "venda";
+              const top10Entry = getEntryForRow(/** @type {Record<string, unknown>} */ (r));
               return (
               <VendasMobileSaleCard
                 key={
@@ -1380,6 +1415,8 @@ function VendasPageContent() {
                   `${String(r.external_order_id ?? r.sale_display_code ?? "ord")}-${String(r.external_order_item_id ?? r.external_item_id ?? "line")}-${rowIndex}`
                 }
                 row={/** @type {Record<string, unknown>} */ (r)}
+                top10Rank={top10Entry?.rank ?? null}
+                top10SalesCount={top10Entry?.quantitySold ?? null}
                 onOpenRayx={openDetail}
                 selected={rowSelected}
                 onToggleSelect={() => {
