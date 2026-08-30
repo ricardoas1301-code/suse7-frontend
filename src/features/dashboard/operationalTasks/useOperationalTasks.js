@@ -9,6 +9,7 @@ import {
   invalidateOperationalTasksCache,
   OPERATIONAL_TASKS_INVALIDATE_EVENT,
 } from "./operationalTasksApi.js";
+import { criarGateRevalidacaoVisibilidadeOperationalTasks } from "./operationalTasksVisibilityRevalidate.js";
 
 const MIN_LOADING_MS = 220;
 
@@ -208,6 +209,52 @@ export function useOperationalTasks(options = {}) {
     window.addEventListener(OPERATIONAL_TASKS_INVALIDATE_EVENT, handleOperationalTasksEvent);
     return () => window.removeEventListener(OPERATIONAL_TASKS_INVALIDATE_EVENT, handleOperationalTasksEvent);
   }, [applyImmediatePatch, refetch]);
+
+  // Pós-OAuth Hosted → Local: ao recuperar foco/visibilidade, revalida OT sem F5.
+  useEffect(() => {
+    if (!effectivelyEnabled) return undefined;
+
+    const gate = criarGateRevalidacaoVisibilidadeOperationalTasks();
+
+    const dispararSePermitido = (/** @type {{ eventType: string; visibilityState?: string | null }} */ meta) => {
+      if (
+        !gate.tentar({
+          effectivelyEnabled: true,
+          eventType: meta.eventType,
+          visibilityState: meta.visibilityState ?? null,
+        })
+      ) {
+        return;
+      }
+      invalidateOperationalTasksCache({
+        reason: "visibility_revalidate",
+        force_revalidate: true,
+      });
+    };
+
+    const onVisibilityChange = () => {
+      dispararSePermitido({
+        eventType: "visibilitychange",
+        visibilityState: typeof document !== "undefined" ? document.visibilityState : null,
+      });
+    };
+    const onPageShow = () => {
+      dispararSePermitido({ eventType: "pageshow" });
+    };
+    const onFocus = () => {
+      dispararSePermitido({ eventType: "focus" });
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [effectivelyEnabled]);
 
   const invalidateAndRefetch = useCallback(async () => {
     invalidateOperationalTasksCache({ force_revalidate: true });

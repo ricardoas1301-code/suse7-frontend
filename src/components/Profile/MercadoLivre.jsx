@@ -39,6 +39,7 @@ import {
 } from "./marketplaceIntegration/mercadoLivreIntegrationCopy.js";
 import "./marketplaceIntegration/s7ModalStack.css";
 import MarketplaceSyncDetailsOpeningIndicator from "./marketplaceIntegration/MarketplaceSyncDetailsOpeningIndicator.jsx";
+import { podeFecharModalDetalhesSincronizacao } from "./marketplaceIntegration/mercadoLivreSyncDetailsDismissPolicy.js";
 
 const ML_OAUTH_SUCCESS_TOAST_GAP_MS = 3500;
 let _mlOAuthSuccessToastLastAt = 0;
@@ -1167,7 +1168,8 @@ export default function MercadoLivre() {
     (overall === "awaiting_start" || syncStatusPayload == null);
 
   const dismissOnboardingModal = useCallback(() => {
-    if (awaitingPipelineStart) return;
+    // awaiting_start NÃO bloqueia: seller pode fechar sem iniciar sincronização.
+    if (!podeFecharModalDetalhesSincronizacao({ awaitingPipelineStart })) return;
     setOnboardingDismissed(true);
     setOnboardingOpen(false);
     if (manageModalAccountId) {
