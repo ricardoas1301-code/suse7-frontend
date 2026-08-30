@@ -703,6 +703,15 @@ export default function S7OperationalTasksPanel({
 
                   const description = typeof task.description === "string" ? task.description : "";
 
+                  const accountAvatarUrl =
+                    typeof task.account_avatar_url === "string" && task.account_avatar_url.trim()
+                      ? task.account_avatar_url.trim()
+                      : null;
+                  const accountLabel =
+                    typeof task.account_label === "string" && task.account_label.trim()
+                      ? task.account_label.trim()
+                      : null;
+
 
 
                   return (
@@ -713,17 +722,36 @@ export default function S7OperationalTasksPanel({
 
                       className="s7-operational-tasks-panel__task-card"
 
+                      data-marketplace-account-id={
+                        task.marketplace_account_id != null
+                          ? String(task.marketplace_account_id)
+                          : undefined
+                      }
+
                     >
 
                       <div className="s7-operational-tasks-panel__task-head">
 
-                        <span className="s7-operational-tasks-panel__attention-icon" aria-hidden>
+                        {accountAvatarUrl ? (
+                          <img
+                            className="s7-operational-tasks-panel__account-avatar"
+                            src={accountAvatarUrl}
+                            alt=""
+                            width={28}
+                            height={28}
+                          />
+                        ) : (
+                          <span className="s7-operational-tasks-panel__attention-icon" aria-hidden>
+                            ⚠
+                          </span>
+                        )}
 
-                          ⚠
-
-                        </span>
-
-                        <h4 className="s7-operational-tasks-panel__task-title">{title}</h4>
+                        <div className="s7-operational-tasks-panel__task-title-wrap">
+                          <h4 className="s7-operational-tasks-panel__task-title">{title}</h4>
+                          {accountLabel ? (
+                            <p className="s7-operational-tasks-panel__account-label">{accountLabel}</p>
+                          ) : null}
+                        </div>
 
                       </div>
 
