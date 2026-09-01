@@ -256,8 +256,13 @@
 .s7-operational-tasks-panel__task-title-wrap {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
   min-width: 0;
+  flex: 1;
+}
+
+.s7-operational-tasks-panel__store-identity {
+  margin-top: 0;
 }
 
 .s7-operational-tasks-panel__account-avatar {

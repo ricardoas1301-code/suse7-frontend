@@ -13,6 +13,13 @@ import {
   readDashboardImportExpanded,
   writeDashboardImportExpanded,
 } from "./s7ImportIntelligenceDashboardUx.js";
+import {
+  contaExigeInicioDeSincronizacao,
+  deveMostrarCtaIdleGlobalImportacao,
+  particionarContasImportIntelligence,
+  rotuloCtaImportacaoPorConta,
+  sellerTemImportacaoTotalmenteConcluida,
+} from "./s7ImportIntelligenceAccountVisibility.js";
 import "./S7ImportIntelligencePanel.css";
 
 /** @param {number | null | undefined} n */
@@ -229,21 +236,18 @@ export default function S7ImportIntelligencePanel({
   const hidePerAccountNav = layout === "modal" && accountId != null && String(accountId).length > 0;
   const showModalFooterLink = layout !== "modal";
 
-  const allFullySynced = accounts.every(
-    (a) =>
-      a.hot_sync_complete === true &&
-      a.historical_backfill_active !== true &&
-      String(a.overall || "") === "done"
-  );
+  const allFullySynced = sellerTemImportacaoTotalmenteConcluida(accounts);
 
   const anyAttention = accounts.some((a) => String(a.overall || "") === "error");
 
-  const showIdleAwaiting = accounts.every((a) => String(a.overall || "") === "awaiting_start");
-  /** No modal com conta explícita, não usar any_engaged global (outra conta pode já ter pipeline). */
-  const idleEngagedGate =
-    layout === "modal" && accountId != null && String(accountId).trim() !== "" ? true : !payload?.any_engaged;
+  const showIdleAwaiting = deveMostrarCtaIdleGlobalImportacao({
+    accounts,
+    layout,
+    accountId,
+    anyEngaged: Boolean(payload?.any_engaged),
+  });
 
-  if (showIdleAwaiting && idleEngagedGate) {
+  if (showIdleAwaiting) {
     return (
       <section
         className={`s7-import-intel s7-import-intel--cta s7-import-intel--${layout}`}
@@ -299,12 +303,26 @@ export default function S7ImportIntelligencePanel({
   }
 
   const recentDays = payload?.ml_initial_recent_days ?? 90;
+  const contasParticionadas = particionarContasImportIntelligence(accounts);
+  const accountsOrdered = [
+    ...contasParticionadas.awaitingStart,
+    ...contasParticionadas.activeOrAttention,
+    ...contasParticionadas.done,
+  ];
 
-  const activeTitle = layout === "modal" ? "Importação inteligente" : "Importação inteligente em andamento";
+  const hasAwaitingStart = contasParticionadas.awaitingStart.length > 0;
+  const activeTitle =
+    layout === "modal"
+      ? "Importação inteligente"
+      : hasAwaitingStart && contasParticionadas.activeOrAttention.length === 0
+        ? "Sincronização necessária"
+        : "Importação inteligente em andamento";
   const activeSub =
     layout === "modal"
       ? "Estamos preparando o histórico inteligente da sua operação. O processamento segue em servidor seguro — camada rápida primeiro, histórico completo em seguida."
-      : "O Suse7 continua trabalhando no servidor — camada rápida primeiro, histórico completo em seguida.";
+      : hasAwaitingStart
+        ? "Há conta conectada aguardando o início da sincronização. Cada conta Mercado Livre inicia de forma independente."
+        : "O Suse7 continua trabalhando no servidor — camada rápida primeiro, histórico completo em seguida.";
   const activeReassure =
     layout === "modal"
       ? "O Suse7 continuará armazenando automaticamente novas vendas e indicadores históricos. Você pode fechar esta janela e voltar quando quiser."
@@ -312,7 +330,44 @@ export default function S7ImportIntelligencePanel({
 
   const accountsBlock = (
     <div className="s7-import-intel__accounts">
-      {accounts.map((acc) => {
+      {accountsOrdered.map((acc) => {
+        const awaitingStart = contaExigeInicioDeSincronizacao(acc);
+        const ctaLabel = rotuloCtaImportacaoPorConta(acc);
+
+        if (awaitingStart) {
+          return (
+            <article
+              key={acc.marketplace_account_id}
+              className="s7-import-intel__account s7-import-intel__account--awaiting-start"
+              data-marketplace-account-id={acc.marketplace_account_id || undefined}
+              data-import-overall="awaiting_start"
+            >
+              <div className="s7-import-intel__account-head">
+                <span className="s7-import-intel__account-name">{acc.display_name || acc.account_label}</span>
+                <span className="s7-import-intel__account-status">
+                  {acc.status_headline || "Sincronização necessária"}
+                </span>
+              </div>
+              <p className="s7-import-intel__layer-copy">
+                Conta conectada e pronta. Inicie a sincronização desta conta sem afetar as demais integrações
+                Mercado Livre.
+              </p>
+              {!hidePerAccountNav ? (
+                <div className="s7-import-intel__account-actions">
+                  <button
+                    type="button"
+                    className="s7-import-intel__btn"
+                    data-cta="iniciar-sincronizacao"
+                    onClick={() => openTechnicalOrNavigate(acc.marketplace_account_id)}
+                  >
+                    {ctaLabel}
+                  </button>
+                </div>
+              ) : null}
+            </article>
+          );
+        }
+
         const hot = acc.hot_sync || {};
         const hist = acc.historical_sync || {};
         const hs = acc.historical_sales_sync;
@@ -335,7 +390,12 @@ export default function S7ImportIntelligencePanel({
         const mainLabel = acc.hot_sync_complete ? "Progresso do histórico completo" : "Progresso da camada rápida";
 
         return (
-          <article key={acc.marketplace_account_id} className="s7-import-intel__account">
+          <article
+            key={acc.marketplace_account_id}
+            className="s7-import-intel__account"
+            data-marketplace-account-id={acc.marketplace_account_id || undefined}
+            data-import-overall={String(acc.overall || "")}
+          >
             <div className="s7-import-intel__account-head">
               <span className="s7-import-intel__account-name">{acc.display_name || acc.account_label}</span>
               <span className="s7-import-intel__account-status">{acc.status_headline}</span>
@@ -455,9 +515,10 @@ export default function S7ImportIntelligencePanel({
                 <button
                   type="button"
                   className="s7-import-intel__btn"
+                  data-cta="ver-sincronizacao"
                   onClick={() => openTechnicalOrNavigate(acc.marketplace_account_id)}
                 >
-                  Ver sincronização em andamento
+                  {ctaLabel}
                 </button>
               </div>
             ) : null}
@@ -508,7 +569,11 @@ export default function S7ImportIntelligencePanel({
 
   if (isDashboardLayout) {
     const compactSummary = buildDashboardImportCompactSummary(accounts, isImportCompleted);
-    const dashboardTitle = isImportCompleted ? "Importação concluída" : "Importação inteligente em andamento";
+    const dashboardTitle = isImportCompleted
+      ? "Importação concluída"
+      : hasAwaitingStart && contasParticionadas.activeOrAttention.length === 0
+        ? "Sincronização necessária"
+        : "Importação inteligente em andamento";
     const ToggleChevron = dashboardExpanded ? ChevronUp : ChevronDown;
 
     return (

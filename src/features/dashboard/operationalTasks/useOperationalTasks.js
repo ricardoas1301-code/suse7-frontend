@@ -24,7 +24,8 @@ export function useOperationalTasks(options = {}) {
   const [tasks, setTasks] = useState(/** @type {Record<string, unknown>[]} */ ([]));
   const [totalTasks, setTotalTasks] = useState(0);
   const [mlInitialSyncPhase, setMlInitialSyncPhase] = useState(/** @type {string | null} */ (null));
-  const [initialSyncUniverseStable, setInitialSyncUniverseStable] = useState(true);
+  /** Fail-closed: UNKNOWN até OT resolver (CTAs manuais de SKU/vínculo ficam ocultas). */
+  const [initialSyncUniverseStable, setInitialSyncUniverseStable] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(/** @type {string | null} */ (null));
@@ -118,6 +119,7 @@ export function useOperationalTasks(options = {}) {
         setError(null);
         setTasks([]);
         setTotalTasks(0);
+        setInitialSyncUniverseStable(false);
         setHasResolvedOnce(true);
         hasResolvedOnceRef.current = true;
         return { tasks: [], total_tasks: 0 };
@@ -156,6 +158,7 @@ export function useOperationalTasks(options = {}) {
           setRefreshing(false);
           setTasks([]);
           setTotalTasks(0);
+          setInitialSyncUniverseStable(false);
           setHasResolvedOnce(true);
           hasResolvedOnceRef.current = true;
         }

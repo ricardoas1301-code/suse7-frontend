@@ -25,43 +25,4 @@ export function writeDashboardImportExpanded(expanded) {
   }
 }
 
-/**
- * @param {any[]} accounts
- * @param {boolean} isCompleted
- */
-export function buildDashboardImportCompactSummary(accounts, isCompleted) {
-  if (isCompleted) {
-    return {
-      primary: "Todas as contas sincronizadas",
-      secondary: null,
-    };
-  }
-
-  const activeAccounts = accounts.filter((a) => String(a.overall || "") !== "done");
-  const count = activeAccounts.length > 0 ? activeAccounts.length : accounts.length;
-  const primary = count === 1 ? "1 conta sincronizando" : `${count} contas sincronizando`;
-
-  const anyHotIncomplete = accounts.some((a) => a.hot_sync_complete !== true);
-  const anyHotRunning = accounts.some(
-    (a) => !a.hot_sync_complete && String(a.hot_sync?.status || "").toLowerCase() === "running",
-  );
-
-  const pcts = accounts
-    .map((a) => Number(a.primary_progress_percent))
-    .filter((n) => Number.isFinite(n));
-  const avgPct =
-    pcts.length > 0 ? Math.round(pcts.reduce((sum, n) => sum + n, 0) / pcts.length) : null;
-
-  let secondary;
-  if (anyHotIncomplete && anyHotRunning) {
-    secondary = "Camada rápida em execução";
-  } else if (avgPct != null) {
-    secondary = `${avgPct}% concluído`;
-  } else if (anyHotIncomplete) {
-    secondary = "Camada rápida em execução";
-  } else {
-    secondary = "Sincronizando…";
-  }
-
-  return { primary, secondary };
-}
+export { buildDashboardImportCompactSummaryAccountAware as buildDashboardImportCompactSummary } from "./s7ImportIntelligenceAccountVisibility.js";

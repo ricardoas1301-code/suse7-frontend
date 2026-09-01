@@ -76,7 +76,7 @@ export default function MarketplaceSyncDetailsModal({
                   </span>
                 </div>
                 <p className="s7-marketplace-sync-details-modal__account-meta">
-                  <span className="s7-marketplace-sync-details-modal__account-meta-label">Empresa vinculada:</span>{" "}
+                  <span className="s7-marketplace-sync-details-modal__account-meta-label">Loja:</span>{" "}
                   <span className="s7-marketplace-sync-details-modal__account-meta-value">
                     {connectedAccount.linkedCompanyName}
                   </span>

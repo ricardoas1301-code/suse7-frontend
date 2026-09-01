@@ -8,6 +8,7 @@ const base = {
   productId: "product-1",
   sku: "SKU-1",
   isProductReady: false,
+  initialSyncUniverseStable: true,
   pricingContext: { product_health: { product_health_status: "INCOMPLETE_PRODUCT" } },
 };
 

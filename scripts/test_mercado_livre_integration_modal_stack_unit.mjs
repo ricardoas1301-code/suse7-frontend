@@ -75,9 +75,16 @@ const modal = buildMercadoLivreIntegrationModalPresentation(account, null, {
 assert("modal exposes linked company document", modal.linkedCompanyDocumentFormatted === "73.151.110/0001-28");
 assert("modal keeps account identifier separate", modal.accountIdentifier === "***0128");
 assert(
-  "state row uses account identifier label",
-  modal.integrationStateRows.some((r) => r.label === "Identificador da conta" && r.value === "***0128")
+  "state rows omit Identificador da conta (Loja+CNPJ is identity SSOT)",
+  !modal.integrationStateRows.some((r) => r.label === "Identificador da conta")
 );
+assert(
+  "state rows keep Conta / Monitoramento / Dados recentes / Histórico / Último sincronismo",
+  ["Conta", "Monitoramento", "Dados recentes", "Histórico de vendas", "Último sincronismo"].every((label) =>
+    modal.integrationStateRows.some((r) => r.label === label)
+  )
+);
+assert("modal identity shows Loja trade name", modal.linkedCompanyName === "Super Metal Rio1" || modal.companyName === "Super Metal Rio1");
 assert(
   "modal missing cnpj shows dash",
   buildMercadoLivreIntegrationModalPresentation(account, null, {
@@ -88,12 +95,13 @@ assert(
 assert("modal identity lines left aligned", /\.profile-modal\.s7-marketplace-integration-modal p\.s7-marketplace-integration-modal__identity-line[\s\S]*text-align:\s*left/.test(modalCss));
 assert("modal compact identity gap", /--s7-mi-identity-gap:\s*2px/.test(modalCss));
 assert("modal groups empresa and cnpj lines", modalJsx.includes("s7-marketplace-integration-modal__identity-details"));
-assert("modal cnpj follows empresa line", /Empresa vinculada:[\s\S]*CNPJ:/.test(modalJsx));
+assert("modal cnpj follows loja line", /Loja:[\s\S]*CNPJ:/.test(modalJsx));
 assert(
   "advanced body has top padding gap",
   /\.s7-marketplace-integration-modal__advanced-body[\s\S]*padding:\s*10px/.test(modalCss)
 );
-assert("modal shows empresa vinculada label", modalJsx.includes("Empresa vinculada:"));
+assert("modal shows loja label", modalJsx.includes("Loja:"));
+assert("modal removes empresa vinculada label", !modalJsx.includes("Empresa vinculada:"));
 assert("modal shows cnpj label", modalJsx.includes("CNPJ:"));
 assert("advanced options default collapsed", modalJsx.includes("defaultOpen={false}"));
 assert("advanced options reset via key", modalJsx.includes("advancedOptionsResetKey"));

@@ -63,11 +63,20 @@ export function isAnunciosCatalogRowPending(row) {
 }
 
 /**
+ * Fail-closed: só libera CTA manual com estabilidade EXPLICITAMENTE true.
+ * null/undefined/false → universo UNKNOWN/UNSTABLE (CTAs ocultas).
+ * @param {{ initialSyncUniverseStable?: boolean | null } | null | undefined} row
+ */
+export function isListingProductLinkUniverseStable(row) {
+  return row?.initialSyncUniverseStable === true;
+}
+
+/**
  * @param {{ skuDependencyPending?: boolean; skuDependencyReason?: string | null; sku?: string | null; skuPending?: boolean; attentionReason?: string | null; pricingContext?: Record<string, unknown> | null; productId?: string | null; isProductReady?: boolean | null; initialSyncUniverseStable?: boolean | null }} row
  * @param {(r: typeof row) => void} [onInformSku]
  */
 export function getListingProductLinkActions(row, onInformSku) {
-  const universeStable = row.initialSyncUniverseStable !== false;
+  const universeStable = isListingProductLinkUniverseStable(row);
   if (!universeStable) {
     return {
       isSkuPendingMl: false,

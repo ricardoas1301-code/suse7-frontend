@@ -129,6 +129,36 @@ test("página passa dismissOnboardingModal ao SyncDetailsModal", () => {
   assert.ok(pageJsx.includes("onClose={dismissOnboardingModal}"));
 });
 
+test("RUNNING_SYNC_DISMISS_POLICY=PRESERVED (running também fecha; awaiting fecha)", () => {
+  assert.equal(
+    podeFecharModalDetalhesSincronizacao({
+      awaitingPipelineStart: false,
+      overall: "running",
+    }),
+    true,
+  );
+  assert.equal(
+    resultadoFechamentoModalDetalhesSincronizacao({
+      awaitingPipelineStart: false,
+      overall: "running",
+    }).syncStarted,
+    false,
+  );
+  assert.equal(
+    podeFecharModalDetalhesSincronizacao({
+      awaitingPipelineStart: true,
+      overall: "awaiting_start",
+    }),
+    true,
+  );
+});
+
+test("OUTSIDE_CLICK_AWAITING_START=DISMISS (shell backdrop → onClose)", () => {
+  assert.match(shellJsx, /onClick=\{isCovered \? undefined : onClose\}/);
+  assert.ok(pageJsx.includes("onClose={dismissOnboardingModal}"));
+  assert.ok(pageJsx.includes("podeFecharModalDetalhesSincronizacao"));
+});
+
 if (failures.length > 0) {
   console.error(
     JSON.stringify({

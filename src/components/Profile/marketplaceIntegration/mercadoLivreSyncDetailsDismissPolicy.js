@@ -7,6 +7,14 @@
 // ======================================================================
 
 /**
+ * Política de fechamento do modal "Detalhes da sincronização".
+ *
+ * Produto CPJ-2 T1 (paridade Hosted/PROD observada pelo seller):
+ * - awaiting_start / sincronização necessária → FECHA (backdrop/Escape)
+ * - running / completed / demais → FECHA (comportamento histórico quando pipeline já engajou)
+ *
+ * Fechar NÃO inicia sync, NÃO altera jobs/token/estado da integração.
+ *
  * @param {{
  *   awaitingPipelineStart?: boolean;
  *   overall?: string | null;

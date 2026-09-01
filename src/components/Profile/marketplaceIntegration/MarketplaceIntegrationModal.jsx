@@ -174,7 +174,7 @@ export default function MarketplaceIntegrationModal({
 
             <p className="s7-marketplace-integration-modal__identity-line">
 
-              <span className="s7-marketplace-integration-modal__identity-label">Empresa vinculada:</span>{" "}
+              <span className="s7-marketplace-integration-modal__identity-label">Loja:</span>{" "}
 
               <span className="s7-marketplace-integration-modal__identity-value">{linkedCompanyName}</span>
 

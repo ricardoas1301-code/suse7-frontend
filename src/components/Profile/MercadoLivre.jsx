@@ -1168,8 +1168,16 @@ export default function MercadoLivre() {
     (overall === "awaiting_start" || syncStatusPayload == null);
 
   const dismissOnboardingModal = useCallback(() => {
-    // awaiting_start NÃO bloqueia: seller pode fechar sem iniciar sincronização.
-    if (!podeFecharModalDetalhesSincronizacao({ awaitingPipelineStart })) return;
+    // awaiting_start: fecha (paridade Hosted/PROD observada). Fechar NÃO inicia sync.
+    // running/completed: também fecham (política histórica preservada quando engajado).
+    if (
+      !podeFecharModalDetalhesSincronizacao({
+        awaitingPipelineStart,
+        overall,
+      })
+    ) {
+      return;
+    }
     setOnboardingDismissed(true);
     setOnboardingOpen(false);
     if (manageModalAccountId) {
@@ -1177,7 +1185,7 @@ export default function MercadoLivre() {
         syncViewButtonRef.current?.focus();
       });
     }
-  }, [awaitingPipelineStart, manageModalAccountId]);
+  }, [awaitingPipelineStart, manageModalAccountId, overall]);
 
   const integrationModalStacked =
     Boolean(manageModalAccountId) &&

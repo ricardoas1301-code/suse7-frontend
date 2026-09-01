@@ -81,7 +81,9 @@ assert("no account-count conditional layout", !/:has\(\s*\.s7-marketplace-integr
 
 assert("modal identity uses flex-start alignment", /\.s7-marketplace-integration-modal__identity[\s\S]*align-items:\s*flex-start/.test(modalCss));
 assert("modal groups empresa and cnpj in details block", modalJsx.includes("s7-marketplace-integration-modal__identity-details"));
-assert("modal cnpj line immediately after empresa", /Empresa vinculada:[\s\S]*CNPJ:/.test(modalJsx));
+assert("modal cnpj line immediately after loja", /Loja:[\s\S]*CNPJ:/.test(modalJsx));
+assert("modal uses Loja label", modalJsx.includes("Loja:"));
+assert("modal drops Empresa vinculada label", !modalJsx.includes("Empresa vinculada:"));
 assert("modal does not duplicate cnpj in state rows header", (modalJsx.match(/CNPJ:/g) || []).length === 1);
 
 const companiesById = buildSellerCompaniesById([
@@ -101,9 +103,16 @@ const modal = buildMercadoLivreIntegrationModalPresentation(account, null, {
 });
 assert("modal keeps masked identifier separate", modal.accountIdentifier === "***0128");
 assert(
-  "state row keeps account identifier label",
-  modal.integrationStateRows.some((r) => r.label === "Identificador da conta" && r.value === "***0128")
+  "state rows omit Identificador da conta (Loja+CNPJ is identity SSOT)",
+  !modal.integrationStateRows.some((r) => r.label === "Identificador da conta")
 );
+assert(
+  "state rows keep Conta / Monitoramento / Dados recentes / Histórico / Último sincronismo",
+  ["Conta", "Monitoramento", "Dados recentes", "Histórico de vendas", "Último sincronismo"].every((label) =>
+    modal.integrationStateRows.some((r) => r.label === label)
+  )
+);
+assert("modal identity shows Loja trade name", modal.linkedCompanyName === "Super Metal Rio1" || modal.companyName === "Super Metal Rio1");
 assert(
   "missing cnpj shows dash",
   buildMercadoLivreIntegrationModalPresentation(account, null, {

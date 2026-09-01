@@ -37,6 +37,13 @@ import {
 
 import { buildCollapsedOperationalTasksLabel } from "./operationalTaskDescriptions.js";
 
+import {
+  normalizarTituloPendenciaMarketplace,
+  resolverIdentidadeLojaDaTaskOperacional,
+} from "./operationalTaskStoreIdentity.js";
+
+import S7StoreIdentityBlock from "../../../components/store/S7StoreIdentityBlock.jsx";
+
 import { cliqueForaPainelOperacional } from "./operationalTasksPanelOutsideClick.js";
 
 import OperationalTasksPanelIcon from "./OperationalTasksPanelIcon.jsx";
@@ -699,20 +706,13 @@ export default function S7OperationalTasksPanel({
 
                   const actionLabel = typeof action.label === "string" ? action.label : "Abrir ação";
 
-                  const title = typeof task.title === "string" ? task.title : "Tarefa";
-
+                  const rawTitle = typeof task.title === "string" ? task.title : "Tarefa";
+                  const title = normalizarTituloPendenciaMarketplace(rawTitle, task?.type);
                   const description = typeof task.description === "string" ? task.description : "";
-
-                  const accountAvatarUrl =
-                    typeof task.account_avatar_url === "string" && task.account_avatar_url.trim()
-                      ? task.account_avatar_url.trim()
-                      : null;
-                  const accountLabel =
-                    typeof task.account_label === "string" && task.account_label.trim()
-                      ? task.account_label.trim()
-                      : null;
-
-
+                  const storeIdentity = resolverIdentidadeLojaDaTaskOperacional(task);
+                  const isMarketplaceTask =
+                    String(task?.type || "").startsWith("ml_initial_sync") ||
+                    String(task?.type || "") === "marketplace_connect_pending";
 
                   return (
 
@@ -728,28 +728,28 @@ export default function S7OperationalTasksPanel({
                           : undefined
                       }
 
+                      data-store-name={storeIdentity.storeName || undefined}
+
                     >
 
                       <div className="s7-operational-tasks-panel__task-head">
 
-                        {accountAvatarUrl ? (
-                          <img
-                            className="s7-operational-tasks-panel__account-avatar"
-                            src={accountAvatarUrl}
-                            alt=""
-                            width={28}
-                            height={28}
-                          />
-                        ) : (
+                        {!isMarketplaceTask || !storeIdentity.hasStoreIdentity ? (
                           <span className="s7-operational-tasks-panel__attention-icon" aria-hidden>
                             ⚠
                           </span>
-                        )}
+                        ) : null}
 
                         <div className="s7-operational-tasks-panel__task-title-wrap">
                           <h4 className="s7-operational-tasks-panel__task-title">{title}</h4>
-                          {accountLabel ? (
-                            <p className="s7-operational-tasks-panel__account-label">{accountLabel}</p>
+                          {isMarketplaceTask && storeIdentity.hasStoreIdentity ? (
+                            <S7StoreIdentityBlock
+                              storeName={storeIdentity.storeName}
+                              documentFormatted={storeIdentity.documentFormatted}
+                              logoUrl={storeIdentity.logoUrl}
+                              fallbackInitial={storeIdentity.fallbackInitial}
+                              className="s7-operational-tasks-panel__store-identity"
+                            />
                           ) : null}
                         </div>
 

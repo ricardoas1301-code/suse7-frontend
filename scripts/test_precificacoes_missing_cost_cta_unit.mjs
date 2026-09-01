@@ -10,6 +10,7 @@ function rowBase(overrides = {}) {
     productId: "prod-1",
     isProductReady: true,
     attentionReason: null,
+    initialSyncUniverseStable: true,
     pricingContext: {
       product_health: { product_health_status: "READY" },
     },
