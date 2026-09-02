@@ -46,6 +46,8 @@ import { useGlobalSellerCompanyModal } from "./globalSellerCompanyModalContext.j
 
 import MarketplaceSyncDetailsHost from "./MarketplaceSyncDetailsHost.jsx";
 
+import { resolveOperationalMarketplaceConnectRoute } from "./resolveOperationalMarketplaceConnectRoute.js";
+
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -74,6 +76,9 @@ export default function DashboardOperationalTasks({ visible = true }) {
   const globalSellerCompanyModal = useGlobalSellerCompanyModal();
 
   const onboardingReturnHandledRef = useRef(false);
+
+  /** Clique único: evita dois OAuths em double-click no CTA Reconectar. */
+  const marketplaceConnectInFlightRef = useRef(false);
 
   const operational = useOperationalTasks({ enabled: visible });
 
@@ -280,7 +285,21 @@ export default function DashboardOperationalTasks({ visible = true }) {
       }
 
       if (actionType === OPERATIONAL_TASK_ACTION_TYPES.OPEN_MARKETPLACE_CONNECT) {
-        navigate("/perfil/integracoes/mercado-livre");
+        if (marketplaceConnectInFlightRef.current) return;
+        const resolution = resolveOperationalMarketplaceConnectRoute(task);
+        if (resolution.kind === "oauth_reconnect" && resolution.path) {
+          marketplaceConnectInFlightRef.current = true;
+          navigate(resolution.path);
+          return;
+        }
+        if (resolution.kind === "missing_seller_company") {
+          // Sem seller_company_id canônico: não inventar OAuth genérico nem duplicar conta.
+          navigate(
+            "/perfil/integracoes/mercado-livre?ml_error=seller_company_id_required_for_ml_connect",
+          );
+          return;
+        }
+        navigate(resolution.path || "/perfil/integracoes/mercado-livre");
         return;
       }
 

@@ -769,7 +769,10 @@ export default function S7OperationalTasksPanel({
 
                         aria-label={`${actionLabel} — ${title}`}
 
-                        onClick={() => handleActionClick(task)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleActionClick(task);
+                        }}
 
                       >
 
